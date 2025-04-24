@@ -199,7 +199,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         lastName 
       }).toString();
       
-      const response = await fetch(`/api/customers?${queryParams}`);
+      const response = await fetch(`/api/customers?${queryParams}`, {
+        credentials: "include"
+      });
       const customers = await response.json();
       
       if (customers && customers.length > 0) {
