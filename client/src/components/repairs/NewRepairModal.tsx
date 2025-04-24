@@ -14,6 +14,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 import { PrintOptionsDialog } from './PrintOptionsDialog';
+import { PrintRepairDialog } from './PrintRepairDialog';
 
 // Extended repair schema with validation
 const repairFormSchema = insertRepairSchema.extend({
@@ -358,6 +359,26 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         }}
         onPrintReceipt={handlePrintReceipt}
         onPrintLabel={handlePrintLabel}
+        repairId={createdRepairId}
+      />
+      
+      {/* Bon Druck Dialog */}
+      <PrintRepairDialog
+        open={showReceiptPrintDialog}
+        onClose={() => {
+          setShowReceiptPrintDialog(false);
+          onClose();
+        }}
+        repairId={createdRepairId}
+      />
+      
+      {/* Etikett Druck Dialog - aktuell gleich dem Bon-Dialog */}
+      <PrintRepairDialog
+        open={showLabelPrintDialog}
+        onClose={() => {
+          setShowLabelPrintDialog(false);
+          onClose();
+        }}
         repairId={createdRepairId}
       />
     </>
