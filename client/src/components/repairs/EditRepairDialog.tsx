@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -228,6 +229,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                         value={field.value === null || field.value === undefined ? '' : field.value}
                       />
                     </FormControl>
+                        <FormDescription>Gerät beim Kunden, wenn ausgefüllt</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
