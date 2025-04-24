@@ -8,14 +8,8 @@ import { User } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-type AuthContextType = {
-  user: User | null;
-  isLoading: boolean;
-  error: Error | null;
-  loginMutation: UseMutationResult<Omit<User, "password">, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<User, "password">, Error, RegisterData>;
-};
+// Typendefinition für User ohne Passwort
+type UserResponse = Omit<User, "password">;
 
 type LoginData = {
   username: string;
@@ -27,15 +21,25 @@ type RegisterData = {
   password: string;
 };
 
+type AuthContextType = {
+  user: UserResponse | null;
+  isLoading: boolean;
+  error: Error | null;
+  loginMutation: UseMutationResult<UserResponse, Error, LoginData>;
+  logoutMutation: UseMutationResult<void, Error, void>;
+  registerMutation: UseMutationResult<UserResponse, Error, RegisterData>;
+};
+
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
   const {
     data: user,
     error,
     isLoading,
-  } = useQuery<Omit<User, "password"> | undefined, Error>({
+  } = useQuery<UserResponse | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
@@ -45,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (data: Omit<User, "password">) => {
+    onSuccess: (data: UserResponse) => {
       queryClient.setQueryData(["/api/user"], data);
       toast({
         title: "Anmeldung erfolgreich",
@@ -66,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
-    onSuccess: (data: Omit<User, "password">) => {
+    onSuccess: (data: UserResponse) => {
       queryClient.setQueryData(["/api/user"], data);
       toast({
         title: "Registrierung erfolgreich",
