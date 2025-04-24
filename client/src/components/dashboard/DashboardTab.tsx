@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { StatCard } from './StatCard';
 import { Button } from '@/components/ui/button';
 import { Repair, Customer } from '@shared/schema';
-import { getStatusBadge } from '@/lib/utils';
 import { useLocation } from 'wouter';
-import { Printer } from 'lucide-react';
+import { getStatusBadge } from '@/lib/utils';
+import { 
+  Printer, 
+  ShoppingBag, 
+  TrendingUp, 
+  Wrench as Tool,
+  Clock
+} from 'lucide-react';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
+import { AnimatedStatCard } from './AnimatedStatCard';
+import { RepairStatusChart } from './RepairStatusChart';
+import { AnimatedRecentOrders } from './AnimatedRecentOrders';
+import { motion } from 'framer-motion';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -69,92 +78,98 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       });
   }, [repairs, customers]);
 
+  // Container-Animations-Varianten
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.2
+      }
+    }
+  };
+
   return (
-    <div className="animate-fade-in">
-      <div className="flex justify-between items-center p-6">
-        <h2 className="text-xl font-semibold">Übersicht</h2>
-        <Button
-          onClick={onNewOrder}
-          className="bg-white text-primary hover:bg-gray-100 shadow flex items-center gap-2 font-semibold transition-all transform hover:-translate-y-1"
+    <motion.div
+      className="p-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div 
+        className="flex justify-between items-center p-4 mb-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+          Dashboard
+        </h2>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <span>➕</span> Neuer Auftrag
-        </Button>
-      </div>
+          <Button
+            onClick={onNewOrder}
+            className="bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg flex items-center gap-2 font-semibold"
+          >
+            <motion.span 
+              animate={{ rotate: [0, 0, 180, 180, 0], scale: [1, 1.3, 1.3, 1, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 5 }}
+            >
+              ➕
+            </motion.span> 
+            Neuer Auftrag
+          </Button>
+        </motion.div>
+      </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-        <StatCard 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <AnimatedStatCard 
           title="Gesamte Aufträge" 
           value={statsLoading ? 0 : stats?.totalOrders || 0} 
           type="primary" 
           onClick={() => navigateToFilteredRepairs('all')}
+          icon={<ShoppingBag size={24} />}
         />
-        <StatCard 
-          title="Außer Haus" 
-          value={statsLoading ? 0 : stats?.outsourced || 0} 
-          type="info" 
-          onClick={() => navigateToFilteredRepairs('ausser_haus')}
+        <AnimatedStatCard 
+          title="In Reparatur" 
+          value={statsLoading ? 0 : stats?.inRepair || 0} 
+          type="warning" 
+          onClick={() => navigateToFilteredRepairs('in_reparatur')}
+          icon={<Tool size={24} />}
         />
-        <StatCard 
+        <AnimatedStatCard 
           title="Fertig zur Abholung" 
           value={statsLoading ? 0 : stats?.readyForPickup || 0} 
           type="success" 
           onClick={() => navigateToFilteredRepairs('fertig')}
+          icon={<Clock size={24} />}
+        />
+        <AnimatedStatCard 
+          title="Außer Haus" 
+          value={statsLoading ? 0 : stats?.outsourced || 0} 
+          type="info" 
+          onClick={() => navigateToFilteredRepairs('ausser_haus')}
+          icon={<TrendingUp size={24} />}
         />
       </div>
       
-      <div className="p-6">
-        <h3 className="font-semibold mb-4 text-lg">Neueste Aufträge</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full rounded-lg overflow-hidden shadow-sm">
-            <thead>
-              <tr className="bg-primary text-white">
-                <th className="py-3 px-4 text-left">Nr</th>
-                <th className="py-3 px-4 text-left">Kunde</th>
-                <th className="py-3 px-4 text-left">Gerät</th>
-                <th className="py-3 px-4 text-left">Status</th>
-                <th className="py-3 px-4 text-left">Datum</th>
-                <th className="py-3 px-4 text-left">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {repairsLoading || customersLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">Lädt Daten...</td>
-                </tr>
-              ) : recentRepairs.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">Keine Reparaturen vorhanden</td>
-                </tr>
-              ) : (
-                recentRepairs.map(repair => (
-                  <tr key={repair.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
-                    <td className="py-3 px-4">#{repair.id}</td>
-                    <td className="py-3 px-4">{repair.customerName}</td>
-                    <td className="py-3 px-4">{repair.model}</td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(repair.status)}
-                    </td>
-                    <td className="py-3 px-4">
-                      {new Date(repair.createdAt).toLocaleDateString('de-DE')}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex space-x-2">
-                        <button 
-                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Druckoptionen anzeigen"
-                          onClick={() => showPrintOptions(repair.id)}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2">
+          <AnimatedRecentOrders 
+            repairs={recentRepairs}
+            isLoading={repairsLoading || customersLoading}
+            onPrintClick={showPrintOptions}
+          />
+        </div>
+        <div>
+          {!statsLoading && stats && (
+            <RepairStatusChart stats={stats} />
+          )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
