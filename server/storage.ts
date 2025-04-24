@@ -83,14 +83,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   async findCustomersByName(firstName: string, lastName: string): Promise<Customer[]> {
-    // Suche Kunden mit exakt übereinstimmendem Vor- und Nachnamen (case-insensitive)
+    // Suche Kunden, deren Vor- und Nachname die gesuchten Begriffe enthalten (case-insensitive)
     return await db
       .select()
       .from(customers)
       .where(
         and(
-          sql`LOWER(${customers.firstName}) = LOWER(${firstName})`,
-          sql`LOWER(${customers.lastName}) = LOWER(${lastName})`
+          sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
+          sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`
         )
       );
   }
