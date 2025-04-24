@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Handyshop Verwaltung</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4895ef;
+      --secondary: #3f37c9;
+      --dark: #1b263b;
+      --light: #f8f9fa;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --gray: #adb5bd;
+      --gray-light: #e9ecef;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+    
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      padding: 25px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .tab-button {
+      padding: 15px 25px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--gray);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    
+    .tab-button:hover {
+      color: var(--primary);
+    }
+    
+    .tab-button.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+    
+    .tab-content {
+      padding: 0;
+    }
+    
+    .tab {
+      display: none;
+      min-height: 400px;
+    }
+    
+    .tab.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Dashboard Stile */
+    .dashboard-header {
+      padding: 20px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 25px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .stat-card h3 {
+      color: var(--gray);
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark);
+    }
+    
+    .stat-card.fertig {
+      border-left-color: var(--success);
+    }
+    
+    .stat-card.in-reparatur {
+      border-left-color: var(--warning);
+    }
+    
+    .new-order-btn {
+      background: white;
+      color: var(--primary);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .new-order-btn:hover {
+      background: var(--gray-light);
+      transform: translateY(-2px);
+    }
+    
+    /* Tabellen Stile */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+    
+    th {
+      background-color: var(--primary);
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+    }
+    
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    tr:hover {
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 18px;
+      padding: 5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+      color: var(--secondary);
+      transform: scale(1.1);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .status-eingegangen { background: #ffeed9; color: #ff9500; }
+    .status-in_reparatur { background: #e0f7fa; color: #00b4d8; }
+    .status-fertig { background: #e6f7e6; color: #2ecc71; }
+    .status-abgeholt { background: #f0f0f0; color: #7f8c8d; }
+    
+    /* Popup Stile */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+    
+    .popup-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      width: 600px;
+      max-width: 95%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      animation: popIn 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .popup-header h2 {
+      color: var(--primary);
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--gray);
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--gray-light);
+      border-radius: 6px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      outline: none;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary);
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--gray-light);
+    }
+    
+    @media (max-width: 768px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .tabs {
+        overflow-x: auto;
+      }
+      
+      .tab-button {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+      
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="header">
+      <h1>📱 Handyshop Verwaltungssystem</h1>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab-button active" onclick="showTab('dashboardTab')">📊 Dashboard</div>
+      <div class="tab-button" onclick="showTab('reparaturTab')">🔧 Reparaturen</div>
+      <div class="tab-button" onclick="showTab('kundenTab')">👥 Kunden</div>
+    </div>
+    
+    <div class="tab-content">
+      <!-- Dashboard Tab -->
+      <div id="dashboardTab" class="tab active">
+        <div class="dashboard-header">
+          <h2>Übersicht</h2>
+          <button class="new-order-btn" onclick="openNewOrderPopup()">
+            <span>➕</span> Neuer Auftrag
+          </button>
+        </div>
+        
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3>Gesamte Aufträge</h3>
+            <div class="value" id="total-orders">0</div>
+          </div>
+          
+          <div class="stat-card in-reparatur">
+            <h3>In Reparatur</h3>
+            <div class="value" id="in-repair">0</div>
+          </div>
+          
+          <div class="stat-card fertig">
+            <h3>Fertiggestellte Reparaturen</h3>
+            <div class="value" id="completed">0</div>
+          </div>
+          
+          <div class="stat-card">
+            <h3>Heute erfasst</h3>
+            <div class="value" id="today">0</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Reparaturen Tab -->
+      <div id="reparaturTab" class="tab">
+        <div class="dashboard-header">
+          <h2>Reparaturübersicht</h2>
+          <button class="new-order-btn" onclick="openNewOrderPopup()">
+            <span>➕</span> Neuer Auftrag
+          </button>
+        </div>
+        
+        <div style="padding: 25px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Nr</th>
+                <th>Kunde</th>
+                <th>Gerät</th>
+                <th>Fehler</th>
+                <th>Status</th>
+                <th>Datum</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="reparaturListe"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Kunden Tab -->
+      <div id="kundenTab" class="tab">
+        <div class="dashboard-header">
+          <h2>Kundenübersicht</h2>
+          <button class="new-order-btn" onclick="openNewOrderPopup()">
+            <span>➕</span> Neuer Auftrag
+          </button>
+        </div>
+        
+        <div style="padding: 25px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Vorname</th>
+                <th>Nachname</th>
+                <th>Telefon</th>
+                <th>Anzahl Aufträge</th>
+                <th>Letzter Auftrag</th>
+              </tr>
+            </thead>
+            <tbody id="kundenListe"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Order Popup -->
+  <div id="newOrderPopup" class="popup-overlay" style="display: none;">
+    <div class="popup-content">
+      <div class="popup-header">
+        <h2>Neuen Auftrag erfassen</h2>
+        <button class="close-btn" onclick="closeNewOrderPopup()">×</button>
+      </div>
+      
+      <form id="auftragForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="vorname">Vorname</label>
+            <input type="text" id="vorname" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="nachname">Nachname</label>
+            <input type="text" id="nachname" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="telefon">Telefon</label>
+            <input type="text" id="telefon" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="geraeteart">Geräteart</label>
+            <select id="geraeteart" required>
+              <option value="">-- auswählen --</option>
+              <option value="smartphone">Smartphone</option>
+              <option value="tablet">Tablet</option>
+              <option value="laptop">Laptop</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="marke">Marke</label>
+            <input type="text" id="marke" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="modell">Modell</label>
+            <input type="text" id="modell" required>
+          </div>
+          
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="fehler">Fehlerbeschreibung</label>
+            <textarea id="fehler" rows="3" required></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status">
+              <option value="eingegangen">Eingegangen</option>
+              <option value="in_reparatur">In Reparatur</option>
+              <option value="fertig">Fertig</option>
+              <option value="abgeholt">Abgeholt</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeNewOrderPopup()">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Auftrag speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Daten aus dem LocalStorage laden
+    let auftraege = JSON.parse(localStorage.getItem("auftraege") || []);
+    
+    // Tab-Wechsel Funktion
+    function showTab(id) {
+      // Alle Tabs verstecken
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.remove("active");
+      });
+      
+      // Alle Tab-Buttons deaktivieren
+      document.querySelectorAll(".tab-button").forEach(btn => {
+        btn.classList.remove("active");
+      });
+      
+      // Gewählten Tab anzeigen
+      document.getElementById(id).classList.add("active");
+      
+      // Tab-Button als aktiv markieren
+      document.querySelector(`.tab-button[onclick="showTab('${id}')"]`).classList.add("active");
+      
+      // Daten aktualisieren
+      updateStats();
+      renderReparaturen();
+      renderKunden();
+    }
+    
+    // Dashboard Statistiken aktualisieren
+    function updateStats() {
+      const today = new Date().toLocaleDateString("de-DE");
+      
+      document.getElementById("total-orders").textContent = auftraege.length;
+      document.getElementById("in-repair").textContent = auftraege.filter(a => a.status === "in_reparatur").length;
+      document.getElementById("completed").textContent = auftraege.filter(a => a.status === "fertig").length;
+      document.getElementById("today").textContent = auftraege.filter(a => a.datum === today).length;
+    }
+    
+    // Reparaturliste rendern
+    function renderReparaturen() {
+      const rList = document.getElementById("reparaturListe");
+      rList.innerHTML = "";
+      
+      // Nach Datum absteigend sortieren
+      const sortedAuftraege = [...auftraege].sort((a, b) => {
+        return new Date(b.datum.split('.').reverse().join('-')) - new Date(a.datum.split('.').reverse().join('-'));
+      });
+      
+      sortedAuftraege.forEach((a, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${a.nr}</td>
+          <td>${a.vorname} ${a.nachname}</td>
+          <td>${a.marke} ${a.modell}</td>
+          <td>${a.fehler}</td>
+          <td>${getStatusBadge(a.status)}</td>
+          <td>${a.datum}</td>
+          <td>
+            <button class="action-btn" onclick="drucke(${i})" title="Drucken">🖨</button>
+          </td>
+        `;
+        rList.appendChild(tr);
+      });
+    }
+    
+    // Kundenliste rendern
+    function renderKunden() {
+      const kList = document.getElementById("kundenListe");
+      kList.innerHTML = "";
+      
+      // Kunden mit Anzahl der Aufträge und letztem Auftragsdatum
+      const kundenMap = new Map();
+      
+      auftraege.forEach(a => {
+        const key = `${a.vorname.toLowerCase()}_${a.nachname.toLowerCase()}`;
+        if (!kundenMap.has(key)) {
+          kundenMap.set(key, {
+            vorname: a.vorname,
+            nachname: a.nachname,
+            telefon: a.telefon,
+            count: 0,
+            lastDate: a.datum
+          });
+        }
+        const kunde = kundenMap.get(key);
+        kunde.count++;
+        // Aktualisiere das letzte Datum, wenn das aktuelle Datum neuer ist
+        if (new Date(a.datum.split('.').reverse().join('-')) > new Date(kunde.lastDate.split('.').reverse().join('-'))) {
+          kunde.lastDate = a.datum;
+        }
+      });
+      
+      // Nach Nachname sortieren
+      const sortedKunden = Array.from(kundenMap.values()).sort((a, b) => {
+        return a.nachname.localeCompare(b.nachname);
+      });
+      
+      sortedKunden.forEach(kunde => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${kunde.vorname}</td>
+          <td>${kunde.nachname}</td>
+          <td>${kunde.telefon}</td>
+          <td>${kunde.count}</td>
+          <td>${kunde.lastDate}</td>
+        `;
+        kList.appendChild(tr);
+      });
+    }
+    
+    // Status-Badge erstellen
+    function getStatusBadge(status) {
+      const statusText = {
+        'eingegangen': 'Eingegangen',
+        'in_reparatur': 'In Reparatur',
+        'fertig': 'Fertig',
+        'abgeholt': 'Abgeholt'
+      };
+      
+      return `<span class="status-badge status-${status}">${statusText[status]}</span>`;
+    }
+    
+    // Auftrag drucken
+    function drucke(index) {
+      const a = auftraege[index];
+      const win = window.open('', '', 'width=800,height=600');
+      win.document.write(`
+        <html>
+        <head>
+          <title>Auftragschein ${a.nr}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h2 { color: #4361ee; border-bottom: 2px solid #4361ee; padding-bottom: 10px; }
+            p { margin: 10px 0; }
+            .info-label { font-weight: bold; display: inline-block; width: 150px; }
+          </style>
+        </head>
+        <body>
+          <h2>Auftragschein #${a.nr}</h2>
+          <p><span class="info-label">Kunde:</span> ${a.vorname} ${a.nachname}</p>
+          <p><span class="info-label">Telefon:</span> ${a.telefon}</p>
+          <p><span class="info-label">Gerät:</span> ${a.geraeteart} ${a.marke} ${a.modell}</p>
+          <p><span class="info-label">Fehler:</span> ${a.fehler}</p>
+          <p><span class="info-label">Status:</span> ${a.status}</p>
+          <p><span class="info-label">Datum:</span> ${a.datum} ${a.zeit}</p>
+          <script>window.onload = function() { window.print(); }<\/script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+    
+    // Popup Funktionen
+    function openNewOrderPopup() {
+      document.getElementById("newOrderPopup").style.display = "flex";
+    }
+    
+    function closeNewOrderPopup() {
+      document.getElementById("newOrderPopup").style.display = "none";
+      document.getElementById("auftragForm").reset();
+    }
+    
+    // Formular absenden
+    document.getElementById("auftragForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const now = new Date();
+      
+      const newOrder = {
+        vorname: document.getElementById("vorname").value.trim(),
+        nachname: document.getElementById("nachname").value.trim(),
+        telefon: document.getElementById("telefon").value.trim(),
+        geraeteart: document.getElementById("geraeteart").value,
+        marke: document.getElementById("marke").value.trim(),
+        modell: document.getElementById("modell").value.trim(),
+        fehler: document.getElementById("fehler").value.trim(),
+        status: document.getElementById("status").value,
+        nr: "R" + Math.floor(1000 + Math.random() * 9000),
+        datum: now.toLocaleDateString("de-DE", { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        zeit: now.toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      auftraege.push(newOrder);
+      localStorage.setItem("auftraege", JSON.stringify(auftraege));
+      
+      // Alle Ansichten aktualisieren
+      updateStats();
+      renderReparaturen();
+      renderKunden();
+      
+      closeNewOrderPopup();
+      
+      // Erfolgsmeldung
+      alert("Auftrag wurde erfolgreich erfasst!");
+      
+      // Zur Reparaturliste wechseln
+      showTab('reparaturTab');
+    });
+    
+    // Initialisierung
+    updateStats();
+    renderReparaturen();
+    renderKunden();
+  </script>
+</body>
+</html>
