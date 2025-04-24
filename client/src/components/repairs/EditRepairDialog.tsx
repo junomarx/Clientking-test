@@ -31,11 +31,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Form schema
 const repairEditSchema = z.object({
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
-  estimatedCost: z.coerce.number().optional(),
+  estimatedCost: z.coerce.number().nullable().optional(),
   status: z.enum(['eingegangen', 'in_reparatur', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 type RepairEditValues = z.infer<typeof repairEditSchema>;

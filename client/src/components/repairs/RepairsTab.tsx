@@ -63,13 +63,24 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const repairs = useMemo(() => {
     if (!schemaRepairs) return undefined;
     
-    return schemaRepairs.map(repair => ({
-      ...repair,
-      deviceType: repair.deviceType as 'smartphone' | 'tablet' | 'laptop',
-      status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
-      createdAt: repair.createdAt.toString(),
-      updatedAt: repair.updatedAt.toString()
-    }));
+    return schemaRepairs.map(repair => {
+      // Alle Properties explizit zuweisen, um Typprobleme zu vermeiden
+      const convertedRepair: Repair = {
+        id: repair.id,
+        customerId: repair.customerId,
+        deviceType: repair.deviceType as 'smartphone' | 'tablet' | 'laptop',
+        brand: repair.brand,
+        model: repair.model,
+        serialNumber: repair.serialNumber,
+        issue: repair.issue,
+        estimatedCost: repair.estimatedCost,
+        status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
+        notes: repair.notes,
+        createdAt: repair.createdAt.toString(),
+        updatedAt: repair.updatedAt.toString()
+      };
+      return convertedRepair;
+    });
   }, [schemaRepairs]);
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({

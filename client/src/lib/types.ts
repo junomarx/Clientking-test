@@ -21,11 +21,11 @@ export interface Repair {
   deviceType: DeviceType;
   brand: string;
   model: string;
-  serialNumber?: string;
+  serialNumber?: string | null;
   issue: string;
-  estimatedCost?: number;
+  estimatedCost?: number | null;
   status: RepairStatus;
-  notes?: string;
+  notes?: string | null;
   createdAt: string;
   updatedAt: string;
 }

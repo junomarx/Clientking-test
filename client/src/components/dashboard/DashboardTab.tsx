@@ -8,9 +8,12 @@ import { useLocation } from 'wouter';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
+  onTabChange?: (tab: 'dashboard' | 'repairs' | 'customers') => void;
 }
 
-export function DashboardTab({ onNewOrder }: DashboardTabProps) {
+export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
+  // Statt zu einer neuen Seite zu navigieren, wechseln wir zum Repairs-Tab
+  // und setzen den Status-Filter über URL-Parameter
   const [, setLocation] = useLocation();
   
   const { data: stats, isLoading: statsLoading } = useQuery<{
@@ -26,7 +29,15 @@ export function DashboardTab({ onNewOrder }: DashboardTabProps) {
   
   // Handler functions for status filtering
   const navigateToFilteredRepairs = (status: string) => {
-    setLocation('/repairs?status=' + status);
+    // Setze den URL-Parameter, ohne die Seite zu wechseln
+    const currentUrl = window.location.pathname;
+    const newUrl = `${currentUrl}?status=${status}`;
+    window.history.pushState({}, '', newUrl);
+    
+    // Wechsle zum Repairs-Tab
+    if (onTabChange) {
+      onTabChange('repairs');
+    }
   };
 
   const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({

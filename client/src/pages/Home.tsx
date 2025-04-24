@@ -25,7 +25,10 @@ export default function Home() {
         
         <div className="tab-content">
           {activeTab === 'dashboard' && (
-            <DashboardTab onNewOrder={handleNewOrder} />
+            <DashboardTab 
+              onNewOrder={handleNewOrder} 
+              onTabChange={setActiveTab} 
+            />
           )}
           
           {activeTab === 'repairs' && (
