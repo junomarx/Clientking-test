@@ -1,0 +1,231 @@
+import React, { useState, useMemo } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Repair, Customer } from '@/lib/types';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { getStatusBadge } from '@/lib/utils/statusBadges';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+
+interface RepairsTabProps {
+  onNewOrder: () => void;
+}
+
+export function RepairsTab({ onNewOrder }: RepairsTabProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+
+  const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({
+    queryKey: ['/api/repairs']
+  });
+
+  const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
+    queryKey: ['/api/customers']
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      setShowStatusDialog(false);
+    },
+  });
+
+  const filteredRepairs = useMemo(() => {
+    if (!repairs || !customers) return [];
+
+    return repairs
+      .filter(repair => {
+        // Apply status filter
+        if (statusFilter !== 'all' && repair.status !== statusFilter) {
+          return false;
+        }
+
+        // Apply search filter
+        if (searchTerm) {
+          const customer = customers.find(c => c.id === repair.customerId);
+          const customerName = customer 
+            ? `${customer.firstName} ${customer.lastName}`.toLowerCase() 
+            : '';
+          
+          const searchValue = searchTerm.toLowerCase();
+          return (
+            repair.model.toLowerCase().includes(searchValue) ||
+            repair.brand.toLowerCase().includes(searchValue) ||
+            repair.issue.toLowerCase().includes(searchValue) ||
+            customerName.includes(searchValue)
+          );
+        }
+
+        return true;
+      })
+      .map(repair => {
+        const customer = customers.find(c => c.id === repair.customerId);
+        return {
+          ...repair,
+          customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown'
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [repairs, customers, searchTerm, statusFilter]);
+
+  const handleUpdateStatus = () => {
+    if (!selectedRepairId || !newStatus) return;
+    updateStatusMutation.mutate({ id: selectedRepairId, status: newStatus });
+  };
+
+  const openStatusDialog = (id: number, currentStatus: string) => {
+    setSelectedRepairId(id);
+    setNewStatus(currentStatus);
+    setShowStatusDialog(true);
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center p-6">
+        <h2 className="text-xl font-semibold">Reparaturübersicht</h2>
+        <Button
+          onClick={onNewOrder}
+          className="bg-white text-primary hover:bg-gray-100 shadow flex items-center gap-2 font-semibold transition-all transform hover:-translate-y-1"
+        >
+          <span>➕</span> Neuer Auftrag
+        </Button>
+      </div>
+      
+      <div className="px-6 pb-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-grow">
+            <Input
+              type="text"
+              placeholder="Suchen..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10"
+            />
+            <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Alle Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="eingegangen">Eingegangen</SelectItem>
+              <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+              <SelectItem value="fertig">Fertig</SelectItem>
+              <SelectItem value="abgeholt">Abgeholt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="px-6 pb-6">
+        <div className="overflow-x-auto">
+          <table className="min-w-full rounded-lg overflow-hidden shadow-sm">
+            <thead>
+              <tr className="bg-primary text-white">
+                <th className="py-3 px-4 text-left">Nr</th>
+                <th className="py-3 px-4 text-left">Kunde</th>
+                <th className="py-3 px-4 text-left">Gerät</th>
+                <th className="py-3 px-4 text-left">Fehler</th>
+                <th className="py-3 px-4 text-left">Status</th>
+                <th className="py-3 px-4 text-left">Datum</th>
+                <th className="py-3 px-4 text-left">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody>
+              {repairsLoading || customersLoading ? (
+                <tr>
+                  <td colSpan={7} className="py-4 text-center text-gray-500">Lädt Daten...</td>
+                </tr>
+              ) : filteredRepairs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
+                </tr>
+              ) : (
+                filteredRepairs.map(repair => (
+                  <tr key={repair.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
+                    <td className="py-3 px-4">#{repair.id}</td>
+                    <td className="py-3 px-4">{repair.customerName}</td>
+                    <td className="py-3 px-4">{repair.model}</td>
+                    <td className="py-3 px-4">{repair.issue}</td>
+                    <td className="py-3 px-4">
+                      {getStatusBadge(repair.status)}
+                    </td>
+                    <td className="py-3 px-4">
+                      {new Date(repair.createdAt).toLocaleDateString('de-DE')}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex space-x-2">
+                        <button 
+                          className="text-primary hover:text-secondary p-1 transform hover:scale-110 transition-all" 
+                          title="Status ändern"
+                          onClick={() => openStatusDialog(repair.id, repair.status)}
+                        >
+                          🔄
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Status Update Dialog */}
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Status aktualisieren</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Select
+              value={newStatus}
+              onValueChange={setNewStatus}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                <SelectItem value="fertig">Fertig</SelectItem>
+                <SelectItem value="abgeholt">Abgeholt</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={handleUpdateStatus}
+              disabled={updateStatusMutation.isPending}
+            >
+              {updateStatusMutation.isPending ? 'Aktualisiere...' : 'Speichern'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
