@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { PrintOptionsDialog } from './PrintOptionsDialog';
 import { PrintRepairDialog } from './PrintRepairDialog';
+import { PrintLabelDialog } from './PrintLabelDialog';
 
 // Kontext für globale Druckoptionen
 type PrintManagerContextType = {
@@ -63,7 +64,7 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
       />
       
       {/* Etikett Druck Dialog */}
-      <PrintRepairDialog
+      <PrintLabelDialog
         open={showLabelPrintDialog}
         onClose={() => setShowLabelPrintDialog(false)}
         repairId={repairId}
