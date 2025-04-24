@@ -48,9 +48,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Wenn firstName und lastName als Query-Parameter übergeben werden, suche nach Kunden mit diesem Namen
       if (req.query.firstName && req.query.lastName) {
         console.log(`Searching for customers with name: ${req.query.firstName} ${req.query.lastName}`);
-        const matchingCustomers = await storage.findCustomersByName(
-          req.query.firstName as string, 
-          req.query.lastName as string
+        const firstName = req.query.firstName as string;
+        const lastName = req.query.lastName as string;
+        
+        // Wenn einer der Parameter zu kurz ist, gebe eine leere Liste zurück
+        if (firstName.length < 1 || lastName.length < 1) {
+          return res.json([]);
+        }
+        
+        // Alle Kunden abrufen und sowohl nach Vor- als auch Nachnamen filtern
+        const allCustomers = await storage.getAllCustomers();
+        const matchingCustomers = allCustomers.filter(customer => 
+          customer.firstName.toLowerCase().includes(firstName.toLowerCase()) &&
+          customer.lastName.toLowerCase().includes(lastName.toLowerCase())
         );
         console.log(`Found ${matchingCustomers.length} matching customers`);
         return res.json(matchingCustomers);

@@ -225,7 +225,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Funktion zum Prüfen, ob ein Kunde mit gleichem Namen existiert
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
     try {
-      if (firstName.length < 2 || lastName.length < 2) {
+      if (firstName.length < 1 || lastName.length < 1) {
+        setMatchingCustomers([]);
+        setIsCustomerDropdownOpen(false);
         return false;
       }
       
@@ -317,7 +319,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   
   // Überprüft den Nachnamen, sobald er eingegeben wird
   const checkCustomerAfterLastNameInput = async (firstName: string, lastName: string) => {
-    if (firstName.length >= 2 && lastName.length >= 2) {
+    if (firstName.length >= 1 && lastName.length >= 1) {
       await checkForExistingCustomer(firstName, lastName);
     }
   };
@@ -568,11 +570,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               placeholder="Nachname"
                               onChange={(e) => {
                                 field.onChange(e);
-                                // Nach Eingabe des Nachnamens Kundendaten überprüfen
+                                // Sofort nach jeder Eingabe im Nachnamen nach Kunden suchen
                                 const firstName = form.getValues().firstName;
-                                if (e.target.value.length >= 2) {
-                                  checkCustomerAfterLastNameInput(firstName, e.target.value);
-                                }
+                                checkCustomerAfterLastNameInput(firstName, e.target.value);
                               }}
                               onBlur={() => {
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
