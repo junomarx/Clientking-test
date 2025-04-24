@@ -83,6 +83,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState(false);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   
   // Form definition
   const form = useForm<OrderFormValues>({
@@ -591,37 +592,52 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Modell</FormLabel>
                         <FormControl>
-                          <div className="space-y-2">
-                            {savedModels.length > 0 && (
-                              <div className="flex space-x-2 flex-wrap">
-                                {savedModels.map((model) => (
-                                  <Button
-                                    key={model}
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => field.onChange(model)}
-                                    className="mb-2"
-                                  >
-                                    {model}
-                                  </Button>
-                                ))}
-                              </div>
-                            )}
+                          <div className="relative">
                             <Input 
                               {...field} 
                               placeholder="z.B. iPhone 13 Pro"
                               onChange={(e) => {
                                 field.onChange(e.target.value);
+                                setIsModelDropdownOpen(e.target.value.length > 0);
+                                
                                 // Bei Eingabe eines neuen Modells, wird es automatisch gespeichert
-                                if (e.target.value && watchDeviceType && watchBrand) {
-                                  // Speichere das Modell nur, wenn es nicht leer ist und eine Länge > 2 hat
-                                  if (e.target.value.length > 2) {
-                                    saveModel(watchDeviceType, watchBrand, e.target.value);
-                                  }
+                                if (e.target.value && watchDeviceType && watchBrand && e.target.value.length > 2) {
+                                  saveModel(watchDeviceType, watchBrand, e.target.value);
                                 }
                               }}
+                              onFocus={() => {
+                                if (savedModels.length > 0) {
+                                  setIsModelDropdownOpen(field.value?.length > 0);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Verzögert schließen, um Klick auf Dropdown-Items zu ermöglichen
+                                setTimeout(() => setIsModelDropdownOpen(false), 200);
+                              }}
                             />
+                            
+                            {savedModels.length > 0 && isModelDropdownOpen && (
+                              <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                {savedModels
+                                  .filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase()))
+                                  .map(model => (
+                                    <div 
+                                      key={model} 
+                                      className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                      onMouseDown={(e) => {
+                                        // Verhindert onBlur vor dem Klick
+                                        e.preventDefault();
+                                      }}
+                                      onClick={() => {
+                                        field.onChange(model);
+                                        setIsModelDropdownOpen(false);
+                                      }}
+                                    >
+                                      {model}
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
                           </div>
                         </FormControl>
                         <FormMessage />
