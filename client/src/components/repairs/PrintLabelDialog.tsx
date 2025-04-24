@@ -149,6 +149,31 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   .mb-2 {
                     margin-bottom: 2mm;
                   }
+                  
+                  /* Zusätzliche Stile für Logo */
+                  .flex {
+                    display: flex;
+                  }
+                  
+                  .justify-center {
+                    justify-content: center;
+                  }
+                  
+                  .max-h-12 {
+                    max-height: 48px;
+                  }
+                  
+                  .max-w-\\[150px\\] {
+                    max-width: 150px;
+                  }
+                  
+                  .object-contain {
+                    object-fit: contain;
+                  }
+                  
+                  img {
+                    max-width: 100%;
+                  }
                 }
                 
                 /* Nicht-Druck-Styles */
@@ -259,6 +284,15 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div ref={printRef} className="bg-white p-4 rounded-md shadow-sm">
                 <div className="label-container border border-dashed border-gray-300 p-4 rounded-lg">
                   <div className="label-header text-center mb-3 border-b border-primary pb-2">
+                    {businessSettings?.logoImage && (
+                      <div className="mb-2 flex justify-center">
+                        <img 
+                          src={businessSettings.logoImage} 
+                          alt={businessSettings.businessName || "Firmenlogo"}
+                          className="max-h-12 max-w-[150px] object-contain"
+                        />
+                      </div>
+                    )}
                     <p className="font-bold text-sm text-primary">{businessSettings?.businessName || "Handyshop Verwaltung"}</p>
                   </div>
                   
