@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Customer, InsertCustomer, Repair } from '@shared/schema';
+import { Customer as SchemaCustomer, InsertCustomer } from '@shared/schema';
+import { Customer, Repair } from '@/lib/types';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Plus, Loader2, Phone, Mail, User, Calendar, Pencil } from 'lucide-react';
+import { Plus, Loader2, Phone, Mail, User, Calendar, Pencil, Trash2 } from 'lucide-react';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 
@@ -37,6 +39,9 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   const [activeTab, setActiveTab] = useState('details');
   const [editRepairId, setEditRepairId] = useState<number | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteCustomerDialog, setShowDeleteCustomerDialog] = useState(false);
+  const [showDeleteRepairDialog, setShowDeleteRepairDialog] = useState(false);
+  const [repairToDelete, setRepairToDelete] = useState<number | null>(null);
   const { toast } = useToast();
   
   // Load customer details
@@ -120,6 +125,54 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       toast({
         title: "Fehler",
         description: `Kunde konnte nicht aktualisiert werden: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete customer mutation
+  const deleteCustomerMutation = useMutation({
+    mutationFn: async () => {
+      if (!customerId) throw new Error("Kunden-ID fehlt");
+      await apiRequest('DELETE', `/api/customers/${customerId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Kunde gelöscht",
+        description: "Der Kunde wurde erfolgreich gelöscht.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      onClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Kunde konnte nicht gelöscht werden: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Delete repair mutation
+  const deleteRepairMutation = useMutation({
+    mutationFn: async () => {
+      if (!repairToDelete) throw new Error("Reparatur-ID fehlt");
+      await apiRequest('DELETE', `/api/repairs/${repairToDelete}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Reparatur gelöscht",
+        description: "Die Reparatur wurde erfolgreich gelöscht.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      setShowDeleteRepairDialog(false);
+      setRepairToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Reparatur konnte nicht gelöscht werden: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -227,13 +280,24 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                 />
                 
                 <div className="flex justify-between pt-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={onClose}
-                  >
-                    Abbrechen
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={onClose}
+                    >
+                      Abbrechen
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteCustomerDialog(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Löschen
+                    </Button>
+                  </div>
                   
                   <Button 
                     type="submit" 
