@@ -297,8 +297,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
         issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
-        estimatedCost: formData.estimatedCost === "" ? null : formData.estimatedCost,
-        depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
+        estimatedCost: formData.estimatedCost,
         status: formData.status || 'eingegangen', // Standardwert
         notes: formData.notes
       };
@@ -356,7 +355,6 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         brand: data.brand || 'apple', // Standardwert
         model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
-        depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         issue: data.issue || 'Wird später hinzugefügt', // Standardwert
         estimatedCost: data.estimatedCost,
         status: data.status || 'eingegangen', // Standardwert
@@ -429,7 +427,6 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
         model: formData.model || 'Unbekanntes Modell', // Standardwert
-        depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         serialNumber: formData.serialNumber,
         issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
         estimatedCost: formData.estimatedCost,
