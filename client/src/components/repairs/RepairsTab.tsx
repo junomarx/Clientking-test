@@ -16,9 +16,10 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { EditRepairDialog } from './EditRepairDialog';
-import { PrintRepairDialog } from './PrintRepairDialog';
+
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Pencil, Printer, Trash2, AlertCircle } from 'lucide-react';
+import { Pencil, Printer, Trash2, AlertCircle, Tag } from 'lucide-react';
+import { usePrintManager } from './PrintOptionsManager';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
@@ -31,9 +32,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
+  
+  // PrintManager für Druckoptionen
+  const { showPrintOptions } = usePrintManager();
   
   // For tracking if we're filtering by today's orders
   const [filterByToday, setFilterByToday] = useState(false);
@@ -275,16 +278,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button 
-                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Auftrag drucken"
-                          onClick={() => {
-                            setSelectedRepairId(repair.id);
-                            setShowPrintDialog(true);
-                          }}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </button>
+                        <div className="flex gap-1">
+                          <button 
+                            className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
+                            title="Druckoptionen anzeigen"
+                            onClick={() => showPrintOptions(repair.id)}
+                          >
+                            <Printer className="h-4 w-4" />
+                          </button>
+                        </div>
                         <button 
                           className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag löschen"
@@ -351,12 +353,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         />
       )}
 
-      {/* Print Repair Dialog */}
-      <PrintRepairDialog
-        open={showPrintDialog}
-        onClose={() => setShowPrintDialog(false)}
-        repairId={selectedRepairId}
-      />
+      {/* Kein separater Druckdialog mehr nötig, wird durch PrintManager abgedeckt */}
       
       {/* Delete Confirmation Dialog */}
       {selectedRepairId && repairs && (
