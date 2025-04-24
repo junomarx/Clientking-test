@@ -43,8 +43,11 @@ interface NewRepairModalProps {
 
 export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProps) {
   const { toast } = useToast();
+  // Zustandsvariablen
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [createdRepairId, setCreatedRepairId] = useState<number | null>(null);
+  const [showReceiptPrintDialog, setShowReceiptPrintDialog] = useState(false);
+  const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
   
   // Load customer details if customerId is provided
   const { 
@@ -53,9 +56,13 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     queryKey: ['/api/customers', customerId],
     queryFn: async () => {
       if (!customerId) return null;
-      const response = await fetch(`/api/customers/${customerId}`);
-      if (!response.ok) throw new Error("Kunde konnte nicht geladen werden");
-      return response.json();
+      try {
+        const response = await apiRequest('GET', `/api/customers/${customerId}`);
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden des Kunden:", err);
+        return null;
+      }
     },
     enabled: !!customerId && open,
   });
@@ -110,14 +117,15 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       setCreatedRepairId(data.id);
       
       // Speichere Modell in localStorage wenn es neu ist
-      if (values.brand && values.model && values.deviceType) {
-        const modelKey = `${values.deviceType}:${values.brand}`;
+      const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
+      if (formValues.brand && formValues.model && formValues.deviceType) {
+        const modelKey = `${formValues.deviceType}:${formValues.brand}`;
         const existingModels = JSON.parse(localStorage.getItem('storedModels') || '{}');
         if (!existingModels[modelKey]) {
           existingModels[modelKey] = [];
         }
-        if (!existingModels[modelKey].includes(values.model)) {
-          existingModels[modelKey].push(values.model);
+        if (!existingModels[modelKey].includes(formValues.model)) {
+          existingModels[modelKey].push(formValues.model);
           localStorage.setItem('storedModels', JSON.stringify(existingModels));
         }
       }
@@ -141,10 +149,6 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   
   // If no customer is selected or loaded and customerId is required
   const isCustomerMissing = !customer && customerId;
-  
-  // Zustand für die Druck-Dialoge
-  const [showReceiptPrintDialog, setShowReceiptPrintDialog] = useState(false);
-  const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
   
   // Handler für Druckoptionen
   const handlePrintReceipt = () => {

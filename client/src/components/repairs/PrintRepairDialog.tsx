@@ -27,9 +27,18 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
-      const response = await fetch(`/api/repairs/${repairId}`);
-      if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
-      return response.json();
+      try {
+        const response = await fetch(`/api/repairs/${repairId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der Reparaturdaten:", err);
+        return null;
+      }
     },
     enabled: !!repairId && open,
   });
@@ -39,9 +48,18 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     queryKey: ['/api/customers', repair?.customerId],
     queryFn: async () => {
       if (!repair?.customerId) return null;
-      const response = await fetch(`/api/customers/${repair.customerId}`);
-      if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
-      return response.json();
+      try {
+        const response = await fetch(`/api/customers/${repair.customerId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der Kundendaten:", err);
+        return null;
+      }
     },
     enabled: !!repair?.customerId && open,
   });
