@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard } from './StatCard';
 import { Button } from '@/components/ui/button';
 import { Repair, Customer } from '@shared/schema';
 import { getStatusBadge } from '@/lib/utils';
 import { useLocation } from 'wouter';
+import { Printer } from 'lucide-react';
+import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -15,6 +17,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   // Statt zu einer neuen Seite zu navigieren, wechseln wir zum Repairs-Tab
   // und setzen den Status-Filter über URL-Parameter
   const [, setLocation] = useLocation();
+  
+  // PrintManager für Druckoptionen
+  const { showPrintOptions } = usePrintManager();
   
   const { data: stats, isLoading: statsLoading } = useQuery<{
     totalOrders: number;
@@ -108,16 +113,17 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
                 <th className="py-3 px-4 text-left">Gerät</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left">Datum</th>
+                <th className="py-3 px-4 text-left">Aktionen</th>
               </tr>
             </thead>
             <tbody>
               {repairsLoading || customersLoading ? (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-gray-500">Lädt Daten...</td>
+                  <td colSpan={6} className="py-4 text-center text-gray-500">Lädt Daten...</td>
                 </tr>
               ) : recentRepairs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-gray-500">Keine Reparaturen vorhanden</td>
+                  <td colSpan={6} className="py-4 text-center text-gray-500">Keine Reparaturen vorhanden</td>
                 </tr>
               ) : (
                 recentRepairs.map(repair => (
@@ -130,6 +136,17 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
                     </td>
                     <td className="py-3 px-4">
                       {new Date(repair.createdAt).toLocaleDateString('de-DE')}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex space-x-2">
+                        <button 
+                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Druckoptionen anzeigen"
+                          onClick={() => showPrintOptions(repair.id)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
