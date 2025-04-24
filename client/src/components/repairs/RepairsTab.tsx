@@ -31,16 +31,25 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   
+  // For tracking if we're filtering by today's orders
+  const [filterByToday, setFilterByToday] = useState(false);
+  
   // Check for status filter in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const statusParam = params.get('status');
     
     if (statusParam) {
-      // "today" is a special case that would be handled in the filters
-      if (statusParam !== 'today') {
+      if (statusParam === 'today') {
+        // Special case for filtering by today's orders
+        setFilterByToday(true);
+        setStatusFilter('all'); // Reset status filter
+      } else {
+        setFilterByToday(false);
         setStatusFilter(statusParam);
       }
+    } else {
+      setFilterByToday(false);
     }
   }, [location]);
 
@@ -67,11 +76,24 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const filteredRepairs = useMemo(() => {
     if (!repairs || !customers) return [];
 
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     return repairs
       .filter(repair => {
         // Apply status filter
         if (statusFilter !== 'all' && repair.status !== statusFilter) {
           return false;
+        }
+
+        // Apply "today" filter if active
+        if (filterByToday) {
+          const repairDate = new Date(repair.createdAt);
+          repairDate.setHours(0, 0, 0, 0);
+          if (repairDate.getTime() !== today.getTime()) {
+            return false;
+          }
         }
 
         // Apply search filter
@@ -100,7 +122,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         };
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [repairs, customers, searchTerm, statusFilter]);
+  }, [repairs, customers, searchTerm, statusFilter, filterByToday]);
 
   const handleUpdateStatus = () => {
     if (!selectedRepairId || !newStatus) return;
@@ -148,6 +170,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               <SelectItem value="all">Alle Status</SelectItem>
               <SelectItem value="eingegangen">Eingegangen</SelectItem>
               <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+              <SelectItem value="ausser_haus">Außer Haus</SelectItem>
               <SelectItem value="fertig">Fertig</SelectItem>
               <SelectItem value="abgeholt">Abgeholt</SelectItem>
             </SelectContent>
@@ -247,6 +270,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               <SelectContent>
                 <SelectItem value="eingegangen">Eingegangen</SelectItem>
                 <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                <SelectItem value="ausser_haus">Außer Haus</SelectItem>
                 <SelectItem value="fertig">Fertig</SelectItem>
                 <SelectItem value="abgeholt">Abgeholt</SelectItem>
               </SelectContent>
