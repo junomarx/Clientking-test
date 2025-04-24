@@ -2,7 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Customer, Repair } from '@/lib/types';
+import { Customer, Repair } from '@shared/schema';
+import { CustomerDetailDialog } from './CustomerDetailDialog';
+import { NewRepairModal } from '../repairs/NewRepairModal';
+import { Plus, Search } from 'lucide-react';
 
 interface CustomersTabProps {
   onNewOrder: () => void;
@@ -10,6 +13,9 @@ interface CustomersTabProps {
 
 export function CustomersTab({ onNewOrder }: CustomersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false);
+  const [isNewRepairOpen, setIsNewRepairOpen] = useState(false);
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers']
@@ -63,15 +69,35 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
       });
   }, [customers, repairs, searchTerm]);
 
+  // Event handlers
+  const handleCustomerClick = (customerId: number) => {
+    setSelectedCustomerId(customerId);
+    setIsCustomerDetailOpen(true);
+  };
+
+  const handleCustomerDetailClose = () => {
+    setIsCustomerDetailOpen(false);
+  };
+
+  const handleNewRepairForCustomer = (customerId: number) => {
+    setSelectedCustomerId(customerId);
+    setIsNewRepairOpen(true);
+  };
+
+  const handleNewRepairClose = () => {
+    setIsNewRepairOpen(false);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center p-6">
         <h2 className="text-xl font-semibold">Kundenübersicht</h2>
         <Button
           onClick={onNewOrder}
-          className="bg-white text-primary hover:bg-gray-100 shadow flex items-center gap-2 font-semibold transition-all transform hover:-translate-y-1"
+          variant="default"
+          className="flex items-center gap-2"
         >
-          <span>➕</span> Neuer Auftrag
+          <Plus className="h-4 w-4" /> Neuer Auftrag
         </Button>
       </div>
       
@@ -84,7 +110,7 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pr-10"
           />
-          <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+          <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
         </div>
       </div>
       
@@ -112,7 +138,11 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
                 </tr>
               ) : (
                 customerWithRepairs.map(customer => (
-                  <tr key={customer.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
+                  <tr 
+                    key={customer.id} 
+                    className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer"
+                    onClick={() => handleCustomerClick(customer.id)}
+                  >
                     <td className="py-3 px-4">{customer.firstName}</td>
                     <td className="py-3 px-4">{customer.lastName}</td>
                     <td className="py-3 px-4">{customer.phone}</td>
@@ -130,6 +160,21 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
           </table>
         </div>
       </div>
+
+      {/* Customer Detail Dialog */}
+      <CustomerDetailDialog
+        open={isCustomerDetailOpen}
+        onClose={handleCustomerDetailClose}
+        customerId={selectedCustomerId}
+        onNewOrder={handleNewRepairForCustomer}
+      />
+
+      {/* New Repair Modal for Customer */}
+      <NewRepairModal
+        open={isNewRepairOpen}
+        onClose={handleNewRepairClose}
+        customerId={selectedCustomerId}
+      />
     </div>
   );
 }
