@@ -23,6 +23,7 @@ export interface IStorage {
   // Customer methods
   getAllCustomers(): Promise<Customer[]>;
   getCustomer(id: number): Promise<Customer | undefined>;
+  findCustomersByName(firstName: string, lastName: string): Promise<Customer[]>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer | undefined>;
   deleteCustomer(id: number): Promise<boolean>;

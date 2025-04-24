@@ -76,18 +76,12 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
         <StatCard 
           title="Gesamte Aufträge" 
           value={statsLoading ? 0 : stats?.totalOrders || 0} 
           type="primary" 
           onClick={() => navigateToFilteredRepairs('all')}
-        />
-        <StatCard 
-          title="In Reparatur" 
-          value={statsLoading ? 0 : stats?.inRepair || 0} 
-          type="warning" 
-          onClick={() => navigateToFilteredRepairs('in_reparatur')}
         />
         <StatCard 
           title="Außer Haus" 
@@ -100,18 +94,6 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           value={statsLoading ? 0 : stats?.readyForPickup || 0} 
           type="success" 
           onClick={() => navigateToFilteredRepairs('fertig')}
-        />
-        <StatCard 
-          title="Abgeholt" 
-          value={statsLoading ? 0 : (stats?.completed || 0) - (stats?.readyForPickup || 0)} 
-          type="success" 
-          onClick={() => navigateToFilteredRepairs('abgeholt')}
-        />
-        <StatCard 
-          title="Heute erfasst" 
-          value={statsLoading ? 0 : stats?.today || 0} 
-          type="primary"
-          onClick={() => navigateToFilteredRepairs('today')} 
         />
       </div>
       

@@ -24,6 +24,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Wenn firstName und lastName als Query-Parameter übergeben werden, suche nach Kunden mit diesem Namen
+      if (req.query.firstName && req.query.lastName) {
+        const matchingCustomers = await storage.findCustomersByName(
+          req.query.firstName as string, 
+          req.query.lastName as string
+        );
+        return res.json(matchingCustomers);
+      }
+      
+      // Ansonsten gebe alle Kunden zurück
       const customers = await storage.getAllCustomers();
       res.json(customers);
     } catch (error) {
