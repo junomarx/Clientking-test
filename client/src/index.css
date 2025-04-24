@@ -83,6 +83,10 @@
   @apply bg-gray-100 text-gray-800;
 }
 
+.status-ausser_haus {
+  @apply bg-purple-100 text-purple-800;
+}
+
 .animate-fade-in {
   animation: fadeIn 0.5s ease;
 }

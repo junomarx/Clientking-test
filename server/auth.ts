@@ -29,16 +29,24 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Stellen Sie sicher, dass das SECRET im Produktion gesetzt ist
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    console.warn('Warning: SESSION_SECRET is not set in production environment');
+  }
+
+  // Session-Konfiguration
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "handyshop-secret-key",
+    secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
     resave: true,
     saveUninitialized: true,
     store: storage.sessionStore,
+    name: 'handyshop.sid', // Anpassung des Cookie-Namens
     cookie: {
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      sameSite: "lax", // Wichtig für Entwicklung
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
+      sameSite: 'lax',
       httpOnly: true,
-      secure: false // Immer false in Entwicklung, da wir kein HTTPS verwenden
+      secure: false, // In Entwicklung immer false, da kein HTTPS
+      path: '/'
     }
   };
 
