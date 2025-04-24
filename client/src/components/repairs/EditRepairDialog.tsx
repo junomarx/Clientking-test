@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const repairEditSchema = z.object({
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
   estimatedCost: z.coerce.number().optional(),
-  status: z.enum(['eingegangen', 'in_reparatur', 'fertig', 'abgeholt'], {
+  status: z.enum(['eingegangen', 'in_reparatur', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
   notes: z.string().optional(),
@@ -193,6 +193,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                       <SelectContent>
                         <SelectItem value="eingegangen">Eingegangen</SelectItem>
                         <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                        <SelectItem value="ausser_haus">Außer Haus</SelectItem>
                         <SelectItem value="fertig">Fertig</SelectItem>
                         <SelectItem value="abgeholt">Abgeholt</SelectItem>
                       </SelectContent>

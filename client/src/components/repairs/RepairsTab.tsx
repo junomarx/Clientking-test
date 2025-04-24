@@ -3,7 +3,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Repair, Customer } from '@shared/schema';
+import { Repair as SchemaRepair, Customer } from '@shared/schema';
+import { Repair } from '@/lib/types';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { getStatusBadge } from '@/lib/utils';
 import { useLocation } from 'wouter';
@@ -53,9 +54,23 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     }
   }, [location]);
 
-  const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({
+  // Hier benutzen wir SchemaRepair für die Anfrage und konvertieren dann zu unserem Repair-Typ
+  const { data: schemaRepairs, isLoading: repairsLoading } = useQuery<SchemaRepair[]>({
     queryKey: ['/api/repairs']
   });
+  
+  // Konvertiere die DB-Repairs zu unserem Repair-Typ mit korrekten deviceType und status
+  const repairs = useMemo(() => {
+    if (!schemaRepairs) return undefined;
+    
+    return schemaRepairs.map(repair => ({
+      ...repair,
+      deviceType: repair.deviceType as 'smartphone' | 'tablet' | 'laptop',
+      status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
+      createdAt: repair.createdAt.toString(),
+      updatedAt: repair.updatedAt.toString()
+    }));
+  }, [schemaRepairs]);
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers']
