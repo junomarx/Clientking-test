@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
-import { saveModel, getModelsForDeviceAndBrand } from '@/lib/localStorage';
+import { saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels } from '@/lib/localStorage';
 
 import {
   Dialog,
@@ -625,24 +625,62 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                             
                             {savedModels.length > 0 && isModelDropdownOpen && (
                               <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                <div className="sticky top-0 bg-background border-b flex justify-between items-center p-2">
+                                  <span className="text-sm font-medium">Gespeicherte Modelle</span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                                    onClick={() => {
+                                      if (window.confirm('Möchten Sie wirklich alle gespeicherten Modelle löschen?')) {
+                                        clearAllModels(); // Importierte Funktion aus localStorage.ts
+                                        setSavedModels([]);
+                                      }
+                                    }}
+                                  >
+                                    Alle löschen
+                                  </Button>
+                                </div>
+                                
                                 {savedModels
                                   .filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase()))
                                   .map(model => (
                                     <div 
                                       key={model} 
-                                      className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                      className="px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center"
                                       onMouseDown={(e) => {
                                         // Verhindert onBlur vor dem Klick
                                         e.preventDefault();
                                       }}
-                                      onClick={() => {
-                                        field.onChange(model);
-                                        setIsModelDropdownOpen(false);
-                                      }}
                                     >
-                                      {model}
+                                      <div
+                                        className="flex-grow"
+                                        onClick={() => {
+                                          field.onChange(model);
+                                          setIsModelDropdownOpen(false);
+                                        }}
+                                      >
+                                        {model}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteModel(watchDeviceType, watchBrand, model);
+                                          setSavedModels(prev => prev.filter(m => m !== model));
+                                        }}
+                                      >
+                                        ×
+                                      </button>
                                     </div>
                                   ))}
+                                  
+                                {savedModels.filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase())).length === 0 && (
+                                  <div className="px-3 py-2 text-muted-foreground text-sm">
+                                    Keine passenden Modelle gefunden
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>

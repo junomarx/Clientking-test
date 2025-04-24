@@ -196,3 +196,41 @@ export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): s
     return [];
   }
 };
+
+// Funktion zum Löschen eines einzelnen Modells
+export const deleteModel = (deviceType: string, brand: string, model: string): void => {
+  if (!deviceType || !brand) return;
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  if (!storedData) return;
+  
+  try {
+    const storedModels: StoredModels = JSON.parse(storedData);
+    
+    if (storedModels[key]) {
+      // Filtere das zu löschende Modell heraus
+      storedModels[key] = storedModels[key].filter(m => m !== model);
+      
+      // Wenn die Liste für diesen Key leer ist, entferne den Key
+      if (storedModels[key].length === 0) {
+        delete storedModels[key];
+      }
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(SAVED_MODELS_KEY, JSON.stringify(storedModels));
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen des Modells:', err);
+  }
+};
+
+// Funktion zum Zurücksetzen aller gespeicherten Modelle
+export const clearAllModels = (): void => {
+  try {
+    localStorage.removeItem(SAVED_MODELS_KEY);
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen aller Modelle:', err);
+  }
+};
