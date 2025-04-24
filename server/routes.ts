@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   // CUSTOMERS API
-  app.get("/api/customers", async (req: Request, res: Response) => {
+  app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const customers = await storage.getAllCustomers();
       res.json(customers);
@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/customers/:id", async (req: Request, res: Response) => {
+  app.get("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
@@ -46,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/customers", async (req: Request, res: Response) => {
+  app.post("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
       const customer = await storage.createCustomer(customerData);
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/customers/:id", async (req: Request, res: Response) => {
+  app.patch("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const customerData = insertCustomerSchema.partial().parse(req.body);
@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // REPAIRS API
-  app.get("/api/repairs", async (req: Request, res: Response) => {
+  app.get("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairs = await storage.getAllRepairs();
       res.json(repairs);
@@ -89,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/repairs/:id", async (req: Request, res: Response) => {
+  app.get("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const repair = await storage.getRepair(id);
@@ -104,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/customers/:id/repairs", async (req: Request, res: Response) => {
+  app.get("/api/customers/:id/repairs", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const customerId = parseInt(req.params.id);
       const repairs = await storage.getRepairsByCustomerId(customerId);
@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/repairs", async (req: Request, res: Response) => {
+  app.post("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairData = insertRepairSchema.parse(req.body);
       
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/repairs/:id", async (req: Request, res: Response) => {
+  app.patch("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const repairData = insertRepairSchema.partial().parse(req.body);
@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/repairs/:id/status", async (req: Request, res: Response) => {
+  app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
