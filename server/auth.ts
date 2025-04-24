@@ -31,14 +31,14 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "handyshop-secret-key",
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: storage.sessionStore,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      sameSite: "lax",
+      sameSite: "lax", // Wichtig für Entwicklung
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production"
+      secure: false // Immer false in Entwicklung, da wir kein HTTPS verwenden
     }
   };
 
