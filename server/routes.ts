@@ -5,6 +5,7 @@ import {
   insertCustomerSchema, 
   insertRepairSchema,
   insertBusinessSettingsSchema,
+  insertFeedbackSchema,
   repairStatuses,
   deviceTypes
 } from "@shared/schema";
@@ -377,6 +378,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid business settings data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update business settings" });
+    }
+  });
+
+  // FEEDBACK API
+  // Erzeuge einen neuen Feedback-Token für eine Reparatur
+  app.post("/api/repairs/:id/feedback-token", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const repair = await storage.getRepair(repairId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      const customerId = repair.customerId;
+      const token = await storage.createFeedbackToken(repairId, customerId);
+      
+      res.json({ token });
+    } catch (error) {
+      console.error("Error creating feedback token:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Feedback-Tokens" });
+    }
+  });
+  
+  // Feedback-Informationen für einen bestimmten Token abrufen (ohne Authentifizierung)
+  app.get("/api/feedback/:token", async (req: Request, res: Response) => {
+    try {
+      const token = req.params.token;
+      const feedback = await storage.getFeedbackByToken(token);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback-Token ungültig oder abgelaufen" });
+      }
+      
+      // Reparaturinformationen laden
+      const repair = await storage.getRepair(feedback.repairId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Zugehörige Reparatur nicht gefunden" });
+      }
+      
+      // Kundeninformationen laden
+      const customer = await storage.getCustomer(feedback.customerId);
+      
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      // Geschäftsinformationen laden
+      const businessSettings = await storage.getBusinessSettings();
+      
+      // Nur die notwendigen Informationen zurückgeben
+      res.json({
+        token: feedback.feedbackToken,
+        rating: feedback.rating,
+        comment: feedback.comment,
+        submitted: feedback.rating > 0, // rating=0 bedeutet noch nicht abgegeben
+        repair: {
+          id: repair.id,
+          brand: repair.brand,
+          model: repair.model,
+          deviceType: repair.deviceType,
+          status: repair.status
+        },
+        customer: {
+          firstName: customer.firstName,
+          lastName: customer.lastName
+        },
+        business: {
+          name: businessSettings?.businessName || "Handyshop Verwaltung",
+          logoImage: businessSettings?.logoImage
+        }
+      });
+    } catch (error) {
+      console.error("Error retrieving feedback:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Feedbacks" });
+    }
+  });
+  
+  // Feedback einreichen (ohne Authentifizierung)
+  app.post("/api/feedback/:token", async (req: Request, res: Response) => {
+    try {
+      const token = req.params.token;
+      const { rating, comment } = req.body;
+      
+      // Validiere die Bewertung
+      if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Ungültige Bewertung. Bitte geben Sie 1-5 Sterne an." });
+      }
+      
+      // Feedback speichern
+      const feedback = await storage.submitFeedback(token, rating, comment);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback-Token ungültig oder abgelaufen" });
+      }
+      
+      res.json({ success: true, message: "Feedback erfolgreich gespeichert" });
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ message: "Fehler beim Speichern des Feedbacks" });
+    }
+  });
+  
+  // Feedback für eine bestimmte Reparatur abrufen (mit Authentifizierung)
+  app.get("/api/repairs/:id/feedback", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const feedbacks = await storage.getFeedbacksByRepairId(repairId);
+      
+      res.json(feedbacks);
+    } catch (error) {
+      console.error("Error retrieving repair feedback:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Feedbacks" });
     }
   });
 
