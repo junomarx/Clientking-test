@@ -23,7 +23,7 @@ export interface Repair {
   model: string;
   serialNumber?: string | null;
   issue: string;
-  estimatedCost?: number | null;
+  estimatedCost?: string | null;
   status: RepairStatus;
   notes?: string | null;
   createdAt: string;
