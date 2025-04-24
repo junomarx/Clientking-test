@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/dialog';
 import { EditRepairDialog } from './EditRepairDialog';
 import { PrintRepairDialog } from './PrintRepairDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { Pencil, Printer, Trash2, AlertCircle } from 'lucide-react';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
@@ -30,6 +32,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   
   // For tracking if we're filtering by today's orders
@@ -96,6 +99,19 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       setShowStatusDialog(false);
+    },
+  });
+  
+  // Delete repair mutation
+  const deleteRepairMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/repairs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      setShowDeleteDialog(false);
+      setSelectedRepairId(null);
     },
   });
 
@@ -247,7 +263,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                           title="Status ändern"
                           onClick={() => openStatusDialog(repair.id, repair.status)}
                         >
-                          🔄
+                          <AlertCircle className="h-4 w-4" />
                         </button>
                         <button 
                           className="text-orange-600 hover:text-orange-800 p-1 transform hover:scale-110 transition-all" 
@@ -257,7 +273,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                             setShowEditDialog(true);
                           }}
                         >
-                          ✏️
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button 
                           className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
@@ -267,7 +283,17 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                             setShowPrintDialog(true);
                           }}
                         >
-                          🖨️
+                          <Printer className="h-4 w-4" />
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Auftrag löschen"
+                          onClick={() => {
+                            setSelectedRepairId(repair.id);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>

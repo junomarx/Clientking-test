@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Trash2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -103,6 +104,35 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         variant: "destructive",
       });
       console.error("Error updating repair:", error);
+    }
+  });
+  
+  // Delete repair mutation
+  const deleteRepairMutation = useMutation({
+    mutationFn: async () => {
+      if (!repair) return null;
+      await apiRequest('DELETE', `/api/repairs/${repair.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      
+      // Show success message
+      toast({
+        title: "Auftrag gelöscht",
+        description: "Der Reparaturauftrag wurde erfolgreich gelöscht.",
+      });
+      
+      // Close dialog
+      handleClose();
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: "Der Reparaturauftrag konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      });
+      console.error("Error deleting repair:", error);
     }
   });
   
@@ -221,20 +251,52 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
               )}
             />
             
-            <DialogFooter className="pt-4">
-              <Button variant="outline" onClick={handleClose} type="button">
-                Abbrechen
-              </Button>
+            <DialogFooter className="pt-4 flex justify-between">
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleClose} 
+                  type="button"
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Löschen
+                </Button>
+              </div>
               <Button 
                 type="submit"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Speichere...' : 'Änderungen speichern'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Speichere...
+                  </>
+                ) : (
+                  'Änderungen speichern'
+                )}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
+      
+      {/* Delete confirmation dialog */}
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={() => deleteRepairMutation.mutate()}
+        title="Reparatur löschen"
+        description={`Möchten Sie wirklich die Reparatur für ${repair.brand} ${repair.model} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+        isDeleting={deleteRepairMutation.isPending}
+        itemName="Reparatur"
+      />
     </Dialog>
   );
 }
