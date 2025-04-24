@@ -64,6 +64,7 @@ const orderFormSchema = z.object({
   // Issue info
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
   estimatedCost: z.string().optional(),
+  depositAmount: z.string().optional(),
   status: z.enum(['eingegangen', 'in_reparatur', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
@@ -100,7 +101,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       model: '',
       serialNumber: '',
       issue: '',
-      estimatedCost: undefined,
+      estimatedCost: '',
+      depositAmount: '',
       status: 'eingegangen',
       notes: '',
     },
@@ -159,6 +161,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       serialNumber?: string;
       issue: string;
       estimatedCost?: string;
+      depositAmount?: string;
       status: string;
       notes?: string;
     }) => {
