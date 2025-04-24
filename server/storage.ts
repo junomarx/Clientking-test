@@ -1,7 +1,8 @@
 import { 
   users, type User, type InsertUser,
   customers, type Customer, type InsertCustomer,
-  repairs, type Repair, type InsertRepair
+  repairs, type Repair, type InsertRepair,
+  businessSettings, type BusinessSettings, type InsertBusinessSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, sql, gte, lt, count } from "drizzle-orm";
@@ -36,6 +37,10 @@ export interface IStorage {
   updateRepair(id: number, repair: Partial<InsertRepair>): Promise<Repair | undefined>;
   updateRepairStatus(id: number, status: string): Promise<Repair | undefined>;
   deleteRepair(id: number): Promise<boolean>;
+  
+  // Business settings methods
+  getBusinessSettings(): Promise<BusinessSettings | undefined>;
+  updateBusinessSettings(settings: Partial<InsertBusinessSettings>): Promise<BusinessSettings>;
   
   // Stats methods
   getStats(): Promise<{
@@ -191,6 +196,41 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error deleting repair:", error);
       return false;
+    }
+  }
+  
+  // Business settings methods
+  async getBusinessSettings(): Promise<BusinessSettings | undefined> {
+    const [settings] = await db.select().from(businessSettings);
+    return settings;
+  }
+  
+  async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>): Promise<BusinessSettings> {
+    const existingSettings = await this.getBusinessSettings();
+    
+    if (existingSettings) {
+      // Update existing settings
+      const [updatedSettings] = await db
+        .update(businessSettings)
+        .set({
+          ...settingsData,
+          updatedAt: new Date()
+        })
+        .where(eq(businessSettings.id, existingSettings.id))
+        .returning();
+      
+      return updatedSettings;
+    } else {
+      // Create new settings
+      const [newSettings] = await db
+        .insert(businessSettings)
+        .values({
+          ...settingsData as InsertBusinessSettings,
+          updatedAt: new Date()
+        })
+        .returning();
+      
+      return newSettings;
     }
   }
   

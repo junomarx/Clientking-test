@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
+  insertBusinessSettingsSchema,
   repairStatuses,
   deviceTypes
 } from "@shared/schema";

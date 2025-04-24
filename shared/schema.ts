@@ -66,3 +66,28 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Unternehmensdaten / Geschäftsinformationen
+export const businessSettings = pgTable("business_settings", {
+  id: serial("id").primaryKey(),
+  businessName: text("business_name").notNull(),
+  ownerFirstName: text("owner_first_name").notNull(),
+  ownerLastName: text("owner_last_name").notNull(),
+  taxId: text("tax_id"), // ATU Nummer
+  streetAddress: text("street_address").notNull(),
+  city: text("city").notNull(),
+  zipCode: text("zip_code").notNull(),
+  country: text("country").default("Österreich").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type BusinessSettings = typeof businessSettings.$inferSelect;
+export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
