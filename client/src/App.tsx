@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import FeedbackPage from "@/pages/feedback-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
@@ -17,6 +18,7 @@ function Router() {
         <Home />
       </ProtectedRoute>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/feedback" component={FeedbackPage} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Repair } from '@/lib/types';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { RepairFeedback } from './RepairFeedback';
 
 import {
   Dialog,
@@ -15,6 +16,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTabs,
+  DialogTab,
+  DialogTabsContent,
+  DialogTabsList,
+  DialogTabsTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
