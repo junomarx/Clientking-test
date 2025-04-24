@@ -591,46 +591,38 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Modell</FormLabel>
                         <FormControl>
-                          {savedModels.length > 0 ? (
-                            <Select 
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                // Speichere das Modell (wird auch durch useEffect gespeichert)
-                                if (watchDeviceType && watchBrand) {
-                                  saveModel(watchDeviceType, watchBrand, value);
-                                }
-                              }}
-                              value={field.value}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Modell auswählen oder eingeben" />
-                              </SelectTrigger>
-                              <SelectContent>
+                          <div className="space-y-2">
+                            {savedModels.length > 0 && (
+                              <div className="flex space-x-2 flex-wrap">
                                 {savedModels.map((model) => (
-                                  <SelectItem key={model} value={model}>
+                                  <Button
+                                    key={model}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => field.onChange(model)}
+                                    className="mb-2"
+                                  >
                                     {model}
-                                  </SelectItem>
+                                  </Button>
                                 ))}
-                                {/* Option für neues Modell */}
-                                <div className="px-2 py-1.5 text-sm border-t mt-1">
-                                  <div className="text-muted-foreground mb-1">Neues Modell eingeben:</div>
-                                  <Input 
-                                    placeholder="z.B. iPhone 13 Pro" 
-                                    onChange={(e) => {
-                                      field.onChange(e.target.value);
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="mt-1"
-                                  />
-                                </div>
-                              </SelectContent>
-                            </Select>
-                          ) : (
+                              </div>
+                            )}
                             <Input 
                               {...field} 
-                              placeholder="z.B. iPhone 13 Pro" 
+                              placeholder="z.B. iPhone 13 Pro"
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                // Bei Eingabe eines neuen Modells, wird es automatisch gespeichert
+                                if (e.target.value && watchDeviceType && watchBrand) {
+                                  // Speichere das Modell nur, wenn es nicht leer ist und eine Länge > 2 hat
+                                  if (e.target.value.length > 2) {
+                                    saveModel(watchDeviceType, watchBrand, e.target.value);
+                                  }
+                                }
+                              }}
                             />
-                          )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
