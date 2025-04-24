@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Form schema
 const repairEditSchema = z.object({
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
-  estimatedCost: z.coerce.number().nullable().optional(),
+  estimatedCost: z.string().nullable().optional(),
   status: z.enum(['eingegangen', 'in_reparatur', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
@@ -55,7 +55,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
     resolver: zodResolver(repairEditSchema),
     defaultValues: {
       issue: repair?.issue || '',
-      estimatedCost: repair?.estimatedCost,
+      estimatedCost: repair?.estimatedCost?.toString(),
       status: repair?.status || 'eingegangen',
       notes: repair?.notes || '',
     },
@@ -66,7 +66,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
     if (repair) {
       form.reset({
         issue: repair.issue,
-        estimatedCost: repair.estimatedCost,
+        estimatedCost: repair.estimatedCost?.toString(),
         status: repair.status,
         notes: repair.notes || '',
       });
@@ -157,16 +157,9 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                     <FormLabel>Kostenvoranschlag (€)</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
-                        step="0.01" 
-                        min="0"
-                        placeholder="0.00"
+                        placeholder="z.B. 150 oder 150-180"
                         {...field}
                         value={field.value === null || field.value === undefined ? '' : field.value}
-                        onChange={(e) => {
-                          const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                          field.onChange(value);
-                        }}
                       />
                     </FormControl>
                     <FormMessage />

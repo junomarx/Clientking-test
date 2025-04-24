@@ -22,8 +22,8 @@ const repairFormSchema = insertRepairSchema.extend({
   brand: z.string().min(2, "Marke muss mindestens 2 Zeichen lang sein"),
   model: z.string().min(1, "Modell muss angegeben werden"),
   issue: z.string().min(5, "Problembeschreibung muss mindestens 5 Zeichen lang sein"),
-  estimatedCost: z.coerce.number().optional()
-    .transform(val => val === undefined || isNaN(val) ? null : val),
+  estimatedCost: z.string().optional()
+    .transform(val => val === undefined || val === '' ? null : val),
   notes: z.string().optional()
     .transform(val => val === undefined || val === '' ? null : val),
   serialNumber: z.string().optional()
@@ -238,13 +238,8 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                       <FormLabel>Kostenvoranschlag (optional)</FormLabel>
                       <FormControl>
                         <Input 
-                          type="number" 
-                          placeholder="0.00" 
-                          step="0.01"
-                          onChange={e => {
-                            const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                            field.onChange(value);
-                          }}
+                          placeholder="z.B. 150 oder 150-180" 
+                          {...field}
                           value={field.value === null || field.value === undefined ? '' : field.value}
                         />
                       </FormControl>
