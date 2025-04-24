@@ -287,8 +287,8 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                           {format(new Date(repair.createdAt), 'dd.MM.yyyy')}
                         </span>
                         <span className="flex items-center">
-                          {repair.estimatedCost !== null && (
-                            <>Kostenvoranschlag: {repair.estimatedCost?.toFixed(2)}€</>
+                          {repair.estimatedCost !== null && repair.estimatedCost !== '' && (
+                            <>Kostenvoranschlag: {repair.estimatedCost}€</>
                           )}
                         </span>
                       </div>
