@@ -44,7 +44,11 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     queryKey: [`/api/customers/${customerId}`],
     queryFn: async () => {
       if (!customerId) return null;
-      const response = await fetch(`/api/customers/${customerId}`);
+      const response = await fetch(`/api/customers/${customerId}`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
       if (!response.ok) throw new Error("Kunde konnte nicht geladen werden");
       return response.json();
     },
@@ -59,7 +63,11 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     queryKey: [`/api/customers/${customerId}/repairs`],
     queryFn: async () => {
       if (!customerId) return [];
-      const response = await fetch(`/api/customers/${customerId}/repairs`);
+      const response = await fetch(`/api/customers/${customerId}/repairs`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
       if (!response.ok) throw new Error("Reparaturen konnten nicht geladen werden");
       return response.json();
     },
