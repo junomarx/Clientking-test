@@ -3,8 +3,18 @@ import {
   customers, type Customer, type InsertCustomer,
   repairs, type Repair, type InsertRepair
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, or, sql, gte, lt, count } from "drizzle-orm";
+import { pool } from "./db";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  // Session store
+  sessionStore: session.Store;
+  
   // User methods (required by template)
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -35,158 +45,188 @@ export interface IStorage {
   }>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private customers: Map<number, Customer>;
-  private repairs: Map<number, Repair>;
-  
-  private userCurrentId: number;
-  private customerCurrentId: number;
-  private repairCurrentId: number;
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.customers = new Map();
-    this.repairs = new Map();
-    
-    this.userCurrentId = 1;
-    this.customerCurrentId = 1;
-    this.repairCurrentId = 1;
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
   
   // Customer methods
   async getAllCustomers(): Promise<Customer[]> {
-    return Array.from(this.customers.values());
+    return await db.select().from(customers).orderBy(desc(customers.createdAt));
   }
   
   async getCustomer(id: number): Promise<Customer | undefined> {
-    return this.customers.get(id);
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer;
   }
   
   async createCustomer(insertCustomer: InsertCustomer): Promise<Customer> {
-    const id = this.customerCurrentId++;
-    const now = new Date();
-    const customer: Customer = { 
-      ...insertCustomer, 
-      id, 
-      createdAt: now 
-    };
-    this.customers.set(id, customer);
+    const [customer] = await db.insert(customers).values({
+      ...insertCustomer,
+      createdAt: new Date()
+    }).returning();
     return customer;
   }
   
   async updateCustomer(id: number, customerUpdate: Partial<InsertCustomer>): Promise<Customer | undefined> {
-    const customer = this.customers.get(id);
-    if (!customer) return undefined;
-    
-    const updatedCustomer: Customer = {
-      ...customer,
-      ...customerUpdate
-    };
-    
-    this.customers.set(id, updatedCustomer);
+    const [updatedCustomer] = await db
+      .update(customers)
+      .set(customerUpdate)
+      .where(eq(customers.id, id))
+      .returning();
     return updatedCustomer;
   }
   
   async deleteCustomer(id: number): Promise<boolean> {
-    return this.customers.delete(id);
+    try {
+      await db.delete(customers).where(eq(customers.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      return false;
+    }
   }
   
   // Repair methods
   async getAllRepairs(): Promise<Repair[]> {
-    return Array.from(this.repairs.values());
+    return await db.select().from(repairs).orderBy(desc(repairs.createdAt));
   }
   
   async getRepair(id: number): Promise<Repair | undefined> {
-    return this.repairs.get(id);
+    const [repair] = await db.select().from(repairs).where(eq(repairs.id, id));
+    return repair;
   }
   
   async getRepairsByCustomerId(customerId: number): Promise<Repair[]> {
-    return Array.from(this.repairs.values()).filter(
-      (repair) => repair.customerId === customerId
-    );
+    return await db
+      .select()
+      .from(repairs)
+      .where(eq(repairs.customerId, customerId))
+      .orderBy(desc(repairs.createdAt));
   }
   
   async createRepair(insertRepair: InsertRepair): Promise<Repair> {
-    const id = this.repairCurrentId++;
     const now = new Date();
-    const repair: Repair = { 
-      ...insertRepair, 
-      id, 
-      createdAt: now, 
-      updatedAt: now 
+    
+    // Make sure status is set
+    const repairData = {
+      ...insertRepair,
+      status: insertRepair.status || 'eingegangen',
+      createdAt: now,
+      updatedAt: now
     };
-    this.repairs.set(id, repair);
+    
+    const [repair] = await db.insert(repairs)
+      .values(repairData)
+      .returning();
+    
     return repair;
   }
   
   async updateRepair(id: number, repairUpdate: Partial<InsertRepair>): Promise<Repair | undefined> {
-    const repair = this.repairs.get(id);
-    if (!repair) return undefined;
+    const [updatedRepair] = await db
+      .update(repairs)
+      .set({
+        ...repairUpdate,
+        updatedAt: new Date()
+      })
+      .where(eq(repairs.id, id))
+      .returning();
     
-    const updatedRepair: Repair = {
-      ...repair,
-      ...repairUpdate,
-      updatedAt: new Date()
-    };
-    
-    this.repairs.set(id, updatedRepair);
     return updatedRepair;
   }
   
   async updateRepairStatus(id: number, status: string): Promise<Repair | undefined> {
-    const repair = this.repairs.get(id);
-    if (!repair) return undefined;
+    const [updatedRepair] = await db
+      .update(repairs)
+      .set({
+        status,
+        updatedAt: new Date()
+      })
+      .where(eq(repairs.id, id))
+      .returning();
     
-    const updatedRepair: Repair = {
-      ...repair,
-      status,
-      updatedAt: new Date()
-    };
-    
-    this.repairs.set(id, updatedRepair);
     return updatedRepair;
   }
   
   async deleteRepair(id: number): Promise<boolean> {
-    return this.repairs.delete(id);
+    try {
+      await db.delete(repairs).where(eq(repairs.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting repair:", error);
+      return false;
+    }
   }
   
   // Stats methods
   async getStats(): Promise<{ totalOrders: number; inRepair: number; completed: number; today: number; }> {
-    const repairs = Array.from(this.repairs.values());
+    // Get total number of orders
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(repairs);
+    
+    // Get number of repairs in progress
+    const [inRepairResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(eq(repairs.status, "in_reparatur"));
+    
+    // Get number of completed repairs
+    const [completedResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(
+        or(
+          eq(repairs.status, "fertig"),
+          eq(repairs.status, "abgeholt")
+        )
+      );
+    
+    // Get number of repairs created today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const [todayResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(
+        and(
+          gte(repairs.createdAt, today),
+          lt(repairs.createdAt, tomorrow)
+        )
+      );
     
     return {
-      totalOrders: repairs.length,
-      inRepair: repairs.filter(r => r.status === "in_reparatur").length,
-      completed: repairs.filter(r => r.status === "fertig" || r.status === "abgeholt").length,
-      today: repairs.filter(r => {
-        const createdDate = new Date(r.createdAt);
-        createdDate.setHours(0, 0, 0, 0);
-        return createdDate.getTime() === today.getTime();
-      }).length
+      totalOrders: totalResult?.count || 0,
+      inRepair: inRepairResult?.count || 0,
+      completed: completedResult?.count || 0,
+      today: todayResult?.count || 0,
     };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

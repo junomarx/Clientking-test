@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -8,8 +8,19 @@ import {
   deviceTypes
 } from "@shared/schema";
 import { ZodError } from "zod";
+import { setupAuth } from "./auth";
+
+// Middleware to check if user is authenticated
+function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Nicht angemeldet" });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
   // CUSTOMERS API
   app.get("/api/customers", async (req: Request, res: Response) => {
     try {
