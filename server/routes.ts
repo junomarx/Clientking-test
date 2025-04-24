@@ -205,7 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // STATISTICS API
-  app.get("/api/stats", async (req: Request, res: Response) => {
+  app.get("/api/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const stats = await storage.getStats();
       res.json(stats);
