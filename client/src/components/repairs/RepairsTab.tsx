@@ -357,6 +357,19 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         onClose={() => setShowPrintDialog(false)}
         repairId={selectedRepairId}
       />
+      
+      {/* Delete Confirmation Dialog */}
+      {selectedRepairId && repairs && (
+        <DeleteConfirmDialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={() => deleteRepairMutation.mutate(selectedRepairId)}
+          title="Reparatur löschen"
+          description={`Möchten Sie wirklich die Reparatur #${selectedRepairId} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+          isDeleting={deleteRepairMutation.isPending}
+          itemName="Reparatur"
+        />
+      )}
     </div>
   );
 }
