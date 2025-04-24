@@ -76,8 +76,8 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       issue: "",
       status: "eingegangen",
       serialNumber: "",
-      estimatedCost: undefined,
-      depositAmount: undefined,
+      estimatedCost: "",
+      depositAmount: "",
       notes: "",
     },
   });
@@ -95,11 +95,12 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Für Debugging-Zwecke die Daten anzeigen
       console.log("Sending repair data (submit):", values);
       
-      // Stelle sicher, dass depositAmount korrekt übermittelt wird
+      // Stelle sicher, dass depositAmount und estimatedCost korrekt übermittelt werden
       const cleanValues = {
         ...values,
-        // Wenn depositAmount leer ist, setze es auf null
-        depositAmount: values.depositAmount === "" ? null : values.depositAmount
+        // Wenn depositAmount oder estimatedCost leer sind, setze sie auf null
+        depositAmount: values.depositAmount === "" ? null : values.depositAmount,
+        estimatedCost: values.estimatedCost === "" ? null : values.estimatedCost
       };
       
       console.log("Clean values being sent:", cleanValues);
