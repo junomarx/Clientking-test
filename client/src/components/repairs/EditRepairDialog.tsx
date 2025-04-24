@@ -83,7 +83,20 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   const updateRepairMutation = useMutation({
     mutationFn: async (data: RepairEditValues) => {
       if (!repair) return null;
-      const response = await apiRequest('PATCH', `/api/repairs/${repair.id}`, data);
+      
+      // Für Debugging-Zwecke die Daten anzeigen
+      console.log("Updating repair data:", data);
+      
+      // Stelle sicher, dass depositAmount korrekt übermittelt wird
+      const cleanData = {
+        ...data,
+        // Wenn depositAmount leer ist, setze es auf null
+        depositAmount: data.depositAmount === "" ? null : data.depositAmount
+      };
+      
+      console.log("Clean data being sent:", cleanData);
+      
+      const response = await apiRequest('PATCH', `/api/repairs/${repair.id}`, cleanData);
       return response.json();
     },
     onSuccess: () => {
