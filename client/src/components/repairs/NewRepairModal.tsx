@@ -14,6 +14,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
+import { saveModel } from '@/lib/localStorage';
 
 // Extended repair schema with validation
 const repairFormSchema = insertRepairSchema.extend({
@@ -91,8 +92,19 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // Create repair mutation
   const createMutation = useMutation({
     mutationFn: async (values: RepairFormValues) => {
+      // Für Debugging-Zwecke die Daten anzeigen
       console.log("Sending repair data (submit):", values);
-      const response = await apiRequest('POST', '/api/repairs', values);
+      
+      // Stelle sicher, dass depositAmount korrekt übermittelt wird
+      const cleanValues = {
+        ...values,
+        // Wenn depositAmount leer ist, setze es auf null
+        depositAmount: values.depositAmount === "" ? null : values.depositAmount
+      };
+      
+      console.log("Clean values being sent:", cleanValues);
+      
+      const response = await apiRequest('POST', '/api/repairs', cleanValues);
       const result = await response.json();
       // Hauptdialog schließen, damit der Druckdialog sichtbar wird
       onClose();
@@ -117,15 +129,10 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Speichere Modell in localStorage wenn es neu ist
       const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
       if (formValues.brand && formValues.model && formValues.deviceType) {
-        const modelKey = `${formValues.deviceType}:${formValues.brand}`;
-        const existingModels = JSON.parse(localStorage.getItem('storedModels') || '{}');
-        if (!existingModels[modelKey]) {
-          existingModels[modelKey] = [];
-        }
-        if (!existingModels[modelKey].includes(formValues.model)) {
-          existingModels[modelKey].push(formValues.model);
-          localStorage.setItem('storedModels', JSON.stringify(existingModels));
-        }
+        const { deviceType, brand, model } = formValues;
+        // Speichere das Modell
+        saveModel(deviceType, brand, model);
+        console.log(`Modell gespeichert: ${deviceType}:${brand} - ${model}`);
       }
       
       // Druckoptionen über den PrintManager anzeigen
