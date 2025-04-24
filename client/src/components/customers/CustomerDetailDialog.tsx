@@ -12,7 +12,7 @@ import { Customer, InsertCustomer, Repair } from '@shared/schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Plus, Loader2, Phone, Mail, User, Calendar } from 'lucide-react';
+import { Plus, Loader2, Phone, Mail, User, Calendar, Pencil } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 
@@ -34,6 +34,8 @@ interface CustomerDetailDialogProps {
 
 export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: CustomerDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('details');
+  const [editRepairId, setEditRepairId] = useState<number | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
   
   // Load customer details
@@ -265,13 +267,31 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             ) : repairs && repairs.length > 0 ? (
               <div className="space-y-3">
                 {repairs.map((repair) => (
-                  <div key={repair.id} className="border rounded-lg p-4 shadow-sm">
+                  <div key={repair.id} 
+                    className="border rounded-lg p-4 shadow-sm hover:shadow-md cursor-pointer transition-all"
+                    onClick={() => {
+                      setEditRepairId(repair.id);
+                      setShowEditDialog(true);
+                    }}
+                  >
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold">{repair.brand} {repair.model}</h4>
                         <p className="text-sm text-muted-foreground">{repair.deviceType} | Nr. {repair.id}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex items-center">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7 mr-2 hover:bg-slate-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditRepairId(repair.id);
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           repair.status === 'eingegangen' ? 'bg-blue-100 text-blue-800' :
                           repair.status === 'in_reparatur' ? 'bg-amber-100 text-amber-800' :
