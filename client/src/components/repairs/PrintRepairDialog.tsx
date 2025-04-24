@@ -130,7 +130,6 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     }
                     
                     .print-header {
-                      text-align: center;
                       padding-bottom: 15px;
                       border-bottom: 2px solid #3b82f6;
                       margin-bottom: 20px;
@@ -209,8 +208,16 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                       margin-bottom: 10px;
                     }
                     
+                    .mb-3 {
+                      margin-bottom: 15px;
+                    }
+                    
                     .mb-4 {
                       margin-bottom: 20px;
+                    }
+                    
+                    .mt-2 {
+                      margin-top: 10px;
                     }
                     
                     .mt-8 {
@@ -297,6 +304,40 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     .status-ausser-haus {
                       background-color: #e0e7ff;
                       color: #4338ca;
+                    }
+                    
+                    /* Flex-Layout für Firmenlogo und Informationen */
+                    .flex {
+                      display: flex;
+                    }
+                    
+                    .flex-col {
+                      flex-direction: column;
+                    }
+                    
+                    .items-center {
+                      align-items: center;
+                    }
+                    
+                    .justify-center {
+                      justify-content: center;
+                    }
+                    
+                    /* Bildstilisierung für Logo */
+                    img {
+                      max-width: 100%;
+                    }
+                    
+                    .max-h-16 {
+                      max-height: 64px;
+                    }
+                    
+                    .max-w-\\[200px\\] {
+                      max-width: 200px;
+                    }
+                    
+                    .object-contain {
+                      object-fit: contain;
                     }
                   }
                   
@@ -394,19 +435,32 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   REPARATURAUFTRAG
                 </div>
                 
-                {/* Header */}
-                <div className="print-header text-center mb-6">
-                  <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
-                  {businessSettings?.phone && <p className="text-sm">Tel: {businessSettings.phone}</p>}
-                  {businessSettings?.email && <p className="text-sm">E-Mail: {businessSettings.email}</p>}
-                  <p className="text-xs">
-                    {businessSettings ? (
-                      `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}`
-                    ) : (
-                      "Adresse nicht verfügbar"
+                {/* Header mit Logo */}
+                <div className="print-header mb-6">
+                  <div className="flex flex-col items-center justify-center">
+                    {/* Logo anzeigen, wenn vorhanden */}
+                    {businessSettings?.logoImage && (
+                      <div className="mb-3">
+                        <img 
+                          src={businessSettings.logoImage} 
+                          alt={businessSettings.businessName || "Firmenlogo"}
+                          className="max-h-16 max-w-[200px] object-contain"
+                        />
+                      </div>
                     )}
-                  </p>
-                  {businessSettings?.website && <p className="text-xs">{businessSettings.website}</p>}
+                    
+                    <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
+                    {businessSettings?.phone && <p className="text-sm">Tel: {businessSettings.phone}</p>}
+                    {businessSettings?.email && <p className="text-sm">E-Mail: {businessSettings.email}</p>}
+                    <p className="text-xs">
+                      {businessSettings ? (
+                        `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}`
+                      ) : (
+                        "Adresse nicht verfügbar"
+                      )}
+                    </p>
+                    {businessSettings?.website && <p className="text-xs">{businessSettings.website}</p>}
+                  </div>
                 </div>
                 
                 {/* Auftragskopf */}

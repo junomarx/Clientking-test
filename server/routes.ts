@@ -343,8 +343,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const settingsData = insertBusinessSettingsSchema.partial().parse(req.body);
-      const settings = await storage.updateBusinessSettings(settingsData);
+      // Wir extrahieren das logoImage aus dem Request-Body, bevor wir die Validierung durchführen,
+      // da es nicht Teil des schemas ist
+      const { logoImage, ...settingsData } = req.body;
+      
+      // Validierung der Geschäftsdaten
+      const validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
+      
+      // Wenn ein Logo im Request ist, validieren wir es
+      if (logoImage) {
+        // Basis-Validierung: Prüfen, ob es sich um einen gültigen Base64-String handelt
+        if (typeof logoImage !== 'string' || !logoImage.startsWith('data:image/')) {
+          return res.status(400).json({ 
+            message: "Ungültiges Logo-Format. Nur Base64-codierte Bilder werden unterstützt." 
+          });
+        }
+        
+        // Speichere die Daten einschließlich des Logos
+        const settings = await storage.updateBusinessSettings({
+          ...validatedData,
+          logoImage
+        });
+        
+        return res.json(settings);
+      }
+      
+      // Wenn kein neues Logo übermittelt wurde, aktualisiere nur die anderen Einstellungen
+      const settings = await storage.updateBusinessSettings(validatedData);
       res.json(settings);
     } catch (error) {
       console.error("Error updating business settings:", error);
