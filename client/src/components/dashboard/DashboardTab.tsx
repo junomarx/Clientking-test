@@ -62,7 +62,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
     queryKey: ['/api/customers']
   });
 
-  // Get the most recent 5 repairs
+  // Get the most recent 5 repairs with customer names for the animated table
   const recentRepairs = React.useMemo(() => {
     if (!repairs || !customers) return [];
     
@@ -72,8 +72,11 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       .map(repair => {
         const customer = customers.find(c => c.id === repair.customerId);
         return {
-          ...repair,
-          customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown'
+          id: repair.id,
+          customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
+          model: repair.model,
+          status: repair.status,
+          createdAt: repair.createdAt.toString()
         };
       });
   }, [repairs, customers]);
