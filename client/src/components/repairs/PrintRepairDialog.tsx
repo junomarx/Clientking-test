@@ -1,17 +1,17 @@
-import React, { useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Repair, Customer } from '@/lib/types';
-import { getStatusText } from '@/lib/utils/statusBadges';
-
+import React, { useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { Repair, Customer } from '@shared/schema';
+import { Loader2, Printer } from 'lucide-react';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface PrintRepairDialogProps {
   open: boolean;
@@ -21,247 +21,173 @@ interface PrintRepairDialogProps {
 
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  
-  const { data: repairs } = useQuery<Repair[]>({
-    queryKey: ['/api/repairs']
+
+  // Lade Reparaturdaten
+  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
+    queryKey: ['/api/repairs', repairId],
+    queryFn: async () => {
+      if (!repairId) return null;
+      const response = await fetch(`/api/repairs/${repairId}`);
+      if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+      return response.json();
+    },
+    enabled: !!repairId && open,
   });
-  
-  const { data: customers } = useQuery<Customer[]>({
-    queryKey: ['/api/customers']
+
+  // Lade Kundendaten wenn Reparatur geladen ist
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
+    queryKey: ['/api/customers', repair?.customerId],
+    queryFn: async () => {
+      if (!repair?.customerId) return null;
+      const response = await fetch(`/api/customers/${repair.customerId}`);
+      if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+      return response.json();
+    },
+    enabled: !!repair?.customerId && open,
   });
-  
-  // Find the current repair
-  const repair = repairs?.find(r => r.id === repairId);
-  
-  // Find the associated customer
-  const customer = repair ? customers?.find(c => c.id === repair.customerId) : null;
-  
+
+  const isLoading = isLoadingRepair || isLoadingCustomer;
+
+  // Funktion zum Drucken
   const handlePrint = () => {
     if (printRef.current) {
-      const content = printRef.current;
-      const printWindow = window.open('', '_blank');
+      const printContents = printRef.current.innerHTML;
+      const originalContents = document.body.innerHTML;
       
-      if (!printWindow) {
-        alert('Bitte erlauben Sie Pop-ups für diese Webseite, um den Ausdruck zu ermöglichen.');
-        return;
-      }
+      document.body.innerHTML = `
+        <style>
+          @media print {
+            body {
+              font-family: Arial, sans-serif;
+              padding: 15px;
+            }
+            .print-header {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .print-section {
+              margin-bottom: 15px;
+            }
+            .print-row {
+              display: flex;
+              margin-bottom: 5px;
+            }
+            .print-label {
+              font-weight: bold;
+              width: 150px;
+            }
+            .print-value {
+              flex: 1;
+            }
+            .print-footer {
+              margin-top: 30px;
+              font-size: 12px;
+              text-align: center;
+            }
+            .text-xs {
+              font-size: 12px;
+            }
+          }
+        </style>
+        <div class="print-container">${printContents}</div>
+      `;
       
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Reparaturauftrag #${repair?.id}</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                margin: 0;
-                padding: 20px;
-              }
-              .print-container {
-                max-width: 800px;
-                margin: 0 auto;
-              }
-              .header {
-                text-align: center;
-                margin-bottom: 30px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #333;
-              }
-              .section {
-                margin-bottom: 20px;
-              }
-              .section-title {
-                font-size: 18px;
-                font-weight: bold;
-                margin-bottom: 10px;
-                padding-bottom: 5px;
-                border-bottom: 1px solid #ddd;
-              }
-              .row {
-                display: flex;
-                margin-bottom: 8px;
-              }
-              .label {
-                font-weight: bold;
-                width: 180px;
-              }
-              .value {
-                flex: 1;
-              }
-              .signature-area {
-                margin-top: 50px;
-                display: flex;
-                justify-content: space-between;
-              }
-              .signature-line {
-                border-top: 1px solid #333;
-                margin-top: 40px;
-                width: 200px;
-                text-align: center;
-              }
-              @media print {
-                body {
-                  padding: 0;
-                  margin: 0;
-                }
-                button {
-                  display: none;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${content.innerHTML}
-            <div class="print-container">
-              <div style="text-align: center; margin-top: 30px;">
-                <button onclick="window.print(); window.close();" style="padding: 10px 15px; background: #4a85bd; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                  Drucken
-                </button>
-              </div>
-            </div>
-          </body>
-        </html>
-      `);
-      
-      printWindow.document.close();
+      window.print();
+      document.body.innerHTML = originalContents;
+      // Nach dem Drucken Dialog schließen
+      onClose();
     }
   };
-  
-  if (!repair || !customer) {
-    return null;
-  }
-  
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-  
-  const formatCurrency = (cost?: string) => {
-    if (!cost) return '---';
-    // Wenn der Wert bereits wie "150-180" formatiert ist, geben wir ihn einfach zurück
-    if (isNaN(Number(cost)) || cost.includes('-')) {
-      return cost + ' €';
-    }
-    // Andernfalls formatieren wir ihn als Währung
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(Number(cost));
-  };
+
+  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-primary">Reparaturauftrag drucken</DialogTitle>
-          <DialogDescription>
-            Vorschau des Drucks - klicken Sie auf "Drucken" um den Reparaturauftrag auszudrucken
-          </DialogDescription>
+          <DialogTitle>Reparaturauftrag drucken</DialogTitle>
         </DialogHeader>
         
-        <div className="print-preview" ref={printRef}>
-          <div className="print-container">
-            <div className="header">
-              <h1 style={{ fontSize: "24px", marginBottom: "5px" }}>Reparaturauftrag #{repair.id}</h1>
-              <div>Ausstellungsdatum: {formatDate(repair.createdAt)}</div>
-              <div>Status: {getStatusText(repair.status)}</div>
-            </div>
-            
-            <div className="section">
-              <div className="section-title">Kundeninformationen</div>
-              <div className="row">
-                <div className="label">Name:</div>
-                <div className="value">{customer.firstName} {customer.lastName}</div>
-              </div>
-              <div className="row">
-                <div className="label">Telefon:</div>
-                <div className="value">{customer.phone}</div>
-              </div>
-              {customer.email && (
-                <div className="row">
-                  <div className="label">E-Mail:</div>
-                  <div className="value">{customer.email}</div>
-                </div>
-              )}
-              <div className="row">
-                <div className="label">Kunde seit:</div>
-                <div className="value">{formatDate(customer.createdAt)}</div>
-              </div>
-            </div>
-            
-            <div className="section">
-              <div className="section-title">Geräteinformationen</div>
-              <div className="row">
-                <div className="label">Geräteart:</div>
-                <div className="value">
-                  {repair.deviceType === 'smartphone' ? 'Smartphone' : 
-                   repair.deviceType === 'tablet' ? 'Tablet' : 'Laptop'}
-                </div>
-              </div>
-              <div className="row">
-                <div className="label">Marke:</div>
-                <div className="value">{repair.brand}</div>
-              </div>
-              <div className="row">
-                <div className="label">Modell:</div>
-                <div className="value">{repair.model}</div>
-              </div>
-              {repair.serialNumber && (
-                <div className="row">
-                  <div className="label">Seriennummer:</div>
-                  <div className="value">{repair.serialNumber}</div>
-                </div>
-              )}
-            </div>
-            
-            <div className="section">
-              <div className="section-title">Reparaturdetails</div>
-              <div className="row">
-                <div className="label">Fehlerbeschreibung:</div>
-                <div className="value">{repair.issue}</div>
-              </div>
-              <div className="row">
-                <div className="label">Kostenvoranschlag:</div>
-                <div className="value">{formatCurrency(repair.estimatedCost !== null ? repair.estimatedCost : undefined)}</div>
-              </div>
-              {repair.notes && (
-                <div className="row">
-                  <div className="label">Notizen:</div>
-                  <div className="value">{repair.notes}</div>
-                </div>
-              )}
-              <div className="row">
-                <div className="label">Auftragsdatum:</div>
-                <div className="value">{formatDate(repair.createdAt)}</div>
-              </div>
-              <div className="row">
-                <div className="label">Letzte Aktualisierung:</div>
-                <div className="value">{formatDate(repair.updatedAt)}</div>
-              </div>
-            </div>
-            
-            <div className="signature-area">
-              <div>
-                <div className="signature-line">Unterschrift Kunde</div>
-              </div>
-              <div>
-                <div className="signature-line">Unterschrift Mitarbeiter</div>
-              </div>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        </div>
-        
-        <DialogFooter className="pt-4">
-          <Button variant="outline" onClick={onClose}>
-            Schließen
-          </Button>
-          <Button onClick={handlePrint}>
-            Drucken
-          </Button>
-        </DialogFooter>
+        ) : (
+          <>
+            <div className="border rounded-md p-4 max-h-[60vh] overflow-auto">
+              <div ref={printRef}>
+                <div className="print-header text-center mb-6">
+                  <h2 className="text-xl font-bold">Handyshop Verwaltung</h2>
+                  <p className="text-sm">Ihr Spezialist für Smartphone Reparaturen</p>
+                  <p className="text-xs">Musterstraße 123, 12345 Musterstadt</p>
+                </div>
+                
+                <div className="print-section mb-4">
+                  <h3 className="font-semibold text-lg mb-2">Reparaturauftrag #{repair?.id}</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p><span className="font-medium">Datum:</span> {repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}</p>
+                      <p><span className="font-medium">Status:</span> {repair?.status === 'eingegangen' ? 'Eingegangen' : 
+                                                  repair?.status === 'in_reparatur' ? 'In Reparatur' : 
+                                                  repair?.status === 'fertig' ? 'Fertig' : 
+                                                  repair?.status === 'abgeholt' ? 'Abgeholt' : 'Außer Haus'}</p>
+                    </div>
+                    <div>
+                      <p><span className="font-medium">Auftragsnummer:</span> {repair?.id}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="print-section mb-4">
+                  <h3 className="font-semibold mb-2">Kundendaten</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm">
+                    <p><span className="font-medium">Name:</span> {customer?.firstName} {customer?.lastName}</p>
+                    <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
+                    {customer?.email && <p><span className="font-medium">E-Mail:</span> {customer?.email}</p>}
+                  </div>
+                </div>
+                
+                <div className="print-section mb-4">
+                  <h3 className="font-semibold mb-2">Gerätedaten</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm">
+                    <p><span className="font-medium">Typ:</span> {repair?.deviceType === 'smartphone' ? 'Smartphone' : 
+                                            repair?.deviceType === 'tablet' ? 'Tablet' : 'Laptop'}</p>
+                    <p><span className="font-medium">Marke:</span> {repair?.brand}</p>
+                    <p><span className="font-medium">Modell:</span> {repair?.model}</p>
+                    {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
+                  </div>
+                </div>
+                
+                <div className="print-section mb-4">
+                  <h3 className="font-semibold mb-2">Reparaturdetails</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm">
+                    <p><span className="font-medium">Problem:</span> {repair?.issue}</p>
+                    {repair?.estimatedCost && <p><span className="font-medium">Kostenvoranschlag:</span> {repair.estimatedCost} €</p>}
+                    {repair?.notes && <p><span className="font-medium">Notizen:</span> {repair.notes}</p>}
+                  </div>
+                </div>
+                
+                <div className="print-section mt-8">
+                  <div className="border-t pt-4 text-xs">
+                    <p className="text-center">Vielen Dank für Ihren Auftrag.</p>
+                    <p className="text-center">Bitte bewahren Sie diesen Beleg auf. Er dient als Nachweis für die Abholung Ihres Geräts.</p>
+                    <p className="text-center mt-2">© {new Date().getFullYear()} Handyshop Verwaltung</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="flex justify-between">
+              <Button variant="outline" onClick={onClose}>
+                Abbrechen
+              </Button>
+              <Button onClick={handlePrint} className="gap-2">
+                <Printer className="h-4 w-4" />
+                Drucken
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
