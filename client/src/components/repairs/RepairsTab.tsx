@@ -80,6 +80,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         serialNumber: repair.serialNumber,
         issue: repair.issue,
         estimatedCost: repair.estimatedCost,
+        depositAmount: repair.depositAmount,
         status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
         notes: repair.notes,
         createdAt: repair.createdAt.toString(),
