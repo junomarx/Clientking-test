@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Plus, Loader2, Phone, Mail, User, Calendar, Pencil } from 'lucide-react';
+import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 
@@ -338,6 +339,15 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             )}
           </TabsContent>
         </Tabs>
+        
+        {/* Repair Edit Dialog */}
+        {showEditDialog && (
+          <EditRepairDialog
+            open={showEditDialog}
+            onClose={() => setShowEditDialog(false)}
+            repair={repairs?.find(r => r.id === editRepairId) || null}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
