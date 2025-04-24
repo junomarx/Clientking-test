@@ -25,6 +25,8 @@ const repairFormSchema = insertRepairSchema.extend({
   issue: z.string().min(5, "Problembeschreibung muss mindestens 5 Zeichen lang sein"),
   estimatedCost: z.string().optional()
     .transform(val => val === undefined || val === '' ? null : val),
+  depositAmount: z.string().optional()
+    .transform(val => val === undefined || val === '' ? null : val),
   notes: z.string().optional()
     .transform(val => val === undefined || val === '' ? null : val),
   serialNumber: z.string().optional()
@@ -74,6 +76,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       status: "eingegangen",
       serialNumber: "",
       estimatedCost: undefined,
+      depositAmount: undefined,
       notes: "",
     },
   });
@@ -281,32 +284,51 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="depositAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Status auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                          <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                          <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                          <SelectItem value="fertig">Fertig</SelectItem>
-                          <SelectItem value="abgeholt">Abgeholt</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Anzahlung (optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="z.B. 50" 
+                          {...field}
+                          value={field.value === null || field.value === undefined ? '' : field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>Gerät beim Kunden, wenn ausgefüllt</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Status auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                        <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                        <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                        <SelectItem value="fertig">Fertig</SelectItem>
+                        <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <FormField
                 control={form.control}

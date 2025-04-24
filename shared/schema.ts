@@ -33,6 +33,7 @@ export const repairs = pgTable("repairs", {
   serialNumber: text("serial_number"),
   issue: text("issue").notNull(),
   estimatedCost: text("estimated_cost"),
+  depositAmount: text("deposit_amount"),
   status: text("status").notNull().default("eingegangen"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
