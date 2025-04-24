@@ -24,20 +24,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      console.log("GET /api/customers: Auth status:", req.isAuthenticated(), "User:", req.user?.username);
+      
       // Wenn firstName und lastName als Query-Parameter übergeben werden, suche nach Kunden mit diesem Namen
       if (req.query.firstName && req.query.lastName) {
+        console.log(`Searching for customers with name: ${req.query.firstName} ${req.query.lastName}`);
         const matchingCustomers = await storage.findCustomersByName(
           req.query.firstName as string, 
           req.query.lastName as string
         );
+        console.log(`Found ${matchingCustomers.length} matching customers`);
         return res.json(matchingCustomers);
       }
       
       // Ansonsten gebe alle Kunden zurück
       const customers = await storage.getAllCustomers();
+      console.log(`Returning all ${customers.length} customers`);
       res.json(customers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch customers" });
+      console.error("Error fetching customers:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Kunden" });
     }
   });
   
@@ -126,31 +132,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const repairData = insertRepairSchema.parse(req.body);
+      console.log("Received repair data:", req.body);
+      console.log("Auth status:", req.isAuthenticated(), "User:", req.user?.username);
+      
+      // Verwende safeParse für bessere Fehlerdiagnose
+      const validationResult = insertRepairSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        console.error("Validation failed:", validationResult.error);
+        return res.status(400).json({ 
+          message: "Ungültige Reparaturdaten", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const repairData = validationResult.data;
       
       // Validate customerId exists
       const customer = await storage.getCustomer(repairData.customerId);
       if (!customer) {
-        return res.status(400).json({ message: "Invalid customer ID" });
+        console.error("Customer not found:", repairData.customerId);
+        return res.status(400).json({ message: "Ungültige Kunden-ID" });
       }
       
       // Validate deviceType
       if (!deviceTypes.safeParse(repairData.deviceType).success) {
-        return res.status(400).json({ message: "Invalid device type" });
+        console.error("Invalid device type:", repairData.deviceType);
+        return res.status(400).json({ message: "Ungültiger Gerätetyp" });
       }
       
       // Validate status if provided
       if (repairData.status && !repairStatuses.safeParse(repairData.status).success) {
-        return res.status(400).json({ message: "Invalid repair status" });
+        console.error("Invalid status:", repairData.status);
+        return res.status(400).json({ message: "Ungültiger Reparaturstatus" });
       }
       
       const repair = await storage.createRepair(repairData);
+      console.log("Created repair:", repair);
       res.status(201).json(repair);
     } catch (error) {
+      console.error("Error creating repair:", error);
       if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid repair data", errors: error.errors });
+        return res.status(400).json({ message: "Ungültige Reparaturdaten", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create repair" });
+      res.status(500).json({ message: "Fehler beim Erstellen der Reparatur" });
     }
   });
   
