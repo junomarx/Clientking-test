@@ -131,12 +131,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     }
   }, [watchDeviceType, watchBrand]);
   
-  // Speichere Modell, wenn es sich ändert und Geräteart und Marke ausgewählt sind
-  useEffect(() => {
-    if (watchDeviceType && watchBrand && watchModel && watchModel.trim() !== '') {
-      saveModel(watchDeviceType, watchBrand, watchModel);
-    }
-  }, [watchDeviceType, watchBrand, watchModel]);
+  // Diese automatische Speicherung bei Änderungen ist entfernt, da Modelle nur gespeichert werden
+  // sollen, wenn der Auftrag tatsächlich gespeichert wird
   
   // Create customer mutation
   const createCustomerMutation = useMutation({
@@ -235,6 +231,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: formData.notes
       };
       
+      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      if (repairData.model && repairData.deviceType && repairData.brand) {
+        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+      }
+      
       console.log("Sending repair data:", repairData);
       await createRepairMutation.mutateAsync(repairData);
     } catch (error) {
@@ -281,6 +282,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         status: data.status || 'eingegangen', // Standardwert
         notes: data.notes
       };
+      
+      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      if (repairData.model && repairData.deviceType && repairData.brand) {
+        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+      }
       
       console.log("Sending repair data (submit):", repairData);
       await createRepairMutation.mutateAsync(repairData);
@@ -347,6 +353,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         status: formData.status || 'eingegangen', // Standardwert
         notes: formData.notes
       };
+      
+      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      if (repairData.model && repairData.deviceType && repairData.brand) {
+        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+      }
       
       console.log("Sending repair data (new customer):", repairData);
       await createRepairMutation.mutateAsync(repairData);
@@ -599,11 +610,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               onChange={(e) => {
                                 field.onChange(e.target.value);
                                 setIsModelDropdownOpen(e.target.value.length > 0);
-                                
-                                // Bei Eingabe eines neuen Modells, wird es automatisch gespeichert
-                                if (e.target.value && watchDeviceType && watchBrand && e.target.value.length > 2) {
-                                  saveModel(watchDeviceType, watchBrand, e.target.value);
-                                }
+                                // Keine automatische Speicherung mehr während der Eingabe
                               }}
                               onFocus={() => {
                                 if (savedModels.length > 0) {
