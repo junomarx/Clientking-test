@@ -161,8 +161,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       model: string;
       serialNumber?: string;
       issue: string;
-      estimatedCost?: string;
-      depositAmount?: string;
+      estimatedCost?: string | null;
+      depositAmount?: string | null;
       status: string;
       notes?: string;
     }) => {
@@ -357,9 +357,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         brand: data.brand || 'apple', // Standardwert
         model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
-        depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
+        depositAmount: data.depositAmount === "" ? null : data.depositAmount,
         issue: data.issue || 'Wird später hinzugefügt', // Standardwert
-        estimatedCost: data.estimatedCost,
+        estimatedCost: data.estimatedCost === "" ? null : data.estimatedCost,
         status: data.status || 'eingegangen', // Standardwert
         notes: data.notes
       };
