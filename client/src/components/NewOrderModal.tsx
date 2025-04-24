@@ -213,19 +213,18 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     }
   };
   
+  // Überprüft den Nachnamen, sobald er eingegeben wird
+  const checkCustomerAfterLastNameInput = async (firstName: string, lastName: string) => {
+    if (firstName.length >= 2 && lastName.length >= 2) {
+      await checkForExistingCustomer(firstName, lastName);
+    }
+  };
+  
   // Bearbeiten des Formularsubmits
   const onSubmit = async (data: OrderFormValues) => {
     try {
-      // Erst prüfen, ob Kunde bereits existiert
-      const customerExists = await checkForExistingCustomer(data.firstName, data.lastName);
-      
-      // Wenn Kunde existiert, wird im Dialog entschieden, was zu tun ist
-      // Dialog zeigt alle übereinstimmenden Kunden an
-      if (customerExists) {
-        return; // Dialog übernimmt den Rest
-      }
-      
-      // Wenn kein Kunde gefunden wurde, erstelle einen neuen Kunden
+      // Wir erstellen einfach einen neuen Kunden, da die Überprüfung bereits
+      // nach der Eingabe des Nachnamens stattgefunden hat
       const customerData = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -400,7 +399,18 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Vorname</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Vorname" />
+                          <Input 
+                            {...field} 
+                            placeholder="Vorname" 
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Wenn der Nachname bereits eingegeben wurde, prüfe nach Änderung des Vornamens
+                              const lastName = form.getValues().lastName;
+                              if (lastName.length >= 2) {
+                                checkCustomerAfterLastNameInput(e.target.value, lastName);
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -414,7 +424,18 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Nachname</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Nachname" />
+                          <Input 
+                            {...field} 
+                            placeholder="Nachname"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Nach Eingabe des Nachnamens Kundendaten überprüfen
+                              const firstName = form.getValues().firstName;
+                              if (e.target.value.length >= 2) {
+                                checkCustomerAfterLastNameInput(firstName, e.target.value);
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
