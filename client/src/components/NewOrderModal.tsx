@@ -84,6 +84,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
   // Form definition
   const form = useForm<OrderFormValues>({
@@ -188,6 +190,38 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     }
   });
   
+  // Funktion zum Suchen von Kunden in Echtzeit basierend auf dem Vornamen
+  const searchCustomersByFirstName = async (firstName: string) => {
+    try {
+      if (firstName.length < 2) {
+        setMatchingCustomers([]);
+        setIsCustomerDropdownOpen(false);
+        return;
+      }
+      
+      const queryParams = new URLSearchParams({ firstName }).toString();
+      
+      const response = await fetch(`/api/customers?${queryParams}`, {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen der Kunden');
+      }
+      
+      const customers = await response.json();
+      
+      setMatchingCustomers(customers);
+      setIsCustomerDropdownOpen(customers.length > 0);
+    } catch (error) {
+      console.error("Error searching for customers:", error);
+      setMatchingCustomers([]);
+      setIsCustomerDropdownOpen(false);
+    }
+  };
+  
   // Funktion zum Prüfen, ob ein Kunde mit gleichem Namen existiert
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
     try {
@@ -212,6 +246,22 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       console.error("Error checking for existing customer:", error);
       return false;
     }
+  };
+  
+  // Funktion zum Ausfüllen der Kundendaten bei Auswahl eines Kunden aus dem Dropdown
+  const fillCustomerData = (customer: Customer) => {
+    form.setValue('firstName', customer.firstName);
+    form.setValue('lastName', customer.lastName);
+    form.setValue('phone', customer.phone);
+    if (customer.email) {
+      form.setValue('email', customer.email);
+    }
+    
+    // Setzt auch die customerId, um den Auftrag diesem Kunden zuzuweisen
+    setSelectedCustomerId(customer.id);
+    
+    // Schließt das Dropdown
+    setIsCustomerDropdownOpen(false);
   };
   
   // Funktion zum Erstellen eines neuen Auftrags mit vorhandenem Kunden
@@ -259,20 +309,27 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Bearbeiten des Formularsubmits
   const onSubmit = async (data: OrderFormValues) => {
     try {
-      // Wir erstellen einfach einen neuen Kunden, da die Überprüfung bereits
-      // nach der Eingabe des Nachnamens stattgefunden hat
-      const customerData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone || '0000000000', // Standardwert für Telefonnummer
-        email: data.email
-      };
+      let customerId: number;
       
-      const customer = await createCustomerMutation.mutateAsync(customerData);
+      // Wenn bereits ein Kunde ausgewählt wurde, verwenden wir dessen ID
+      if (selectedCustomerId) {
+        customerId = selectedCustomerId;
+      } else {
+        // Ansonsten erstellen wir einen neuen Kunden
+        const customerData = {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone || '0000000000', // Standardwert für Telefonnummer
+          email: data.email
+        };
+        
+        const customer = await createCustomerMutation.mutateAsync(customerData);
+        customerId = customer.id;
+      }
       
       // Dann erstelle den Reparaturauftrag mit der Kunden-ID, mit Standardwerten für fehlende Pflichtfelder
       const repairData = {
-        customerId: customer.id,
+        customerId,
         deviceType: data.deviceType || 'smartphone', // Standardwert
         brand: data.brand || 'apple', // Standardwert
         model: data.model || 'Unbekanntes Modell', // Standardwert
@@ -303,6 +360,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   
   const handleClose = () => {
     form.reset();
+    setSelectedCustomerId(null);
+    setMatchingCustomers([]);
     onClose();
   };
   
@@ -459,18 +518,58 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Vorname</FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="Vorname" 
-                            onChange={(e) => {
-                              field.onChange(e);
-                              // Wenn der Nachname bereits eingegeben wurde, prüfe nach Änderung des Vornamens
-                              const lastName = form.getValues().lastName;
-                              if (lastName.length >= 2) {
-                                checkCustomerAfterLastNameInput(e.target.value, lastName);
-                              }
-                            }}
-                          />
+                          <div className="relative">
+                            <Input 
+                              {...field} 
+                              placeholder="Vorname" 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Starte die Kundensuche basierend auf dem Vornamen
+                                searchCustomersByFirstName(e.target.value);
+                                
+                                // Wenn der Nachname bereits eingegeben wurde, prüfe nach Änderung des Vornamens
+                                const lastName = form.getValues().lastName;
+                                if (lastName.length >= 2) {
+                                  checkCustomerAfterLastNameInput(e.target.value, lastName);
+                                }
+                              }}
+                              onFocus={() => {
+                                if (field.value && field.value.length >= 2) {
+                                  searchCustomersByFirstName(field.value);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
+                                setTimeout(() => setIsCustomerDropdownOpen(false), 200);
+                              }}
+                            />
+                            
+                            {/* Dropdown für die Kundenergebnisse */}
+                            {matchingCustomers.length > 0 && isCustomerDropdownOpen && (
+                              <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                <div className="sticky top-0 bg-background border-b p-2">
+                                  <span className="text-sm font-medium">Vorhandene Kunden</span>
+                                </div>
+                                
+                                {matchingCustomers.map(customer => (
+                                  <div 
+                                    key={customer.id} 
+                                    className="px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center"
+                                    onMouseDown={(e) => {
+                                      // Verhindert onBlur vor dem Klick
+                                      e.preventDefault();
+                                    }}
+                                    onClick={() => fillCustomerData(customer)}
+                                  >
+                                    <div className="flex-grow">
+                                      <div className="font-medium">{customer.firstName} {customer.lastName}</div>
+                                      <div className="text-xs text-muted-foreground">{customer.phone}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

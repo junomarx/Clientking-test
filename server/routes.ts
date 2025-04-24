@@ -56,6 +56,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(matchingCustomers);
       }
       
+      // Wenn nur firstName als Query-Parameter übergeben wird, suche nach Kunden mit ähnlichem Vornamen
+      if (req.query.firstName) {
+        console.log(`Searching for customers with first name: ${req.query.firstName}`);
+        const firstName = req.query.firstName as string;
+        if (firstName.length < 2) {
+          return res.json([]);
+        }
+        
+        // Alle Kunden abrufen und nach Vornamen filtern
+        const allCustomers = await storage.getAllCustomers();
+        const matchingCustomers = allCustomers.filter(customer => 
+          customer.firstName.toLowerCase().includes(firstName.toLowerCase())
+        );
+        console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}"`);
+        return res.json(matchingCustomers);
+      }
+      
       // Ansonsten gebe alle Kunden zurück
       const customers = await storage.getAllCustomers();
       console.log(`Returning all ${customers.length} customers`);
