@@ -139,12 +139,17 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     });
   };
   
-  const formatCurrency = (amount?: number) => {
-    if (amount === undefined) return '---';
+  const formatCurrency = (cost?: string) => {
+    if (!cost) return '---';
+    // Wenn der Wert bereits wie "150-180" formatiert ist, geben wir ihn einfach zurück
+    if (isNaN(Number(cost)) || cost.includes('-')) {
+      return cost + ' €';
+    }
+    // Andernfalls formatieren wir ihn als Währung
     return new Intl.NumberFormat('de-DE', {
       style: 'currency',
       currency: 'EUR'
-    }).format(amount);
+    }).format(Number(cost));
   };
 
   return (
