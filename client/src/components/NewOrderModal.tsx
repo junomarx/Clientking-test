@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -386,206 +385,181 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-primary">Neuen Auftrag erfassen</DialogTitle>
           </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            {/* Customer Information Section */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-lg border-b pb-2">Kundeninformationen</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vorname</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Vorname" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+              {/* Customer Information Section */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Kundeninformationen</h3>
                 
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nachname</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Nachname" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Telefonnummer" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-Mail (optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="email@example.com" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-            
-            {/* Device Information Section */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-lg border-b pb-2">Geräteinformationen</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="deviceType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Geräteart</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vorname</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="-- auswählen --" />
-                          </SelectTrigger>
+                          <Input {...field} placeholder="Vorname" />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="smartphone">Smartphone</SelectItem>
-                          <SelectItem value="tablet">Tablet</SelectItem>
-                          <SelectItem value="laptop">Laptop</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="brand"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Marke</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        disabled={availableBrands.length === 0}
-                      >
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nachname</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={
-                              watchDeviceType 
-                                ? "-- Marke wählen --" 
-                                : "-- erst Geräteart wählen --"
-                            } />
-                          </SelectTrigger>
+                          <Input {...field} placeholder="Nachname" />
                         </FormControl>
-                        <SelectContent>
-                          {availableBrands.map((brand) => (
-                            <SelectItem key={brand} value={brand.toLowerCase()}>
-                              {brand}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Modell</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="z.B. iPhone 13 Pro" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="serialNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seriennummer (optional)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Seriennummer" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefon</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Telefonnummer" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>E-Mail (optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="email@example.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
-            
-            {/* Problem Information Section */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-lg border-b pb-2">Problembeschreibung</h3>
               
-              <FormField
-                control={form.control}
-                name="issue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fehlerbeschreibung</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        {...field} 
-                        placeholder="Beschreiben Sie das Problem"
-                        className="resize-none min-h-[100px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Device Information Section */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Geräteinformationen</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="deviceType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Geräteart</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="-- auswählen --" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="smartphone">Smartphone</SelectItem>
+                            <SelectItem value="tablet">Tablet</SelectItem>
+                            <SelectItem value="laptop">Laptop</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marke</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={availableBrands.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={
+                                watchDeviceType 
+                                  ? "-- Marke wählen --" 
+                                  : "-- erst Geräteart wählen --"
+                              } />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableBrands.map((brand) => (
+                              <SelectItem key={brand} value={brand.toLowerCase()}>
+                                {brand}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modell</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="z.B. iPhone 13 Pro" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="serialNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Seriennummer (optional)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Seriennummer" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Problem Information Section */}
+              <div className="space-y-4">
+                <h3 className="font-medium text-lg border-b pb-2">Problembeschreibung</h3>
+                
                 <FormField
                   control={form.control}
-                  name="estimatedCost"
+                  name="issue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Kostenvoranschlag (€)</FormLabel>
+                      <FormLabel>Fehlerbeschreibung</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          min="0"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) => {
-                            const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                            field.onChange(value);
-                          }}
+                        <Textarea 
+                          {...field} 
+                          placeholder="Beschreiben Sie das Problem"
+                          className="resize-none min-h-[100px]"
                         />
                       </FormControl>
                       <FormMessage />
@@ -593,66 +567,91 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                   )}
                 />
                 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="estimatedCost"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Kostenvoranschlag (€)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            min="0"
+                            placeholder="0.00"
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                              field.onChange(value);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Status auswählen" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                            <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                            <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                            <SelectItem value="fertig">Fertig</SelectItem>
+                            <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Status auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                          <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                          <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                          <SelectItem value="fertig">Fertig</SelectItem>
-                          <SelectItem value="abgeholt">Abgeholt</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Notizen (optional)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Interne Notizen"
+                          className="resize-none"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notizen (optional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        {...field} 
-                        placeholder="Interne Notizen"
-                        className="resize-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose}>
-                Abbrechen
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Speichere...' : 'Auftrag speichern'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Abbrechen
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Speichere...' : 'Auftrag speichern'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
