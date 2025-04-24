@@ -536,6 +536,13 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                       </div>
                     )}
                     
+                    {repair?.depositAmount && (
+                      <div className="highlight-box bg-red-50 border-red-200">
+                        <p className="font-bold text-red-700">Gerät beim Kunden / bei Kundin!</p>
+                        <p><span className="font-medium">Anzahlung:</span> {repair.depositAmount} €</p>
+                      </div>
+                    )}
+                    
                     {repair?.notes && (
                       <div>
                         <p><span className="font-medium">Notizen:</span></p>

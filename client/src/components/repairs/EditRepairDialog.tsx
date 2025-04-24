@@ -60,6 +60,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
     defaultValues: {
       issue: repair?.issue || '',
       estimatedCost: repair?.estimatedCost?.toString(),
+      depositAmount: repair?.depositAmount?.toString(),
       status: repair?.status || 'eingegangen',
       notes: repair?.notes || '',
     },
@@ -71,6 +72,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       form.reset({
         issue: repair.issue,
         estimatedCost: repair.estimatedCost?.toString(),
+        depositAmount: repair.depositAmount?.toString(),
         status: repair.status,
         notes: repair.notes || '',
       });
@@ -202,33 +204,51 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
               
               <FormField
                 control={form.control}
-                name="status"
+                name="depositAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Status auswählen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                        <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                        <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                        <SelectItem value="fertig">Fertig</SelectItem>
-                        <SelectItem value="abgeholt">Abgeholt</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Anzahlung (€)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="z.B. 50"
+                        {...field}
+                        value={field.value === null || field.value === undefined ? '' : field.value}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+            
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Status auswählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                      <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                      <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                      <SelectItem value="fertig">Fertig</SelectItem>
+                      <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}

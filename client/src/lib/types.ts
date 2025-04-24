@@ -24,6 +24,7 @@ export interface Repair {
   serialNumber?: string | null;
   issue: string;
   estimatedCost?: string | null;
+  depositAmount?: string | null;
   status: RepairStatus;
   notes?: string | null;
   createdAt: string;

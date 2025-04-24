@@ -331,6 +331,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                           <p className="text-xs">{repair.serialNumber}</p>
                         </div>
                       )}
+
+                      {repair?.depositAmount && (
+                        <div className="mt-2 bg-red-100 p-1 rounded border border-red-300 text-red-800">
+                          <p className="text-xs font-bold text-center">Gerät beim Kunden / bei Kundin!</p>
+                          <p className="text-xs text-center">Anzahlung: {repair.depositAmount} €</p>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="mb-2">
