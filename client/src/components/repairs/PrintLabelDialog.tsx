@@ -84,64 +84,159 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum Drucken
+  // Funktion zum Drucken mit verbessertem Error-Handling
   const handlePrint = () => {
     if (printRef.current) {
       const printContents = printRef.current.innerHTML;
-      const originalContents = document.body.innerHTML;
+      const closeDialog = onClose;
       
-      document.body.innerHTML = `
-        <style>
-          @media print {
-            body {
-              font-family: Arial, sans-serif;
-              padding: 5px;
-              margin: 0;
-            }
-            .label-container {
-              width: 300px;
-              padding: 10px;
-              border: 1px dotted #ccc;
-              page-break-inside: avoid;
-            }
-            .label-header {
-              text-align: center;
-              font-size: 12px;
-              margin-bottom: 8px;
-            }
-            .label-content {
-              font-size: 10px;
-            }
-            .text-center {
-              text-align: center;
-            }
-            .font-bold {
-              font-weight: bold;
-            }
-            .text-xs {
-              font-size: 10px;
-            }
-            .text-sm {
-              font-size: 12px;
-            }
-            .text-lg {
-              font-size: 16px;
-            }
-            .mb-1 {
-              margin-bottom: 4px;
-            }
-            .mb-2 {
-              margin-bottom: 8px;
-            }
-          }
-        </style>
-        <div>${printContents}</div>
-      `;
-      
-      window.print();
-      document.body.innerHTML = originalContents;
-      // Nach dem Drucken Dialog schließen
-      onClose();
+      try {
+        const printWindow = window.open('', '_blank');
+        
+        if (!printWindow) {
+          alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
+          return;
+        }
+        
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Etikett für Reparatur #${repair?.id}</title>
+              <style>
+                @media print {
+                  @page {
+                    size: 100mm 50mm;
+                    margin: 3mm;
+                  }
+                  body {
+                    font-family: Arial, sans-serif;
+                    padding: 0;
+                    margin: 0;
+                  }
+                  .label-container {
+                    width: 94mm;
+                    padding: 2mm;
+                    border: 1px dotted #ccc;
+                    page-break-inside: avoid;
+                  }
+                  .label-header {
+                    text-align: center;
+                    font-size: 12px;
+                    margin-bottom: 2mm;
+                  }
+                  .label-content {
+                    font-size: 10px;
+                  }
+                  .text-center {
+                    text-align: center;
+                  }
+                  .font-bold {
+                    font-weight: bold;
+                  }
+                  .text-xs {
+                    font-size: 10px;
+                  }
+                  .text-sm {
+                    font-size: 12px;
+                  }
+                  .text-lg {
+                    font-size: 16px;
+                  }
+                  .mb-1 {
+                    margin-bottom: 1mm;
+                  }
+                  .mb-2 {
+                    margin-bottom: 2mm;
+                  }
+                }
+                
+                /* Nicht-Druck-Styles */
+                body {
+                  font-family: Arial, sans-serif;
+                  padding: 20px;
+                  background-color: #f5f5f5;
+                }
+                .label-container {
+                  width: 300px;
+                  padding: 10px;
+                  border: 1px dotted #ccc;
+                  background-color: white;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  margin: 0 auto 20px;
+                }
+                .label-header {
+                  text-align: center;
+                  font-size: 12px;
+                  margin-bottom: 8px;
+                }
+                .label-content {
+                  font-size: 10px;
+                }
+                .text-center {
+                  text-align: center;
+                }
+                .font-bold {
+                  font-weight: bold;
+                }
+                .text-xs {
+                  font-size: 10px;
+                }
+                .text-sm {
+                  font-size: 12px;
+                }
+                .text-lg {
+                  font-size: 16px;
+                }
+                .mb-1 {
+                  margin-bottom: 4px;
+                }
+                .mb-2 {
+                  margin-bottom: 8px;
+                }
+                .print-button {
+                  background-color: #3b82f6;
+                  color: white;
+                  border: none;
+                  padding: 10px 20px;
+                  font-size: 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  margin: 20px auto;
+                  display: block;
+                }
+                .close-button {
+                  background-color: #e5e7eb;
+                  color: #4b5563;
+                  border: none;
+                  padding: 10px 20px;
+                  font-size: 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  margin: 0 auto;
+                  display: block;
+                }
+              </style>
+            </head>
+            <body>
+              <div>${printContents}</div>
+              <button class="print-button" onClick="window.print(); window.close();">
+                Drucken
+              </button>
+              <button class="close-button" onClick="window.close();">
+                Schließen
+              </button>
+            </body>
+          </html>
+        `);
+        
+        printWindow.document.close();
+        closeDialog();
+      } catch (error) {
+        console.error('Fehler beim Drucken:', error);
+        alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+        closeDialog();
+      }
     }
   };
 
@@ -160,38 +255,85 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           </div>
         ) : (
           <>
-            <div className="border rounded-md p-4 max-h-[60vh] overflow-auto">
-              <div ref={printRef}>
-                <div className="label-container">
-                  <div className="label-header text-center mb-2">
-                    <p className="font-bold text-sm">{businessSettings?.businessName || "Handyshop Verwaltung"}</p>
+            <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
+              <div ref={printRef} className="bg-white p-4 rounded-md shadow-sm">
+                <div className="label-container border border-dashed border-gray-300 p-4 rounded-lg">
+                  <div className="label-header text-center mb-3 border-b border-primary pb-2">
+                    <p className="font-bold text-sm text-primary">{businessSettings?.businessName || "Handyshop Verwaltung"}</p>
                   </div>
                   
                   <div className="label-content">
-                    <p className="text-center text-lg font-bold mb-1">#{repair?.id}</p>
-                    <p className="text-xs mb-1">Kunde: {customer?.firstName} {customer?.lastName}</p>
-                    <p className="text-xs mb-1">Tel: {customer?.phone}</p>
+                    <div className="bg-primary text-white text-center rounded py-1 px-2 mb-3">
+                      <p className="text-lg font-bold">Reparatur #{repair?.id}</p>
+                    </div>
                     
-                    <p className="text-xs mb-1">Gerät: {repair?.deviceType === 'smartphone' ? 'Smartphone' : 
+                    <div className="grid grid-cols-2 gap-1 mb-2">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600">Kunde:</p>
+                        <p className="text-xs">{customer?.firstName} {customer?.lastName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600">Telefon:</p>
+                        <p className="text-xs">{customer?.phone}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t border-b border-gray-200 py-2 my-2">
+                      <div className="grid grid-cols-2 gap-1">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Gerät:</p>
+                          <p className="text-xs">{repair?.deviceType === 'smartphone' ? 'Smartphone' : 
                                      repair?.deviceType === 'tablet' ? 'Tablet' : 'Laptop'}</p>
-                    <p className="text-xs mb-1">Marke/Modell: {repair?.brand} {repair?.model}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-600">Marke/Modell:</p>
+                          <p className="text-xs">{repair?.brand} {repair?.model}</p>
+                        </div>
+                      </div>
+                      
+                      {repair?.serialNumber && (
+                        <div className="mt-1">
+                          <p className="text-xs font-semibold text-gray-600">S/N:</p>
+                          <p className="text-xs">{repair.serialNumber}</p>
+                        </div>
+                      )}
+                    </div>
                     
-                    {repair?.serialNumber && <p className="text-xs mb-1">S/N: {repair.serialNumber}</p>}
+                    <div className="mb-2">
+                      <p className="text-xs font-semibold text-gray-600">Problem:</p>
+                      <p className="text-xs">{repair?.issue}</p>
+                    </div>
                     
-                    <p className="text-xs mb-1">Problem: {repair?.issue}</p>
+                    <div className="flex justify-between items-center mb-2">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600">Status:</p>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                          repair?.status === 'eingegangen' ? 'bg-gray-100 text-gray-600' :
+                          repair?.status === 'in_reparatur' ? 'bg-amber-100 text-amber-800' :
+                          repair?.status === 'fertig' ? 'bg-green-100 text-green-800' :
+                          repair?.status === 'abgeholt' ? 'bg-blue-100 text-blue-800' :
+                          'bg-indigo-100 text-indigo-800'
+                        }`}>
+                          {repair?.status === 'eingegangen' ? 'Eingegangen' : 
+                           repair?.status === 'in_reparatur' ? 'In Reparatur' : 
+                           repair?.status === 'fertig' ? 'Fertig' : 
+                           repair?.status === 'abgeholt' ? 'Abgeholt' : 'Außer Haus'}
+                        </span>
+                      </div>
+                      
+                      {repair?.estimatedCost && (
+                        <div className="text-right">
+                          <p className="text-xs font-semibold text-gray-600">Preis:</p>
+                          <p className="text-xs font-semibold">{repair.estimatedCost} €</p>
+                        </div>
+                      )}
+                    </div>
                     
-                    <p className="text-xs mb-2">Status: {repair?.status === 'eingegangen' ? 'Eingegangen' : 
-                               repair?.status === 'in_reparatur' ? 'In Reparatur' : 
-                               repair?.status === 'fertig' ? 'Fertig' : 
-                               repair?.status === 'abgeholt' ? 'Abgeholt' : 'Außer Haus'}</p>
-                    
-                    {repair?.estimatedCost && <p className="text-xs mb-2">Preis: {repair.estimatedCost} €</p>}
-                    
-                    <p className="text-xs text-center">
+                    <div className="mt-3 pt-2 border-t border-gray-200 text-xs text-center text-gray-500">
                       {businessSettings?.phone}
                       {businessSettings?.phone && businessSettings?.email && " | "}
                       {businessSettings?.email}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>

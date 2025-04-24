@@ -86,210 +86,289 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum Drucken
+  // Funktion zum Drucken mit verbessertem Error-Handling
   const handlePrint = () => {
     if (printRef.current) {
       const printContents = printRef.current.innerHTML;
       const originalContents = document.body.innerHTML;
       
-      document.body.innerHTML = `
-        <style>
-          @media print {
-            @page {
-              size: A4;
-              margin: 10mm;
-            }
-            
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              padding: 0;
-              margin: 0;
-              color: #333;
-            }
-            
-            .print-container {
-              max-width: 100%;
-              margin: 0 auto;
-            }
-            
-            .print-header {
-              text-align: center;
-              padding-bottom: 15px;
-              border-bottom: 2px solid #3b82f6;
-              margin-bottom: 20px;
-            }
-            
-            .print-header h2 {
-              font-size: 24px;
-              margin-bottom: 5px;
-              color: #1e3a8a;
-            }
-            
-            .print-section {
-              margin-bottom: 20px;
-              padding-bottom: 10px;
-            }
-            
-            .print-section h3 {
-              font-size: 16px;
-              margin-bottom: 10px;
-              padding-bottom: 5px;
-              border-bottom: 1px solid #ddd;
-              color: #1e3a8a;
-            }
-            
-            .print-row {
-              display: flex;
-              margin-bottom: 5px;
-            }
-            
-            .print-label {
-              font-weight: 600;
-              width: 150px;
-              color: #4b5563;
-            }
-            
-            .print-value {
-              flex: 1;
-            }
-            
-            .grid-cols-2 {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 15px;
-            }
-            
-            .grid-cols-1 {
-              display: grid;
-              grid-template-columns: 1fr;
-              gap: 8px;
-            }
-            
-            .font-medium {
-              font-weight: 600;
-              margin-right: 5px;
-              color: #4b5563;
-            }
-            
-            .font-semibold {
-              font-weight: 700;
-              color: #1e3a8a;
-            }
-            
-            .text-sm {
-              font-size: 14px;
-            }
-            
-            .text-xs {
-              font-size: 12px;
-            }
-            
-            .text-center {
-              text-align: center;
-            }
-            
-            .mb-2 {
-              margin-bottom: 10px;
-            }
-            
-            .mb-4 {
-              margin-bottom: 20px;
-            }
-            
-            .mt-8 {
-              margin-top: 40px;
-            }
-            
-            .border-t {
-              border-top: 1px solid #e5e7eb;
-              padding-top: 20px;
-            }
-            
-            .highlight-box {
-              background-color: #f3f4f6;
-              border-radius: 5px;
-              padding: 15px;
-              margin-top: 10px;
-              margin-bottom: 10px;
-              border-left: 4px solid #3b82f6;
-            }
-            
-            .receipt-number {
-              display: inline-block;
-              background-color: #1e3a8a;
-              color: white;
-              padding: 5px 10px;
-              border-radius: 4px;
-              font-weight: bold;
-              margin-left: 10px;
-              font-size: 14px;
-            }
-            
-            .receipt-footer {
-              margin-top: 30px;
-              padding-top: 15px;
-              border-top: 2px solid #3b82f6;
-              font-size: 12px;
-              text-align: center;
-              color: #4b5563;
-            }
-            
-            .receipt-watermark {
-              position: fixed;
-              top: 50%;
-              left: 0;
-              width: 100%;
-              text-align: center;
-              opacity: 0.03;
-              transform: rotate(-45deg);
-              font-size: 80px;
-              font-weight: bold;
-              z-index: -1;
-              color: #000;
-            }
-            
-            .status-badge {
-              display: inline-block;
-              padding: 3px 8px;
-              border-radius: 4px;
-              font-size: 12px;
-              font-weight: 600;
-              text-transform: uppercase;
-            }
-            
-            .status-eingegangen {
-              background-color: #e5e7eb;
-              color: #4b5563;
-            }
-            
-            .status-in-reparatur {
-              background-color: #fef3c7;
-              color: #92400e;
-            }
-            
-            .status-fertig {
-              background-color: #d1fae5;
-              color: #065f46;
-            }
-            
-            .status-abgeholt {
-              background-color: #dbeafe;
-              color: #1e40af;
-            }
-            
-            .status-ausser-haus {
-              background-color: #e0e7ff;
-              color: #4338ca;
-            }
-          }
-        </style>
-        <div class="print-container">${printContents}</div>
-      `;
+      // Eine Referenz auf das aktuelle onClose speichern, bevor wir den DOM verändern
+      const closeDialog = onClose;
       
-      window.print();
-      document.body.innerHTML = originalContents;
-      // Nach dem Drucken Dialog schließen
-      onClose();
+      try {
+        // Eine neue print-window Funktion, die nach dem Drucken das Fenster wiederherstellt
+        const printAndRestore = () => {
+          const printWindow = window.open('', '_blank');
+          
+          if (!printWindow) {
+            alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
+            return;
+          }
+          
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>Reparaturauftrag #${repair?.id}</title>
+                <style>
+                  @media print {
+                    @page {
+                      size: A4;
+                      margin: 10mm;
+                    }
+                    
+                    body {
+                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                      padding: 0;
+                      margin: 0;
+                      color: #333;
+                    }
+                    
+                    .print-container {
+                      max-width: 100%;
+                      margin: 0 auto;
+                    }
+                    
+                    .print-header {
+                      text-align: center;
+                      padding-bottom: 15px;
+                      border-bottom: 2px solid #3b82f6;
+                      margin-bottom: 20px;
+                    }
+                    
+                    .print-header h2 {
+                      font-size: 24px;
+                      margin-bottom: 5px;
+                      color: #1e3a8a;
+                    }
+                    
+                    .print-section {
+                      margin-bottom: 20px;
+                      padding-bottom: 10px;
+                    }
+                    
+                    .print-section h3 {
+                      font-size: 16px;
+                      margin-bottom: 10px;
+                      padding-bottom: 5px;
+                      border-bottom: 1px solid #ddd;
+                      color: #1e3a8a;
+                    }
+                    
+                    .print-row {
+                      display: flex;
+                      margin-bottom: 5px;
+                    }
+                    
+                    .print-label {
+                      font-weight: 600;
+                      width: 150px;
+                      color: #4b5563;
+                    }
+                    
+                    .print-value {
+                      flex: 1;
+                    }
+                    
+                    .grid-cols-2 {
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 15px;
+                    }
+                    
+                    .grid-cols-1 {
+                      display: grid;
+                      grid-template-columns: 1fr;
+                      gap: 8px;
+                    }
+                    
+                    .font-medium {
+                      font-weight: 600;
+                      margin-right: 5px;
+                      color: #4b5563;
+                    }
+                    
+                    .font-semibold {
+                      font-weight: 700;
+                      color: #1e3a8a;
+                    }
+                    
+                    .text-sm {
+                      font-size: 14px;
+                    }
+                    
+                    .text-xs {
+                      font-size: 12px;
+                    }
+                    
+                    .text-center {
+                      text-align: center;
+                    }
+                    
+                    .mb-2 {
+                      margin-bottom: 10px;
+                    }
+                    
+                    .mb-4 {
+                      margin-bottom: 20px;
+                    }
+                    
+                    .mt-8 {
+                      margin-top: 40px;
+                    }
+                    
+                    .border-t {
+                      border-top: 1px solid #e5e7eb;
+                      padding-top: 20px;
+                    }
+                    
+                    .highlight-box {
+                      background-color: #f3f4f6;
+                      border-radius: 5px;
+                      padding: 15px;
+                      margin-top: 10px;
+                      margin-bottom: 10px;
+                      border-left: 4px solid #3b82f6;
+                    }
+                    
+                    .receipt-number {
+                      display: inline-block;
+                      background-color: #1e3a8a;
+                      color: white;
+                      padding: 5px 10px;
+                      border-radius: 4px;
+                      font-weight: bold;
+                      margin-left: 10px;
+                      font-size: 14px;
+                    }
+                    
+                    .receipt-footer {
+                      margin-top: 30px;
+                      padding-top: 15px;
+                      border-top: 2px solid #3b82f6;
+                      font-size: 12px;
+                      text-align: center;
+                      color: #4b5563;
+                    }
+                    
+                    .receipt-watermark {
+                      position: fixed;
+                      top: 50%;
+                      left: 0;
+                      width: 100%;
+                      text-align: center;
+                      opacity: 0.03;
+                      transform: rotate(-45deg);
+                      font-size: 80px;
+                      font-weight: bold;
+                      z-index: -1;
+                      color: #000;
+                    }
+                    
+                    .status-badge {
+                      display: inline-block;
+                      padding: 3px 8px;
+                      border-radius: 4px;
+                      font-size: 12px;
+                      font-weight: 600;
+                      text-transform: uppercase;
+                    }
+                    
+                    .status-eingegangen {
+                      background-color: #e5e7eb;
+                      color: #4b5563;
+                    }
+                    
+                    .status-in-reparatur {
+                      background-color: #fef3c7;
+                      color: #92400e;
+                    }
+                    
+                    .status-fertig {
+                      background-color: #d1fae5;
+                      color: #065f46;
+                    }
+                    
+                    .status-abgeholt {
+                      background-color: #dbeafe;
+                      color: #1e40af;
+                    }
+                    
+                    .status-ausser-haus {
+                      background-color: #e0e7ff;
+                      color: #4338ca;
+                    }
+                  }
+                  
+                  /* Nicht-Druck-Styles */
+                  body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    padding: 20px;
+                    margin: 0;
+                    color: #333;
+                  }
+                  
+                  .print-button {
+                    background-color: #3b82f6;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 20px auto;
+                    display: block;
+                  }
+                  
+                  .close-button {
+                    background-color: #e5e7eb;
+                    color: #4b5563;
+                    border: none;
+                    padding: 10px 20px;
+                    font-size: 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 0 auto;
+                    display: block;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="print-container">${printContents}</div>
+                <button class="print-button" onClick="window.print(); window.close();">
+                  Drucken
+                </button>
+                <button class="close-button" onClick="window.close();">
+                  Schließen
+                </button>
+                <script>
+                  window.addEventListener('afterprint', function() {
+                    // Optional: Fenster nach dem Drucken automatisch schließen
+                    // window.close();
+                  });
+                </script>
+              </body>
+            </html>
+          `);
+          
+          printWindow.document.close();
+          
+          // Dialog im Hauptfenster schließen
+          closeDialog();
+        };
+        
+        // Neue Methode nutzen, die keine DOM-Manipulation am Hauptfenster erfordert
+        printAndRestore();
+      } catch (error) {
+        console.error('Fehler beim Drucken:', error);
+        
+        // Im Fehlerfall das Original-Layout wiederherstellen
+        // Dies sollte eigentlich nicht passieren, da wir jetzt ein neues Fenster verwenden
+        alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+        
+        // Dialog trotzdem schließen
+        closeDialog();
+      }
     }
   };
 
