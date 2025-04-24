@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
 
 function Router() {
   return (
@@ -25,10 +26,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <PrintManagerProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </PrintManagerProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

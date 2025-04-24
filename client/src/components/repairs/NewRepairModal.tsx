@@ -13,8 +13,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
-import { PrintOptionsDialog } from './PrintOptionsDialog';
-import { PrintRepairDialog } from './PrintRepairDialog';
+import { usePrintManager } from './PrintOptionsManager';
 
 // Extended repair schema with validation
 const repairFormSchema = insertRepairSchema.extend({
@@ -96,7 +95,10 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     mutationFn: async (values: RepairFormValues) => {
       console.log("Sending repair data (submit):", values);
       const response = await apiRequest('POST', '/api/repairs', values);
-      return response.json();
+      const result = await response.json();
+      // Hauptdialog schließen, damit der Druckdialog sichtbar wird
+      onClose();
+      return result;
     },
     onSuccess: (data) => {
       toast({
@@ -131,13 +133,14 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         }
       }
       
-      // Form zurücksetzen
-      form.reset();
+      // Wichtig: Erst Dialog anzeigen, dann Form zurücksetzen
+      setShowPrintOptions(true);
+      console.log("Druckoptionen-Dialog sollte jetzt angezeigt werden");
       
-      // Dialog zur Druckoption anzeigen
+      // Form später zurücksetzen um Konflikte zu vermeiden
       setTimeout(() => {
-        setShowPrintOptions(true);
-      }, 100);
+        form.reset();
+      }, 500);
     },
     onError: (error) => {
       toast({
@@ -376,12 +379,13 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         </DialogContent>
       </Dialog>
 
-      {/* Druckoptionen Dialog */}
+      {/* Druckoptionen Dialog - separater Dialog, der auch angezeigt wird, wenn der Hauptdialog geschlossen wird */}
       <PrintOptionsDialog 
         open={showPrintOptions}
         onClose={() => {
+          console.log("PrintOptionsDialog wird geschlossen");
           setShowPrintOptions(false);
-          onClose();
+          // Dialog nicht automatisch schließen, Nutzer soll entscheiden
         }}
         onPrintReceipt={handlePrintReceipt}
         onPrintLabel={handlePrintLabel}

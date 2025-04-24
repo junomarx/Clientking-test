@@ -24,8 +24,11 @@ export function PrintOptionsDialog({
   onPrintLabel,
   repairId
 }: PrintOptionsDialogProps) {
+  // Dialog immer als Root-Element verwenden, nicht in andere Dialog-Komponenten verschachteln
+  console.log("PrintOptionsDialog gerendert mit open:", open, "repairId:", repairId);
+  
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose} modal={true}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Auftrag #{repairId} - Druckoptionen</DialogTitle>
