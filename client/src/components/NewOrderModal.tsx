@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
+import { saveModel, getModelsForDeviceAndBrand } from '@/lib/localStorage';
 
 import {
   Dialog,
@@ -103,6 +104,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   });
   
   const watchDeviceType = form.watch('deviceType');
+  const watchBrand = form.watch('brand');
+  const watchModel = form.watch('model');
+  
+  // Zustand für die gespeicherten Modelle
+  const [savedModels, setSavedModels] = useState<string[]>([]);
   
   // Update brands based on selected device type
   useEffect(() => {
@@ -113,6 +119,23 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       setAvailableBrands([]);
     }
   }, [watchDeviceType, form]);
+  
+  // Lade gespeicherte Modelle, wenn sich Geräteart oder Marke ändert
+  useEffect(() => {
+    if (watchDeviceType && watchBrand) {
+      const models = getModelsForDeviceAndBrand(watchDeviceType, watchBrand);
+      setSavedModels(models);
+    } else {
+      setSavedModels([]);
+    }
+  }, [watchDeviceType, watchBrand]);
+  
+  // Speichere Modell, wenn es sich ändert und Geräteart und Marke ausgewählt sind
+  useEffect(() => {
+    if (watchDeviceType && watchBrand && watchModel && watchModel.trim() !== '') {
+      saveModel(watchDeviceType, watchBrand, watchModel);
+    }
+  }, [watchDeviceType, watchBrand, watchModel]);
   
   // Create customer mutation
   const createCustomerMutation = useMutation({
@@ -566,7 +589,46 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                       <FormItem>
                         <FormLabel>Modell</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="z.B. iPhone 13 Pro" />
+                          {savedModels.length > 0 ? (
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Speichere das Modell (wird auch durch useEffect gespeichert)
+                                if (watchDeviceType && watchBrand) {
+                                  saveModel(watchDeviceType, watchBrand, value);
+                                }
+                              }}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Modell auswählen oder eingeben" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {savedModels.map((model) => (
+                                  <SelectItem key={model} value={model}>
+                                    {model}
+                                  </SelectItem>
+                                ))}
+                                {/* Option für neues Modell */}
+                                <div className="px-2 py-1.5 text-sm border-t mt-1">
+                                  <div className="text-muted-foreground mb-1">Neues Modell eingeben:</div>
+                                  <Input 
+                                    placeholder="z.B. iPhone 13 Pro" 
+                                    onChange={(e) => {
+                                      field.onChange(e.target.value);
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="mt-1"
+                                  />
+                                </div>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input 
+                              {...field} 
+                              placeholder="z.B. iPhone 13 Pro" 
+                            />
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>

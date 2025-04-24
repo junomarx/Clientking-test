@@ -1,4 +1,4 @@
-import { Customer, Repair } from './types';
+import { Customer, Repair, RepairStatus } from './types';
 
 const CUSTOMERS_KEY = 'repair-shop-customers';
 const REPAIRS_KEY = 'repair-shop-repairs';
@@ -104,7 +104,7 @@ export const updateRepair = (id: number, updatedData: Partial<Repair>): Repair |
   return repairs[index];
 };
 
-export const updateRepairStatus = (id: number, status: string): Repair | null => {
+export const updateRepairStatus = (id: number, status: RepairStatus): Repair | null => {
   return updateRepair(id, { status });
 };
 
@@ -134,6 +134,63 @@ export const getStatistics = () => {
       const createdDate = new Date(r.createdAt);
       createdDate.setHours(0, 0, 0, 0);
       return createdDate.getTime() === today.getTime();
-    }).length
+    }).length,
+    readyForPickup: repairs.filter(r => r.status === 'fertig').length,
+    outsourced: repairs.filter(r => r.status === 'ausser_haus').length
   };
+};
+
+// Konstante für den localStorage Key der gespeicherten Modelle
+const SAVED_MODELS_KEY = 'repair-shop-models';
+
+// Typ für gespeicherte Modelle
+interface StoredModels {
+  [key: string]: string[]; // Format: "deviceType:brand" => ["Modell 1", "Modell 2", ...]
+}
+
+// Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Marke-Kombination
+export const saveModel = (deviceType: string, brand: string, model: string): void => {
+  if (!deviceType || !brand || !model) return;
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  let storedModels: StoredModels = {};
+  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  
+  if (storedData) {
+    try {
+      storedModels = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Modelle:', err);
+    }
+  }
+  
+  // Erstelle Array für diesen Schlüssel, falls es noch nicht existiert
+  if (!storedModels[key]) {
+    storedModels[key] = [];
+  }
+  
+  // Füge Modell hinzu, wenn es noch nicht existiert
+  if (!storedModels[key].includes(model)) {
+    storedModels[key].push(model);
+    localStorage.setItem(SAVED_MODELS_KEY, JSON.stringify(storedModels));
+  }
+};
+
+// Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp und Marke
+export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
+  if (!deviceType || !brand) return [];
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  if (!storedData) return [];
+  
+  try {
+    const storedModels: StoredModels = JSON.parse(storedData);
+    return storedModels[key] || [];
+  } catch (err) {
+    console.error('Fehler beim Abrufen der gespeicherten Modelle:', err);
+    return [];
+  }
 };
