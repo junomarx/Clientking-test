@@ -13,6 +13,8 @@ import {
   DialogTitle,
   DialogFooter
 } from '@/components/ui/dialog';
+import { EditRepairDialog } from './EditRepairDialog';
+import { PrintRepairDialog } from './PrintRepairDialog';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
@@ -23,6 +25,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
   const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({
@@ -175,11 +179,31 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-primary hover:text-secondary p-1 transform hover:scale-110 transition-all" 
+                          className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
                           title="Status ändern"
                           onClick={() => openStatusDialog(repair.id, repair.status)}
                         >
                           🔄
+                        </button>
+                        <button 
+                          className="text-orange-600 hover:text-orange-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Auftrag bearbeiten"
+                          onClick={() => {
+                            setSelectedRepairId(repair.id);
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Auftrag drucken"
+                          onClick={() => {
+                            setSelectedRepairId(repair.id);
+                            setShowPrintDialog(true);
+                          }}
+                        >
+                          🖨️
                         </button>
                       </div>
                     </td>
@@ -226,6 +250,22 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Repair Dialog */}
+      {repairs && selectedRepairId && (
+        <EditRepairDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          repair={repairs.find(r => r.id === selectedRepairId) || null}
+        />
+      )}
+
+      {/* Print Repair Dialog */}
+      <PrintRepairDialog
+        open={showPrintDialog}
+        onClose={() => setShowPrintDialog(false)}
+        repairId={selectedRepairId}
+      />
     </div>
   );
 }
