@@ -348,6 +348,18 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                         <Button 
                           size="icon" 
                           variant="ghost" 
+                          className="h-7 w-7 mr-1 hover:bg-slate-100"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRepairToDelete(repair.id);
+                            setShowDeleteRepairDialog(true);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
                           className="h-7 w-7 mr-2 hover:bg-slate-100"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -412,6 +424,28 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             repair={repairs?.find(r => r.id === editRepairId) || null}
           />
         )}
+
+        {/* Customer Delete Confirmation */}
+        <DeleteConfirmDialog
+          open={showDeleteCustomerDialog}
+          onClose={() => setShowDeleteCustomerDialog(false)}
+          onConfirm={() => deleteCustomerMutation.mutate()}
+          title="Kunde löschen"
+          description={`Möchten Sie wirklich den Kunden "${customer?.firstName} ${customer?.lastName}" löschen? Diese Aktion kann nicht rückgängig gemacht werden. Alle zugehörigen Reparaturaufträge werden ebenfalls gelöscht.`}
+          isDeleting={deleteCustomerMutation.isPending}
+          itemName="Kunde"
+        />
+
+        {/* Repair Delete Confirmation */}
+        <DeleteConfirmDialog
+          open={showDeleteRepairDialog}
+          onClose={() => setShowDeleteRepairDialog(false)}
+          onConfirm={() => deleteRepairMutation.mutate()}
+          title="Reparatur löschen"
+          description={`Möchten Sie wirklich die Reparatur #${repairToDelete} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+          isDeleting={deleteRepairMutation.isPending}
+          itemName="Reparatur"
+        />
       </DialogContent>
     </Dialog>
   );

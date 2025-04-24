@@ -141,6 +141,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Delete customer
+  app.delete("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteCustomer(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "Failed to delete customer" });
+    }
+  });
+  
   // REPAIRS API
   app.get("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -282,6 +299,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(repair);
     } catch (error) {
       res.status(500).json({ message: "Failed to update repair status" });
+    }
+  });
+  
+  // Delete repair
+  app.delete("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteRepair(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Repair not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting repair:", error);
+      res.status(500).json({ message: "Failed to delete repair" });
     }
   });
   

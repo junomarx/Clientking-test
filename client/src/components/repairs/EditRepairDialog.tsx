@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Repair } from '@/lib/types';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 import {
   Dialog,
@@ -49,6 +50,7 @@ interface EditRepairDialogProps {
 export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Form definition
   const form = useForm<RepairEditValues>({
