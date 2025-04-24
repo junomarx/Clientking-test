@@ -30,7 +30,7 @@ const repairFormSchema = insertRepairSchema.extend({
     .transform(val => val === undefined || val === '' ? null : val),
   serialNumber: z.string().optional()
     .transform(val => val === undefined || val === '' ? null : val),
-  status: z.enum(["eingegangen", "in_reparatur", "fertig", "abgeholt"]),
+  status: z.enum(["eingegangen", "in_reparatur", "fertig", "abgeholt", "ausser_haus"]),
 });
 
 type RepairFormValues = z.infer<typeof repairFormSchema>;
@@ -43,6 +43,7 @@ interface NewRepairModalProps {
 
 export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProps) {
   const { toast } = useToast();
+  
   // Zustandsvariablen
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [createdRepairId, setCreatedRepairId] = useState<number | null>(null);
