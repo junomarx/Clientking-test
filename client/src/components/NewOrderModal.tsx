@@ -195,21 +195,30 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Funktion zum Erstellen eines neuen Auftrags mit vorhandenem Kunden
   const createRepairWithExistingCustomer = async (customer: Customer, formData: OrderFormValues) => {
     try {
+      // Überprüfe, ob alle erforderlichen Felder vorhanden sind
+      // Wenn nicht, verwende Standardwerte für fehlende Pflichtfelder
       const repairData = {
         customerId: customer.id,
-        deviceType: formData.deviceType,
-        brand: formData.brand,
-        model: formData.model,
+        deviceType: formData.deviceType || 'smartphone', // Standardwert
+        brand: formData.brand || 'apple', // Standardwert
+        model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
-        issue: formData.issue,
+        issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
         estimatedCost: formData.estimatedCost,
-        status: formData.status,
+        status: formData.status || 'eingegangen', // Standardwert
         notes: formData.notes
       };
       
+      console.log("Sending repair data:", repairData);
       await createRepairMutation.mutateAsync(repairData);
     } catch (error) {
       console.error("Error creating repair with existing customer:", error);
+      // Zeige eine Fehlermeldung an
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Der Auftrag konnte nicht gespeichert werden. Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -228,28 +237,35 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       const customerData = {
         firstName: data.firstName,
         lastName: data.lastName,
-        phone: data.phone,
+        phone: data.phone || '0000000000', // Standardwert für Telefonnummer
         email: data.email
       };
       
       const customer = await createCustomerMutation.mutateAsync(customerData);
       
-      // Dann erstelle den Reparaturauftrag mit der Kunden-ID
+      // Dann erstelle den Reparaturauftrag mit der Kunden-ID, mit Standardwerten für fehlende Pflichtfelder
       const repairData = {
         customerId: customer.id,
-        deviceType: data.deviceType,
-        brand: data.brand,
-        model: data.model,
+        deviceType: data.deviceType || 'smartphone', // Standardwert
+        brand: data.brand || 'apple', // Standardwert
+        model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
-        issue: data.issue,
+        issue: data.issue || 'Wird später hinzugefügt', // Standardwert
         estimatedCost: data.estimatedCost,
-        status: data.status,
+        status: data.status || 'eingegangen', // Standardwert
         notes: data.notes
       };
       
+      console.log("Sending repair data (submit):", repairData);
       await createRepairMutation.mutateAsync(repairData);
     } catch (error) {
       console.error("Error in form submission:", error);
+      // Fehlermeldung anzeigen
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Der Auftrag konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -287,28 +303,35 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       const customerData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        phone: formData.phone || '0000000000', // Standardwert für Telefonnummer
         email: formData.email
       };
       
       const customer = await createCustomerMutation.mutateAsync(customerData);
       
-      // Dann erstelle den Reparaturauftrag mit der Kunden-ID
+      // Dann erstelle den Reparaturauftrag mit der Kunden-ID, mit Standardwerten für fehlende Pflichtfelder
       const repairData = {
         customerId: customer.id,
-        deviceType: formData.deviceType,
-        brand: formData.brand,
-        model: formData.model,
+        deviceType: formData.deviceType || 'smartphone', // Standardwert
+        brand: formData.brand || 'apple', // Standardwert
+        model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
-        issue: formData.issue,
+        issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
         estimatedCost: formData.estimatedCost,
-        status: formData.status,
+        status: formData.status || 'eingegangen', // Standardwert
         notes: formData.notes
       };
       
+      console.log("Sending repair data (new customer):", repairData);
       await createRepairMutation.mutateAsync(repairData);
     } catch (error) {
       console.error("Error creating new customer and repair:", error);
+      // Fehlermeldung anzeigen
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Der Auftrag konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      });
     }
   };
 
