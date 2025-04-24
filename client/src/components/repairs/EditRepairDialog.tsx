@@ -7,7 +7,6 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Repair } from '@/lib/types';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { RepairFeedback } from './RepairFeedback';
 
 import {
   Dialog,
@@ -17,12 +16,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  DialogTabs,
-  DialogTabsList,
-  DialogTabsTrigger,
-  DialogTabsContent,
-} from '@/components/ui/dialog-tabs';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -167,144 +160,131 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
           </DialogDescription>
         </DialogHeader>
         
-        <DialogTabs defaultValue="details" className="mt-4">
-          <DialogTabsList className="grid w-full grid-cols-2">
-            <DialogTabsTrigger value="details">Details</DialogTabsTrigger>
-            <DialogTabsTrigger value="feedback">Kundenfeedback</DialogTabsTrigger>
-          </DialogTabsList>
-          
-          <DialogTabsContent value="details" className="pt-4">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="issue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fehlerbeschreibung</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Beschreiben Sie das Problem"
-                          className="resize-none min-h-[80px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="estimatedCost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Kostenvoranschlag (€)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="z.B. 150 oder 150-180"
-                            {...field}
-                            value={field.value === null || field.value === undefined ? '' : field.value}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Status auswählen" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                            <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                            <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                            <SelectItem value="fertig">Fertig</SelectItem>
-                            <SelectItem value="abgeholt">Abgeholt</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notizen</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Interne Notizen"
-                          className="resize-none min-h-[80px]"
-                          value={field.value === null ? '' : (field.value || '')}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                          ref={field.ref}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter className="pt-4 flex justify-between">
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={handleClose} 
-                      type="button"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="issue"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fehlerbeschreibung</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field} 
+                      placeholder="Beschreiben Sie das Problem"
+                      className="resize-none min-h-[80px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="estimatedCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kostenvoranschlag (€)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="z.B. 150 oder 150-180"
+                        {...field}
+                        value={field.value === null || field.value === undefined ? '' : field.value}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      value={field.value}
                     >
-                      Abbrechen
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => setShowDeleteDialog(true)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Löschen
-                    </Button>
-                  </div>
-                  <Button 
-                    type="submit"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Speichere...
-                      </>
-                    ) : (
-                      'Änderungen speichern'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogTabsContent>
-          
-          <DialogTabsContent value="feedback" className="pt-4">
-            <RepairFeedback repairId={repair.id} />
-          </DialogTabsContent>
-        </DialogTabs>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Status auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                        <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                        <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                        <SelectItem value="fertig">Fertig</SelectItem>
+                        <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notizen</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Interne Notizen"
+                      className="resize-none min-h-[80px]"
+                      value={field.value === null ? '' : (field.value || '')}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter className="pt-4 flex justify-between">
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleClose} 
+                  type="button"
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Löschen
+                </Button>
+              </div>
+              <Button 
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Speichere...
+                  </>
+                ) : (
+                  'Änderungen speichern'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
       
       {/* Delete confirmation dialog */}
