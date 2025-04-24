@@ -12,7 +12,7 @@ export interface Customer {
 export type DeviceType = 'smartphone' | 'tablet' | 'laptop';
 
 // Repair statuses
-export type RepairStatus = 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt';
+export type RepairStatus = 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus';
 
 // Repair model
 export interface Repair {
@@ -47,4 +47,6 @@ export interface RepairStatistics {
   inRepair: number;
   completed: number;
   today: number;
+  readyForPickup: number;
+  outsourced: number;
 }
