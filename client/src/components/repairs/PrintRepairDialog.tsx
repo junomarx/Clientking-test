@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { Repair, Customer } from '@shared/schema';
+import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -64,7 +64,27 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     enabled: !!repair?.customerId && open,
   });
 
-  const isLoading = isLoadingRepair || isLoadingCustomer;
+  // Lade Unternehmenseinstellungen
+  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
+    queryKey: ['/api/business-settings'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/business-settings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) return null;
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
+        return null;
+      }
+    },
+    enabled: open,
+  });
+
+  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
   // Funktion zum Drucken
   const handlePrint = () => {
@@ -135,9 +155,17 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto">
               <div ref={printRef}>
                 <div className="print-header text-center mb-6">
-                  <h2 className="text-xl font-bold">Handyshop Verwaltung</h2>
-                  <p className="text-sm">Ihr Spezialist für Smartphone Reparaturen</p>
-                  <p className="text-xs">Musterstraße 123, 12345 Musterstadt</p>
+                  <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
+                  {businessSettings?.phone && <p className="text-sm">Tel: {businessSettings.phone}</p>}
+                  {businessSettings?.email && <p className="text-sm">E-Mail: {businessSettings.email}</p>}
+                  <p className="text-xs">
+                    {businessSettings ? (
+                      `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}`
+                    ) : (
+                      "Adresse nicht verfügbar"
+                    )}
+                  </p>
+                  {businessSettings?.website && <p className="text-xs">{businessSettings.website}</p>}
                 </div>
                 
                 <div className="print-section mb-4">
@@ -189,7 +217,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   <div className="border-t pt-4 text-xs">
                     <p className="text-center">Vielen Dank für Ihren Auftrag.</p>
                     <p className="text-center">Bitte bewahren Sie diesen Beleg auf. Er dient als Nachweis für die Abholung Ihres Geräts.</p>
-                    <p className="text-center mt-2">© {new Date().getFullYear()} Handyshop Verwaltung</p>
+                    <p className="text-center mt-2">© {new Date().getFullYear()} {businessSettings?.businessName || "Handyshop Verwaltung"}</p>
+                    {businessSettings?.taxId && (
+                      <p className="text-center">UID: {businessSettings.taxId}</p>
+                    )}
                   </div>
                 </div>
               </div>
