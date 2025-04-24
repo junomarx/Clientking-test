@@ -49,7 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/login", credentials);
       return await res.json();
     },
-    onSuccess: (data: UserResponse) => {
+    onSuccess: (data: any) => {
+      // Hier speichern wir den Token aus der Antwort
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        console.log('Token saved to localStorage');
+      }
+      
       queryClient.setQueryData(["/api/user"], data);
       toast({
         title: "Anmeldung erfolgreich",
@@ -91,6 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      // Token bei Abmeldung entfernen
+      localStorage.removeItem('auth_token');
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Abmeldung erfolgreich",

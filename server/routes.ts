@@ -12,9 +12,28 @@ import { setupAuth } from "./auth";
 
 // Middleware to check if user is authenticated
 function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  // Standardauthentifizierung über Session
   if (req.isAuthenticated()) {
     return next();
   }
+  
+  // Alternativ über Token-Authentifizierung
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    try {
+      // Dekodieren des Tokens (in Produktion würden wir JWT verwenden)
+      const decoded = Buffer.from(token, 'base64').toString();
+      const [userId, username] = decoded.split(':');
+      
+      // Benutzer in Request setzen
+      req.user = { id: parseInt(userId), username } as Express.User;
+      return next();
+    } catch (error) {
+      console.error('Token authentication error:', error);
+    }
+  }
+  
   res.status(401).json({ message: "Nicht angemeldet" });
 }
 

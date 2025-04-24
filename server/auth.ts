@@ -110,9 +110,15 @@ export function setupAuth(app: Express) {
       
       req.login(user, (err) => {
         if (err) return next(err);
-        // Return the user without the password
+        // Generate a simple token (in production we would use JWT)
+        const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
+        
+        // Return the user without the password and token
         const { password, ...userWithoutPassword } = user;
-        res.status(200).json(userWithoutPassword);
+        res.status(200).json({ 
+          ...userWithoutPassword, 
+          token 
+        });
       });
     })(req, res, next);
   });
