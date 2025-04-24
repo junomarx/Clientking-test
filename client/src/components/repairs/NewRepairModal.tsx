@@ -42,12 +42,7 @@ interface NewRepairModalProps {
 
 export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProps) {
   const { toast } = useToast();
-  
-  // Zustandsvariablen
-  const [showPrintOptions, setShowPrintOptions] = useState(false);
-  const [createdRepairId, setCreatedRepairId] = useState<number | null>(null);
-  const [showReceiptPrintDialog, setShowReceiptPrintDialog] = useState(false);
-  const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
+  const { showPrintOptions } = usePrintManager();
   
   // Load customer details if customerId is provided
   const { 
@@ -116,9 +111,6 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       
       console.log("Erstellt mit ID:", data.id);
       
-      // Wichtig: Reihenfolge beachten - erst ID setzen, dann Dialog anzeigen
-      setCreatedRepairId(data.id);
-      
       // Speichere Modell in localStorage wenn es neu ist
       const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
       if (formValues.brand && formValues.model && formValues.deviceType) {
@@ -133,14 +125,12 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         }
       }
       
-      // Wichtig: Erst Dialog anzeigen, dann Form zurücksetzen
-      setShowPrintOptions(true);
-      console.log("Druckoptionen-Dialog sollte jetzt angezeigt werden");
+      // Druckoptionen über den PrintManager anzeigen
+      showPrintOptions(data.id);
+      console.log("Druckoptionen über PrintManager angezeigt für ID:", data.id);
       
-      // Form später zurücksetzen um Konflikte zu vermeiden
-      setTimeout(() => {
-        form.reset();
-      }, 500);
+      // Form zurücksetzen
+      form.reset();
     },
     onError: (error) => {
       toast({
@@ -154,18 +144,6 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // If no customer is selected or loaded and customerId is required
   const isCustomerMissing = !customer && customerId;
   
-  // Handler für Druckoptionen
-  const handlePrintReceipt = () => {
-    setShowPrintOptions(false);
-    setShowReceiptPrintDialog(true);
-  };
-  
-  const handlePrintLabel = () => {
-    // Für das Etikett nutzen wir denselben Dialog mit einer anderen Ansicht (könnte später angepasst werden)
-    setShowPrintOptions(false);
-    setShowLabelPrintDialog(true);
-  };
-  
   function onSubmit(data: RepairFormValues) {
     createMutation.mutate(data);
   }
@@ -173,244 +151,209 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   if (!open) return null;
   
   return (
-    <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>Neuer Reparaturauftrag</DialogTitle>
-            <DialogDescription>
-              {customer ? (
-                <span>Neuen Reparaturauftrag für <strong>{customer.firstName} {customer.lastName}</strong> erstellen</span>
-              ) : (
-                "Details für den neuen Reparaturauftrag eingeben"
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {isCustomerMissing ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-auto">
+        <DialogHeader>
+          <DialogTitle>Neuer Reparaturauftrag</DialogTitle>
+          <DialogDescription>
+            {customer ? (
+              <span>Neuen Reparaturauftrag für <strong>{customer.firstName} {customer.lastName}</strong> erstellen</span>
+            ) : (
+              "Details für den neuen Reparaturauftrag eingeben"
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isCustomerMissing ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="deviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gerätetyp</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Gerätetyp auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="smartphone">Smartphone</SelectItem>
+                        <SelectItem value="tablet">Tablet</SelectItem>
+                        <SelectItem value="laptop">Laptop</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="deviceType"
+                  name="brand"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gerätetyp</FormLabel>
+                      <FormLabel>Marke</FormLabel>
+                      <FormControl>
+                        <Input placeholder="z.B. Apple, Samsung, Huawei" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="model"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modell</FormLabel>
+                      <FormControl>
+                        <Input placeholder="z.B. iPhone 13, Galaxy S21" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="serialNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seriennummer (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Seriennummer oder IMEI" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="issue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Problembeschreibung</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Beschreiben Sie das Problem mit dem Gerät" 
+                        className="min-h-[80px]"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="estimatedCost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kostenvoranschlag (optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="z.B. 150 oder 150-180" 
+                          {...field}
+                          value={field.value === null || field.value === undefined ? '' : field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>Geschätzte Kosten in Euro</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Gerätetyp auswählen" />
+                            <SelectValue placeholder="Status auswählen" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="smartphone">Smartphone</SelectItem>
-                          <SelectItem value="tablet">Tablet</SelectItem>
-                          <SelectItem value="laptop">Laptop</SelectItem>
+                          <SelectItem value="eingegangen">Eingegangen</SelectItem>
+                          <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                          <SelectItem value="ausser_haus">Außer Haus</SelectItem>
+                          <SelectItem value="fertig">Fertig</SelectItem>
+                          <SelectItem value="abgeholt">Abgeholt</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notizen (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Interne Notizen zur Reparatur" 
+                        className="min-h-[80px]"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex justify-between pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                >
+                  Abbrechen
+                </Button>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="brand"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Marke</FormLabel>
-                        <FormControl>
-                          <Input placeholder="z.B. Apple, Samsung, Huawei" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="model"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Modell</FormLabel>
-                        <FormControl>
-                          <Input placeholder="z.B. iPhone 13, Galaxy S21" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="serialNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Seriennummer (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Seriennummer oder IMEI" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <Button 
+                  type="submit" 
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Erstellen...
+                    </>
+                  ) : (
+                    "Reparaturauftrag erstellen"
                   )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="issue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Problembeschreibung</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Beschreiben Sie das Problem mit dem Gerät" 
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="estimatedCost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Kostenvoranschlag (optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="z.B. 150 oder 150-180" 
-                            {...field}
-                            value={field.value === null || field.value === undefined ? '' : field.value}
-                          />
-                        </FormControl>
-                        <FormDescription>Geschätzte Kosten in Euro</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Status auswählen" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                            <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                            <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                            <SelectItem value="fertig">Fertig</SelectItem>
-                            <SelectItem value="abgeholt">Abgeholt</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notizen (optional)</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Interne Notizen zur Reparatur" 
-                          className="min-h-[80px]"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex justify-between pt-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={onClose}
-                  >
-                    Abbrechen
-                  </Button>
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Erstellen...
-                      </>
-                    ) : (
-                      "Reparaturauftrag erstellen"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Druckoptionen Dialog - separater Dialog, der auch angezeigt wird, wenn der Hauptdialog geschlossen wird */}
-      <PrintOptionsDialog 
-        open={showPrintOptions}
-        onClose={() => {
-          console.log("PrintOptionsDialog wird geschlossen");
-          setShowPrintOptions(false);
-          // Dialog nicht automatisch schließen, Nutzer soll entscheiden
-        }}
-        onPrintReceipt={handlePrintReceipt}
-        onPrintLabel={handlePrintLabel}
-        repairId={createdRepairId}
-      />
-      
-      {/* Bon Druck Dialog */}
-      <PrintRepairDialog
-        open={showReceiptPrintDialog}
-        onClose={() => {
-          setShowReceiptPrintDialog(false);
-          onClose();
-        }}
-        repairId={createdRepairId}
-      />
-      
-      {/* Etikett Druck Dialog - aktuell gleich dem Bon-Dialog */}
-      <PrintRepairDialog
-        open={showLabelPrintDialog}
-        onClose={() => {
-          setShowLabelPrintDialog(false);
-          onClose();
-        }}
-        repairId={createdRepairId}
-      />
-    </>
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
