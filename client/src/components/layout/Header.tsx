@@ -6,6 +6,7 @@ import { BusinessSettingsDialog } from '@/components/settings';
 
 export function Header() {
   const { user, logoutMutation } = useAuth();
+  const [showSettings, setShowSettings] = useState(false);
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -24,6 +25,17 @@ export function Header() {
             <User size={18} />
             <span className="hidden md:inline">{user.username}</span>
           </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+            onClick={() => setShowSettings(true)}
+          >
+            <Settings size={16} className="mr-1" />
+            <span className="hidden sm:inline">Einstellungen</span>
+          </Button>
+          
           <Button 
             variant="outline" 
             size="sm" 
@@ -40,6 +52,12 @@ export function Header() {
               </>
             )}
           </Button>
+          
+          {/* Business Settings Dialog */}
+          <BusinessSettingsDialog 
+            open={showSettings} 
+            onClose={() => setShowSettings(false)} 
+          />
         </div>
       )}
     </div>
