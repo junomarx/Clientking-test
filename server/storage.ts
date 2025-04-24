@@ -2,8 +2,10 @@ import {
   users, type User, type InsertUser,
   customers, type Customer, type InsertCustomer,
   repairs, type Repair, type InsertRepair,
-  businessSettings, type BusinessSettings, type InsertBusinessSettings
+  businessSettings, type BusinessSettings, type InsertBusinessSettings,
+  feedbacks, type Feedback, type InsertFeedback
 } from "@shared/schema";
+import crypto from "crypto";
 import { db } from "./db";
 import { eq, desc, and, or, sql, gte, lt, count } from "drizzle-orm";
 import { pool } from "./db";
@@ -49,6 +51,12 @@ export interface IStorage {
     completed: number;
     today: number;
   }>;
+
+  // Feedback methods
+  createFeedbackToken(repairId: number, customerId: number): Promise<string>;
+  getFeedbackByToken(token: string): Promise<Feedback | undefined>;
+  submitFeedback(token: string, rating: number, comment?: string): Promise<Feedback | undefined>;
+  getFeedbacksByRepairId(repairId: number): Promise<Feedback[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -301,6 +309,91 @@ export class DatabaseStorage implements IStorage {
       readyForPickup: readyForPickupResult?.count || 0,
       outsourced: outsourcedResult?.count || 0,
     };
+  }
+  
+  // Feedback methods
+  async createFeedbackToken(repairId: number, customerId: number): Promise<string> {
+    try {
+      // Generiere einen einzigartigen Token
+      const token = crypto.randomBytes(32).toString('hex');
+      
+      // Prüfe, ob schon ein Feedback für diese Reparatur existiert
+      const existingFeedbacks = await db
+        .select()
+        .from(feedbacks)
+        .where(eq(feedbacks.repairId, repairId));
+      
+      if (existingFeedbacks.length > 0) {
+        // Wenn bereits ein Feedback-Token existiert, gebe diesen zurück
+        return existingFeedbacks[0].feedbackToken;
+      }
+      
+      // Erstelle einen neuen Feedback-Eintrag mit dem Token
+      await db.insert(feedbacks).values({
+        repairId,
+        customerId,
+        rating: 0, // Platzhalter-Bewertung (0 bedeutet 'noch nicht bewertet')
+        feedbackToken: token,
+        createdAt: new Date()
+      });
+      
+      return token;
+    } catch (error) {
+      console.error("Error creating feedback token:", error);
+      throw new Error("Fehler beim Erstellen des Feedback-Tokens");
+    }
+  }
+  
+  async getFeedbackByToken(token: string): Promise<Feedback | undefined> {
+    try {
+      const [feedback] = await db
+        .select()
+        .from(feedbacks)
+        .where(eq(feedbacks.feedbackToken, token));
+      
+      return feedback;
+    } catch (error) {
+      console.error("Error retrieving feedback by token:", error);
+      return undefined;
+    }
+  }
+  
+  async submitFeedback(token: string, rating: number, comment?: string): Promise<Feedback | undefined> {
+    try {
+      // Prüfe, ob der Token existiert
+      const existingFeedback = await this.getFeedbackByToken(token);
+      
+      if (!existingFeedback) {
+        return undefined;
+      }
+      
+      // Aktualisiere das Feedback
+      const [updatedFeedback] = await db
+        .update(feedbacks)
+        .set({
+          rating: rating,
+          comment: comment || existingFeedback.comment
+        })
+        .where(eq(feedbacks.feedbackToken, token))
+        .returning();
+      
+      return updatedFeedback;
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      return undefined;
+    }
+  }
+  
+  async getFeedbacksByRepairId(repairId: number): Promise<Feedback[]> {
+    try {
+      return await db
+        .select()
+        .from(feedbacks)
+        .where(eq(feedbacks.repairId, repairId));
+    } catch (error) {
+      console.error("Error retrieving feedbacks for repair:", error);
+      return [];
+    }
   }
 }
 

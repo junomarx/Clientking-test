@@ -92,3 +92,22 @@ export const insertBusinessSettingsSchema = createInsertSchema(businessSettings)
 
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
+
+// Kundenfeedback Tabelle
+export const feedbacks = pgTable("feedbacks", {
+  id: serial("id").primaryKey(),
+  repairId: integer("repair_id").notNull().references(() => repairs.id),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  rating: integer("rating").notNull(), // 1-5 Sterne
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  feedbackToken: text("feedback_token").notNull().unique(), // Einmaliger Token für Feedback-Link
+});
+
+export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
