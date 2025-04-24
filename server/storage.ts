@@ -181,7 +181,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Stats methods
-  async getStats(): Promise<{ totalOrders: number; inRepair: number; completed: number; today: number; }> {
+  async getStats(): Promise<{ 
+    totalOrders: number; 
+    inRepair: number; 
+    completed: number; 
+    today: number;
+    readyForPickup: number; 
+    outsourced: number; 
+  }> {
     // Get total number of orders
     const [totalResult] = await db
       .select({ count: count() })
@@ -204,6 +211,18 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
+    // Get number of repairs ready for pickup
+    const [readyForPickupResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(eq(repairs.status, "fertig"));
+      
+    // Get number of outsourced repairs
+    const [outsourcedResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(eq(repairs.status, "ausser_haus"));
+    
     // Get number of repairs created today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -225,6 +244,8 @@ export class DatabaseStorage implements IStorage {
       inRepair: inRepairResult?.count || 0,
       completed: completedResult?.count || 0,
       today: todayResult?.count || 0,
+      readyForPickup: readyForPickupResult?.count || 0,
+      outsourced: outsourcedResult?.count || 0,
     };
   }
 }

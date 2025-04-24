@@ -272,6 +272,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         <SelectContent>
                           <SelectItem value="eingegangen">Eingegangen</SelectItem>
                           <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                          <SelectItem value="ausser_haus">Außer Haus</SelectItem>
                           <SelectItem value="fertig">Fertig</SelectItem>
                           <SelectItem value="abgeholt">Abgeholt</SelectItem>
                         </SelectContent>

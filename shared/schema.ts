@@ -21,7 +21,7 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
 export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 
 // Repair statuses enum
-export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "fertig", "abgeholt"]);
+export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "fertig", "abgeholt", "ausser_haus"]);
 
 // Repair orders table
 export const repairs = pgTable("repairs", {

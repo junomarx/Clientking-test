@@ -2,22 +2,32 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard } from './StatCard';
 import { Button } from '@/components/ui/button';
-import { Repair, Customer } from '@/lib/types';
-import { getStatusBadge } from '@/lib/utils/statusBadges';
+import { Repair, Customer } from '@shared/schema';
+import { getStatusBadge } from '@/lib/utils';
+import { useLocation } from 'wouter';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
 }
 
 export function DashboardTab({ onNewOrder }: DashboardTabProps) {
+  const [, setLocation] = useLocation();
+  
   const { data: stats, isLoading: statsLoading } = useQuery<{
     totalOrders: number;
     inRepair: number;
     completed: number;
     today: number;
+    readyForPickup: number;
+    outsourced: number;
   }>({
     queryKey: ['/api/stats']
   });
+  
+  // Handler functions for status filtering
+  const navigateToFilteredRepairs = (status: string) => {
+    setLocation('/repairs?status=' + status);
+  };
 
   const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({
     queryKey: ['/api/repairs']
@@ -55,26 +65,42 @@ export function DashboardTab({ onNewOrder }: DashboardTabProps) {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
         <StatCard 
           title="Gesamte Aufträge" 
           value={statsLoading ? 0 : stats?.totalOrders || 0} 
           type="primary" 
+          onClick={() => navigateToFilteredRepairs('all')}
         />
         <StatCard 
           title="In Reparatur" 
           value={statsLoading ? 0 : stats?.inRepair || 0} 
           type="warning" 
+          onClick={() => navigateToFilteredRepairs('in_reparatur')}
         />
         <StatCard 
-          title="Fertiggestellte Reparaturen" 
-          value={statsLoading ? 0 : stats?.completed || 0} 
+          title="Außer Haus" 
+          value={statsLoading ? 0 : stats?.outsourced || 0} 
+          type="info" 
+          onClick={() => navigateToFilteredRepairs('ausser_haus')}
+        />
+        <StatCard 
+          title="Fertig zur Abholung" 
+          value={statsLoading ? 0 : stats?.readyForPickup || 0} 
           type="success" 
+          onClick={() => navigateToFilteredRepairs('fertig')}
+        />
+        <StatCard 
+          title="Abgeholt" 
+          value={statsLoading ? 0 : (stats?.completed || 0) - (stats?.readyForPickup || 0)} 
+          type="success" 
+          onClick={() => navigateToFilteredRepairs('abgeholt')}
         />
         <StatCard 
           title="Heute erfasst" 
           value={statsLoading ? 0 : stats?.today || 0} 
-          type="info" 
+          type="primary"
+          onClick={() => navigateToFilteredRepairs('today')} 
         />
       </div>
       

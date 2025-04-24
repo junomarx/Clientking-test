@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Repair, Customer } from '@/lib/types';
+import { Repair, Customer } from '@shared/schema';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { getStatusBadge } from '@/lib/utils/statusBadges';
+import { getStatusBadge } from '@/lib/utils';
+import { useLocation } from 'wouter';
 import { 
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ interface RepairsTabProps {
 }
 
 export function RepairsTab({ onNewOrder }: RepairsTabProps) {
+  const [location] = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
@@ -28,6 +30,19 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
+  
+  // Check for status filter in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const statusParam = params.get('status');
+    
+    if (statusParam) {
+      // "today" is a special case that would be handled in the filters
+      if (statusParam !== 'today') {
+        setStatusFilter(statusParam);
+      }
+    }
+  }, [location]);
 
   const { data: repairs, isLoading: repairsLoading } = useQuery<Repair[]>({
     queryKey: ['/api/repairs']
