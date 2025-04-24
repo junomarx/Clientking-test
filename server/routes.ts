@@ -330,6 +330,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // BUSINESS SETTINGS API
+  app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const settings = await storage.getBusinessSettings();
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Error fetching business settings:", error);
+      res.status(500).json({ message: "Failed to fetch business settings" });
+    }
+  });
+
+  app.post("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const settingsData = insertBusinessSettingsSchema.partial().parse(req.body);
+      const settings = await storage.updateBusinessSettings(settingsData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating business settings:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Invalid business settings data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update business settings" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
