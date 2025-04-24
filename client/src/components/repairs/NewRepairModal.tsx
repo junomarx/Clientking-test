@@ -104,10 +104,31 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Invalidate stats query
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
-      form.reset();
-      // Statt Dialog zu schließen, zeigen wir die Druckoptionen an
+      console.log("Erstellt mit ID:", data.id);
+      
+      // Wichtig: Reihenfolge beachten - erst ID setzen, dann Dialog anzeigen
       setCreatedRepairId(data.id);
-      setShowPrintOptions(true);
+      
+      // Speichere Modell in localStorage wenn es neu ist
+      if (values.brand && values.model && values.deviceType) {
+        const modelKey = `${values.deviceType}:${values.brand}`;
+        const existingModels = JSON.parse(localStorage.getItem('storedModels') || '{}');
+        if (!existingModels[modelKey]) {
+          existingModels[modelKey] = [];
+        }
+        if (!existingModels[modelKey].includes(values.model)) {
+          existingModels[modelKey].push(values.model);
+          localStorage.setItem('storedModels', JSON.stringify(existingModels));
+        }
+      }
+      
+      // Form zurücksetzen
+      form.reset();
+      
+      // Dialog zur Druckoption anzeigen
+      setTimeout(() => {
+        setShowPrintOptions(true);
+      }, 100);
     },
     onError: (error) => {
       toast({
