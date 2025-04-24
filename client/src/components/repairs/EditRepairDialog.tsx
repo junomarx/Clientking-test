@@ -162,7 +162,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                         min="0"
                         placeholder="0.00"
                         {...field}
-                        value={field.value === undefined ? '' : field.value}
+                        value={field.value === null || field.value === undefined ? '' : field.value}
                         onChange={(e) => {
                           const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
                           field.onChange(value);
@@ -212,9 +212,13 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                   <FormLabel>Notizen</FormLabel>
                   <FormControl>
                     <Textarea 
-                      {...field} 
                       placeholder="Interne Notizen"
                       className="resize-none min-h-[80px]"
+                      value={field.value === null ? '' : (field.value || '')}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                     />
                   </FormControl>
                   <FormMessage />

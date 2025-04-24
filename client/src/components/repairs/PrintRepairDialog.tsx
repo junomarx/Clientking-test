@@ -220,7 +220,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               </div>
               <div className="row">
                 <div className="label">Kostenvoranschlag:</div>
-                <div className="value">{formatCurrency(repair.estimatedCost)}</div>
+                <div className="value">{formatCurrency(repair.estimatedCost !== null ? repair.estimatedCost : undefined)}</div>
               </div>
               {repair.notes && (
                 <div className="row">

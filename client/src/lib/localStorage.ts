@@ -104,8 +104,10 @@ export const updateRepair = (id: number, updatedData: Partial<Repair>): Repair |
   return repairs[index];
 };
 
-export const updateRepairStatus = (id: number, status: RepairStatus): Repair | null => {
-  return updateRepair(id, { status });
+export const updateRepairStatus = (id: number, status: string): Repair | null => {
+  // Hier konvertieren wir den String-Status in den RepairStatus-Typ
+  const typedStatus = status as RepairStatus;
+  return updateRepair(id, { status: typedStatus });
 };
 
 export const removeRepair = (id: number): boolean => {
