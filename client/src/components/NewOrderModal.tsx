@@ -225,25 +225,41 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Funktion zum Prüfen, ob ein Kunde mit gleichem Namen existiert
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
     try {
+      if (firstName.length < 2 || lastName.length < 2) {
+        return false;
+      }
+      
       const queryParams = new URLSearchParams({ 
         firstName, 
         lastName 
       }).toString();
       
       const response = await fetch(`/api/customers?${queryParams}`, {
-        credentials: "include"
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+        }
       });
+      
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen der Kunden');
+      }
+      
       const customers = await response.json();
       
       if (customers && customers.length > 0) {
         setMatchingCustomers(customers);
-        setShowExistingCustomerDialog(true);
+        setIsCustomerDropdownOpen(true);
         return true;
       }
       
+      // Wenn keine Kunden gefunden wurden, leere die Liste und schließe das Dropdown
+      setMatchingCustomers([]);
+      setIsCustomerDropdownOpen(false);
       return false;
     } catch (error) {
       console.error("Error checking for existing customer:", error);
+      setMatchingCustomers([]);
+      setIsCustomerDropdownOpen(false);
       return false;
     }
   };
@@ -524,18 +540,38 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               placeholder="Vorname" 
                               onChange={(e) => {
                                 field.onChange(e);
-                                // Starte die Kundensuche basierend auf dem Vornamen
-                                searchCustomersByFirstName(e.target.value);
-                                
-                                // Wenn der Nachname bereits eingegeben wurde, prüfe nach Änderung des Vornamens
+                                // Keine Suche nach Kunden bei Änderung des Vornamens
+                                // Nur wenn der Nachname bereits eingegeben wurde, prüfe nach Änderung des Vornamens
                                 const lastName = form.getValues().lastName;
                                 if (lastName.length >= 2) {
                                   checkCustomerAfterLastNameInput(e.target.value, lastName);
                                 }
                               }}
-                              onFocus={() => {
-                                if (field.value && field.value.length >= 2) {
-                                  searchCustomersByFirstName(field.value);
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nachname</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              {...field} 
+                              placeholder="Nachname"
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Nach Eingabe des Nachnamens Kundendaten überprüfen
+                                const firstName = form.getValues().firstName;
+                                if (e.target.value.length >= 2) {
+                                  checkCustomerAfterLastNameInput(firstName, e.target.value);
                                 }
                               }}
                               onBlur={() => {
@@ -570,31 +606,6 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               </div>
                             )}
                           </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nachname</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="Nachname"
-                            onChange={(e) => {
-                              field.onChange(e);
-                              // Nach Eingabe des Nachnamens Kundendaten überprüfen
-                              const firstName = form.getValues().firstName;
-                              if (e.target.value.length >= 2) {
-                                checkCustomerAfterLastNameInput(firstName, e.target.value);
-                              }
-                            }}
-                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
