@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import type { Customer } from '@/lib/types';
 
 import {
   Dialog,
@@ -12,7 +13,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -69,6 +81,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
+  const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
+  const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState(false);
   
   // Form definition
   const form = useForm<OrderFormValues>({
@@ -155,9 +169,64 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     }
   });
   
-  const onSubmit = async (data: OrderFormValues) => {
-    // First create the customer
+  // Funktion zum Prüfen, ob ein Kunde mit gleichem Namen existiert
+  const checkForExistingCustomer = async (firstName: string, lastName: string) => {
     try {
+      const queryParams = new URLSearchParams({ 
+        firstName, 
+        lastName 
+      }).toString();
+      
+      const response = await fetch(`/api/customers?${queryParams}`);
+      const customers = await response.json();
+      
+      if (customers && customers.length > 0) {
+        setMatchingCustomers(customers);
+        setShowExistingCustomerDialog(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking for existing customer:", error);
+      return false;
+    }
+  };
+  
+  // Funktion zum Erstellen eines neuen Auftrags mit vorhandenem Kunden
+  const createRepairWithExistingCustomer = async (customer: Customer, formData: OrderFormValues) => {
+    try {
+      const repairData = {
+        customerId: customer.id,
+        deviceType: formData.deviceType,
+        brand: formData.brand,
+        model: formData.model,
+        serialNumber: formData.serialNumber,
+        issue: formData.issue,
+        estimatedCost: formData.estimatedCost,
+        status: formData.status,
+        notes: formData.notes
+      };
+      
+      await createRepairMutation.mutateAsync(repairData);
+    } catch (error) {
+      console.error("Error creating repair with existing customer:", error);
+    }
+  };
+  
+  // Bearbeiten des Formularsubmits
+  const onSubmit = async (data: OrderFormValues) => {
+    try {
+      // Erst prüfen, ob Kunde bereits existiert
+      const customerExists = await checkForExistingCustomer(data.firstName, data.lastName);
+      
+      // Wenn Kunde existiert, wird im Dialog entschieden, was zu tun ist
+      // Dialog zeigt alle übereinstimmenden Kunden an
+      if (customerExists) {
+        return; // Dialog übernimmt den Rest
+      }
+      
+      // Wenn kein Kunde gefunden wurde, erstelle einen neuen Kunden
       const customerData = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -167,7 +236,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       
       const customer = await createCustomerMutation.mutateAsync(customerData);
       
-      // Then create the repair with the customer ID
+      // Dann erstelle den Reparaturauftrag mit der Kunden-ID
       const repairData = {
         customerId: customer.id,
         deviceType: data.deviceType,
@@ -194,12 +263,129 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Determine if the form is submitting
   const isSubmitting = createCustomerMutation.isPending || createRepairMutation.isPending;
 
+  // Handler für Kundenbestätigung im Dialog
+  const handleUseExistingCustomer = (customer: Customer) => {
+    // Kundendaten in Formular übernehmen
+    form.setValue('firstName', customer.firstName);
+    form.setValue('lastName', customer.lastName);
+    form.setValue('phone', customer.phone);
+    form.setValue('email', customer.email || '');
+    
+    // Dialog schließen
+    setShowExistingCustomerDialog(false);
+    
+    // Repair mit vorhandenem Kunden erstellen
+    createRepairWithExistingCustomer(customer, form.getValues());
+  };
+  
+  // Handler für neuen Kunden im Dialog
+  const handleCreateNewCustomer = async () => {
+    setShowExistingCustomerDialog(false);
+    
+    // Die aktuelle Form mit einem neuen Kunden fortsetzen
+    try {
+      const formData = form.getValues();
+      
+      const customerData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email
+      };
+      
+      const customer = await createCustomerMutation.mutateAsync(customerData);
+      
+      // Dann erstelle den Reparaturauftrag mit der Kunden-ID
+      const repairData = {
+        customerId: customer.id,
+        deviceType: formData.deviceType,
+        brand: formData.brand,
+        model: formData.model,
+        serialNumber: formData.serialNumber,
+        issue: formData.issue,
+        estimatedCost: formData.estimatedCost,
+        status: formData.status,
+        notes: formData.notes
+      };
+      
+      await createRepairMutation.mutateAsync(repairData);
+    } catch (error) {
+      console.error("Error creating new customer and repair:", error);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-primary">Neuen Auftrag erfassen</DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Dialog zur Bestätigung des vorhandenen Kunden */}
+      <AlertDialog open={showExistingCustomerDialog} onOpenChange={setShowExistingCustomerDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kunde bereits vorhanden</AlertDialogTitle>
+            <AlertDialogDescription>
+              {matchingCustomers.length === 1 ? (
+                <>
+                  Es gibt bereits einen Kunden mit dem Namen "{matchingCustomers[0]?.firstName} {matchingCustomers[0]?.lastName}".
+                  Möchten Sie diesen bestehenden Kunden verwenden oder einen neuen Kunden anlegen?
+                </>
+              ) : (
+                <>
+                  Es wurden {matchingCustomers.length} Kunden mit demselben Namen gefunden.
+                  Bitte wählen Sie einen vorhandenen Kunden oder legen Sie einen neuen an.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          {matchingCustomers.length > 0 && (
+            <div className="my-4 max-h-[200px] overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b">
+                  <tr>
+                    <th className="py-2 text-left">Name</th>
+                    <th className="py-2 text-left">Telefon</th>
+                    <th className="py-2 text-left">E-Mail</th>
+                    <th className="py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {matchingCustomers.map(customer => (
+                    <tr key={customer.id} className="border-b hover:bg-blue-50">
+                      <td className="py-2">{customer.firstName} {customer.lastName}</td>
+                      <td className="py-2">{customer.phone}</td>
+                      <td className="py-2">{customer.email || '-'}</td>
+                      <td className="py-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleUseExistingCustomer(customer)}
+                        >
+                          Auswählen
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleCreateNewCustomer}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Neuen Kunden anlegen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Hauptdialog zum Erstellen eines neuen Auftrags */}
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-primary">Neuen Auftrag erfassen</DialogTitle>
+          </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -467,5 +653,6 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         </Form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
