@@ -5,6 +5,7 @@ import { getStatusBadge } from '@/lib/utils';
 
 interface RepairWithCustomer {
   id: number;
+  orderCode?: string;
   customerName: string;
   model: string;
   status: string;
@@ -90,7 +91,7 @@ export function AnimatedRecentOrders({
                   >
                     <td className="py-3 px-4">
                       <motion.div whileHover={{ scale: 1.1 }}>
-                        #{repair.id}
+                        {repair.orderCode || `#${repair.id}`}
                       </motion.div>
                     </td>
                     <td className="py-3 px-4">{repair.customerName}</td>

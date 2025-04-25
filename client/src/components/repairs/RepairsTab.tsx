@@ -250,7 +250,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               ) : (
                 filteredRepairs.map(repair => (
                   <tr key={repair.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
-                    <td className="py-3 px-4">#{repair.id}</td>
+                    <td className="py-3 px-4">{repair.orderCode || `#${repair.id}`}</td>
                     <td className="py-3 px-4">{repair.customerName}</td>
                     <td className="py-3 px-4">{repair.model}</td>
                     <td className="py-3 px-4">{repair.issue}</td>
@@ -363,7 +363,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onClose={() => setShowDeleteDialog(false)}
           onConfirm={() => deleteRepairMutation.mutate(selectedRepairId)}
           title="Reparatur löschen"
-          description={`Möchten Sie wirklich die Reparatur #${selectedRepairId} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+          description={`Möchten Sie wirklich die Reparatur ${repairs.find(r => r.id === selectedRepairId)?.orderCode || `#${selectedRepairId}`} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
           isDeleting={deleteRepairMutation.isPending}
           itemName="Reparatur"
         />
