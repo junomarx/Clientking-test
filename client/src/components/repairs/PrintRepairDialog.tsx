@@ -145,6 +145,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 max-width: ${settings?.receiptWidth || '80mm'};
                 margin: 0 auto;
                 padding: 5mm 2mm;
+                padding-bottom: 15mm; /* Mehr Platz am Ende des Bons */
               }
               
               .print-header {
@@ -505,6 +506,12 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 </div>
                 
                 {/* Entfernt: Status wird nicht mehr angezeigt */}
+                
+                {/* Dankeschön und extra Platz am Ende */}
+                <div className="text-center mt-8">
+                  <p className="text-sm">Vielen Dank für Ihren Auftrag!</p>
+                  <div style={{ height: '10mm' }}></div>
+                </div>
               </div>
             </div>
             
