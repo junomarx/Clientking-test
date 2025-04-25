@@ -159,9 +159,42 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  // Middleware zum Überprüfen von Token im Authorization-Header
+  const checkTokenAuth = async (req: any, res: any, next: any) => {
+    if (req.isAuthenticated()) {
+      return next(); // Wenn der Benutzer über Cookie authentifiziert ist, weitermachen
+    }
     
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.sendStatus(401);
+    }
+    
+    try {
+      const token = authHeader.split(' ')[1];
+      const tokenData = Buffer.from(token, 'base64').toString().split(':');
+      
+      if (tokenData.length < 2) {
+        return res.sendStatus(401);
+      }
+      
+      const userId = parseInt(tokenData[0]);
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.isActive && !user.isAdmin) {
+        return res.sendStatus(401);
+      }
+      
+      // Benutzer im Request speichern
+      req.user = user;
+      return next();
+    } catch (error) {
+      console.error("Token authentication error:", error);
+      return res.sendStatus(401);
+    }
+  };
+  
+  app.get("/api/user", checkTokenAuth, (req, res) => {
     // Return the user without the password
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);

@@ -356,7 +356,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid status value" });
       }
       
-      const repair = await storage.updateRepairStatus(id, status);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).isAdmin;
+      
+      // Reparaturstatus mit Benutzerkontext aktualisieren
+      const repair = await storage.updateRepairStatus(id, status, isAdmin ? undefined : userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
@@ -414,7 +419,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteRepair(id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).isAdmin;
+      
+      // Reparatur mit Benutzerkontext löschen
+      const deleted = await storage.deleteRepair(id, isAdmin ? undefined : userId);
       
       if (!deleted) {
         return res.status(404).json({ message: "Repair not found" });
@@ -430,7 +441,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // STATISTICS API
   app.get("/api/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const stats = await storage.getStats();
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).isAdmin;
+      
+      // Statistiken mit Benutzerkontext abrufen
+      const stats = await storage.getStats(isAdmin ? undefined : userId);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch statistics" });
@@ -537,7 +553,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/repairs/:id/feedback-token", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairId = parseInt(req.params.id);
-      const repair = await storage.getRepair(repairId);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).isAdmin;
+      
+      // Reparatur mit Benutzerkontext abrufen
+      const repair = await storage.getRepair(repairId, isAdmin ? undefined : userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
@@ -637,8 +659,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/repairs/:id/feedback", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairId = parseInt(req.params.id);
-      const feedbacks = await storage.getFeedbacksByRepairId(repairId);
       
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).isAdmin;
+      
+      // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
+      const repair = await storage.getRepair(repairId, isAdmin ? undefined : userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Wenn die Reparatur gefunden wurde, Feedback abrufen
+      const feedbacks = await storage.getFeedbacksByRepairId(repairId);
       res.json(feedbacks);
     } catch (error) {
       console.error("Error retrieving repair feedback:", error);
