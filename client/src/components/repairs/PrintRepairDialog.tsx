@@ -12,6 +12,7 @@ import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useBusinessSettings } from '@/hooks/use-business-settings';
 
 interface PrintRepairDialogProps {
   open: boolean;
@@ -21,7 +22,8 @@ interface PrintRepairDialogProps {
 
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
-
+  const { settings } = useBusinessSettings();
+  
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],

@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
+import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
 import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
@@ -49,15 +50,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider>
-          <PrintManagerProvider>
-            <TooltipProvider>
-              <TitleUpdater />
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </PrintManagerProvider>
-        </ThemeProvider>
+        <BusinessSettingsProvider>
+          <ThemeProvider>
+            <PrintManagerProvider>
+              <TooltipProvider>
+                <TitleUpdater />
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </PrintManagerProvider>
+          </ThemeProvider>
+        </BusinessSettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
