@@ -10,6 +10,8 @@ export const customers = pgTable("customers", {
   phone: text("phone").notNull(),
   email: text("email"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Jeder Kunde gehört zu einem Benutzer/Unternehmen
+  userId: integer("user_id").references(() => users.id),
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -39,6 +41,8 @@ export const repairs = pgTable("repairs", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Jede Reparatur gehört zu einem Benutzer/Unternehmen
+  userId: integer("user_id").references(() => users.id),
 });
 
 export const insertRepairSchema = createInsertSchema(repairs).omit({

@@ -148,13 +148,36 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Customer methods
-  async getAllCustomers(): Promise<Customer[]> {
-    return await db.select().from(customers).orderBy(desc(customers.createdAt));
+  async getAllCustomers(currentUserId?: number): Promise<Customer[]> {
+    if (currentUserId) {
+      return await db
+        .select()
+        .from(customers)
+        .where(eq(customers.userId, currentUserId))
+        .orderBy(desc(customers.createdAt));
+    } else {
+      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
+      return await db.select().from(customers).orderBy(desc(customers.createdAt));
+    }
   }
   
-  async getCustomer(id: number): Promise<Customer | undefined> {
-    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
-    return customer;
+  async getCustomer(id: number, currentUserId?: number): Promise<Customer | undefined> {
+    if (currentUserId) {
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(
+          and(
+            eq(customers.id, id),
+            eq(customers.userId, currentUserId)
+          )
+        );
+      return customer;
+    } else {
+      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
+      const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+      return customer;
+    }
   }
   
   async findCustomersByName(firstName: string, lastName: string): Promise<Customer[]> {

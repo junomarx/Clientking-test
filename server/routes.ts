@@ -385,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Wenn der Benutzer kein Admin ist und die Business-Settings noch nicht gesetzt hat,
       // initialisieren wir die Einstellungen mit den Firmendaten aus seinem Profil
-      if (!req.user.isAdmin && (!settings || settings.id === 1)) {
+      if (req.user && !req.user.isAdmin && (!settings || settings.id === 1)) {
         // Verwende die Firmendaten des angemeldeten Benutzers
         const userData = req.user;
         
@@ -395,14 +395,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           businessName: userData.companyName || "",
           ownerFirstName: "", 
           ownerLastName: "",
-          taxId: userData.companyVatNumber || userData.tax_id || "",
-          streetAddress: userData.companyAddress || userData.street_address || "",
-          city: userData.city || "",
-          zipCode: userData.zip_code || "",
-          country: userData.country || "Österreich",
-          phone: userData.companyPhone || userData.phone || "",
+          taxId: userData.companyVatNumber || "",
+          streetAddress: userData.companyAddress || "",
+          city: "",
+          zipCode: "",
+          country: "Österreich",
+          phone: userData.companyPhone || "",
           email: userData.companyEmail || userData.email || "",
-          website: userData.website || "",
+          website: "",
           updatedAt: new Date(),
           logoImage: settings?.logoImage || null,
           colorTheme: settings?.colorTheme || "blue",
