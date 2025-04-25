@@ -26,6 +26,7 @@ export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "fertig", "
 // Repair orders table
 export const repairs = pgTable("repairs", {
   id: serial("id").primaryKey(),
+  orderCode: text("order_code").unique(), // Neue Spalte für das spezielle Auftragsnummerformat: z.B. AS1496
   customerId: integer("customer_id").notNull().references(() => customers.id),
   deviceType: text("device_type").notNull(),
   brand: text("brand").notNull(),
@@ -42,6 +43,7 @@ export const repairs = pgTable("repairs", {
 
 export const insertRepairSchema = createInsertSchema(repairs).omit({
   id: true,
+  orderCode: true, // Wird automatisch generiert
   createdAt: true,
   updatedAt: true,
 });

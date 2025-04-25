@@ -153,12 +153,55 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(repairs.createdAt));
   }
   
+  // Generiert einen eindeutigen Auftragscode im Format: [Marke-Anfangsbuchstabe][Geräteart-Anfangsbuchstabe][4 zufällige Ziffern]
+  // z.B. Apple Smartphone = AS1234
+  private async generateUniqueOrderCode(brand: string, deviceType: string): Promise<string> {
+    // Extrahiere den ersten Buchstaben der Marke und der Geräteart und konvertiere zu Großbuchstaben
+    const brandInitial = brand.charAt(0).toUpperCase();
+    const deviceInitial = deviceType.charAt(0).toUpperCase();
+    const prefix = brandInitial + deviceInitial;
+    
+    // Prüfe, ob ein Auftragscode mit diesem Präfix bereits existiert
+    const existingCodes = await db
+      .select({ orderCode: repairs.orderCode })
+      .from(repairs)
+      .where(
+        and(
+          isNotNull(repairs.orderCode),
+          like(repairs.orderCode, `${prefix}%`)
+        )
+      );
+    
+    // Extrahiere alle verwendeten Zahlenkombinationen
+    const usedNumbers = new Set<string>();
+    existingCodes.forEach(code => {
+      if (code.orderCode && code.orderCode.length >= 6) {
+        usedNumbers.add(code.orderCode.substring(2));
+      }
+    });
+    
+    // Generiere eine zufällige vierstellige Zahl, die noch nicht verwendet wurde
+    let randomNum: string;
+    do {
+      randomNum = Math.floor(1000 + Math.random() * 9000).toString(); // 1000-9999
+    } while (usedNumbers.has(randomNum));
+    
+    return prefix + randomNum;
+  }
+
   async createRepair(insertRepair: InsertRepair): Promise<Repair> {
     const now = new Date();
+    
+    // Generiere einen eindeutigen Auftragscode
+    const orderCode = await this.generateUniqueOrderCode(
+      insertRepair.brand,
+      insertRepair.deviceType
+    );
     
     // Make sure status is set
     const repairData = {
       ...insertRepair,
+      orderCode,
       status: insertRepair.status || 'eingegangen',
       createdAt: now,
       updatedAt: now
