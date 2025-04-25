@@ -98,8 +98,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: string }) => {
-      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status });
+    mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
       return response.json();
     },
     onSuccess: () => {
@@ -176,7 +176,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
 
   const handleUpdateStatus = () => {
     if (!selectedRepairId || !newStatus) return;
-    updateStatusMutation.mutate({ id: selectedRepairId, status: newStatus });
+    updateStatusMutation.mutate({ 
+      id: selectedRepairId, 
+      status: newStatus, 
+      sendEmail: (newStatus === 'fertig' && sendEmail) ? true : false 
+    });
   };
 
   const openStatusDialog = (id: number, currentStatus: string) => {
@@ -326,10 +330,17 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           <DialogHeader>
             <DialogTitle>Status aktualisieren</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             <Select
               value={newStatus}
-              onValueChange={setNewStatus}
+              onValueChange={(value) => {
+                setNewStatus(value);
+                if (value === 'fertig') {
+                  setSendEmail(true); // Auto-select email option when status is set to "fertig"
+                } else {
+                  setSendEmail(false);
+                }
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Status wählen" />
@@ -342,6 +353,22 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 <SelectItem value="abgeholt">Abgeholt</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Wenn Status "fertig" gewählt ist, zeige E-Mail-Option an */}
+            {newStatus === 'fertig' && (
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="sendEmail"
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={sendEmail}
+                  onChange={(e) => setSendEmail(e.target.checked)}
+                />
+                <label htmlFor="sendEmail">
+                  Benachrichtigungs-E-Mail an Kunden senden
+                </label>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowStatusDialog(false)}>

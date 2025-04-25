@@ -285,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status } = req.body;
+      const { status, sendEmail } = req.body;
       
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
@@ -298,8 +298,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Repair not found" });
       }
       
+      // Wenn Status auf "fertig" gesetzt wird und sendEmail=true, dann E-Mail senden
+      if (status === "fertig" && sendEmail === true) {
+        console.log("E-Mail-Benachrichtigung wird vorbereitet...");
+        
+        try {
+          // Lade Kunde
+          const customer = await storage.getCustomer(repair.customerId);
+          if (customer && customer.email) {
+            // Suche nach einer E-Mail-Vorlage mit name "fertig"
+            const templates = await storage.getAllEmailTemplates();
+            const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
+                                                     t.name.toLowerCase().includes("abholung"));
+            
+            if (pickupTemplate) {
+              console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
+              
+              // Variablen für die E-Mail zusammenstellen
+              const variables: Record<string, string> = {
+                "kundenName": `${customer.firstName} ${customer.lastName}`,
+                "geraet": repair.model,
+                "marke": repair.brand,
+                "auftragsnummer": repair.orderCode || `#${repair.id}`,
+                "fehler": repair.issue,
+                "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben"
+              };
+              
+              // E-Mail senden
+              const emailSent = await storage.sendEmailWithTemplate(pickupTemplate.id, customer.email, variables);
+              console.log("E-Mail gesendet:", emailSent);
+            } else {
+              console.log("Keine passende E-Mail-Vorlage für 'Fertig' gefunden");
+            }
+          } else {
+            console.log("Kunde hat keine E-Mail-Adresse angegeben");
+          }
+        } catch (emailError) {
+          console.error("Fehler beim Senden der E-Mail:", emailError);
+          // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
+        }
+      }
+      
       res.json(repair);
     } catch (error) {
+      console.error("Fehler bei der Statusaktualisierung:", error);
       res.status(500).json({ message: "Failed to update repair status" });
     }
   });
