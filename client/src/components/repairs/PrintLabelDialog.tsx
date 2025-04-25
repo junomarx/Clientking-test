@@ -95,7 +95,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     }
     
     // Erstelle ein neues Fenster für den Druck
-    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    const printWindow = window.open('', '_blank', 'width=300,height=200');
     
     if (!printWindow) {
       alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
@@ -103,7 +103,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     }
     
     // Extrahiere den Inhalt aus dem Referenzobjekt
-    const qrCode = printRef.current.querySelector('svg')?.outerHTML || '';
+    const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
     const repairId = repair?.id || '';
     const customerName = `${customer?.firstName || ''} ${customer?.lastName || ''}`;
     const customerPhone = customer?.phone || '';
@@ -116,66 +116,77 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       <html>
         <head>
           <title>Etikett für Reparatur #${repairId}</title>
+          <meta charset="UTF-8">
           <style>
             @page {
-              size: 32mm 57mm;
+              size: 57mm 32mm;
               margin: 0;
             }
-            body {
+            html, body {
               margin: 0;
               padding: 0;
+              width: 57mm;
+              height: 32mm;
+              overflow: hidden;
               font-family: Arial, sans-serif;
             }
-            .print-container {
-              position: relative;
-              width: 32mm;
-              height: 57mm;
-              transform: rotate(90deg);
-              transform-origin: bottom left;
-              position: absolute;
-              left: 0;
-              bottom: 57mm;
-              padding: 1mm;
+            .label {
+              width: 57mm;
+              height: 32mm;
               box-sizing: border-box;
-            }
-            .repair-id {
-              text-align: center;
-              font-size: 16px;
-              font-weight: bold;
-              margin-bottom: 3mm;
-            }
-            .content-container {
+              padding: 2mm;
+              background-color: white;
               display: flex;
+              flex-direction: column;
             }
-            .qr-code {
-              flex-shrink: 0;
-              width: 64px;
+            .repair-number {
+              text-align: center;
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 2mm;
+            }
+            .content {
+              display: flex;
+              flex: 1;
+            }
+            .qr-container {
+              width: 20mm;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .qr-container svg {
+              width: 20mm;
+              height: 20mm;
             }
             .details {
-              flex-grow: 1;
-              margin-left: 3mm;
-              font-size: 7px;
+              flex: 1;
+              margin-left: 2mm;
+              font-size: 8px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+            .details-item {
+              margin-bottom: 2mm;
             }
             .customer-name {
               font-weight: bold;
             }
-            .item {
-              margin-bottom: 2mm;
-            }
           </style>
         </head>
         <body>
-          <div class="print-container">
-            <div class="repair-id">#${repairId}</div>
-            <div class="content-container">
-              <div class="qr-code">${qrCode}</div>
+          <div class="label">
+            <div class="repair-number">#${repairId}</div>
+            <div class="content">
+              <div class="qr-container">${qrCode}</div>
               <div class="details">
-                <div class="item">
+                <div class="details-item">
                   <div class="customer-name">${customerName}</div>
                   <div>${customerPhone}</div>
                 </div>
-                <div class="item">${deviceInfo}</div>
-                <div class="item">${repairIssue}</div>
+                <div class="details-item">${deviceInfo}</div>
+                <div class="details-item">${repairIssue}</div>
               </div>
             </div>
           </div>
