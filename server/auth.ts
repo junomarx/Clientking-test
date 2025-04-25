@@ -9,7 +9,11 @@ import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    // Making sure the User interface extends SelectUser 
+    // and explicitly includes the password field
+    interface User extends SelectUser {
+      password: string;
+    }
   }
 }
 
@@ -195,6 +199,10 @@ export function setupAuth(app: Express) {
   };
   
   app.get("/api/user", checkTokenAuth, (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+    
     // Return the user without the password
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);

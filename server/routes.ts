@@ -14,7 +14,7 @@ import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 
 // Middleware to check if user is authenticated
-function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   // Standardauthentifizierung über Session
   if (req.isAuthenticated()) {
     return next();
@@ -27,13 +27,31 @@ function isAuthenticated(req: Request, res: Response, next: NextFunction) {
     try {
       // Dekodieren des Tokens (in Produktion würden wir JWT verwenden)
       const decoded = Buffer.from(token, 'base64').toString();
-      const [userId, username] = decoded.split(':');
+      const tokenParts = decoded.split(':');
+      
+      if (tokenParts.length < 2) {
+        return res.status(401).json({ message: "Ungültiges Token-Format" });
+      }
+      
+      const userId = parseInt(tokenParts[0]);
+      
+      // Benutzer aus der Datenbank abrufen
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      if (!user.isActive && !user.isAdmin) {
+        return res.status(401).json({ message: "Konto ist nicht aktiviert" });
+      }
       
       // Benutzer in Request setzen
-      req.user = { id: parseInt(userId), username } as Express.User;
+      req.user = user;
       return next();
     } catch (error) {
       console.error('Token authentication error:', error);
+      return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
     }
   }
   
