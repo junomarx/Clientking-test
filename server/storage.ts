@@ -23,6 +23,11 @@ export interface IStorage {
   // User methods (required by template)
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUsersByEmail(email: string): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>): Promise<User | undefined>;
+  updateUserPassword(id: number, newPassword: string): Promise<boolean>;
+  deleteUser(id: number): Promise<boolean>;
   createUser(user: InsertUser): Promise<User>;
   
   // Customer methods
@@ -93,9 +98,52 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
+  
+  async getUsersByEmail(email: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.email, email));
+  }
+  
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+  
+  async updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, newPassword: string): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ password: newPassword })
+        .where(eq(users.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error updating user password:", error);
+      return false;
+    }
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      await db.delete(users).where(eq(users.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
+    }
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await db.insert(users).values({
+      ...insertUser,
+      createdAt: new Date()
+    }).returning();
     return user;
   }
   

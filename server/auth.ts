@@ -60,8 +60,13 @@ export function setupAuth(app: Express) {
       try {
         const user = await storage.getUserByUsername(username);
         if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        } else {
+          return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
+        } 
+        // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
+        else if (!user.isActive && !user.isAdmin) {
+          return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
+        } 
+        else {
           return done(null, user);
         }
       } catch (error) {
@@ -82,23 +87,43 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      // Überprüfe die erforderlichen Felder
+      const { username, password, email, companyName } = req.body;
+      
+      if (!username || !password || !email || !companyName) {
+        return res.status(400).json({ 
+          message: "Bitte füllen Sie alle erforderlichen Felder aus (Benutzername, Passwort, E-Mail, Firmenname)" 
+        });
+      }
+      
+      const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        return res.status(400).send("Benutzername existiert bereits");
+        return res.status(400).json({ message: "Benutzername existiert bereits" });
+      }
+      
+      // Überprüfe, ob die E-Mail bereits verwendet wird
+      const usersWithEmail = await storage.getUsersByEmail(email);
+      if (usersWithEmail && usersWithEmail.length > 0) {
+        return res.status(400).json({ message: "Diese E-Mail-Adresse wird bereits verwendet" });
       }
 
+      // Erstelle einen neuen Benutzer (standardmäßig inaktiv)
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        password: await hashPassword(password),
+        isActive: false,  // Benutzer müssen vom Admin aktiviert werden
+        isAdmin: false    // Standardmäßig kein Administrator
       });
 
-      req.login(user, (err) => {
-        if (err) return next(err);
-        // Return the user without the password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+      // Sende einen Erfolg zurück, aber logge den Benutzer nicht ein
+      // Der Benutzer muss erst vom Administrator freigeschaltet werden
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({ 
+        ...userWithoutPassword, 
+        message: "Registrierung erfolgreich. Ihr Konto muss vom Administrator freigeschaltet werden, bevor Sie sich anmelden können." 
       });
     } catch (error) {
+      console.error("Fehler bei der Registrierung:", error);
       next(error);
     }
   });
@@ -106,7 +131,11 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
-      if (!user) return res.status(401).json({ message: "Benutzername oder Passwort falsch" });
+      if (!user) {
+        // Verwende die Fehlermeldung aus info, wenn vorhanden
+        const errorMessage = info && info.message ? info.message : "Benutzername oder Passwort falsch";
+        return res.status(401).json({ message: errorMessage });
+      }
       
       req.login(user, (err) => {
         if (err) return next(err);
