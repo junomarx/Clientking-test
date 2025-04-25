@@ -326,6 +326,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               .object-contain {
                 object-fit: contain;
               }
+              
+              .no-print {
+                display: none !important;
+              }
             }
             
             /* Nicht-Druck-Styles */
@@ -363,12 +367,14 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
         </head>
         <body>
           <div class="print-container">${printContents}</div>
-          <button class="print-button" onClick="window.print(); window.close();">
-            Drucken
-          </button>
-          <button class="close-button" onClick="window.close();">
-            Schließen
-          </button>
+          <div class="no-print">
+            <button class="print-button" onClick="window.print(); window.close();">
+              Drucken
+            </button>
+            <button class="close-button" onClick="window.close();">
+              Schließen
+            </button>
+          </div>
           <script>
             window.addEventListener('afterprint', function() {
               // Fenster nach dem Drucken automatisch schließen
