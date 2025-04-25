@@ -31,7 +31,14 @@ function TitleUpdater() {
   
   useEffect(() => {
     if (companyName) {
+      // Setze den Firmennamen als Dokumenttitel
       document.title = companyName;
+      
+      // Suche auch nach dem Title-Element in der Navigationsleiste und aktualisiere es
+      const appTitle = document.querySelector('[data-app-title]');
+      if (appTitle) {
+        appTitle.textContent = companyName;
+      }
     }
   }, [companyName]);
   

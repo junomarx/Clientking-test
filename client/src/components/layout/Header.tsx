@@ -16,7 +16,7 @@ export function Header() {
     <div className="bg-gradient-to-r from-primary to-secondary py-6 px-6 flex justify-between items-center">
       <h1 className="text-white text-xl md:text-2xl font-semibold flex items-center gap-2">
         <span className="text-2xl">📱</span> 
-        Handyshop Verwaltungssystem
+        <span data-app-title>Handyshop Verwaltungssystem</span>
       </h1>
       
       {user && (
