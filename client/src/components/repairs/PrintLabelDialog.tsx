@@ -200,7 +200,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
-              <div class="repair-number">#${repairId}</div>
+              <div class="repair-number">${repair.orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">${qrCode}</div>
               
