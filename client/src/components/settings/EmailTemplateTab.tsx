@@ -14,7 +14,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialog } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Trash2, Edit, Mail, Plus, MessageSquare } from 'lucide-react';
-import type { EmailTemplate } from '@shared/schema';
+import type { EmailTemplate as DBEmailTemplate } from '@shared/schema';
+
+// Erweiterte EmailTemplate-Schnittstelle für unser UI
+interface EmailTemplate extends DBEmailTemplate {
+  description?: string;
+}
 
 // Interface für das Formular zum Erstellen/Bearbeiten von Vorlagen
 interface EmailTemplateFormData {
@@ -213,7 +218,9 @@ export function EmailTemplateTab() {
     // Konvertiere den variables-String in ein Array für das Formular
     const templateWithArrayVars = {
       ...template,
-      variables: template.variables ? template.variables.split(',').map(v => v.trim()) : []
+      variables: typeof template.variables === 'string' 
+        ? template.variables.split(',').map((v: string) => v.trim()) 
+        : (template.variables || [])
     } as EmailTemplate & { variables: string[] };
     
     setEditingTemplate(templateWithArrayVars);
@@ -228,10 +235,16 @@ export function EmailTemplateTab() {
       // Initialisiere die Variablen-State mit leeren Werten für alle Variablen dieser Vorlage
       const initialVars: Record<string, string> = {};
       if (template.variables) {
-        template.variables.split(',').forEach(v => {
-          const varName = v.trim();
-          if (varName) initialVars[varName] = '';
-        });
+        const varsArray = typeof template.variables === 'string' 
+          ? template.variables.split(',') 
+          : template.variables;
+          
+        if (Array.isArray(varsArray)) {
+          varsArray.forEach((v: string) => {
+            const varName = v.trim();
+            if (varName) initialVars[varName] = '';
+          });
+        }
       }
       
       setVariables(initialVars);
@@ -337,7 +350,12 @@ export function EmailTemplateTab() {
                   <h4 className="text-sm font-semibold mb-1">Variablen:</h4>
                   <p className="text-sm mb-3 text-muted-foreground">
                     {template.variables ? 
-                      template.variables.split(',').map(v => `{{${v.trim()}}}`).join(', ') : 
+                      (typeof template.variables === 'string' 
+                        ? template.variables.split(',').map((v: string) => `{{${v.trim()}}}`).join(', ')
+                        : (Array.isArray(template.variables)
+                           ? template.variables.map((v: string) => `{{${v.trim()}}}`).join(', ')
+                           : 'Keine Variablen')
+                      ) : 
                       'Keine Variablen'
                     }
                   </p>
@@ -370,7 +388,7 @@ export function EmailTemplateTab() {
             <SheetTitle>{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage erstellen'}</SheetTitle>
             <SheetDescription>
               Erstellen Sie eine E-Mail-Vorlage mit Variablen für personalisierte Nachrichten.
-              Variablen werden im Format {{variableName}} eingefügt.
+              Variablen werden im Format {'{{'} Variable {'}}' } eingefügt.
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={editingTemplate ? handleUpdateTemplate : handleCreateTemplate} className="space-y-4 py-4">
