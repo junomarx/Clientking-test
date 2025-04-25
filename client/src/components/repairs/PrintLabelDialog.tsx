@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
+import { useBusinessSettings } from '@/hooks/use-business-settings';
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -19,6 +20,7 @@ interface PrintLabelDialogProps {
 
 export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const { settings } = useBusinessSettings();
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -106,7 +108,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <style>
                 @media print {
                   @page {
-                    size: 100mm 50mm;
+                    size: ${settings?.receiptWidth === '58mm' ? '58mm' : '100mm'} 50mm;
                     margin: 3mm;
                   }
                   body {
@@ -115,7 +117,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     margin: 0;
                   }
                   .label-container {
-                    width: 94mm;
+                    width: ${settings?.receiptWidth === '58mm' ? '52mm' : '94mm'};
                     padding: 2mm;
                     border: 1px dotted #ccc;
                     page-break-inside: avoid;
@@ -135,13 +137,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     font-weight: bold;
                   }
                   .text-xs {
-                    font-size: 10px;
+                    font-size: ${settings?.receiptWidth === '58mm' ? '8px' : '10px'};
                   }
                   .text-sm {
-                    font-size: 12px;
+                    font-size: ${settings?.receiptWidth === '58mm' ? '10px' : '12px'};
                   }
                   .text-lg {
-                    font-size: 16px;
+                    font-size: ${settings?.receiptWidth === '58mm' ? '14px' : '16px'};
                   }
                   .mb-1 {
                     margin-bottom: 1mm;
@@ -164,7 +166,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   }
                   
                   .max-w-\\[150px\\] {
-                    max-width: 150px;
+                    max-width: ${settings?.receiptWidth === '58mm' ? '50px' : '150px'};
                   }
                   
                   .object-contain {
@@ -172,7 +174,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   }
                   
                   img {
-                    max-width: 100%;
+                    max-width: ${settings?.receiptWidth === '58mm' ? '40mm' : '100%'};
+                    max-height: ${settings?.receiptWidth === '58mm' ? '10mm' : '20mm'};
                   }
                 }
                 

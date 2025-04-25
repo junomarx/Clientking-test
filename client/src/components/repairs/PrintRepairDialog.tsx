@@ -115,7 +115,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 <style>
                   @media print {
                     @page {
-                      size: 80mm auto; /* Fixe Breite von 80mm für Thermodruck */
+                      size: ${settings?.receiptWidth || '80mm'} auto; /* Bonbreite aus Einstellungen */
                       margin: 0mm;
                     }
                     
@@ -124,13 +124,13 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                       padding: 0;
                       margin: 0;
                       color: black;
-                      font-size: 10pt; /* Basis-Schriftgröße für Thermodruck */
-                      width: 80mm; /* Fixe Breite von 80mm */
+                      font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; /* Angepasste Schriftgröße je nach Bonbreite */
+                      width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
                     }
                     
                     .print-container {
-                      width: 80mm; /* Fixe Breite von 80mm */
-                      max-width: 80mm;
+                      width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
+                      max-width: ${settings?.receiptWidth || '80mm'};
                       margin: 0 auto;
                       padding: 5mm 2mm;
                     }
@@ -169,13 +169,13 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     
                     .print-label {
                       font-weight: bold;
-                      width: 25mm; /* Angepasst für 80mm Breite */
+                      width: ${settings?.receiptWidth === '58mm' ? '20mm' : '25mm'}; /* Angepasst für Bonbreite */
                       margin-right: 1mm;
                     }
                     
                     .print-value {
                       flex: 1;
-                      min-width: 45mm; /* Stellt sicher, dass der Wert genug Platz hat */
+                      min-width: ${settings?.receiptWidth === '58mm' ? '30mm' : '45mm'}; /* Angepasst für Bonbreite */
                     }
                     
                     .grid-cols-2 {
@@ -301,7 +301,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     
                     /* Bildstilisierung für Logo */
                     img {
-                      max-width: 60mm; /* Angepasst für 80mm Breite */
+                      max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'}; /* Angepasst für Bonbreite */
                       max-height: 20mm; /* Begrenzte Höhe */
                       margin: 0 auto;
                       display: block;
@@ -312,7 +312,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     }
                     
                     .max-w-\\[200px\\] {
-                      max-width: 60mm;
+                      max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'};
                     }
                     
                     .object-contain {
