@@ -109,13 +109,21 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     // Schließe den Dialog
     onClose();
     
-    // Fülle das Druckfenster mit Inhalten
+    // Fülle das Druckfenster mit Inhalten und starte direkt den Druckvorgang
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>Reparaturauftrag #${repair?.id}</title>
           <meta charset="UTF-8">
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 500);
+            };
+          </script>
           <style>
             @media print {
               @page {
@@ -455,7 +463,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 <div className="print-section mb-3">
                   <h3 className="font-semibold mb-1">Gerätedaten</h3>
                   <div className="grid grid-cols-1 gap-1 text-sm">
-                    <p><span className="font-medium">Marke:</span> {repair?.brand}</p>
+                    <p><span className="font-medium">Marke:</span> {repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}</p>
                     <p><span className="font-medium">Modell:</span> {repair?.model}</p>
                     {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
                   </div>
@@ -490,24 +498,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   </div>
                 </div>
                 
-                {/* Status */}
-                <div className="print-section mb-3 text-center">
-                  <p className="text-sm">
-                    <span className="font-medium">Status:</span>
-                    <span className={`status-badge status-${repair?.status === 'in_reparatur' 
-                        ? 'in-reparatur' 
-                        : repair?.status === 'ausser_haus' 
-                          ? 'ausser-haus' 
-                          : repair?.status}`}>
-                      {repair?.status === 'eingegangen' ? 'Eingegangen' : 
-                       repair?.status === 'in_reparatur' ? 'In Reparatur' : 
-                       repair?.status === 'fertig' ? 'Fertig' : 
-                       repair?.status === 'abgeholt' ? 'Abgeholt' : 
-                       repair?.status === 'ausser_haus' ? 'Außer Haus' : 
-                       'Unbekannt'}
-                    </span>
-                  </p>
-                </div>
+                {/* Entfernt: Status wird nicht mehr angezeigt */}
               </div>
             </div>
             
