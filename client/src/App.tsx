@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
+import AdminPage from "@/pages/admin-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -19,6 +20,9 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/">
         <Home />
+      </ProtectedRoute>
+      <ProtectedRoute path="/admin">
+        <AdminPage />
       </ProtectedRoute>
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
