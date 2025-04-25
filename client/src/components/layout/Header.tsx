@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, User, Settings } from 'lucide-react';
 import { BusinessSettingsDialog } from '@/components/settings';
+import { useTheme } from '@/hooks/use-theme';
 
 export function Header() {
   const { user, logoutMutation } = useAuth();
+  const { companyName } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
+  const [appTitle, setAppTitle] = useState("Handyshop Verwaltungssystem");
+  
+  // Aktualisiere den angezeigten Titel, wenn sich der Firmenname ändert
+  useEffect(() => {
+    if (companyName) {
+      setAppTitle(companyName);
+    }
+  }, [companyName]);
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -16,7 +26,7 @@ export function Header() {
     <div className="bg-gradient-to-r from-primary to-secondary py-6 px-6 flex justify-between items-center">
       <h1 className="text-white text-xl md:text-2xl font-semibold flex items-center gap-2">
         <span className="text-2xl">📱</span> 
-        <span data-app-title>Handyshop Verwaltungssystem</span>
+        <span data-app-title>{appTitle}</span>
       </h1>
       
       {user && (
