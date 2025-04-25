@@ -83,22 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (data: any) => {
-      // Wenn die Registrierung erfolgreich war, aber der Benutzer noch aktiviert werden muss,
-      // zeigen wir eine entsprechende Meldung an
-      if (data.message && data.message.includes("Freischaltung")) {
-        queryClient.setQueryData(["/api/user"], null);
-        toast({
-          title: "Registrierung erfolgreich",
-          description: data.message,
-        });
-      } else {
-        // Ansonsten normal fortfahren (automatische Aktivierung)
-        queryClient.setQueryData(["/api/user"], data);
-        toast({
-          title: "Registrierung erfolgreich",
-          description: `Willkommen, ${data.username}!`,
-        });
-      }
+      // Bei erfolgreicher Registrierung im B2B-System immer auf Admin-Freischaltung warten
+      // Der Benutzer wird nicht automatisch angemeldet
+      queryClient.setQueryData(["/api/user"], null);
+      toast({
+        title: "Registrierung erfolgreich",
+        description: "Vielen Dank für Ihre Registrierung. Ihr Konto muss vom Administrator freigeschaltet werden, bevor Sie sich anmelden können.",
+      });
     },
     onError: (error: Error) => {
       toast({

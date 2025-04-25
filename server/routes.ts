@@ -380,7 +380,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // BUSINESS SETTINGS API
   app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Globale Einstellungen abrufen
       const settings = await storage.getBusinessSettings();
+      
+      // Wenn der Benutzer kein Admin ist und die Business-Settings noch nicht gesetzt hat,
+      // initialisieren wir die Einstellungen mit den Firmendaten aus seinem Profil
+      if (!req.user.isAdmin && (!settings || settings.id === 1)) {
+        // Verwende die Firmendaten des angemeldeten Benutzers
+        const userData = req.user;
+        
+        // Erstelle ein Business-Settings-Objekt aus den Benutzerdaten
+        const userSettings = {
+          id: settings?.id || 1,
+          businessName: userData.companyName || "",
+          ownerFirstName: "", 
+          ownerLastName: "",
+          taxId: userData.companyVatNumber || userData.tax_id || "",
+          streetAddress: userData.companyAddress || userData.street_address || "",
+          city: userData.city || "",
+          zipCode: userData.zip_code || "",
+          country: userData.country || "Österreich",
+          phone: userData.companyPhone || userData.phone || "",
+          email: userData.companyEmail || userData.email || "",
+          website: userData.website || "",
+          updatedAt: new Date(),
+          logoImage: settings?.logoImage || null,
+          colorTheme: settings?.colorTheme || "blue",
+          receiptWidth: settings?.receiptWidth || "80mm"
+        };
+        
+        // Diese temporären Einstellungen werden nur für die Anzeige verwendet
+        return res.json(userSettings);
+      }
+      
+      // Ansonsten geben wir die gespeicherten Einstellungen zurück
       res.json(settings || {});
     } catch (error) {
       console.error("Error fetching business settings:", error);
