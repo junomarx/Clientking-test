@@ -102,7 +102,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     document.body.innerHTML = `
       <style>
         @page {
-          size: 57mm 32mm;
+          size: 32mm 57mm;
           margin: 0;
         }
         body {
@@ -111,12 +111,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           margin: 0;
         }
         .label-container {
-          width: 57mm;
-          height: 32mm;
+          width: 32mm;
+          height: 57mm;
           padding: 1mm;
           border: none;
           page-break-inside: avoid;
           overflow: hidden;
+          transform: rotate(90deg);
+          transform-origin: bottom left;
+          position: absolute;
+          left: 0;
+          bottom: 57mm;
         }
         .text-center {
           text-align: center;
@@ -162,13 +167,10 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     // Drucken
     window.print();
     
-    // Alten Inhalt wiederherstellen
-    document.body.innerHTML = originalContent;
-    
-    // Dialog schließen (das muss separat gemacht werden, da wir die React-Komponente "neu erstellt" haben)
+    // Alten Inhalt wiederherstellen und Seite neu laden
+    // Dies vermeidet Probleme mit React-Komponenten und DOM-Manipulationen
     setTimeout(() => {
       onClose();
-      // Force re-rendering
       window.location.reload();
     }, 100);
   };
