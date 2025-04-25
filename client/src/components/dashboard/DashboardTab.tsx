@@ -66,12 +66,22 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const recentRepairs = React.useMemo(() => {
     if (!repairs || !customers) return [];
     
+    // Definiere einen Typ, der mit der Interface-Definition von AnimatedRecentOrders übereinstimmt
+    type DashboardRepair = {
+      id: number;
+      orderCode?: string | null;
+      customerName: string;
+      model: string;
+      status: string;
+      createdAt: string;
+    };
+    
     return repairs
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5)
       .map(repair => {
         const customer = customers.find(c => c.id === repair.customerId);
-        return {
+        const dashboardRepair: DashboardRepair = {
           id: repair.id,
           orderCode: repair.orderCode,
           customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
@@ -79,6 +89,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           status: repair.status,
           createdAt: repair.createdAt.toString()
         };
+        return dashboardRepair;
       });
   }, [repairs, customers]);
 

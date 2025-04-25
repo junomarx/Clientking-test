@@ -152,6 +152,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           
           const searchValue = searchTerm.toLowerCase();
           return (
+            (repair.orderCode && repair.orderCode.toLowerCase().includes(searchValue)) ||
             repair.model.toLowerCase().includes(searchValue) ||
             repair.brand.toLowerCase().includes(searchValue) ||
             repair.issue.toLowerCase().includes(searchValue) ||

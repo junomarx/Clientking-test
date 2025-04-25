@@ -5,7 +5,7 @@ import { getStatusBadge } from '@/lib/utils';
 
 interface RepairWithCustomer {
   id: number;
-  orderCode?: string;
+  orderCode?: string | null;
   customerName: string;
   model: string;
   status: string;
