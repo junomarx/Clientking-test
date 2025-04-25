@@ -23,10 +23,11 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Palette } from "lucide-react";
 
 const businessSettingsSchema = z.object({
   businessName: z.string().min(2, "Firmenname wird benötigt"),
@@ -40,6 +41,7 @@ const businessSettingsSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email("Ungültige E-Mail").optional(),
   website: z.string().optional(),
+  colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]).default("blue"),
 });
 
 // Erweiterte Form-Werte, die nicht direkt im Schema sind
@@ -83,12 +85,19 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       email: "",
       website: "",
       logoImage: "",
+      colorTheme: "blue",
     },
   });
 
   // Aktualisiere die Formularwerte, wenn die Daten geladen sind
   React.useEffect(() => {
     if (settings) {
+      // Validiere das colorTheme
+      let validColorTheme: "blue" | "green" | "purple" | "red" | "orange" = "blue";
+      if (["blue", "green", "purple", "red", "orange"].includes(settings.colorTheme)) {
+        validColorTheme = settings.colorTheme as "blue" | "green" | "purple" | "red" | "orange";
+      }
+      
       form.reset({
         businessName: settings.businessName,
         ownerFirstName: settings.ownerFirstName,
@@ -102,6 +111,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         email: settings.email || "",
         website: settings.website || "",
         logoImage: settings.logoImage || "",
+        colorTheme: validColorTheme,
       });
 
       // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
@@ -455,6 +465,55 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
                     <FormLabel>Website</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="www.handyshop.at" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="colorTheme"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2 space-y-3">
+                    <FormLabel className="flex items-center gap-2">
+                      <Palette className="h-4 w-4" /> Farbpalette
+                    </FormLabel>
+                    <FormDescription>
+                      Wählen Sie eine Farbpalette für die Anwendung.
+                    </FormDescription>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col sm:flex-row gap-4 sm:gap-6"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="blue" id="blue" className="border-blue-600" />
+                          <div className="w-6 h-6 rounded-full bg-blue-600 shadow-sm"></div>
+                          <label htmlFor="blue" className="text-sm font-medium">Blau</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="green" id="green" className="border-green-600" />
+                          <div className="w-6 h-6 rounded-full bg-green-600 shadow-sm"></div>
+                          <label htmlFor="green" className="text-sm font-medium">Grün</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="purple" id="purple" className="border-purple-600" />
+                          <div className="w-6 h-6 rounded-full bg-purple-600 shadow-sm"></div>
+                          <label htmlFor="purple" className="text-sm font-medium">Lila</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="red" id="red" className="border-red-600" />
+                          <div className="w-6 h-6 rounded-full bg-red-600 shadow-sm"></div>
+                          <label htmlFor="red" className="text-sm font-medium">Rot</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="orange" id="orange" className="border-orange-600" />
+                          <div className="w-6 h-6 rounded-full bg-orange-600 shadow-sm"></div>
+                          <label htmlFor="orange" className="text-sm font-medium">Orange</label>
+                        </div>
+                      </RadioGroup>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
