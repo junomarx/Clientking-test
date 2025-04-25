@@ -17,6 +17,7 @@ export type RepairStatus = 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt
 // Repair model
 export interface Repair {
   id: number;
+  orderCode?: string | null; // Neue Auftragsnummer im Format: [Marke][Geräteart][4 Ziffern], z.B. AS1496
   customerId: number;
   deviceType: DeviceType;
   brand: string;

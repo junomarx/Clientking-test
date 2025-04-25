@@ -7,7 +7,7 @@ import {
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
-import { eq, desc, and, or, sql, gte, lt, count } from "drizzle-orm";
+import { eq, desc, and, or, sql, gte, lt, count, isNotNull, like } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";

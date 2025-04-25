@@ -452,7 +452,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 <div className="print-section mb-3">
                   <div className="flex items-center justify-center">
                     <h3 className="font-semibold text-lg">Reparaturauftrag</h3>
-                    <span className="receipt-number">#{repair?.id}</span>
+                    <span className="receipt-number">{repair?.orderCode || `#${repair?.id}`}</span>
                   </div>
                 </div>
                 
