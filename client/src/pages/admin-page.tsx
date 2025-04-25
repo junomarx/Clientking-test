@@ -562,9 +562,12 @@ export default function AdminPage() {
             Verwalten Sie Benutzer und System-Einstellungen
           </p>
         </div>
-        <Button variant="outline" onClick={() => setLocation("/")} className="gap-2">
+        <Button 
+          onClick={() => setLocation("/")}
+          className="bg-green-600 hover:bg-green-700 text-white gap-2"
+        >
           <ChevronLeft className="h-4 w-4" />
-          Zurück zur Anwendung
+          Zurück zum Handyshop
         </Button>
       </div>
       
