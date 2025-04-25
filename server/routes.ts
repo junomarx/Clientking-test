@@ -507,6 +507,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // E-Mail-Vorlagen API-Endpunkte
+  app.get("/api/email-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const templates = await storage.getAllEmailTemplates();
+      return res.status(200).json(templates);
+    } catch (error) {
+      console.error("Error retrieving email templates:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.get("/api/email-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      const template = await storage.getEmailTemplate(id);
+      if (!template) {
+        return res.status(404).json({ error: "Email template not found" });
+      }
+      
+      return res.status(200).json(template);
+    } catch (error) {
+      console.error("Error retrieving email template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/email-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Einfache Validierung
+      const { name, subject, body, variables } = req.body;
+      if (!name || !subject || !body) {
+        return res.status(400).json({ error: "Name, subject, and body are required" });
+      }
+      
+      const newTemplate = await storage.createEmailTemplate({
+        name,
+        subject,
+        body,
+        variables: variables || []
+      });
+      
+      return res.status(201).json(newTemplate);
+    } catch (error) {
+      console.error("Error creating email template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/email-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      const template = await storage.getEmailTemplate(id);
+      if (!template) {
+        return res.status(404).json({ error: "Email template not found" });
+      }
+      
+      const updatedTemplate = await storage.updateEmailTemplate(id, req.body);
+      return res.status(200).json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating email template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/email-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      const success = await storage.deleteEmailTemplate(id);
+      if (!success) {
+        return res.status(404).json({ error: "Email template not found or could not be deleted" });
+      }
+      
+      return res.status(200).json({ message: "Email template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting email template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  app.post("/api/send-email", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { templateId, to, variables } = req.body;
+      
+      if (!templateId || !to || !variables) {
+        return res.status(400).json({ error: "Template ID, recipient email, and variables are required" });
+      }
+      
+      const success = await storage.sendEmailWithTemplate(templateId, to, variables);
+      if (!success) {
+        return res.status(500).json({ error: "Failed to send email" });
+      }
+      
+      return res.status(200).json({ message: "Email sent successfully" });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
