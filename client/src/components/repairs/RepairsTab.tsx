@@ -73,6 +73,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       // Alle Properties explizit zuweisen, um Typprobleme zu vermeiden
       const convertedRepair: Repair = {
         id: repair.id,
+        orderCode: repair.orderCode,
         customerId: repair.customerId,
         deviceType: repair.deviceType as 'smartphone' | 'tablet' | 'laptop',
         brand: repair.brand,

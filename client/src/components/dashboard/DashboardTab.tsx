@@ -73,6 +73,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         const customer = customers.find(c => c.id === repair.customerId);
         return {
           id: repair.id,
+          orderCode: repair.orderCode,
           customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
           model: repair.model,
           status: repair.status,
