@@ -23,7 +23,13 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -483,37 +489,36 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
                       Wählen Sie eine Farbpalette für die Anwendung.
                     </FormDescription>
                     <FormControl>
-                      <RadioGroup
+                      <Select 
+                        defaultValue={field.value} 
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col sm:flex-row gap-4 sm:gap-6"
                       >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="blue" id="blue" className="border-blue-600" />
-                          <div className="w-6 h-6 rounded-full bg-blue-600 shadow-sm"></div>
-                          <label htmlFor="blue" className="text-sm font-medium">Blau</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="green" id="green" className="border-green-600" />
-                          <div className="w-6 h-6 rounded-full bg-green-600 shadow-sm"></div>
-                          <label htmlFor="green" className="text-sm font-medium">Grün</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="purple" id="purple" className="border-purple-600" />
-                          <div className="w-6 h-6 rounded-full bg-purple-600 shadow-sm"></div>
-                          <label htmlFor="purple" className="text-sm font-medium">Lila</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="red" id="red" className="border-red-600" />
-                          <div className="w-6 h-6 rounded-full bg-red-600 shadow-sm"></div>
-                          <label htmlFor="red" className="text-sm font-medium">Rot</label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="orange" id="orange" className="border-orange-600" />
-                          <div className="w-6 h-6 rounded-full bg-orange-600 shadow-sm"></div>
-                          <label htmlFor="orange" className="text-sm font-medium">Orange</label>
-                        </div>
-                      </RadioGroup>
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                          <SelectValue placeholder="Farbpalette wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="blue" className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-blue-600 shadow-sm inline-block mr-2"></div>
+                            Blau
+                          </SelectItem>
+                          <SelectItem value="green" className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-green-600 shadow-sm inline-block mr-2"></div>
+                            Grün
+                          </SelectItem>
+                          <SelectItem value="purple" className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-purple-600 shadow-sm inline-block mr-2"></div>
+                            Lila
+                          </SelectItem>
+                          <SelectItem value="red" className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-red-600 shadow-sm inline-block mr-2"></div>
+                            Rot
+                          </SelectItem>
+                          <SelectItem value="orange" className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-orange-600 shadow-sm inline-block mr-2"></div>
+                            Orange
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
