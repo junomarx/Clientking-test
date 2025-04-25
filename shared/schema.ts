@@ -60,11 +60,32 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").notNull(),
+  isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
+  isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
+  companyName: text("company_name"),
+  taxId: text("tax_id"),                                   // Steuernummer/UID
+  streetAddress: text("street_address"),
+  city: text("city"),
+  zipCode: text("zip_code"),
+  country: text("country").default("Österreich"),
+  phone: text("phone"),
+  website: text("website"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  email: true,
+  companyName: true,
+  taxId: true,
+  streetAddress: true,
+  city: true,
+  zipCode: true,
+  country: true,
+  phone: true,
+  website: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
