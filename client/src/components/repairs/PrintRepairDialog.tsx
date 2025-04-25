@@ -113,91 +113,93 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 <style>
                   @media print {
                     @page {
-                      size: A4;
-                      margin: 10mm;
+                      size: 80mm auto; /* Fixe Breite von 80mm für Thermodruck */
+                      margin: 0mm;
                     }
                     
                     body {
-                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                      font-family: 'Courier New', monospace; /* Bessere Schrift für Thermodruck */
                       padding: 0;
                       margin: 0;
-                      color: #333;
+                      color: black;
+                      font-size: 10pt; /* Basis-Schriftgröße für Thermodruck */
+                      width: 80mm; /* Fixe Breite von 80mm */
                     }
                     
                     .print-container {
-                      max-width: 100%;
+                      width: 80mm; /* Fixe Breite von 80mm */
+                      max-width: 80mm;
                       margin: 0 auto;
+                      padding: 5mm 2mm;
                     }
                     
                     .print-header {
-                      padding-bottom: 15px;
-                      border-bottom: 2px solid #3b82f6;
-                      margin-bottom: 20px;
+                      padding-bottom: 5mm;
+                      border-bottom: 0.5mm solid black;
+                      margin-bottom: 5mm;
+                      text-align: center;
                     }
                     
                     .print-header h2 {
-                      font-size: 24px;
-                      margin-bottom: 5px;
-                      color: #1e3a8a;
+                      font-size: 14pt;
+                      margin-bottom: 2mm;
+                      font-weight: bold;
                     }
                     
                     .print-section {
-                      margin-bottom: 20px;
-                      padding-bottom: 10px;
+                      margin-bottom: 5mm;
+                      padding-bottom: 2mm;
                     }
                     
                     .print-section h3 {
-                      font-size: 16px;
-                      margin-bottom: 10px;
-                      padding-bottom: 5px;
-                      border-bottom: 1px solid #ddd;
-                      color: #1e3a8a;
+                      font-size: 12pt;
+                      margin-bottom: 2mm;
+                      padding-bottom: 1mm;
+                      border-bottom: 0.2mm solid black;
+                      font-weight: bold;
                     }
                     
                     .print-row {
                       display: flex;
-                      margin-bottom: 5px;
+                      margin-bottom: 1.5mm;
+                      flex-wrap: wrap; /* Erlaubt Umbrüche bei schmalen Breiten */
                     }
                     
                     .print-label {
-                      font-weight: 600;
-                      width: 150px;
-                      color: #4b5563;
+                      font-weight: bold;
+                      width: 25mm; /* Angepasst für 80mm Breite */
+                      margin-right: 1mm;
                     }
                     
                     .print-value {
                       flex: 1;
+                      min-width: 45mm; /* Stellt sicher, dass der Wert genug Platz hat */
                     }
                     
                     .grid-cols-2 {
-                      display: grid;
-                      grid-template-columns: 1fr 1fr;
-                      gap: 15px;
+                      display: block; /* Kein Grid für Thermodruck */
                     }
                     
                     .grid-cols-1 {
-                      display: grid;
-                      grid-template-columns: 1fr;
-                      gap: 8px;
+                      display: block; /* Kein Grid für Thermodruck */
+                      margin-bottom: 2mm;
                     }
                     
                     .font-medium {
-                      font-weight: 600;
-                      margin-right: 5px;
-                      color: #4b5563;
+                      font-weight: bold;
+                      margin-right: 1mm;
                     }
                     
                     .font-semibold {
-                      font-weight: 700;
-                      color: #1e3a8a;
+                      font-weight: bold;
                     }
                     
                     .text-sm {
-                      font-size: 14px;
+                      font-size: 10pt;
                     }
                     
                     .text-xs {
-                      font-size: 12px;
+                      font-size: 8pt;
                     }
                     
                     .text-center {
@@ -205,135 +207,110 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     }
                     
                     .mb-2 {
-                      margin-bottom: 10px;
+                      margin-bottom: 2mm;
                     }
                     
                     .mb-3 {
-                      margin-bottom: 15px;
+                      margin-bottom: 3mm;
                     }
                     
                     .mb-4 {
-                      margin-bottom: 20px;
+                      margin-bottom: 4mm;
                     }
                     
                     .mt-2 {
-                      margin-top: 10px;
+                      margin-top: 2mm;
                     }
                     
                     .mt-8 {
-                      margin-top: 40px;
+                      margin-top: 8mm;
                     }
                     
                     .border-t {
-                      border-top: 1px solid #e5e7eb;
-                      padding-top: 20px;
+                      border-top: 0.3mm solid black;
+                      padding-top: 4mm;
                     }
                     
                     .highlight-box {
-                      background-color: #f3f4f6;
-                      border-radius: 5px;
-                      padding: 15px;
-                      margin-top: 10px;
-                      margin-bottom: 10px;
-                      border-left: 4px solid #3b82f6;
+                      border: 0.3mm solid black;
+                      padding: 2mm;
+                      margin-top: 2mm;
+                      margin-bottom: 2mm;
+                      border-left-width: 1mm;
                     }
                     
                     .receipt-number {
                       display: inline-block;
-                      background-color: #1e3a8a;
-                      color: white;
-                      padding: 5px 10px;
-                      border-radius: 4px;
+                      border: 0.3mm solid black;
+                      padding: 1mm 2mm;
                       font-weight: bold;
-                      margin-left: 10px;
-                      font-size: 14px;
+                      margin-left: 2mm;
+                      font-size: 12pt;
                     }
                     
                     .receipt-footer {
-                      margin-top: 30px;
-                      padding-top: 15px;
-                      border-top: 2px solid #3b82f6;
-                      font-size: 12px;
+                      margin-top: 6mm;
+                      padding-top: 3mm;
+                      border-top: 0.3mm solid black;
+                      font-size: 8pt;
                       text-align: center;
-                      color: #4b5563;
                     }
                     
                     .receipt-watermark {
-                      position: fixed;
-                      top: 50%;
-                      left: 0;
-                      width: 100%;
-                      text-align: center;
-                      opacity: 0.03;
-                      transform: rotate(-45deg);
-                      font-size: 80px;
-                      font-weight: bold;
-                      z-index: -1;
-                      color: #000;
+                      display: none; /* Keine Wasserzeichen für Thermodruck */
                     }
                     
                     .status-badge {
                       display: inline-block;
-                      padding: 3px 8px;
-                      border-radius: 4px;
-                      font-size: 12px;
-                      font-weight: 600;
+                      padding: 0.5mm 1mm;
+                      border: 0.2mm solid black;
+                      font-size: 9pt;
+                      font-weight: bold;
                       text-transform: uppercase;
+                      margin-left: 1mm;
                     }
                     
-                    .status-eingegangen {
-                      background-color: #e5e7eb;
-                      color: #4b5563;
-                    }
-                    
-                    .status-in-reparatur {
-                      background-color: #fef3c7;
-                      color: #92400e;
-                    }
-                    
-                    .status-fertig {
-                      background-color: #d1fae5;
-                      color: #065f46;
-                    }
-                    
-                    .status-abgeholt {
-                      background-color: #dbeafe;
-                      color: #1e40af;
-                    }
-                    
+                    /* Für alle Status-Varianten nur Umrandungen verwenden */
+                    .status-eingegangen,
+                    .status-in-reparatur,
+                    .status-fertig,
+                    .status-abgeholt,
                     .status-ausser-haus {
-                      background-color: #e0e7ff;
-                      color: #4338ca;
+                      border: 0.3mm solid black;
                     }
                     
                     /* Flex-Layout für Firmenlogo und Informationen */
                     .flex {
-                      display: flex;
+                      display: block; /* Für Thermodruck ist block-Layout besser */
+                      text-align: center;
                     }
                     
                     .flex-col {
-                      flex-direction: column;
+                      /* Keine besondere Stilisierung notwendig */
                     }
                     
                     .items-center {
-                      align-items: center;
+                      text-align: center;
                     }
                     
                     .justify-center {
-                      justify-content: center;
+                      text-align: center;
                     }
                     
                     /* Bildstilisierung für Logo */
                     img {
-                      max-width: 100%;
+                      max-width: 60mm; /* Angepasst für 80mm Breite */
+                      max-height: 20mm; /* Begrenzte Höhe */
+                      margin: 0 auto;
+                      display: block;
                     }
                     
                     .max-h-16 {
-                      max-height: 64px;
+                      max-height: 20mm;
                     }
                     
                     .max-w-\\[200px\\] {
-                      max-width: 200px;
+                      max-width: 60mm;
                     }
                     
                     .object-contain {
@@ -537,8 +514,8 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     )}
                     
                     {repair?.depositAmount && (
-                      <div className="highlight-box bg-red-50 border-red-200">
-                        <p className="font-bold text-red-700">Gerät beim Kunden / bei Kundin!</p>
+                      <div className="highlight-box" style={{borderWidth: '0.5mm'}}>
+                        <p className="font-bold" style={{textDecoration: 'underline'}}>WICHTIG: Gerät beim Kunden / bei Kundin!</p>
                         <p><span className="font-medium">Anzahlung:</span> {repair.depositAmount} €</p>
                       </div>
                     )}
