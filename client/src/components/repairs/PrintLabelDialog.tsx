@@ -87,191 +87,102 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum Drucken mit verbessertem Error-Handling
+  // Funktion zum direkten Drucken ohne neues Fenster
   const handlePrint = () => {
-    if (printRef.current) {
-      const printContents = printRef.current.innerHTML;
-      const closeDialog = onClose;
-      
-      try {
-        const printWindow = window.open('', '_blank');
-        
-        if (!printWindow) {
-          alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
-          return;
+    const printStyles = `
+      @media print {
+        @page {
+          size: 57mm 32mm;
+          margin: 0;
+        }
+        body {
+          font-family: Arial, sans-serif;
+          padding: 0;
+          margin: 0;
+        }
+        .label-container {
+          width: 57mm;
+          height: 32mm;
+          padding: 1mm;
+          border: none;
+          page-break-inside: avoid;
+          overflow: hidden;
+        }
+        .text-center {
+          text-align: center;
+        }
+        .font-bold {
+          font-weight: bold;
+        }
+        .text-xs {
+          font-size: 7px;
+        }
+        .text-sm {
+          font-size: 9px;
+        }
+        .text-lg {
+          font-size: 14px;
+        }
+        .text-xl {
+          font-size: 16px;
+          font-weight: bold;
+        }
+        .mb-1 {
+          margin-bottom: 1mm;
+        }
+        .mb-2 {
+          margin-bottom: 2mm;
+        }
+        .flex {
+          display: flex;
+        }
+        .space-x-1 > * + * {
+          margin-left: 1mm;
+        }
+        .flex-shrink-0 {
+          flex-shrink: 0;
+        }
+        .flex-grow {
+          flex-grow: 1;
         }
         
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Etikett für Reparatur #${repair?.id}</title>
-              <style>
-                @media print {
-                  @page {
-                    size: 57mm 32mm;
-                    margin: 0;
-                  }
-                  body {
-                    font-family: Arial, sans-serif;
-                    padding: 0;
-                    margin: 0;
-                  }
-                  .label-container {
-                    width: 57mm;
-                    height: 32mm;
-                    padding: 1mm;
-                    border: none;
-                    page-break-inside: avoid;
-                    overflow: hidden;
-                  }
-                  .label-header {
-                    text-align: center;
-                    font-size: 12px;
-                    margin-bottom: 2mm;
-                  }
-                  .label-content {
-                    font-size: 10px;
-                  }
-                  .text-center {
-                    text-align: center;
-                  }
-                  .font-bold {
-                    font-weight: bold;
-                  }
-                  .text-xs {
-                    font-size: 7px;
-                  }
-                  .text-sm {
-                    font-size: 9px;
-                  }
-                  .text-lg {
-                    font-size: 14px;
-                  }
-                  .text-xl {
-                    font-size: 16px;
-                    font-weight: bold;
-                  }
-                  .mb-1 {
-                    margin-bottom: 1mm;
-                  }
-                  .mb-2 {
-                    margin-bottom: 2mm;
-                  }
-                  
-                  /* Zusätzliche Stile für Logo */
-                  .flex {
-                    display: flex;
-                  }
-                  
-                  .justify-center {
-                    justify-content: center;
-                  }
-                  
-                  .max-h-12 {
-                    max-height: 48px;
-                  }
-                  
-                  .max-w-\\[150px\\] {
-                    max-width: ${settings?.receiptWidth === '58mm' ? '50px' : '150px'};
-                  }
-                  
-                  .object-contain {
-                    object-fit: contain;
-                  }
-                  
-                  img {
-                    max-width: ${settings?.receiptWidth === '58mm' ? '40mm' : '100%'};
-                    max-height: ${settings?.receiptWidth === '58mm' ? '10mm' : '20mm'};
-                  }
-                }
-                
-                /* Nicht-Druck-Styles */
-                body {
-                  font-family: Arial, sans-serif;
-                  padding: 20px;
-                  background-color: #f5f5f5;
-                }
-                .label-container {
-                  width: 300px;
-                  padding: 10px;
-                  border: 1px dotted #ccc;
-                  background-color: white;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                  margin: 0 auto 20px;
-                }
-                .label-header {
-                  text-align: center;
-                  font-size: 12px;
-                  margin-bottom: 8px;
-                }
-                .label-content {
-                  font-size: 10px;
-                }
-                .text-center {
-                  text-align: center;
-                }
-                .font-bold {
-                  font-weight: bold;
-                }
-                .text-xs {
-                  font-size: 10px;
-                }
-                .text-sm {
-                  font-size: 12px;
-                }
-                .text-lg {
-                  font-size: 16px;
-                }
-                .mb-1 {
-                  margin-bottom: 4px;
-                }
-                .mb-2 {
-                  margin-bottom: 8px;
-                }
-                .print-button {
-                  background-color: #3b82f6;
-                  color: white;
-                  border: none;
-                  padding: 10px 20px;
-                  font-size: 16px;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  margin: 20px auto;
-                  display: block;
-                }
-                .close-button {
-                  background-color: #e5e7eb;
-                  color: #4b5563;
-                  border: none;
-                  padding: 10px 20px;
-                  font-size: 16px;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  margin: 0 auto;
-                  display: block;
-                }
-              </style>
-            </head>
-            <body>
-              <div>${printContents}</div>
-              <button class="print-button" onClick="window.print(); window.close();">
-                Drucken
-              </button>
-              <button class="close-button" onClick="window.close();">
-                Schließen
-              </button>
-            </body>
-          </html>
-        `);
-        
-        printWindow.document.close();
-        closeDialog();
-      } catch (error) {
-        console.error('Fehler beim Drucken:', error);
-        alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
-        closeDialog();
+        /* Ausblenden von Elementen, die nicht gedruckt werden sollen */
+        .no-print, .no-print * {
+          display: none !important;
+        }
       }
+    `;
+    
+    try {
+      // Erstelle ein temporäres Stylesheet für den Druck
+      const styleElement = document.createElement('style');
+      styleElement.id = 'print-styles';
+      styleElement.innerHTML = printStyles;
+      document.head.appendChild(styleElement);
+      
+      // Füge No-Print-Klasse zu allen Elementen außer dem zu druckenden Inhalt hinzu
+      const allElements = document.body.getElementsByTagName('*');
+      for (let i = 0; i < allElements.length; i++) {
+        if (!printRef.current?.contains(allElements[i]) && allElements[i] !== printRef.current) {
+          allElements[i].classList.add('no-print');
+        }
+      }
+      
+      // Drucke das Dokument
+      window.print();
+      
+      // Entferne die temporären Stile und Klassen nach dem Drucken
+      setTimeout(() => {
+        document.head.removeChild(styleElement);
+        for (let i = 0; i < allElements.length; i++) {
+          allElements[i].classList.remove('no-print');
+        }
+        onClose();
+      }, 500);
+    } catch (error) {
+      console.error('Fehler beim Drucken:', error);
+      alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+      onClose();
     }
   };
 
@@ -291,8 +202,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         ) : (
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
-              <div ref={printRef} className="bg-white p-4 rounded-md shadow-sm">
-                <div className="label-container border border-dashed border-gray-300 p-1">
+              <div className="bg-white p-4 rounded-md shadow-sm">
+                <div ref={printRef} className="label-container border border-dashed border-gray-300 p-1">
                   {/* Auftragsnummer mittig und fett */}
                   <div className="text-center mb-1">
                     <p className="text-xl font-bold">#{repair?.id}</p>
