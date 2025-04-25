@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ interface PrintRepairDialogProps {
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
-  
+
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],
@@ -88,307 +88,295 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum Drucken mit verbessertem Error-Handling
+  // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
-    if (printRef.current) {
-      const printContents = printRef.current.innerHTML;
-      const originalContents = document.body.innerHTML;
-      
-      // Eine Referenz auf das aktuelle onClose speichern, bevor wir den DOM verändern
-      const closeDialog = onClose;
-      
-      try {
-        // Eine neue print-window Funktion, die nach dem Drucken das Fenster wiederherstellt
-        const printAndRestore = () => {
-          const printWindow = window.open('', '_blank');
-          
-          if (!printWindow) {
-            alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
-            return;
-          }
-          
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Reparaturauftrag #${repair?.id}</title>
-                <style>
-                  @media print {
-                    @page {
-                      size: ${settings?.receiptWidth || '80mm'} auto; /* Bonbreite aus Einstellungen */
-                      margin: 0mm;
-                    }
-                    
-                    body {
-                      font-family: 'Courier New', monospace; /* Bessere Schrift für Thermodruck */
-                      padding: 0;
-                      margin: 0;
-                      color: black;
-                      font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; /* Angepasste Schriftgröße je nach Bonbreite */
-                      width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
-                    }
-                    
-                    .print-container {
-                      width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
-                      max-width: ${settings?.receiptWidth || '80mm'};
-                      margin: 0 auto;
-                      padding: 5mm 2mm;
-                    }
-                    
-                    .print-header {
-                      padding-bottom: 5mm;
-                      border-bottom: 0.5mm solid black;
-                      margin-bottom: 5mm;
-                      text-align: center;
-                    }
-                    
-                    .print-header h2 {
-                      font-size: 14pt;
-                      margin-bottom: 2mm;
-                      font-weight: bold;
-                    }
-                    
-                    .print-section {
-                      margin-bottom: 5mm;
-                      padding-bottom: 2mm;
-                    }
-                    
-                    .print-section h3 {
-                      font-size: 12pt;
-                      margin-bottom: 2mm;
-                      padding-bottom: 1mm;
-                      border-bottom: 0.2mm solid black;
-                      font-weight: bold;
-                    }
-                    
-                    .print-row {
-                      display: flex;
-                      margin-bottom: 1.5mm;
-                      flex-wrap: wrap; /* Erlaubt Umbrüche bei schmalen Breiten */
-                    }
-                    
-                    .print-label {
-                      font-weight: bold;
-                      width: ${settings?.receiptWidth === '58mm' ? '20mm' : '25mm'}; /* Angepasst für Bonbreite */
-                      margin-right: 1mm;
-                    }
-                    
-                    .print-value {
-                      flex: 1;
-                      min-width: ${settings?.receiptWidth === '58mm' ? '30mm' : '45mm'}; /* Angepasst für Bonbreite */
-                    }
-                    
-                    .grid-cols-2 {
-                      display: block; /* Kein Grid für Thermodruck */
-                    }
-                    
-                    .grid-cols-1 {
-                      display: block; /* Kein Grid für Thermodruck */
-                      margin-bottom: 2mm;
-                    }
-                    
-                    .font-medium {
-                      font-weight: bold;
-                      margin-right: 1mm;
-                    }
-                    
-                    .font-semibold {
-                      font-weight: bold;
-                    }
-                    
-                    .text-sm {
-                      font-size: 10pt;
-                    }
-                    
-                    .text-xs {
-                      font-size: 8pt;
-                    }
-                    
-                    .text-center {
-                      text-align: center;
-                    }
-                    
-                    .mb-2 {
-                      margin-bottom: 2mm;
-                    }
-                    
-                    .mb-3 {
-                      margin-bottom: 3mm;
-                    }
-                    
-                    .mb-4 {
-                      margin-bottom: 4mm;
-                    }
-                    
-                    .mt-2 {
-                      margin-top: 2mm;
-                    }
-                    
-                    .mt-8 {
-                      margin-top: 8mm;
-                    }
-                    
-                    .border-t {
-                      border-top: 0.3mm solid black;
-                      padding-top: 4mm;
-                    }
-                    
-                    .highlight-box {
-                      border: 0.3mm solid black;
-                      padding: 2mm;
-                      margin-top: 2mm;
-                      margin-bottom: 2mm;
-                      border-left-width: 1mm;
-                    }
-                    
-                    .receipt-number {
-                      display: inline-block;
-                      border: 0.3mm solid black;
-                      padding: 1mm 2mm;
-                      font-weight: bold;
-                      margin-left: 2mm;
-                      font-size: 12pt;
-                    }
-                    
-                    .receipt-footer {
-                      margin-top: 6mm;
-                      padding-top: 3mm;
-                      border-top: 0.3mm solid black;
-                      font-size: 8pt;
-                      text-align: center;
-                    }
-                    
-                    .receipt-watermark {
-                      display: none; /* Keine Wasserzeichen für Thermodruck */
-                    }
-                    
-                    .status-badge {
-                      display: inline-block;
-                      padding: 0.5mm 1mm;
-                      border: 0.2mm solid black;
-                      font-size: 9pt;
-                      font-weight: bold;
-                      text-transform: uppercase;
-                      margin-left: 1mm;
-                    }
-                    
-                    /* Für alle Status-Varianten nur Umrandungen verwenden */
-                    .status-eingegangen,
-                    .status-in-reparatur,
-                    .status-fertig,
-                    .status-abgeholt,
-                    .status-ausser-haus {
-                      border: 0.3mm solid black;
-                    }
-                    
-                    /* Flex-Layout für Firmenlogo und Informationen */
-                    .flex {
-                      display: block; /* Für Thermodruck ist block-Layout besser */
-                      text-align: center;
-                    }
-                    
-                    .flex-col {
-                      /* Keine besondere Stilisierung notwendig */
-                    }
-                    
-                    .items-center {
-                      text-align: center;
-                    }
-                    
-                    .justify-center {
-                      text-align: center;
-                    }
-                    
-                    /* Bildstilisierung für Logo */
-                    img {
-                      max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'}; /* Angepasst für Bonbreite */
-                      max-height: 20mm; /* Begrenzte Höhe */
-                      margin: 0 auto;
-                      display: block;
-                    }
-                    
-                    .max-h-16 {
-                      max-height: 20mm;
-                    }
-                    
-                    .max-w-\\[200px\\] {
-                      max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'};
-                    }
-                    
-                    .object-contain {
-                      object-fit: contain;
-                    }
-                  }
-                  
-                  /* Nicht-Druck-Styles */
-                  body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    padding: 20px;
-                    margin: 0;
-                    color: #333;
-                  }
-                  
-                  .print-button {
-                    background-color: #3b82f6;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    font-size: 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    margin: 20px auto;
-                    display: block;
-                  }
-                  
-                  .close-button {
-                    background-color: #e5e7eb;
-                    color: #4b5563;
-                    border: none;
-                    padding: 10px 20px;
-                    font-size: 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    margin: 0 auto;
-                    display: block;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="print-container">${printContents}</div>
-                <button class="print-button" onClick="window.print(); window.close();">
-                  Drucken
-                </button>
-                <button class="close-button" onClick="window.close();">
-                  Schließen
-                </button>
-                <script>
-                  window.addEventListener('afterprint', function() {
-                    // Optional: Fenster nach dem Drucken automatisch schließen
-                    // window.close();
-                  });
-                </script>
-              </body>
-            </html>
-          `);
-          
-          printWindow.document.close();
-          
-          // Dialog im Hauptfenster schließen
-          closeDialog();
-        };
-        
-        // Neue Methode nutzen, die keine DOM-Manipulation am Hauptfenster erfordert
-        printAndRestore();
-      } catch (error) {
-        console.error('Fehler beim Drucken:', error);
-        
-        // Im Fehlerfall das Original-Layout wiederherstellen
-        // Dies sollte eigentlich nicht passieren, da wir jetzt ein neues Fenster verwenden
-        alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
-        
-        // Dialog trotzdem schließen
-        closeDialog();
-      }
+    if (!printRef.current) {
+      console.error('Druckelement nicht gefunden');
+      return;
+    }
+    
+    // Erstelle ein neues Fenster für den Druck
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    
+    if (!printWindow) {
+      alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
+      return;
+    }
+    
+    // Extrahiere den Inhalt aus dem Referenzobjekt
+    const printContents = printRef.current.innerHTML;
+
+    // Schließe den Dialog
+    onClose();
+    
+    // Fülle das Druckfenster mit Inhalten
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Reparaturauftrag #${repair?.id}</title>
+          <meta charset="UTF-8">
+          <style>
+            @media print {
+              @page {
+                size: ${settings?.receiptWidth || '80mm'} auto; /* Bonbreite aus Einstellungen */
+                margin: 0mm;
+              }
+              
+              body {
+                font-family: 'Courier New', monospace; /* Bessere Schrift für Thermodruck */
+                padding: 0;
+                margin: 0;
+                color: black;
+                font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; /* Angepasste Schriftgröße je nach Bonbreite */
+                width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
+              }
+              
+              .print-container {
+                width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
+                max-width: ${settings?.receiptWidth || '80mm'};
+                margin: 0 auto;
+                padding: 5mm 2mm;
+              }
+              
+              .print-header {
+                padding-bottom: 3mm;
+                border-bottom: 0.5mm solid black;
+                margin-bottom: 3mm;
+                text-align: center;
+              }
+              
+              .print-header h2 {
+                font-size: 14pt;
+                margin-bottom: 1mm;
+                font-weight: bold;
+              }
+              
+              .print-section {
+                margin-bottom: 3mm;
+                padding-bottom: 1mm;
+              }
+              
+              .print-section h3 {
+                font-size: 12pt;
+                margin-bottom: 1mm;
+                padding-bottom: 1mm;
+                border-bottom: 0.2mm solid black;
+                font-weight: bold;
+              }
+              
+              .print-row {
+                display: flex;
+                margin-bottom: 1mm;
+                flex-wrap: wrap; /* Erlaubt Umbrüche bei schmalen Breiten */
+              }
+              
+              .print-label {
+                font-weight: bold;
+                width: ${settings?.receiptWidth === '58mm' ? '20mm' : '25mm'}; /* Angepasst für Bonbreite */
+                margin-right: 1mm;
+              }
+              
+              .print-value {
+                flex: 1;
+                min-width: ${settings?.receiptWidth === '58mm' ? '30mm' : '45mm'}; /* Angepasst für Bonbreite */
+              }
+              
+              .grid-cols-2 {
+                display: block; /* Kein Grid für Thermodruck */
+              }
+              
+              .grid-cols-1 {
+                display: block; /* Kein Grid für Thermodruck */
+                margin-bottom: 1mm;
+              }
+              
+              .font-medium {
+                font-weight: bold;
+                margin-right: 1mm;
+              }
+              
+              .font-semibold {
+                font-weight: bold;
+              }
+              
+              .text-sm {
+                font-size: 10pt;
+              }
+              
+              .text-xs {
+                font-size: 8pt;
+              }
+              
+              .text-center {
+                text-align: center;
+              }
+              
+              .mb-2 {
+                margin-bottom: 2mm;
+              }
+              
+              .mb-3 {
+                margin-bottom: 3mm;
+              }
+              
+              .mb-4 {
+                margin-bottom: 4mm;
+              }
+              
+              .mt-2 {
+                margin-top: 2mm;
+              }
+              
+              .mt-8 {
+                margin-top: 8mm;
+              }
+              
+              .border-t {
+                border-top: 0.3mm solid black;
+                padding-top: 4mm;
+              }
+              
+              .highlight-box {
+                border: 0.3mm solid black;
+                padding: 2mm;
+                margin-top: 1mm;
+                margin-bottom: 1mm;
+                border-left-width: 1mm;
+              }
+              
+              .receipt-number {
+                display: inline-block;
+                border: 0.3mm solid black;
+                padding: 1mm 2mm;
+                font-weight: bold;
+                margin-left: 2mm;
+                font-size: 12pt;
+              }
+              
+              .receipt-footer {
+                margin-top: 6mm;
+                padding-top: 3mm;
+                border-top: 0.3mm solid black;
+                font-size: 8pt;
+                text-align: center;
+              }
+              
+              .status-badge {
+                display: inline-block;
+                padding: 0.5mm 1mm;
+                border: 0.2mm solid black;
+                font-size: 9pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                margin-left: 1mm;
+              }
+              
+              /* Für alle Status-Varianten nur Umrandungen verwenden */
+              .status-eingegangen,
+              .status-in-reparatur,
+              .status-fertig,
+              .status-abgeholt,
+              .status-ausser-haus {
+                border: 0.3mm solid black;
+              }
+              
+              /* Flex-Layout für Firmenlogo und Informationen */
+              .flex {
+                display: block; /* Für Thermodruck ist block-Layout besser */
+                text-align: center;
+              }
+              
+              .flex-col {
+                /* Keine besondere Stilisierung notwendig */
+              }
+              
+              .items-center {
+                text-align: center;
+              }
+              
+              .justify-center {
+                text-align: center;
+              }
+              
+              /* Bildstilisierung für Logo */
+              img {
+                max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'}; /* Angepasst für Bonbreite */
+                max-height: 15mm; /* Begrenzte Höhe */
+                margin: 0 auto;
+                display: block;
+              }
+              
+              .max-h-16 {
+                max-height: 15mm;
+              }
+              
+              .max-w-\\[200px\\] {
+                max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'};
+              }
+              
+              .object-contain {
+                object-fit: contain;
+              }
+            }
+            
+            /* Nicht-Druck-Styles */
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              padding: 20px;
+              margin: 0;
+              color: #333;
+            }
+            
+            .print-button {
+              background-color: #3b82f6;
+              color: white;
+              border: none;
+              padding: 10px 20px;
+              font-size: 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin: 20px auto;
+              display: block;
+            }
+            
+            .close-button {
+              background-color: #e5e7eb;
+              color: #4b5563;
+              border: none;
+              padding: 10px 20px;
+              font-size: 16px;
+              border-radius: 4px;
+              cursor: pointer;
+              margin: 0 auto;
+              display: block;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">${printContents}</div>
+          <button class="print-button" onClick="window.print(); window.close();">
+            Drucken
+          </button>
+          <button class="close-button" onClick="window.close();">
+            Schließen
+          </button>
+          <script>
+            window.addEventListener('afterprint', function() {
+              // Fenster nach dem Drucken automatisch schließen
+              window.close();
+            });
+          </script>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    try {
+      printWindow.focus();
+    } catch (error) {
+      console.error('Fehler beim Fokussieren des Druckfensters:', error);
     }
   };
 
@@ -409,17 +397,12 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
               <div ref={printRef} className="bg-white p-6 rounded-md shadow-sm">
-                {/* Wasserzeichen */}
-                <div className="receipt-watermark">
-                  REPARATURAUFTRAG
-                </div>
-                
-                {/* Header mit Logo */}
-                <div className="print-header mb-6">
+                {/* Logo und Unternehmensdaten */}
+                <div className="print-header mb-4">
                   <div className="flex flex-col items-center justify-center">
                     {/* Logo anzeigen, wenn vorhanden */}
                     {businessSettings?.logoImage && (
-                      <div className="mb-3">
+                      <div className="mb-2">
                         <img 
                           src={businessSettings.logoImage} 
                           alt={businessSettings.businessName || "Firmenlogo"}
@@ -429,8 +412,6 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     )}
                     
                     <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
-                    {businessSettings?.phone && <p className="text-sm">Tel: {businessSettings.phone}</p>}
-                    {businessSettings?.email && <p className="text-sm">E-Mail: {businessSettings.email}</p>}
                     <p className="text-xs">
                       {businessSettings ? (
                         `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}`
@@ -438,48 +419,31 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                         "Adresse nicht verfügbar"
                       )}
                     </p>
+                    {businessSettings?.phone && <p className="text-xs">Tel: {businessSettings.phone}</p>}
+                    {businessSettings?.email && <p className="text-xs">E-Mail: {businessSettings.email}</p>}
                     {businessSettings?.website && <p className="text-xs">{businessSettings.website}</p>}
                   </div>
                 </div>
                 
-                {/* Auftragskopf */}
-                <div className="print-section mb-4">
-                  <div className="flex items-center">
+                {/* Datum */}
+                <div className="text-sm text-center mb-2">
+                  <p>
+                    <span className="font-medium">Datum:</span> 
+                    {repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}
+                  </p>
+                </div>
+                
+                {/* Reparaturauftrag Nummer */}
+                <div className="print-section mb-3">
+                  <div className="flex items-center justify-center">
                     <h3 className="font-semibold text-lg">Reparaturauftrag</h3>
                     <span className="receipt-number">#{repair?.id}</span>
-                  </div>
-                  
-                  <div className="highlight-box mt-2">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p>
-                          <span className="font-medium">Datum:</span> 
-                          {repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}
-                        </p>
-                        <p>
-                          <span className="font-medium">Status:</span>
-                          <span className={`status-badge status-${repair?.status === 'in_reparatur' 
-                              ? 'in-reparatur' 
-                              : repair?.status === 'ausser_haus' 
-                                ? 'ausser-haus' 
-                                : repair?.status}`}>
-                            {repair?.status === 'eingegangen' ? 'Eingegangen' : 
-                             repair?.status === 'in_reparatur' ? 'In Reparatur' : 
-                             repair?.status === 'fertig' ? 'Fertig' : 
-                             repair?.status === 'abgeholt' ? 'Abgeholt' : 'Außer Haus'}
-                          </span>
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p><span className="font-medium">Auftragsnummer:</span> {repair?.id}</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
                 
                 {/* Kundendaten */}
-                <div className="print-section mb-4">
-                  <h3 className="font-semibold mb-2">Kundendaten</h3>
+                <div className="print-section mb-3">
+                  <h3 className="font-semibold mb-1">Kundendaten</h3>
                   <div className="grid grid-cols-1 gap-1 text-sm">
                     <p><span className="font-medium">Name:</span> {customer?.firstName} {customer?.lastName}</p>
                     <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
@@ -487,23 +451,19 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   </div>
                 </div>
                 
-                {/* Gerätedaten */}
-                <div className="print-section mb-4">
-                  <h3 className="font-semibold mb-2">Gerätedaten</h3>
-                  <div className="highlight-box">
-                    <div className="grid grid-cols-2 gap-1 text-sm">
-                      <p><span className="font-medium">Typ:</span> {repair?.deviceType === 'smartphone' ? 'Smartphone' : 
-                                            repair?.deviceType === 'tablet' ? 'Tablet' : 'Laptop'}</p>
-                      <p><span className="font-medium">Marke:</span> {repair?.brand}</p>
-                      <p><span className="font-medium">Modell:</span> {repair?.model}</p>
-                      {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
-                    </div>
+                {/* Gerätedaten - ohne Typ */}
+                <div className="print-section mb-3">
+                  <h3 className="font-semibold mb-1">Gerätedaten</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm">
+                    <p><span className="font-medium">Marke:</span> {repair?.brand}</p>
+                    <p><span className="font-medium">Modell:</span> {repair?.model}</p>
+                    {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
                   </div>
                 </div>
                 
                 {/* Reparaturdetails */}
-                <div className="print-section mb-4">
-                  <h3 className="font-semibold mb-2">Reparaturdetails</h3>
+                <div className="print-section mb-3">
+                  <h3 className="font-semibold mb-1">Reparaturdetails</h3>
                   <div className="grid grid-cols-1 gap-2 text-sm">
                     <div className="highlight-box">
                       <p><span className="font-medium">Problem:</span> {repair?.issue}</p>
@@ -511,7 +471,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     
                     {repair?.estimatedCost && (
                       <div className="highlight-box">
-                        <p><span className="font-medium">Kostenvoranschlag:</span> {repair.estimatedCost} €</p>
+                        <p><span className="font-medium">Preis:</span> {repair.estimatedCost} €</p>
                       </div>
                     )}
                     
@@ -523,20 +483,30 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     )}
                     
                     {repair?.notes && (
-                      <div>
-                        <p><span className="font-medium">Notizen:</span></p>
-                        <p className="mt-1 ml-4">{repair.notes}</p>
+                      <div className="highlight-box">
+                        <p><span className="font-medium">Notizen:</span> {repair.notes}</p>
                       </div>
                     )}
                   </div>
                 </div>
                 
-                {/* Footer */}
-                <div className="receipt-footer">
-                  <p>Vielen Dank für Ihren Auftrag.</p>
-                  <p>Bitte bewahren Sie diesen Beleg auf. Er dient als Nachweis für die Abholung Ihres Geräts.</p>
-                  <p className="mt-2">© {new Date().getFullYear()} {businessSettings?.businessName || "Handyshop Verwaltung"}</p>
-                  {businessSettings?.taxId && <p>UID: {businessSettings.taxId}</p>}
+                {/* Status */}
+                <div className="print-section mb-3 text-center">
+                  <p className="text-sm">
+                    <span className="font-medium">Status:</span>
+                    <span className={`status-badge status-${repair?.status === 'in_reparatur' 
+                        ? 'in-reparatur' 
+                        : repair?.status === 'ausser_haus' 
+                          ? 'ausser-haus' 
+                          : repair?.status}`}>
+                      {repair?.status === 'eingegangen' ? 'Eingegangen' : 
+                       repair?.status === 'in_reparatur' ? 'In Reparatur' : 
+                       repair?.status === 'fertig' ? 'Fertig' : 
+                       repair?.status === 'abgeholt' ? 'Abgeholt' : 
+                       repair?.status === 'ausser_haus' ? 'Außer Haus' : 
+                       'Unbekannt'}
+                    </span>
+                  </p>
                 </div>
               </div>
             </div>
