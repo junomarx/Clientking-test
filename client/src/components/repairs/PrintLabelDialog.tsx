@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -108,8 +109,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <style>
                 @media print {
                   @page {
-                    size: ${settings?.receiptWidth === '58mm' ? '58mm' : '100mm'} 50mm;
-                    margin: 3mm;
+                    size: 57mm 32mm;
+                    margin: 0;
                   }
                   body {
                     font-family: Arial, sans-serif;
@@ -117,10 +118,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     margin: 0;
                   }
                   .label-container {
-                    width: ${settings?.receiptWidth === '58mm' ? '52mm' : '94mm'};
-                    padding: 2mm;
-                    border: 1px dotted #ccc;
+                    width: 57mm;
+                    height: 32mm;
+                    padding: 1mm;
+                    border: none;
                     page-break-inside: avoid;
+                    overflow: hidden;
                   }
                   .label-header {
                     text-align: center;
@@ -137,13 +140,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     font-weight: bold;
                   }
                   .text-xs {
-                    font-size: ${settings?.receiptWidth === '58mm' ? '8px' : '10px'};
+                    font-size: 7px;
                   }
                   .text-sm {
-                    font-size: ${settings?.receiptWidth === '58mm' ? '10px' : '12px'};
+                    font-size: 9px;
                   }
                   .text-lg {
-                    font-size: ${settings?.receiptWidth === '58mm' ? '14px' : '16px'};
+                    font-size: 14px;
+                  }
+                  .text-xl {
+                    font-size: 16px;
+                    font-weight: bold;
                   }
                   .mb-1 {
                     margin-bottom: 1mm;
@@ -285,98 +292,36 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
               <div ref={printRef} className="bg-white p-4 rounded-md shadow-sm">
-                <div className="label-container border border-dashed border-gray-300 p-4 rounded-lg">
-                  <div className="label-header text-center mb-3 border-b border-primary pb-2">
-                    {businessSettings?.logoImage && (
-                      <div className="mb-2 flex justify-center">
-                        <img 
-                          src={businessSettings.logoImage} 
-                          alt={businessSettings.businessName || "Firmenlogo"}
-                          className="max-h-12 max-w-[150px] object-contain"
-                        />
-                      </div>
-                    )}
-                    <p className="font-bold text-sm text-primary">{businessSettings?.businessName || "Handyshop Verwaltung"}</p>
+                <div className="label-container border border-dashed border-gray-300 p-1">
+                  {/* Auftragsnummer mittig und fett */}
+                  <div className="text-center mb-1">
+                    <p className="text-xl font-bold">#{repair?.id}</p>
                   </div>
                   
-                  <div className="label-content">
-                    <div className="bg-primary text-white text-center rounded py-1 px-2 mb-3">
-                      <p className="text-lg font-bold">Reparatur #{repair?.id}</p>
+                  <div className="flex space-x-1">
+                    {/* QR-Code auf der linken Seite */}
+                    <div className="flex-shrink-0">
+                      <QRCodeSVG 
+                        value={`${window.location.origin}/repairs/${repair?.id}`} 
+                        size={64} 
+                        level="M"
+                      />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-1 mb-2">
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600">Kunde:</p>
-                        <p className="text-xs">{customer?.firstName} {customer?.lastName}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600">Telefon:</p>
+                    {/* Kundendaten und Reparaturinformationen auf der rechten Seite */}
+                    <div className="flex-grow">
+                      <div className="mb-1">
+                        <p className="text-xs font-bold">{customer?.firstName} {customer?.lastName}</p>
                         <p className="text-xs">{customer?.phone}</p>
                       </div>
-                    </div>
-                    
-                    <div className="border-t border-b border-gray-200 py-2 my-2">
-                      <div className="grid grid-cols-2 gap-1">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Gerät:</p>
-                          <p className="text-xs">{repair?.deviceType === 'smartphone' ? 'Smartphone' : 
-                                     repair?.deviceType === 'tablet' ? 'Tablet' : 'Laptop'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-600">Marke/Modell:</p>
-                          <p className="text-xs">{repair?.brand} {repair?.model}</p>
-                        </div>
+                      
+                      <div className="mb-1">
+                        <p className="text-xs">{repair?.brand} {repair?.model}</p>
                       </div>
                       
-                      {repair?.serialNumber && (
-                        <div className="mt-1">
-                          <p className="text-xs font-semibold text-gray-600">S/N:</p>
-                          <p className="text-xs">{repair.serialNumber}</p>
-                        </div>
-                      )}
-
-                      {repair?.depositAmount && (
-                        <div className="mt-2 bg-red-100 p-1 rounded border border-red-300 text-red-800">
-                          <p className="text-xs font-bold text-center">Gerät beim Kunden / bei Kundin!</p>
-                          <p className="text-xs text-center">Anzahlung: {repair.depositAmount} €</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="mb-2">
-                      <p className="text-xs font-semibold text-gray-600">Problem:</p>
-                      <p className="text-xs">{repair?.issue}</p>
-                    </div>
-                    
-                    <div className="flex justify-between items-center mb-2">
                       <div>
-                        <p className="text-xs font-semibold text-gray-600">Status:</p>
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          repair?.status === 'eingegangen' ? 'bg-gray-100 text-gray-600' :
-                          repair?.status === 'in_reparatur' ? 'bg-amber-100 text-amber-800' :
-                          repair?.status === 'fertig' ? 'bg-green-100 text-green-800' :
-                          repair?.status === 'abgeholt' ? 'bg-blue-100 text-blue-800' :
-                          'bg-indigo-100 text-indigo-800'
-                        }`}>
-                          {repair?.status === 'eingegangen' ? 'Eingegangen' : 
-                           repair?.status === 'in_reparatur' ? 'In Reparatur' : 
-                           repair?.status === 'fertig' ? 'Fertig' : 
-                           repair?.status === 'abgeholt' ? 'Abgeholt' : 'Außer Haus'}
-                        </span>
+                        <p className="text-xs">{repair?.issue}</p>
                       </div>
-                      
-                      {repair?.estimatedCost && (
-                        <div className="text-right">
-                          <p className="text-xs font-semibold text-gray-600">Preis:</p>
-                          <p className="text-xs font-semibold">{repair.estimatedCost} €</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="mt-3 pt-2 border-t border-gray-200 text-xs text-center text-gray-500">
-                      {businessSettings?.phone}
-                      {businessSettings?.phone && businessSettings?.email && " | "}
-                      {businessSettings?.email}
                     </div>
                   </div>
                 </div>
