@@ -149,63 +149,48 @@ export class DatabaseStorage implements IStorage {
   
   // Customer methods
   async getAllCustomers(currentUserId?: number): Promise<Customer[]> {
-    if (currentUserId) {
-      return await db
-        .select()
-        .from(customers)
-        .where(eq(customers.userId, currentUserId))
-        .orderBy(desc(customers.createdAt));
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      return await db.select().from(customers).orderBy(desc(customers.createdAt));
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    return await db
+      .select()
+      .from(customers)
+      .where(eq(customers.userId, currentUserId))
+      .orderBy(desc(customers.createdAt));
   }
   
   async getCustomer(id: number, currentUserId?: number): Promise<Customer | undefined> {
-    if (currentUserId) {
-      const [customer] = await db
-        .select()
-        .from(customers)
-        .where(
-          and(
-            eq(customers.id, id),
-            eq(customers.userId, currentUserId)
-          )
-        );
-      return customer;
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      const [customer] = await db.select().from(customers).where(eq(customers.id, id));
-      return customer;
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    const [customer] = await db
+      .select()
+      .from(customers)
+      .where(
+        and(
+          eq(customers.id, id),
+          eq(customers.userId, currentUserId)
+        )
+      );
+    return customer;
   }
   
   async findCustomersByName(firstName: string, lastName: string, currentUserId?: number): Promise<Customer[]> {
     // Suche Kunden, deren Vor- und Nachname die gesuchten Begriffe enthalten (case-insensitive)
     // und die zum aktuellen Benutzer gehören (falls currentUserId angegeben ist)
-    if (currentUserId) {
-      return await db
-        .select()
-        .from(customers)
-        .where(
-          and(
-            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
-            sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`,
-            eq(customers.userId, currentUserId)
-          )
-        );
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      return await db
-        .select()
-        .from(customers)
-        .where(
-          and(
-            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
-            sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`
-          )
-        );
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    return await db
+      .select()
+      .from(customers)
+      .where(
+        and(
+          sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
+          sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`,
+          eq(customers.userId, currentUserId)
+        )
+      );
   }
   
   async createCustomer(insertCustomer: InsertCustomer, currentUserId?: number): Promise<Customer> {
@@ -219,42 +204,33 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateCustomer(id: number, customerUpdate: Partial<InsertCustomer>, currentUserId?: number): Promise<Customer | undefined> {
-    if (currentUserId) {
-      const [updatedCustomer] = await db
-        .update(customers)
-        .set(customerUpdate)
-        .where(
-          and(
-            eq(customers.id, id),
-            eq(customers.userId, currentUserId)
-          )
-        )
-        .returning();
-      return updatedCustomer;
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      const [updatedCustomer] = await db
-        .update(customers)
-        .set(customerUpdate)
-        .where(eq(customers.id, id))
-        .returning();
-      return updatedCustomer;
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    const [updatedCustomer] = await db
+      .update(customers)
+      .set(customerUpdate)
+      .where(
+        and(
+          eq(customers.id, id),
+          eq(customers.userId, currentUserId)
+        )
+      )
+      .returning();
+    return updatedCustomer;
   }
   
   async deleteCustomer(id: number, currentUserId?: number): Promise<boolean> {
     try {
-      if (currentUserId) {
-        await db.delete(customers).where(
-          and(
-            eq(customers.id, id),
-            eq(customers.userId, currentUserId)
-          )
-        );
-      } else {
-        // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-        await db.delete(customers).where(eq(customers.id, id));
+      if (!currentUserId) {
+        return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
       }
+      await db.delete(customers).where(
+        and(
+          eq(customers.id, id),
+          eq(customers.userId, currentUserId)
+        )
+      );
       return true;
     } catch (error) {
       console.error("Error deleting customer:", error);
@@ -264,57 +240,46 @@ export class DatabaseStorage implements IStorage {
   
   // Repair methods
   async getAllRepairs(currentUserId?: number): Promise<Repair[]> {
-    if (currentUserId) {
-      return await db
-        .select()
-        .from(repairs)
-        .where(eq(repairs.userId, currentUserId))
-        .orderBy(desc(repairs.createdAt));
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      return await db.select().from(repairs).orderBy(desc(repairs.createdAt));
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    return await db
+      .select()
+      .from(repairs)
+      .where(eq(repairs.userId, currentUserId))
+      .orderBy(desc(repairs.createdAt));
   }
   
   async getRepair(id: number, currentUserId?: number): Promise<Repair | undefined> {
-    if (currentUserId) {
-      const [repair] = await db
-        .select()
-        .from(repairs)
-        .where(
-          and(
-            eq(repairs.id, id),
-            eq(repairs.userId, currentUserId)
-          )
-        );
-      return repair;
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      const [repair] = await db.select().from(repairs).where(eq(repairs.id, id));
-      return repair;
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    const [repair] = await db
+      .select()
+      .from(repairs)
+      .where(
+        and(
+          eq(repairs.id, id),
+          eq(repairs.userId, currentUserId)
+        )
+      );
+    return repair;
   }
   
   async getRepairsByCustomerId(customerId: number, currentUserId?: number): Promise<Repair[]> {
-    if (currentUserId) {
-      return await db
-        .select()
-        .from(repairs)
-        .where(
-          and(
-            eq(repairs.customerId, customerId),
-            eq(repairs.userId, currentUserId)
-          )
-        )
-        .orderBy(desc(repairs.createdAt));
-    } else {
-      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
-      return await db
-        .select()
-        .from(repairs)
-        .where(eq(repairs.customerId, customerId))
-        .orderBy(desc(repairs.createdAt));
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    return await db
+      .select()
+      .from(repairs)
+      .where(
+        and(
+          eq(repairs.customerId, customerId),
+          eq(repairs.userId, currentUserId)
+        )
+      )
+      .orderBy(desc(repairs.createdAt));
   }
   
   // Generiert einen eindeutigen Auftragscode im Format: [Marke-Anfangsbuchstabe][Geräteart-Anfangsbuchstabe][4 zufällige Ziffern]
