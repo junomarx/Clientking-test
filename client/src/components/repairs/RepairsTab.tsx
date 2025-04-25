@@ -34,6 +34,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
+  const [sendEmail, setSendEmail] = useState(false);
+  const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
   
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
@@ -180,6 +182,14 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const openStatusDialog = (id: number, currentStatus: string) => {
     setSelectedRepairId(id);
     setNewStatus(currentStatus);
+    setSendEmail(false); // Reset E-Mail-Option
+    
+    // Finde die Reparatur-Details
+    const repair = filteredRepairs.find(r => r.id === id);
+    if (repair) {
+      setSelectedRepairDetails(repair);
+    }
+    
     setShowStatusDialog(true);
   };
 
