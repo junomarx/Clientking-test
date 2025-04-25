@@ -95,7 +95,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     }
     
     // Erstelle ein neues Fenster für den Druck
-    const printWindow = window.open('', '_blank', 'width=300,height=200');
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
     
     if (!printWindow) {
       alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
@@ -105,9 +105,10 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     // Extrahiere den Inhalt aus dem Referenzobjekt
     const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
     const repairId = repair?.id || '';
-    const customerName = `${customer?.firstName || ''} ${customer?.lastName || ''}`;
+    const firstName = customer?.firstName || '';
+    const lastName = customer?.lastName || '';
     const customerPhone = customer?.phone || '';
-    const deviceInfo = `${repair?.brand || ''} ${repair?.model || ''}`;
+    const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
     
     // Fülle das Druckfenster mit Inhalten
@@ -119,74 +120,99 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <meta charset="UTF-8">
           <style>
             @page {
-              size: 57mm 32mm;
+              size: 32mm 57mm;
               margin: 0;
             }
             html, body {
               margin: 0;
               padding: 0;
-              width: 57mm;
-              height: 32mm;
+              width: 32mm;
+              height: 57mm;
               overflow: hidden;
               font-family: Arial, sans-serif;
             }
             .label {
-              width: 57mm;
-              height: 32mm;
+              width: 32mm;
+              height: 57mm;
               box-sizing: border-box;
-              padding: 2mm;
+              padding: 3mm;
               background-color: white;
               display: flex;
               flex-direction: column;
+              align-items: center;
+            }
+            .print-area {
+              width: 26mm;
+              height: 51mm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-between;
             }
             .repair-number {
               text-align: center;
-              font-size: 14px;
+              font-size: 16px;
               font-weight: bold;
               margin-bottom: 2mm;
             }
-            .content {
-              display: flex;
-              flex: 1;
-            }
-            .qr-container {
-              width: 20mm;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
-            .qr-container svg {
+            .qr-code {
+              margin-bottom: 2mm;
               width: 20mm;
               height: 20mm;
             }
-            .details {
-              flex: 1;
-              margin-left: 2mm;
-              font-size: 8px;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
+            .qr-code svg {
+              width: 100%;
+              height: 100%;
             }
-            .details-item {
+            .customer-info {
+              text-align: center;
+              width: 100%;
               margin-bottom: 2mm;
             }
-            .customer-name {
+            .first-name {
+              font-size: 11px;
               font-weight: bold;
+              margin-bottom: 1mm;
+            }
+            .last-name {
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 1mm;
+            }
+            .phone {
+              font-size: 10px;
+              margin-bottom: 2mm;
+            }
+            .repair-info {
+              text-align: center;
+              width: 100%;
+              font-size: 9px;
+            }
+            .model {
+              margin-bottom: 1mm;
+              font-weight: bold;
+            }
+            .issue {
+              font-size: 9px;
             }
           </style>
         </head>
         <body>
           <div class="label">
-            <div class="repair-number">#${repairId}</div>
-            <div class="content">
-              <div class="qr-container">${qrCode}</div>
-              <div class="details">
-                <div class="details-item">
-                  <div class="customer-name">${customerName}</div>
-                  <div>${customerPhone}</div>
-                </div>
-                <div class="details-item">${deviceInfo}</div>
-                <div class="details-item">${repairIssue}</div>
+            <div class="print-area">
+              <div class="repair-number">#${repairId}</div>
+              
+              <div class="qr-code">${qrCode}</div>
+              
+              <div class="customer-info">
+                <div class="first-name">${firstName}</div>
+                <div class="last-name">${lastName}</div>
+                <div class="phone">${customerPhone}</div>
+              </div>
+              
+              <div class="repair-info">
+                <div class="model">${model}</div>
+                <div class="issue">${repairIssue}</div>
               </div>
             </div>
           </div>
@@ -226,36 +252,34 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
               <div className="bg-white p-4 rounded-md shadow-sm">
-                <div ref={printRef} className="label-container border border-dashed border-gray-300 p-1">
-                  {/* Auftragsnummer mittig und fett */}
-                  <div className="text-center mb-1">
-                    <p className="text-xl font-bold">#{repair?.id}</p>
-                  </div>
-                  
-                  <div className="flex space-x-1">
-                    {/* QR-Code auf der linken Seite */}
-                    <div className="flex-shrink-0">
+                <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
+                  {/* Vorschau im gleichen Format wie das Drucklayout (Hochformat) */}
+                  <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
+                    {/* Auftragsnummer */}
+                    <div className="text-center">
+                      <p className="text-xl font-bold">#{repair?.id}</p>
+                    </div>
+                    
+                    {/* QR-Code mittig */}
+                    <div className="flex justify-center">
                       <QRCodeSVG 
                         value={`${window.location.origin}/repairs/${repair?.id}`} 
-                        size={64} 
+                        size={76} 
                         level="M"
                       />
                     </div>
                     
-                    {/* Kundendaten und Reparaturinformationen auf der rechten Seite */}
-                    <div className="flex-grow">
-                      <div className="mb-1">
-                        <p className="text-xs font-bold">{customer?.firstName} {customer?.lastName}</p>
-                        <p className="text-xs">{customer?.phone}</p>
-                      </div>
-                      
-                      <div className="mb-1">
-                        <p className="text-xs">{repair?.brand} {repair?.model}</p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-xs">{repair?.issue}</p>
-                      </div>
+                    {/* Kundendaten */}
+                    <div className="text-center w-full">
+                      <p className="text-xs font-bold">{customer?.firstName}</p>
+                      <p className="text-xs font-bold">{customer?.lastName}</p>
+                      <p className="text-xs">{customer?.phone}</p>
+                    </div>
+                    
+                    {/* Reparaturinformationen */}
+                    <div className="text-center w-full">
+                      <p className="text-xs font-bold">{repair?.model}</p>
+                      <p className="text-xs">{repair?.issue}</p>
                     </div>
                   </div>
                 </div>
