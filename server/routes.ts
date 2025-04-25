@@ -636,10 +636,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let variablesArray: string[] = [];
         if (typeof updateData.variables === 'string') {
           // Wenn ein Komma-separierter String übergeben wird
-          variablesArray = updateData.variables.split(',').map(v => v.trim()).filter(v => v.length > 0);
+          const varString: string = updateData.variables;
+          variablesArray = varString.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0);
         } else if (Array.isArray(updateData.variables)) {
           // Wenn bereits ein Array übergeben wird
-          variablesArray = updateData.variables;
+          variablesArray = updateData.variables as string[];
         }
         updateData.variables = variablesArray;
       }

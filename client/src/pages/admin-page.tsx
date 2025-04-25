@@ -177,7 +177,8 @@ function UserTable() {
     // Neues Passwort, falls angegeben
     const password = formData.get("password") as string;
     if (password) {
-      userData.password = password;
+      // Da password nicht in UserResponse ist, müssen wir es als any behandeln
+      (userData as any).password = password;
     }
     
     // isAdmin, falls Checkbox vorhanden und angehakt
