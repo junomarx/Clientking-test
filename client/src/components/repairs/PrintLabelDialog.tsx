@@ -87,92 +87,115 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum direkten Drucken ohne neues Fenster
+  // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
     if (!printRef.current) {
       console.error('Druckelement nicht gefunden');
       return;
     }
     
-    // Speichere eine Kopie des zu druckenden Inhalts
-    const printContents = printRef.current.innerHTML;
-    const originalContent = document.body.innerHTML;
+    // Erstelle ein neues Fenster für den Druck
+    const printWindow = window.open('', '_blank', 'width=600,height=600');
     
-    // Setze nur den Druckinhalt
-    document.body.innerHTML = `
-      <style>
-        @page {
-          size: 32mm 57mm;
-          margin: 0;
-        }
-        body {
-          font-family: Arial, sans-serif;
-          padding: 0;
-          margin: 0;
-        }
-        .label-container {
-          width: 32mm;
-          height: 57mm;
-          padding: 1mm;
-          border: none;
-          page-break-inside: avoid;
-          overflow: hidden;
-          transform: rotate(90deg);
-          transform-origin: bottom left;
-          position: absolute;
-          left: 0;
-          bottom: 57mm;
-        }
-        .text-center {
-          text-align: center;
-        }
-        .font-bold {
-          font-weight: bold;
-        }
-        .text-xs {
-          font-size: 7px;
-        }
-        .text-sm {
-          font-size: 9px;
-        }
-        .text-lg {
-          font-size: 14px;
-        }
-        .text-xl {
-          font-size: 16px;
-          font-weight: bold;
-        }
-        .mb-1 {
-          margin-bottom: 1mm;
-        }
-        .mb-2 {
-          margin-bottom: 2mm;
-        }
-        .flex {
-          display: flex;
-        }
-        .space-x-1 > * + * {
-          margin-left: 1mm;
-        }
-        .flex-shrink-0 {
-          flex-shrink: 0;
-        }
-        .flex-grow {
-          flex-grow: 1;
-        }
-      </style>
-      <div class="label-container">${printContents}</div>
-    `;
+    if (!printWindow) {
+      alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
+      return;
+    }
     
-    // Drucken
-    window.print();
+    // Extrahiere den Inhalt aus dem Referenzobjekt
+    const qrCode = printRef.current.querySelector('svg')?.outerHTML || '';
+    const repairId = repair?.id || '';
+    const customerName = `${customer?.firstName || ''} ${customer?.lastName || ''}`;
+    const customerPhone = customer?.phone || '';
+    const deviceInfo = `${repair?.brand || ''} ${repair?.model || ''}`;
+    const repairIssue = repair?.issue || '';
     
-    // Alten Inhalt wiederherstellen und Seite neu laden
-    // Dies vermeidet Probleme mit React-Komponenten und DOM-Manipulationen
-    setTimeout(() => {
-      onClose();
-      window.location.reload();
-    }, 100);
+    // Fülle das Druckfenster mit Inhalten
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Etikett für Reparatur #${repairId}</title>
+          <style>
+            @page {
+              size: 32mm 57mm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              font-family: Arial, sans-serif;
+            }
+            .print-container {
+              position: relative;
+              width: 32mm;
+              height: 57mm;
+              transform: rotate(90deg);
+              transform-origin: bottom left;
+              position: absolute;
+              left: 0;
+              bottom: 57mm;
+              padding: 1mm;
+              box-sizing: border-box;
+            }
+            .repair-id {
+              text-align: center;
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 3mm;
+            }
+            .content-container {
+              display: flex;
+            }
+            .qr-code {
+              flex-shrink: 0;
+              width: 64px;
+            }
+            .details {
+              flex-grow: 1;
+              margin-left: 3mm;
+              font-size: 7px;
+            }
+            .customer-name {
+              font-weight: bold;
+            }
+            .item {
+              margin-bottom: 2mm;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">
+            <div class="repair-id">#${repairId}</div>
+            <div class="content-container">
+              <div class="qr-code">${qrCode}</div>
+              <div class="details">
+                <div class="item">
+                  <div class="customer-name">${customerName}</div>
+                  <div>${customerPhone}</div>
+                </div>
+                <div class="item">${deviceInfo}</div>
+                <div class="item">${repairIssue}</div>
+              </div>
+            </div>
+          </div>
+          <script>
+            // Drucken nach vollständigem Laden
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                };
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    onClose();
   };
 
   if (!open) return null;
