@@ -11,6 +11,7 @@ import {
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
+import { registerAdminRoutes } from "./admin-routes";
 
 // Middleware to check if user is authenticated
 function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -42,6 +43,9 @@ function isAuthenticated(req: Request, res: Response, next: NextFunction) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
+  
+  // Set up admin routes
+  registerAdminRoutes(app);
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {

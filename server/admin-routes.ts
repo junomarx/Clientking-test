@@ -19,7 +19,7 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: "Nicht angemeldet" });
   }
   
-  if (!req.user.isAdmin) {
+  if (!req.user || !req.user.isAdmin) {
     return res.status(403).json({ message: "Keine Administratorrechte" });
   }
   
@@ -140,7 +140,7 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Nur der Superadmin (bugi) darf Administratorrechte ändern
-      if (isAdmin !== undefined && req.user.username !== 'bugi') {
+      if (isAdmin !== undefined && req.user && req.user.username !== 'bugi') {
         return res.status(403).json({ message: "Nur der Hauptadministrator darf Administratorrechte ändern" });
       }
       
@@ -197,7 +197,7 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Verhindere, dass der eingeloggte Benutzer sich selbst löscht
-      if (user.id === req.user.id) {
+      if (req.user && user.id === req.user.id) {
         return res.status(400).json({ message: "Sie können Ihren eigenen Benutzer nicht löschen" });
       }
       

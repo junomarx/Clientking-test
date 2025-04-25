@@ -19,6 +19,12 @@ type LoginData = {
 type RegisterData = {
   username: string;
   password: string;
+  email: string;
+  companyName: string;
+  companyAddress?: string;
+  companyVatNumber?: string;
+  companyPhone?: string;
+  companyEmail?: string;
 };
 
 type AuthContextType = {
@@ -76,12 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRequest("POST", "/api/register", credentials);
       return await res.json();
     },
-    onSuccess: (data: UserResponse) => {
-      queryClient.setQueryData(["/api/user"], data);
-      toast({
-        title: "Registrierung erfolgreich",
-        description: `Willkommen, ${data.username}!`,
-      });
+    onSuccess: (data: any) => {
+      // Wenn die Registrierung erfolgreich war, aber der Benutzer noch aktiviert werden muss,
+      // zeigen wir eine entsprechende Meldung an
+      if (data.message && data.message.includes("Freischaltung")) {
+        queryClient.setQueryData(["/api/user"], null);
+        toast({
+          title: "Registrierung erfolgreich",
+          description: data.message,
+        });
+      } else {
+        // Ansonsten normal fortfahren (automatische Aktivierung)
+        queryClient.setQueryData(["/api/user"], data);
+        toast({
+          title: "Registrierung erfolgreich",
+          description: `Willkommen, ${data.username}!`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
