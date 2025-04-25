@@ -545,11 +545,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Name, subject, and body are required" });
       }
       
+      // Verarbeitung der Variablen: Konvertiere String zu Array, wenn es als String kommt
+      let variablesArray: string[] = [];
+      if (variables) {
+        if (typeof variables === 'string') {
+          // Wenn ein Komma-separierter String übergeben wird
+          variablesArray = variables.split(',').map(v => v.trim()).filter(v => v.length > 0);
+        } else if (Array.isArray(variables)) {
+          // Wenn bereits ein Array übergeben wird
+          variablesArray = variables;
+        }
+      }
+      
       const newTemplate = await storage.createEmailTemplate({
         name,
         subject,
         body,
-        variables: variables || []
+        variables: variablesArray
       });
       
       return res.status(201).json(newTemplate);
@@ -571,7 +583,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Email template not found" });
       }
       
-      const updatedTemplate = await storage.updateEmailTemplate(id, req.body);
+      // Kopie der Anfragedaten erstellen und variables verarbeiten, wenn vorhanden
+      const updateData = { ...req.body };
+      
+      if (updateData.variables !== undefined) {
+        let variablesArray: string[] = [];
+        if (typeof updateData.variables === 'string') {
+          // Wenn ein Komma-separierter String übergeben wird
+          variablesArray = updateData.variables.split(',').map(v => v.trim()).filter(v => v.length > 0);
+        } else if (Array.isArray(updateData.variables)) {
+          // Wenn bereits ein Array übergeben wird
+          variablesArray = updateData.variables;
+        }
+        updateData.variables = variablesArray;
+      }
+      
+      const updatedTemplate = await storage.updateEmailTemplate(id, updateData);
       return res.status(200).json(updatedTemplate);
     } catch (error) {
       console.error("Error updating email template:", error);
