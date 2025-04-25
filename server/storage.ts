@@ -353,7 +353,7 @@ export class DatabaseStorage implements IStorage {
     return prefix + randomNum;
   }
 
-  async createRepair(insertRepair: InsertRepair): Promise<Repair> {
+  async createRepair(insertRepair: InsertRepair, currentUserId?: number): Promise<Repair> {
     const now = new Date();
     
     // Generiere einen eindeutigen Auftragscode
@@ -368,7 +368,9 @@ export class DatabaseStorage implements IStorage {
       orderCode,
       status: insertRepair.status || 'eingegangen',
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      // Setze die Benutzer-ID, wenn vorhanden
+      userId: currentUserId
     };
     
     const [repair] = await db.insert(repairs)
@@ -378,35 +380,84 @@ export class DatabaseStorage implements IStorage {
     return repair;
   }
   
-  async updateRepair(id: number, repairUpdate: Partial<InsertRepair>): Promise<Repair | undefined> {
-    const [updatedRepair] = await db
-      .update(repairs)
-      .set({
-        ...repairUpdate,
-        updatedAt: new Date()
-      })
-      .where(eq(repairs.id, id))
-      .returning();
-    
-    return updatedRepair;
+  async updateRepair(id: number, repairUpdate: Partial<InsertRepair>, currentUserId?: number): Promise<Repair | undefined> {
+    if (currentUserId) {
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          ...repairUpdate,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.userId, currentUserId)
+          )
+        )
+        .returning();
+      
+      return updatedRepair;
+    } else {
+      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          ...repairUpdate,
+          updatedAt: new Date()
+        })
+        .where(eq(repairs.id, id))
+        .returning();
+      
+      return updatedRepair;
+    }
   }
   
-  async updateRepairStatus(id: number, status: string): Promise<Repair | undefined> {
-    const [updatedRepair] = await db
-      .update(repairs)
-      .set({
-        status,
-        updatedAt: new Date()
-      })
-      .where(eq(repairs.id, id))
-      .returning();
-    
-    return updatedRepair;
+  async updateRepairStatus(id: number, status: string, currentUserId?: number): Promise<Repair | undefined> {
+    if (currentUserId) {
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          status,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.userId, currentUserId)
+          )
+        )
+        .returning();
+      
+      return updatedRepair;
+    } else {
+      // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          status,
+          updatedAt: new Date()
+        })
+        .where(eq(repairs.id, id))
+        .returning();
+      
+      return updatedRepair;
+    }
   }
   
-  async deleteRepair(id: number): Promise<boolean> {
+  async deleteRepair(id: number, currentUserId?: number): Promise<boolean> {
     try {
-      await db.delete(repairs).where(eq(repairs.id, id));
+      if (currentUserId) {
+        // Lösche nur Reparaturen, die dem aktuellen Benutzer gehören
+        await db.delete(repairs).where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.userId, currentUserId)
+          )
+        );
+      } else {
+        // Für Admin-Benutzer oder wenn kein Benutzerkontext vorhanden ist
+        await db.delete(repairs).where(eq(repairs.id, id));
+      }
       return true;
     } catch (error) {
       console.error("Error deleting repair:", error);
@@ -450,7 +501,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Stats methods
-  async getStats(): Promise<{ 
+  async getStats(currentUserId?: number): Promise<{ 
     totalOrders: number; 
     inRepair: number; 
     completed: number; 
@@ -458,39 +509,63 @@ export class DatabaseStorage implements IStorage {
     readyForPickup: number; 
     outsourced: number; 
   }> {
+    // Filter für Benutzerkontext
+    const userFilter = currentUserId ? eq(repairs.userId, currentUserId) : undefined;
+    
     // Get total number of orders
     const [totalResult] = await db
       .select({ count: count() })
-      .from(repairs);
+      .from(repairs)
+      .where(userFilter ? userFilter : undefined);
     
     // Get number of repairs in progress
     const [inRepairResult] = await db
       .select({ count: count() })
       .from(repairs)
-      .where(eq(repairs.status, "in_reparatur"));
+      .where(
+        userFilter 
+          ? and(eq(repairs.status, "in_reparatur"), userFilter)
+          : eq(repairs.status, "in_reparatur")
+      );
     
     // Get number of completed repairs
     const [completedResult] = await db
       .select({ count: count() })
       .from(repairs)
       .where(
-        or(
-          eq(repairs.status, "fertig"),
-          eq(repairs.status, "abgeholt")
-        )
+        userFilter
+          ? and(
+              or(
+                eq(repairs.status, "fertig"),
+                eq(repairs.status, "abgeholt")
+              ),
+              userFilter
+            )
+          : or(
+              eq(repairs.status, "fertig"),
+              eq(repairs.status, "abgeholt")
+            )
       );
     
     // Get number of repairs ready for pickup
     const [readyForPickupResult] = await db
       .select({ count: count() })
       .from(repairs)
-      .where(eq(repairs.status, "fertig"));
+      .where(
+        userFilter 
+          ? and(eq(repairs.status, "fertig"), userFilter)
+          : eq(repairs.status, "fertig")
+      );
       
     // Get number of outsourced repairs
     const [outsourcedResult] = await db
       .select({ count: count() })
       .from(repairs)
-      .where(eq(repairs.status, "ausser_haus"));
+      .where(
+        userFilter
+          ? and(eq(repairs.status, "ausser_haus"), userFilter)
+          : eq(repairs.status, "ausser_haus")
+      );
     
     // Get number of repairs created today
     const today = new Date();
@@ -498,14 +573,18 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
+    const dateFilter = and(
+      gte(repairs.createdAt, today),
+      lt(repairs.createdAt, tomorrow)
+    );
+    
     const [todayResult] = await db
       .select({ count: count() })
       .from(repairs)
       .where(
-        and(
-          gte(repairs.createdAt, today),
-          lt(repairs.createdAt, tomorrow)
-        )
+        userFilter
+          ? and(dateFilter, userFilter)
+          : dateFilter
       );
     
     return {

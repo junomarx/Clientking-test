@@ -62,8 +62,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
+        // Benutzer-ID aus der Authentifizierung abrufen
+        const userId = (req.user as any).id;
+        const isAdmin = (req.user as any).isAdmin;
+        
         // Alle Kunden abrufen und sowohl nach Vor- als auch Nachnamen filtern
-        const allCustomers = await storage.getAllCustomers();
+        const allCustomers = await storage.getAllCustomers(isAdmin ? undefined : userId);
         const matchingCustomers = allCustomers.filter(customer => 
           customer.firstName.toLowerCase().includes(firstName.toLowerCase()) &&
           customer.lastName.toLowerCase().includes(lastName.toLowerCase())
@@ -80,8 +84,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
+        // Benutzer-ID aus der Authentifizierung abrufen
+        const userId = (req.user as any).id;
+        const isAdmin = (req.user as any).isAdmin;
+        
         // Alle Kunden abrufen und nach Vornamen filtern
-        const allCustomers = await storage.getAllCustomers();
+        const allCustomers = await storage.getAllCustomers(isAdmin ? undefined : userId);
         const matchingCustomers = allCustomers.filter(customer => 
           customer.firstName.toLowerCase().includes(firstName.toLowerCase())
         );
