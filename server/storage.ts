@@ -4,7 +4,7 @@ import {
   repairs, type Repair, type InsertRepair,
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
-  emailTemplates, type EmailTemplate, type InsertEmailTemplate
+  type EmailTemplate, type InsertEmailTemplate
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -12,6 +12,7 @@ import { eq, desc, and, or, sql, gte, lt, count, isNotNull, like } from "drizzle
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import { emailService } from "./email-service";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -454,74 +455,28 @@ export class DatabaseStorage implements IStorage {
 
   // Email template methods
   async getAllEmailTemplates(): Promise<EmailTemplate[]> {
-    return await db.select().from(emailTemplates).orderBy(desc(emailTemplates.createdAt));
+    return await emailService.getAllEmailTemplates();
   }
   
   async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
-    const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
-    return template;
+    return await emailService.getEmailTemplate(id);
   }
   
   async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
-    const now = new Date();
-    const [newTemplate] = await db.insert(emailTemplates).values({
-      ...template,
-      createdAt: now,
-      updatedAt: now
-    }).returning();
-    return newTemplate;
+    return await emailService.createEmailTemplate(template);
   }
   
   async updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
-    const [updatedTemplate] = await db
-      .update(emailTemplates)
-      .set({
-        ...template,
-        updatedAt: new Date()
-      })
-      .where(eq(emailTemplates.id, id))
-      .returning();
-    return updatedTemplate;
+    return await emailService.updateEmailTemplate(id, template);
   }
   
   async deleteEmailTemplate(id: number): Promise<boolean> {
-    try {
-      await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting email template:", error);
-      return false;
-    }
+    return await emailService.deleteEmailTemplate(id);
   }
   
   // Email sending method with template processing
   async sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean> {
-    try {
-      const template = await this.getEmailTemplate(templateId);
-      if (!template) {
-        throw new Error("E-Mail-Vorlage nicht gefunden");
-      }
-      
-      // Process variables in subject and body
-      let subject = template.subject;
-      let body = template.body;
-      
-      // Replace variables in the format {{variableName}}
-      Object.entries(variables).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
-        subject = subject.replace(new RegExp(placeholder, 'g'), value);
-        body = body.replace(new RegExp(placeholder, 'g'), value);
-      });
-      
-      // In einer echten Implementierung würde hier ein E-Mail-Versanddienst wie SendGrid genutzt werden
-      console.log(`Sending email to ${to}, subject: ${subject}, body: ${body}`);
-      
-      // Hier muss die tatsächliche SendGrid-Implementation eingefügt werden
-      return true;
-    } catch (error) {
-      console.error("Error sending email with template:", error);
-      return false;
-    }
+    return await emailService.sendEmailWithTemplate(templateId, to, variables);
   }
 }
 
