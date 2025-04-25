@@ -20,7 +20,13 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben."),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein."),
+  companyName: z.string().min(2, "Bitte geben Sie einen Firmennamen ein."),
+  companyAddress: z.string().optional(),
+  companyVatNumber: z.string().optional(),
+  companyPhone: z.string().optional(),
+  companyEmail: z.string().email("Bitte geben Sie eine gültige Geschäfts-E-Mail-Adresse ein.").optional(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein.",
   path: ["confirmPassword"],
@@ -46,6 +52,12 @@ export default function AuthPage() {
       username: "",
       password: "",
       confirmPassword: "",
+      email: "",
+      companyName: "",
+      companyAddress: "",
+      companyVatNumber: "",
+      companyPhone: "",
+      companyEmail: "",
     },
   });
   
@@ -207,9 +219,105 @@ export default function AuthPage() {
                         )}
                       />
                       
+                      <div className="space-y-2 my-4">
+                        <h3 className="text-base font-medium">Firmeninformationen</h3>
+                        <p className="text-sm text-muted-foreground">Diese Informationen werden für Ihr Konto benötigt. Sie können später im Administrationsbereich geändert werden.</p>
+                      </div>
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-Mail-Adresse *</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Ihre E-Mail-Adresse" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="companyName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Firmenname *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Name Ihres Unternehmens" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="companyAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Adresse</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Straße, Hausnummer, PLZ, Ort" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="companyVatNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>USt-IdNr.</FormLabel>
+                              <FormControl>
+                                <Input placeholder="z.B. ATU12345678" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="companyPhone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefon</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Telefonnummer" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="companyEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Geschäfts-E-Mail</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="E-Mail für Geschäftskunden" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="text-sm text-muted-foreground mt-4">
+                        <p className="mb-2">Hinweis: Nach der Registrierung muss Ihr Konto von einem Administrator freigeschaltet werden, bevor Sie sich anmelden können.</p>
+                        <p>Mit * markierte Felder sind Pflichtfelder.</p>
+                      </div>
+                      
                       <Button 
                         type="submit" 
-                        className="w-full mt-2"
+                        className="w-full mt-4"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
