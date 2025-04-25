@@ -83,6 +83,7 @@ export const businessSettings = pgTable("business_settings", {
   email: text("email"),
   website: text("website"),
   logoImage: text("logo_image"), // Base64-encoded image data für das Logo
+  colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
