@@ -221,9 +221,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             window.onload = function() {
               setTimeout(function() {
                 window.print();
-                window.onafterprint = function() {
-                  window.close();
-                };
+                window.close(); // Fenster direkt schließen, ohne auf onafterprint zu warten
               }, 500);
             };
           </script>

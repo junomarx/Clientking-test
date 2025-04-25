@@ -108,9 +108,7 @@ export function AnimatedRecentOrders({
                           title="Druckoptionen anzeigen"
                           onClick={() => onPrintClick(repair.id)}
                           whileHover={{ 
-                            scale: 1.2,
-                            rotate: [0, 15, -15, 0],
-                            transition: { duration: 0.5 }
+                            scale: 1.2 
                           }}
                           whileTap={{ scale: 0.9 }}
                         >
