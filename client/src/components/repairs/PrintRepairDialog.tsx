@@ -114,7 +114,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Reparaturauftrag #${repair?.id}</title>
+          <title>Reparaturauftrag ${repair?.orderCode || `#${repair?.id}`}</title>
           <meta charset="UTF-8">
           <script>
             window.onload = function() {

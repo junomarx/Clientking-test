@@ -105,6 +105,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     // Extrahiere den Inhalt aus dem Referenzobjekt
     const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
     const repairId = repair?.id || '';
+    const orderCode = repair?.orderCode || '';
     const firstName = customer?.firstName || '';
     const lastName = customer?.lastName || '';
     const customerPhone = customer?.phone || '';
@@ -116,7 +117,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Etikett für Reparatur #${repairId}</title>
+          <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
           <meta charset="UTF-8">
           <style>
             @page {
@@ -200,7 +201,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
-              <div class="repair-number">${repair.orderCode || `#${repairId}`}</div>
+              <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">${qrCode}</div>
               
@@ -255,7 +256,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                   <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
                     {/* Auftragsnummer */}
                     <div className="text-center">
-                      <p className="text-xl font-bold">#{repair?.id}</p>
+                      <p className="text-xl font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
                     </div>
                     
                     {/* QR-Code mittig */}
