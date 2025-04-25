@@ -84,6 +84,7 @@ export const businessSettings = pgTable("business_settings", {
   website: text("website"),
   logoImage: text("logo_image"), // Base64-encoded image data für das Logo
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
+  receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

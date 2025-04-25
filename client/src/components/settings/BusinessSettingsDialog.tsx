@@ -33,7 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, X, Image as ImageIcon, Palette } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Palette, Printer } from "lucide-react";
 
 const businessSettingsSchema = z.object({
   businessName: z.string().min(2, "Firmenname wird benötigt"),
@@ -48,6 +48,7 @@ const businessSettingsSchema = z.object({
   email: z.string().email("Ungültige E-Mail").optional(),
   website: z.string().optional(),
   colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]).default("blue"),
+  receiptWidth: z.enum(["58mm", "80mm"]).default("80mm"),
 });
 
 // Erweiterte Form-Werte, die nicht direkt im Schema sind
@@ -92,6 +93,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       website: "",
       logoImage: "",
       colorTheme: "blue",
+      receiptWidth: "80mm",
     },
   });
 
@@ -102,6 +104,12 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       let validColorTheme: "blue" | "green" | "purple" | "red" | "orange" = "blue";
       if (["blue", "green", "purple", "red", "orange"].includes(settings.colorTheme)) {
         validColorTheme = settings.colorTheme as "blue" | "green" | "purple" | "red" | "orange";
+      }
+      
+      // Validiere die Bonbreite
+      let validReceiptWidth = "80mm";
+      if (["58mm", "80mm"].includes(settings.receiptWidth)) {
+        validReceiptWidth = settings.receiptWidth as "58mm" | "80mm";
       }
       
       form.reset({
@@ -118,6 +126,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         website: settings.website || "",
         logoImage: settings.logoImage || "",
         colorTheme: validColorTheme,
+        receiptWidth: validReceiptWidth as "58mm" | "80mm",
       });
 
       // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
@@ -517,6 +526,37 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
                             <div className="w-4 h-4 rounded-full bg-orange-600 shadow-sm inline-block mr-2"></div>
                             Orange
                           </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="receiptWidth"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2 space-y-3">
+                    <FormLabel className="flex items-center gap-2">
+                      <Printer className="h-4 w-4" /> Bonbreite
+                    </FormLabel>
+                    <FormDescription>
+                      Wählen Sie die Breite Ihres Thermobondruckers. 
+                      Dies beeinflusst die Formatierung der ausgedruckten Belege.
+                    </FormDescription>
+                    <FormControl>
+                      <Select 
+                        defaultValue={field.value} 
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                          <SelectValue placeholder="Bonbreite wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="58mm">58mm (schmaler Bon)</SelectItem>
+                          <SelectItem value="80mm">80mm (breiter Bon)</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
