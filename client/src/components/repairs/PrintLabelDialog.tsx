@@ -89,8 +89,18 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   // Funktion zum direkten Drucken ohne neues Fenster
   const handlePrint = () => {
-    const printStyles = `
-      @media print {
+    if (!printRef.current) {
+      console.error('Druckelement nicht gefunden');
+      return;
+    }
+    
+    // Speichere eine Kopie des zu druckenden Inhalts
+    const printContents = printRef.current.innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    // Setze nur den Druckinhalt
+    document.body.innerHTML = `
+      <style>
         @page {
           size: 57mm 32mm;
           margin: 0;
@@ -145,45 +155,22 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         .flex-grow {
           flex-grow: 1;
         }
-        
-        /* Ausblenden von Elementen, die nicht gedruckt werden sollen */
-        .no-print, .no-print * {
-          display: none !important;
-        }
-      }
+      </style>
+      <div class="label-container">${printContents}</div>
     `;
     
-    try {
-      // Erstelle ein temporäres Stylesheet für den Druck
-      const styleElement = document.createElement('style');
-      styleElement.id = 'print-styles';
-      styleElement.innerHTML = printStyles;
-      document.head.appendChild(styleElement);
-      
-      // Füge No-Print-Klasse zu allen Elementen außer dem zu druckenden Inhalt hinzu
-      const allElements = document.body.getElementsByTagName('*');
-      for (let i = 0; i < allElements.length; i++) {
-        if (!printRef.current?.contains(allElements[i]) && allElements[i] !== printRef.current) {
-          allElements[i].classList.add('no-print');
-        }
-      }
-      
-      // Drucke das Dokument
-      window.print();
-      
-      // Entferne die temporären Stile und Klassen nach dem Drucken
-      setTimeout(() => {
-        document.head.removeChild(styleElement);
-        for (let i = 0; i < allElements.length; i++) {
-          allElements[i].classList.remove('no-print');
-        }
-        onClose();
-      }, 500);
-    } catch (error) {
-      console.error('Fehler beim Drucken:', error);
-      alert('Beim Drucken ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.');
+    // Drucken
+    window.print();
+    
+    // Alten Inhalt wiederherstellen
+    document.body.innerHTML = originalContent;
+    
+    // Dialog schließen (das muss separat gemacht werden, da wir die React-Komponente "neu erstellt" haben)
+    setTimeout(() => {
       onClose();
-    }
+      // Force re-rendering
+      window.location.reload();
+    }, 100);
   };
 
   if (!open) return null;
