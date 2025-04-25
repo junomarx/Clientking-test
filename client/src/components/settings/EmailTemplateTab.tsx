@@ -435,7 +435,7 @@ export function EmailTemplateTab() {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Diese Variablen können im Betreff und Inhalt im Format {{variableName}} verwendet werden.
+                Diese Variablen können im Betreff und Inhalt im Format {'{{'} Variable {'}}' } verwendet werden.
               </p>
             </div>
             <div className="space-y-2">
