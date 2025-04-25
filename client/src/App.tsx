@@ -8,7 +8,10 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
+import { ThemeProvider } from "./hooks/use-theme";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
+import { useEffect } from "react";
+import { useTheme } from "./hooks/use-theme";
 
 function Router() {
   return (
@@ -22,16 +25,32 @@ function Router() {
   );
 }
 
+// Component to update the document title
+function TitleUpdater() {
+  const { companyName } = useTheme();
+  
+  useEffect(() => {
+    if (companyName) {
+      document.title = companyName;
+    }
+  }, [companyName]);
+  
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PrintManagerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </PrintManagerProvider>
+        <ThemeProvider>
+          <PrintManagerProvider>
+            <TooltipProvider>
+              <TitleUpdater />
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </PrintManagerProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

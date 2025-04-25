@@ -344,12 +344,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Wir extrahieren das logoImage aus dem Request-Body, bevor wir die Validierung durchführen,
-      // da es nicht Teil des schemas ist
-      const { logoImage, ...settingsData } = req.body;
+      // Wir extrahieren das logoImage und colorTheme aus dem Request-Body, bevor wir die Validierung durchführen
+      const { logoImage, colorTheme, ...settingsData } = req.body;
       
       // Validierung der Geschäftsdaten
       const validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
+      
+      // Zusätzliche Daten für die Speicherung
+      const additionalData: any = {};
       
       // Wenn ein Logo im Request ist, validieren wir es
       if (logoImage) {
@@ -360,18 +362,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Speichere die Daten einschließlich des Logos
-        const settings = await storage.updateBusinessSettings({
-          ...validatedData,
-          logoImage
-        });
-        
-        return res.json(settings);
+        additionalData.logoImage = logoImage;
       }
       
-      // Wenn kein neues Logo übermittelt wurde, aktualisiere nur die anderen Einstellungen
-      const settings = await storage.updateBusinessSettings(validatedData);
-      res.json(settings);
+      // Wenn ein Farbthema im Request ist, validieren wir es
+      if (colorTheme) {
+        // Validierung: Prüfen, ob es sich um ein gültiges Farbthema handelt
+        if (typeof colorTheme === 'string' && ['blue', 'green', 'purple', 'red', 'orange'].includes(colorTheme)) {
+          additionalData.colorTheme = colorTheme;
+        } else {
+          return res.status(400).json({ 
+            message: "Ungültiges Farbthema. Erlaubte Werte sind: blue, green, purple, red, orange." 
+          });
+        }
+      }
+      
+      // Speichere die Daten einschließlich der zusätzlichen Daten
+      const settings = await storage.updateBusinessSettings({
+        ...validatedData,
+        ...additionalData
+      });
+      
+      return res.json(settings);
     } catch (error) {
       console.error("Error updating business settings:", error);
       if (error instanceof ZodError) {
