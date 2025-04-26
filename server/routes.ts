@@ -598,15 +598,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Feedback-Token ungültig oder abgelaufen" });
       }
       
-      // Reparaturinformationen laden
-      const repair = await storage.getRepair(feedback.repairId);
+      // Reparaturinformationen laden - hier brauchen wir die zugehörige Benutzer-ID
+      // Da wir ohne Authentifizierung sind, holen wir den Besitzer aus der Feedback-ID
+      const [feedbackWithRepair] = await db
+        .select({
+          repair: repairs,
+          feedback: feedbacks
+        })
+        .from(feedbacks)
+        .innerJoin(repairs, eq(feedbacks.repairId, repairs.id))
+        .where(eq(feedbacks.feedbackToken, token));
       
-      if (!repair) {
+      if (!feedbackWithRepair?.repair) {
         return res.status(404).json({ message: "Zugehörige Reparatur nicht gefunden" });
       }
       
-      // Kundeninformationen laden
-      const customer = await storage.getCustomer(feedback.customerId);
+      const repair = feedbackWithRepair.repair;
+      
+      // Kundeninformationen laden mit dem Benutzerkontext der Reparatur
+      const customer = await storage.getCustomer(feedback.customerId, repair.userId);
       
       if (!customer) {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
