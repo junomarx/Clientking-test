@@ -264,11 +264,18 @@ export class EmailService {
             text: body.replace(/<[^>]*>/g, ''), // Strip HTML für Plaintext
             // Weitere Optionen für robustere E-Mail-Zustellung
             headers: {
-              // Wichtige Header für bessere Zustellbarkeit
-              'X-Priority': '1', // Priorität: Hoch
-              'Importance': 'high',
-              'X-MSMail-Priority': 'High',
-              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)'
+              // Wichtige Header für bessere Zustellbarkeit und weniger Spam-Einstufung
+              'X-Priority': '3', // Normale Priorität (hohe Priorität kann Spam-Verdacht erhöhen)
+              'Importance': 'normal',
+              'X-MSMail-Priority': 'Normal',
+              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)',
+              // Header für bessere Zustellbarkeit
+              'Precedence': 'bulk',
+              'Auto-Submitted': 'auto-generated',
+              'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
+              // Anti-Spam Header (beugen Spam-Verdacht vor)
+              'X-Auto-Response-Suppress': 'OOF, DR, RN, NRN, AutoReply',
+              'X-Report-Abuse': `Bitte melden Sie Missbrauch an ${fromEmail}`
             },
             // In Entwicklungsumgebungen zurückverfolgen
             dsn: {
@@ -329,12 +336,31 @@ export class EmailService {
         try {
           console.log('Sende E-Mail über globalen SMTP-Server...');
           
+          const fromEmail = process.env.SMTP_USER || '';
+          
           const mailOptions = {
-            from: `"${senderName}" <${process.env.SMTP_USER}>`, // Der SMTP-Login muss als Absender verwendet werden
+            from: `"${senderName}" <${fromEmail}>`, // Der SMTP-Login muss als Absender verwendet werden
             to: to,
             subject: subject,
             html: body,
-            text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+            text: body.replace(/<[^>]*>/g, ''), // Strip HTML für Plaintext
+            // Weitere Optionen für robustere E-Mail-Zustellung
+            headers: {
+              // Wichtige Header für bessere Zustellbarkeit und weniger Spam-Einstufung
+              'X-Priority': '3', // Normale Priorität (hohe Priorität kann Spam-Verdacht erhöhen)
+              'Importance': 'normal',
+              'X-MSMail-Priority': 'Normal',
+              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)',
+              // Header für bessere Zustellbarkeit
+              'Precedence': 'bulk',
+              'Auto-Submitted': 'auto-generated',
+              'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
+              // Anti-Spam Header (beugen Spam-Verdacht vor)
+              'X-Auto-Response-Suppress': 'OOF, DR, RN, NRN, AutoReply',
+              'X-Report-Abuse': `Bitte melden Sie Missbrauch an ${fromEmail}`
+            },
+            // Eine Antwort-Adresse hinzufügen
+            replyTo: fromEmail
           };
           
           const info = await this.globalSmtpTransporter.sendMail(mailOptions);
