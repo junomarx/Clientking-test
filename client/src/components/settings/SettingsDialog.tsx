@@ -142,7 +142,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   // Mutations für Gerätearten
   const createDeviceTypeMutation = useMutation({
     mutationFn: async (name: string) => {
-      const response = await apiRequest("POST", "/api/device-types", { name });
+      // Hier muss die userId explizit übergeben werden, damit das Backend die Verknüpfung herstellen kann
+      const response = await apiRequest("POST", "/api/device-types", { 
+        name, 
+        userId: businessSettings?.userId 
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -253,7 +257,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   // Mutations für Marken
   const createBrandMutation = useMutation({
     mutationFn: async (data: { name: string, deviceTypeId: number }) => {
-      const response = await apiRequest("POST", "/api/brands", data);
+      // Hier muss auch die userId explizit übergeben werden
+      const response = await apiRequest("POST", "/api/brands", {
+        ...data,
+        userId: businessSettings?.userId
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -389,6 +397,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     queryKey: ["/api/business-settings"],
     enabled: open,
   });
+  
+  // Für das Hinzufügen von Gerätearten und Marken
+  const businessSettings = settings;
 
   const form = useForm<ExtendedBusinessSettingsFormValues>({
     resolver: zodResolver(businessSettingsSchema),
