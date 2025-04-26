@@ -200,12 +200,39 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
 
   const handleUpdateStatus = () => {
     if (!selectedRepairId || !newStatus) return;
-    updateStatusMutation.mutate({ 
-      id: selectedRepairId, 
-      status: newStatus, 
-      sendEmail: (newStatus === 'fertig' && sendEmail) ? true : false,
-      sendSms: (newStatus === 'fertig' && sendSms) ? true : false
-    });
+    
+    // Status auf "fertig" aktualisieren mit optionalen E-Mail- und SMS-Benachrichtigungen
+    if (newStatus === 'fertig') {
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus, 
+        sendEmail: sendEmail,
+        sendSms: sendSms
+      });
+    }
+    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
+    else if (newStatus === 'abgeholt') {
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus
+      }, {
+        onSuccess: () => {
+          // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
+          if (sendEmail) {
+            setTimeout(() => {
+              handleSendReviewRequest(selectedRepairId);
+            }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
+          }
+        }
+      });
+    }
+    // Alle anderen Statusänderungen ohne zusätzliche Funktionen
+    else {
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus
+      });
+    }
   };
 
   const openStatusDialog = (id: number, currentStatus: string) => {
@@ -378,6 +405,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 if (value === 'fertig') {
                   setSendEmail(true); // Auto-select email option when status is set to "fertig"
                   setSendSms(true); // Auto-select SMS option when status is set to "fertig"
+                } else if (value === 'abgeholt') {
+                  setSendEmail(true); // Auto-select review request option when status is set to "abgeholt"
+                  setSendSms(false);
                 } else {
                   setSendEmail(false);
                   setSendSms(false);
@@ -422,6 +452,25 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   />
                   <label htmlFor="sendSms">
                     SMS-Benachrichtigung an Kunden senden
+                  </label>
+                </div>
+              </div>
+            )}
+            
+            {/* Bewertungsanfrage-Option für "abgeholt" Status */}
+            {newStatus === 'abgeholt' && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendReviewRequest"
+                    className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                  />
+                  <label htmlFor="sendReviewRequest" className="flex items-center gap-1">
+                    <Star className="h-4 w-4 text-yellow-500" /> 
+                    Bewertungsanfrage an Kunden senden
                   </label>
                 </div>
               </div>
