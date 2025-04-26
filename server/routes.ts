@@ -880,7 +880,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Template ID, recipient email, and variables are required" });
       }
       
-      const success = await storage.sendEmailWithTemplate(templateId, to, variables);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Füge userId zu den Variablen hinzu, um die Datenisolierung zu gewährleisten
+      const variablesWithUserId = {
+        ...variables,
+        userId: userId.toString()
+      };
+      
+      const success = await storage.sendEmailWithTemplate(templateId, to, variablesWithUserId);
       if (!success) {
         return res.status(500).json({ error: "Failed to send email" });
       }

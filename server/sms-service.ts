@@ -1,5 +1,7 @@
 import { TransactionalSMSApi, SendTransacSms } from '@getbrevo/brevo';
-import { SmsTemplate } from '@shared/schema';
+import { SmsTemplate, businessSettings } from '@shared/schema';
+import { db } from './db';
+import { eq } from 'drizzle-orm';
 
 /**
  * SMS-Service für das Senden von SMS-Nachrichten und die Verwaltung von SMS-Vorlagen
