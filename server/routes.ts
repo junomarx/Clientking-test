@@ -457,6 +457,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch statistics" });
     }
   });
+  
+  // Detaillierte Reparaturstatistiken für Analysen und Diagramme
+  app.get("/api/stats/detailed", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Detaillierte Statistiken für den Benutzer abrufen
+      const detailedStats = await storage.getDetailedRepairStats(userId);
+      res.json(detailedStats);
+    } catch (error) {
+      console.error("Error fetching detailed stats:", error);
+      res.status(500).json({ message: "Failed to fetch detailed statistics" });
+    }
+  });
 
   // BUSINESS SETTINGS API
   app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
