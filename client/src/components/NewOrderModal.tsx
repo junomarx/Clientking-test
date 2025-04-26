@@ -315,10 +315,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: formData.notes
       };
       
-      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
         saveDeviceType(repairData.deviceType);
+        saveBrand(repairData.deviceType, repairData.brand);
       }
       
       console.log("Sending repair data:", repairData);
@@ -376,10 +377,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: data.notes
       };
       
-      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
         saveDeviceType(repairData.deviceType);
+        saveBrand(repairData.deviceType, repairData.brand);
       }
       
       console.log("Sending repair data (submit):", repairData);
@@ -451,10 +453,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: formData.notes
       };
       
-      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
         saveDeviceType(repairData.deviceType);
+        saveBrand(repairData.deviceType, repairData.brand);
       }
       
       console.log("Sending repair data (new customer):", repairData);
