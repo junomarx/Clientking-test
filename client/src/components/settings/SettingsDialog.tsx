@@ -136,7 +136,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [selectedBrand, setSelectedBrand] = useState<{id?: number, name: string, deviceTypeId: number} | null>(null);
   const [brandFormData, setBrandFormData] = useState({
     name: "",
-    deviceTypeId: "1" // String, da Select-Komponente Strings erwartet
+    deviceTypeId: deviceTypes.length > 0 ? deviceTypes[0].id.toString() : "1" // String, da Select-Komponente Strings erwartet
   });
   
   // Mutations für Gerätearten
@@ -1207,10 +1207,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       const name = brandFormData.name.trim();
                       if (!name) return;
                       
-                      const deviceTypeId = parseInt(brandFormData.deviceTypeId);
-                      if (isNaN(deviceTypeId)) return;
-                      
-                      handleSaveBrand({name, deviceTypeId});
+                      handleSaveBrand({name, deviceTypeId: brandFormData.deviceTypeId});
                     }}
                   >
                     Speichern
