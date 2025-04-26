@@ -602,9 +602,52 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 const firstName = form.getValues().firstName;
                                 checkCustomerAfterLastNameInput(firstName, e.target.value);
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
+                                // Wenn ein Element ausgewählt ist und wir wegnavigieren (z.B. mit Tab)
+                                if (selectedCustomerIndex >= 0 && matchingCustomers.length > 0) {
+                                  const selectedCustomer = matchingCustomers[selectedCustomerIndex];
+                                  
+                                  // Nur wenn der Fokus auf ein anderes Element gesetzt wird (nicht bei Klick außerhalb)
+                                  if (e.relatedTarget) {
+                                    fillCustomerData(selectedCustomer);
+                                  }
+                                }
+                                
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
-                                setTimeout(() => setIsCustomerDropdownOpen(false), 200);
+                                setTimeout(() => {
+                                  setIsCustomerDropdownOpen(false);
+                                  setSelectedCustomerIndex(-1);
+                                }, 200);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!isCustomerDropdownOpen) return;
+                                
+                                // Pfeiltaste nach unten
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedCustomerIndex(prev => 
+                                    prev < matchingCustomers.length - 1 ? prev + 1 : 0
+                                  );
+                                } 
+                                // Pfeiltaste nach oben
+                                else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedCustomerIndex(prev => 
+                                    prev > 0 ? prev - 1 : matchingCustomers.length - 1
+                                  );
+                                } 
+                                // Enter-Taste
+                                else if (e.key === 'Enter' && selectedCustomerIndex >= 0 && matchingCustomers.length > 0) {
+                                  e.preventDefault();
+                                  const selectedCustomer = matchingCustomers[selectedCustomerIndex];
+                                  fillCustomerData(selectedCustomer);
+                                  
+                                  // Fokus zum nächsten Feld setzen
+                                  const phoneInput = document.querySelector('input[name="phone"]');
+                                  if (phoneInput) {
+                                    (phoneInput as HTMLInputElement).focus();
+                                  }
+                                }
                               }}
                             />
                             
@@ -615,15 +658,18 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                   <span className="text-sm font-medium">Vorhandene Kunden</span>
                                 </div>
                                 
-                                {matchingCustomers.map(customer => (
+                                {matchingCustomers.map((customer, index) => (
                                   <div 
                                     key={customer.id} 
-                                    className="px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center"
+                                    className={`px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center ${selectedCustomerIndex === index ? 'bg-muted' : ''}`}
                                     onMouseDown={(e) => {
                                       // Verhindert onBlur vor dem Klick
                                       e.preventDefault();
                                     }}
                                     onClick={() => fillCustomerData(customer)}
+                                    onMouseEnter={() => {
+                                      setSelectedCustomerIndex(index);
+                                    }}
                                   >
                                     <div className="flex-grow">
                                       <div className="font-medium">{customer.firstName} {customer.lastName}</div>
