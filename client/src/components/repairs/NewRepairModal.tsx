@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -27,7 +27,7 @@ const repairFormSchema = insertRepairSchema.extend({
   deviceType: z.string({
     required_error: "Gerätetyp auswählen",
   }),
-  brand: z.string().min(2, "Marke muss mindestens 2 Zeichen lang sein"),
+  brand: z.string().min(1, "Marke muss angegeben werden"),
   model: z.string().min(1, "Modell muss angegeben werden"),
   issue: z.string().min(5, "Problembeschreibung muss mindestens 5 Zeichen lang sein"),
   estimatedCost: z.string().optional()
@@ -72,7 +72,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   });
   
   // Lade benutzerspezifische Gerätearten
-  const { data: deviceTypes = [] } = useQuery<UserDeviceType[]>({
+  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
     enabled: open,
   });
@@ -80,26 +80,26 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // State für die ausgewählte Geräteart
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
   
-  // Lade Marken basierend auf ausgewählter Geräteart
-  const { data: brands = [] } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeId],
-    queryFn: async () => {
-      if (!selectedDeviceTypeId) return [];
-      const response = await apiRequest('GET', `/api/brands`);
-      const allBrands = await response.json();
-      return allBrands.filter((brand: UserBrand) => 
-        brand.deviceTypeId.toString() === selectedDeviceTypeId
-      );
-    },
-    enabled: !!selectedDeviceTypeId && open,
+  // Lade alle Marken
+  const { data: allBrands = [], isLoading: isLoadingBrands } = useQuery<UserBrand[]>({
+    queryKey: ['/api/brands'],
+    enabled: open,
   });
+  
+  // Filtere Marken basierend auf der ausgewählten Geräteart
+  const brands = useMemo(() => {
+    if (!selectedDeviceTypeId) return [];
+    return allBrands.filter((brand: UserBrand) => 
+      brand.deviceTypeId.toString() === selectedDeviceTypeId
+    );
+  }, [allBrands, selectedDeviceTypeId]);
   
   // Setup form
   const form = useForm<RepairFormValues>({
     resolver: zodResolver(repairFormSchema),
     defaultValues: {
       customerId: customerId || 0,
-      deviceType: "smartphone",
+      deviceType: "",
       brand: "",
       model: "",
       issue: "",
@@ -159,10 +159,14 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Speichere Modell in localStorage wenn es neu ist
       const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
       if (formValues.brand && formValues.model && formValues.deviceType) {
-        const { deviceType, brand, model } = formValues;
-        // Speichere das Modell
-        saveModel(deviceType, brand, model);
-        console.log(`Modell gespeichert: ${deviceType}:${brand} - ${model}`);
+        const { deviceType: deviceTypeId, brand, model } = formValues;
+        // Finde den Gerätetyp-Namen anhand der ID
+        const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
+        if (selectedDeviceType) {
+          // Speichere das Modell mit dem Namen des Gerätetyps statt der ID
+          saveModel(selectedDeviceType.name, brand, model);
+          console.log(`Modell gespeichert: ${selectedDeviceType.name}:${brand} - ${model}`);
+        }
       }
       
       // Druckoptionen über den PrintManager anzeigen
