@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -185,3 +186,45 @@ export const insertSmsTemplateSchema = createInsertSchema(smsTemplates).omit({
 
 export type SmsTemplate = typeof smsTemplates.$inferSelect;
 export type InsertSmsTemplate = z.infer<typeof insertSmsTemplateSchema>;
+
+// Zentral verwaltete Gerätetypen
+export const deviceTypesList = pgTable("device_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDeviceTypeSchema = createInsertSchema(deviceTypesList).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DeviceType = typeof deviceTypesList.$inferSelect;
+export type InsertDeviceType = z.infer<typeof insertDeviceTypeSchema>;
+
+// Zentral verwaltete Marken
+export const brandsList = pgTable("brands", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  deviceTypeId: integer("device_type_id").references(() => deviceTypesList.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const brandsRelations = relations(brandsList, ({ one }) => ({
+  deviceType: one(deviceTypesList, {
+    fields: [brandsList.deviceTypeId],
+    references: [deviceTypesList.id],
+  }),
+}));
+
+export const insertBrandSchema = createInsertSchema(brandsList).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Brand = typeof brandsList.$inferSelect;
+export type InsertBrand = z.infer<typeof insertBrandSchema>;

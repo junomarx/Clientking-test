@@ -5,7 +5,9 @@ import {
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
-  smsTemplates, type SmsTemplate, type InsertSmsTemplate
+  smsTemplates, type SmsTemplate, type InsertSmsTemplate,
+  deviceTypesList, type DeviceType, type InsertDeviceType,
+  brandsList, type Brand, type InsertBrand
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -96,6 +98,20 @@ export interface IStorage {
   
   // SMS sending method
   sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
+  
+  // Device types methods (zentral verwaltet)
+  getAllDeviceTypes(): Promise<DeviceType[]>;
+  getDeviceType(id: number): Promise<DeviceType | undefined>;
+  createDeviceType(deviceType: InsertDeviceType): Promise<DeviceType>;
+  updateDeviceType(id: number, deviceType: Partial<InsertDeviceType>): Promise<DeviceType | undefined>;
+  deleteDeviceType(id: number): Promise<boolean>;
+  
+  // Brands methods (zentral verwaltet)
+  getAllBrands(deviceTypeId?: number): Promise<Brand[]>;
+  getBrand(id: number): Promise<Brand | undefined>;
+  createBrand(brand: InsertBrand): Promise<Brand>;
+  updateBrand(id: number, brand: Partial<InsertBrand>): Promise<Brand | undefined>;
+  deleteBrand(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
