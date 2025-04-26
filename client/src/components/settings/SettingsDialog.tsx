@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -111,6 +112,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState("business");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
   
+  // Benutzer-ID aus dem Auth-Kontext holen
+  const { user } = useAuth();
+  
   // Daten für Gerätearten und Marken aus der API holen
   const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<any[]>({
     queryKey: ['/api/device-types'],
@@ -145,7 +149,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       // Hier muss die userId explizit übergeben werden, damit das Backend die Verknüpfung herstellen kann
       const response = await apiRequest("POST", "/api/device-types", { 
         name, 
-        userId: businessSettings?.userId 
+        userId: user?.id 
       });
       return response.json();
     },
@@ -260,7 +264,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       // Hier muss auch die userId explizit übergeben werden
       const response = await apiRequest("POST", "/api/brands", {
         ...data,
-        userId: businessSettings?.userId
+        userId: user?.id
       });
       return response.json();
     },
@@ -397,9 +401,6 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     queryKey: ["/api/business-settings"],
     enabled: open,
   });
-  
-  // Für das Hinzufügen von Gerätearten und Marken
-  const businessSettings = settings;
 
   const form = useForm<ExtendedBusinessSettingsFormValues>({
     resolver: zodResolver(businessSettingsSchema),
