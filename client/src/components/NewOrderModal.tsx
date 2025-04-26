@@ -8,7 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { 
   saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
-  saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes
+  saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes,
+  saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands
 } from '@/lib/localStorage';
 
 import {
@@ -85,6 +86,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isDeviceTypeDropdownOpen, setIsDeviceTypeDropdownOpen] = useState(false);
+  const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
   // Form definition
@@ -731,28 +733,65 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Marke</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          disabled={availableBrands.length === 0}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder={
-                                watchDeviceType 
-                                  ? "-- Marke wählen --" 
-                                  : "-- erst Geräteart wählen --"
-                              } />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {availableBrands.map((brand) => (
-                              <SelectItem key={brand} value={brand.toLowerCase()}>
-                                {brand}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              {...field} 
+                              placeholder="z.B. Apple, Samsung, Huawei, ..." 
+                              disabled={!watchDeviceType}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Bei Eingabe das Dropdown öffnen
+                                if (watchDeviceType) {
+                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
+                                  setIsBrandDropdownOpen(e.target.value.length > 0);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
+                                setTimeout(() => setIsBrandDropdownOpen(false), 200);
+                              }}
+                            />
+                            
+                            {/* Dropdown für die gespeicherten Marken */}
+                            {availableBrands.length > 0 && watchDeviceType && field.value && isBrandDropdownOpen && (
+                              <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                <div className="sticky top-0 bg-background border-b p-2">
+                                  <span className="text-sm font-medium">Gespeicherte Marken</span>
+                                </div>
+                                
+                                {availableBrands
+                                  .filter(brand => brand.toLowerCase().includes(field.value.toLowerCase()))
+                                  .map((brand, index) => (
+                                  <div 
+                                    key={index} 
+                                    className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                    onMouseDown={(e) => {
+                                      // Verhindert onBlur vor dem Klick
+                                      e.preventDefault();
+                                    }}
+                                    onClick={() => {
+                                      field.onChange(brand);
+                                      // Nach der Auswahl den Fokus zum nächsten Feld setzen
+                                      const modelInput = document.querySelector('input[name="model"]');
+                                      if (modelInput) {
+                                        (modelInput as HTMLInputElement).focus();
+                                      }
+                                    }}
+                                  >
+                                    {brand}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          {watchDeviceType ? 
+                            "Geben Sie die Marke des Geräts ein" : 
+                            "Bitte zuerst eine Geräteart auswählen"
+                          }
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
