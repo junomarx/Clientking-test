@@ -111,18 +111,22 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [activeTab, setActiveTab] = useState("business");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
   
-  // State für Gerätearten und Marken
-  const [deviceTypes, setDeviceTypes] = useState([
-    { id: 1, name: "Smartphone" },
-    { id: 2, name: "Tablet" },
-    { id: 3, name: "Laptop" }
-  ]);
+  // Daten für Gerätearten und Marken aus der API holen
+  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<any[]>({
+    queryKey: ['/api/device-types'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/device-types');
+      return res.json();
+    }
+  });
   
-  const [brands, setBrands] = useState([
-    { id: 1, name: "Apple", deviceTypeId: 1, deviceTypeName: "Smartphone" },
-    { id: 2, name: "Samsung", deviceTypeId: 1, deviceTypeName: "Smartphone" },
-    { id: 3, name: "Huawei", deviceTypeId: 2, deviceTypeName: "Tablet" }
-  ]);
+  const { data: brands = [], isLoading: isLoadingBrands } = useQuery<any[]>({
+    queryKey: ['/api/brands'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/brands');
+      return res.json();
+    }
+  });
   
   // State für Dialoge
   const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
@@ -135,6 +139,85 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     deviceTypeId: "1" // String, da Select-Komponente Strings erwartet
   });
   
+  // Mutations für Gerätearten
+  const createDeviceTypeMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const response = await apiRequest("POST", "/api/device-types", { name });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      setIsDeviceTypeDialogOpen(false);
+      setSelectedDeviceType(null);
+      toast({
+        title: "Erfolg!",
+        description: "Geräteart hinzugefügt.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Geräteart konnte nicht gespeichert werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+  
+  const updateDeviceTypeMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: number, name: string }) => {
+      const response = await apiRequest("PATCH", `/api/device-types/${id}`, { name });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      setIsDeviceTypeDialogOpen(false);
+      setSelectedDeviceType(null);
+      toast({
+        title: "Erfolg!",
+        description: "Geräteart aktualisiert.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Geräteart konnte nicht aktualisiert werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+  
+  const deleteDeviceTypeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/device-types/${id}`);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
+      toast({
+        title: "Erfolg!",
+        description: "Geräteart gelöscht.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Geräteart konnte nicht gelöscht werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+
   // Funktionen für Gerätearten
   const handleAddDeviceType = () => {
     setSelectedDeviceType({ name: "" });
@@ -149,57 +232,101 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   };
   
   const handleSaveDeviceType = (name: string) => {
+    if (!name.trim()) return;
+    
     if (selectedDeviceType?.id) {
       // Bearbeiten
-      setDeviceTypes(deviceTypes.map(dt => 
-        dt.id === selectedDeviceType.id ? {...dt, name} : dt
-      ));
-      
-      // Aktualisiere auch die Geräteartnamen in den Marken
-      setBrands(brands.map(brand => 
-        brand.deviceTypeId === selectedDeviceType.id 
-          ? {...brand, deviceTypeName: name} 
-          : brand
-      ));
+      updateDeviceTypeMutation.mutate({ id: selectedDeviceType.id, name });
     } else {
       // Neu hinzufügen
-      const newId = Math.max(...deviceTypes.map(dt => dt.id), 0) + 1;
-      setDeviceTypes([...deviceTypes, {id: newId, name}]);
+      createDeviceTypeMutation.mutate(name);
     }
-    setIsDeviceTypeDialogOpen(false);
-    setSelectedDeviceType(null);
-    
-    toast({
-      title: "Erfolg!",
-      description: `Geräteart ${selectedDeviceType?.id ? "aktualisiert" : "hinzugefügt"}.`,
-      duration: 2000,
-    });
   };
   
   const handleDeleteDeviceType = (id: number) => {
-    // Prüfe, ob es Marken mit diesem Gerätetyp gibt
-    const relatedBrands = brands.filter(brand => brand.deviceTypeId === id);
-    
-    if (relatedBrands.length > 0) {
-      toast({
-        title: "Nicht möglich",
-        description: `Diese Geräteart wird noch von ${relatedBrands.length} Marken verwendet.`,
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-    
+    // Die Backendlogik prüft bereits, ob die Geräteart von Marken verwendet wird
     if (confirm("Möchten Sie diese Geräteart wirklich löschen?")) {
-      setDeviceTypes(deviceTypes.filter(dt => dt.id !== id));
-      toast({
-        title: "Erfolg!",
-        description: "Geräteart gelöscht.",
-        duration: 2000,
-      });
+      deleteDeviceTypeMutation.mutate(id);
     }
   };
   
+  // Mutations für Marken
+  const createBrandMutation = useMutation({
+    mutationFn: async (data: { name: string, deviceTypeId: number }) => {
+      const response = await apiRequest("POST", "/api/brands", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      setIsBrandDialogOpen(false);
+      setSelectedBrand(null);
+      toast({
+        title: "Erfolg!",
+        description: "Marke hinzugefügt.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Marke konnte nicht gespeichert werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+  
+  const updateBrandMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: { name: string, deviceTypeId: number } }) => {
+      const response = await apiRequest("PATCH", `/api/brands/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      setIsBrandDialogOpen(false);
+      setSelectedBrand(null);
+      toast({
+        title: "Erfolg!",
+        description: "Marke aktualisiert.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Marke konnte nicht aktualisiert werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+  
+  const deleteBrandMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/brands/${id}`);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      toast({
+        title: "Erfolg!",
+        description: "Marke gelöscht.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Marke konnte nicht gelöscht werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+
   // Funktionen für Marken
   const handleAddBrand = () => {
     if (deviceTypes.length === 0) {
@@ -229,45 +356,28 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setIsBrandDialogOpen(true);
   };
   
-  const handleSaveBrand = (data: {name: string, deviceTypeId: number}) => {
-    // Finde den Namen des Gerätetyps
-    const deviceTypeName = deviceTypes.find(dt => dt.id === data.deviceTypeId)?.name || "";
+  const handleSaveBrand = (data: {name: string, deviceTypeId: string}) => {
+    const name = data.name.trim();
+    if (!name) return;
+    
+    const deviceTypeId = parseInt(data.deviceTypeId);
+    if (isNaN(deviceTypeId)) return;
     
     if (selectedBrand?.id) {
       // Bearbeiten
-      setBrands(brands.map(b => 
-        b.id === selectedBrand.id 
-          ? {...b, name: data.name, deviceTypeId: data.deviceTypeId, deviceTypeName} 
-          : b
-      ));
+      updateBrandMutation.mutate({ 
+        id: selectedBrand.id, 
+        data: { name, deviceTypeId } 
+      });
     } else {
       // Neu hinzufügen
-      const newId = Math.max(...brands.map(b => b.id), 0) + 1;
-      setBrands([...brands, {
-        id: newId, 
-        name: data.name, 
-        deviceTypeId: data.deviceTypeId,
-        deviceTypeName
-      }]);
+      createBrandMutation.mutate({ name, deviceTypeId });
     }
-    setIsBrandDialogOpen(false);
-    setSelectedBrand(null);
-    
-    toast({
-      title: "Erfolg!",
-      description: `Marke ${selectedBrand?.id ? "aktualisiert" : "hinzugefügt"}.`,
-      duration: 2000,
-    });
   };
   
   const handleDeleteBrand = (id: number) => {
     if (confirm("Möchten Sie diese Marke wirklich löschen?")) {
-      setBrands(brands.filter(b => b.id !== id));
-      toast({
-        title: "Erfolg!",
-        description: "Marke gelöscht.",
-        duration: 2000,
-      });
+      deleteBrandMutation.mutate(id);
     }
   };
 

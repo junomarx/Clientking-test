@@ -944,6 +944,175 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // User device types methods
+  async getUserDeviceTypes(userId: number): Promise<UserDeviceType[]> {
+    return await db
+      .select()
+      .from(userDeviceTypes)
+      .where(eq(userDeviceTypes.userId, userId))
+      .orderBy(userDeviceTypes.name);
+  }
+  
+  async getUserDeviceType(id: number, userId: number): Promise<UserDeviceType | undefined> {
+    const [deviceType] = await db
+      .select()
+      .from(userDeviceTypes)
+      .where(
+        and(
+          eq(userDeviceTypes.id, id),
+          eq(userDeviceTypes.userId, userId)
+        )
+      );
+    return deviceType;
+  }
+  
+  async createUserDeviceType(deviceType: InsertUserDeviceType, userId: number): Promise<UserDeviceType> {
+    const now = new Date();
+    const [newDeviceType] = await db
+      .insert(userDeviceTypes)
+      .values({
+        ...deviceType,
+        userId,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    return newDeviceType;
+  }
+  
+  async updateUserDeviceType(id: number, deviceType: Partial<InsertUserDeviceType>, userId: number): Promise<UserDeviceType | undefined> {
+    const [updatedDeviceType] = await db
+      .update(userDeviceTypes)
+      .set({
+        ...deviceType,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userDeviceTypes.id, id),
+          eq(userDeviceTypes.userId, userId)
+        )
+      )
+      .returning();
+    return updatedDeviceType;
+  }
+  
+  async deleteUserDeviceType(id: number, userId: number): Promise<boolean> {
+    try {
+      // Prüfen, ob Marken diesen Gerätetyp verwenden
+      const relatedBrands = await db
+        .select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.deviceTypeId, id),
+            eq(userBrands.userId, userId)
+          )
+        );
+      
+      if (relatedBrands.length > 0) {
+        console.error(`Gerätetyp mit ID ${id} kann nicht gelöscht werden, da er von ${relatedBrands.length} Marken verwendet wird.`);
+        return false;
+      }
+      
+      await db
+        .delete(userDeviceTypes)
+        .where(
+          and(
+            eq(userDeviceTypes.id, id),
+            eq(userDeviceTypes.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting device type:", error);
+      return false;
+    }
+  }
+  
+  // User brands methods
+  async getUserBrands(userId: number): Promise<UserBrand[]> {
+    return await db
+      .select()
+      .from(userBrands)
+      .where(eq(userBrands.userId, userId))
+      .orderBy(userBrands.name);
+  }
+  
+  async getUserBrand(id: number, userId: number): Promise<UserBrand | undefined> {
+    const [brand] = await db
+      .select()
+      .from(userBrands)
+      .where(
+        and(
+          eq(userBrands.id, id),
+          eq(userBrands.userId, userId)
+        )
+      );
+    return brand;
+  }
+  
+  async getUserBrandsByDeviceTypeId(deviceTypeId: number, userId: number): Promise<UserBrand[]> {
+    return await db
+      .select()
+      .from(userBrands)
+      .where(
+        and(
+          eq(userBrands.deviceTypeId, deviceTypeId),
+          eq(userBrands.userId, userId)
+        )
+      )
+      .orderBy(userBrands.name);
+  }
+  
+  async createUserBrand(brand: InsertUserBrand, userId: number): Promise<UserBrand> {
+    const now = new Date();
+    const [newBrand] = await db
+      .insert(userBrands)
+      .values({
+        ...brand,
+        userId,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    return newBrand;
+  }
+  
+  async updateUserBrand(id: number, brand: Partial<InsertUserBrand>, userId: number): Promise<UserBrand | undefined> {
+    const [updatedBrand] = await db
+      .update(userBrands)
+      .set({
+        ...brand,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userBrands.id, id),
+          eq(userBrands.userId, userId)
+        )
+      )
+      .returning();
+    return updatedBrand;
+  }
+  
+  async deleteUserBrand(id: number, userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(userBrands)
+        .where(
+          and(
+            eq(userBrands.id, id),
+            eq(userBrands.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting brand:", error);
+      return false;
+    }
+  }
+  
   // Die Device Types und Brands Management Methoden wurden entfernt
 }
 

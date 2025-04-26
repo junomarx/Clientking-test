@@ -613,10 +613,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GERÄTETYPEN UND MARKEN API (für Lesezugriff durch alle Benutzer)
-  // Alle Gerätearten abrufen
+  // Benutzerspezifische Gerätearten abrufen
   app.get("/api/device-types", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const deviceTypes = await storage.getAllDeviceTypes();
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const deviceTypes = await storage.getUserDeviceTypes(userId);
       res.json(deviceTypes);
     } catch (error) {
       console.error("Error retrieving device types:", error);
@@ -624,15 +627,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Alle Marken abrufen (optional nach Gerätetyp gefiltert)
+  // Benutzerspezifische Gerätearte nach ID abrufen
+  app.get("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const deviceType = await storage.getUserDeviceType(id, userId);
+      if (!deviceType) {
+        return res.status(404).json({ message: "Geräteart nicht gefunden" });
+      }
+      
+      res.json(deviceType);
+    } catch (error) {
+      console.error("Error retrieving device type:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geräteart" });
+    }
+  });
+  
+  // Benutzerspezifische Geräteart erstellen
+  app.post("/api/device-types", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const deviceTypeData = insertUserDeviceTypeSchema.parse(req.body);
+      const deviceType = await storage.createUserDeviceType(deviceTypeData, userId);
+      
+      res.status(201).json(deviceType);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Geräteart-Daten", errors: error.errors });
+      }
+      console.error("Error creating device type:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Geräteart" });
+    }
+  });
+  
+  // Benutzerspezifische Geräteart aktualisieren
+  app.patch("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const deviceTypeData = insertUserDeviceTypeSchema.partial().parse(req.body);
+      const deviceType = await storage.updateUserDeviceType(id, deviceTypeData, userId);
+      
+      if (!deviceType) {
+        return res.status(404).json({ message: "Geräteart nicht gefunden" });
+      }
+      
+      res.json(deviceType);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Geräteart-Daten", errors: error.errors });
+      }
+      console.error("Error updating device type:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Geräteart" });
+    }
+  });
+  
+  // Benutzerspezifische Geräteart löschen
+  app.delete("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteUserDeviceType(id, userId);
+      
+      if (!success) {
+        return res.status(400).json({ message: "Geräteart konnte nicht gelöscht werden. Möglicherweise wird sie noch von Marken verwendet." });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting device type:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Geräteart" });
+    }
+  });
+  
+  // Alle benutzerspezifischen Marken abrufen (optional nach Gerätetyp gefiltert)
   app.get("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
       const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
-      const brands = await storage.getAllBrands(deviceTypeId);
+      
+      let brands;
+      if (deviceTypeId) {
+        brands = await storage.getUserBrandsByDeviceTypeId(deviceTypeId, userId);
+      } else {
+        brands = await storage.getUserBrands(userId);
+      }
+      
       res.json(brands);
     } catch (error) {
       console.error("Error retrieving brands:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
+    }
+  });
+  
+  // Benutzerspezifische Marke nach ID abrufen
+  app.get("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const brand = await storage.getUserBrand(id, userId);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      console.error("Error retrieving brand:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Marke" });
+    }
+  });
+  
+  // Benutzerspezifische Marke erstellen
+  app.post("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const brandData = insertUserBrandSchema.parse(req.body);
+      
+      // Prüfen, ob der Gerätetyp existiert und dem Benutzer gehört
+      const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, userId);
+      if (!deviceType) {
+        return res.status(400).json({ message: "Ungültiger Gerätetyp" });
+      }
+      
+      const brand = await storage.createUserBrand(brandData, userId);
+      
+      res.status(201).json(brand);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Marken-Daten", errors: error.errors });
+      }
+      console.error("Error creating brand:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Marke" });
+    }
+  });
+  
+  // Benutzerspezifische Marke aktualisieren
+  app.patch("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const brandData = insertUserBrandSchema.partial().parse(req.body);
+      
+      // Wenn deviceTypeId gegeben ist, prüfen, ob der Gerätetyp existiert und dem Benutzer gehört
+      if (brandData.deviceTypeId) {
+        const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, userId);
+        if (!deviceType) {
+          return res.status(400).json({ message: "Ungültiger Gerätetyp" });
+        }
+      }
+      
+      const brand = await storage.updateUserBrand(id, brandData, userId);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Marken-Daten", errors: error.errors });
+      }
+      console.error("Error updating brand:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Marke" });
+    }
+  });
+  
+  // Benutzerspezifische Marke löschen
+  app.delete("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteUserBrand(id, userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Marke konnte nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting brand:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Marke" });
     }
   });
   
