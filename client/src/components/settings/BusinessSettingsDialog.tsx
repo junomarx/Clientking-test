@@ -49,6 +49,13 @@ const businessSettingsSchema = z.object({
   website: z.string().optional(),
   colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]).default("blue"),
   receiptWidth: z.enum(["58mm", "80mm"]).default("80mm"),
+  
+  // E-Mail-SMTP-Einstellungen
+  smtpSenderName: z.string().optional(),
+  smtpHost: z.string().optional(),
+  smtpUser: z.string().optional(),
+  smtpPassword: z.string().optional(),
+  smtpPort: z.string().optional(),
 });
 
 // Erweiterte Form-Werte, die nicht direkt im Schema sind
@@ -94,6 +101,12 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       logoImage: "",
       colorTheme: "blue",
       receiptWidth: "80mm",
+      // SMTP-Einstellungen
+      smtpSenderName: "",
+      smtpHost: "",
+      smtpUser: "",
+      smtpPassword: "",
+      smtpPort: "",
     },
   });
 
@@ -127,6 +140,12 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         logoImage: settings.logoImage || "",
         colorTheme: validColorTheme,
         receiptWidth: validReceiptWidth as "58mm" | "80mm",
+        // SMTP-Einstellungen
+        smtpSenderName: settings.smtpSenderName || "",
+        smtpHost: settings.smtpHost || "",
+        smtpUser: settings.smtpUser || "",
+        smtpPassword: settings.smtpPassword || "",
+        smtpPort: settings.smtpPort || "",
       });
 
       // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
