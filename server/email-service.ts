@@ -215,25 +215,37 @@ export class EmailService {
       const userId = variables.userId ? parseInt(variables.userId) : 0;
       
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
-      const [businessSetting] = await db.select().from(businessSettings)
-        .where(eq(businessSettings.userId, userId));
+      const businessSettingsTable = businessSettings;
+      const settingsData = await db.select().from(businessSettingsTable)
+        .where(eq(businessSettingsTable.userId, userId));
+        
+      const bizSettings = settingsData.length > 0 ? settingsData[0] : null;
       
-      if (businessSetting) {
+      if (bizSettings) {
         // Füge alle relevanten Geschäftsdaten als Variablen hinzu
-        if (!variables["adresse"] && businessSetting.street) {
-          variables["adresse"] = `${businessSetting.street}, ${businessSetting.zipCode} ${businessSetting.city}`;
+        // Geschäftsname als Variable
+        if (!variables["geschaeftsname"] && bizSettings.businessName) {
+          variables["geschaeftsname"] = bizSettings.businessName;
         }
         
-        if (!variables["telefon"] && businessSetting.phone) {
-          variables["telefon"] = businessSetting.phone;
+        // Adresse als Variable
+        if (!variables["adresse"] && bizSettings.streetAddress) {
+          variables["adresse"] = `${bizSettings.streetAddress}, ${bizSettings.zipCode} ${bizSettings.city}`;
         }
         
-        if (!variables["email"] && businessSetting.email) {
-          variables["email"] = businessSetting.email;
+        // Telefonnummer als Variable
+        if (!variables["telefon"] && bizSettings.phone) {
+          variables["telefon"] = bizSettings.phone;
         }
         
-        if (!variables["website"] && businessSetting.website) {
-          variables["website"] = businessSetting.website;
+        // E-Mail als Variable
+        if (!variables["email"] && bizSettings.email) {
+          variables["email"] = bizSettings.email;
+        }
+        
+        // Website als Variable
+        if (!variables["website"] && bizSettings.website) {
+          variables["website"] = bizSettings.website;
         }
       }
       
@@ -246,14 +258,14 @@ export class EmailService {
         }
       });
       
-      if (!businessSetting) {
+      if (!bizSettings) {
         console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
         return false;
       }
       
       // Verwende die SMTP-Einstellungen des Benutzers, falls vorhanden
-      const senderEmail = businessSetting.email || 'no-reply@example.com';
-      const senderName = businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop Verwaltung';
+      const senderEmail = bizSettings.email || 'no-reply@example.com';
+      const senderName = bizSettings.smtpSenderName || bizSettings.businessName || 'Handyshop Verwaltung';
       
       // Entwicklungsmodus-Information, aber senden trotzdem
       if (process.env.NODE_ENV === 'development') {
@@ -268,7 +280,7 @@ export class EmailService {
           
           // Bei der Absender-E-Mail MUSS der SMTP-Login verwendet werden
           // Dies ist ein häufiger Fehler bei SMTP-Konfigurationen
-          const fromEmail = businessSetting.smtpUser;
+          const fromEmail = bizSettings.smtpUser;
           
           // Sicherstellen, dass die From-Adresse eine gültige E-Mail-Struktur hat
           if (!fromEmail || !fromEmail.includes('@')) {
@@ -277,7 +289,7 @@ export class EmailService {
           }
           
           // Debug-Ausgabe für die Verbindung
-          console.log(`SMTP-Verbindungsdaten: Host=${businessSetting.smtpHost}, Port=${businessSetting.smtpPort}, User=${fromEmail}`);
+          console.log(`SMTP-Verbindungsdaten: Host=${bizSettings.smtpHost}, Port=${bizSettings.smtpPort}, User=${fromEmail}`);
           
           // Erweiterte Mail-Optionen
           const mailOptions = {
