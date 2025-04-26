@@ -55,9 +55,7 @@ const orderFormSchema = z.object({
   email: z.string().email({ message: 'Gültige E-Mail-Adresse eingeben' }).optional().or(z.literal('')),
   
   // Device info
-  deviceType: z.enum(['smartphone', 'tablet', 'laptop'], {
-    required_error: 'Bitte Geräteart auswählen',
-  }),
+  deviceType: z.string().min(1, { message: 'Bitte Geräteart eingeben' }),
   brand: z.string().min(1, { message: 'Bitte Marke auswählen' }),
   model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
   serialNumber: z.string().optional(),
@@ -97,7 +95,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       lastName: '',
       phone: '',
       email: '',
-      deviceType: undefined,
+      deviceType: '',
       brand: '',
       model: '',
       serialNumber: '',
