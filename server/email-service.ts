@@ -3,6 +3,7 @@ import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessS
 import { eq, desc } from 'drizzle-orm';
 import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
@@ -49,6 +50,10 @@ export class EmailService {
           auth: {
             user: smtpUser,
             pass: smtpPassword
+          },
+          tls: {
+            // Deaktiviere die Zertifikatsprüfung im Entwicklungsmodus
+            rejectUnauthorized: process.env.NODE_ENV !== 'development'
           }
         });
         
@@ -88,7 +93,8 @@ export class EmailService {
       // Erweiterte Konfigurationsoptionen basierend auf dem Port
       const isSecure = smtpPort === 465;
       
-      const transporterConfig = {
+      // Erstelle einen SMTP-Transporter
+      const transporter = nodemailer.createTransport({
         host: settings.smtpHost,
         port: smtpPort,
         secure: isSecure, // true für 465, false für andere Ports
@@ -96,23 +102,11 @@ export class EmailService {
           user: settings.smtpUser,
           pass: settings.smtpPassword
         },
-        // Zusätzliche Optionen für eine robustere E-Mail-Zustellung
         tls: {
           // Deaktiviere die Zertifikatsprüfung im Entwicklungsmodus
-          rejectUnauthorized: process.env.NODE_ENV !== 'development',
-          // Aktiviere TLS für alle Verbindungen, unabhängig vom Port
-          // Dies ist wichtig für den STARTTLS-Modus
-          minVersion: 'TLSv1.2'
-        },
-        // Debug-Ausgabe aktivieren im Entwicklungsmodus
-        debug: process.env.NODE_ENV === 'development',
-        // Längere Timeouts für langsamere Server
-        connectionTimeout: 10000, // 10 Sekunden
-        greetingTimeout: 10000,
-        socketTimeout: 30000 // 30 Sekunden
-      };
-      
-      const transporter = nodemailer.createTransport(transporterConfig);
+          rejectUnauthorized: process.env.NODE_ENV !== 'development'
+        }
+      });
       
       console.log(`SMTP-Transporter für Benutzer ${userId} (${settings.smtpHost}:${smtpPort}, secure=${isSecure}) erstellt`);
       
