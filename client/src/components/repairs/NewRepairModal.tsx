@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Customer } from '@/lib/types';
 import { getBrandsForDeviceType, saveBrand, saveModel } from '@/lib/localStorage';
+import { clearAllBrands, clearAllModels, showAllStoredData } from './ClearCacheHelpers';
 
 import {
   Dialog,
@@ -409,6 +410,28 @@ export function NewRepairModal({
                   </FormItem>
                 )}
               />
+              
+              {/* Cache-Leeren Funktion */}
+              <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    clearAllBrands();
+                    clearAllModels();
+                    setSavedBrands([]);
+                    toast({
+                      title: "Cache geleert",
+                      description: "Alle gespeicherten Marken und Gerätetypen wurden gelöscht.",
+                      duration: 2000,
+                    });
+                  }}
+                >
+                  Cache leeren
+                </Button>
+                <span className="text-xs">Gerätetyp: <span className="font-mono">{selectedDeviceType || "keiner ausgewählt"}</span></span>
+              </div>
               
               {/* Buttons */}
               <div className="flex justify-between pt-2">

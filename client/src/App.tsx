@@ -14,6 +14,7 @@ import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
 import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
+import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
 
 function Router() {
   return (
@@ -50,6 +51,18 @@ function TitleUpdater() {
   return null;
 }
 
+// Component to clear cache on app start
+function CacheClearer() {
+  useEffect(() => {
+    // Löscht alle gespeicherten Marken und Modelle beim Start der App
+    clearAllBrands();
+    clearAllModels();
+    console.log('Cache für Gerätearten und Marken wurde beim Start gelöscht');
+  }, []);
+  
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -59,6 +72,7 @@ function App() {
             <PrintManagerProvider>
               <TooltipProvider>
                 <TitleUpdater />
+                <CacheClearer />
                 <Toaster />
                 <Router />
               </TooltipProvider>
