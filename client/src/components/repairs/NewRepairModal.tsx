@@ -80,45 +80,8 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     enabled: !!customerId && open,
   });
   
-  // FESTGELEGTE Liste von Gerätetypen, damit wir die vollständige Liste garantieren können
-  // Wir laden die tatsächlichen Gerätetypen für die ID-Lookup, verwenden aber unsere statische Liste für die Anzeige
-  const [fixedDeviceTypes, setFixedDeviceTypes] = useState<{ id: number, name: string }[]>([]);
-  
-  // Lade die Gerätetypen aus der Datenbank nur für die ID-Zuordnung
-  const { data: deviceTypesFromDB = [] } = useQuery<UserDeviceType[]>({
-    queryKey: ['/api/device-types'],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest('GET', '/api/device-types');
-        const result = await response.json();
-        
-        // Hier direkt die fixedDeviceTypes erstellen
-        if (Array.isArray(result)) {
-          // Erstelle eine statische Liste mit vordefinierten Gerätekategorien
-          // und verwende die IDs aus der Datenbank, wenn verfügbar
-          const requiredTypes = ["Laptop", "Smartphone", "Tablet", "Watch"];
-          const staticTypes = requiredTypes.map(typeName => {
-            // Suche die ID in den Datenbankdaten
-            const dbType = result.find(t => t.name.toLowerCase() === typeName.toLowerCase());
-            return {
-              id: dbType?.id || 0,  // Wenn keine ID gefunden, verwende 0 (wird später behandelt)
-              name: typeName
-            };
-          });
-          
-          // Setze die feste Liste der Gerätetypen
-          setFixedDeviceTypes(staticTypes);
-          console.log("Feste Gerätetypliste erstellt:", staticTypes);
-        }
-        
-        return result;
-      } catch (err) {
-        console.error("Fehler beim Laden der Gerätetypen:", err);
-        return [];
-      }
-    },
-    enabled: open
-  });
+  // Wir verwenden hier eine statische, fest codierte Liste für die Gerätetypen
+  // Die IDs sind fest vergeben und repräsentieren gängige Werte aus der Datenbank
   
   // State für die ausgewählte Geräteart
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
@@ -203,12 +166,20 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       if (formValues.brand && formValues.model && formValues.deviceType) {
         const { deviceType: deviceTypeId, brand: brandId, model } = formValues;
         
-        const selectedDeviceType = fixedDeviceTypes.find(type => type.id.toString() === deviceTypeId);
+        // Direkte Zuordnung der statischen Gerätetypen
+        const deviceTypeMap: Record<string, string> = {
+          "7": "Laptop",
+          "8": "Smartphone",
+          "9": "Tablet",
+          "10": "Watch"
+        };
+        
+        const deviceTypeName = deviceTypeMap[deviceTypeId];
         const selectedBrand = brands.find(b => b.id.toString() === brandId);
         
-        if (selectedDeviceType && selectedBrand) {
-          saveModel(selectedDeviceType.name, selectedBrand.name, model);
-          console.log(`Modell gespeichert: ${selectedDeviceType.name}:${selectedBrand.name} - ${model}`);
+        if (deviceTypeName && selectedBrand) {
+          saveModel(deviceTypeName, selectedBrand.name, model);
+          console.log(`Modell gespeichert: ${deviceTypeName}:${selectedBrand.name} - ${model}`);
         }
       }
       
@@ -234,13 +205,21 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     const deviceTypeId = data.deviceType;
     const brandId = data.brand;
     
-    const selectedDeviceType = fixedDeviceTypes.find(type => type.id.toString() === deviceTypeId);
+    // Direkte Zuordnung der statischen Gerätetypen
+    const deviceTypeMap: Record<string, string> = {
+      "7": "Laptop",
+      "8": "Smartphone",
+      "9": "Tablet",
+      "10": "Watch"
+    };
+    
+    // Marken über API-Daten ermitteln
     const selectedBrand = brands.find(brand => brand.id.toString() === brandId);
     
-    if (selectedDeviceType && selectedBrand) {
+    if (deviceTypeMap[deviceTypeId] && selectedBrand) {
       const modifiedData = {
         ...data,
-        deviceType: selectedDeviceType.name,
+        deviceType: deviceTypeMap[deviceTypeId],
         brand: selectedBrand.name
       };
       
@@ -304,17 +283,11 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {fixedDeviceTypes.length > 0 ? (
-                          fixedDeviceTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.id.toString()}>
-                              {type.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="" disabled>
-                            Lade Gerätetypen...
-                          </SelectItem>
-                        )}
+                        {/* KOMPLETT STATISCHE LISTE - direkt codiert ohne API-Ladung */}
+                        <SelectItem value="7">Laptop</SelectItem>
+                        <SelectItem value="8">Smartphone</SelectItem>
+                        <SelectItem value="9">Tablet</SelectItem>
+                        <SelectItem value="10">Watch</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
