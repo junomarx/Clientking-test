@@ -69,10 +69,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up admin routes
   registerAdminRoutes(app);
+  
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
       console.log("GET /api/customers: Auth status:", req.isAuthenticated(), "User:", req.user?.username);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
       
       // Wenn firstName und lastName als Query-Parameter übergeben werden, suche nach Kunden mit diesem Namen
       if (req.query.firstName && req.query.lastName) {
@@ -84,10 +88,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (firstName.length < 1 || lastName.length < 1) {
           return res.json([]);
         }
-        
-        // Benutzer-ID aus der Authentifizierung abrufen
-        const userId = (req.user as any).id;
-        const isAdmin = (req.user as any).isAdmin;
         
         // Alle Kunden abrufen und sowohl nach Vor- als auch Nachnamen filtern
         const allCustomers = await storage.getAllCustomers(userId);
@@ -107,10 +107,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
-        // Benutzer-ID aus der Authentifizierung abrufen
-        const userId = (req.user as any).id;
-        const isAdmin = (req.user as any).isAdmin;
-        
         // Alle Kunden abrufen und nach Vornamen filtern
         const allCustomers = await storage.getAllCustomers(userId);
         const matchingCustomers = allCustomers.filter(customer => 
@@ -119,9 +115,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}"`);
         return res.json(matchingCustomers);
       }
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
       
       // Ansonsten gebe alle Kunden zurück (gefiltert nach Benutzer)
       const customers = await storage.getAllCustomers(userId);
@@ -271,6 +264,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Received repair data:", req.body);
       console.log("Auth status:", req.isAuthenticated(), "User:", req.user?.username);
       
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
       // Verwende safeParse für bessere Fehlerdiagnose
       const validationResult = insertRepairSchema.safeParse(req.body);
       
@@ -284,10 +280,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const repairData = validationResult.data;
       
-      // Validate customerId exists
-      const customer = await storage.getCustomer(repairData.customerId);
+      // Validate customerId exists - wichtig: userId mit übergeben
+      const customer = await storage.getCustomer(repairData.customerId, userId);
       if (!customer) {
-        console.error("Customer not found:", repairData.customerId);
+        console.error("Customer not found:", repairData.customerId, "for user:", userId);
         return res.status(400).json({ message: "Ungültige Kunden-ID" });
       }
       
@@ -302,9 +298,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Invalid status:", repairData.status);
         return res.status(400).json({ message: "Ungültiger Reparaturstatus" });
       }
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
       
       // Reparatur mit Benutzerkontext erstellen
       const repair = await storage.createRepair(repairData, userId);
@@ -324,9 +317,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const repairData = insertRepairSchema.partial().parse(req.body);
       
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
       // Validate customerId exists if provided
       if (repairData.customerId) {
-        const customer = await storage.getCustomer(repairData.customerId);
+        const customer = await storage.getCustomer(repairData.customerId, userId);
         if (!customer) {
           return res.status(400).json({ message: "Invalid customer ID" });
         }
@@ -341,9 +337,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (repairData.status && !repairStatuses.safeParse(repairData.status).success) {
         return res.status(400).json({ message: "Invalid repair status" });
       }
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
       
       // Reparatur mit Benutzerkontext aktualisieren
       const repair = await storage.updateRepair(id, repairData, userId);
@@ -386,8 +379,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("E-Mail-Benachrichtigung wird vorbereitet...");
         
         try {
-          // Lade Kunde
-          const customer = await storage.getCustomer(repair.customerId);
+          // Lade Kunde mit userId
+          const customer = await storage.getCustomer(repair.customerId, userId);
           if (customer && customer.email) {
             // Suche nach einer E-Mail-Vorlage mit name "fertig"
             const templates = await storage.getAllEmailTemplates();
@@ -619,16 +612,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const repair = feedbackWithRepair.repair;
+      const repairUserId = repair.userId;
       
       // Kundeninformationen laden mit dem Benutzerkontext der Reparatur
-      const customer = await storage.getCustomer(feedback.customerId, repair.userId);
+      const customer = await storage.getCustomer(feedback.customerId, repairUserId);
       
       if (!customer) {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
       // Geschäftsinformationen für den Besitzer der Reparatur laden
-      const businessSettings = await storage.getBusinessSettings(repair.userId);
+      const businessSettings = await storage.getBusinessSettings(repairUserId);
       
       // Nur die notwendigen Informationen zurückgeben
       res.json({
