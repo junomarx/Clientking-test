@@ -142,12 +142,18 @@ export const getStatistics = () => {
   };
 };
 
-// Konstante für den localStorage Key der gespeicherten Modelle
+// Konstante für den localStorage Key der gespeicherten Modelle und Marken
 const SAVED_MODELS_KEY = 'repair-shop-models';
+const SAVED_BRANDS_KEY = 'repair-shop-brands';
 
 // Typ für gespeicherte Modelle
 interface StoredModels {
   [key: string]: string[]; // Format: "deviceType:brand" => ["Modell 1", "Modell 2", ...]
+}
+
+// Typ für gespeicherte Marken
+interface StoredBrands {
+  [key: string]: string[]; // Format: "deviceType" => ["Marke 1", "Marke 2", ...]
 }
 
 // Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Marke-Kombination
@@ -232,5 +238,90 @@ export const clearAllModels = (): void => {
     localStorage.removeItem(SAVED_MODELS_KEY);
   } catch (err) {
     console.error('Fehler beim Zurücksetzen aller Modelle:', err);
+  }
+};
+
+// Funktionen für die Marken-Verwaltung
+export const saveBrand = (deviceType: string, brand: string): void => {
+  if (!deviceType || !brand) return;
+  
+  const key = deviceType.toLowerCase();
+  
+  let storedBrands: StoredBrands = {};
+  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  
+  if (storedData) {
+    try {
+      storedBrands = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Marken:', err);
+    }
+  }
+  
+  // Erstelle Array für diesen Gerätetyp, falls es noch nicht existiert
+  if (!storedBrands[key]) {
+    storedBrands[key] = [];
+  }
+  
+  // Füge Marke hinzu, wenn sie noch nicht existiert
+  if (!storedBrands[key].includes(brand)) {
+    storedBrands[key].push(brand);
+    localStorage.setItem(SAVED_BRANDS_KEY, JSON.stringify(storedBrands));
+  }
+};
+
+// Funktion zum Abrufen von gespeicherten Marken für einen bestimmten Gerätetyp
+export const getBrandsForDeviceType = (deviceType: string): string[] => {
+  if (!deviceType) return [];
+  
+  const key = deviceType.toLowerCase();
+  
+  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  if (!storedData) return [];
+  
+  try {
+    const storedBrands: StoredBrands = JSON.parse(storedData);
+    return storedBrands[key] || [];
+  } catch (err) {
+    console.error('Fehler beim Abrufen der gespeicherten Marken:', err);
+    return [];
+  }
+};
+
+// Funktion zum Löschen einer einzelnen Marke
+export const deleteBrand = (deviceType: string, brand: string): void => {
+  if (!deviceType) return;
+  
+  const key = deviceType.toLowerCase();
+  
+  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  if (!storedData) return;
+  
+  try {
+    const storedBrands: StoredBrands = JSON.parse(storedData);
+    
+    if (storedBrands[key]) {
+      // Filtere die zu löschende Marke heraus
+      storedBrands[key] = storedBrands[key].filter(b => b !== brand);
+      
+      // Wenn die Liste für diesen Key leer ist, entferne den Key
+      if (storedBrands[key].length === 0) {
+        delete storedBrands[key];
+      }
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(SAVED_BRANDS_KEY, JSON.stringify(storedBrands));
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen der Marke:', err);
+  }
+};
+
+// Funktion zum Zurücksetzen aller gespeicherten Marken
+export const clearAllBrands = (): void => {
+  try {
+    localStorage.removeItem(SAVED_BRANDS_KEY);
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen aller Marken:', err);
   }
 };

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { saveModel } from '@/lib/localStorage';
+import { saveModel, getModelsForDeviceAndBrand, saveBrand, getBrandsForDeviceType } from '@/lib/localStorage';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { Customer } from '@/lib/types';
 import { UserDeviceType, UserBrand, insertRepairSchema } from '@shared/schema';
@@ -85,26 +85,28 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   
   // State für die ausgewählte Geräteart
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
+  const [savedBrands, setSavedBrands] = useState<string[]>([]);
   
-  // Lade Marken basierend auf dem ausgewählten Gerätetyp (genau wie in SettingsDialog)
-  const { data: brands = [] } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: parseInt(selectedDeviceTypeId) } : 'empty'],
-    queryFn: async () => {
-      if (!selectedDeviceTypeId) return [];
+  // Lade gespeicherte Marken aus localStorage, wenn sich der Gerätetyp ändert
+  useEffect(() => {
+    if (selectedDeviceTypeId) {
+      // Mapping der IDs zu Namen
+      const deviceTypeMap: Record<string, string> = {
+        "7": "Laptop",
+        "8": "Smartphone",
+        "9": "Tablet",
+        "10": "Watch"
+      };
       
-      try {
-        console.log("Lade Marken für Gerätetyp in NewRepairModal:", selectedDeviceTypeId);
-        const response = await apiRequest('GET', `/api/brands?deviceTypeId=${selectedDeviceTypeId}`);
-        const data = await response.json();
-        console.log("Geladene Marken in NewRepairModal:", data.length);
-        return data;
-      } catch (err) {
-        console.error('Fehler beim Laden der Marken:', err);
-        return [];
+      const deviceTypeName = deviceTypeMap[selectedDeviceTypeId];
+      if (deviceTypeName) {
+        const brands = getBrandsForDeviceType(deviceTypeName);
+        setSavedBrands(brands);
       }
-    },
-    enabled: open && !!selectedDeviceTypeId,
-  });
+    } else {
+      setSavedBrands([]);
+    }
+  }, [selectedDeviceTypeId]);
   
   // Setup form
   const form = useForm<RepairFormValues>({
@@ -303,32 +305,28 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Marke</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        disabled={!selectedDeviceTypeId}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Marke auswählen" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {brands.length > 0 ? (
-                            brands.map((brand: UserBrand) => (
-                              <SelectItem key={brand.id} value={brand.id.toString()}>
-                                {brand.name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="" disabled>
-                              {!selectedDeviceTypeId 
-                                ? "Bitte zuerst Gerätetyp wählen" 
-                                : "Keine Marken für diesen Gerätetyp verfügbar. Bitte erst in Einstellungen anlegen."}
-                            </SelectItem>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            placeholder="z.B. Apple, Samsung, Xiaomi" 
+                            {...field}
+                            disabled={!selectedDeviceTypeId}
+                            list="brand-options" 
+                          />
+                          {savedBrands.length > 0 && (
+                            <datalist id="brand-options">
+                              {savedBrands.map((brand, index) => (
+                                <option key={index} value={brand} />
+                              ))}
+                            </datalist>
                           )}
-                        </SelectContent>
-                      </Select>
+                        </div>
+                      </FormControl>
+                      {!selectedDeviceTypeId && (
+                        <FormDescription>
+                          Bitte zuerst Gerätetyp wählen
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
