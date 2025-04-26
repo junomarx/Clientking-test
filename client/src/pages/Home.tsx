@@ -6,7 +6,7 @@ import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTab } from '@/components/statistics/StatisticsTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
-import { NewRepairModal } from '@/components/repairs/NewRepairModal';
+
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
 

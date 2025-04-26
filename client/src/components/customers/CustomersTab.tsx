@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Customer, Repair } from '@shared/schema';
 import { CustomerDetailDialog } from './CustomerDetailDialog';
-import { NewRepairModal } from '../repairs/NewRepairModal';
+
 import { Plus, Search } from 'lucide-react';
 
 interface CustomersTabProps {
@@ -15,7 +15,6 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false);
-  const [isNewRepairOpen, setIsNewRepairOpen] = useState(false);
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers']
@@ -79,13 +78,8 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
     setIsCustomerDetailOpen(false);
   };
 
-  const handleNewRepairForCustomer = (customerId: number) => {
-    setSelectedCustomerId(customerId);
-    setIsNewRepairOpen(true);
-  };
-
-  const handleNewRepairClose = () => {
-    setIsNewRepairOpen(false);
+  const handleNewRepairForCustomer = () => {
+    onNewOrder(); // Stattdessen den vom Parent übergebenen Handler aufrufen
   };
 
   return (
@@ -169,12 +163,7 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
         onNewOrder={handleNewRepairForCustomer}
       />
 
-      {/* New Repair Modal for Customer */}
-      <NewRepairModal
-        open={isNewRepairOpen}
-        onClose={handleNewRepairClose}
-        customerId={selectedCustomerId}
-      />
+
     </div>
   );
 }
