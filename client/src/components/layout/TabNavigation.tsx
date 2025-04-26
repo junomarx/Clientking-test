@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { Users, BarChart } from 'lucide-react';
+import { Settings, BarChart } from 'lucide-react';
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
 
@@ -72,8 +72,8 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             className="px-4 py-2 mr-4 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
             onClick={handleGoToAdmin}
           >
-            <Users className="mr-2 h-4 w-4" />
-            Benutzer verwalten
+            <Settings className="mr-2 h-4 w-4" />
+            Backend
           </button>
         </div>
       )}
