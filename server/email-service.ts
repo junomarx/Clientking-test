@@ -208,12 +208,8 @@ export class EmailService {
       let subject = template.subject;
       let body = template.body;
       
-      // Ersetze Variablen im Format {{variableName}}
-      Object.entries(variables).forEach(([key, value]) => {
-        const placeholder = `{{${key}}}`;
-        subject = subject.replace(new RegExp(placeholder, 'g'), value);
-        body = body.replace(new RegExp(placeholder, 'g'), value);
-      });
+      // Füge das aktuelle Jahr als Variable hinzu
+      variables["aktuellesJahr"] = new Date().getFullYear().toString();
       
       // Bestimme die aktuelle Benutzer-ID aus den Variablen
       const userId = variables.userId ? parseInt(variables.userId) : 0;
@@ -221,6 +217,34 @@ export class EmailService {
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
       const [businessSetting] = await db.select().from(businessSettings)
         .where(eq(businessSettings.userId, userId));
+      
+      if (businessSetting) {
+        // Füge alle relevanten Geschäftsdaten als Variablen hinzu
+        if (!variables["adresse"] && businessSetting.street) {
+          variables["adresse"] = `${businessSetting.street}, ${businessSetting.zipCode} ${businessSetting.city}`;
+        }
+        
+        if (!variables["telefon"] && businessSetting.phone) {
+          variables["telefon"] = businessSetting.phone;
+        }
+        
+        if (!variables["email"] && businessSetting.email) {
+          variables["email"] = businessSetting.email;
+        }
+        
+        if (!variables["website"] && businessSetting.website) {
+          variables["website"] = businessSetting.website;
+        }
+      }
+      
+      // Ersetze Variablen im Format {{variableName}}
+      Object.entries(variables).forEach(([key, value]) => {
+        if (value) { // Überprüfe, ob der Wert existiert
+          const placeholder = `{{${key}}}`;
+          subject = subject.replace(new RegExp(placeholder, 'g'), value);
+          body = body.replace(new RegExp(placeholder, 'g'), value);
+        }
+      });
       
       if (!businessSetting) {
         console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
