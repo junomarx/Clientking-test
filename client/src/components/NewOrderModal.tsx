@@ -44,7 +44,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Standard Vorschläge für Gerätetypen - werden nur verwendet, wenn keine gespeicherten Werte vorhanden sind
-const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop'];
+const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop', 'Spielekonsole'];
 
 // Form schema
 const orderFormSchema = z.object({
@@ -116,6 +116,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   // Zustand für die gespeicherten Modelle und Gerätetypen
   const [savedModels, setSavedModels] = useState<string[]>([]);
   const [savedDeviceTypes, setSavedDeviceTypes] = useState<string[]>([]);
+  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
+  const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
+  const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
   
   // Update Gerätetyp-Liste beim ersten Rendern
   useEffect(() => {
@@ -686,10 +689,50 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 field.onChange(e);
                                 // Bei Eingabe das Dropdown öffnen
                                 setIsDeviceTypeDropdownOpen(e.target.value.length > 0);
+                                // Bei jeder Eingabe den Index zurücksetzen
+                                setSelectedDeviceTypeIndex(-1);
                               }}
                               onBlur={() => {
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
-                                setTimeout(() => setIsDeviceTypeDropdownOpen(false), 200);
+                                setTimeout(() => {
+                                  setIsDeviceTypeDropdownOpen(false);
+                                  setSelectedDeviceTypeIndex(-1);
+                                }, 200);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!isDeviceTypeDropdownOpen) return;
+                                
+                                const filteredTypes = savedDeviceTypes
+                                  .filter(type => !field.value || type.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Pfeiltaste nach unten
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedDeviceTypeIndex(prev => 
+                                    prev < filteredTypes.length - 1 ? prev + 1 : 0
+                                  );
+                                } 
+                                // Pfeiltaste nach oben
+                                else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedDeviceTypeIndex(prev => 
+                                    prev > 0 ? prev - 1 : filteredTypes.length - 1
+                                  );
+                                } 
+                                // Enter-Taste
+                                else if (e.key === 'Enter' && selectedDeviceTypeIndex >= 0 && filteredTypes.length > 0) {
+                                  e.preventDefault();
+                                  const selectedType = filteredTypes[selectedDeviceTypeIndex];
+                                  field.onChange(selectedType);
+                                  setIsDeviceTypeDropdownOpen(false);
+                                  setSelectedDeviceTypeIndex(-1);
+                                  
+                                  // Fokus zum nächsten Feld setzen
+                                  const brandInput = document.querySelector('input[name="brand"]');
+                                  if (brandInput) {
+                                    (brandInput as HTMLInputElement).focus();
+                                  }
+                                }
                               }}
                             />
                             
@@ -701,11 +744,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 </div>
                                 
                                 {savedDeviceTypes
-                                  .filter(type => type.toLowerCase().includes(field.value.toLowerCase()))
+                                  .filter(type => !field.value || type.toLowerCase().includes(field.value.toLowerCase()))
                                   .map((deviceType, index) => (
                                   <div 
                                     key={index} 
-                                    className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                    className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedDeviceTypeIndex === index ? 'bg-muted' : ''}`}
                                     onMouseDown={(e) => {
                                       // Verhindert onBlur vor dem Klick
                                       e.preventDefault();
@@ -713,6 +756,15 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                     onClick={() => {
                                       field.onChange(deviceType);
                                       setIsDeviceTypeDropdownOpen(false);
+                                      
+                                      // Fokus zum nächsten Feld setzen
+                                      const brandInput = document.querySelector('input[name="brand"]');
+                                      if (brandInput) {
+                                        (brandInput as HTMLInputElement).focus();
+                                      }
+                                    }}
+                                    onMouseEnter={() => {
+                                      setSelectedDeviceTypeIndex(index);
                                     }}
                                   >
                                     {deviceType}
@@ -748,11 +800,51 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 if (watchDeviceType) {
                                   setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
                                   setIsBrandDropdownOpen(e.target.value.length > 0);
+                                  // Bei jeder Eingabe den Index zurücksetzen
+                                  setSelectedBrandIndex(-1);
                                 }
                               }}
                               onBlur={() => {
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
-                                setTimeout(() => setIsBrandDropdownOpen(false), 200);
+                                setTimeout(() => {
+                                  setIsBrandDropdownOpen(false);
+                                  setSelectedBrandIndex(-1);
+                                }, 200);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!isBrandDropdownOpen) return;
+                                
+                                const filteredBrands = availableBrands
+                                  .filter(brand => !field.value || brand.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Pfeiltaste nach unten
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedBrandIndex(prev => 
+                                    prev < filteredBrands.length - 1 ? prev + 1 : 0
+                                  );
+                                } 
+                                // Pfeiltaste nach oben
+                                else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedBrandIndex(prev => 
+                                    prev > 0 ? prev - 1 : filteredBrands.length - 1
+                                  );
+                                } 
+                                // Enter-Taste
+                                else if (e.key === 'Enter' && selectedBrandIndex >= 0 && filteredBrands.length > 0) {
+                                  e.preventDefault();
+                                  const selectedBrand = filteredBrands[selectedBrandIndex];
+                                  field.onChange(selectedBrand);
+                                  setIsBrandDropdownOpen(false);
+                                  setSelectedBrandIndex(-1);
+                                  
+                                  // Fokus zum nächsten Feld setzen
+                                  const modelInput = document.querySelector('input[name="model"]');
+                                  if (modelInput) {
+                                    (modelInput as HTMLInputElement).focus();
+                                  }
+                                }
                               }}
                             />
                             
@@ -764,11 +856,11 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 </div>
                                 
                                 {availableBrands
-                                  .filter(brand => brand.toLowerCase().includes(field.value.toLowerCase()))
+                                  .filter(brand => !field.value || brand.toLowerCase().includes(field.value.toLowerCase()))
                                   .map((brand, index) => (
                                   <div 
                                     key={index} 
-                                    className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                    className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedBrandIndex === index ? 'bg-muted' : ''}`}
                                     onMouseDown={(e) => {
                                       // Verhindert onBlur vor dem Klick
                                       e.preventDefault();
@@ -780,6 +872,9 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                       if (modelInput) {
                                         (modelInput as HTMLInputElement).focus();
                                       }
+                                    }}
+                                    onMouseEnter={() => {
+                                      setSelectedBrandIndex(index);
                                     }}
                                   >
                                     {brand}
@@ -814,6 +909,8 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               onChange={(e) => {
                                 field.onChange(e.target.value);
                                 setIsModelDropdownOpen(e.target.value.length > 0);
+                                // Bei jeder Eingabe den Index zurücksetzen
+                                setSelectedModelIndex(-1);
                                 // Keine automatische Speicherung mehr während der Eingabe
                               }}
                               onFocus={() => {
@@ -823,7 +920,45 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                               }}
                               onBlur={() => {
                                 // Verzögert schließen, um Klick auf Dropdown-Items zu ermöglichen
-                                setTimeout(() => setIsModelDropdownOpen(false), 200);
+                                setTimeout(() => {
+                                  setIsModelDropdownOpen(false);
+                                  setSelectedModelIndex(-1);
+                                }, 200);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!isModelDropdownOpen) return;
+                                
+                                const filteredModels = savedModels
+                                  .filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Pfeiltaste nach unten
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedModelIndex(prev => 
+                                    prev < filteredModels.length - 1 ? prev + 1 : 0
+                                  );
+                                } 
+                                // Pfeiltaste nach oben
+                                else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedModelIndex(prev => 
+                                    prev > 0 ? prev - 1 : filteredModels.length - 1
+                                  );
+                                } 
+                                // Enter-Taste
+                                else if (e.key === 'Enter' && selectedModelIndex >= 0 && filteredModels.length > 0) {
+                                  e.preventDefault();
+                                  const selectedModel = filteredModels[selectedModelIndex];
+                                  field.onChange(selectedModel);
+                                  setIsModelDropdownOpen(false);
+                                  setSelectedModelIndex(-1);
+                                  
+                                  // Fokus zum nächsten Feld setzen
+                                  const serialNumberInput = document.querySelector('input[name="serialNumber"]');
+                                  if (serialNumberInput) {
+                                    (serialNumberInput as HTMLInputElement).focus();
+                                  }
+                                }
                               }}
                             />
                             
@@ -848,13 +983,16 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 
                                 {savedModels
                                   .filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase()))
-                                  .map(model => (
+                                  .map((model, index) => (
                                     <div 
                                       key={model} 
-                                      className="px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center"
+                                      className={`px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center ${selectedModelIndex === index ? 'bg-muted' : ''}`}
                                       onMouseDown={(e) => {
                                         // Verhindert onBlur vor dem Klick
                                         e.preventDefault();
+                                      }}
+                                      onMouseEnter={() => {
+                                        setSelectedModelIndex(index);
                                       }}
                                     >
                                       <div
@@ -862,6 +1000,12 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                         onClick={() => {
                                           field.onChange(model);
                                           setIsModelDropdownOpen(false);
+                                          
+                                          // Fokus zum nächsten Feld setzen
+                                          const serialNumberInput = document.querySelector('input[name="serialNumber"]');
+                                          if (serialNumberInput) {
+                                            (serialNumberInput as HTMLInputElement).focus();
+                                          }
                                         }}
                                       >
                                         {model}
