@@ -91,7 +91,7 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
   return (
     <div>
       <div className="flex justify-between items-center p-6">
-        <h2 className="text-xl font-semibold">Kundenübersicht</h2>
+        <h2 className="text-xl font-semibold text-primary">Kundenübersicht</h2>
         <Button
           onClick={onNewOrder}
           variant="default"
