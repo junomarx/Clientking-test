@@ -13,7 +13,7 @@ import { eq, desc, and, or, sql, gte, lt, count, isNotNull, like } from "drizzle
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { emailService } from "./email-service";
+import { brevoEmailService as emailService } from "./brevo-email-service";
 import { smsService } from "./sms-service";
 
 const PostgresSessionStore = connectPg(session);
