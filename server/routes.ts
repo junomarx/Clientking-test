@@ -1039,6 +1039,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API-Endpunkt zum Senden von Bewertungs-E-Mails
+  app.post("/api/repairs/:id/send-review-request", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Kunde und Business-Daten laden
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      if (!customer.email) {
+        return res.status(400).json({ message: "Kunde hat keine E-Mail-Adresse" });
+      }
+      
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Variablen für die Kommunikation zusammenstellen
+      const variables: Record<string, string> = {
+        "kundenname": `${customer.firstName} ${customer.lastName}`,
+        "geraet": repair.model,
+        "marke": repair.brand,
+        "auftragsnummer": repair.orderCode || `#${repair.id}`,
+        "fehler": repair.issue,
+        "geschaeftsname": businessSettings?.businessName || "Handyshop",
+        // Wichtig: userId für die Datenisolierung hinzufügen
+        "userId": userId.toString()
+      };
+      
+      // Suche nach der Bewertungs-E-Mail-Vorlage
+      const templates = await storage.getAllEmailTemplates();
+      const reviewTemplate = templates.find(t => 
+        t.name.toLowerCase().includes("bewertung") || 
+        t.name.toLowerCase().includes("feedback")
+      );
+      
+      if (!reviewTemplate) {
+        return res.status(404).json({ message: "Keine Bewertungs-E-Mail-Vorlage gefunden" });
+      }
+      
+      // E-Mail senden
+      const emailSent = await emailService.sendEmailWithTemplate(
+        reviewTemplate.id, 
+        customer.email, 
+        variables
+      );
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      }
+      
+      res.json({ success: true, message: "Bewertungs-E-Mail wurde gesendet" });
+    } catch (error) {
+      console.error("Error sending review request email:", error);
+      res.status(500).json({ message: "Failed to send review request email" });
+    }
+  });
+
   app.post("/api/send-sms", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { templateId, phoneNumber, variables } = req.body;
