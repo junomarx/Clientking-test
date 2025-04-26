@@ -116,8 +116,10 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       toast({
         title: "Kunde aktualisiert",
         description: "Die Kundendaten wurden erfolgreich aktualisiert.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       // Invalidate customer queries to refresh data
+      onClose(); // Dialog schließen
       queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
     },
@@ -126,6 +128,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         title: "Fehler",
         description: `Kunde konnte nicht aktualisiert werden: ${error.message}`,
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
   });
@@ -140,6 +143,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       toast({
         title: "Kunde gelöscht",
         description: "Der Kunde wurde erfolgreich gelöscht.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       onClose();
@@ -149,6 +153,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         title: "Fehler",
         description: `Kunde konnte nicht gelöscht werden: ${error.message}`,
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
   });
@@ -163,6 +168,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       toast({
         title: "Reparatur gelöscht",
         description: "Die Reparatur wurde erfolgreich gelöscht.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
@@ -174,6 +180,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         title: "Fehler",
         description: `Reparatur konnte nicht gelöscht werden: ${error.message}`,
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
   });
