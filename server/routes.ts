@@ -173,10 +173,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Kunde mit Benutzerkontext aktualisieren
-      const customer = await storage.updateCustomer(id, customerData, isAdmin ? undefined : userId);
+      const customer = await storage.updateCustomer(id, customerData, userId);
       
       if (!customer) {
         return res.status(404).json({ message: "Customer not found" });
@@ -198,10 +197,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Kunde mit Benutzerkontext löschen
-      const deleted = await storage.deleteCustomer(id, isAdmin ? undefined : userId);
+      const deleted = await storage.deleteCustomer(id, userId);
       
       if (!deleted) {
         return res.status(404).json({ message: "Customer not found" });
@@ -219,10 +217,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparaturen mit Benutzerfilterung abrufen
-      const repairs = await storage.getAllRepairs(isAdmin ? undefined : userId);
+      const repairs = await storage.getAllRepairs(userId);
       res.json(repairs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch repairs" });
@@ -235,10 +232,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparatur mit Benutzerfilterung abrufen
-      const repair = await storage.getRepair(id, isAdmin ? undefined : userId);
+      const repair = await storage.getRepair(id, userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
@@ -256,10 +252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparaturen für den Kunden mit Benutzerfilterung abrufen
-      const repairs = await storage.getRepairsByCustomerId(customerId, isAdmin ? undefined : userId);
+      const repairs = await storage.getRepairsByCustomerId(customerId, userId);
       res.json(repairs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch customer repairs" });
@@ -344,10 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparatur mit Benutzerkontext aktualisieren
-      const repair = await storage.updateRepair(id, repairData, isAdmin ? undefined : userId);
+      const repair = await storage.updateRepair(id, repairData, userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
@@ -374,10 +368,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparaturstatus mit Benutzerkontext aktualisieren
-      const repair = await storage.updateRepairStatus(id, status, isAdmin ? undefined : userId);
+      const repair = await storage.updateRepairStatus(id, status, userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
@@ -438,10 +431,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparatur mit Benutzerkontext löschen
-      const deleted = await storage.deleteRepair(id, isAdmin ? undefined : userId);
+      const deleted = await storage.deleteRepair(id, userId);
       
       if (!deleted) {
         return res.status(404).json({ message: "Repair not found" });
@@ -459,10 +451,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Statistiken mit Benutzerkontext abrufen
-      const stats = await storage.getStats(isAdmin ? undefined : userId);
+      const stats = await storage.getStats(userId);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch statistics" });
@@ -572,10 +563,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Reparatur mit Benutzerkontext abrufen
-      const repair = await storage.getRepair(repairId, isAdmin ? undefined : userId);
+      const repair = await storage.getRepair(repairId, userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
