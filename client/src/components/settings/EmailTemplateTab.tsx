@@ -218,9 +218,9 @@ export function EmailTemplateTab() {
     // Konvertiere den variables-String in ein Array für das Formular
     const templateWithArrayVars = {
       ...template,
-      variables: typeof template.variables === 'string' 
-        ? template.variables.split(',').map((v: string) => v.trim()) 
-        : (template.variables || [])
+      variables: Array.isArray(template.variables) 
+        ? template.variables 
+        : []
     } as EmailTemplate & { variables: string[] };
     
     setEditingTemplate(templateWithArrayVars);
@@ -234,17 +234,11 @@ export function EmailTemplateTab() {
       
       // Initialisiere die Variablen-State mit leeren Werten für alle Variablen dieser Vorlage
       const initialVars: Record<string, string> = {};
-      if (template.variables) {
-        const varsArray = typeof template.variables === 'string' 
-          ? template.variables.split(',') 
-          : template.variables;
-          
-        if (Array.isArray(varsArray)) {
-          varsArray.forEach((v: string) => {
-            const varName = v.trim();
-            if (varName) initialVars[varName] = '';
-          });
-        }
+      if (template.variables && Array.isArray(template.variables)) {
+        template.variables.forEach((v: string) => {
+          const varName = v.trim();
+          if (varName) initialVars[varName] = '';
+        });
       }
       
       setVariables(initialVars);

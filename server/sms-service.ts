@@ -1,4 +1,4 @@
-import * as SibApiV3Sdk from '@getbrevo/brevo';
+import { TransactionalSMSApi, SendTransacSms } from '@getbrevo/brevo';
 import { SmsTemplate } from '@shared/schema';
 
 /**
@@ -6,18 +6,21 @@ import { SmsTemplate } from '@shared/schema';
  * Verwendet Brevo (ehemals Sendinblue) als SMS-Provider
  */
 export class SmsService {
-  private apiInstance: SibApiV3Sdk.TransactionalSMSApi | null = null;
+  private apiInstance: TransactionalSMSApi | null = null;
   private senderName: string = 'Handyshop';
 
   constructor() {
     const apiKey = process.env.BREVO_API_KEY;
     
     if (apiKey) {
-      const apiConfig = new SibApiV3Sdk.Configuration();
-      apiConfig.apiKey = {
-        'api-key': apiKey
-      };
-      this.apiInstance = new SibApiV3Sdk.TransactionalSMSApi(apiConfig);
+      try {
+        this.apiInstance = new TransactionalSMSApi();
+        // Bei Brevo wird der API-Key als Header-Parameter übergeben
+        // Das wird bei jedem API-Aufruf direkt gemacht
+      } catch (error) {
+        console.error('Fehler beim Initialisieren der Brevo API:', error);
+        this.apiInstance = null;
+      }
     } else {
       console.warn('Brevo-API-Schlüssel fehlt - SMS-Versand wird simuliert');
     }
@@ -60,12 +63,18 @@ export class SmsService {
       }
 
       // Sende die SMS über Brevo
-      const smsRequest = new SibApiV3Sdk.SendTransacSms();
+      const smsRequest = new SendTransacSms();
       smsRequest.sender = this.senderName;
       smsRequest.recipient = to;
       smsRequest.content = body;
       
-      const response = await this.apiInstance.sendTransacSms(smsRequest);
+      // API-Key aus der Umgebungsvariable holen
+      const apiKey = process.env.BREVO_API_KEY || '';
+      
+      // Die Brevo-API erfordert den API-Key im Header
+      const response = await this.apiInstance.sendTransacSms(smsRequest, { 
+        headers: { 'api-key': apiKey }
+      });
       console.log('SMS erfolgreich gesendet, Antwort:', response);
       return true;
     } catch (error) {

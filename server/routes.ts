@@ -632,14 +632,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repairUserId = repair.userId;
       
       // Kundeninformationen laden mit dem Benutzerkontext der Reparatur
-      const customer = await storage.getCustomer(feedback.customerId, repairUserId);
+      const customer = await storage.getCustomer(feedback.customerId, repairUserId || undefined);
       
       if (!customer) {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
       // Geschäftsinformationen für den Besitzer der Reparatur laden
-      const businessSettings = await storage.getBusinessSettings(repairUserId);
+      const businessSettings = await storage.getBusinessSettings(repairUserId || undefined);
       
       // Nur die notwendigen Informationen zurückgeben
       res.json({
