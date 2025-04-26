@@ -6,7 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
-import { saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels } from '@/lib/localStorage';
+import { 
+  saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
+  saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes
+} from '@/lib/localStorage';
 
 import {
   Dialog,
@@ -85,6 +88,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const [isDeviceTypeDropdownOpen, setIsDeviceTypeDropdownOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
   // Form definition

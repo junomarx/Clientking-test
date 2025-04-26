@@ -142,9 +142,10 @@ export const getStatistics = () => {
   };
 };
 
-// Konstante für den localStorage Key der gespeicherten Modelle und Marken
+// Konstante für den localStorage Key der gespeicherten Werte
 const SAVED_MODELS_KEY = 'repair-shop-models';
 const SAVED_BRANDS_KEY = 'repair-shop-brands';
+const SAVED_DEVICE_TYPES_KEY = 'repair-shop-device-types';
 
 // Typ für gespeicherte Modelle
 interface StoredModels {
@@ -323,5 +324,74 @@ export const clearAllBrands = (): void => {
     localStorage.removeItem(SAVED_BRANDS_KEY);
   } catch (err) {
     console.error('Fehler beim Zurücksetzen aller Marken:', err);
+  }
+};
+
+// Funktionen für die Gerätetyp-Verwaltung
+export const saveDeviceType = (deviceType: string): void => {
+  if (!deviceType) return;
+  
+  const deviceTypeLower = deviceType.toLowerCase();
+  
+  let savedDeviceTypes: string[] = [];
+  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  
+  if (storedData) {
+    try {
+      savedDeviceTypes = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Gerätetypen:', err);
+    }
+  }
+  
+  // Füge Gerätetyp hinzu, wenn er noch nicht existiert
+  if (!savedDeviceTypes.includes(deviceTypeLower)) {
+    savedDeviceTypes.push(deviceTypeLower);
+    localStorage.setItem(SAVED_DEVICE_TYPES_KEY, JSON.stringify(savedDeviceTypes));
+  }
+};
+
+// Funktion zum Abrufen von gespeicherten Gerätetypen
+export const getSavedDeviceTypes = (): string[] => {
+  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  if (!storedData) return [];
+  
+  try {
+    return JSON.parse(storedData);
+  } catch (err) {
+    console.error('Fehler beim Abrufen der gespeicherten Gerätetypen:', err);
+    return [];
+  }
+};
+
+// Funktion zum Löschen eines einzelnen Gerätetyps
+export const deleteDeviceType = (deviceType: string): void => {
+  if (!deviceType) return;
+  
+  const deviceTypeLower = deviceType.toLowerCase();
+  
+  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  if (!storedData) return;
+  
+  try {
+    const savedDeviceTypes: string[] = JSON.parse(storedData);
+    
+    // Filtere den zu löschenden Gerätetyp heraus
+    const updatedDeviceTypes = savedDeviceTypes.filter(dt => dt !== deviceTypeLower);
+    
+    // Speichere die aktualisierte Liste
+    localStorage.setItem(SAVED_DEVICE_TYPES_KEY, JSON.stringify(updatedDeviceTypes));
+  } catch (err) {
+    console.error('Fehler beim Löschen des Gerätetyps:', err);
+  }
+};
+
+// Funktion zum Zurücksetzen aller gespeicherten Gerätetypen
+export const clearAllDeviceTypes = (): void => {
+  try {
+    localStorage.removeItem(SAVED_DEVICE_TYPES_KEY);
+    console.log('Alle gespeicherten Gerätetypen wurden gelöscht.');
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen aller Gerätetypen:', err);
   }
 };
