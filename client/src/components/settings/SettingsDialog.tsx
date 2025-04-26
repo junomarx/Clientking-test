@@ -275,13 +275,16 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       toast({
         title: "Erfolg!",
         description: "Einstellungen wurden aktualisiert.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      onClose(); // Dialog schließen
     },
     onError: (error) => {
       toast({
         title: "Fehler!",
         description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
   });
@@ -509,7 +512,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                         <FormItem className="sm:col-span-2">
                           <FormLabel>Land *</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Österreich" defaultValue="Österreich" />
+                            <Input {...field} placeholder="Österreich" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

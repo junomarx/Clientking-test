@@ -272,14 +272,16 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       toast({
         title: "Erfolg!",
         description: "Unternehmenseinstellungen wurden aktualisiert.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
-      onClose();
+      onClose(); // Dialog schließen
     },
     onError: (error) => {
       toast({
         title: "Fehler!",
         description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
   });
