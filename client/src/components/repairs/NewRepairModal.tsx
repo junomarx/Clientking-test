@@ -85,13 +85,16 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     data: brands = [], 
     isLoading: isLoadingBrands 
   } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: selectedDeviceTypeId } : undefined],
+    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: selectedDeviceTypeId } : 'empty'],
     queryFn: async () => {
       if (!selectedDeviceTypeId) return [];
       
       try {
+        console.log("Lade Marken für Gerätetyp:", selectedDeviceTypeId);
         const response = await apiRequest('GET', `/api/brands?deviceTypeId=${selectedDeviceTypeId}`);
-        return response.json();
+        const data = await response.json();
+        console.log("Geladene Marken:", data.length);
+        return data;
       } catch (err) {
         console.error('Fehler beim Laden der Marken:', err);
         return [];
