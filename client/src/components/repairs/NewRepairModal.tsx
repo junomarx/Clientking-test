@@ -6,7 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Customer, deviceTypes, repairStatuses, insertRepairSchema } from '@shared/schema';
+import { 
+  Customer, 
+  repairStatuses, 
+  insertRepairSchema, 
+  UserDeviceType, 
+  UserBrand 
+} from '@shared/schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -66,7 +72,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   });
   
   // Lade benutzerspezifische Gerätearten
-  const { data: deviceTypes = [] } = useQuery({
+  const { data: deviceTypes = [] } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
     enabled: open,
   });
@@ -75,13 +81,15 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
   
   // Lade Marken basierend auf ausgewählter Geräteart
-  const { data: brands = [] } = useQuery({
+  const { data: brands = [] } = useQuery<UserBrand[]>({
     queryKey: ['/api/brands', selectedDeviceTypeId],
     queryFn: async () => {
       if (!selectedDeviceTypeId) return [];
       const response = await apiRequest('GET', `/api/brands`);
       const allBrands = await response.json();
-      return allBrands.filter(brand => brand.deviceTypeId.toString() === selectedDeviceTypeId);
+      return allBrands.filter((brand: UserBrand) => 
+        brand.deviceTypeId.toString() === selectedDeviceTypeId
+      );
     },
     enabled: !!selectedDeviceTypeId && open,
   });
@@ -258,7 +266,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         </FormControl>
                         <SelectContent>
                           {brands.length > 0 ? (
-                            brands.map((brand) => (
+                            brands.map((brand: UserBrand) => (
                               <SelectItem key={brand.id} value={brand.name}>
                                 {brand.name}
                               </SelectItem>
