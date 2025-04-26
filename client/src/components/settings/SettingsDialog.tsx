@@ -128,6 +128,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
   const [isBrandDialogOpen, setIsBrandDialogOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<{id?: number, name: string} | null>(null);
+  const [deviceTypeName, setDeviceTypeName] = useState("");
   const [selectedBrand, setSelectedBrand] = useState<{id?: number, name: string, deviceTypeId: number} | null>(null);
   const [brandFormData, setBrandFormData] = useState({
     name: "",
@@ -137,11 +138,13 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   // Funktionen für Gerätearten
   const handleAddDeviceType = () => {
     setSelectedDeviceType({ name: "" });
+    setDeviceTypeName("");
     setIsDeviceTypeDialogOpen(true);
   };
   
   const handleEditDeviceType = (deviceType: {id: number, name: string}) => {
     setSelectedDeviceType(deviceType);
+    setDeviceTypeName(deviceType.name);
     setIsDeviceTypeDialogOpen(true);
   };
   
@@ -1018,7 +1021,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     <Input 
                       id="deviceTypeName" 
                       placeholder="z.B. Smartphone, Tablet, etc." 
-                      defaultValue={selectedDeviceType?.name || ""}
+                      value={deviceTypeName}
+                      onChange={(e) => setDeviceTypeName(e.target.value)}
                       ref={(input) => input?.focus()}
                     />
                   </div>
@@ -1032,8 +1036,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   </Button>
                   <Button 
                     onClick={() => {
-                      const input = document.getElementById("deviceTypeName") as HTMLInputElement;
-                      const name = input.value.trim();
+                      const name = deviceTypeName.trim();
                       if (!name) return;
                       handleSaveDeviceType(name);
                     }}
@@ -1058,15 +1061,16 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     <Input 
                       id="brandName" 
                       placeholder="z.B. Apple, Samsung, etc." 
-                      defaultValue={selectedBrand?.name || ""}
+                      value={brandFormData.name}
+                      onChange={(e) => setBrandFormData({...brandFormData, name: e.target.value})}
                       ref={(input) => input?.focus()}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="deviceTypeSelect">Gerätetyp</Label>
                     <Select 
-                      defaultValue={selectedBrand?.deviceTypeId?.toString()} 
-                      onValueChange={() => {}}
+                      value={brandFormData.deviceTypeId}
+                      onValueChange={(value) => setBrandFormData({...brandFormData, deviceTypeId: value})}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Gerätetyp auswählen" />
@@ -1090,12 +1094,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   </Button>
                   <Button 
                     onClick={() => {
-                      const nameInput = document.getElementById("brandName") as HTMLInputElement;
-                      const name = nameInput.value.trim();
+                      const name = brandFormData.name.trim();
                       if (!name) return;
                       
-                      const select = document.getElementById("deviceTypeSelect") as HTMLSelectElement;
-                      const deviceTypeId = parseInt(select.value);
+                      const deviceTypeId = parseInt(brandFormData.deviceTypeId);
                       if (isNaN(deviceTypeId)) return;
                       
                       handleSaveBrand({name, deviceTypeId});
