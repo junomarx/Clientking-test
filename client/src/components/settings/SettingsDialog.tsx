@@ -36,6 +36,14 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,7 +59,11 @@ import {
   Phone, 
   MapPin,
   Settings,
-  MessageSquare
+  MessageSquare,
+  Smartphone,
+  Plus,
+  PenLine,
+  Trash
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
@@ -97,6 +109,19 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("business");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
+  
+  // State für Gerätearten und Marken
+  const [deviceTypes, setDeviceTypes] = useState([
+    { id: 1, name: "Smartphone" },
+    { id: 2, name: "Tablet" },
+    { id: 3, name: "Laptop" }
+  ]);
+  
+  const [brands, setBrands] = useState([
+    { id: 1, name: "Apple", deviceTypeId: 1, deviceTypeName: "Smartphone" },
+    { id: 2, name: "Samsung", deviceTypeId: 1, deviceTypeName: "Smartphone" },
+    { id: 3, name: "Huawei", deviceTypeId: 2, deviceTypeName: "Tablet" }
+  ]);
 
   // Max. Logo-Größe in Bytes (1MB)
   const MAX_LOGO_SIZE = 1024 * 1024;
@@ -304,7 +329,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="business" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" /> Unternehmen
             </TabsTrigger>
@@ -313,6 +338,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center gap-2">
               <Settings className="h-4 w-4" /> Darstellung
+            </TabsTrigger>
+            <TabsTrigger value="devices" className="flex items-center gap-2">
+              <Smartphone className="h-4 w-4" /> Geräte & Marken
             </TabsTrigger>
           </TabsList>
 
@@ -713,6 +741,137 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 <SmsTemplateTab />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+          
+          {/* Tab: Geräte & Marken */}
+          <TabsContent value="devices" className="max-h-[65vh] overflow-y-auto">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Gerätearten</h3>
+                <div className="border rounded-md">
+                  <div className="p-4 flex justify-between items-center border-b">
+                    <div className="font-medium">Gerätearten verwalten</div>
+                    <Button size="sm" className="gap-1">
+                      <Plus className="h-4 w-4" /> Neue Geräteart
+                    </Button>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Smartphone</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Tablet</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Laptop</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Marken</h3>
+                <div className="border rounded-md">
+                  <div className="p-4 flex justify-between items-center border-b">
+                    <div className="font-medium">Marken verwalten</div>
+                    <Button size="sm" className="gap-1">
+                      <Plus className="h-4 w-4" /> Neue Marke
+                    </Button>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Gerätetyp</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Apple</TableCell>
+                        <TableCell>Smartphone</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Samsung</TableCell>
+                        <TableCell>Smartphone</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Huawei</TableCell>
+                        <TableCell>Tablet</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon">
+                              <PenLine className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </div>
           </TabsContent>
           
           {/* Tab: Darstellung */}
