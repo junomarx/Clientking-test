@@ -668,10 +668,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
-      const repair = await storage.getRepair(repairId, isAdmin ? undefined : userId);
+      const repair = await storage.getRepair(repairId, userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
