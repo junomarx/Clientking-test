@@ -42,12 +42,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Device brands mapping
-const deviceBrands: Record<string, string[]> = {
-  smartphone: ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'Google', 'OnePlus', 'Sony'],
-  tablet: ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Microsoft', 'Amazon'],
-  laptop: ['Apple', 'Dell', 'HP', 'Lenovo', 'Asus', 'Acer', 'Microsoft']
-};
+// Standard Vorschläge für Gerätetypen - werden nur verwendet, wenn keine gespeicherten Werte vorhanden sind
+const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop'];
 
 // Form schema
 const orderFormSchema = z.object({
@@ -115,18 +111,29 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const watchBrand = form.watch('brand');
   const watchModel = form.watch('model');
   
-  // Zustand für die gespeicherten Modelle
+  // Zustand für die gespeicherten Modelle und Gerätetypen
   const [savedModels, setSavedModels] = useState<string[]>([]);
+  const [savedDeviceTypes, setSavedDeviceTypes] = useState<string[]>([]);
   
-  // Update brands based on selected device type
+  // Update Gerätetyp-Liste beim ersten Rendern
+  useEffect(() => {
+    const deviceTypes = getSavedDeviceTypes();
+    // Wenn keine gespeicherten Gerätetypen vorhanden sind, verwenden wir die Standardliste
+    setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
+  }, []);
+  
+  // Update Marken basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
-      setAvailableBrands(deviceBrands[watchDeviceType] || []);
+      const brands = getBrandsForDeviceType(watchDeviceType);
+      setAvailableBrands(brands);
       form.setValue('brand', '');
     } else {
       setAvailableBrands([]);
     }
   }, [watchDeviceType, form]);
+  
+
   
   // Lade gespeicherte Modelle, wenn sich Geräteart oder Marke ändert
   useEffect(() => {
@@ -306,9 +313,10 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: formData.notes
       };
       
-      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveDeviceType(repairData.deviceType);
       }
       
       console.log("Sending repair data:", repairData);
@@ -366,9 +374,10 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: data.notes
       };
       
-      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveDeviceType(repairData.deviceType);
       }
       
       console.log("Sending repair data (submit):", repairData);
@@ -440,9 +449,10 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
         notes: formData.notes
       };
       
-      // Hier speichern wir das Modell, wenn es einen Wert hat - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell und den Gerätetyp, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveDeviceType(repairData.deviceType);
       }
       
       console.log("Sending repair data (new customer):", repairData);
@@ -662,21 +672,54 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Geräteart</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="-- auswählen --" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="smartphone">Smartphone</SelectItem>
-                            <SelectItem value="tablet">Tablet</SelectItem>
-                            <SelectItem value="laptop">Laptop</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              {...field} 
+                              placeholder="z.B. Smartphone, Tablet, Watch, Laptop" 
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Bei Eingabe das Dropdown öffnen
+                                setIsDeviceTypeDropdownOpen(e.target.value.length > 0);
+                              }}
+                              onBlur={() => {
+                                // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
+                                setTimeout(() => setIsDeviceTypeDropdownOpen(false), 200);
+                              }}
+                            />
+                            
+                            {/* Dropdown für die gespeicherten Gerätetypen */}
+                            {savedDeviceTypes.length > 0 && isDeviceTypeDropdownOpen && (
+                              <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                <div className="sticky top-0 bg-background border-b p-2">
+                                  <span className="text-sm font-medium">Gespeicherte Gerätetypen</span>
+                                </div>
+                                
+                                {savedDeviceTypes
+                                  .filter(type => type.toLowerCase().includes(field.value.toLowerCase()))
+                                  .map((deviceType, index) => (
+                                  <div 
+                                    key={index} 
+                                    className="px-3 py-2 hover:bg-muted cursor-pointer"
+                                    onMouseDown={(e) => {
+                                      // Verhindert onBlur vor dem Klick
+                                      e.preventDefault();
+                                    }}
+                                    onClick={() => {
+                                      field.onChange(deviceType);
+                                      setIsDeviceTypeDropdownOpen(false);
+                                    }}
+                                  >
+                                    {deviceType}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Typisch: Smartphone, Tablet, Watch, Laptop
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
