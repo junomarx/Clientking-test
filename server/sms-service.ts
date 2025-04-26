@@ -1,24 +1,25 @@
-import twilio from 'twilio';
+import * as SibApiV3Sdk from '@getbrevo/brevo';
 import { SmsTemplate } from '@shared/schema';
 
 /**
  * SMS-Service für das Senden von SMS-Nachrichten und die Verwaltung von SMS-Vorlagen
+ * Verwendet Brevo (ehemals Sendinblue) als SMS-Provider
  */
 export class SmsService {
-  private client: any | null = null;
-  private fromPhoneNumber: string | null = null;
+  private apiInstance: SibApiV3Sdk.TransactionalSMSApi | null = null;
+  private senderName: string = 'Handyshop';
 
   constructor() {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-    const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
+    const apiKey = process.env.BREVO_API_KEY;
     
-    this.fromPhoneNumber = phoneNumber || null;
-
-    if (accountSid && authToken) {
-      this.client = twilio(accountSid, authToken);
+    if (apiKey) {
+      const apiConfig = new SibApiV3Sdk.Configuration();
+      apiConfig.apiKey = {
+        'api-key': apiKey
+      };
+      this.apiInstance = new SibApiV3Sdk.TransactionalSMSApi(apiConfig);
     } else {
-      console.warn('Twilio-Zugangsdaten fehlen - SMS-Versand wird simuliert');
+      console.warn('Brevo-API-Schlüssel fehlt - SMS-Versand wird simuliert');
     }
   }
 
@@ -51,21 +52,21 @@ export class SmsService {
         }
       }
 
-      // Wenn Twilio nicht konfiguriert ist, simuliere den SMS-Versand
-      if (!this.client || !this.fromPhoneNumber) {
+      // Wenn Brevo nicht konfiguriert ist, simuliere den SMS-Versand
+      if (!this.apiInstance) {
         console.log('SMS würde gesendet werden an:', to);
         console.log('SMS-Inhalt:', body);
         return true;
       }
 
-      // Sende die SMS über Twilio
-      const message = await this.client.messages.create({
-        body,
-        from: this.fromPhoneNumber,
-        to
-      });
-
-      console.log('SMS erfolgreich gesendet, SID:', message.sid);
+      // Sende die SMS über Brevo
+      const smsRequest = new SibApiV3Sdk.SendTransacSms();
+      smsRequest.sender = this.senderName;
+      smsRequest.recipient = to;
+      smsRequest.content = body;
+      
+      const response = await this.apiInstance.sendTransacSms(smsRequest);
+      console.log('SMS erfolgreich gesendet, Antwort:', response);
       return true;
     } catch (error) {
       console.error('Fehler beim Senden der SMS:', error);
