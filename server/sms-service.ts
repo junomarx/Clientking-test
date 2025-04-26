@@ -55,28 +55,42 @@ export class SmsService {
         }
       }
 
-      // Wenn Brevo nicht konfiguriert ist, simuliere den SMS-Versand
-      if (!this.apiInstance) {
-        console.log('SMS würde gesendet werden an:', to);
-        console.log('SMS-Inhalt:', body);
+      // Wenn Brevo nicht konfiguriert ist oder wir im Simulationsmodus sind, simuliere den SMS-Versand
+      if (!this.apiInstance || process.env.NODE_ENV === 'development') {
+        console.log('[SIMULIERT] SMS würde gesendet werden an:', to);
+        console.log('[SIMULIERT] SMS-Inhalt:', body);
         return true;
       }
 
-      // Sende die SMS über Brevo
-      const smsRequest = new SendTransacSms();
-      smsRequest.sender = this.senderName;
-      smsRequest.recipient = to;
-      smsRequest.content = body;
-      
-      // API-Key aus der Umgebungsvariable holen
-      const apiKey = process.env.BREVO_API_KEY || '';
-      
-      // Die Brevo-API erfordert den API-Key im Header
-      const response = await this.apiInstance.sendTransacSms(smsRequest, { 
-        headers: { 'api-key': apiKey }
-      });
-      console.log('SMS erfolgreich gesendet, Antwort:', response);
-      return true;
+      try {
+        // Sende die SMS über Brevo
+        const smsRequest = new SendTransacSms();
+        smsRequest.sender = this.senderName;
+        smsRequest.recipient = to;
+        smsRequest.content = body;
+        
+        // API-Key aus der Umgebungsvariable holen
+        const apiKey = process.env.BREVO_API_KEY || '';
+        
+        // Die Brevo-API erfordert den API-Key im Header
+        const response = await this.apiInstance.sendTransacSms(smsRequest, { 
+          headers: { 'api-key': apiKey }
+        });
+        console.log('SMS erfolgreich gesendet, Antwort:', response);
+        return true;
+      } catch (error) {
+        console.error('Fehler beim Senden der SMS über Brevo API:', error);
+        
+        // Bei Fehlern im Produktionsmodus schlagen wir fehl
+        if (process.env.NODE_ENV === 'production') {
+          return false;
+        }
+        
+        // Im Entwicklungsmodus simulieren wir erfolgreiches Senden
+        console.log('[FALLBACK SIMULATION] SMS würde gesendet werden an:', to);
+        console.log('[FALLBACK SIMULATION] SMS-Inhalt:', body);
+        return true;
+      }
     } catch (error) {
       console.error('Fehler beim Senden der SMS:', error);
       return false;
