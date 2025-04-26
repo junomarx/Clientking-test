@@ -80,19 +80,25 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // State für die ausgewählte Geräteart
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
   
-  // Lade alle Marken
-  const { data: allBrands = [], isLoading: isLoadingBrands } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands'],
-    enabled: open,
+  // Lade Marken basierend auf dem ausgewählten Gerätetyp
+  const { 
+    data: brands = [], 
+    isLoading: isLoadingBrands 
+  } = useQuery<UserBrand[]>({
+    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: selectedDeviceTypeId } : undefined],
+    queryFn: async () => {
+      if (!selectedDeviceTypeId) return [];
+      
+      try {
+        const response = await apiRequest('GET', `/api/brands?deviceTypeId=${selectedDeviceTypeId}`);
+        return response.json();
+      } catch (err) {
+        console.error('Fehler beim Laden der Marken:', err);
+        return [];
+      }
+    },
+    enabled: open && !!selectedDeviceTypeId,
   });
-  
-  // Filtere Marken basierend auf der ausgewählten Geräteart
-  const brands = useMemo(() => {
-    if (!selectedDeviceTypeId) return [];
-    return allBrands.filter((brand: UserBrand) => 
-      brand.deviceTypeId.toString() === selectedDeviceTypeId
-    );
-  }, [allBrands, selectedDeviceTypeId]);
   
   // Setup form
   const form = useForm<RepairFormValues>({

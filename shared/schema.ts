@@ -196,6 +196,15 @@ export const userDeviceTypes = pgTable("user_device_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Beziehungen definieren - userDeviceTypes zu userBrands
+export const userDeviceTypesRelations = relations(userDeviceTypes, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userDeviceTypes.userId],
+    references: [users.id],
+  }),
+  brands: many(userBrands),
+}));
+
 export const insertUserDeviceTypeSchema = createInsertSchema(userDeviceTypes).omit({
   id: true,
   createdAt: true,
@@ -214,6 +223,18 @@ export const userBrands = pgTable("user_brands", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
+
+// Beziehungen definieren - userBrands zu userDeviceTypes und users
+export const userBrandsRelations = relations(userBrands, ({ one }) => ({
+  deviceType: one(userDeviceTypes, {
+    fields: [userBrands.deviceTypeId],
+    references: [userDeviceTypes.id],
+  }),
+  user: one(users, {
+    fields: [userBrands.userId],
+    references: [users.id],
+  }),
+}));
 
 export const insertUserBrandSchema = createInsertSchema(userBrands).omit({
   id: true,
