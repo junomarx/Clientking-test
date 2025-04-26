@@ -157,3 +157,23 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
 
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+
+// SMS-Vorlagen für Kundenkommunikation
+export const smsTemplates = pgTable("sms_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  body: text("body").notNull(),
+  variables: text("variables").array(),  // Liste von Variablen, die in der Vorlage verwendet werden können
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  userId: integer("user_id").references(() => users.id) // Jede SMS-Vorlage gehört zu einem Benutzer
+});
+
+export const insertSmsTemplateSchema = createInsertSchema(smsTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type SmsTemplate = typeof smsTemplates.$inferSelect;
+export type InsertSmsTemplate = z.infer<typeof insertSmsTemplateSchema>;

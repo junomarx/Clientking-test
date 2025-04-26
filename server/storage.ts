@@ -4,7 +4,8 @@ import {
   repairs, type Repair, type InsertRepair,
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
-  type EmailTemplate, type InsertEmailTemplate
+  emailTemplates, type EmailTemplate, type InsertEmailTemplate,
+  smsTemplates, type SmsTemplate, type InsertSmsTemplate
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -84,6 +85,16 @@ export interface IStorage {
   
   // Email sending method (with template)
   sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean>;
+  
+  // SMS template methods
+  getAllSmsTemplates(userId?: number): Promise<SmsTemplate[]>;
+  getSmsTemplate(id: number, userId?: number): Promise<SmsTemplate | undefined>;
+  createSmsTemplate(template: InsertSmsTemplate, userId?: number): Promise<SmsTemplate>;
+  updateSmsTemplate(id: number, template: Partial<InsertSmsTemplate>, userId?: number): Promise<SmsTemplate | undefined>;
+  deleteSmsTemplate(id: number, userId?: number): Promise<boolean>;
+  
+  // SMS sending method
+  sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
