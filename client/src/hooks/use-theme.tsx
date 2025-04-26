@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessSettings } from "@shared/schema";
+import { useAuth } from "./use-auth";
 
 type ColorTheme = "blue" | "green" | "purple" | "red" | "orange";
 
@@ -17,9 +18,12 @@ const ThemeContext = createContext<ThemeContextType>(initialTheme);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<ThemeContextType>(initialTheme);
+  const { user } = useAuth();
+  const userId = user?.id;
 
   const { data: settings } = useQuery<BusinessSettings | null>({
-    queryKey: ["/api/business-settings"],
+    queryKey: ["/api/business-settings", userId],
+    enabled: !!userId, // Deaktiviere die Abfrage, wenn kein Benutzer angemeldet ist
   });
 
   useEffect(() => {
