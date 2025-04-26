@@ -206,20 +206,13 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          // Überprüfen der Auflösung
-          if (img.width > 400 || img.height > 400) {
-            resolve({
-              isValid: false,
-              base64: null,
-              error: 'Die Bildauflösung darf maximal 400x400 Pixel betragen.'
-            });
-          } else {
-            resolve({
-              isValid: true,
-              base64: e.target?.result as string,
-              error: null
-            });
-          }
+          // Keine Auflösungsbegrenzung mehr, stattdessen skalieren wir das Bild bei Bedarf
+          // Das Originalformat wird ohne Modifikation im Base64-Format gespeichert
+          resolve({
+            isValid: true,
+            base64: e.target?.result as string,
+            error: null
+          });
         };
         img.onerror = () => {
           resolve({
@@ -328,7 +321,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 <div className="mb-6">
                   <FormLabel>Firmenlogo</FormLabel>
                   <FormDescription>
-                    Laden Sie Ihr Firmenlogo hoch (max. 100KB, max. 400x400 Pixel, PNG oder JPG).
+                    Laden Sie Ihr Firmenlogo hoch (max. 1MB, PNG, JPG, SVG, GIF oder WEBP). Hochauflösende Bilder werden automatisch skaliert.
                   </FormDescription>
                   
                   <div className="mt-3 flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -361,7 +354,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/png,image/jpeg"
+                        accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
                         onChange={handleLogoUpload}
                         className="hidden"
                         id="logo-upload"
