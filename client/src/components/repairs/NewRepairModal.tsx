@@ -85,7 +85,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     data: brands = [], 
     isLoading: isLoadingBrands 
   } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: selectedDeviceTypeId } : 'empty'],
+    queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: parseInt(selectedDeviceTypeId) } : 'empty'],
     queryFn: async () => {
       if (!selectedDeviceTypeId) return [];
       
@@ -168,13 +168,18 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Speichere Modell in localStorage wenn es neu ist
       const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
       if (formValues.brand && formValues.model && formValues.deviceType) {
-        const { deviceType: deviceTypeId, brand, model } = formValues;
+        const { deviceType: deviceTypeId, brand: brandId, model } = formValues;
+        
         // Finde den Gerätetyp-Namen anhand der ID
         const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
-        if (selectedDeviceType) {
-          // Speichere das Modell mit dem Namen des Gerätetyps statt der ID
-          saveModel(selectedDeviceType.name, brand, model);
-          console.log(`Modell gespeichert: ${selectedDeviceType.name}:${brand} - ${model}`);
+        
+        // Finde den Marken-Namen anhand der ID
+        const selectedBrand = brands.find(b => b.id.toString() === brandId);
+        
+        if (selectedDeviceType && selectedBrand) {
+          // Speichere das Modell mit dem Namen des Gerätetyps und der Marke statt der IDs
+          saveModel(selectedDeviceType.name, selectedBrand.name, model);
+          console.log(`Modell gespeichert: ${selectedDeviceType.name}:${selectedBrand.name} - ${model}`);
         }
       }
       
@@ -198,7 +203,32 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   const isCustomerMissing = !customer && customerId;
   
   function onSubmit(data: RepairFormValues) {
-    createMutation.mutate(data);
+    // Wir müssen die IDs in Namen umwandeln, bevor wir die Daten an den Server senden
+    const deviceTypeId = data.deviceType;
+    const brandId = data.brand;
+    
+    // Finde den Gerätetyp und die Marke anhand ihrer IDs
+    const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
+    const selectedBrand = brands.find(brand => brand.id.toString() === brandId);
+    
+    if (selectedDeviceType && selectedBrand) {
+      // Ersetze die IDs durch die Namen
+      const modifiedData = {
+        ...data,
+        deviceType: selectedDeviceType.name,
+        brand: selectedBrand.name
+      };
+      
+      console.log("Modifizierte Daten für Server:", modifiedData);
+      createMutation.mutate(modifiedData);
+    } else {
+      // Fehlerfall - sollte nicht auftreten
+      toast({
+        title: "Fehler",
+        description: "Gerätetyp oder Marke konnte nicht gefunden werden.",
+        variant: "destructive",
+      });
+    }
   }
   
   if (!open) return null;
@@ -280,7 +310,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         <SelectContent>
                           {brands.length > 0 ? (
                             brands.map((brand: UserBrand) => (
-                              <SelectItem key={brand.id} value={brand.name}>
+                              <SelectItem key={brand.id} value={brand.id.toString()}>
                                 {brand.name}
                               </SelectItem>
                             ))
