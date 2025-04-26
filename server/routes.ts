@@ -6,11 +6,13 @@ import {
   insertRepairSchema,
   insertBusinessSettingsSchema,
   insertFeedbackSchema,
+  insertSmsTemplateSchema,
   repairStatuses,
   deviceTypes,
   customers,
   repairs,
-  feedbacks
+  feedbacks,
+  smsTemplates
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -851,6 +853,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(200).json({ message: "Email sent successfully" });
     } catch (error) {
       console.error("Error sending email:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  // SMS-Vorlagen API-Endpunkte
+  app.get("/api/sms-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const templates = await storage.getAllSmsTemplates(userId);
+      return res.status(200).json(templates);
+    } catch (error) {
+      console.error("Error retrieving SMS templates:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.get("/api/sms-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const template = await storage.getSmsTemplate(id, userId);
+      if (!template) {
+        return res.status(404).json({ error: "SMS template not found" });
+      }
+      
+      return res.status(200).json(template);
+    } catch (error) {
+      console.error("Error retrieving SMS template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/sms-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Einfache Validierung
+      const { name, body, variables } = req.body;
+      if (!name || !body) {
+        return res.status(400).json({ error: "Name and body are required" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Verarbeitung der Variablen: Konvertiere String zu Array, wenn es als String kommt
+      let variablesArray: string[] = [];
+      if (variables) {
+        if (typeof variables === 'string') {
+          // Wenn ein Komma-separierter String übergeben wird
+          variablesArray = variables.split(',').map(v => v.trim()).filter(v => v.length > 0);
+        } else if (Array.isArray(variables)) {
+          // Wenn bereits ein Array übergeben wird
+          variablesArray = variables;
+        }
+      }
+      
+      const newTemplate = await storage.createSmsTemplate({
+        name,
+        body,
+        variables: variablesArray
+      }, userId);
+      
+      return res.status(201).json(newTemplate);
+    } catch (error) {
+      console.error("Error creating SMS template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.patch("/api/sms-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const template = await storage.getSmsTemplate(id, userId);
+      if (!template) {
+        return res.status(404).json({ error: "SMS template not found" });
+      }
+      
+      // Kopie der Anfragedaten erstellen und variables verarbeiten, wenn vorhanden
+      const updateData = { ...req.body };
+      
+      if (updateData.variables !== undefined) {
+        let variablesArray: string[] = [];
+        if (typeof updateData.variables === 'string') {
+          // Wenn ein Komma-separierter String übergeben wird
+          const varString: string = updateData.variables;
+          variablesArray = varString.split(',').map((v: string) => v.trim()).filter((v: string) => v.length > 0);
+        } else if (Array.isArray(updateData.variables)) {
+          // Wenn bereits ein Array übergeben wird
+          variablesArray = updateData.variables as string[];
+        }
+        updateData.variables = variablesArray;
+      }
+      
+      const updatedTemplate = await storage.updateSmsTemplate(id, updateData, userId);
+      return res.status(200).json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating SMS template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.delete("/api/sms-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid template ID" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const template = await storage.getSmsTemplate(id, userId);
+      if (!template) {
+        return res.status(404).json({ error: "SMS template not found" });
+      }
+      
+      const success = await storage.deleteSmsTemplate(id, userId);
+      if (success) {
+        return res.status(200).json({ message: "SMS template deleted successfully" });
+      } else {
+        return res.status(500).json({ error: "Failed to delete SMS template" });
+      }
+    } catch (error) {
+      console.error("Error deleting SMS template:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+  app.post("/api/send-sms", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { templateId, phoneNumber, variables } = req.body;
+      
+      if (!templateId || !phoneNumber) {
+        return res.status(400).json({ error: "Template ID and phone number are required" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const template = await storage.getSmsTemplate(templateId, userId);
+      if (!template) {
+        return res.status(404).json({ error: "SMS template not found" });
+      }
+      
+      const success = await storage.sendSmsWithTemplate(templateId, phoneNumber, variables || {}, userId);
+      if (success) {
+        return res.status(200).json({ message: "SMS sent successfully" });
+      } else {
+        return res.status(500).json({ error: "Failed to send SMS" });
+      }
+    } catch (error) {
+      console.error("Error sending SMS:", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   });

@@ -1,20 +1,22 @@
-import { Twilio } from 'twilio';
+import twilio from 'twilio';
 import { SmsTemplate } from '@shared/schema';
 
 /**
  * SMS-Service für das Senden von SMS-Nachrichten und die Verwaltung von SMS-Vorlagen
  */
 export class SmsService {
-  private client: Twilio | null = null;
+  private client: any | null = null;
   private fromPhoneNumber: string | null = null;
 
   constructor() {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
-    this.fromPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+    const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
+    
+    this.fromPhoneNumber = phoneNumber || null;
 
     if (accountSid && authToken) {
-      this.client = new Twilio(accountSid, authToken);
+      this.client = twilio(accountSid, authToken);
     } else {
       console.warn('Twilio-Zugangsdaten fehlen - SMS-Versand wird simuliert');
     }
@@ -22,7 +24,7 @@ export class SmsService {
 
   /**
    * Sendet eine SMS mit einer bestimmten Vorlage
-   * @param templateId Die ID der SMS-Vorlage
+   * @param template Die SMS-Vorlage
    * @param to Die Empfänger-Telefonnummer
    * @param variables Die Variablen, die in der Vorlage ersetzt werden sollen
    * @returns True, wenn die SMS erfolgreich gesendet wurde
@@ -39,14 +41,14 @@ export class SmsService {
       if (variables && template.variables) {
         const vars = Array.isArray(template.variables) 
           ? template.variables 
-          : template.variables.split(',');
+          : [];
         
-        vars.forEach(variable => {
+        for (const variable of vars) {
           const varName = variable.trim();
           if (varName && variables[varName]) {
             body = body.replace(new RegExp(`{{${varName}}}`, 'g'), variables[varName]);
           }
-        });
+        }
       }
 
       // Wenn Twilio nicht konfiguriert ist, simuliere den SMS-Versand
