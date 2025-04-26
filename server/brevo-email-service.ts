@@ -2,17 +2,23 @@ import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
+import nodemailer from 'nodemailer';
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
- * Verwendet Brevo (ehemals Sendinblue) als E-Mail-Provider
+ * Verwendet Brevo (ehemals Sendinblue) als E-Mail-Provider über SMTP
  */
 export class BrevoEmailService {
   private apiInstance: TransactionalEmailsApi | null = null;
+  private smtpTransporter: nodemailer.Transporter | null = null;
+  private readonly smtpHost = 'smtp-relay.brevo.com';
+  private readonly smtpPort = 587;
+  private readonly smtpLogin = '8b7dba001@smtp-brevo.com';
 
   constructor() {
     const apiKey = process.env.BREVO_API_KEY;
     
+    // Initialisiere API-Client (als Fallback oder für zukünftige Verwendung)
     if (apiKey) {
       try {
         this.apiInstance = new TransactionalEmailsApi();
@@ -24,6 +30,24 @@ export class BrevoEmailService {
       }
     } else {
       console.warn('Brevo-API-Schlüssel fehlt - E-Mail-Versand wird simuliert');
+    }
+
+    // Initialisiere SMTP Transporter (bevorzugte Methode)
+    try {
+      this.smtpTransporter = nodemailer.createTransport({
+        host: this.smtpHost,
+        port: this.smtpPort,
+        secure: false, // true für 465, false für andere Ports
+        auth: {
+          user: this.smtpLogin,
+          pass: apiKey || '' 
+        }
+      });
+      
+      console.log('SMTP-Transporter für Brevo wurde initialisiert');
+    } catch (error) {
+      console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
+      this.smtpTransporter = null;
     }
   }
 
@@ -101,54 +125,97 @@ export class BrevoEmailService {
       const senderEmail = businessSetting?.email || 'no-reply@example.com';
       const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
       
-      // Wenn Brevo nicht konfiguriert ist oder wir im Simulationsmodus sind, simuliere den E-Mail-Versand
-      if (!this.apiInstance || process.env.NODE_ENV === 'development') {
+      // Wenn wir im Entwicklungsmodus sind, simuliere den E-Mail-Versand
+      if (process.env.NODE_ENV === 'development') {
         console.log(`[SIMULIERT] E-Mail würde gesendet werden an: ${to}, Betreff: ${subject}`);
         console.log(`[SIMULIERT] Inhalt: ${body}`);
         return true;
       }
 
-      try {
-        // Sende die E-Mail über Brevo
-        const sendSmtpEmail = new SendSmtpEmail();
-        
-        // Absender-Informationen
-        sendSmtpEmail.sender = {
-          name: senderName,
-          email: senderEmail
-        };
-        
-        // Empfänger (kann auch mehrere enthalten)
-        sendSmtpEmail.to = [{ email: to }];
-        
-        // Betreff und Inhalt
-        sendSmtpEmail.subject = subject;
-        sendSmtpEmail.htmlContent = body;  // HTML-Inhalt
-        sendSmtpEmail.textContent = body;  // Plaintext-Inhalt
-        
-        // API-Key aus der Umgebungsvariable holen
-        const apiKey = process.env.BREVO_API_KEY || '';
-        
-        // Die Brevo-API erfordert den API-Key im Header
-        const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail, {
-          headers: { 'api-key': apiKey }
-        });
-        
-        console.log('E-Mail erfolgreich gesendet, Antwort:', response);
-        return true;
-      } catch (error) {
-        console.error('Fehler beim Senden der E-Mail über Brevo API:', error);
-        
-        // Bei Fehlern im Produktionsmodus schlagen wir fehl
-        if (process.env.NODE_ENV === 'production') {
+      // Versuche, die E-Mail über SMTP zu senden (bevorzugte Methode)
+      if (this.smtpTransporter) {
+        try {
+          console.log('Sende E-Mail über SMTP...');
+          
+          const mailOptions = {
+            from: `"${senderName}" <${this.smtpLogin}>`, // Der SMTP-Login muss als Absender verwendet werden
+            to: to,
+            subject: subject,
+            html: body,
+            text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+          };
+          
+          const info = await this.smtpTransporter.sendMail(mailOptions);
+          console.log('E-Mail erfolgreich über SMTP gesendet:', info.messageId);
+          return true;
+        } catch (smtpError) {
+          console.error('Fehler beim Senden der E-Mail über SMTP:', smtpError);
+          
+          // Bei SMTP-Fehler im Produktionsmodus versuchen wir die API als Fallback
+          if (process.env.NODE_ENV === 'production' && this.apiInstance) {
+            console.log('Versuche Fallback über API...');
+          } else {
+            // Im Entwicklungsmodus oder ohne API-Instanz simulieren wir
+            console.log('[FALLBACK SIMULATION] E-Mail würde gesendet werden an:', to);
+            console.log('[FALLBACK SIMULATION] E-Mail-Betreff:', subject);
+            return true;
+          }
+        }
+      }
+
+      // Fallback: Wenn SMTP fehlschlägt oder nicht konfiguriert ist, versuche die API
+      if (this.apiInstance) {
+        try {
+          console.log('Sende E-Mail über Brevo API...');
+          // Sende die E-Mail über Brevo API
+          const sendSmtpEmail = new SendSmtpEmail();
+          
+          // Absender-Informationen
+          sendSmtpEmail.sender = {
+            name: senderName,
+            email: senderEmail
+          };
+          
+          // Empfänger (kann auch mehrere enthalten)
+          sendSmtpEmail.to = [{ email: to }];
+          
+          // Betreff und Inhalt
+          sendSmtpEmail.subject = subject;
+          sendSmtpEmail.htmlContent = body;  // HTML-Inhalt
+          sendSmtpEmail.textContent = body.replace(/<[^>]*>/g, '');  // Plaintext-Inhalt
+          
+          // API-Key aus der Umgebungsvariable holen
+          const apiKey = process.env.BREVO_API_KEY || '';
+          
+          // Die Brevo-API erfordert den API-Key im Header
+          const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail, {
+            headers: { 'api-key': apiKey }
+          });
+          
+          console.log('E-Mail erfolgreich über API gesendet, Antwort:', response);
+          return true;
+        } catch (apiError) {
+          console.error('Fehler beim Senden der E-Mail über Brevo API:', apiError);
+          
+          // Bei Fehlern im Produktionsmodus schlagen wir fehl
+          if (process.env.NODE_ENV === 'production') {
+            return false;
+          }
+          
+          // Im Entwicklungsmodus simulieren wir erfolgreiches Senden
+          console.log('[FALLBACK SIMULATION] E-Mail würde gesendet werden an:', to);
+          console.log('[FALLBACK SIMULATION] E-Mail-Betreff:', subject);
+          return true;
+        }
+      } else {
+        // Wenn weder SMTP noch API konfiguriert sind, simulieren wir im Entwicklungsmodus
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[SIMULIERT] Keine E-Mail-Konfiguration verfügbar. E-Mail würde gesendet werden an:', to);
+          return true;
+        } else {
+          console.error('Keine gültige E-Mail-Konfiguration vorhanden');
           return false;
         }
-        
-        // Im Entwicklungsmodus simulieren wir erfolgreiches Senden
-        console.log('[FALLBACK SIMULATION] E-Mail würde gesendet werden an:', to);
-        console.log('[FALLBACK SIMULATION] E-Mail-Betreff:', subject);
-        console.log('[FALLBACK SIMULATION] E-Mail-Inhalt:', body);
-        return true;
       }
     } catch (error) {
       console.error("Error sending email with template:", error);
