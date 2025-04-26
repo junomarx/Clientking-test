@@ -292,11 +292,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ungültige Kunden-ID" });
       }
       
-      // Validate deviceType
-      if (!deviceTypes.safeParse(repairData.deviceType).success) {
-        console.error("Invalid device type:", repairData.deviceType);
-        return res.status(400).json({ message: "Ungültiger Gerätetyp" });
-      }
+      // Nicht mehr nötig, da deviceType und brand jetzt zentral verwaltet werden 
+      // und keine Enum-Validierung mehr benötigen
       
       // Validate status if provided
       if (repairData.status && !repairStatuses.safeParse(repairData.status).success) {
@@ -333,10 +330,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Validate deviceType if provided
-      if (repairData.deviceType && !deviceTypes.safeParse(repairData.deviceType).success) {
-        return res.status(400).json({ message: "Invalid device type" });
-      }
+      // Nicht mehr nötig, da deviceType und brand jetzt zentral verwaltet werden 
+      // und keine Enum-Validierung mehr benötigen
       
       // Validate status if provided
       if (repairData.status && !repairStatuses.safeParse(repairData.status).success) {
@@ -615,6 +610,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GERÄTETYPEN UND MARKEN API (für Lesezugriff durch alle Benutzer)
+  // Alle Gerätearten abrufen
+  app.get("/api/device-types", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const deviceTypes = await storage.getAllDeviceTypes();
+      res.json(deviceTypes);
+    } catch (error) {
+      console.error("Error retrieving device types:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätearten" });
+    }
+  });
+  
+  // Alle Marken abrufen (optional nach Gerätetyp gefiltert)
+  app.get("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
+      const brands = await storage.getAllBrands(deviceTypeId);
+      res.json(brands);
+    } catch (error) {
+      console.error("Error retrieving brands:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
+    }
+  });
+  
   // FEEDBACK API
   // Erzeuge einen neuen Feedback-Token für eine Reparatur
   app.post("/api/repairs/:id/feedback-token", isAuthenticated, async (req: Request, res: Response) => {
