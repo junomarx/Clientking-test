@@ -1,6 +1,7 @@
-// Dieses Modul dient als kompatibilitätsschicht und leitet alle Anfragen an den email-service weiter
+// Dieses Modul dient als kompatibilitätsschicht und leitet alle Anfragen an den E-Mail-Service weiter
+// Jetzt umgestellt auf den Brevo-basierten E-Mail-Service
 
-import { emailService } from './email-service';
+import { brevoEmailService as emailService } from './brevo-email-service';
 import type { EmailTemplate, InsertEmailTemplate } from '@shared/schema';
 
 // Re-export der grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
