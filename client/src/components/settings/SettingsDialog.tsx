@@ -115,22 +115,42 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   // Benutzer-ID aus dem Auth-Kontext holen
   const { user } = useAuth();
   
-  // Daten für Gerätearten und Marken aus der API holen
-  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<any[]>({
+  // Daten für Gerätearten aus der API holen
+  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
-    queryFn: async () => {
-      const res = await apiRequest('GET', '/api/device-types');
-      return res.json();
-    }
+    enabled: open,
   });
   
-  const { data: brands = [], isLoading: isLoadingBrands } = useQuery<any[]>({
-    queryKey: ['/api/brands'],
+  // State für die ausgewählte Geräteart (für die Markenanzeige)
+  const [selectedDeviceTypeForBrands, setSelectedDeviceTypeForBrands] = useState<number | null>(null);
+  
+  // Lade Marken basierend auf dem ausgewählten Gerätetyp oder alle Marken, wenn kein Gerätetyp ausgewählt
+  const { 
+    data: brands = [], 
+    isLoading: isLoadingBrands 
+  } = useQuery<UserBrand[]>({
+    queryKey: ['/api/brands', selectedDeviceTypeForBrands ? { deviceTypeId: selectedDeviceTypeForBrands } : undefined],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/brands');
-      return res.json();
-    }
+      try {
+        const url = selectedDeviceTypeForBrands 
+          ? `/api/brands?deviceTypeId=${selectedDeviceTypeForBrands}` 
+          : '/api/brands';
+        const response = await apiRequest('GET', url);
+        return response.json();
+      } catch (err) {
+        console.error('Fehler beim Laden der Marken:', err);
+        return [];
+      }
+    },
+    enabled: open,
   });
+  
+  // Initialisiere den ausgewählten Gerätetyp für Markenfilterung, wenn Gerätearten geladen werden
+  useEffect(() => {
+    if (deviceTypes.length > 0 && !selectedDeviceTypeForBrands) {
+      setSelectedDeviceTypeForBrands(deviceTypes[0].id);
+    }
+  }, [deviceTypes, selectedDeviceTypeForBrands]);
   
   // State für Dialoge
   const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
