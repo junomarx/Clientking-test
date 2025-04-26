@@ -359,7 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, sendEmail } = req.body;
+      const { status, sendEmail, sendSms } = req.body;
       
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
@@ -376,45 +376,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Repair not found" });
       }
       
-      // Wenn Status auf "fertig" gesetzt wird und sendEmail=true, dann E-Mail senden
-      if (status === "fertig" && sendEmail === true) {
-        console.log("E-Mail-Benachrichtigung wird vorbereitet...");
+      // Kunde und Business-Daten laden (für E-Mail und SMS)
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Wenn Kunde existiert, Benachrichtigungen senden
+      if (customer) {
+        // Variablen für die Kommunikation zusammenstellen
+        const variables: Record<string, string> = {
+          "kundenname": `${customer.firstName} ${customer.lastName}`,
+          "geraet": repair.model,
+          "marke": repair.brand,
+          "auftragsnummer": repair.orderCode || `#${repair.id}`,
+          "fehler": repair.issue,
+          "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben",
+          "geschaeftsname": businessSettings?.businessName || "Handyshop",
+          "abholzeit": "ab sofort" // kann später angepasst werden
+        };
         
-        try {
-          // Lade Kunde mit userId
-          const customer = await storage.getCustomer(repair.customerId, userId);
-          if (customer && customer.email) {
+        // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
+        if ((status === "fertig" || status === "abholbereit") && sendEmail === true && customer.email) {
+          console.log("E-Mail-Benachrichtigung wird vorbereitet...");
+          
+          try {
             // Suche nach einer E-Mail-Vorlage mit name "fertig"
             const templates = await storage.getAllEmailTemplates();
             const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
+                                                     t.name.toLowerCase().includes("abholbereit") ||
                                                      t.name.toLowerCase().includes("abholung"));
             
             if (pickupTemplate) {
               console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
               
-              // Variablen für die E-Mail zusammenstellen
-              const variables: Record<string, string> = {
-                "kundenName": `${customer.firstName} ${customer.lastName}`,
-                "geraet": repair.model,
-                "marke": repair.brand,
-                "auftragsnummer": repair.orderCode || `#${repair.id}`,
-                "fehler": repair.issue,
-                "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben"
-              };
-              
               // E-Mail senden
               const emailSent = await storage.sendEmailWithTemplate(pickupTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
             } else {
-              console.log("Keine passende E-Mail-Vorlage für 'Fertig' gefunden");
+              console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
             }
-          } else {
-            console.log("Kunde hat keine E-Mail-Adresse angegeben");
+          } catch (emailError) {
+            console.error("Fehler beim Senden der E-Mail:", emailError);
+            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
           }
-        } catch (emailError) {
-          console.error("Fehler beim Senden der E-Mail:", emailError);
-          // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
         }
+        
+        // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendSms=true, dann SMS senden
+        if ((status === "fertig" || status === "abholbereit") && sendSms === true && customer.phone) {
+          console.log("SMS-Benachrichtigung wird vorbereitet...");
+          
+          try {
+            // Suche nach einer SMS-Vorlage mit name "abholbereit"
+            const smsTemplates = await storage.getAllSmsTemplates(userId);
+            const pickupSmsTemplate = smsTemplates.find(t => 
+              t.name.toLowerCase().includes("fertig") || 
+              t.name.toLowerCase().includes("abholbereit") || 
+              t.name.toLowerCase().includes("abholung"));
+            
+            if (pickupSmsTemplate) {
+              console.log(`SMS-Vorlage gefunden: ${pickupSmsTemplate.name}`);
+              
+              // SMS senden
+              const smsSent = await storage.sendSmsWithTemplate(pickupSmsTemplate.id, customer.phone, variables, userId);
+              console.log("SMS gesendet:", smsSent);
+            } else {
+              console.log("Keine passende SMS-Vorlage für 'Abholbereit' gefunden");
+            }
+          } catch (smsError) {
+            console.error("Fehler beim Senden der SMS:", smsError);
+            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
+          }
+        }
+      } else {
+        console.log("Kunde nicht gefunden, keine Benachrichtigung möglich");
       }
       
       res.json(repair);
