@@ -345,7 +345,7 @@ export function SmsTemplateTab() {
                 placeholder="z.B. kundenname, auftragsnummer, datum" 
               />
               <p className="text-sm text-muted-foreground">
-                Variablen im Textkörper mit {{varname}} verwenden
+                Variablen im Textkörper mit {"{{"} variablename {"}}"}  verwenden
               </p>
             </div>
             <div className="space-y-2">
