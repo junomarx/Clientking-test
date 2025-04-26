@@ -189,22 +189,57 @@ export class EmailService {
         body = body.replace(new RegExp(placeholder, 'g'), value);
       });
       
+      // Bestimme die aktuelle Benutzer-ID aus den Variablen
+      const userId = variables.userId ? parseInt(variables.userId) : 0;
+      
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
       const [businessSetting] = await db.select().from(businessSettings)
-        .where(eq(businessSettings.userId, variables.userId ? parseInt(variables.userId) : 0));
-      const senderEmail = businessSetting?.email || 'no-reply@example.com';
-      const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!businessSetting) {
+        console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+        return false;
+      }
+      
+      // Verwende die SMTP-Einstellungen des Benutzers, falls vorhanden
+      const senderEmail = businessSetting.email || 'no-reply@example.com';
+      const senderName = businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop Verwaltung';
       
       // Entwicklungsmodus-Information, aber senden trotzdem
       if (process.env.NODE_ENV === 'development') {
-        console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}`);
-        // Wir simulieren nicht mehr, sondern senden tatsächlich
+        console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}, von: ${senderName} <${senderEmail}>`);
       }
 
-      // Versuche, die E-Mail über SMTP zu senden (bevorzugte Methode)
-      if (this.smtpTransporter) {
+      // 1. Versuch: Benutze den benutzerspezifischen SMTP-Transporter, falls vorhanden
+      const userSmtpTransporter = await this.getUserSmtpTransporter(userId);
+      if (userSmtpTransporter) {
         try {
-          console.log('Sende E-Mail über SMTP...');
+          console.log(`Sende E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}...`);
+          
+          // Bei der Absender-E-Mail muss der SMTP-Login verwendet werden
+          const fromEmail = businessSetting.smtpUser || senderEmail;
+          
+          const mailOptions = {
+            from: `"${senderName}" <${fromEmail}>`,
+            to: to,
+            subject: subject,
+            html: body,
+            text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+          };
+          
+          const info = await userSmtpTransporter.sendMail(mailOptions);
+          console.log(`E-Mail erfolgreich über benutzerdefinierten SMTP-Server für Benutzer ${userId} gesendet:`, info.messageId);
+          return true;
+        } catch (userSmtpError) {
+          console.error(`Fehler beim Senden der E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}:`, userSmtpError);
+          // Fallback zum nächsten Versuch
+        }
+      }
+
+      // 2. Versuch: Benutze den globalen SMTP-Transporter, falls vorhanden
+      if (this.globalSmtpTransporter) {
+        try {
+          console.log('Sende E-Mail über globalen SMTP-Server...');
           
           const mailOptions = {
             from: `"${senderName}" <${process.env.SMTP_USER}>`, // Der SMTP-Login muss als Absender verwendet werden
@@ -214,11 +249,11 @@ export class EmailService {
             text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
           };
           
-          const info = await this.smtpTransporter.sendMail(mailOptions);
-          console.log('E-Mail erfolgreich über SMTP gesendet:', info.messageId);
+          const info = await this.globalSmtpTransporter.sendMail(mailOptions);
+          console.log('E-Mail erfolgreich über globalen SMTP-Server gesendet:', info.messageId);
           return true;
         } catch (smtpError) {
-          console.error('Fehler beim Senden der E-Mail über SMTP:', smtpError);
+          console.error('Fehler beim Senden der E-Mail über globalen SMTP-Server:', smtpError);
           
           // Wenn SMTP fehlschlägt, versuchen wir immer die API als Fallback
           if (this.apiInstance) {
@@ -231,7 +266,7 @@ export class EmailService {
         }
       }
 
-      // Fallback: Wenn SMTP fehlschlägt oder nicht konfiguriert ist, versuche die API
+      // 3. Versuch (Fallback): Wenn SMTP fehlschlägt oder nicht konfiguriert ist, versuche die API
       if (this.apiInstance) {
         try {
           console.log('Sende E-Mail über Brevo API...');
