@@ -62,12 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Token saved to localStorage');
       }
       
+      // Benutzer-Daten setzen
       queryClient.setQueryData(["/api/user"], data);
       
-      // Explizit den Cache für die Geschäftseinstellungen invalidieren
-      queryClient.invalidateQueries({
-        queryKey: ["/api/business-settings"]
-      });
+      // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
+      // Dies verhindert, dass Daten anderer Benutzer angezeigt werden
+      queryClient.invalidateQueries();
       
       toast({
         title: "Anmeldung erfolgreich",
@@ -115,10 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('auth_token');
       queryClient.setQueryData(["/api/user"], null);
       
-      // Explizit den Cache für die Geschäftseinstellungen invalidieren
-      queryClient.invalidateQueries({
-        queryKey: ["/api/business-settings"]
-      });
+      // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
+      // Dies verhindert, dass Daten des vorherigen Benutzers angezeigt werden
+      queryClient.clear();
       
       toast({
         title: "Abmeldung erfolgreich",
