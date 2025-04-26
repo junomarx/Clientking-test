@@ -6,11 +6,12 @@ import nodemailer from 'nodemailer';
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
- * Kann sowohl den eigenen Mail-Server als auch Brevo als Fallback verwenden
+ * Jeder Benutzer kann seinen eigenen Mail-Server konfigurieren, mit Brevo als Fallback
  */
 export class EmailService {
   private apiInstance: TransactionalEmailsApi | null = null;
-  private smtpTransporter: nodemailer.Transporter | null = null;
+  private globalSmtpTransporter: nodemailer.Transporter | null = null;
+  private userTransporters: Map<number, nodemailer.Transporter> = new Map();
 
   constructor() {
     const apiKey = process.env.BREVO_API_KEY;
@@ -29,7 +30,7 @@ export class EmailService {
       console.warn('Brevo-API-Schlüssel fehlt - Brevo-Fallback nicht verfügbar');
     }
 
-    // Initialisiere SMTP Transporter mit den Benutzer-SMTP-Einstellungen
+    // Initialisiere globalen SMTP-Transporter als Fallback
     try {
       const smtpHost = process.env.SMTP_HOST;
       const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
@@ -38,10 +39,10 @@ export class EmailService {
       
       // Prüfe, ob alle erforderlichen SMTP-Einstellungen vorhanden sind
       if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-        console.warn('Eine oder mehrere SMTP-Einstellungen fehlen, verwende Brevo als Fallback');
+        console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen, nur Benutzer-SMTP oder Brevo als Fallback verfügbar');
       } else {
-        // Verwende die Benutzer-SMTP-Einstellungen
-        this.smtpTransporter = nodemailer.createTransport({
+        // Verwende die globalen SMTP-Einstellungen als Fallback
+        this.globalSmtpTransporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
           secure: smtpPort === 465, // true für 465, false für andere Ports
@@ -51,12 +52,72 @@ export class EmailService {
           }
         });
         
-        console.log(`SMTP-Transporter für ${smtpHost} wurde initialisiert`);
+        console.log(`Globaler SMTP-Transporter für ${smtpHost} wurde initialisiert`);
       }
     } catch (error) {
-      console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
-      this.smtpTransporter = null;
+      console.error('Fehler beim Initialisieren des globalen SMTP-Transporters:', error);
+      this.globalSmtpTransporter = null;
     }
+  }
+  
+  /**
+   * Erstellt einen SMTP-Transporter für den angegebenen Benutzer
+   * @param userId Die ID des Benutzers
+   * @returns Ein Promise mit dem SMTP-Transporter oder null, wenn die Erstellung fehlschlägt
+   */
+  private async createUserSmtpTransporter(userId: number): Promise<nodemailer.Transporter | null> {
+    try {
+      // Lade die SMTP-Einstellungen des Benutzers aus der Datenbank
+      const [settings] = await db.select().from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!settings) {
+        console.warn(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+        return null;
+      }
+      
+      // Prüfe, ob die erforderlichen SMTP-Einstellungen vorhanden sind
+      if (!settings.smtpHost || !settings.smtpUser || !settings.smtpPassword || !settings.smtpPort) {
+        console.warn(`Unvollständige SMTP-Einstellungen für Benutzer ${userId}`);
+        return null;
+      }
+      
+      // Erstelle einen SMTP-Transporter mit den Benutzereinstellungen
+      const smtpPort = parseInt(settings.smtpPort);
+      const transporter = nodemailer.createTransport({
+        host: settings.smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465, // true für 465, false für andere Ports
+        auth: {
+          user: settings.smtpUser,
+          pass: settings.smtpPassword
+        }
+      });
+      
+      // Speichere den Transporter in der Map
+      this.userTransporters.set(userId, transporter);
+      console.log(`SMTP-Transporter für Benutzer ${userId} (${settings.smtpHost}) erstellt`);
+      
+      return transporter;
+    } catch (error) {
+      console.error(`Fehler beim Erstellen des SMTP-Transporters für Benutzer ${userId}:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Gibt den passenden SMTP-Transporter für den angegebenen Benutzer zurück
+   * @param userId Die ID des Benutzers
+   * @returns Ein Promise mit dem SMTP-Transporter oder null, wenn kein Transporter gefunden wurde
+   */
+  private async getUserSmtpTransporter(userId: number): Promise<nodemailer.Transporter | null> {
+    // Prüfe, ob bereits ein Transporter für diesen Benutzer existiert
+    if (this.userTransporters.has(userId)) {
+      return this.userTransporters.get(userId) || null;
+    }
+    
+    // Erstelle einen neuen Transporter für diesen Benutzer
+    return await this.createUserSmtpTransporter(userId);
   }
 
   // Die grundlegenden CRUD-Funktionen für E-Mail-Vorlagen

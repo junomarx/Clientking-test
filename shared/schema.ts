@@ -106,6 +106,14 @@ export const businessSettings = pgTable("business_settings", {
   logoImage: text("logo_image"), // Base64-encoded image data für das Logo
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
+  
+  // E-Mail-SMTP-Einstellungen für den eigenen Mail-Server
+  smtpSenderName: text("smtp_sender_name"), // Bei den Mails anzuzeigender Name
+  smtpHost: text("smtp_host"),             // SMTP Host (z.B. smtp.example.com)
+  smtpUser: text("smtp_user"),             // SMTP Benutzername
+  smtpPassword: text("smtp_password"),     // SMTP Passwort
+  smtpPort: text("smtp_port"),             // SMTP Port (z.B. 587)
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),
