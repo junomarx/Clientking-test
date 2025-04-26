@@ -18,7 +18,7 @@ import { saveModel } from '@/lib/localStorage';
 
 // Extended repair schema with validation
 const repairFormSchema = insertRepairSchema.extend({
-  deviceType: z.enum(["smartphone", "tablet", "laptop"], {
+  deviceType: z.string({
     required_error: "Gerätetyp auswählen",
   }),
   brand: z.string().min(2, "Marke muss mindestens 2 Zeichen lang sein"),
@@ -63,6 +63,27 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       }
     },
     enabled: !!customerId && open,
+  });
+  
+  // Lade benutzerspezifische Gerätearten
+  const { data: deviceTypes = [] } = useQuery({
+    queryKey: ['/api/device-types'],
+    enabled: open,
+  });
+  
+  // State für die ausgewählte Geräteart
+  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
+  
+  // Lade Marken basierend auf ausgewählter Geräteart
+  const { data: brands = [] } = useQuery({
+    queryKey: ['/api/brands', selectedDeviceTypeId],
+    queryFn: async () => {
+      if (!selectedDeviceTypeId) return [];
+      const response = await apiRequest('GET', `/api/brands`);
+      const allBrands = await response.json();
+      return allBrands.filter(brand => brand.deviceTypeId.toString() === selectedDeviceTypeId);
+    },
+    enabled: !!selectedDeviceTypeId && open,
   });
   
   // Setup form
@@ -189,7 +210,11 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                   <FormItem>
                     <FormLabel>Gerätetyp</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedDeviceTypeId(value);
+                        form.setValue("brand", ""); // Zurücksetzen der Marke bei Änderung der Geräteart
+                      }}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -198,9 +223,15 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="smartphone">Smartphone</SelectItem>
-                        <SelectItem value="tablet">Tablet</SelectItem>
-                        <SelectItem value="laptop">Laptop</SelectItem>
+                        {deviceTypes.length > 0 ? (
+                          deviceTypes.map((type) => (
+                            <SelectItem key={type.id} value={type.id.toString()}>
+                              {type.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>Keine Gerätearten verfügbar</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -215,9 +246,30 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Marke</FormLabel>
-                      <FormControl>
-                        <Input placeholder="z.B. Apple, Samsung, Huawei" {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={!selectedDeviceTypeId}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Marke auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {brands.length > 0 ? (
+                            brands.map((brand) => (
+                              <SelectItem key={brand.id} value={brand.name}>
+                                {brand.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>
+                              {!selectedDeviceTypeId ? "Bitte zuerst Gerätetyp wählen" : "Keine Marken verfügbar"}
+                            </SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -1207,7 +1207,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       const name = brandFormData.name.trim();
                       if (!name) return;
                       
-                      handleSaveBrand({name, deviceTypeId: brandFormData.deviceTypeId});
+                      handleSaveBrand({
+                        name, 
+                        deviceTypeId: brandFormData.deviceTypeId
+                      });
                     }}
                   >
                     Speichern
