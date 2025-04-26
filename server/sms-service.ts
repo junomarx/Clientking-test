@@ -55,11 +55,16 @@ export class SmsService {
         }
       }
 
-      // Wenn Brevo nicht konfiguriert ist oder wir im Simulationsmodus sind, simuliere den SMS-Versand
-      if (!this.apiInstance || process.env.NODE_ENV === 'development') {
-        console.log('[SIMULIERT] SMS würde gesendet werden an:', to);
-        console.log('[SIMULIERT] SMS-Inhalt:', body);
-        return true;
+      // Entwicklungsmodus-Information, aber senden trotzdem
+      if (process.env.NODE_ENV === 'development') {
+        console.log('SMS wird gesendet an:', to);
+        console.log('SMS-Inhalt:', body);
+      }
+      
+      // Wenn keine API-Instanz vorhanden ist, geben wir einen Fehler zurück
+      if (!this.apiInstance) {
+        console.error('Keine gültige SMS-Konfiguration vorhanden');
+        return false;
       }
 
       try {

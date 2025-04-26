@@ -125,11 +125,10 @@ export class BrevoEmailService {
       const senderEmail = businessSetting?.email || 'no-reply@example.com';
       const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
       
-      // Wenn wir im Entwicklungsmodus sind, simuliere den E-Mail-Versand
+      // Entwicklungsmodus-Information, aber senden trotzdem
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[SIMULIERT] E-Mail würde gesendet werden an: ${to}, Betreff: ${subject}`);
-        console.log(`[SIMULIERT] Inhalt: ${body}`);
-        return true;
+        console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}`);
+        // Wir simulieren nicht mehr, sondern senden tatsächlich
       }
 
       // Versuche, die E-Mail über SMTP zu senden (bevorzugte Methode)
@@ -151,14 +150,13 @@ export class BrevoEmailService {
         } catch (smtpError) {
           console.error('Fehler beim Senden der E-Mail über SMTP:', smtpError);
           
-          // Bei SMTP-Fehler im Produktionsmodus versuchen wir die API als Fallback
-          if (process.env.NODE_ENV === 'production' && this.apiInstance) {
+          // Wenn SMTP fehlschlägt, versuchen wir immer die API als Fallback
+          if (this.apiInstance) {
             console.log('Versuche Fallback über API...');
           } else {
-            // Im Entwicklungsmodus oder ohne API-Instanz simulieren wir
-            console.log('[FALLBACK SIMULATION] E-Mail würde gesendet werden an:', to);
-            console.log('[FALLBACK SIMULATION] E-Mail-Betreff:', subject);
-            return true;
+            // Ohne API-Instanz melden wir einen Fehler
+            console.error('SMTP fehlt und keine API-Konfiguration verfügbar');
+            return false;
           }
         }
       }
@@ -197,25 +195,14 @@ export class BrevoEmailService {
         } catch (apiError) {
           console.error('Fehler beim Senden der E-Mail über Brevo API:', apiError);
           
-          // Bei Fehlern im Produktionsmodus schlagen wir fehl
-          if (process.env.NODE_ENV === 'production') {
-            return false;
-          }
-          
-          // Im Entwicklungsmodus simulieren wir erfolgreiches Senden
-          console.log('[FALLBACK SIMULATION] E-Mail würde gesendet werden an:', to);
-          console.log('[FALLBACK SIMULATION] E-Mail-Betreff:', subject);
-          return true;
-        }
-      } else {
-        // Wenn weder SMTP noch API konfiguriert sind, simulieren wir im Entwicklungsmodus
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[SIMULIERT] Keine E-Mail-Konfiguration verfügbar. E-Mail würde gesendet werden an:', to);
-          return true;
-        } else {
-          console.error('Keine gültige E-Mail-Konfiguration vorhanden');
+          // Bei API-Fehlern geben wir immer einen Fehler zurück
+          console.error('Fehler beim E-Mail-Versand über alle verfügbaren Methoden');
           return false;
         }
+      } else {
+        // Wenn weder SMTP noch API konfiguriert sind, geben wir einen Fehler zurück
+        console.error('Keine gültige E-Mail-Konfiguration vorhanden');
+        return false;
       }
     } catch (error) {
       console.error("Error sending email with template:", error);
