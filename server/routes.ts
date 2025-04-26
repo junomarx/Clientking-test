@@ -85,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isAdmin = (req.user as any).isAdmin;
         
         // Alle Kunden abrufen und sowohl nach Vor- als auch Nachnamen filtern
-        const allCustomers = await storage.getAllCustomers(isAdmin ? undefined : userId);
+        const allCustomers = await storage.getAllCustomers(userId);
         const matchingCustomers = allCustomers.filter(customer => 
           customer.firstName.toLowerCase().includes(firstName.toLowerCase()) &&
           customer.lastName.toLowerCase().includes(lastName.toLowerCase())
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isAdmin = (req.user as any).isAdmin;
         
         // Alle Kunden abrufen und nach Vornamen filtern
-        const allCustomers = await storage.getAllCustomers(isAdmin ? undefined : userId);
+        const allCustomers = await storage.getAllCustomers(userId);
         const matchingCustomers = allCustomers.filter(customer => 
           customer.firstName.toLowerCase().includes(firstName.toLowerCase())
         );
@@ -117,10 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Ansonsten gebe alle Kunden zurück (gefiltert nach Benutzer)
-      const customers = await storage.getAllCustomers(isAdmin ? undefined : userId);
+      const customers = await storage.getAllCustomers(userId);
       console.log(`Returning all ${customers.length} customers`);
       res.json(customers);
     } catch (error) {
@@ -135,10 +134,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      const isAdmin = (req.user as any).isAdmin;
       
       // Kunde abrufen mit Benutzerfilterung
-      const customer = await storage.getCustomer(id, isAdmin ? undefined : userId);
+      const customer = await storage.getCustomer(id, userId);
       
       if (!customer) {
         return res.status(404).json({ message: "Customer not found" });
