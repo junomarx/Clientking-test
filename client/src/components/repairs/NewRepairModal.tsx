@@ -83,6 +83,18 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // Lade benutzerspezifische Gerätearten (genau wie in SettingsDialog)
   const { data: deviceTypes = [] } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
+    queryFn: async () => {
+      console.log("Lade Gerätetypen in NewRepairModal");
+      try {
+        const response = await apiRequest('GET', '/api/device-types');
+        const data = await response.json();
+        console.log("Geladene Gerätetypen in NewRepairModal:", data);
+        return data;
+      } catch (err) {
+        console.error("Fehler beim Laden der Gerätetypen:", err);
+        return [];
+      }
+    },
     enabled: open,
   });
   
