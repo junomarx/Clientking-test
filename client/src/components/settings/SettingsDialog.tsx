@@ -38,16 +38,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { BusinessSettings, UserDeviceType, UserBrand } from "@shared/schema";
+import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Upload, 
@@ -61,11 +53,7 @@ import {
   Phone, 
   MapPin,
   Settings,
-  MessageSquare,
-  Smartphone,
-  Plus,
-  PenLine,
-  Trash
+  MessageSquare
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
@@ -114,270 +102,6 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   
   // Benutzer-ID aus dem Auth-Kontext holen
   const { user } = useAuth();
-  
-  // Wir initialisieren den ausgewählten Gerätetyp nicht mehr automatisch,
-  // stattdessen lassen wir ihn auf null, damit der Benutzer "Alle Gerätearten" sieht
-  
-  // State für Dialoge
-  const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
-  const [isBrandDialogOpen, setIsBrandDialogOpen] = useState(false);
-  const [selectedDeviceType, setSelectedDeviceType] = useState<{id?: number, name: string} | null>(null);
-  const [deviceTypeName, setDeviceTypeName] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState<{id?: number, name: string, deviceTypeId: number} | null>(null);
-  const [brandFormData, setBrandFormData] = useState({
-    name: "",
-    deviceTypeId: deviceTypes.length > 0 ? deviceTypes[0].id.toString() : "1" // String, da Select-Komponente Strings erwartet
-  });
-  
-  // Mutations für Gerätearten
-  const createDeviceTypeMutation = useMutation({
-    mutationFn: async (name: string) => {
-      // Hier muss die userId explizit übergeben werden, damit das Backend die Verknüpfung herstellen kann
-      const response = await apiRequest("POST", "/api/device-types", { 
-        name, 
-        userId: user?.id 
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      setIsDeviceTypeDialogOpen(false);
-      setSelectedDeviceType(null);
-      toast({
-        title: "Erfolg!",
-        description: "Geräteart hinzugefügt.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Geräteart konnte nicht gespeichert werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-  
-  const updateDeviceTypeMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: number, name: string }) => {
-      const response = await apiRequest("PATCH", `/api/device-types/${id}`, { name });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      setIsDeviceTypeDialogOpen(false);
-      setSelectedDeviceType(null);
-      toast({
-        title: "Erfolg!",
-        description: "Geräteart aktualisiert.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Geräteart konnte nicht aktualisiert werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-  
-  const deleteDeviceTypeMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/device-types/${id}`);
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
-      toast({
-        title: "Erfolg!",
-        description: "Geräteart gelöscht.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Geräteart konnte nicht gelöscht werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-
-  // Funktionen für Gerätearten
-  const handleAddDeviceType = () => {
-    setSelectedDeviceType({ name: "" });
-    setDeviceTypeName("");
-    setIsDeviceTypeDialogOpen(true);
-  };
-  
-  const handleEditDeviceType = (deviceType: {id: number, name: string}) => {
-    setSelectedDeviceType(deviceType);
-    setDeviceTypeName(deviceType.name);
-    setIsDeviceTypeDialogOpen(true);
-  };
-  
-  const handleSaveDeviceType = (name: string) => {
-    if (!name.trim()) return;
-    
-    if (selectedDeviceType?.id) {
-      // Bearbeiten
-      updateDeviceTypeMutation.mutate({ id: selectedDeviceType.id, name });
-    } else {
-      // Neu hinzufügen
-      createDeviceTypeMutation.mutate(name);
-    }
-  };
-  
-  const handleDeleteDeviceType = (id: number) => {
-    // Die Backendlogik prüft bereits, ob die Geräteart von Marken verwendet wird
-    if (confirm("Möchten Sie diese Geräteart wirklich löschen?")) {
-      deleteDeviceTypeMutation.mutate(id);
-    }
-  };
-  
-  // Mutations für Marken
-  const createBrandMutation = useMutation({
-    mutationFn: async (data: { name: string, deviceTypeId: number }) => {
-      // Hier muss auch die userId explizit übergeben werden
-      const response = await apiRequest("POST", "/api/brands", {
-        ...data,
-        userId: user?.id
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      setIsBrandDialogOpen(false);
-      setSelectedBrand(null);
-      toast({
-        title: "Erfolg!",
-        description: "Marke hinzugefügt.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Marke konnte nicht gespeichert werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-  
-  const updateBrandMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: { name: string, deviceTypeId: number } }) => {
-      const response = await apiRequest("PATCH", `/api/brands/${id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      setIsBrandDialogOpen(false);
-      setSelectedBrand(null);
-      toast({
-        title: "Erfolg!",
-        description: "Marke aktualisiert.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Marke konnte nicht aktualisiert werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-  
-  const deleteBrandMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/brands/${id}`);
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      return true;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      toast({
-        title: "Erfolg!",
-        description: "Marke gelöscht.",
-        duration: 2000,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler!",
-        description: `Die Marke konnte nicht gelöscht werden: ${error.message}`,
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  });
-
-  // Funktionen für Marken
-  const handleAddBrand = () => {
-    if (deviceTypes.length === 0) {
-      toast({
-        title: "Nicht möglich",
-        description: "Bitte erstellen Sie zuerst mindestens eine Geräteart.",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-    
-    setSelectedBrand({ name: "", deviceTypeId: deviceTypes[0].id });
-    setBrandFormData({
-      name: "",
-      deviceTypeId: deviceTypes[0].id.toString()
-    });
-    setIsBrandDialogOpen(true);
-  };
-  
-  const handleEditBrand = (brand: {id: number, name: string, deviceTypeId: number}) => {
-    setSelectedBrand(brand);
-    setBrandFormData({
-      name: brand.name,
-      deviceTypeId: brand.deviceTypeId.toString()
-    });
-    setIsBrandDialogOpen(true);
-  };
-  
-  const handleSaveBrand = (data: {name: string, deviceTypeId: string}) => {
-    const name = data.name.trim();
-    if (!name) return;
-    
-    const deviceTypeId = parseInt(data.deviceTypeId);
-    if (isNaN(deviceTypeId)) return;
-    
-    if (selectedBrand?.id) {
-      // Bearbeiten
-      updateBrandMutation.mutate({ 
-        id: selectedBrand.id, 
-        data: { name, deviceTypeId } 
-      });
-    } else {
-      // Neu hinzufügen
-      createBrandMutation.mutate({ name, deviceTypeId });
-    }
-  };
-  
-  const handleDeleteBrand = (id: number) => {
-    if (confirm("Möchten Sie diese Marke wirklich löschen?")) {
-      deleteBrandMutation.mutate(id);
-    }
-  };
 
   // Max. Logo-Größe in Bytes (1MB)
   const MAX_LOGO_SIZE = 1024 * 1024;
@@ -518,56 +242,63 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const result = await validateImage(file);
+    setLogoError(null); // Setzt Fehler zurück
 
-    if (result.isValid && result.base64) {
-      setLogoPreview(result.base64);
-      form.setValue('logoImage', result.base64);
-      setLogoError(null);
-    } else {
-      setLogoError(result.error || 'Unbekannter Fehler beim Hochladen des Logos.');
-      // Input zurücksetzen
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    try {
+      const result = await validateImage(file);
+      if (result.isValid && result.base64) {
+        setLogoPreview(result.base64);
+        form.setValue("logoImage", result.base64); // Setzt Base64-Bild im Formular
+      } else if (result.error) {
+        setLogoError(result.error);
+        setLogoPreview(null);
+        form.setValue("logoImage", ""); // Löscht das Bild aus dem Formular bei Fehler
       }
+    } catch (err) {
+      console.error("Fehler beim Validieren des Logos:", err);
+      setLogoError("Ein unerwarteter Fehler ist aufgetreten.");
+    }
+
+    // Leert das Input-Element für wiederholte Uploads derselben Datei
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-  // Funktion zum Löschen des Logos
+  // Event-Handler zum Löschen des Logos
   const handleDeleteLogo = () => {
     setLogoPreview(null);
-    form.setValue('logoImage', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    form.setValue("logoImage", "");
+    setLogoError(null);
   };
 
+  // Mutation für das Update der Unternehmenseinstellungen
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      // Wir senden das Logo als Base64-String mit
-      const response = await apiRequest("POST", "/api/business-settings", {
-        ...data,
-        logoImage: logoPreview
-      });
+      console.log("Sende Daten an API:", data);
+      const response = await apiRequest("POST", "/api/business-settings", data);
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
+      onClose(); // Dialog schließen
       toast({
         title: "Erfolg!",
-        description: "Einstellungen wurden aktualisiert.",
-        duration: 2000, // Nach 2 Sekunden ausblenden
+        description: "Die Einstellungen wurden gespeichert.",
+        duration: 2000, // Verkürzt auf 2 Sekunden
       });
-      onClose(); // Dialog schließen
     },
     onError: (error) => {
       toast({
         title: "Fehler!",
         description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
         variant: "destructive",
-        duration: 2000, // Nach 2 Sekunden ausblenden
+        duration: 3000,
       });
-    },
+    }
   });
 
   function onSubmit(data: ExtendedBusinessSettingsFormValues) {
@@ -862,10 +593,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </Form>
           </TabsContent>
 
-          {/* Tab: Kommunikation */}
-          <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto space-y-6">
+          {/* Tab: Kommunikation (E-Mail und SMS) */}
+          <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
             <Tabs defaultValue="email" className="w-full">
-              <TabsList className="mb-4">
+              <TabsList className="grid grid-cols-2 mb-4">
                 <TabsTrigger value="email" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" /> E-Mail
                 </TabsTrigger>
@@ -876,14 +607,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               
               {/* E-Mail-Einstellungen */}
               <TabsContent value="email">
-                <Tabs defaultValue="templates">
+                <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
                   <TabsList className="mb-4">
-                    <TabsTrigger value="templates" className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" /> Vorlagen
-                    </TabsTrigger>
-                    <TabsTrigger value="server" className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" /> SMTP-Server
-                    </TabsTrigger>
+                    <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
+                    <TabsTrigger value="settings">SMTP-Einstellungen</TabsTrigger>
                   </TabsList>
                   
                   {/* E-Mail-Vorlagen */}
@@ -891,16 +618,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     <EmailTemplateTab />
                   </TabsContent>
                   
-                  {/* SMTP-Server-Einstellungen */}
-                  <TabsContent value="server">
+                  {/* SMTP-Einstellungen */}
+                  <TabsContent value="settings">
                     <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {/* SMTP-Einstellungen */}
                         <div className="space-y-4">
-                          <h3 className="text-md font-medium mb-3">E-Mail-Server-Einstellungen (SMTP)</h3>
-                          <p className="text-sm text-muted-foreground mb-5">
-                            Hier können Sie Ihren eigenen E-Mail-Server konfigurieren, um E-Mails an Kunden zu senden.
-                            Diese Einstellungen sind optional. Wenn nicht ausgefüllt, wird der zentrale Mail-Server verwendet.
-                          </p>
+                          <h3 className="text-md font-medium mb-3">SMTP-Einstellungen</h3>
+                          <FormDescription>
+                            Tragen Sie hier Ihre SMTP-Servereinstellungen ein, damit Sie E-Mails mit Ihrem eigenen Mail-Server versenden können.
+                            Falls keine SMTP-Einstellungen angegeben werden, wird automatisch der Brevo-Dienst verwendet.
+                          </FormDescription>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
@@ -908,12 +636,12 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               name="smtpSenderName"
                               render={({ field }) => (
                                 <FormItem className="sm:col-span-2">
-                                  <FormLabel>Absendername für E-Mails</FormLabel>
+                                  <FormLabel>Absendername</FormLabel>
                                   <FormControl>
                                     <Input {...field} placeholder="Handyshop Service" />
                                   </FormControl>
                                   <FormDescription>
-                                    Dieser Name wird als Absender in E-Mails angezeigt
+                                    Der Name, der als Absender angezeigt wird
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
@@ -924,10 +652,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               control={form.control}
                               name="smtpHost"
                               render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>SMTP Server</FormLabel>
+                                <FormItem className="sm:col-span-2">
+                                  <FormLabel>SMTP-Server</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="smtp.beispiel.at" />
+                                    <Input {...field} placeholder="smtp.example.com" />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -939,7 +667,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               name="smtpPort"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>SMTP Port</FormLabel>
+                                  <FormLabel>SMTP-Port</FormLabel>
                                   <FormControl>
                                     <Input {...field} placeholder="587" />
                                   </FormControl>
@@ -953,9 +681,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               name="smtpUser"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel>SMTP Benutzername</FormLabel>
+                                  <FormLabel>SMTP-Benutzername</FormLabel>
                                   <FormControl>
-                                    <Input {...field} placeholder="benutzername" />
+                                    <Input {...field} placeholder="user@example.com" />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -966,11 +694,19 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                               control={form.control}
                               name="smtpPassword"
                               render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>SMTP Passwort</FormLabel>
+                                <FormItem className="sm:col-span-2">
+                                  <FormLabel>SMTP-Passwort</FormLabel>
                                   <FormControl>
-                                    <Input {...field} type="password" placeholder="••••••••" />
+                                    <Input 
+                                      {...field} 
+                                      type="password" 
+                                      placeholder="••••••••"
+                                      value={field.value || ""}
+                                    />
                                   </FormControl>
+                                  <FormDescription>
+                                    Lassen Sie dieses Feld leer, um das bestehende Passwort beizubehalten
+                                  </FormDescription>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -996,358 +732,96 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </Tabs>
           </TabsContent>
           
-          {/* Tab: Geräte & Marken */}
-          <TabsContent value="devices" className="max-h-[65vh] overflow-y-auto">
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Gerätearten</h3>
-                <div className="border rounded-md">
-                  <div className="p-4 flex justify-between items-center border-b">
-                    <div className="font-medium">Gerätearten verwalten</div>
-                    <Button size="sm" className="gap-1" onClick={handleAddDeviceType}>
-                      <Plus className="h-4 w-4" /> Neue Geräteart
-                    </Button>
-                  </div>
-                  {deviceTypes.length === 0 ? (
-                    <div className="p-6 text-center text-muted-foreground">
-                      Keine Gerätearten vorhanden. Fügen Sie eine neue Geräteart hinzu.
-                    </div>
-                  ) : (
-                    <div className="max-h-[300px] overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead className="text-right">Aktionen</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {deviceTypes.map((deviceType) => (
-                            <TableRow key={deviceType.id}>
-                              <TableCell>{deviceType.name}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => handleEditDeviceType(deviceType)}
-                                    title="Geräteart bearbeiten"
-                                  >
-                                    <PenLine className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => handleDeleteDeviceType(deviceType.id)}
-                                    title="Geräteart löschen"
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Marken</h3>
-                <div className="border rounded-md">
-                  <div className="p-4 flex justify-between items-center border-b">
-                    <div className="flex items-center gap-4">
-                      <div className="font-medium">Marken verwalten</div>
-                      
-                      {/* Gerätetyp-Filter für Marken */}
-                      {deviceTypes.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">Filter:</span>
-                          <Select
-                            value={selectedDeviceTypeForBrands?.toString() || "all"}
-                            onValueChange={(value) => {
-                              if (value === "all") {
-                                // Bei Auswahl von "Alle Gerätearten" setzen wir selectedDeviceTypeForBrands auf null
-                                setSelectedDeviceTypeForBrands(null);
-                              } else {
-                                // Ansonsten setzen wir den ausgewählten Gerätetyp
-                                setSelectedDeviceTypeForBrands(parseInt(value));
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Alle Gerätearten" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Alle Gerätearten</SelectItem>
-                              {deviceTypes.map((type) => (
-                                <SelectItem key={type.id} value={type.id.toString()}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-                    <Button size="sm" className="gap-1" onClick={handleAddBrand}>
-                      <Plus className="h-4 w-4" /> Neue Marke
-                    </Button>
-                  </div>
-                  {brands.length === 0 ? (
-                    <div className="p-6 text-center text-muted-foreground">
-                      {selectedDeviceTypeForBrands
-                        ? "Keine Marken für diesen Gerätetyp vorhanden."
-                        : "Keine Marken vorhanden. Fügen Sie eine neue Marke hinzu."}
-                    </div>
-                  ) : (
-                    <div className="max-h-[300px] overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Gerätetyp</TableHead>
-                            <TableHead className="text-right">Aktionen</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {brands.map((brand) => (
-                            <TableRow key={brand.id}>
-                              <TableCell>{brand.name}</TableCell>
-                              <TableCell>
-                                {deviceTypes.find(dt => dt.id === brand.deviceTypeId)?.name || "Unbekannt"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => handleEditBrand(brand)}
-                                    title="Marke bearbeiten"
-                                  >
-                                    <PenLine className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    onClick={() => handleDeleteBrand(brand.id)}
-                                    title="Marke löschen"
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Dialog für Geräteart hinzufügen/bearbeiten */}
-            <Dialog open={isDeviceTypeDialogOpen} onOpenChange={setIsDeviceTypeDialogOpen}>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {selectedDeviceType?.id ? "Geräteart bearbeiten" : "Neue Geräteart hinzufügen"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="deviceTypeName">Name</Label>
-                    <Input 
-                      id="deviceTypeName" 
-                      placeholder="z.B. Smartphone, Tablet, etc." 
-                      value={deviceTypeName}
-                      onChange={(e) => setDeviceTypeName(e.target.value)}
-                      ref={(input) => input?.focus()}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsDeviceTypeDialogOpen(false)}
-                  >
-                    Abbrechen
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      const name = deviceTypeName.trim();
-                      if (!name) return;
-                      handleSaveDeviceType(name);
-                    }}
-                  >
-                    Speichern
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            
-            {/* Dialog für Marke hinzufügen/bearbeiten */}
-            <Dialog open={isBrandDialogOpen} onOpenChange={setIsBrandDialogOpen}>
-              <DialogContent className="sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {selectedBrand?.id ? "Marke bearbeiten" : "Neue Marke hinzufügen"}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="brandName">Name</Label>
-                    <Input 
-                      id="brandName" 
-                      placeholder="z.B. Apple, Samsung, etc." 
-                      value={brandFormData.name}
-                      onChange={(e) => setBrandFormData({...brandFormData, name: e.target.value})}
-                      ref={(input) => input?.focus()}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="deviceTypeSelect">Gerätetyp</Label>
-                    <Select 
-                      value={brandFormData.deviceTypeId}
-                      onValueChange={(value) => setBrandFormData({...brandFormData, deviceTypeId: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Gerätetyp auswählen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {deviceTypes.map((dt) => (
-                          <SelectItem key={dt.id} value={dt.id.toString()}>
-                            {dt.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsBrandDialogOpen(false)}
-                  >
-                    Abbrechen
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      const name = brandFormData.name.trim();
-                      if (!name) return;
-                      
-                      handleSaveBrand({
-                        name, 
-                        deviceTypeId: brandFormData.deviceTypeId
-                      });
-                    }}
-                  >
-                    Speichern
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </TabsContent>
-          
-          {/* Tab: Darstellung */}
+          {/* Tab: Darstellung und Design */}
           <TabsContent value="appearance" className="max-h-[65vh] overflow-y-auto">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Farbschema Auswahl */}
                 <div className="space-y-4">
-                  <h3 className="text-md font-medium mb-3">Erscheinungsbild und Darstellungsoptionen</h3>
-                  <p className="text-sm text-muted-foreground mb-5">
-                    Passen Sie das Aussehen der Anwendung und Ausgabeformate an.
-                  </p>
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <Palette className="h-4 w-4" /> Design
+                  </h3>
                   
-                  <div className="grid grid-cols-1 gap-8">
-                    <FormField
-                      control={form.control}
-                      name="colorTheme"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel className="flex items-center gap-2">
-                            <Palette className="h-4 w-4" /> Farbpalette
-                          </FormLabel>
-                          <FormDescription>
-                            Wählen Sie eine Farbpalette für die Anwendung.
-                          </FormDescription>
-                          <div className="grid grid-cols-5 gap-3 my-4">
-                            {['blue', 'green', 'purple', 'red', 'orange'].map((color) => (
+                  <FormField
+                    control={form.control}
+                    name="colorTheme"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Farbschema</FormLabel>
+                        <FormDescription>
+                          Wählen Sie ein Farbschema für Ihre Anwendung. Bitte beachten Sie, dass die Änderung des Farbschemas ein Neuladen der Seite erfordert.
+                        </FormDescription>
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-1">
+                          {['blue', 'green', 'purple', 'red', 'orange'].map((color) => (
+                            <div
+                              key={color}
+                              className={`relative rounded-md p-2 cursor-pointer border-2 flex items-center justify-center
+                                ${field.value === color ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'}
+                                transition-all
+                              `}
+                              onClick={() => field.onChange(color)}
+                              data-active={field.value === color}
+                            >
                               <div 
-                                key={color}
-                                onClick={() => form.setValue('colorTheme', color as any)}
-                                className={`
-                                  w-full aspect-square rounded-lg cursor-pointer transition-all 
-                                  ${field.value === color ? 'ring-2 ring-offset-2 ring-primary' : 'hover:scale-105'} 
-                                  ${color === 'blue' ? 'bg-blue-600' : ''}
-                                  ${color === 'green' ? 'bg-green-600' : ''}
-                                  ${color === 'purple' ? 'bg-purple-600' : ''}
-                                  ${color === 'red' ? 'bg-red-600' : ''}
-                                  ${color === 'orange' ? 'bg-orange-600' : ''}
-                                `}
+                                className={`w-full h-8 rounded-md
+                                  ${color === 'blue' ? 'bg-blue-500' : 
+                                    color === 'green' ? 'bg-green-500' : 
+                                    color === 'purple' ? 'bg-purple-500' : 
+                                    color === 'red' ? 'bg-red-500' : 
+                                    'bg-orange-500'
+                                  }
+                                `} 
                               />
-                            ))}
-                          </div>
+                              <FormLabel className="font-medium w-full text-center mt-1 capitalize cursor-pointer">
+                                {color}
+                              </FormLabel>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                {/* Bonbreite Auswahl */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <Printer className="h-4 w-4" /> Druckeinstellungen
+                  </h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="receiptWidth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bonbreite</FormLabel>
+                        <FormDescription>
+                          Wählen Sie die Breite der Bons, die Sie ausdrucken möchten.
+                        </FormDescription>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
-                            <Select 
-                              defaultValue={field.value} 
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Farbpalette wählen" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="blue">Blau</SelectItem>
-                                <SelectItem value="green">Grün</SelectItem>
-                                <SelectItem value="purple">Lila</SelectItem>
-                                <SelectItem value="red">Rot</SelectItem>
-                                <SelectItem value="orange">Orange</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <SelectTrigger className="w-full max-w-[200px]">
+                              <SelectValue placeholder="80mm" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="receiptWidth"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel className="flex items-center gap-2">
-                            <Printer className="h-4 w-4" /> Bonbreite
-                          </FormLabel>
-                          <FormDescription>
-                            Wählen Sie die Breite des Thermobondruckers.
-                          </FormDescription>
-                          <FormControl>
-                            <Select 
-                              defaultValue={field.value} 
-                              onValueChange={field.onChange}
-                            >
-                              <SelectTrigger className="w-full sm:w-[200px]">
-                                <SelectValue placeholder="Bonbreite wählen" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="80mm">80mm Bon</SelectItem>
-                                <SelectItem value="58mm">58mm Bon</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                          <SelectContent>
+                            <SelectItem value="58mm">58mm</SelectItem>
+                            <SelectItem value="80mm">80mm</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <DialogFooter>
                   <Button type="submit" disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? "Wird gespeichert..." : "Darstellungsoptionen speichern"}
+                    {updateMutation.isPending ? "Wird gespeichert..." : "Darstellungseinstellungen speichern"}
                   </Button>
                 </DialogFooter>
               </form>
