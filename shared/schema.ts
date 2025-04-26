@@ -107,6 +107,8 @@ export const businessSettings = pgTable("business_settings", {
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
+  userId: integer("user_id").references(() => users.id),
 });
 
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({

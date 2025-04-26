@@ -407,13 +407,25 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Business settings methods
-  async getBusinessSettings(): Promise<BusinessSettings | undefined> {
+  async getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined> {
+    // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser
+    if (userId) {
+      const [settings] = await db.select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      return settings;
+    }
+    
+    // Ansonsten gebe die erste Einstellung zurück (für Kompatibilität)
     const [settings] = await db.select().from(businessSettings);
     return settings;
   }
   
-  async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>): Promise<BusinessSettings> {
-    const existingSettings = await this.getBusinessSettings();
+  async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>, userId?: number): Promise<BusinessSettings> {
+    // Wenn eine Benutzer-ID angegeben ist, versuche die Einstellungen für diesen Benutzer zu finden
+    const existingSettings = userId ? 
+      await this.getBusinessSettings(userId) : 
+      await this.getBusinessSettings();
     
     if (existingSettings) {
       // Update existing settings
@@ -428,12 +440,13 @@ export class DatabaseStorage implements IStorage {
       
       return updatedSettings;
     } else {
-      // Create new settings
+      // Create new settings for this user
       const [newSettings] = await db
         .insert(businessSettings)
         .values({
           ...settingsData as InsertBusinessSettings,
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          userId: userId // Speichere die Benutzer-ID
         })
         .returning();
       
