@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { saveModel, getModelsForDeviceAndBrand, saveBrand, getBrandsForDeviceType } from '@/lib/localStorage';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { Customer } from '@/lib/types';
-import { UserDeviceType, UserBrand, insertRepairSchema } from '@shared/schema';
+import { insertRepairSchema } from '@shared/schema';
 
 import {
   Dialog,
@@ -163,10 +163,10 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
-      // Speichere Modell in localStorage
+      // Speichere Marke und Modell in localStorage
       const formValues = form.getValues();
       if (formValues.brand && formValues.model && formValues.deviceType) {
-        const { deviceType: deviceTypeId, brand: brandId, model } = formValues;
+        const { deviceType: deviceTypeId, brand, model } = formValues;
         
         // Direkte Zuordnung der statischen Gerätetypen
         const deviceTypeMap: Record<string, string> = {
@@ -177,11 +177,14 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         };
         
         const deviceTypeName = deviceTypeMap[deviceTypeId];
-        const selectedBrand = brands.find(b => b.id.toString() === brandId);
         
-        if (deviceTypeName && selectedBrand) {
-          saveModel(deviceTypeName, selectedBrand.name, model);
-          console.log(`Modell gespeichert: ${deviceTypeName}:${selectedBrand.name} - ${model}`);
+        if (deviceTypeName) {
+          // Speichere Marke für diesen Gerätetyp
+          saveBrand(deviceTypeName, brand);
+          // Speichere Modell für diese Marke und Gerätetyp
+          saveModel(deviceTypeName, brand, model);
+          console.log(`Marke gespeichert: ${deviceTypeName} - ${brand}`);
+          console.log(`Modell gespeichert: ${deviceTypeName}:${brand} - ${model}`);
         }
       }
       
@@ -205,7 +208,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   function onSubmit(data: RepairFormValues) {
     // IDs in Namen umwandeln für den Server
     const deviceTypeId = data.deviceType;
-    const brandId = data.brand;
+    const brandName = data.brand; // Brand ist jetzt direkt der Name
     
     // Direkte Zuordnung der statischen Gerätetypen
     const deviceTypeMap: Record<string, string> = {
@@ -215,14 +218,11 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       "10": "Watch"
     };
     
-    // Marken über API-Daten ermitteln
-    const selectedBrand = brands.find(brand => brand.id.toString() === brandId);
-    
-    if (deviceTypeMap[deviceTypeId] && selectedBrand) {
+    if (deviceTypeMap[deviceTypeId]) {
       const modifiedData = {
         ...data,
         deviceType: deviceTypeMap[deviceTypeId],
-        brand: selectedBrand.name
+        // Brand ist bereits der Name, keine Änderung nötig
       };
       
       console.log("Modifizierte Daten für Server:", modifiedData);
@@ -230,7 +230,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     } else {
       toast({
         title: "Fehler!",
-        description: "Gerätetyp oder Marke konnte nicht gefunden werden.",
+        description: "Gerätetyp konnte nicht gefunden werden.",
         variant: "destructive",
         duration: 3000,
       });
