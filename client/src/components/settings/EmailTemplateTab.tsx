@@ -344,31 +344,9 @@ export function EmailTemplateTab() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <h4 className="text-sm font-semibold mb-1">Betreff:</h4>
-                  <p className="text-sm mb-3 text-muted-foreground">{template.subject}</p>
+                  {/* Nur der Titel wird angezeigt, wie vom Benutzer gewünscht */}
                   
-                  <h4 className="text-sm font-semibold mb-1">Variablen:</h4>
-                  <p className="text-sm mb-3 text-muted-foreground">
-                    {template.variables ? 
-                      (typeof template.variables === 'string' 
-                        ? template.variables.split(',').map((v: string) => `{{${v.trim()}}}`).join(', ')
-                        : (Array.isArray(template.variables)
-                           ? template.variables.map((v: string) => `{{${v.trim()}}}`).join(', ')
-                           : 'Keine Variablen')
-                      ) : 
-                      'Keine Variablen'
-                    }
-                  </p>
-                  
-                  <h4 className="text-sm font-semibold mb-1">Inhalt:</h4>
-                  <div className="text-sm border rounded-md p-2 max-h-32 overflow-auto">
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {template.body.length > 200 ? 
-                        `${template.body.substring(0, 200)}...` : 
-                        template.body
-                      }
-                    </p>
-                  </div>
+                  {/* Inhalt wird nicht mehr angezeigt, wie vom Benutzer gewünscht */}
                 </CardContent>
                 <CardFooter className="flex justify-end bg-muted/20 pt-2">
                   <p className="text-xs text-muted-foreground">
