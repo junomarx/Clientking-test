@@ -95,8 +95,8 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  // Max. Logo-Größe in Bytes (100KB)
-  const MAX_LOGO_SIZE = 100 * 1024;
+  // Max. Logo-Größe in Bytes (1MB)
+  const MAX_LOGO_SIZE = 1024 * 1024;
 
   // Lade die bestehenden Unternehmenseinstellungen
   const { data: settings, isLoading } = useQuery<BusinessSettings | null>({
@@ -189,11 +189,11 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       }
 
       // Überprüfen des Dateityps
-      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+      if (!['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'].includes(file.type)) {
         resolve({
           isValid: false,
           base64: null,
-          error: 'Nur JPEG und PNG Dateien sind erlaubt.'
+          error: 'Nur JPEG, PNG, SVG, GIF und WEBP Dateien sind erlaubt.'
         });
         return;
       }
