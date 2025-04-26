@@ -35,6 +35,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
+  const [sendSms, setSendSms] = useState(false);
   const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
   
   // PrintManager für Druckoptionen
@@ -98,8 +99,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
+    mutationFn: async ({ id, status, sendEmail, sendSms }: { id: number, status: string, sendEmail?: boolean, sendSms?: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, sendSms });
       return response.json();
     },
     onSuccess: () => {
@@ -179,7 +180,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     updateStatusMutation.mutate({ 
       id: selectedRepairId, 
       status: newStatus, 
-      sendEmail: (newStatus === 'fertig' && sendEmail) ? true : false 
+      sendEmail: (newStatus === 'fertig' && sendEmail) ? true : false,
+      sendSms: (newStatus === 'fertig' && sendSms) ? true : false
     });
   };
 
@@ -187,6 +189,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     setSelectedRepairId(id);
     setNewStatus(currentStatus);
     setSendEmail(false); // Reset E-Mail-Option
+    setSendSms(false); // Reset SMS-Option
     
     // Finde die Reparatur-Details
     const repair = filteredRepairs.find(r => r.id === id);
@@ -337,8 +340,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 setNewStatus(value);
                 if (value === 'fertig') {
                   setSendEmail(true); // Auto-select email option when status is set to "fertig"
+                  setSendSms(true); // Auto-select SMS option when status is set to "fertig"
                 } else {
                   setSendEmail(false);
+                  setSendSms(false);
                 }
               }}
             >
@@ -349,24 +354,39 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 <SelectItem value="eingegangen">Eingegangen</SelectItem>
                 <SelectItem value="in_reparatur">In Reparatur</SelectItem>
                 <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                <SelectItem value="fertig">Fertig</SelectItem>
+                <SelectItem value="fertig">Fertig / Abholbereit</SelectItem>
                 <SelectItem value="abgeholt">Abgeholt</SelectItem>
               </SelectContent>
             </Select>
             
-            {/* Wenn Status "fertig" gewählt ist, zeige E-Mail-Option an */}
+            {/* Benachrichtigungsoptionen für "fertig" Status */}
             {newStatus === 'fertig' && (
-              <div className="flex items-center space-x-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="sendEmail"
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                  checked={sendEmail}
-                  onChange={(e) => setSendEmail(e.target.checked)}
-                />
-                <label htmlFor="sendEmail">
-                  Benachrichtigungs-E-Mail an Kunden senden
-                </label>
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendEmail"
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                  />
+                  <label htmlFor="sendEmail">
+                    Benachrichtigungs-E-Mail an Kunden senden
+                  </label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendSms"
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                    checked={sendSms}
+                    onChange={(e) => setSendSms(e.target.checked)}
+                  />
+                  <label htmlFor="sendSms">
+                    SMS-Benachrichtigung an Kunden senden
+                  </label>
+                </div>
               </div>
             )}
           </div>
