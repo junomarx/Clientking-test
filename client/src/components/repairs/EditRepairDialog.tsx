@@ -112,6 +112,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       toast({
         title: "Auftrag aktualisiert",
         description: "Die Änderungen wurden erfolgreich gespeichert.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
     },
     onError: (error) => {
@@ -119,6 +120,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         title: "Fehler beim Speichern",
         description: "Die Änderungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       console.error("Error updating repair:", error);
     }
@@ -138,6 +140,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       toast({
         title: "Auftrag gelöscht",
         description: "Der Reparaturauftrag wurde erfolgreich gelöscht.",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       
       // Close dialog
@@ -148,6 +151,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         title: "Fehler beim Löschen",
         description: "Der Reparaturauftrag konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
         variant: "destructive",
+        duration: 2000, // Nach 2 Sekunden ausblenden
       });
       console.error("Error deleting repair:", error);
     }
