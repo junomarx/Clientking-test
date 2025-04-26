@@ -128,8 +128,9 @@ export class EmailService {
         body = body.replace(new RegExp(placeholder, 'g'), value);
       });
       
-      // Geschäftsinformationen für das Absenderfeld laden
-      const [businessSetting] = await db.select().from(businessSettings);
+      // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
+      const [businessSetting] = await db.select().from(businessSettings)
+        .where(eq(businessSettings.userId, variables.userId ? parseInt(variables.userId) : 0));
       const senderEmail = businessSetting?.email || 'no-reply@example.com';
       const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
       
