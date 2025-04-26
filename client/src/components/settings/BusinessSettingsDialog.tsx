@@ -585,6 +585,102 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
               />
             </div>
 
+            {/* SMTP-Einstellungen für den E-Mail-Versand */}
+            <div className="mt-8 border-t pt-6">
+              <h3 className="text-lg font-medium mb-3">E-Mail-Server-Einstellungen (SMTP)</h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                Hier können Sie Ihren eigenen E-Mail-Server konfigurieren, um E-Mails an Kunden zu senden.
+                Diese Einstellungen sind optional. Wenn nicht ausgefüllt, wird der zentrale Mail-Server verwendet.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="smtpSenderName"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Absendername für E-Mails</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Handyshop Service" />
+                      </FormControl>
+                      <FormDescription>
+                        Dieser Name wird als Absender in E-Mails angezeigt
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="smtpHost"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>SMTP Server (Host)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="smtp.ihredomain.at" />
+                      </FormControl>
+                      <FormDescription>
+                        Der SMTP-Server Ihres E-Mail-Anbieters, z.B. smtp.gmail.com
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="smtpPort"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SMTP Port</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="587 oder 465" />
+                      </FormControl>
+                      <FormDescription>
+                        Typische Ports: 587 (TLS) oder 465 (SSL)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="smtpUser"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SMTP Benutzername</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="ihr-login@ihredomain.at" />
+                      </FormControl>
+                      <FormDescription>
+                        Oft Ihre E-Mail-Adresse
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="smtpPassword"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>SMTP Passwort</FormLabel>
+                      <FormControl>
+                        <Input type="password" {...field} placeholder="●●●●●●●●" />
+                      </FormControl>
+                      <FormDescription>
+                        Das Passwort für Ihren E-Mail-Account oder ein spezielles App-Passwort
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
             <DialogFooter>
               <Button 
                 type="submit" 
