@@ -84,29 +84,19 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // Die IDs sind fest vergeben und repräsentieren gängige Werte aus der Datenbank
   
   // State für die ausgewählte Geräteart
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
+  const [selectedDeviceType, setSelectedDeviceTypeId] = useState<string>("");
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   
   // Lade gespeicherte Marken aus localStorage, wenn sich der Gerätetyp ändert
   useEffect(() => {
-    if (selectedDeviceTypeId) {
-      // Mapping der IDs zu Namen
-      const deviceTypeMap: Record<string, string> = {
-        "7": "Laptop",
-        "8": "Smartphone",
-        "9": "Tablet",
-        "10": "Watch"
-      };
-      
-      const deviceTypeName = deviceTypeMap[selectedDeviceTypeId];
-      if (deviceTypeName) {
-        const brands = getBrandsForDeviceType(deviceTypeName);
-        setSavedBrands(brands);
-      }
+    if (selectedDeviceType) {
+      // Verwende den direkten Gerätetyp-Namen aus dem Input
+      const brands = getBrandsForDeviceType(selectedDeviceType);
+      setSavedBrands(brands);
     } else {
       setSavedBrands([]);
     }
-  }, [selectedDeviceTypeId]);
+  }, [selectedDeviceType]);
   
   // Setup form
   const form = useForm<RepairFormValues>({
@@ -166,26 +156,14 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       // Speichere Marke und Modell in localStorage
       const formValues = form.getValues();
       if (formValues.brand && formValues.model && formValues.deviceType) {
-        const { deviceType: deviceTypeId, brand, model } = formValues;
+        const { deviceType, brand, model } = formValues;
         
-        // Direkte Zuordnung der statischen Gerätetypen
-        const deviceTypeMap: Record<string, string> = {
-          "7": "Laptop",
-          "8": "Smartphone",
-          "9": "Tablet",
-          "10": "Watch"
-        };
-        
-        const deviceTypeName = deviceTypeMap[deviceTypeId];
-        
-        if (deviceTypeName) {
-          // Speichere Marke für diesen Gerätetyp
-          saveBrand(deviceTypeName, brand);
-          // Speichere Modell für diese Marke und Gerätetyp
-          saveModel(deviceTypeName, brand, model);
-          console.log(`Marke gespeichert: ${deviceTypeName} - ${brand}`);
-          console.log(`Modell gespeichert: ${deviceTypeName}:${brand} - ${model}`);
-        }
+        // Speichere Marke für diesen Gerätetyp
+        saveBrand(deviceType, brand);
+        // Speichere Modell für diese Marke und Gerätetyp
+        saveModel(deviceType, brand, model);
+        console.log(`Marke gespeichert: ${deviceType} - ${brand}`);
+        console.log(`Modell gespeichert: ${deviceType}:${brand} - ${model}`);
       }
       
       // Druckoptionen anzeigen
@@ -206,31 +184,18 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   
   // Wird aufgerufen, wenn das Formular abgeschickt wird
   function onSubmit(data: RepairFormValues) {
-    // IDs in Namen umwandeln für den Server
-    const deviceTypeId = data.deviceType;
+    // Wir verwenden direkt die eingegebenen Werte, ohne Mapping
+    const deviceType = data.deviceType;
     const brandName = data.brand; // Brand ist jetzt direkt der Name
     
-    // Direkte Zuordnung der statischen Gerätetypen
-    const deviceTypeMap: Record<string, string> = {
-      "7": "Laptop",
-      "8": "Smartphone",
-      "9": "Tablet",
-      "10": "Watch"
-    };
-    
-    if (deviceTypeMap[deviceTypeId]) {
-      const modifiedData = {
-        ...data,
-        deviceType: deviceTypeMap[deviceTypeId],
-        // Brand ist bereits der Name, keine Änderung nötig
-      };
-      
-      console.log("Modifizierte Daten für Server:", modifiedData);
-      createMutation.mutate(modifiedData);
+    // Prüfe ob wir einen gültigen Gerätetyp haben
+    if (deviceType) {
+      console.log("Modifizierte Daten für Server:", data);
+      createMutation.mutate(data);
     } else {
       toast({
         title: "Fehler!",
-        description: "Gerätetyp konnte nicht gefunden werden.",
+        description: "Bitte geben Sie einen Gerätetyp ein.",
         variant: "destructive",
         duration: 3000,
       });
@@ -271,27 +236,27 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gerätetyp</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setSelectedDeviceTypeId(value);
-                        form.setValue("brand", ""); // Marke zurücksetzen
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Gerätetyp auswählen" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {/* KOMPLETT STATISCHE LISTE - direkt codiert ohne API-Ladung */}
-                        <SelectItem value="7">Laptop</SelectItem>
-                        <SelectItem value="8">Smartphone</SelectItem>
-                        <SelectItem value="9">Tablet</SelectItem>
-                        <SelectItem value="10">Watch</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input 
+                        placeholder="z.B. Smartphone, Tablet, Laptop, Watch" 
+                        {...field}
+                        list="device-type-options" 
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value);
+                          // Wenn wir den Gerätetyp ändern, lokale State Variable aktualisieren
+                          // und Marke zurücksetzen
+                          setSelectedDeviceTypeId(value);
+                          form.setValue("brand", "");
+                        }}
+                      />
+                    </FormControl>
+                    <datalist id="device-type-options">
+                      <option value="Smartphone" />
+                      <option value="Tablet" />
+                      <option value="Laptop" />
+                      <option value="Watch" />
+                    </datalist>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -310,7 +275,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                           <Input 
                             placeholder="z.B. Apple, Samsung, Xiaomi" 
                             {...field}
-                            disabled={!selectedDeviceTypeId}
+                            disabled={!selectedDeviceType}
                             list="brand-options" 
                           />
                           {savedBrands.length > 0 && (
@@ -322,7 +287,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                           )}
                         </div>
                       </FormControl>
-                      {!selectedDeviceTypeId && (
+                      {!selectedDeviceType && (
                         <FormDescription>
                           Bitte zuerst Gerätetyp wählen
                         </FormDescription>
