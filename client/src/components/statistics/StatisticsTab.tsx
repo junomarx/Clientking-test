@@ -144,7 +144,7 @@ export function StatisticsTab() {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-primary">
           Reparaturstatistik
         </h1>
         <div className="flex gap-2">

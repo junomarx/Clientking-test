@@ -118,7 +118,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+        <h2 className="text-2xl font-semibold text-primary">
           Dashboard
         </h2>
         <motion.div
@@ -127,7 +127,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         >
           <Button
             onClick={onNewOrder}
-            className="bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg flex items-center gap-2 font-semibold"
+            className="bg-primary text-white shadow-lg flex items-center gap-2 font-semibold"
           >
             <motion.span 
               animate={{ rotate: [0, 0, 180, 180, 0], scale: [1, 1.3, 1.3, 1, 1] }}
