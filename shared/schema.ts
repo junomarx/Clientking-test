@@ -187,5 +187,39 @@ export const insertSmsTemplateSchema = createInsertSchema(smsTemplates).omit({
 export type SmsTemplate = typeof smsTemplates.$inferSelect;
 export type InsertSmsTemplate = z.infer<typeof insertSmsTemplateSchema>;
 
-// Hier standen die Definitionen für zentral verwaltete Gerätetypen und Marken,
-// die wir entfernt haben
+// Benutzerspezifische Gerätearten
+export const userDeviceTypes = pgTable("user_device_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id), // Jede Geräteart gehört zu einem Benutzer
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertUserDeviceTypeSchema = createInsertSchema(userDeviceTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type UserDeviceType = typeof userDeviceTypes.$inferSelect;
+export type InsertUserDeviceType = z.infer<typeof insertUserDeviceTypeSchema>;
+
+// Benutzerspezifische Marken
+export const userBrands = pgTable("user_brands", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  deviceTypeId: integer("device_type_id").notNull().references(() => userDeviceTypes.id), // Jede Marke gehört zu einer Geräteart
+  userId: integer("user_id").notNull().references(() => users.id), // Jede Marke gehört zu einem Benutzer
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertUserBrandSchema = createInsertSchema(userBrands).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type UserBrand = typeof userBrands.$inferSelect;
+export type InsertUserBrand = z.infer<typeof insertUserBrandSchema>;

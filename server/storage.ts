@@ -5,7 +5,9 @@ import {
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
-  smsTemplates, type SmsTemplate, type InsertSmsTemplate
+  smsTemplates, type SmsTemplate, type InsertSmsTemplate,
+  userDeviceTypes, type UserDeviceType, type InsertUserDeviceType,
+  userBrands, type UserBrand, type InsertUserBrand
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -97,7 +99,20 @@ export interface IStorage {
   // SMS sending method
   sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
   
-  // Device types and brand methods have been removed
+  // User device types methods
+  getUserDeviceTypes(userId: number): Promise<UserDeviceType[]>;
+  getUserDeviceType(id: number, userId: number): Promise<UserDeviceType | undefined>;
+  createUserDeviceType(deviceType: InsertUserDeviceType, userId: number): Promise<UserDeviceType>;
+  updateUserDeviceType(id: number, deviceType: Partial<InsertUserDeviceType>, userId: number): Promise<UserDeviceType | undefined>;
+  deleteUserDeviceType(id: number, userId: number): Promise<boolean>;
+  
+  // User brands methods
+  getUserBrands(userId: number): Promise<UserBrand[]>;
+  getUserBrand(id: number, userId: number): Promise<UserBrand | undefined>;
+  getUserBrandsByDeviceTypeId(deviceTypeId: number, userId: number): Promise<UserBrand[]>;
+  createUserBrand(brand: InsertUserBrand, userId: number): Promise<UserBrand>;
+  updateUserBrand(id: number, brand: Partial<InsertUserBrand>, userId: number): Promise<UserBrand | undefined>;
+  deleteUserBrand(id: number, userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

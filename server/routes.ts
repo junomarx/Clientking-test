@@ -7,14 +7,16 @@ import {
   insertBusinessSettingsSchema,
   insertFeedbackSchema,
   insertSmsTemplateSchema,
+  insertUserDeviceTypeSchema,
+  insertUserBrandSchema,
   repairStatuses,
   deviceTypes,
   customers,
   repairs,
   feedbacks,
   smsTemplates,
-  deviceTypesList,
-  brandsList
+  userDeviceTypes,
+  userBrands
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
