@@ -60,6 +60,14 @@ export interface IStorage {
     readyForPickup: number;
     outsourced: number;
   }>;
+  
+  // Detaillierte Reparaturstatistiken für erweiterte Analysen
+  getDetailedRepairStats(): Promise<{
+    byDeviceType: Record<string, number>;
+    byBrand: Record<string, number>;
+    byIssue: Record<string, number>;
+    mostRecentRepairs: Repair[];
+  }>;
 
   // Feedback methods
   createFeedbackToken(repairId: number, customerId: number): Promise<string>;
@@ -547,6 +555,100 @@ export class DatabaseStorage implements IStorage {
       readyForPickup: readyForPickupResult?.count || 0,
       outsourced: outsourcedResult?.count || 0,
     };
+  }
+  
+  // Detaillierte Reparaturstatistiken nach Gerätetyp und häufigen Problemen
+  async getDetailedRepairStats(currentUserId?: number): Promise<{
+    byDeviceType: Record<string, number>;
+    byBrand: Record<string, number>;
+    byIssue: Record<string, number>;
+    mostRecentRepairs: Repair[];
+  }> {
+    try {
+      if (!currentUserId) {
+        return {
+          byDeviceType: {},
+          byBrand: {},
+          byIssue: {},
+          mostRecentRepairs: []
+        };
+      }
+      
+      // Alle Reparaturen des Benutzers abrufen
+      const userRepairs = await db
+        .select()
+        .from(repairs)
+        .where(eq(repairs.userId, currentUserId));
+      
+      // Statistiken nach Gerätetyp
+      const byDeviceType: Record<string, number> = {};
+      userRepairs.forEach(repair => {
+        const deviceType = repair.deviceType;
+        byDeviceType[deviceType] = (byDeviceType[deviceType] || 0) + 1;
+      });
+      
+      // Statistiken nach Marke
+      const byBrand: Record<string, number> = {};
+      userRepairs.forEach(repair => {
+        const brand = repair.brand;
+        byBrand[brand] = (byBrand[brand] || 0) + 1;
+      });
+      
+      // Statistiken nach Problemen (häufigste Probleme)
+      // Hier extrahieren wir die ersten paar Wörter aus dem Issue-Feld
+      // oder verwenden bestimmte Schlüsselwörter
+      const byIssue: Record<string, number> = {};
+      userRepairs.forEach(repair => {
+        // Extrahiere relevante Schlüsselwörter aus dem Problem
+        const issue = repair.issue.toLowerCase();
+        
+        // Überprüfe auf häufige Probleme mit einfachen Stichwörtern
+        const keywords = [
+          'display', 'akku', 'battery', 'ladeport', 'ladebuchse', 'charging port', 
+          'kamera', 'camera', 'wasserschaden', 'water damage', 'software', 'wasser',
+          'mic', 'mikrofon', 'lautsprecher', 'speaker', 'touch', 'button', 'knopf',
+          'home', 'wifi', 'wlan', 'bluetooth', 'netz', 'network'
+        ];
+        
+        let matched = false;
+        for (const keyword of keywords) {
+          if (issue.includes(keyword)) {
+            byIssue[keyword] = (byIssue[keyword] || 0) + 1;
+            matched = true;
+            break; // Nehme nur das erste passende Schlüsselwort
+          }
+        }
+        
+        // Wenn kein Schlüsselwort gefunden wurde, verwende "Sonstiges"
+        if (!matched) {
+          byIssue['sonstiges'] = (byIssue['sonstiges'] || 0) + 1;
+        }
+      });
+      
+      // Die neuesten 5 Reparaturen
+      const mostRecentRepairs = [...userRepairs]
+        .sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0);
+          const dateB = new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        })
+        .slice(0, 5);
+      
+      return {
+        byDeviceType,
+        byBrand,
+        byIssue,
+        mostRecentRepairs
+      };
+    } catch (error) {
+      console.error("Error getting detailed repair stats:", error);
+      return {
+        byDeviceType: {},
+        byBrand: {},
+        byIssue: {},
+        mostRecentRepairs: []
+      };
+    }
   }
   
   // Feedback methods
