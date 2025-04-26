@@ -19,6 +19,7 @@ import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
+import { brevoEmailService } from "./brevo-email-service";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -1091,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // E-Mail senden
-      const emailSent = await emailService.sendEmailWithTemplate(
+      const emailSent = await brevoEmailService.sendEmailWithTemplate(
         reviewTemplate.id, 
         customer.email, 
         variables

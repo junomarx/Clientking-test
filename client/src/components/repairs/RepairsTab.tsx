@@ -222,6 +222,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     
     setShowStatusDialog(true);
   };
+  
+  // Funktion zum Senden einer Bewertungsanfrage
+  const handleSendReviewRequest = (repairId: number) => {
+    sendReviewRequestMutation.mutate(repairId);
+  };
 
   return (
     <div>
