@@ -23,6 +23,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -122,6 +123,150 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     { id: 2, name: "Samsung", deviceTypeId: 1, deviceTypeName: "Smartphone" },
     { id: 3, name: "Huawei", deviceTypeId: 2, deviceTypeName: "Tablet" }
   ]);
+  
+  // State für Dialoge
+  const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
+  const [isBrandDialogOpen, setIsBrandDialogOpen] = useState(false);
+  const [selectedDeviceType, setSelectedDeviceType] = useState<{id?: number, name: string} | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<{id?: number, name: string, deviceTypeId: number} | null>(null);
+  const [brandFormData, setBrandFormData] = useState({
+    name: "",
+    deviceTypeId: "1" // String, da Select-Komponente Strings erwartet
+  });
+  
+  // Funktionen für Gerätearten
+  const handleAddDeviceType = () => {
+    setSelectedDeviceType({ name: "" });
+    setIsDeviceTypeDialogOpen(true);
+  };
+  
+  const handleEditDeviceType = (deviceType: {id: number, name: string}) => {
+    setSelectedDeviceType(deviceType);
+    setIsDeviceTypeDialogOpen(true);
+  };
+  
+  const handleSaveDeviceType = (name: string) => {
+    if (selectedDeviceType?.id) {
+      // Bearbeiten
+      setDeviceTypes(deviceTypes.map(dt => 
+        dt.id === selectedDeviceType.id ? {...dt, name} : dt
+      ));
+      
+      // Aktualisiere auch die Geräteartnamen in den Marken
+      setBrands(brands.map(brand => 
+        brand.deviceTypeId === selectedDeviceType.id 
+          ? {...brand, deviceTypeName: name} 
+          : brand
+      ));
+    } else {
+      // Neu hinzufügen
+      const newId = Math.max(...deviceTypes.map(dt => dt.id), 0) + 1;
+      setDeviceTypes([...deviceTypes, {id: newId, name}]);
+    }
+    setIsDeviceTypeDialogOpen(false);
+    setSelectedDeviceType(null);
+    
+    toast({
+      title: "Erfolg!",
+      description: `Geräteart ${selectedDeviceType?.id ? "aktualisiert" : "hinzugefügt"}.`,
+      duration: 2000,
+    });
+  };
+  
+  const handleDeleteDeviceType = (id: number) => {
+    // Prüfe, ob es Marken mit diesem Gerätetyp gibt
+    const relatedBrands = brands.filter(brand => brand.deviceTypeId === id);
+    
+    if (relatedBrands.length > 0) {
+      toast({
+        title: "Nicht möglich",
+        description: `Diese Geräteart wird noch von ${relatedBrands.length} Marken verwendet.`,
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    if (confirm("Möchten Sie diese Geräteart wirklich löschen?")) {
+      setDeviceTypes(deviceTypes.filter(dt => dt.id !== id));
+      toast({
+        title: "Erfolg!",
+        description: "Geräteart gelöscht.",
+        duration: 2000,
+      });
+    }
+  };
+  
+  // Funktionen für Marken
+  const handleAddBrand = () => {
+    if (deviceTypes.length === 0) {
+      toast({
+        title: "Nicht möglich",
+        description: "Bitte erstellen Sie zuerst mindestens eine Geräteart.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    setSelectedBrand({ name: "", deviceTypeId: deviceTypes[0].id });
+    setBrandFormData({
+      name: "",
+      deviceTypeId: deviceTypes[0].id.toString()
+    });
+    setIsBrandDialogOpen(true);
+  };
+  
+  const handleEditBrand = (brand: {id: number, name: string, deviceTypeId: number}) => {
+    setSelectedBrand(brand);
+    setBrandFormData({
+      name: brand.name,
+      deviceTypeId: brand.deviceTypeId.toString()
+    });
+    setIsBrandDialogOpen(true);
+  };
+  
+  const handleSaveBrand = (data: {name: string, deviceTypeId: number}) => {
+    // Finde den Namen des Gerätetyps
+    const deviceTypeName = deviceTypes.find(dt => dt.id === data.deviceTypeId)?.name || "";
+    
+    if (selectedBrand?.id) {
+      // Bearbeiten
+      setBrands(brands.map(b => 
+        b.id === selectedBrand.id 
+          ? {...b, name: data.name, deviceTypeId: data.deviceTypeId, deviceTypeName} 
+          : b
+      ));
+    } else {
+      // Neu hinzufügen
+      const newId = Math.max(...brands.map(b => b.id), 0) + 1;
+      setBrands([...brands, {
+        id: newId, 
+        name: data.name, 
+        deviceTypeId: data.deviceTypeId,
+        deviceTypeName
+      }]);
+    }
+    setIsBrandDialogOpen(false);
+    setSelectedBrand(null);
+    
+    toast({
+      title: "Erfolg!",
+      description: `Marke ${selectedBrand?.id ? "aktualisiert" : "hinzugefügt"}.`,
+      duration: 2000,
+    });
+  };
+  
+  const handleDeleteBrand = (id: number) => {
+    if (confirm("Möchten Sie diese Marke wirklich löschen?")) {
+      setBrands(brands.filter(b => b.id !== id));
+      toast({
+        title: "Erfolg!",
+        description: "Marke gelöscht.",
+        duration: 2000,
+      });
+    }
+  };
 
   // Max. Logo-Größe in Bytes (1MB)
   const MAX_LOGO_SIZE = 1024 * 1024;
@@ -751,59 +896,53 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 <div className="border rounded-md">
                   <div className="p-4 flex justify-between items-center border-b">
                     <div className="font-medium">Gerätearten verwalten</div>
-                    <Button size="sm" className="gap-1">
+                    <Button size="sm" className="gap-1" onClick={handleAddDeviceType}>
                       <Plus className="h-4 w-4" /> Neue Geräteart
                     </Button>
                   </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Smartphone</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Tablet</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Laptop</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  {deviceTypes.length === 0 ? (
+                    <div className="p-6 text-center text-muted-foreground">
+                      Keine Gerätearten vorhanden. Fügen Sie eine neue Geräteart hinzu.
+                    </div>
+                  ) : (
+                    <div className="max-h-[300px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead className="text-right">Aktionen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {deviceTypes.map((deviceType) => (
+                            <TableRow key={deviceType.id}>
+                              <TableCell>{deviceType.name}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleEditDeviceType(deviceType)}
+                                    title="Geräteart bearbeiten"
+                                  >
+                                    <PenLine className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleDeleteDeviceType(deviceType.id)}
+                                    title="Geräteart löschen"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -812,66 +951,161 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 <div className="border rounded-md">
                   <div className="p-4 flex justify-between items-center border-b">
                     <div className="font-medium">Marken verwalten</div>
-                    <Button size="sm" className="gap-1">
+                    <Button size="sm" className="gap-1" onClick={handleAddBrand}>
                       <Plus className="h-4 w-4" /> Neue Marke
                     </Button>
                   </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Gerätetyp</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Apple</TableCell>
-                        <TableCell>Smartphone</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Samsung</TableCell>
-                        <TableCell>Smartphone</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>Huawei</TableCell>
-                        <TableCell>Tablet</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
-                              <PenLine className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                  {brands.length === 0 ? (
+                    <div className="p-6 text-center text-muted-foreground">
+                      Keine Marken vorhanden. Fügen Sie eine neue Marke hinzu.
+                    </div>
+                  ) : (
+                    <div className="max-h-[300px] overflow-y-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Gerätetyp</TableHead>
+                            <TableHead className="text-right">Aktionen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {brands.map((brand) => (
+                            <TableRow key={brand.id}>
+                              <TableCell>{brand.name}</TableCell>
+                              <TableCell>{brand.deviceTypeName}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleEditBrand(brand)}
+                                    title="Marke bearbeiten"
+                                  >
+                                    <PenLine className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleDeleteBrand(brand.id)}
+                                    title="Marke löschen"
+                                  >
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+            
+            {/* Dialog für Geräteart hinzufügen/bearbeiten */}
+            <Dialog open={isDeviceTypeDialogOpen} onOpenChange={setIsDeviceTypeDialogOpen}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedDeviceType?.id ? "Geräteart bearbeiten" : "Neue Geräteart hinzufügen"}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="deviceTypeName">Name</Label>
+                    <Input 
+                      id="deviceTypeName" 
+                      placeholder="z.B. Smartphone, Tablet, etc." 
+                      defaultValue={selectedDeviceType?.name || ""}
+                      ref={(input) => input?.focus()}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsDeviceTypeDialogOpen(false)}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      const input = document.getElementById("deviceTypeName") as HTMLInputElement;
+                      const name = input.value.trim();
+                      if (!name) return;
+                      handleSaveDeviceType(name);
+                    }}
+                  >
+                    Speichern
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            {/* Dialog für Marke hinzufügen/bearbeiten */}
+            <Dialog open={isBrandDialogOpen} onOpenChange={setIsBrandDialogOpen}>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>
+                    {selectedBrand?.id ? "Marke bearbeiten" : "Neue Marke hinzufügen"}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="brandName">Name</Label>
+                    <Input 
+                      id="brandName" 
+                      placeholder="z.B. Apple, Samsung, etc." 
+                      defaultValue={selectedBrand?.name || ""}
+                      ref={(input) => input?.focus()}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="deviceTypeSelect">Gerätetyp</Label>
+                    <Select 
+                      defaultValue={selectedBrand?.deviceTypeId?.toString()} 
+                      onValueChange={() => {}}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Gerätetyp auswählen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {deviceTypes.map((dt) => (
+                          <SelectItem key={dt.id} value={dt.id.toString()}>
+                            {dt.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsBrandDialogOpen(false)}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      const nameInput = document.getElementById("brandName") as HTMLInputElement;
+                      const name = nameInput.value.trim();
+                      if (!name) return;
+                      
+                      const select = document.getElementById("deviceTypeSelect") as HTMLSelectElement;
+                      const deviceTypeId = parseInt(select.value);
+                      if (isNaN(deviceTypeId)) return;
+                      
+                      handleSaveBrand({name, deviceTypeId});
+                    }}
+                  >
+                    Speichern
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
           
           {/* Tab: Darstellung */}
