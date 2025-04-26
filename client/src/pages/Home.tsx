@@ -4,13 +4,11 @@ import { TabNavigation } from '@/components/layout/TabNavigation';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
-import { EmailTemplateTab } from '@/components/settings/EmailTemplateTab';
-import { SmsTemplateTab } from '@/components/settings/SmsTemplateTab';
 import { StatisticsTab } from '@/components/statistics/StatisticsTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { NewRepairModal } from '@/components/repairs/NewRepairModal';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'emailTemplates' | 'smsTemplates' | 'statistics';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -40,14 +38,6 @@ export default function Home() {
           
           {activeTab === 'customers' && (
             <CustomersTab onNewOrder={handleNewOrder} />
-          )}
-          
-          {activeTab === 'emailTemplates' && (
-            <EmailTemplateTab />
-          )}
-          
-          {activeTab === 'smsTemplates' && (
-            <SmsTemplateTab />
           )}
           
           {activeTab === 'statistics' && (

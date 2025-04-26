@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useLocation } from 'wouter';
-import { Settings, Users, BarChart, MessageSquare } from 'lucide-react';
+import { Users, BarChart } from 'lucide-react';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'emailTemplates' | 'smsTemplates' | 'statistics';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
 
 interface TabNavigationProps {
   activeTab: Tab;
@@ -53,26 +53,6 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
           onClick={() => onTabChange('customers')}
         >
           <span className="mr-2">👥</span> Kunden
-        </button>
-        <button 
-          className={`px-4 py-4 font-semibold ${
-            activeTab === 'emailTemplates' 
-              ? 'text-primary border-b-2 border-primary' 
-              : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-          } transition-all flex items-center`}
-          onClick={() => onTabChange('emailTemplates')}
-        >
-          <span className="mr-2">✉️</span> E-Mail-Vorlagen
-        </button>
-        <button 
-          className={`px-4 py-4 font-semibold ${
-            activeTab === 'smsTemplates' 
-              ? 'text-primary border-b-2 border-primary' 
-              : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-          } transition-all flex items-center`}
-          onClick={() => onTabChange('smsTemplates')}
-        >
-          <MessageSquare className="mr-2 h-4 w-4" /> SMS-Vorlagen
         </button>
         <button 
           className={`px-4 py-4 font-semibold ${
