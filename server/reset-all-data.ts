@@ -22,9 +22,14 @@ async function resetAllData() {
     console.log("Beginne Transaktion...");
     await db.execute(sql`BEGIN`);
     
-    // 1. Alle Feedbacks löschen
-    console.log("Lösche alle Feedbacks...");
-    await db.delete(feedbacks);
+    // 1. Prüfen, ob die Feedbacks-Tabelle existiert und ggf. löschen
+    console.log("Prüfe auf Feedbacks-Tabelle...");
+    try {
+      await db.delete(feedbacks);
+      console.log("Feedbacks gelöscht.");
+    } catch (error) {
+      console.log("Feedbacks-Tabelle existiert nicht oder ist leer. Überspringe...");
+    }
     
     // 2. Alle Reparaturen löschen
     console.log("Lösche alle Reparaturen...");
@@ -114,9 +119,13 @@ async function checkResults() {
   const repairsCount = await db.select({ count: sql`count(*)` }).from(repairs);
   console.log(`Anzahl Reparaturen in der Datenbank: ${Number(repairsCount[0].count)}`);
   
-  // Zähle Feedbacks
-  const feedbacksCount = await db.select({ count: sql`count(*)` }).from(feedbacks);
-  console.log(`Anzahl Feedbacks in der Datenbank: ${Number(feedbacksCount[0].count)}`);
+  // Zähle Feedbacks (wenn die Tabelle existiert)
+  try {
+    const feedbacksCount = await db.select({ count: sql`count(*)` }).from(feedbacks);
+    console.log(`Anzahl Feedbacks in der Datenbank: ${Number(feedbacksCount[0].count)}`);
+  } catch (error) {
+    console.log(`Feedbacks-Tabelle existiert nicht.`);
+  }
   
   // Zähle Benutzer
   const usersCount = await db.select({ count: sql`count(*)` }).from(users);
