@@ -1055,7 +1055,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "SMS template not found" });
       }
       
-      const success = await storage.sendSmsWithTemplate(templateId, phoneNumber, variables || {}, userId);
+      // Füge userId zu den Variablen hinzu, um die Datenisolierung zu gewährleisten
+      const variablesWithUserId = {
+        ...(variables || {}),
+        userId: userId.toString()
+      };
+      
+      const success = await storage.sendSmsWithTemplate(templateId, phoneNumber, variablesWithUserId, userId);
       if (success) {
         return res.status(200).json({ message: "SMS sent successfully" });
       } else {

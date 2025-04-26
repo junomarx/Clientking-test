@@ -56,10 +56,18 @@ export class SmsService {
           }
         }
       }
+      
+      // Geschäftsinformationen für den Absender des aktuellen Benutzers laden
+      const userId = variables.userId ? parseInt(variables.userId) : 0;
+      const [businessSetting] = await db.select().from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      // Absendername aus den Geschäftsinformationen verwenden
+      const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
 
       // Entwicklungsmodus-Information, aber senden trotzdem
       if (process.env.NODE_ENV === 'development') {
-        console.log('SMS wird gesendet an:', to);
+        console.log(`SMS wird gesendet an: ${to} von: ${senderName}`);
         console.log('SMS-Inhalt:', body);
       }
       
@@ -72,7 +80,7 @@ export class SmsService {
       try {
         // Sende die SMS über Brevo
         const smsRequest = new SendTransacSms();
-        smsRequest.sender = this.senderName;
+        smsRequest.sender = senderName;
         smsRequest.recipient = to;
         smsRequest.content = body;
         
