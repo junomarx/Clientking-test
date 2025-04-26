@@ -63,6 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       queryClient.setQueryData(["/api/user"], data);
+      
+      // Explizit den Cache für die Geschäftseinstellungen invalidieren
+      queryClient.invalidateQueries({
+        queryKey: ["/api/business-settings"]
+      });
+      
       toast({
         title: "Anmeldung erfolgreich",
         description: `Willkommen zurück, ${data.username}!`,
@@ -108,6 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Token bei Abmeldung entfernen
       localStorage.removeItem('auth_token');
       queryClient.setQueryData(["/api/user"], null);
+      
+      // Explizit den Cache für die Geschäftseinstellungen invalidieren
+      queryClient.invalidateQueries({
+        queryKey: ["/api/business-settings"]
+      });
+      
       toast({
         title: "Abmeldung erfolgreich",
         description: "Sie wurden erfolgreich abgemeldet."
