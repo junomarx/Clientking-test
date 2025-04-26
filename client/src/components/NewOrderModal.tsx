@@ -119,6 +119,7 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
   const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
   const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
+  const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   
   // Update Gerätetyp-Liste beim ersten Rendern
   useEffect(() => {
@@ -692,7 +693,27 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                 // Bei jeder Eingabe den Index zurücksetzen
                                 setSelectedDeviceTypeIndex(-1);
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
+                                // Wenn ein Element ausgewählt ist und Tab gedrückt wurde
+                                const filteredTypes = savedDeviceTypes
+                                  .filter(type => !field.value || type.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Wenn ein Element ausgewählt ist und wir wegnavigieren (z.B. mit Tab)
+                                if (selectedDeviceTypeIndex >= 0 && filteredTypes.length > 0) {
+                                  const selectedType = filteredTypes[selectedDeviceTypeIndex];
+                                  field.onChange(selectedType);
+                                  
+                                  // Nur wenn der Fokus auf ein anderes Element gesetzt wird (nicht bei Klick außerhalb)
+                                  if (e.relatedTarget) {
+                                    const brandInput = document.querySelector('input[name="brand"]');
+                                    if (brandInput) {
+                                      setTimeout(() => {
+                                        (brandInput as HTMLInputElement).focus();
+                                      }, 10);
+                                    }
+                                  }
+                                }
+                                
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
                                 setTimeout(() => {
                                   setIsDeviceTypeDropdownOpen(false);
@@ -804,7 +825,27 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                   setSelectedBrandIndex(-1);
                                 }
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
+                                // Verwende die gefilterten Marken
+                                const filteredBrands = availableBrands
+                                  .filter(brand => !field.value || brand.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Wenn ein Element ausgewählt ist und wir wegnavigieren (z.B. mit Tab)
+                                if (selectedBrandIndex >= 0 && filteredBrands.length > 0) {
+                                  const selectedBrand = filteredBrands[selectedBrandIndex];
+                                  field.onChange(selectedBrand);
+                                  
+                                  // Nur wenn der Fokus auf ein anderes Element gesetzt wird (nicht bei Klick außerhalb)
+                                  if (e.relatedTarget) {
+                                    const modelInput = document.querySelector('input[name="model"]');
+                                    if (modelInput) {
+                                      setTimeout(() => {
+                                        (modelInput as HTMLInputElement).focus();
+                                      }, 10);
+                                    }
+                                  }
+                                }
+                                
                                 // Verzögerung, damit der Benutzer Zeit hat, einen Eintrag im Dropdown zu wählen
                                 setTimeout(() => {
                                   setIsBrandDropdownOpen(false);
@@ -918,7 +959,27 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                   setIsModelDropdownOpen(field.value?.length > 0);
                                 }
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
+                                // Verwende die gefilterten Modelle
+                                const filteredModels = savedModels
+                                  .filter(model => !field.value || model.toLowerCase().includes(field.value.toLowerCase()));
+                                
+                                // Wenn ein Element ausgewählt ist und wir wegnavigieren (z.B. mit Tab)
+                                if (selectedModelIndex >= 0 && filteredModels.length > 0) {
+                                  const selectedModel = filteredModels[selectedModelIndex];
+                                  field.onChange(selectedModel);
+                                  
+                                  // Nur wenn der Fokus auf ein anderes Element gesetzt wird (nicht bei Klick außerhalb)
+                                  if (e.relatedTarget) {
+                                    const serialNumberInput = document.querySelector('input[name="serialNumber"]');
+                                    if (serialNumberInput) {
+                                      setTimeout(() => {
+                                        (serialNumberInput as HTMLInputElement).focus();
+                                      }, 10);
+                                    }
+                                  }
+                                }
+                                
                                 // Verzögert schließen, um Klick auf Dropdown-Items zu ermöglichen
                                 setTimeout(() => {
                                   setIsModelDropdownOpen(false);
