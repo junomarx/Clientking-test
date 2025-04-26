@@ -80,34 +80,44 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     enabled: !!customerId && open,
   });
   
-  // Lade benutzerspezifische Gerätearten (genau wie in SettingsDialog)
-  const { data: deviceTypes = [] } = useQuery<UserDeviceType[]>({
+  // FESTGELEGTE Liste von Gerätetypen, damit wir die vollständige Liste garantieren können
+  // Wir laden die tatsächlichen Gerätetypen für die ID-Lookup, verwenden aber unsere statische Liste für die Anzeige
+  const [fixedDeviceTypes, setFixedDeviceTypes] = useState<{ id: number, name: string }[]>([]);
+  
+  // Lade die Gerätetypen aus der Datenbank nur für die ID-Zuordnung
+  const { data: deviceTypesFromDB = [] } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
     queryFn: async () => {
-      console.log("Lade Gerätetypen in NewRepairModal");
       try {
         const response = await apiRequest('GET', '/api/device-types');
-        const data = await response.json();
-        console.log("Geladene Gerätetypen in NewRepairModal:", JSON.stringify(data));
+        const result = await response.json();
         
-        // Ausgabe jedes einzelnen Gerätetyps zur besseren Diagnose
-        if (Array.isArray(data)) {
-          data.forEach((type, index) => {
-            console.log(`Gerätetyp ${index + 1}:`, type.id, type.name);
+        // Hier direkt die fixedDeviceTypes erstellen
+        if (Array.isArray(result)) {
+          // Erstelle eine statische Liste mit vordefinierten Gerätekategorien
+          // und verwende die IDs aus der Datenbank, wenn verfügbar
+          const requiredTypes = ["Laptop", "Smartphone", "Tablet", "Watch"];
+          const staticTypes = requiredTypes.map(typeName => {
+            // Suche die ID in den Datenbankdaten
+            const dbType = result.find(t => t.name.toLowerCase() === typeName.toLowerCase());
+            return {
+              id: dbType?.id || 0,  // Wenn keine ID gefunden, verwende 0 (wird später behandelt)
+              name: typeName
+            };
           });
           
-          // Prüfen ob Watch dabei ist
-          const hasWatch = data.some(type => type.name.toLowerCase() === 'watch');
-          console.log("Hat Watch-Gerätetyp:", hasWatch);
+          // Setze die feste Liste der Gerätetypen
+          setFixedDeviceTypes(staticTypes);
+          console.log("Feste Gerätetypliste erstellt:", staticTypes);
         }
         
-        return data;
+        return result;
       } catch (err) {
         console.error("Fehler beim Laden der Gerätetypen:", err);
         return [];
       }
     },
-    enabled: open,
+    enabled: open
   });
   
   // State für die ausgewählte Geräteart
@@ -193,7 +203,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       if (formValues.brand && formValues.model && formValues.deviceType) {
         const { deviceType: deviceTypeId, brand: brandId, model } = formValues;
         
-        const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
+        const selectedDeviceType = fixedDeviceTypes.find(type => type.id.toString() === deviceTypeId);
         const selectedBrand = brands.find(b => b.id.toString() === brandId);
         
         if (selectedDeviceType && selectedBrand) {
@@ -224,7 +234,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
     const deviceTypeId = data.deviceType;
     const brandId = data.brand;
     
-    const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
+    const selectedDeviceType = fixedDeviceTypes.find(type => type.id.toString() === deviceTypeId);
     const selectedBrand = brands.find(brand => brand.id.toString() === brandId);
     
     if (selectedDeviceType && selectedBrand) {
@@ -294,15 +304,15 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {deviceTypes.length > 0 ? (
-                          deviceTypes.map((type) => (
+                        {fixedDeviceTypes.length > 0 ? (
+                          fixedDeviceTypes.map((type) => (
                             <SelectItem key={type.id} value={type.id.toString()}>
                               {type.name}
                             </SelectItem>
                           ))
                         ) : (
                           <SelectItem value="" disabled>
-                            Keine Gerätearten verfügbar. Bitte erst in Einstellungen anlegen.
+                            Lade Gerätetypen...
                           </SelectItem>
                         )}
                       </SelectContent>
