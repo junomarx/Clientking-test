@@ -115,42 +115,6 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   // Benutzer-ID aus dem Auth-Kontext holen
   const { user } = useAuth();
   
-  // Daten für Gerätearten aus der API holen
-  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<UserDeviceType[]>({
-    queryKey: ['/api/device-types'],
-    enabled: open,
-  });
-  
-  // State für die ausgewählte Geräteart (für die Markenanzeige)
-  const [selectedDeviceTypeForBrands, setSelectedDeviceTypeForBrands] = useState<number | null>(null);
-  
-  // Lade Marken basierend auf dem ausgewählten Gerätetyp oder alle Marken, wenn kein Gerätetyp ausgewählt
-  const { 
-    data: brands = [], 
-    isLoading: isLoadingBrands 
-  } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeForBrands ? { deviceTypeId: selectedDeviceTypeForBrands } : 'all'],
-    queryFn: async () => {
-      try {
-        // Wenn ein Gerätetyp ausgewählt ist, holen wir nur die Marken für diesen Gerätetyp
-        // Ansonsten holen wir alle Marken
-        const url = selectedDeviceTypeForBrands 
-          ? `/api/brands?deviceTypeId=${selectedDeviceTypeForBrands}` 
-          : '/api/brands';
-          
-        console.log("Marken werden geladen von URL:", url);
-        const response = await apiRequest('GET', url);
-        const data = await response.json();
-        console.log("Geladene Marken:", data.length);
-        return data;
-      } catch (err) {
-        console.error('Fehler beim Laden der Marken:', err);
-        return [];
-      }
-    },
-    enabled: open,
-  });
-  
   // Wir initialisieren den ausgewählten Gerätetyp nicht mehr automatisch,
   // stattdessen lassen wir ihn auf null, damit der Benutzer "Alle Gerätearten" sieht
   
@@ -621,7 +585,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="business" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" /> Unternehmen
             </TabsTrigger>
@@ -630,9 +594,6 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center gap-2">
               <Settings className="h-4 w-4" /> Darstellung
-            </TabsTrigger>
-            <TabsTrigger value="devices" className="flex items-center gap-2">
-              <Smartphone className="h-4 w-4" /> Geräte & Marken
             </TabsTrigger>
           </TabsList>
 
