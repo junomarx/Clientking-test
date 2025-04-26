@@ -1076,6 +1076,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "auftragsnummer": repair.orderCode || `#${repair.id}`,
         "fehler": repair.issue,
         "geschaeftsname": businessSettings?.businessName || "Handyshop",
+        "logo": businessSettings?.logoImage || "",
+        "telefon": businessSettings?.phone || "",
+        "email": businessSettings?.email || "",
+        "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
+        "website": businessSettings?.website || "",
         // Wichtig: userId für die Datenisolierung hinzufügen
         "userId": userId.toString()
       };
