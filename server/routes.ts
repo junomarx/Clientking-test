@@ -463,41 +463,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // BUSINESS SETTINGS API
   app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Globale Einstellungen abrufen
-      const settings = await storage.getBusinessSettings();
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      console.log(`Fetching business settings for user ${userId} (${req.user?.username})`);
       
-      // Wenn der Benutzer kein Admin ist und die Business-Settings noch nicht gesetzt hat,
-      // initialisieren wir die Einstellungen mit den Firmendaten aus seinem Profil
-      if (req.user && !req.user.isAdmin && (!settings || settings.id === 1)) {
+      // Einstellungen für diesen spezifischen Benutzer abrufen
+      const settings = await storage.getBusinessSettings(userId);
+      
+      // Wenn der Benutzer noch keine eigenen Einstellungen hat,
+      // initialisieren wir sie mit den Firmendaten aus seinem Profil
+      if (!settings) {
+        console.log(`No settings found for user ${userId}, creating default settings`);
         // Verwende die Firmendaten des angemeldeten Benutzers
-        const userData = req.user;
+        const userData = req.user as any;
         
         // Erstelle ein Business-Settings-Objekt aus den Benutzerdaten
         const userSettings = {
-          id: settings?.id || 1,
-          businessName: userData.companyName || "",
+          businessName: userData?.companyName || "Mein Reparaturshop",
           ownerFirstName: "", 
           ownerLastName: "",
-          taxId: userData.companyVatNumber || "",
-          streetAddress: userData.companyAddress || "",
+          taxId: userData?.companyVatNumber || "",
+          streetAddress: userData?.companyAddress || "",
           city: "",
           zipCode: "",
           country: "Österreich",
-          phone: userData.companyPhone || "",
-          email: userData.companyEmail || userData.email || "",
+          phone: userData?.companyPhone || "",
+          email: userData?.companyEmail || userData?.email || "",
           website: "",
-          updatedAt: new Date(),
-          logoImage: settings?.logoImage || null,
-          colorTheme: settings?.colorTheme || "blue",
-          receiptWidth: settings?.receiptWidth || "80mm"
+          colorTheme: "blue",
+          receiptWidth: "80mm"
         };
         
-        // Diese temporären Einstellungen werden nur für die Anzeige verwendet
-        return res.json(userSettings);
+        // Speichere die Einstellungen für diesen Benutzer in der Datenbank
+        const newSettings = await storage.updateBusinessSettings(userSettings, userId);
+        return res.json(newSettings);
       }
       
       // Ansonsten geben wir die gespeicherten Einstellungen zurück
-      res.json(settings || {});
+      res.json(settings);
     } catch (error) {
       console.error("Error fetching business settings:", error);
       res.status(500).json({ message: "Failed to fetch business settings" });
@@ -506,6 +509,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      console.log(`Updating business settings for user ${userId} (${req.user?.username})`);
+      
       // Wir extrahieren das logoImage und colorTheme aus dem Request-Body, bevor wir die Validierung durchführen
       const { logoImage, colorTheme, ...settingsData } = req.body;
       
@@ -539,11 +546,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Speichere die Daten einschließlich der zusätzlichen Daten
+      // Speichere die Daten einschließlich der zusätzlichen Daten mit der Benutzer-ID
       const settings = await storage.updateBusinessSettings({
         ...validatedData,
         ...additionalData
-      });
+      }, userId);
       
       return res.json(settings);
     } catch (error) {
@@ -605,8 +612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
-      // Geschäftsinformationen laden
-      const businessSettings = await storage.getBusinessSettings();
+      // Geschäftsinformationen für den Besitzer der Reparatur laden
+      const businessSettings = await storage.getBusinessSettings(repair.userId);
       
       // Nur die notwendigen Informationen zurückgeben
       res.json({
