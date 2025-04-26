@@ -1,26 +1,42 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { saveModel } from '@/lib/localStorage';
+import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
+import { Customer } from '@/lib/types';
+import { UserDeviceType, UserBrand, insertRepairSchema } from '@shared/schema';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Customer, 
-  repairStatuses, 
-  insertRepairSchema, 
-  UserDeviceType, 
-  UserBrand 
-} from '@shared/schema';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Loader2 } from 'lucide-react';
-import { usePrintManager } from './PrintOptionsManager';
-import { saveModel } from '@/lib/localStorage';
 
 // Extended repair schema with validation
 const repairFormSchema = insertRepairSchema.extend({
@@ -46,33 +62,26 @@ type RepairFormValues = z.infer<typeof repairFormSchema>;
 interface NewRepairModalProps {
   open: boolean;
   onClose: () => void;
-  customerId?: number | null;
+  customerId?: number;
 }
 
 export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { showPrintOptions } = usePrintManager();
   
-  // Load customer details if customerId is provided
-  const { 
-    data: customer 
-  } = useQuery<Customer>({
-    queryKey: ['/api/customers', customerId],
+  // Lade Kundeninformationen, falls customerId vorhanden ist
+  const { data: customer } = useQuery<Customer>({
+    queryKey: [`/api/customers/${customerId}`],
     queryFn: async () => {
-      if (!customerId) return null;
-      try {
-        const response = await apiRequest('GET', `/api/customers/${customerId}`);
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden des Kunden:", err);
-        return null;
-      }
+      const response = await apiRequest('GET', `/api/customers/${customerId}`);
+      return response.json();
     },
     enabled: !!customerId && open,
   });
   
-  // Lade benutzerspezifische Gerätearten
-  const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<UserDeviceType[]>({
+  // Lade benutzerspezifische Gerätearten (genau wie in SettingsDialog)
+  const { data: deviceTypes = [] } = useQuery<UserDeviceType[]>({
     queryKey: ['/api/device-types'],
     enabled: open,
   });
@@ -80,20 +89,17 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // State für die ausgewählte Geräteart
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<string>("");
   
-  // Lade Marken basierend auf dem ausgewählten Gerätetyp
-  const { 
-    data: brands = [], 
-    isLoading: isLoadingBrands 
-  } = useQuery<UserBrand[]>({
+  // Lade Marken basierend auf dem ausgewählten Gerätetyp (genau wie in SettingsDialog)
+  const { data: brands = [] } = useQuery<UserBrand[]>({
     queryKey: ['/api/brands', selectedDeviceTypeId ? { deviceTypeId: parseInt(selectedDeviceTypeId) } : 'empty'],
     queryFn: async () => {
       if (!selectedDeviceTypeId) return [];
       
       try {
-        console.log("Lade Marken für Gerätetyp:", selectedDeviceTypeId);
+        console.log("Lade Marken für Gerätetyp in NewRepairModal:", selectedDeviceTypeId);
         const response = await apiRequest('GET', `/api/brands?deviceTypeId=${selectedDeviceTypeId}`);
         const data = await response.json();
-        console.log("Geladene Marken:", data.length);
+        console.log("Geladene Marken in NewRepairModal:", data.length);
         return data;
       } catch (err) {
         console.error('Fehler beim Laden der Marken:', err);
@@ -130,89 +136,74 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   // Create repair mutation
   const createMutation = useMutation({
     mutationFn: async (values: RepairFormValues) => {
-      // Für Debugging-Zwecke die Daten anzeigen
-      console.log("Sending repair data (submit):", values);
-      
       // Stelle sicher, dass depositAmount und estimatedCost korrekt übermittelt werden
       const cleanValues = {
         ...values,
-        // Wenn depositAmount oder estimatedCost leer sind, setze sie auf null
         depositAmount: values.depositAmount === "" ? null : values.depositAmount,
         estimatedCost: values.estimatedCost === "" ? null : values.estimatedCost
       };
       
-      console.log("Clean values being sent:", cleanValues);
+      console.log("Bereinigte Reparaturdaten werden gesendet:", cleanValues);
       
       const response = await apiRequest('POST', '/api/repairs', cleanValues);
       const result = await response.json();
-      // Hauptdialog schließen, damit der Druckdialog sichtbar wird
-      onClose();
+      onClose(); // Dialog schließen
       return result;
     },
     onSuccess: (data) => {
       toast({
-        title: "Reparaturauftrag erstellt",
+        title: "Erfolg!",
         description: "Der Reparaturauftrag wurde erfolgreich erstellt.",
+        duration: 2000,
       });
-      // Invalidate customer repairs query
+      
+      // Invalidiere relevante Queries
       if (customerId) {
         queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
       }
-      // Invalidate repairs query
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      // Invalidate stats query
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
-      console.log("Erstellt mit ID:", data.id);
-      
-      // Speichere Modell in localStorage wenn es neu ist
-      const formValues = form.getValues(); // Korrekte Werte aus dem Formular erhalten
+      // Speichere Modell in localStorage
+      const formValues = form.getValues();
       if (formValues.brand && formValues.model && formValues.deviceType) {
         const { deviceType: deviceTypeId, brand: brandId, model } = formValues;
         
-        // Finde den Gerätetyp-Namen anhand der ID
         const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
-        
-        // Finde den Marken-Namen anhand der ID
         const selectedBrand = brands.find(b => b.id.toString() === brandId);
         
         if (selectedDeviceType && selectedBrand) {
-          // Speichere das Modell mit dem Namen des Gerätetyps und der Marke statt der IDs
           saveModel(selectedDeviceType.name, selectedBrand.name, model);
           console.log(`Modell gespeichert: ${selectedDeviceType.name}:${selectedBrand.name} - ${model}`);
         }
       }
       
-      // Druckoptionen über den PrintManager anzeigen
+      // Druckoptionen anzeigen
       showPrintOptions(data.id);
-      console.log("Druckoptionen über PrintManager angezeigt für ID:", data.id);
       
-      // Form zurücksetzen
+      // Formular zurücksetzen
       form.reset();
     },
     onError: (error) => {
       toast({
-        title: "Fehler",
-        description: `Reparaturauftrag konnte nicht erstellt werden: ${error.message}`,
+        title: "Fehler!",
+        description: `Der Reparaturauftrag konnte nicht erstellt werden: ${error.message}`,
         variant: "destructive",
+        duration: 3000,
       });
     },
   });
   
-  // If no customer is selected or loaded and customerId is required
-  const isCustomerMissing = !customer && customerId;
-  
+  // Wird aufgerufen, wenn das Formular abgeschickt wird
   function onSubmit(data: RepairFormValues) {
-    // Wir müssen die IDs in Namen umwandeln, bevor wir die Daten an den Server senden
+    // IDs in Namen umwandeln für den Server
     const deviceTypeId = data.deviceType;
     const brandId = data.brand;
     
-    // Finde den Gerätetyp und die Marke anhand ihrer IDs
     const selectedDeviceType = deviceTypes.find(type => type.id.toString() === deviceTypeId);
     const selectedBrand = brands.find(brand => brand.id.toString() === brandId);
     
     if (selectedDeviceType && selectedBrand) {
-      // Ersetze die IDs durch die Namen
       const modifiedData = {
         ...data,
         deviceType: selectedDeviceType.name,
@@ -222,16 +213,20 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       console.log("Modifizierte Daten für Server:", modifiedData);
       createMutation.mutate(modifiedData);
     } else {
-      // Fehlerfall - sollte nicht auftreten
       toast({
-        title: "Fehler",
+        title: "Fehler!",
         description: "Gerätetyp oder Marke konnte nicht gefunden werden.",
         variant: "destructive",
+        duration: 3000,
       });
     }
   }
   
+  // Wenn der Dialog nicht geöffnet ist, nichts rendern
   if (!open) return null;
+  
+  // Prüfen, ob die Kundeninformationen fehlen
+  const isCustomerMissing = !customer && customerId;
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -254,6 +249,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Gerätetyp-Auswahl */}
               <FormField
                 control={form.control}
                 name="deviceType"
@@ -264,7 +260,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                       onValueChange={(value) => {
                         field.onChange(value);
                         setSelectedDeviceTypeId(value);
-                        form.setValue("brand", ""); // Zurücksetzen der Marke bei Änderung der Geräteart
+                        form.setValue("brand", ""); // Marke zurücksetzen
                       }}
                       defaultValue={field.value}
                     >
@@ -281,7 +277,9 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="" disabled>Keine Gerätearten verfügbar</SelectItem>
+                          <SelectItem value="" disabled>
+                            Keine Gerätearten verfügbar. Bitte erst in Einstellungen anlegen.
+                          </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -290,6 +288,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 )}
               />
               
+              {/* Marke und Modell */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -316,7 +315,9 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                             ))
                           ) : (
                             <SelectItem value="" disabled>
-                              {!selectedDeviceTypeId ? "Bitte zuerst Gerätetyp wählen" : "Keine Marken verfügbar"}
+                              {!selectedDeviceTypeId 
+                                ? "Bitte zuerst Gerätetyp wählen" 
+                                : "Keine Marken für diesen Gerätetyp verfügbar. Bitte erst in Einstellungen anlegen."}
                             </SelectItem>
                           )}
                         </SelectContent>
@@ -333,7 +334,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                     <FormItem>
                       <FormLabel>Modell</FormLabel>
                       <FormControl>
-                        <Input placeholder="z.B. iPhone 13, Galaxy S21" {...field} />
+                        <Input placeholder="z.B. iPhone 13, S22 Ultra" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -341,6 +342,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 />
               </div>
               
+              {/* Seriennummer */}
               <FormField
                 control={form.control}
                 name="serialNumber"
@@ -355,6 +357,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 )}
               />
               
+              {/* Problembeschreibung */}
               <FormField
                 control={form.control}
                 name="issue"
@@ -373,6 +376,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 )}
               />
               
+              {/* Kostenvoranschlag und Anzahlung */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -406,13 +410,14 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                           value={field.value === null || field.value === undefined ? '' : field.value}
                         />
                       </FormControl>
-                      <FormDescription>Gerät beim Kunden, wenn ausgefüllt</FormDescription>
+                      <FormDescription>Eingezahlter Betrag in Euro</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
+              {/* Status */}
               <FormField
                 control={form.control}
                 name="status"
@@ -441,6 +446,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 )}
               />
               
+              {/* Notizen */}
               <FormField
                 control={form.control}
                 name="notes"
@@ -460,6 +466,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                 )}
               />
               
+              {/* Buttons */}
               <div className="flex justify-between pt-2">
                 <Button 
                   type="button" 
