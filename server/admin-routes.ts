@@ -3,6 +3,7 @@ import { storage } from "./storage";
 import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
+import { insertDeviceTypeSchema, insertBrandSchema } from "@shared/schema";
 
 // Helper-Funktion für das Passwort-Hashing
 const scryptAsync = promisify(scrypt);
@@ -27,6 +28,250 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function registerAdminRoutes(app: Express) {
+  //==========================================================================
+  // GERÄTEVERWALTUNG ROUTES
+  //==========================================================================
+  
+  // Alle Gerätearten abrufen
+  app.get("/api/admin/device-types", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const deviceTypes = await storage.getAllDeviceTypes();
+      res.json(deviceTypes);
+    } catch (error) {
+      console.error("Error retrieving device types:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätearten" });
+    }
+  });
+  
+  // Einzelne Geräteart abrufen
+  app.get("/api/admin/device-types/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deviceType = await storage.getDeviceType(id);
+      
+      if (!deviceType) {
+        return res.status(404).json({ message: "Geräteart nicht gefunden" });
+      }
+      
+      res.json(deviceType);
+    } catch (error) {
+      console.error("Error retrieving device type:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geräteart" });
+    }
+  });
+  
+  // Neue Geräteart erstellen
+  app.post("/api/admin/device-types", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ message: "Name muss angegeben werden" });
+      }
+      
+      const newDeviceType = await storage.createDeviceType({ name });
+      res.status(201).json(newDeviceType);
+    } catch (error) {
+      console.error("Error creating device type:", error);
+      
+      // Prüfe auf Unique-Constraint-Verletzung
+      if (error instanceof Error && error.message.includes('unique constraint')) {
+        return res.status(400).json({ message: "Eine Geräteart mit diesem Namen existiert bereits" });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Erstellen der Geräteart" });
+    }
+  });
+  
+  // Geräteart aktualisieren
+  app.patch("/api/admin/device-types/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ message: "Name muss angegeben werden" });
+      }
+      
+      const deviceType = await storage.getDeviceType(id);
+      
+      if (!deviceType) {
+        return res.status(404).json({ message: "Geräteart nicht gefunden" });
+      }
+      
+      const updatedDeviceType = await storage.updateDeviceType(id, { name });
+      
+      if (!updatedDeviceType) {
+        return res.status(500).json({ message: "Fehler beim Aktualisieren der Geräteart" });
+      }
+      
+      res.json(updatedDeviceType);
+    } catch (error) {
+      console.error("Error updating device type:", error);
+      
+      // Prüfe auf Unique-Constraint-Verletzung
+      if (error instanceof Error && error.message.includes('unique constraint')) {
+        return res.status(400).json({ message: "Eine Geräteart mit diesem Namen existiert bereits" });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Geräteart" });
+    }
+  });
+  
+  // Geräteart löschen
+  app.delete("/api/admin/device-types/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const deviceType = await storage.getDeviceType(id);
+      
+      if (!deviceType) {
+        return res.status(404).json({ message: "Geräteart nicht gefunden" });
+      }
+      
+      const deleted = await storage.deleteDeviceType(id);
+      
+      if (!deleted) {
+        return res.status(400).json({ 
+          message: "Die Geräteart kann nicht gelöscht werden, da sie noch von Marken verwendet wird" 
+        });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting device type:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Geräteart" });
+    }
+  });
+  
+  // Alle Marken abrufen
+  app.get("/api/admin/brands", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
+      const brands = await storage.getAllBrands(deviceTypeId);
+      res.json(brands);
+    } catch (error) {
+      console.error("Error retrieving brands:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
+    }
+  });
+  
+  // Einzelne Marke abrufen
+  app.get("/api/admin/brands/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const brand = await storage.getBrand(id);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      console.error("Error retrieving brand:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Marke" });
+    }
+  });
+  
+  // Neue Marke erstellen
+  app.post("/api/admin/brands", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const { name, deviceTypeId } = req.body;
+      
+      if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ message: "Name muss angegeben werden" });
+      }
+      
+      if (!deviceTypeId || typeof deviceTypeId !== 'number') {
+        return res.status(400).json({ message: "Geräteart-ID muss angegeben werden" });
+      }
+      
+      // Prüfe, ob die angegebene Geräteart existiert
+      const deviceType = await storage.getDeviceType(deviceTypeId);
+      
+      if (!deviceType) {
+        return res.status(400).json({ message: "Die angegebene Geräteart existiert nicht" });
+      }
+      
+      const newBrand = await storage.createBrand({ name, deviceTypeId });
+      res.status(201).json(newBrand);
+    } catch (error) {
+      console.error("Error creating brand:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Marke" });
+    }
+  });
+  
+  // Marke aktualisieren
+  app.patch("/api/admin/brands/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { name, deviceTypeId } = req.body;
+      
+      if ((name && (typeof name !== 'string' || name.trim() === '')) ||
+          (deviceTypeId && typeof deviceTypeId !== 'number')) {
+        return res.status(400).json({ message: "Ungültige Daten für die Aktualisierung" });
+      }
+      
+      const brand = await storage.getBrand(id);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      // Prüfe, ob die angegebene Geräteart existiert, falls eine neue angegeben wurde
+      if (deviceTypeId) {
+        const deviceType = await storage.getDeviceType(deviceTypeId);
+        
+        if (!deviceType) {
+          return res.status(400).json({ message: "Die angegebene Geräteart existiert nicht" });
+        }
+      }
+      
+      const updatedBrand = await storage.updateBrand(id, { 
+        ...(name && { name }), 
+        ...(deviceTypeId && { deviceTypeId }) 
+      });
+      
+      if (!updatedBrand) {
+        return res.status(500).json({ message: "Fehler beim Aktualisieren der Marke" });
+      }
+      
+      res.json(updatedBrand);
+    } catch (error) {
+      console.error("Error updating brand:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Marke" });
+    }
+  });
+  
+  // Marke löschen
+  app.delete("/api/admin/brands/:id", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const brand = await storage.getBrand(id);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      const deleted = await storage.deleteBrand(id);
+      
+      if (!deleted) {
+        return res.status(400).json({ 
+          message: "Die Marke kann nicht gelöscht werden" 
+        });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting brand:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Marke" });
+    }
+  });
+
+  //==========================================================================
+  // BENUTZERVERWALTUNG ROUTES
+  //==========================================================================
   // Admin-Dashboard
   app.get("/api/admin/dashboard", isAdmin, async (req: Request, res: Response) => {
     try {

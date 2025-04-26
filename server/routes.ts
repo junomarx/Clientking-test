@@ -12,7 +12,9 @@ import {
   customers,
   repairs,
   feedbacks,
-  smsTemplates
+  smsTemplates,
+  deviceTypesList,
+  brandsList
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
