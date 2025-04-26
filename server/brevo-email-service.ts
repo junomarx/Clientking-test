@@ -11,9 +11,7 @@ import nodemailer from 'nodemailer';
 export class BrevoEmailService {
   private apiInstance: TransactionalEmailsApi | null = null;
   private smtpTransporter: nodemailer.Transporter | null = null;
-  private readonly smtpHost = 'smtp-relay.brevo.com';
-  private readonly smtpPort = 587;
-  private readonly smtpLogin = '8b7dba001@smtp-brevo.com';
+  // Wir verwenden jetzt die Benutzer-SMTP-Einstellungen statt Brevo
 
   constructor() {
     const apiKey = process.env.BREVO_API_KEY;
@@ -32,19 +30,30 @@ export class BrevoEmailService {
       console.warn('Brevo-API-Schlüssel fehlt - E-Mail-Versand wird simuliert');
     }
 
-    // Initialisiere SMTP Transporter (bevorzugte Methode)
+    // Initialisiere SMTP Transporter mit den Benutzer-SMTP-Einstellungen
     try {
-      this.smtpTransporter = nodemailer.createTransport({
-        host: this.smtpHost,
-        port: this.smtpPort,
-        secure: false, // true für 465, false für andere Ports
-        auth: {
-          user: this.smtpLogin,
-          pass: apiKey || '' 
-        }
-      });
+      const smtpHost = process.env.SMTP_HOST;
+      const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPassword = process.env.SMTP_PASSWORD;
       
-      console.log('SMTP-Transporter für Brevo wurde initialisiert');
+      // Prüfe, ob alle erforderlichen SMTP-Einstellungen vorhanden sind
+      if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
+        console.warn('Eine oder mehrere SMTP-Einstellungen fehlen, verwende Brevo als Fallback');
+      } else {
+        // Verwende die Benutzer-SMTP-Einstellungen
+        this.smtpTransporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465, // true für 465, false für andere Ports
+          auth: {
+            user: smtpUser,
+            pass: smtpPassword
+          }
+        });
+        
+        console.log(`SMTP-Transporter für ${smtpHost} wurde initialisiert`);
+      }
     } catch (error) {
       console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
       this.smtpTransporter = null;
@@ -137,7 +146,7 @@ export class BrevoEmailService {
           console.log('Sende E-Mail über SMTP...');
           
           const mailOptions = {
-            from: `"${senderName}" <${this.smtpLogin}>`, // Der SMTP-Login muss als Absender verwendet werden
+            from: `"${senderName}" <${process.env.SMTP_USER}>`, // Der SMTP-Login muss als Absender verwendet werden
             to: to,
             subject: subject,
             html: body,
