@@ -47,7 +47,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { BusinessSettings } from "@shared/schema";
+import { BusinessSettings, UserDeviceType, UserBrand } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Upload, 
@@ -1095,14 +1095,43 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 <h3 className="text-lg font-medium">Marken</h3>
                 <div className="border rounded-md">
                   <div className="p-4 flex justify-between items-center border-b">
-                    <div className="font-medium">Marken verwalten</div>
+                    <div className="flex items-center gap-4">
+                      <div className="font-medium">Marken verwalten</div>
+                      
+                      {/* Gerätetyp-Filter für Marken */}
+                      {deviceTypes.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">Filter:</span>
+                          <Select
+                            value={selectedDeviceTypeForBrands?.toString() || ""}
+                            onValueChange={(value) => {
+                              setSelectedDeviceTypeForBrands(value ? parseInt(value) : null);
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Alle Gerätearten" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">Alle Gerätearten</SelectItem>
+                              {deviceTypes.map((type) => (
+                                <SelectItem key={type.id} value={type.id.toString()}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </div>
                     <Button size="sm" className="gap-1" onClick={handleAddBrand}>
                       <Plus className="h-4 w-4" /> Neue Marke
                     </Button>
                   </div>
                   {brands.length === 0 ? (
                     <div className="p-6 text-center text-muted-foreground">
-                      Keine Marken vorhanden. Fügen Sie eine neue Marke hinzu.
+                      {selectedDeviceTypeForBrands
+                        ? "Keine Marken für diesen Gerätetyp vorhanden."
+                        : "Keine Marken vorhanden. Fügen Sie eine neue Marke hinzu."}
                     </div>
                   ) : (
                     <div className="max-h-[300px] overflow-y-auto">
@@ -1118,7 +1147,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                           {brands.map((brand) => (
                             <TableRow key={brand.id}>
                               <TableCell>{brand.name}</TableCell>
-                              <TableCell>{brand.deviceTypeName}</TableCell>
+                              <TableCell>
+                                {deviceTypes.find(dt => dt.id === brand.deviceTypeId)?.name || "Unbekannt"}
+                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
                                   <Button 
