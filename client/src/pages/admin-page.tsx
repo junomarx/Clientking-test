@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-// Gerätearten und Marken Komponenten
-import { DeviceTypeTable } from '@/components/admin/DeviceTypeTable';
-import { BrandTable } from '@/components/admin/BrandTable';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -578,20 +575,12 @@ export default function AdminPage() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="users">Benutzer</TabsTrigger>
-          <TabsTrigger value="device-types">Gerätearten</TabsTrigger>
-          <TabsTrigger value="brands">Marken</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
         </TabsContent>
         <TabsContent value="users">
           <UserTable />
-        </TabsContent>
-        <TabsContent value="device-types">
-          <DeviceTypeTable />
-        </TabsContent>
-        <TabsContent value="brands">
-          <BrandTable />
         </TabsContent>
       </Tabs>
     </div>

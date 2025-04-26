@@ -5,9 +5,7 @@ import {
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
-  smsTemplates, type SmsTemplate, type InsertSmsTemplate,
-  deviceTypesList, type DeviceType, type InsertDeviceType,
-  brandsList, type Brand, type InsertBrand
+  smsTemplates, type SmsTemplate, type InsertSmsTemplate
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -99,19 +97,7 @@ export interface IStorage {
   // SMS sending method
   sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
   
-  // Device types methods (zentral verwaltet)
-  getAllDeviceTypes(): Promise<DeviceType[]>;
-  getDeviceType(id: number): Promise<DeviceType | undefined>;
-  createDeviceType(deviceType: InsertDeviceType): Promise<DeviceType>;
-  updateDeviceType(id: number, deviceType: Partial<InsertDeviceType>): Promise<DeviceType | undefined>;
-  deleteDeviceType(id: number): Promise<boolean>;
-  
-  // Brands methods (zentral verwaltet)
-  getAllBrands(deviceTypeId?: number): Promise<Brand[]>;
-  getBrand(id: number): Promise<Brand | undefined>;
-  createBrand(brand: InsertBrand): Promise<Brand>;
-  updateBrand(id: number, brand: Partial<InsertBrand>): Promise<Brand | undefined>;
-  deleteBrand(id: number): Promise<boolean>;
+  // Device types and brand methods have been removed
 }
 
 export class DatabaseStorage implements IStorage {
@@ -943,145 +929,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // ==========================================================================
-  // Device Types Management Methods (zentral verwaltet durch Admin)
-  // ==========================================================================
-  
-  async getAllDeviceTypes(): Promise<DeviceType[]> {
-    return await db
-      .select()
-      .from(deviceTypesList)
-      .orderBy(deviceTypesList.name);
-  }
-  
-  async getDeviceType(id: number): Promise<DeviceType | undefined> {
-    const [deviceType] = await db
-      .select()
-      .from(deviceTypesList)
-      .where(eq(deviceTypesList.id, id));
-    
-    return deviceType;
-  }
-  
-  async createDeviceType(deviceType: InsertDeviceType): Promise<DeviceType> {
-    const now = new Date();
-    
-    const [newDeviceType] = await db
-      .insert(deviceTypesList)
-      .values({
-        ...deviceType,
-        createdAt: now,
-        updatedAt: now
-      })
-      .returning();
-    
-    return newDeviceType;
-  }
-  
-  async updateDeviceType(id: number, deviceTypeUpdate: Partial<InsertDeviceType>): Promise<DeviceType | undefined> {
-    const [updatedDeviceType] = await db
-      .update(deviceTypesList)
-      .set({
-        ...deviceTypeUpdate,
-        updatedAt: new Date()
-      })
-      .where(eq(deviceTypesList.id, id))
-      .returning();
-    
-    return updatedDeviceType;
-  }
-  
-  async deleteDeviceType(id: number): Promise<boolean> {
-    try {
-      // Prüfe, ob dieser Gerätetyp noch von Marken verwendet wird
-      const brandsUsingType = await db
-        .select({ count: count() })
-        .from(brandsList)
-        .where(eq(brandsList.deviceTypeId, id));
-      
-      if (brandsUsingType[0]?.count > 0) {
-        // Es gibt noch Marken, die diesen Gerätetyp verwenden
-        return false;
-      }
-      
-      // Lösche den Gerätetyp, wenn er nicht mehr verwendet wird
-      await db.delete(deviceTypesList).where(eq(deviceTypesList.id, id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting device type:", error);
-      return false;
-    }
-  }
-  
-  // ==========================================================================
-  // Brands Management Methods (zentral verwaltet durch Admin)
-  // ==========================================================================
-  
-  async getAllBrands(deviceTypeId?: number): Promise<Brand[]> {
-    // Wenn eine Gerätetyp-ID angegeben ist, filtere nach dieser
-    if (deviceTypeId) {
-      return await db
-        .select()
-        .from(brandsList)
-        .where(eq(brandsList.deviceTypeId, deviceTypeId))
-        .orderBy(brandsList.name);
-    }
-    
-    // Andernfalls gib alle Marken zurück
-    return await db
-      .select()
-      .from(brandsList)
-      .orderBy(brandsList.name);
-  }
-  
-  async getBrand(id: number): Promise<Brand | undefined> {
-    const [brand] = await db
-      .select()
-      .from(brandsList)
-      .where(eq(brandsList.id, id));
-    
-    return brand;
-  }
-  
-  async createBrand(brand: InsertBrand): Promise<Brand> {
-    const now = new Date();
-    
-    const [newBrand] = await db
-      .insert(brandsList)
-      .values({
-        ...brand,
-        createdAt: now,
-        updatedAt: now
-      })
-      .returning();
-    
-    return newBrand;
-  }
-  
-  async updateBrand(id: number, brandUpdate: Partial<InsertBrand>): Promise<Brand | undefined> {
-    const [updatedBrand] = await db
-      .update(brandsList)
-      .set({
-        ...brandUpdate,
-        updatedAt: new Date()
-      })
-      .where(eq(brandsList.id, id))
-      .returning();
-    
-    return updatedBrand;
-  }
-  
-  async deleteBrand(id: number): Promise<boolean> {
-    try {
-      // Hier könnten wir prüfen, ob diese Marke noch von Reparaturen verwendet wird
-      // Für diese Implementierung erlauben wir das Löschen von Marken ohne Prüfung
-      await db.delete(brandsList).where(eq(brandsList.id, id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting brand:", error);
-      return false;
-    }
-  }
+  // Die Device Types und Brands Management Methoden wurden entfernt
 }
 
 export const storage = new DatabaseStorage();
