@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, User, Settings } from 'lucide-react';
-import { BusinessSettingsDialog } from '@/components/settings';
+import { SettingsDialog } from '@/components/settings';
 import { useTheme } from '@/hooks/use-theme';
 
 export function Header() {
@@ -63,8 +63,8 @@ export function Header() {
             )}
           </Button>
           
-          {/* Business Settings Dialog */}
-          <BusinessSettingsDialog 
+          {/* Settings Dialog */}
+          <SettingsDialog 
             open={showSettings} 
             onClose={() => setShowSettings(false)} 
           />

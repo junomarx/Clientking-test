@@ -30,10 +30,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, X, Image as ImageIcon, Palette, Printer } from "lucide-react";
+import { 
+  Upload, 
+  X, 
+  Image as ImageIcon, 
+  Palette, 
+  Printer, 
+  Building2, 
+  User2, 
+  Mail, 
+  Phone, 
+  MapPin,
+  Settings,
+  MessageSquare
+} from "lucide-react";
+import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 
 const businessSettingsSchema = z.object({
   businessName: z.string().min(2, "Firmenname wird benötigt"),

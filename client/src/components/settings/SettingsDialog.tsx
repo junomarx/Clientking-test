@@ -1,0 +1,827 @@
+import React, { useState, useRef, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { BusinessSettings } from "@shared/schema";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Upload, 
+  X, 
+  Image as ImageIcon, 
+  Palette, 
+  Printer, 
+  Building2, 
+  User2, 
+  Mail, 
+  Phone, 
+  MapPin,
+  Settings,
+  MessageSquare
+} from "lucide-react";
+import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
+import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
+
+const businessSettingsSchema = z.object({
+  businessName: z.string().min(2, "Firmenname wird benötigt"),
+  ownerFirstName: z.string().min(2, "Vorname wird benötigt"),
+  ownerLastName: z.string().min(2, "Nachname wird benötigt"),
+  taxId: z.string().optional(),
+  streetAddress: z.string().min(3, "Straße wird benötigt"),
+  city: z.string().min(2, "Ort wird benötigt"),
+  zipCode: z.string().min(4, "PLZ wird benötigt"),
+  country: z.string().min(2, "Land wird benötigt").default("Österreich"),
+  phone: z.string().optional(),
+  email: z.string().email("Ungültige E-Mail").optional(),
+  website: z.string().optional(),
+  colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]).default("blue"),
+  receiptWidth: z.enum(["58mm", "80mm"]).default("80mm"),
+  
+  // E-Mail-SMTP-Einstellungen
+  smtpSenderName: z.string().optional(),
+  smtpHost: z.string().optional(),
+  smtpUser: z.string().optional(),
+  smtpPassword: z.string().optional(),
+  smtpPort: z.string().optional(),
+});
+
+// Erweiterte Form-Werte, die nicht direkt im Schema sind
+interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
+  logoImage?: string;
+}
+
+interface SettingsDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("business");
+  const [activeEmailTab, setActiveEmailTab] = useState("templates");
+
+  // Max. Logo-Größe in Bytes (100KB)
+  const MAX_LOGO_SIZE = 100 * 1024;
+
+  // Lade die bestehenden Unternehmenseinstellungen
+  const { data: settings, isLoading } = useQuery<BusinessSettings | null>({
+    queryKey: ["/api/business-settings"],
+    enabled: open,
+  });
+
+  const form = useForm<ExtendedBusinessSettingsFormValues>({
+    resolver: zodResolver(businessSettingsSchema),
+    defaultValues: {
+      businessName: "",
+      ownerFirstName: "",
+      ownerLastName: "",
+      taxId: "",
+      streetAddress: "",
+      city: "",
+      zipCode: "",
+      country: "Österreich",
+      phone: "",
+      email: "",
+      website: "",
+      logoImage: "",
+      colorTheme: "blue",
+      receiptWidth: "80mm",
+      // SMTP-Einstellungen
+      smtpSenderName: "",
+      smtpHost: "",
+      smtpUser: "",
+      smtpPassword: "",
+      smtpPort: "",
+    },
+  });
+
+  // Aktualisiere die Formularwerte, wenn die Daten geladen sind
+  useEffect(() => {
+    if (settings) {
+      // Validiere das colorTheme
+      let validColorTheme: "blue" | "green" | "purple" | "red" | "orange" = "blue";
+      if (["blue", "green", "purple", "red", "orange"].includes(settings.colorTheme)) {
+        validColorTheme = settings.colorTheme as "blue" | "green" | "purple" | "red" | "orange";
+      }
+      
+      // Validiere die Bonbreite
+      let validReceiptWidth = "80mm";
+      if (["58mm", "80mm"].includes(settings.receiptWidth)) {
+        validReceiptWidth = settings.receiptWidth as "58mm" | "80mm";
+      }
+      
+      form.reset({
+        businessName: settings.businessName,
+        ownerFirstName: settings.ownerFirstName,
+        ownerLastName: settings.ownerLastName,
+        taxId: settings.taxId || "",
+        streetAddress: settings.streetAddress,
+        city: settings.city,
+        zipCode: settings.zipCode,
+        country: settings.country,
+        phone: settings.phone || "",
+        email: settings.email || "",
+        website: settings.website || "",
+        logoImage: settings.logoImage || "",
+        colorTheme: validColorTheme,
+        receiptWidth: validReceiptWidth as "58mm" | "80mm",
+        // SMTP-Einstellungen
+        smtpSenderName: settings.smtpSenderName || "",
+        smtpHost: settings.smtpHost || "",
+        smtpUser: settings.smtpUser || "",
+        smtpPassword: settings.smtpPassword || "",
+        smtpPort: settings.smtpPort || "",
+      });
+
+      // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
+      if (settings.logoImage) {
+        setLogoPreview(settings.logoImage);
+      }
+    }
+  }, [settings, form]);
+
+  // Funktion zum Validieren des hochgeladenen Bildes
+  const validateImage = (file: File): Promise<{ isValid: boolean; base64: string | null; error: string | null }> => {
+    return new Promise((resolve) => {
+      // Überprüfen der Dateigröße
+      if (file.size > MAX_LOGO_SIZE) {
+        resolve({
+          isValid: false,
+          base64: null,
+          error: `Die Datei ist zu groß. Maximale Größe ist ${MAX_LOGO_SIZE / 1024}KB.`
+        });
+        return;
+      }
+
+      // Überprüfen des Dateityps
+      if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        resolve({
+          isValid: false,
+          base64: null,
+          error: 'Nur JPEG und PNG Dateien sind erlaubt.'
+        });
+        return;
+      }
+
+      // Bild in Base64 konvertieren
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Überprüfen der Auflösung
+          if (img.width > 400 || img.height > 400) {
+            resolve({
+              isValid: false,
+              base64: null,
+              error: 'Die Bildauflösung darf maximal 400x400 Pixel betragen.'
+            });
+          } else {
+            resolve({
+              isValid: true,
+              base64: e.target?.result as string,
+              error: null
+            });
+          }
+        };
+        img.onerror = () => {
+          resolve({
+            isValid: false,
+            base64: null,
+            error: 'Das Bild konnte nicht geladen werden.'
+          });
+        };
+        
+        if (e.target?.result) {
+          img.src = e.target.result as string;
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Event-Handler für das Hochladen des Logos
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const result = await validateImage(file);
+
+    if (result.isValid && result.base64) {
+      setLogoPreview(result.base64);
+      form.setValue('logoImage', result.base64);
+      setLogoError(null);
+    } else {
+      setLogoError(result.error || 'Unbekannter Fehler beim Hochladen des Logos.');
+      // Input zurücksetzen
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Funktion zum Löschen des Logos
+  const handleDeleteLogo = () => {
+    setLogoPreview(null);
+    form.setValue('logoImage', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
+      // Wir senden das Logo als Base64-String mit
+      const response = await apiRequest("POST", "/api/business-settings", {
+        ...data,
+        logoImage: logoPreview
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
+      toast({
+        title: "Erfolg!",
+        description: "Einstellungen wurden aktualisiert.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  function onSubmit(data: ExtendedBusinessSettingsFormValues) {
+    updateMutation.mutate(data);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>Einstellungen</DialogTitle>
+          <DialogDescription>
+            Passen Sie Ihre Unternehmenseinstellungen und Kommunikationsoptionen an.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="business" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" /> Unternehmen
+            </TabsTrigger>
+            <TabsTrigger value="communication" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" /> Kommunikation
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" /> Darstellung
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab: Unternehmenseinstellungen */}
+          <TabsContent value="business" className="max-h-[65vh] overflow-y-auto">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Logo Upload UI */}
+                <div className="mb-6">
+                  <FormLabel>Firmenlogo</FormLabel>
+                  <FormDescription>
+                    Laden Sie Ihr Firmenlogo hoch (max. 100KB, max. 400x400 Pixel, PNG oder JPG).
+                  </FormDescription>
+                  
+                  <div className="mt-3 flex flex-col md:flex-row items-start md:items-center gap-4">
+                    {/* Logo Vorschau */}
+                    <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
+                      ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
+                      {logoPreview ? (
+                        <>
+                          <img
+                            src={logoPreview}
+                            alt="Firmenlogo"
+                            className="max-h-full max-w-full object-contain rounded-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleDeleteLogo}
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground h-5 w-5 rounded-full flex items-center justify-center"
+                            aria-label="Logo löschen"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      )}
+                    </div>
+                    
+                    {/* Upload Button */}
+                    <div className="flex flex-col gap-3">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        id="logo-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Logo hochladen
+                      </Button>
+                      
+                      {logoError && (
+                        <Alert variant="destructive" className="p-3 text-sm">
+                          <AlertDescription>{logoError}</AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Firmen-Grunddaten */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4" /> Unternehmensdaten
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="businessName"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Firmenname *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Handyshop GmbH" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="taxId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Umsatzsteuer-ID</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="ATU12345678" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Inhaber */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <User2 className="h-4 w-4" /> Inhaber
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="ownerFirstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vorname (Inhaber) *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Max" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="ownerLastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nachname (Inhaber) *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Mustermann" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Adresse */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <MapPin className="h-4 w-4" /> Adresse
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Straße und Hausnummer *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Musterstraße 1" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="zipCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PLZ *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="1010" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ort *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Wien" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Land *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Österreich" defaultValue="Österreich" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                
+                {/* Kontakt */}
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                    <Phone className="h-4 w-4" /> Kontakt
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefon</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="+43 1 234 5678" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-Mail</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="info@handyshop.at" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Website</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="www.handyshop.at" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Wird gespeichert..." : "Unternehmensdaten speichern"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </TabsContent>
+
+          {/* Tab: Kommunikation */}
+          <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto space-y-6">
+            <Tabs defaultValue="email" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> E-Mail
+                </TabsTrigger>
+                <TabsTrigger value="sms" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" /> SMS
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* E-Mail-Einstellungen */}
+              <TabsContent value="email">
+                <Tabs defaultValue="templates">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="templates" className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" /> Vorlagen
+                    </TabsTrigger>
+                    <TabsTrigger value="server" className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" /> SMTP-Server
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  {/* E-Mail-Vorlagen */}
+                  <TabsContent value="templates">
+                    <EmailTemplateTab />
+                  </TabsContent>
+                  
+                  {/* SMTP-Server-Einstellungen */}
+                  <TabsContent value="server">
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <div className="space-y-4">
+                          <h3 className="text-md font-medium mb-3">E-Mail-Server-Einstellungen (SMTP)</h3>
+                          <p className="text-sm text-muted-foreground mb-5">
+                            Hier können Sie Ihren eigenen E-Mail-Server konfigurieren, um E-Mails an Kunden zu senden.
+                            Diese Einstellungen sind optional. Wenn nicht ausgefüllt, wird der zentrale Mail-Server verwendet.
+                          </p>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="smtpSenderName"
+                              render={({ field }) => (
+                                <FormItem className="sm:col-span-2">
+                                  <FormLabel>Absendername für E-Mails</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="Handyshop Service" />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Dieser Name wird als Absender in E-Mails angezeigt
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="smtpHost"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>SMTP Server</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="smtp.beispiel.at" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="smtpPort"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>SMTP Port</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="587" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="smtpUser"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>SMTP Benutzername</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="benutzername" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="smtpPassword"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>SMTP Passwort</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="password" placeholder="••••••••" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        <DialogFooter>
+                          <Button type="submit" disabled={updateMutation.isPending}>
+                            {updateMutation.isPending ? "Wird gespeichert..." : "SMTP-Einstellungen speichern"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </TabsContent>
+                </Tabs>
+              </TabsContent>
+              
+              {/* SMS-Einstellungen */}
+              <TabsContent value="sms">
+                <SmsTemplateTab />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+          
+          {/* Tab: Darstellung */}
+          <TabsContent value="appearance" className="max-h-[65vh] overflow-y-auto">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-md font-medium mb-3">Erscheinungsbild und Darstellungsoptionen</h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    Passen Sie das Aussehen der Anwendung und Ausgabeformate an.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 gap-8">
+                    <FormField
+                      control={form.control}
+                      name="colorTheme"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel className="flex items-center gap-2">
+                            <Palette className="h-4 w-4" /> Farbpalette
+                          </FormLabel>
+                          <FormDescription>
+                            Wählen Sie eine Farbpalette für die Anwendung.
+                          </FormDescription>
+                          <div className="grid grid-cols-5 gap-3 my-4">
+                            {['blue', 'green', 'purple', 'red', 'orange'].map((color) => (
+                              <div 
+                                key={color}
+                                onClick={() => form.setValue('colorTheme', color as any)}
+                                className={`
+                                  w-full aspect-square rounded-lg cursor-pointer transition-all 
+                                  ${field.value === color ? 'ring-2 ring-offset-2 ring-primary' : 'hover:scale-105'} 
+                                  ${color === 'blue' ? 'bg-blue-600' : ''}
+                                  ${color === 'green' ? 'bg-green-600' : ''}
+                                  ${color === 'purple' ? 'bg-purple-600' : ''}
+                                  ${color === 'red' ? 'bg-red-600' : ''}
+                                  ${color === 'orange' ? 'bg-orange-600' : ''}
+                                `}
+                              />
+                            ))}
+                          </div>
+                          <FormControl>
+                            <Select 
+                              defaultValue={field.value} 
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Farbpalette wählen" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="blue">Blau</SelectItem>
+                                <SelectItem value="green">Grün</SelectItem>
+                                <SelectItem value="purple">Lila</SelectItem>
+                                <SelectItem value="red">Rot</SelectItem>
+                                <SelectItem value="orange">Orange</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="receiptWidth"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel className="flex items-center gap-2">
+                            <Printer className="h-4 w-4" /> Bonbreite
+                          </FormLabel>
+                          <FormDescription>
+                            Wählen Sie die Breite des Thermobondruckers.
+                          </FormDescription>
+                          <FormControl>
+                            <Select 
+                              defaultValue={field.value} 
+                              onValueChange={field.onChange}
+                            >
+                              <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Bonbreite wählen" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="80mm">80mm Bon</SelectItem>
+                                <SelectItem value="58mm">58mm Bon</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Wird gespeichert..." : "Darstellungsoptionen speichern"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
