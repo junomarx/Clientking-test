@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { saveModel, getModelsForDeviceAndBrand, saveBrand, getBrandsForDeviceType } from '@/lib/localStorage';
-import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { Customer } from '@/lib/types';
-import { insertRepairSchema } from '@shared/schema';
+import { getBrandsForDeviceType, saveBrand, saveModel } from '@/lib/localStorage';
 
 import {
   Dialog,
@@ -27,34 +25,25 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Extended repair schema with validation
-const repairFormSchema = insertRepairSchema.extend({
-  deviceType: z.string({
-    required_error: "Gerätetyp auswählen",
+// Form schema
+const repairFormSchema = z.object({
+  customerId: z.number().min(1, { message: 'Bitte Kunden auswählen' }),
+  deviceType: z.string().min(1, { message: 'Bitte Gerätetyp eingeben' }),
+  brand: z.string().min(1, { message: 'Bitte Marke eingeben' }),
+  model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
+  serialNumber: z.string().optional().nullable(),
+  issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
+  estimatedCost: z.string().nullable().optional(),
+  depositAmount: z.string().nullable().optional(),
+  status: z.enum(['eingegangen', 'in_reparatur', 'ausser_haus', 'fertig', 'abgeholt'], {
+    required_error: 'Bitte Status auswählen',
   }),
-  brand: z.string().min(1, "Marke muss angegeben werden"),
-  model: z.string().min(1, "Modell muss angegeben werden"),
-  issue: z.string().min(5, "Problembeschreibung muss mindestens 5 Zeichen lang sein"),
-  estimatedCost: z.string().optional()
-    .transform(val => val === undefined || val === '' ? null : val),
-  depositAmount: z.string().optional()
-    .transform(val => val === undefined || val === '' ? null : val),
-  notes: z.string().optional()
-    .transform(val => val === undefined || val === '' ? null : val),
-  serialNumber: z.string().optional()
-    .transform(val => val === undefined || val === '' ? null : val),
-  status: z.enum(["eingegangen", "in_reparatur", "fertig", "abgeholt", "ausser_haus"]),
+  notes: z.string().nullable().optional(),
 });
 
 type RepairFormValues = z.infer<typeof repairFormSchema>;
@@ -63,34 +52,27 @@ interface NewRepairModalProps {
   open: boolean;
   onClose: () => void;
   customerId?: number;
+  customer?: Customer;
+  showPrintOptions: (repairId: number) => void;
 }
 
-export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProps) {
-  const { toast } = useToast();
+export function NewRepairModal({ 
+  open, 
+  onClose, 
+  customerId, 
+  customer, 
+  showPrintOptions 
+}: NewRepairModalProps) {
   const queryClient = useQueryClient();
-  const { showPrintOptions } = usePrintManager();
+  const { toast } = useToast();
   
-  // Lade Kundeninformationen, falls customerId vorhanden ist
-  const { data: customer } = useQuery<Customer>({
-    queryKey: [`/api/customers/${customerId}`],
-    queryFn: async () => {
-      const response = await apiRequest('GET', `/api/customers/${customerId}`);
-      return response.json();
-    },
-    enabled: !!customerId && open,
-  });
-  
-  // Wir verwenden hier eine statische, fest codierte Liste für die Gerätetypen
-  // Die IDs sind fest vergeben und repräsentieren gängige Werte aus der Datenbank
-  
-  // State für die ausgewählte Geräteart
-  const [selectedDeviceType, setSelectedDeviceTypeId] = useState<string>("");
+  // State für die ausgewählte Geräteart und gespeicherte Marken
+  const [selectedDeviceType, setSelectedDeviceType] = useState<string>("");
   const [savedBrands, setSavedBrands] = useState<string[]>([]);
   
   // Lade gespeicherte Marken aus localStorage, wenn sich der Gerätetyp ändert
   useEffect(() => {
     if (selectedDeviceType) {
-      // Verwende den direkten Gerätetyp-Namen aus dem Input
       const brands = getBrandsForDeviceType(selectedDeviceType);
       setSavedBrands(brands);
     } else {
@@ -132,7 +114,7 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
         estimatedCost: values.estimatedCost === "" ? null : values.estimatedCost
       };
       
-      console.log("Bereinigte Reparaturdaten werden gesendet:", cleanValues);
+      console.log("Reparaturdaten werden gesendet:", cleanValues);
       
       const response = await apiRequest('POST', '/api/repairs', cleanValues);
       const result = await response.json();
@@ -184,13 +166,8 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
   
   // Wird aufgerufen, wenn das Formular abgeschickt wird
   function onSubmit(data: RepairFormValues) {
-    // Wir verwenden direkt die eingegebenen Werte, ohne Mapping
-    const deviceType = data.deviceType;
-    const brandName = data.brand; // Brand ist jetzt direkt der Name
-    
-    // Prüfe ob wir einen gültigen Gerätetyp haben
-    if (deviceType) {
-      console.log("Modifizierte Daten für Server:", data);
+    if (data.deviceType) {
+      console.log("Formular wird abgeschickt:", data);
       createMutation.mutate(data);
     } else {
       toast({
@@ -239,14 +216,11 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                     <FormControl>
                       <Input 
                         placeholder="z.B. Smartphone, Tablet, Laptop, Watch" 
+                        list="device-type-options"
                         {...field}
-                        list="device-type-options" 
                         onChange={(e) => {
-                          const value = e.target.value;
-                          field.onChange(value);
-                          // Wenn wir den Gerätetyp ändern, lokale State Variable aktualisieren
-                          // und Marke zurücksetzen
-                          setSelectedDeviceTypeId(value);
+                          field.onChange(e.target.value);
+                          setSelectedDeviceType(e.target.value);
                           form.setValue("brand", "");
                         }}
                       />
@@ -274,9 +248,9 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
                         <div className="relative">
                           <Input 
                             placeholder="z.B. Apple, Samsung, Xiaomi" 
+                            list="brand-options"
                             {...field}
                             disabled={!selectedDeviceType}
-                            list="brand-options" 
                           />
                           {savedBrands.length > 0 && (
                             <datalist id="brand-options">
