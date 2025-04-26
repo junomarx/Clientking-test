@@ -3,6 +3,32 @@ import { Customer, Repair, RepairStatus } from './types';
 const CUSTOMERS_KEY = 'repair-shop-customers';
 const REPAIRS_KEY = 'repair-shop-repairs';
 
+// Funktion zum Holen des aktuellen Benutzernamens aus dem Authentifizierungskontext
+const getCurrentUsername = (): string => {
+  try {
+    // Versuche, den Benutzer aus localStorage zu holen (dort wird er üblicherweise gespeichert)
+    const userDataString = localStorage.getItem('user');
+    if (userDataString) {
+      const userData = JSON.parse(userDataString);
+      return userData.username || 'anonymous';
+    }
+  } catch (error) {
+    console.error('Fehler beim Abrufen des Benutzernamens:', error);
+  }
+  return 'anonymous';
+};
+
+// Funktion zum Erzeugen eines benutzerabhängigen Präfixes
+const getUserPrefix = () => {
+  const username = getCurrentUsername();
+  return `user_${username}_`;
+};
+
+// Funktionen zum Erzeugen benutzerabhängiger Schlüssel
+const getSavedModelsKey = () => `${getUserPrefix()}repair-shop-models`;
+const getSavedBrandsKey = () => `${getUserPrefix()}repair-shop-brands`;
+const getSavedDeviceTypesKey = () => `${getUserPrefix()}repair-shop-device-types`;
+
 // Customer functions
 export const saveCustomers = (customers: Customer[]): void => {
   localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
@@ -142,11 +168,6 @@ export const getStatistics = () => {
   };
 };
 
-// Konstante für den localStorage Key der gespeicherten Werte
-const SAVED_MODELS_KEY = 'repair-shop-models';
-const SAVED_BRANDS_KEY = 'repair-shop-brands';
-const SAVED_DEVICE_TYPES_KEY = 'repair-shop-device-types';
-
 // Typ für gespeicherte Modelle
 interface StoredModels {
   [key: string]: string[]; // Format: "deviceType:brand" => ["Modell 1", "Modell 2", ...]
@@ -164,7 +185,7 @@ export const saveModel = (deviceType: string, brand: string, model: string): voi
   const key = `${deviceType}:${brand}`.toLowerCase();
   
   let storedModels: StoredModels = {};
-  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  const storedData = localStorage.getItem(getSavedModelsKey());
   
   if (storedData) {
     try {
@@ -182,7 +203,7 @@ export const saveModel = (deviceType: string, brand: string, model: string): voi
   // Füge Modell hinzu, wenn es noch nicht existiert
   if (!storedModels[key].includes(model)) {
     storedModels[key].push(model);
-    localStorage.setItem(SAVED_MODELS_KEY, JSON.stringify(storedModels));
+    localStorage.setItem(getSavedModelsKey(), JSON.stringify(storedModels));
   }
 };
 
@@ -192,7 +213,7 @@ export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): s
   
   const key = `${deviceType}:${brand}`.toLowerCase();
   
-  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  const storedData = localStorage.getItem(getSavedModelsKey());
   if (!storedData) return [];
   
   try {
@@ -210,7 +231,7 @@ export const deleteModel = (deviceType: string, brand: string, model: string): v
   
   const key = `${deviceType}:${brand}`.toLowerCase();
   
-  const storedData = localStorage.getItem(SAVED_MODELS_KEY);
+  const storedData = localStorage.getItem(getSavedModelsKey());
   if (!storedData) return;
   
   try {
@@ -226,7 +247,7 @@ export const deleteModel = (deviceType: string, brand: string, model: string): v
       }
       
       // Speichere die aktualisierte Liste
-      localStorage.setItem(SAVED_MODELS_KEY, JSON.stringify(storedModels));
+      localStorage.setItem(getSavedModelsKey(), JSON.stringify(storedModels));
     }
   } catch (err) {
     console.error('Fehler beim Löschen des Modells:', err);
@@ -236,7 +257,8 @@ export const deleteModel = (deviceType: string, brand: string, model: string): v
 // Funktion zum Zurücksetzen aller gespeicherten Modelle
 export const clearAllModels = (): void => {
   try {
-    localStorage.removeItem(SAVED_MODELS_KEY);
+    localStorage.removeItem(getSavedModelsKey());
+    console.log('Alle gespeicherten Modelle wurden gelöscht.');
   } catch (err) {
     console.error('Fehler beim Zurücksetzen aller Modelle:', err);
   }
@@ -249,7 +271,7 @@ export const saveBrand = (deviceType: string, brand: string): void => {
   const key = deviceType.toLowerCase();
   
   let storedBrands: StoredBrands = {};
-  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  const storedData = localStorage.getItem(getSavedBrandsKey());
   
   if (storedData) {
     try {
@@ -267,7 +289,7 @@ export const saveBrand = (deviceType: string, brand: string): void => {
   // Füge Marke hinzu, wenn sie noch nicht existiert
   if (!storedBrands[key].includes(brand)) {
     storedBrands[key].push(brand);
-    localStorage.setItem(SAVED_BRANDS_KEY, JSON.stringify(storedBrands));
+    localStorage.setItem(getSavedBrandsKey(), JSON.stringify(storedBrands));
   }
 };
 
@@ -277,7 +299,7 @@ export const getBrandsForDeviceType = (deviceType: string): string[] => {
   
   const key = deviceType.toLowerCase();
   
-  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  const storedData = localStorage.getItem(getSavedBrandsKey());
   if (!storedData) return [];
   
   try {
@@ -295,7 +317,7 @@ export const deleteBrand = (deviceType: string, brand: string): void => {
   
   const key = deviceType.toLowerCase();
   
-  const storedData = localStorage.getItem(SAVED_BRANDS_KEY);
+  const storedData = localStorage.getItem(getSavedBrandsKey());
   if (!storedData) return;
   
   try {
@@ -311,7 +333,7 @@ export const deleteBrand = (deviceType: string, brand: string): void => {
       }
       
       // Speichere die aktualisierte Liste
-      localStorage.setItem(SAVED_BRANDS_KEY, JSON.stringify(storedBrands));
+      localStorage.setItem(getSavedBrandsKey(), JSON.stringify(storedBrands));
     }
   } catch (err) {
     console.error('Fehler beim Löschen der Marke:', err);
@@ -321,7 +343,8 @@ export const deleteBrand = (deviceType: string, brand: string): void => {
 // Funktion zum Zurücksetzen aller gespeicherten Marken
 export const clearAllBrands = (): void => {
   try {
-    localStorage.removeItem(SAVED_BRANDS_KEY);
+    localStorage.removeItem(getSavedBrandsKey());
+    console.log('Alle gespeicherten Marken wurden gelöscht.');
   } catch (err) {
     console.error('Fehler beim Zurücksetzen aller Marken:', err);
   }
@@ -334,7 +357,7 @@ export const saveDeviceType = (deviceType: string): void => {
   const deviceTypeLower = deviceType.toLowerCase();
   
   let savedDeviceTypes: string[] = [];
-  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  const storedData = localStorage.getItem(getSavedDeviceTypesKey());
   
   if (storedData) {
     try {
@@ -347,13 +370,13 @@ export const saveDeviceType = (deviceType: string): void => {
   // Füge Gerätetyp hinzu, wenn er noch nicht existiert
   if (!savedDeviceTypes.includes(deviceTypeLower)) {
     savedDeviceTypes.push(deviceTypeLower);
-    localStorage.setItem(SAVED_DEVICE_TYPES_KEY, JSON.stringify(savedDeviceTypes));
+    localStorage.setItem(getSavedDeviceTypesKey(), JSON.stringify(savedDeviceTypes));
   }
 };
 
 // Funktion zum Abrufen von gespeicherten Gerätetypen
 export const getSavedDeviceTypes = (): string[] => {
-  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  const storedData = localStorage.getItem(getSavedDeviceTypesKey());
   if (!storedData) return [];
   
   try {
@@ -370,7 +393,7 @@ export const deleteDeviceType = (deviceType: string): void => {
   
   const deviceTypeLower = deviceType.toLowerCase();
   
-  const storedData = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
+  const storedData = localStorage.getItem(getSavedDeviceTypesKey());
   if (!storedData) return;
   
   try {
@@ -380,7 +403,7 @@ export const deleteDeviceType = (deviceType: string): void => {
     const updatedDeviceTypes = savedDeviceTypes.filter(dt => dt !== deviceTypeLower);
     
     // Speichere die aktualisierte Liste
-    localStorage.setItem(SAVED_DEVICE_TYPES_KEY, JSON.stringify(updatedDeviceTypes));
+    localStorage.setItem(getSavedDeviceTypesKey(), JSON.stringify(updatedDeviceTypes));
   } catch (err) {
     console.error('Fehler beim Löschen des Gerätetyps:', err);
   }
@@ -389,7 +412,7 @@ export const deleteDeviceType = (deviceType: string): void => {
 // Funktion zum Zurücksetzen aller gespeicherten Gerätetypen
 export const clearAllDeviceTypes = (): void => {
   try {
-    localStorage.removeItem(SAVED_DEVICE_TYPES_KEY);
+    localStorage.removeItem(getSavedDeviceTypesKey());
     console.log('Alle gespeicherten Gerätetypen wurden gelöscht.');
   } catch (err) {
     console.error('Fehler beim Zurücksetzen aller Gerätetypen:', err);
