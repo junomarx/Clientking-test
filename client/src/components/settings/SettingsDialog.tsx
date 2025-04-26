@@ -129,14 +129,20 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     data: brands = [], 
     isLoading: isLoadingBrands 
   } = useQuery<UserBrand[]>({
-    queryKey: ['/api/brands', selectedDeviceTypeForBrands ? { deviceTypeId: selectedDeviceTypeForBrands } : undefined],
+    queryKey: ['/api/brands', selectedDeviceTypeForBrands ? { deviceTypeId: selectedDeviceTypeForBrands } : 'all'],
     queryFn: async () => {
       try {
+        // Wenn ein Gerätetyp ausgewählt ist, holen wir nur die Marken für diesen Gerätetyp
+        // Ansonsten holen wir alle Marken
         const url = selectedDeviceTypeForBrands 
           ? `/api/brands?deviceTypeId=${selectedDeviceTypeForBrands}` 
           : '/api/brands';
+          
+        console.log("Marken werden geladen von URL:", url);
         const response = await apiRequest('GET', url);
-        return response.json();
+        const data = await response.json();
+        console.log("Geladene Marken:", data.length);
+        return data;
       } catch (err) {
         console.error('Fehler beim Laden der Marken:', err);
         return [];
@@ -145,12 +151,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     enabled: open,
   });
   
-  // Initialisiere den ausgewählten Gerätetyp für Markenfilterung, wenn Gerätearten geladen werden
-  useEffect(() => {
-    if (deviceTypes.length > 0 && !selectedDeviceTypeForBrands) {
-      setSelectedDeviceTypeForBrands(deviceTypes[0].id);
-    }
-  }, [deviceTypes, selectedDeviceTypeForBrands]);
+  // Wir initialisieren den ausgewählten Gerätetyp nicht mehr automatisch,
+  // stattdessen lassen wir ihn auf null, damit der Benutzer "Alle Gerätearten" sieht
   
   // State für Dialoge
   const [isDeviceTypeDialogOpen, setIsDeviceTypeDialogOpen] = useState(false);
@@ -1103,16 +1105,22 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-muted-foreground">Filter:</span>
                           <Select
-                            value={selectedDeviceTypeForBrands?.toString() || ""}
+                            value={selectedDeviceTypeForBrands?.toString() || "all"}
                             onValueChange={(value) => {
-                              setSelectedDeviceTypeForBrands(value ? parseInt(value) : null);
+                              if (value === "all") {
+                                // Bei Auswahl von "Alle Gerätearten" setzen wir selectedDeviceTypeForBrands auf null
+                                setSelectedDeviceTypeForBrands(null);
+                              } else {
+                                // Ansonsten setzen wir den ausgewählten Gerätetyp
+                                setSelectedDeviceTypeForBrands(parseInt(value));
+                              }
                             }}
                           >
                             <SelectTrigger className="w-[180px]">
                               <SelectValue placeholder="Alle Gerätearten" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">Alle Gerätearten</SelectItem>
+                              <SelectItem value="all">Alle Gerätearten</SelectItem>
                               {deviceTypes.map((type) => (
                                 <SelectItem key={type.id} value={type.id.toString()}>
                                   {type.name}
