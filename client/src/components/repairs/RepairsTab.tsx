@@ -16,9 +16,9 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { EditRepairDialog } from './EditRepairDialog';
-
+import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Pencil, Printer, Trash2, AlertCircle, Tag } from 'lucide-react';
+import { Pencil, Printer, Trash2, AlertCircle, Tag, Star, Mail } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 
 interface RepairsTabProps {
@@ -37,12 +37,35 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [sendEmail, setSendEmail] = useState(false);
   const [sendSms, setSendSms] = useState(false);
   const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
+  const { toast } = useToast();
   
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
   
   // For tracking if we're filtering by today's orders
   const [filterByToday, setFilterByToday] = useState(false);
+  
+  // Mutation zum Senden von Bewertungsanfragen
+  const sendReviewRequestMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/send-review-request`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Erfolgreich",
+        description: "Die Bewertungsanfrage wurde erfolgreich gesendet.",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: "Die Bewertungsanfrage konnte nicht gesendet werden: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  });
   
   // Check for status filter in URL
   useEffect(() => {
@@ -307,6 +330,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                             <Printer className="h-4 w-4" />
                           </button>
                         </div>
+                        {repair.status === 'abgeholt' && (
+                          <button 
+                            className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
+                            title="Bewertungsanfrage senden"
+                            onClick={() => handleSendReviewRequest(repair.id)}
+                          >
+                            <Star className="h-4 w-4" />
+                          </button>
+                        )}
                         <button 
                           className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag löschen"
