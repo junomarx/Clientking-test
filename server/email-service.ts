@@ -84,19 +84,51 @@ export class EmailService {
       
       // Erstelle einen SMTP-Transporter mit den Benutzereinstellungen
       const smtpPort = parseInt(settings.smtpPort);
-      const transporter = nodemailer.createTransport({
+      
+      // Erweiterte Konfigurationsoptionen basierend auf dem Port
+      const isSecure = smtpPort === 465;
+      
+      const transporterConfig = {
         host: settings.smtpHost,
         port: smtpPort,
-        secure: smtpPort === 465, // true für 465, false für andere Ports
+        secure: isSecure, // true für 465, false für andere Ports
         auth: {
           user: settings.smtpUser,
           pass: settings.smtpPassword
+        },
+        // Zusätzliche Optionen für eine robustere E-Mail-Zustellung
+        tls: {
+          // Deaktiviere die Zertifikatsprüfung im Entwicklungsmodus
+          rejectUnauthorized: process.env.NODE_ENV !== 'development',
+          // Aktiviere TLS für alle Verbindungen, unabhängig vom Port
+          // Dies ist wichtig für den STARTTLS-Modus
+          minVersion: 'TLSv1.2'
+        },
+        // Debug-Ausgabe aktivieren im Entwicklungsmodus
+        debug: process.env.NODE_ENV === 'development',
+        // Längere Timeouts für langsamere Server
+        connectionTimeout: 10000, // 10 Sekunden
+        greetingTimeout: 10000,
+        socketTimeout: 30000 // 30 Sekunden
+      };
+      
+      const transporter = nodemailer.createTransport(transporterConfig);
+      
+      console.log(`SMTP-Transporter für Benutzer ${userId} (${settings.smtpHost}:${smtpPort}, secure=${isSecure}) erstellt`);
+      
+      // Verifiziere die Verbindung im Entwicklungsmodus
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          await transporter.verify();
+          console.log(`SMTP-Verbindung für Benutzer ${userId} verifiziert`);
+        } catch (verifyError) {
+          console.error(`SMTP-Verbindungsfehler für Benutzer ${userId}:`, verifyError);
+          // Versuche trotzdem, den Transporter zurückzugeben
         }
-      });
+      }
       
       // Speichere den Transporter in der Map
       this.userTransporters.set(userId, transporter);
-      console.log(`SMTP-Transporter für Benutzer ${userId} (${settings.smtpHost}) erstellt`);
       
       return transporter;
     } catch (error) {
@@ -216,22 +248,84 @@ export class EmailService {
         try {
           console.log(`Sende E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}...`);
           
-          // Bei der Absender-E-Mail muss der SMTP-Login verwendet werden
-          const fromEmail = businessSetting.smtpUser || senderEmail;
+          // Bei der Absender-E-Mail MUSS der SMTP-Login verwendet werden
+          // Dies ist ein häufiger Fehler bei SMTP-Konfigurationen
+          const fromEmail = businessSetting.smtpUser;
           
+          // Sicherstellen, dass die From-Adresse eine gültige E-Mail-Struktur hat
+          if (!fromEmail || !fromEmail.includes('@')) {
+            console.error(`Ungültige Absender-E-Mail für Benutzer ${userId}: "${fromEmail}"`);
+            throw new Error('Ungültige Absender-E-Mail-Adresse');
+          }
+          
+          // Debug-Ausgabe für die Verbindung
+          console.log(`SMTP-Verbindungsdaten: Host=${businessSetting.smtpHost}, Port=${businessSetting.smtpPort}, User=${fromEmail}`);
+          
+          // Erweiterte Mail-Optionen
           const mailOptions = {
             from: `"${senderName}" <${fromEmail}>`,
             to: to,
             subject: subject,
             html: body,
-            text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+            text: body.replace(/<[^>]*>/g, ''), // Strip HTML für Plaintext
+            // Weitere Optionen für robustere E-Mail-Zustellung
+            headers: {
+              // Wichtige Header für bessere Zustellbarkeit
+              'X-Priority': '1', // Priorität: Hoch
+              'Importance': 'high',
+              'X-MSMail-Priority': 'High',
+              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)'
+            },
+            // In Entwicklungsumgebungen zurückverfolgen
+            dsn: {
+              id: true,
+              return: 'headers',
+              notify: ['failure', 'delay'],
+              recipient: fromEmail
+            },
+            // Eine Antwort-Adresse hinzufügen
+            replyTo: fromEmail
           };
           
-          const info = await userSmtpTransporter.sendMail(mailOptions);
-          console.log(`E-Mail erfolgreich über benutzerdefinierten SMTP-Server für Benutzer ${userId} gesendet:`, info.messageId);
-          return true;
+          try {
+            console.log('Versuche E-Mail zu senden mit Optionen:', JSON.stringify({
+              ...mailOptions,
+              html: '[HTML entfernt für Log]',
+              text: '[Text entfernt für Log]'
+            }, null, 2));
+            
+            const info = await userSmtpTransporter.sendMail(mailOptions);
+            console.log(`E-Mail erfolgreich über benutzerdefinierten SMTP-Server für Benutzer ${userId} gesendet:`, info.messageId);
+            
+            // Ausgabe zusätzlicher Debug-Informationen
+            if (process.env.NODE_ENV === 'development') {
+              console.log('SMTP-Antwort:', info.response);
+              if (info.envelope) {
+                console.log('Envelope:', info.envelope);
+              }
+              console.log('Nachrichtenpfad:', info.messageId);
+              console.log('Zustellungsbericht:', 'Preview URL: ' + nodemailer.getTestMessageUrl(info));
+            }
+            
+            return true;
+          } catch (sendError: any) {
+            // Detaillierte Fehleranalyse
+            console.error(`Fehler beim Senden der E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}:`, sendError?.message);
+            console.error('Fehlercode:', sendError?.code);
+            console.error('Fehlerkommando:', sendError?.command);
+            console.error('SMTP-Antwort:', sendError?.response);
+            
+            // Neu erstellen des Transporters, falls der Fehler auf eine unterbrochene Verbindung hinweist
+            if (sendError?.code === 'ECONNECTION' || sendError?.code === 'ETIMEDOUT' || sendError?.code === 'ESOCKET') {
+              console.log('Verbindungsproblem erkannt, erstelle Transporter neu...');
+              this.userTransporters.delete(userId);
+              // Fallback zum nächsten Versuch
+            }
+            
+            throw sendError; // Weiterleiten für Fallback
+          }
         } catch (userSmtpError) {
-          console.error(`Fehler beim Senden der E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}:`, userSmtpError);
+          console.error(`E-Mail-Versand über benutzerdefinierten SMTP fehlgeschlagen, versuche Fallback...`);
           // Fallback zum nächsten Versuch
         }
       }
