@@ -311,34 +311,36 @@ export function EmailTemplateTab() {
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {templates?.map((template: EmailTemplate) => (
               <Card key={template.id} className="overflow-hidden">
-                <CardHeader className="relative pb-2">
-                  <div className="absolute right-4 top-4 flex space-x-1">
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={() => openSendDialog(template.id)}
-                      title="E-Mail mit dieser Vorlage senden"
-                    >
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={() => openEditSheet(template)}
-                      title="Vorlage bearbeiten"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      onClick={() => handleDelete(template.id)}
-                      title="Vorlage löschen"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start mb-2">
+                    <CardTitle className="mr-4">{template.name}</CardTitle>
+                    <div className="flex space-x-1 shrink-0">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => openSendDialog(template.id)}
+                        title="E-Mail mit dieser Vorlage senden"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => openEditSheet(template)}
+                        title="Vorlage bearbeiten"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        onClick={() => handleDelete(template.id)}
+                        title="Vorlage löschen"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <CardTitle>{template.name}</CardTitle>
                   <CardDescription>
                     {template.description || 'Keine Beschreibung vorhanden'}
                   </CardDescription>
