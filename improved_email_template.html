@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reparatur abholbereit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .email-header {
+            background-color: #4361ee;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .email-content {
+            padding: 20px;
+        }
+        .email-footer {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            padding: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .repair-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4361ee;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .repair-info p {
+            margin: 5px 0;
+        }
+        .order-code {
+            font-weight: bold;
+            color: #4361ee;
+        }
+        .pickup-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b6dbff;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .greeting {
+            margin-bottom: 20px;
+        }
+        .signature {
+            margin-top: 30px;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #4361ee;
+        }
+        @media only screen and (max-width: 480px) {
+            .email-header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>Ihr Gerät ist repariert und abholbereit!</h1>
+        </div>
+        
+        <div class="email-content">
+            <div class="greeting">
+                <p>Sehr geehrte(r) {{kundenname}},</p>
+                <p>wir freuen uns, Ihnen mitteilen zu können, dass die Reparatur Ihres Geräts erfolgreich abgeschlossen wurde.</p>
+            </div>
+            
+            <div class="repair-info">
+                <p><strong>Auftragsnummer:</strong> <span class="order-code">{{auftragsnummer}}</span></p>
+                <p><strong>Gerät:</strong> {{marke}} {{geraet}}</p>
+                <p><strong>Problem:</strong> {{fehler}}</p>
+                <p><strong>Reparaturdetails:</strong> Die Reparatur wurde erfolgreich durchgeführt</p>
+                <p><strong>Preis:</strong> {{kostenvoranschlag}}</p>
+            </div>
+            
+            <div class="pickup-info">
+                <p><strong>Abholzeiten:</strong></p>
+                <p>Sie können Ihr Gerät zu unseren Öffnungszeiten abholen:</p>
+                <p>Montag - Freitag: 10:00 - 18:00 Uhr</p>
+                <p>Bitte bringen Sie Ihren Abholschein oder Ausweis mit, um Ihr Gerät zu identifizieren.</p>
+            </div>
+            
+            <p>Wenn Sie Fragen haben, kontaktieren Sie uns gerne telefonisch oder per E-Mail.</p>
+            
+            <div class="signature">
+                <p>Mit freundlichen Grüßen,</p>
+                <p>Ihr <span class="highlight">{{geschaeftsname}}</span>-Team</p>
+            </div>
+        </div>
+        
+        <div class="email-footer">
+            <p>© 2025 {{geschaeftsname}} | Alle Rechte vorbehalten</p>
+        </div>
+    </div>
+</body>
+</html>
