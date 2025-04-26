@@ -88,7 +88,19 @@ export function NewRepairModal({ open, onClose, customerId }: NewRepairModalProp
       try {
         const response = await apiRequest('GET', '/api/device-types');
         const data = await response.json();
-        console.log("Geladene Gerätetypen in NewRepairModal:", data);
+        console.log("Geladene Gerätetypen in NewRepairModal:", JSON.stringify(data));
+        
+        // Ausgabe jedes einzelnen Gerätetyps zur besseren Diagnose
+        if (Array.isArray(data)) {
+          data.forEach((type, index) => {
+            console.log(`Gerätetyp ${index + 1}:`, type.id, type.name);
+          });
+          
+          // Prüfen ob Watch dabei ist
+          const hasWatch = data.some(type => type.name.toLowerCase() === 'watch');
+          console.log("Hat Watch-Gerätetyp:", hasWatch);
+        }
+        
         return data;
       } catch (err) {
         console.error("Fehler beim Laden der Gerätetypen:", err);
