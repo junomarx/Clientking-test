@@ -337,7 +337,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/png,image/jpeg"
+                    accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
                     onChange={handleLogoUpload}
                     className="hidden"
                     id="logo-upload"
