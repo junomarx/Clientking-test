@@ -1336,9 +1336,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Setze das reviewRequestSent-Flag in der Datenbank
-      await db.update(repairs)
-        .set({ reviewRequestSent: true })
-        .where(eq(repairs.id, repairId));
+      console.log(`Aktualisiere reviewRequestSent für Reparatur ${repairId} auf TRUE`);
+      try {
+        const result = await db.update(repairs)
+          .set({ reviewRequestSent: true })
+          .where(eq(repairs.id, repairId));
+        console.log(`Update-Ergebnis: ${JSON.stringify(result)}`);
+        
+        // Direkte Bestätigung durch erneute Abfrage
+        const [updatedRepair] = await db.select()
+          .from(repairs)
+          .where(eq(repairs.id, repairId));
+        console.log(`Überprüfung des Flags: reviewRequestSent = ${updatedRepair.reviewRequestSent}`);
+      } catch (updateError) {
+        console.error("Fehler beim Aktualisieren des reviewRequestSent-Flags:", updateError);
+      }
       
       res.json({ success: true, message: "Bewertungs-E-Mail wurde gesendet" });
     } catch (error) {
