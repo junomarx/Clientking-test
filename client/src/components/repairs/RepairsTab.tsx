@@ -52,6 +52,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidiere den Cache, um die aktuellen Daten vom Server zu holen
+      // Dies sorgt dafür, dass das reviewRequestSent-Flag im UI angezeigt wird
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      
       toast({
         title: "Erfolgreich",
         description: "Die Bewertungsanfrage wurde erfolgreich gesendet.",
