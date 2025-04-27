@@ -313,6 +313,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 <th className="py-3 px-4 text-left">Gerät</th>
                 <th className="py-3 px-4 text-left">Fehler</th>
                 <th className="py-3 px-4 text-left">Status</th>
+                <th className="py-3 px-4 text-left">Preis</th>
                 <th className="py-3 px-4 text-left">Datum</th>
                 <th className="py-3 px-4 text-left">Aktionen</th>
               </tr>
@@ -320,11 +321,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
             <tbody>
               {repairsLoading || customersLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-4 text-center text-gray-500">Lädt Daten...</td>
+                  <td colSpan={8} className="py-4 text-center text-gray-500">Lädt Daten...</td>
                 </tr>
               ) : filteredRepairs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
+                  <td colSpan={8} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
                 </tr>
               ) : (
                 filteredRepairs.map(repair => (
@@ -335,6 +336,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                     <td className="py-3 px-4">{repair.issue}</td>
                     <td className="py-3 px-4">
                       {getStatusBadge(repair.status)}
+                    </td>
+                    <td className="py-3 px-4 text-right font-medium">
+                      {repair.estimatedCost ? `${repair.estimatedCost} €` : '-'}
                     </td>
                     <td className="py-3 px-4">
                       {new Date(repair.createdAt).toLocaleDateString('de-DE')}
