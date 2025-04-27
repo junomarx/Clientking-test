@@ -980,7 +980,7 @@ export function StatisticsTab() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-lg">
-                    <DollarSign className="h-8 w-8 text-blue-600 mb-2" />
+                    <Euro className="h-8 w-8 text-blue-600 mb-2" />
                     <p className="text-sm font-medium text-blue-800">Gesamtumsatz</p>
                     <h3 className="text-3xl font-bold text-blue-900">
                       {detailedStats?.revenue ? (detailedStats.revenue.total / 100).toFixed(2) : '0.00'} €
