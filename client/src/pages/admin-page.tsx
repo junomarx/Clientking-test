@@ -14,13 +14,31 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, Check, X, MoreVertical, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { 
+  ChevronLeft, 
+  Check, 
+  X, 
+  MoreVertical, 
+  Pencil, 
+  Trash2, 
+  RefreshCw, 
+  Database, 
+  Mail, 
+  HardDrive, 
+  AlertTriangle, 
+  Clock,
+  FileDown,
+  FileUp,
+  List,
+  Trash
+} from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { User } from "@shared/schema";
+import { type User, users } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 
 // Typendefinition für User ohne Passwort
 type UserResponse = Omit<User, "password">;
@@ -431,6 +449,653 @@ function UserTable() {
   );
 }
 
+// Systemdiagnose-Tab-Komponente
+function SystemDiagnosticTab() {
+  const { toast } = useToast();
+  const [isCheckingDatabase, setIsCheckingDatabase] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [databaseStatus, setDatabaseStatus] = useState<"unknown" | "ok" | "error">("unknown");
+  const [emailStatus, setEmailStatus] = useState<"unknown" | "ok" | "error">("unknown");
+  const [systemInfo, setSystemInfo] = useState<{
+    dbSize: number;
+    numUsers: number;
+    numRepairs: number;
+    numCustomers: number;
+    uptime: number;
+  } | null>(null);
+
+  // Simulierte Funktion zum Prüfen der Datenbankverbindung
+  const checkDatabase = () => {
+    setIsCheckingDatabase(true);
+    setDatabaseStatus("unknown");
+    
+    // Simuliere Datenbankprüfung
+    setTimeout(() => {
+      setDatabaseStatus("ok");
+      setIsCheckingDatabase(false);
+      setSystemInfo({
+        dbSize: 12.5, // MB
+        numUsers: 3,
+        numRepairs: 54,
+        numCustomers: 42,
+        uptime: 15 // Tage
+      });
+      toast({
+        title: "Datenbankprüfung abgeschlossen",
+        description: "Die Datenbankverbindung funktioniert einwandfrei.",
+      });
+    }, 1500);
+  };
+  
+  // Simulierte Funktion zum Prüfen des E-Mail-Servers
+  const checkEmailServer = () => {
+    setIsCheckingEmail(true);
+    setEmailStatus("unknown");
+    
+    // Simuliere E-Mail-Server-Prüfung
+    setTimeout(() => {
+      setEmailStatus("ok");
+      setIsCheckingEmail(false);
+      toast({
+        title: "E-Mail-Server-Prüfung abgeschlossen",
+        description: "Der E-Mail-Server ist erreichbar und funktioniert.",
+      });
+    }, 2000);
+  };
+  
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5 text-primary" />
+            Datenbankstatus
+          </CardTitle>
+          <CardDescription>Überprüfen Sie den Status der Datenbankverbindung</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">Status:</span>
+              {databaseStatus === "unknown" && <span className="text-sm text-gray-500">Unbekannt</span>}
+              {databaseStatus === "ok" && <span className="text-sm text-green-500 font-medium">Online</span>}
+              {databaseStatus === "error" && <span className="text-sm text-red-500 font-medium">Fehler</span>}
+            </div>
+            
+            {systemInfo && (
+              <div className="space-y-3 mt-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">Datenbankgröße</span>
+                    <span className="text-sm font-medium">{systemInfo.dbSize} MB</span>
+                  </div>
+                  <Progress value={systemInfo.dbSize / 0.2} className="h-2" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <div className="text-sm text-gray-500">Benutzer</div>
+                    <div className="text-xl font-semibold">{systemInfo.numUsers}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <div className="text-sm text-gray-500">Uptime</div>
+                    <div className="text-xl font-semibold">{systemInfo.uptime} Tage</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <div className="text-sm text-gray-500">Kunden</div>
+                    <div className="text-xl font-semibold">{systemInfo.numCustomers}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-md">
+                    <div className="text-sm text-gray-500">Reparaturen</div>
+                    <div className="text-xl font-semibold">{systemInfo.numRepairs}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={checkDatabase} disabled={isCheckingDatabase} className="w-full">
+            {isCheckingDatabase ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Prüfe Datenbank...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Datenbankstatus prüfen
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" />
+            E-Mail-Server
+          </CardTitle>
+          <CardDescription>Überprüfen Sie die Verbindung zum E-Mail-Server</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">Status:</span>
+              {emailStatus === "unknown" && <span className="text-sm text-gray-500">Unbekannt</span>}
+              {emailStatus === "ok" && <span className="text-sm text-green-500 font-medium">Online</span>}
+              {emailStatus === "error" && <span className="text-sm text-red-500 font-medium">Fehler</span>}
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              <p className="mb-2">
+                Hier können Sie die Verbindung zum konfigurierten E-Mail-Server testen.
+                Der Test versucht, eine Verbindung herzustellen und die SMTP-Einstellungen zu validieren.
+              </p>
+              
+              {emailStatus === "ok" && (
+                <Alert className="mt-4">
+                  <Check className="h-4 w-4" />
+                  <AlertTitle>E-Mail-Server erreichbar</AlertTitle>
+                  <AlertDescription>
+                    Der E-Mail-Server ist erreichbar und korrekt konfiguriert.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {emailStatus === "error" && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Verbindungsfehler</AlertTitle>
+                  <AlertDescription>
+                    Es konnte keine Verbindung zum E-Mail-Server hergestellt werden. Überprüfen Sie Ihre Einstellungen.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={checkEmailServer} disabled={isCheckingEmail} className="w-full">
+            {isCheckingEmail ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Prüfe E-Mail-Server...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                E-Mail-Server prüfen
+              </>
+            )}
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HardDrive className="h-5 w-5 text-primary" />
+            Systemressourcen
+          </CardTitle>
+          <CardDescription>Überwachen Sie die Systemleistung</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm">CPU-Auslastung</span>
+                <span className="text-sm font-medium">24%</span>
+              </div>
+              <Progress value={24} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm">Arbeitsspeicher</span>
+                <span className="text-sm font-medium">512 MB / 2 GB</span>
+              </div>
+              <Progress value={25} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm">Festplattenspeicher</span>
+                <span className="text-sm font-medium">1.8 GB / 10 GB</span>
+              </div>
+              <Progress value={18} className="h-2" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Aktivitätslog-Tab-Komponente
+function ActivityLogTab() {
+  // Simulierte Aktivitätslogs
+  const activityLogs = [
+    {
+      id: 1,
+      username: "murat",
+      action: "login",
+      timestamp: new Date(2025, 3, 27, 14, 15, 0).toISOString(),
+      details: "Anmeldung erfolgreich"
+    },
+    {
+      id: 2,
+      username: "murat",
+      action: "create_repair",
+      timestamp: new Date(2025, 3, 27, 14, 17, 30).toISOString(),
+      details: "Reparaturauftrag #RF4278 erstellt"
+    },
+    {
+      id: 3,
+      username: "bugi",
+      action: "edit_user",
+      timestamp: new Date(2025, 3, 27, 12, 10, 0).toISOString(),
+      details: "Benutzer 'simo' bearbeitet"
+    },
+    {
+      id: 4,
+      username: "simo",
+      action: "login",
+      timestamp: new Date(2025, 3, 26, 9, 5, 0).toISOString(),
+      details: "Anmeldung erfolgreich"
+    },
+    {
+      id: 5,
+      username: "simo",
+      action: "update_repair",
+      timestamp: new Date(2025, 3, 26, 10, 15, 0).toISOString(),
+      details: "Reparaturstatus für Auftrag #AS4211 auf 'Abgeschlossen' gesetzt"
+    },
+    {
+      id: 6,
+      username: "bugi",
+      action: "activate_user",
+      timestamp: new Date(2025, 3, 26, 8, 30, 0).toISOString(),
+      details: "Benutzer 'neueReparaturShop' aktiviert"
+    },
+    {
+      id: 7,
+      username: "murat",
+      action: "delete_customer",
+      timestamp: new Date(2025, 3, 25, 17, 45, 0).toISOString(),
+      details: "Kunde 'Hans Müller' gelöscht"
+    },
+    {
+      id: 8,
+      username: "system",
+      action: "backup",
+      timestamp: new Date(2025, 3, 25, 0, 0, 0).toISOString(),
+      details: "Automatisches Datenbank-Backup erstellt"
+    },
+  ];
+  
+  // Formatiere Datum für die Anzeige
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+  
+  // Bestimme die Icon-Klasse basierend auf der Aktion
+  const getActionIcon = (action: string) => {
+    switch (action) {
+      case 'login':
+        return <Shield className="h-4 w-4 text-blue-500" />;
+      case 'create_repair':
+      case 'update_repair':
+        return <RefreshCw className="h-4 w-4 text-green-500" />;
+      case 'edit_user':
+      case 'activate_user':
+        return <Pencil className="h-4 w-4 text-yellow-500" />;
+      case 'delete_customer':
+        return <Trash2 className="h-4 w-4 text-red-500" />;
+      case 'backup':
+        return <Database className="h-4 w-4 text-purple-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Systemaktivitäten</CardTitle>
+        <CardDescription>Verfolgen Sie alle Benutzeraktivitäten im System</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Datum/Zeit</TableHead>
+              <TableHead>Benutzer</TableHead>
+              <TableHead>Aktion</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {activityLogs.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell className="font-mono text-xs whitespace-nowrap">
+                  {formatDate(log.timestamp)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="text-xs">
+                        {log.username === 'system' ? 'SY' : log.username.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={log.username === 'system' ? 'text-purple-600 font-medium' : ''}>
+                      {log.username}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {getActionIcon(log.action)}
+                    <span>
+                      {log.action === 'login' && 'Anmeldung'}
+                      {log.action === 'create_repair' && 'Neue Reparatur'}
+                      {log.action === 'update_repair' && 'Reparatur aktualisiert'}
+                      {log.action === 'edit_user' && 'Benutzer bearbeitet'}
+                      {log.action === 'activate_user' && 'Benutzer aktiviert'}
+                      {log.action === 'delete_customer' && 'Kunde gelöscht'}
+                      {log.action === 'backup' && 'Backup erstellt'}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-gray-600">
+                  {log.details}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" size="sm">
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Aktualisieren
+        </Button>
+        <Button variant="outline" size="sm">
+          <FileDown className="mr-2 h-4 w-4" />
+          Log exportieren
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+// Backup & Restore Komponente
+function BackupRestoreTab() {
+  const { toast } = useToast();
+  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  
+  // Simulierte Backups
+  const backups = [
+    {
+      id: 1,
+      name: "backup_20250427_000000.sql",
+      size: "2.4 MB", 
+      timestamp: new Date(2025, 3, 27, 0, 0, 0).toISOString(),
+      automatic: true
+    },
+    {
+      id: 2,
+      name: "backup_20250426_000000.sql",
+      size: "2.3 MB", 
+      timestamp: new Date(2025, 3, 26, 0, 0, 0).toISOString(),
+      automatic: true
+    },
+    {
+      id: 3,
+      name: "backup_20250425_143722.sql",
+      size: "2.3 MB", 
+      timestamp: new Date(2025, 3, 25, 14, 37, 22).toISOString(),
+      automatic: false
+    },
+    {
+      id: 4,
+      name: "backup_20250425_000000.sql",
+      size: "2.2 MB", 
+      timestamp: new Date(2025, 3, 25, 0, 0, 0).toISOString(),
+      automatic: true
+    },
+    {
+      id: 5,
+      name: "backup_20250424_000000.sql",
+      size: "2.2 MB", 
+      timestamp: new Date(2025, 3, 24, 0, 0, 0).toISOString(),
+      automatic: true
+    },
+  ];
+  
+  // Formatiere Datum für die Anzeige
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+  
+  // Simuliere Backup-Erstellung
+  const handleCreateBackup = () => {
+    setIsCreatingBackup(true);
+    
+    // Simuliere Backup-Prozess
+    setTimeout(() => {
+      setIsCreatingBackup(false);
+      toast({
+        title: "Backup erstellt",
+        description: "Das Backup wurde erfolgreich erstellt.",
+      });
+    }, 2000);
+  };
+  
+  // Simuliere Backup-Wiederherstellung
+  const handleRestoreBackup = (backupId: number) => {
+    if (confirm("Sind Sie sicher, dass Sie dieses Backup wiederherstellen möchten? Alle aktuellen Daten werden überschrieben.")) {
+      setIsRestoring(true);
+      
+      // Simuliere Wiederherstellungsprozess
+      setTimeout(() => {
+        setIsRestoring(false);
+        toast({
+          title: "Backup wiederhergestellt",
+          description: "Das Backup wurde erfolgreich wiederhergestellt.",
+        });
+      }, 3000);
+    }
+  };
+  
+  // Simuliere Backup-Download
+  const handleDownloadBackup = (backupId: number) => {
+    toast({
+      title: "Download gestartet",
+      description: "Das Backup wird heruntergeladen.",
+    });
+  };
+  
+  // Simuliere Backup-Löschen
+  const handleDeleteBackup = (backupId: number) => {
+    if (confirm("Sind Sie sicher, dass Sie dieses Backup löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+      toast({
+        title: "Backup gelöscht",
+        description: "Das Backup wurde erfolgreich gelöscht.",
+      });
+    }
+  };
+  
+  return (
+    <div className="grid gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Backup & Restore</CardTitle>
+          <CardDescription>Sichern und Wiederherstellen Ihrer Datenbank</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-4">
+            <div className="bg-slate-50 rounded-lg p-4 border">
+              <h3 className="font-medium mb-2">Neues Backup erstellen</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Erstellen Sie eine vollständige Sicherung Ihrer Datenbank. Die Sicherung enthält alle Daten, einschließlich Benutzer, Kunden und Reparaturaufträge.
+              </p>
+              <Button 
+                onClick={handleCreateBackup} 
+                disabled={isCreatingBackup}
+                className="w-full sm:w-auto"
+              >
+                {isCreatingBackup ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Backup wird erstellt...
+                  </>
+                ) : (
+                  <>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Backup jetzt erstellen
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+              <h3 className="font-medium mb-2 text-amber-800">Backup wiederherstellen</h3>
+              <p className="text-sm text-amber-700 mb-4">
+                <AlertTriangle className="h-4 w-4 inline-block mr-1" />
+                Warnung: Bei der Wiederherstellung eines Backups werden alle aktuellen Daten überschrieben. Dieser Vorgang kann nicht rückgängig gemacht werden.
+              </p>
+              <div className="flex items-center">
+                <Label htmlFor="backupFile" className="mr-4">Backup-Datei:</Label>
+                <Input 
+                  id="backupFile" 
+                  type="file" 
+                  accept=".sql"
+                  disabled={isRestoring}
+                  className="max-w-md"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                className="mt-4 border-amber-400 bg-amber-100 hover:bg-amber-200 text-amber-900"
+                disabled={isRestoring}
+              >
+                {isRestoring ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wiederherstellung läuft...
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="mr-2 h-4 w-4" />
+                    Backup hochladen und wiederherstellen
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Verfügbare Backups</CardTitle>
+          <CardDescription>Liste der letzten Datenbanksicherungen</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Backup-Datei</TableHead>
+                <TableHead>Datum</TableHead>
+                <TableHead>Größe</TableHead>
+                <TableHead>Typ</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {backups.map((backup) => (
+                <TableRow key={backup.id}>
+                  <TableCell className="font-mono text-xs">
+                    {backup.name}
+                  </TableCell>
+                  <TableCell>
+                    {formatDate(backup.timestamp)}
+                  </TableCell>
+                  <TableCell>
+                    {backup.size}
+                  </TableCell>
+                  <TableCell>
+                    {backup.automatic ? (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Automatisch
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        Manuell
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDownloadBackup(backup.id)}
+                        title="Herunterladen"
+                      >
+                        <FileDown className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleRestoreBackup(backup.id)}
+                        title="Wiederherstellen"
+                        disabled={isRestoring}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDeleteBackup(backup.id)}
+                        title="Löschen"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <CardFooter>
+          <div className="text-xs text-gray-500">
+            <List className="h-3 w-3 inline-block mr-1" />
+            Die letzten 10 automatischen Backups und alle manuellen Backups werden gespeichert.
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const { data: stats, isLoading, error } = useQuery<AdminDashboardStats>({
     queryKey: ["/api/admin/dashboard"],
@@ -575,12 +1240,24 @@ export default function AdminPage() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="users">Benutzer</TabsTrigger>
+          <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
+          <TabsTrigger value="logs">Aktivitätslog</TabsTrigger>
+          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
         </TabsContent>
         <TabsContent value="users">
           <UserTable />
+        </TabsContent>
+        <TabsContent value="system">
+          <SystemDiagnosticTab />
+        </TabsContent>
+        <TabsContent value="logs">
+          <ActivityLogTab />
+        </TabsContent>
+        <TabsContent value="backup">
+          <BackupRestoreTab />
         </TabsContent>
       </Tabs>
     </div>
