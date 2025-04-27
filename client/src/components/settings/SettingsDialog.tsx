@@ -79,6 +79,9 @@ const businessSettingsSchema = z.object({
   smtpUser: z.string().optional(),
   smtpPassword: z.string().optional(),
   smtpPort: z.string().optional(),
+  
+  // Bewertungslink
+  reviewLink: z.string().url("Bitte geben Sie eine gültige URL ein").optional(),
 });
 
 // Erweiterte Form-Werte, die nicht direkt im Schema sind
@@ -135,6 +138,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       smtpUser: "",
       smtpPassword: "",
       smtpPort: "",
+      reviewLink: "",
     },
   });
 
@@ -174,6 +178,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         smtpUser: settings.smtpUser || "",
         smtpPassword: settings.smtpPassword || "",
         smtpPort: settings.smtpPort || "",
+        reviewLink: settings.reviewLink || "",
       });
 
       // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
@@ -706,6 +711,34 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                                   </FormControl>
                                   <FormDescription>
                                     Lassen Sie dieses Feld leer, um das bestehende Passwort beizubehalten
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Bewertungslink */}
+                        <div className="space-y-4 border-t pt-6">
+                          <h3 className="text-md font-medium mb-3">Bewertungslink</h3>
+                          <FormDescription>
+                            Geben Sie hier Ihren Link zu Google Bewertungen, Facebook oder einer anderen Plattform an.
+                            Dieser Link wird in Bewertungs-E-Mails an Kunden verwendet.
+                          </FormDescription>
+                          
+                          <div className="grid grid-cols-1 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="reviewLink"
+                              render={({ field }) => (
+                                <FormItem className="col-span-1">
+                                  <FormLabel>Link für Kundenbewertungen</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="https://g.page/r/..." />
+                                  </FormControl>
+                                  <FormDescription>
+                                    Vollständige URL, z.B. Google-Bewertungslink, Facebook oder Ihre eigene Bewertungsseite
                                   </FormDescription>
                                   <FormMessage />
                                 </FormItem>
