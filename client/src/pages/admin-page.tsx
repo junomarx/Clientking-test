@@ -751,7 +751,7 @@ function ActivityLogTab() {
   const getActionIcon = (action: string) => {
     switch (action) {
       case 'login':
-        return <Shield className="h-4 w-4 text-blue-500" />;
+        return <UserIcon className="h-4 w-4 text-blue-500" />;
       case 'create_repair':
       case 'update_repair':
         return <RefreshCw className="h-4 w-4 text-green-500" />;
