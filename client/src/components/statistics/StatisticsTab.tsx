@@ -82,6 +82,22 @@ const deviceTypeLabels: Record<string, string> = {
   'spielekonsole': 'Spielekonsolen'
 };
 
+// Extrahiere Preise aus estimatedCost-Feldern
+function extractPrice(priceString: string | null): number {
+  if (!priceString) return 0;
+  
+  // Entferne alle nicht-numerischen Zeichen außer Punkt und Komma
+  const cleaned = priceString.replace(/[^0-9.,]/g, '');
+  
+  // Ersetze Komma durch Punkt für die korrekte Konvertierung
+  const normalized = cleaned.replace(',', '.');
+  
+  // Konvertiere zu Nummer
+  const price = parseFloat(normalized);
+  
+  return isNaN(price) ? 0 : price;
+}
+
 const timeRangeOptions = [
   { value: 'all', label: 'Alle Daten' },
   { value: '7days', label: 'Letzte 7 Tage' },
@@ -898,7 +914,7 @@ export function StatisticsTab() {
                           </span>
                         </td>
                         <td className="px-6 py-4 font-medium text-right">
-                          {repair.estimatedCost ? (parseFloat(repair.estimatedCost)).toFixed(2) : '0.00'} €
+                          {repair.estimatedCost ? extractPrice(repair.estimatedCost).toFixed(2) : '0.00'} €
                         </td>
                         <td className="px-6 py-4">{new Date(repair.createdAt).toLocaleDateString()}</td>
                       </tr>
@@ -913,7 +929,7 @@ export function StatisticsTab() {
                         {recentRepairs
                           .filter(repair => repair.status === 'abgeholt')
                           .reduce((sum, repair) => {
-                            const cost = repair.estimatedCost ? parseFloat(repair.estimatedCost) : 0;
+                            const cost = repair.estimatedCost ? extractPrice(repair.estimatedCost) : 0;
                             return sum + cost;
                           }, 0)
                           .toFixed(2)} €
