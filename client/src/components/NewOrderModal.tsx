@@ -121,12 +121,15 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   
-  // Update Gerätetyp-Liste beim ersten Rendern
+  // Update Gerätetyp-Liste beim ersten Rendern und wenn das Modal geöffnet wird
   useEffect(() => {
-    const deviceTypes = getSavedDeviceTypes();
-    // Wenn keine gespeicherten Gerätetypen vorhanden sind, verwenden wir die Standardliste
-    setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
-  }, []);
+    if (open) {
+      const deviceTypes = getSavedDeviceTypes();
+      console.log('Geladene Gerätearten:', deviceTypes);
+      // Wenn keine gespeicherten Gerätetypen vorhanden sind, verwenden wir die Standardliste
+      setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
+    }
+  }, [open]);
   
   // Update Marken basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
@@ -184,7 +187,18 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
       const response = await apiRequest('POST', '/api/repairs', data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Hier nochmals speichern, um sicherzustellen, dass die Daten für den nächsten Auftrag verfügbar sind
+      if (data.deviceType && data.brand && data.model) {
+        saveDeviceType(data.deviceType);
+        saveBrand(data.deviceType, data.brand);
+        saveModel(data.deviceType, data.brand, data.model);
+        
+        // Aktualisiere die gespeicherten Gerätetypen im State
+        const deviceTypes = getSavedDeviceTypes();
+        setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
+      }
+      
       // Invalidate the queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });

@@ -354,7 +354,8 @@ export const clearAllBrands = (): void => {
 export const saveDeviceType = (deviceType: string): void => {
   if (!deviceType) return;
   
-  const deviceTypeLower = deviceType.toLowerCase();
+  // Originalschreibweise beibehalten (nicht mehr in Kleinbuchstaben umwandeln)
+  const deviceTypeToSave = deviceType.trim();
   
   let savedDeviceTypes: string[] = [];
   const storedData = localStorage.getItem(getSavedDeviceTypesKey());
@@ -367,10 +368,16 @@ export const saveDeviceType = (deviceType: string): void => {
     }
   }
   
+  // Überprüfe, ob der Gerätetyp bereits existiert (unabhängig von Groß-/Kleinschreibung)
+  const exists = savedDeviceTypes.some(
+    type => type.toLowerCase() === deviceTypeToSave.toLowerCase()
+  );
+  
   // Füge Gerätetyp hinzu, wenn er noch nicht existiert
-  if (!savedDeviceTypes.includes(deviceTypeLower)) {
-    savedDeviceTypes.push(deviceTypeLower);
+  if (!exists) {
+    savedDeviceTypes.push(deviceTypeToSave);
     localStorage.setItem(getSavedDeviceTypesKey(), JSON.stringify(savedDeviceTypes));
+    console.log(`Gerätetyp ${deviceTypeToSave} wurde gespeichert.`);
   }
 };
 
@@ -391,7 +398,7 @@ export const getSavedDeviceTypes = (): string[] => {
 export const deleteDeviceType = (deviceType: string): void => {
   if (!deviceType) return;
   
-  const deviceTypeLower = deviceType.toLowerCase();
+  const deviceTypeToDelete = deviceType.trim();
   
   const storedData = localStorage.getItem(getSavedDeviceTypesKey());
   if (!storedData) return;
@@ -399,11 +406,14 @@ export const deleteDeviceType = (deviceType: string): void => {
   try {
     const savedDeviceTypes: string[] = JSON.parse(storedData);
     
-    // Filtere den zu löschenden Gerätetyp heraus
-    const updatedDeviceTypes = savedDeviceTypes.filter(dt => dt !== deviceTypeLower);
+    // Filtere den zu löschenden Gerätetyp heraus (unabhängig von Groß-/Kleinschreibung)
+    const updatedDeviceTypes = savedDeviceTypes.filter(
+      dt => dt.toLowerCase() !== deviceTypeToDelete.toLowerCase()
+    );
     
     // Speichere die aktualisierte Liste
     localStorage.setItem(getSavedDeviceTypesKey(), JSON.stringify(updatedDeviceTypes));
+    console.log(`Gerätetyp ${deviceTypeToDelete} wurde gelöscht.`);
   } catch (err) {
     console.error('Fehler beim Löschen des Gerätetyps:', err);
   }
