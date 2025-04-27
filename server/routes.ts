@@ -1393,6 +1393,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Registriere die Admin-Routen
+  registerAdminRoutes(app);
+
   const httpServer = createServer(app);
 
   return httpServer;
