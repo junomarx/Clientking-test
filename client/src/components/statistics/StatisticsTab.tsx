@@ -31,7 +31,7 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  DollarSign,
+  Euro,
   BarChart as BarChartIcon
 } from 'lucide-react';
 import { Repair } from '@shared/schema';
@@ -576,7 +576,7 @@ export function StatisticsTab() {
             </div>
             {detailedStats?.revenue && (
               <div className="flex items-center gap-1.5">
-                <DollarSign className="h-4 w-4 text-amber-600" />
+                <Euro className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-medium">Umsatz:</span>
                 <Badge variant="outline" className="bg-amber-50">
                   {(detailedStats.revenue.total / 100).toFixed(2)} €
@@ -762,7 +762,7 @@ export function StatisticsTab() {
             Nach Problem
           </TabsTrigger>
           <TabsTrigger value="revenue">
-            <DollarSign className="mr-2 h-4 w-4" />
+            <Euro className="mr-2 h-4 w-4" />
             Umsatz
           </TabsTrigger>
         </TabsList>
