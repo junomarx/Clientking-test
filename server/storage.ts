@@ -672,6 +672,11 @@ export class DatabaseStorage implements IStorage {
     byBrand: Record<string, number>;
     byIssue: Record<string, number>;
     mostRecentRepairs: Repair[];
+    revenue: {
+      total: number;
+      byStatus: Record<string, number>;
+      byMonth: Record<number, number>;
+    };
   }> {
     try {
       if (!currentUserId) {
