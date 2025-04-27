@@ -9,7 +9,8 @@ import type { Customer } from '@/lib/types';
 import { 
   saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
   saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes,
-  saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands
+  saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands,
+  getIssuesForDeviceType, saveIssue, DEFAULT_ISSUES
 } from '@/lib/localStorage';
 
 import {

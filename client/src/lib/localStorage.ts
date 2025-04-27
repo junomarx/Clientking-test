@@ -428,3 +428,169 @@ export const clearAllDeviceTypes = (): void => {
     console.error('Fehler beim Zurücksetzen aller Gerätetypen:', err);
   }
 };
+
+// Funktionen für die Fehlerbeschreibungen-Verwaltung
+const getSavedIssuesKey = () => `${getUserPrefix()}repair-shop-common-issues`;
+
+// Standardfehlerbeschreibungen für verschiedene Gerätetypen
+export const DEFAULT_ISSUES = {
+  'Smartphone': [
+    'Display defekt/gebrochen', 
+    'Akku schwach/defekt', 
+    'Ladebuchse defekt', 
+    'Kein Ton/Mikrofon defekt', 
+    'Wasserschaden', 
+    'Kamera defekt',
+    'Keine Verbindung (WLAN/Bluetooth)',
+    'Software-Probleme/Abstürze',
+    'Kopfhörerbuchse defekt',
+    'Taste(n) defekt'
+  ],
+  'Tablet': [
+    'Display defekt/gebrochen', 
+    'Akku schwach/defekt', 
+    'Ladebuchse defekt',
+    'Wasserschaden',
+    'Software-Probleme/Abstürze',
+    'Keine Verbindung (WLAN)', 
+    'Taste(n) defekt',
+    'Kamera defekt'
+  ],
+  'Watch': [
+    'Display defekt/gebrochen',
+    'Akku schwach/defekt',
+    'Ladeproblem',
+    'Wasserschaden',
+    'Armband defekt/Austausch',
+    'Software-Probleme',
+    'Sensoren defekt',
+    'Verbindungsprobleme'
+  ],
+  'Laptop': [
+    'Display defekt/gebrochen',
+    'Akku schwach/defekt',
+    'Tastatur defekt',
+    'Touchpad defekt',
+    'Wasserschaden',
+    'Überhitzung/Lüfter laut',
+    'Festplatte/SSD-Fehler',
+    'Anschlüsse defekt',
+    'Software-Probleme',
+    'Kein Ton/Lautsprecher defekt'
+  ],
+  'Spielekonsole': [
+    'Startet nicht mehr',
+    'Liest keine Discs',
+    'Überhitzung',
+    'Controller defekt',
+    'Anschlüsse defekt',
+    'Laute Geräusche',
+    'Software-Fehler',
+    'HDMI-Ausgang defekt',
+    'Disc-Laufwerk klemmt'
+  ],
+  'Andere': [
+    'Gerät startet nicht',
+    'Wasserschaden',
+    'Hardware-Fehler',
+    'Software-Probleme',
+    'Stromversorgung defekt',
+    'Anschlüsse defekt'
+  ]
+};
+
+// Funktion zum Speichern benutzerdefinierter Fehlerbeschreibungen pro Gerätetyp
+export const saveIssue = (deviceType: string, issue: string): void => {
+  if (!deviceType || !issue) return;
+  
+  const key = deviceType.toLowerCase();
+  let storedIssues: Record<string, string[]> = {};
+  const storedData = localStorage.getItem(getSavedIssuesKey());
+  
+  if (storedData) {
+    try {
+      storedIssues = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Fehlerbeschreibungen:', err);
+    }
+  }
+  
+  // Erstelle Array für diesen Gerätetyp, falls es noch nicht existiert
+  if (!storedIssues[key]) {
+    storedIssues[key] = [];
+  }
+  
+  // Füge Fehlerbeschreibung hinzu, wenn sie noch nicht existiert
+  if (!storedIssues[key].includes(issue)) {
+    storedIssues[key].push(issue);
+    localStorage.setItem(getSavedIssuesKey(), JSON.stringify(storedIssues));
+  }
+};
+
+// Funktion zum Abrufen von Fehlerbeschreibungen für einen bestimmten Gerätetyp
+export const getIssuesForDeviceType = (deviceType: string): string[] => {
+  if (!deviceType) return [];
+  
+  const key = deviceType.toLowerCase();
+  const storedData = localStorage.getItem(getSavedIssuesKey());
+  let customIssues: string[] = [];
+  
+  // Lade benutzerdefinierte Fehlerbeschreibungen
+  if (storedData) {
+    try {
+      const storedIssues: Record<string, string[]> = JSON.parse(storedData);
+      customIssues = storedIssues[key] || [];
+    } catch (err) {
+      console.error('Fehler beim Abrufen der gespeicherten Fehlerbeschreibungen:', err);
+    }
+  }
+  
+  // Kombiniere mit Standardfehlerbeschreibungen
+  const deviceTypeKey = Object.keys(DEFAULT_ISSUES).find(
+    dt => dt.toLowerCase() === deviceType.toLowerCase()
+  ) || 'Andere';
+  
+  const defaultIssues = DEFAULT_ISSUES[deviceTypeKey as keyof typeof DEFAULT_ISSUES] || [];
+  
+  // Entferne Duplikate und gib die kombinierte Liste zurück
+  return [...new Set([...defaultIssues, ...customIssues])];
+};
+
+// Funktion zum Löschen einer benutzerdefinierten Fehlerbeschreibung
+export const deleteIssue = (deviceType: string, issue: string): void => {
+  if (!deviceType) return;
+  
+  const key = deviceType.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedIssuesKey());
+  if (!storedData) return;
+  
+  try {
+    const storedIssues: Record<string, string[]> = JSON.parse(storedData);
+    
+    if (storedIssues[key]) {
+      // Filtere die zu löschende Fehlerbeschreibung heraus
+      storedIssues[key] = storedIssues[key].filter(i => i !== issue);
+      
+      // Wenn die Liste für diesen Key leer ist, entferne den Key
+      if (storedIssues[key].length === 0) {
+        delete storedIssues[key];
+      }
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(getSavedIssuesKey(), JSON.stringify(storedIssues));
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen der Fehlerbeschreibung:', err);
+  }
+};
+
+// Funktion zum Zurücksetzen aller gespeicherten benutzerdefinierten Fehlerbeschreibungen
+export const clearAllIssues = (): void => {
+  try {
+    localStorage.removeItem(getSavedIssuesKey());
+    console.log('Alle gespeicherten benutzerdefinierten Fehlerbeschreibungen wurden gelöscht.');
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen aller Fehlerbeschreibungen:', err);
+  }
+};
