@@ -249,8 +249,20 @@ export class EmailService {
         }
         
         // Bewertungslink als Variable
-        if (!variables["bewertungslink"] && bizSettings.reviewLink) {
-          variables["bewertungslink"] = bizSettings.reviewLink;
+        if (!variables["bewertungslink"]) {
+          if (bizSettings.reviewLink) {
+            // Stelle sicher, dass der Bewertungslink vollständig ist (mit http/https)
+            let reviewLink = bizSettings.reviewLink;
+            if (reviewLink && !reviewLink.startsWith('http')) {
+              reviewLink = 'https://' + reviewLink;
+            }
+            console.log(`Verwende Bewertungslink: ${reviewLink}`);
+            variables["bewertungslink"] = reviewLink;
+          } else {
+            // Fallback
+            variables["bewertungslink"] = "https://g.page/r/CVkTCKBnO_NqEBM/review";
+            console.log("Verwende Fallback-Bewertungslink, da kein Link in den Einstellungen gefunden wurde.");
+          }
         }
       }
       
