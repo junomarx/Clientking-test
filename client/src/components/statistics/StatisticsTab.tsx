@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Tabs, 
@@ -27,16 +27,22 @@ import {
   Users, 
   FileText, 
   Filter,
-  Calendar
+  Calendar,
+  ChevronRight,
+  ChevronLeft,
+  X
 } from 'lucide-react';
 import { Repair } from '@shared/schema';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, subMonths, isAfter, isBefore, isSameDay } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { de } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Farben für Diagramme
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -73,15 +79,53 @@ const timeRangeOptions = [
   { value: '7days', label: 'Letzte 7 Tage' },
   { value: '30days', label: 'Letzte 30 Tage' },
   { value: 'thisMonth', label: 'Diesen Monat' },
-  { value: 'lastMonth', label: 'Letzten Monat' }
+  { value: 'lastMonth', label: 'Letzten Monat' },
+  { value: 'custom', label: 'Benutzerdefiniert' }
 ];
 
 export function StatisticsTab() {
   const [exportFormat, setExportFormat] = useState<'excel' | 'pdf'>('excel');
   const [timeRange, setTimeRange] = useState<string>('all');
+  const [customDateDialogOpen, setCustomDateDialogOpen] = useState(false);
+  const [customDateStart, setCustomDateStart] = useState<Date | undefined>(undefined);
+  const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
+  const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
+
+  // Dialog öffnen, wenn benutzerdefinierter Zeitraum ausgewählt
+  useEffect(() => {
+    if (timeRange === 'custom' && !customDateRangeActive) {
+      setCustomDateDialogOpen(true);
+    }
+  }, [timeRange, customDateRangeActive]);
+
+  // Funktion für das Zurücksetzen des benutzerdefinierten Zeitraums
+  const resetCustomDateRange = () => {
+    setCustomDateRangeActive(false);
+    setCustomDateStart(undefined);
+    setCustomDateEnd(undefined);
+    setTimeRange('all');
+  };
+
+  // Funktion für das Anwenden des benutzerdefinierten Zeitraums
+  const applyCustomDateRange = () => {
+    if (customDateStart && customDateEnd) {
+      setCustomDateRangeActive(true);
+      setCustomDateDialogOpen(false);
+    } else {
+      alert('Bitte wählen Sie ein Start- und Enddatum aus.');
+    }
+  };
 
   // Datumsbereich basierend auf der ausgewählten Option berechnen
   const getDateRange = () => {
+    // Wenn benutzerdefinierter Zeitraum aktiv ist, verwende diese Daten
+    if (customDateRangeActive && customDateStart && customDateEnd) {
+      // Setze den Endzeitpunkt auf das Ende des Tages für korrekten Vergleich
+      const endWithTime = new Date(customDateEnd);
+      endWithTime.setHours(23, 59, 59, 999);
+      return { start: customDateStart, end: endWithTime };
+    }
+
     const now = new Date();
     switch(timeRange) {
       case '7days':
@@ -341,13 +385,34 @@ export function StatisticsTab() {
                 </Badge>
               </div>
             )}
+            {customDateRangeActive && (
+              <div className="flex items-center gap-1.5 ml-2">
+                <Calendar className="h-4 w-4 text-indigo-600" />
+                <span className="text-sm font-medium">Zeitraum:</span>
+                <Badge variant="outline" className="bg-indigo-50">
+                  {customDateStart && format(customDateStart, 'dd.MM.yyyy')} - {customDateEnd && format(customDateEnd, 'dd.MM.yyyy')}
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-5 w-5 text-gray-500" 
+                  onClick={resetCustomDateRange}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         
         <div className="flex flex-col md:flex-row gap-2">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-600" />
-            <Select value={timeRange} onValueChange={setTimeRange}>
+            <Select 
+              value={timeRange} 
+              onValueChange={setTimeRange}
+              disabled={customDateRangeActive} // Deaktivieren wenn benutzerdefinierter Bereich aktiv
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Zeitraum wählen" />
               </SelectTrigger>
@@ -389,6 +454,53 @@ export function StatisticsTab() {
           </div>
         </div>
       </div>
+      
+      {/* Dialog für benutzerdefinierten Datumsbereich */}
+      <Dialog open={customDateDialogOpen} onOpenChange={setCustomDateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Zeitraum auswählen</DialogTitle>
+            <DialogDescription>
+              Wählen Sie einen benutzerdefinierten Zeitraum für Ihre Statistik aus.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div>
+              <h3 className="mb-2 text-sm font-medium">Startdatum</h3>
+              <CalendarComponent
+                mode="single"
+                selected={customDateStart}
+                onSelect={setCustomDateStart}
+                locale={de}
+                disabled={(date) => customDateEnd ? isAfter(date, customDateEnd) : false}
+                className="border rounded-md p-2"
+              />
+            </div>
+            
+            <div>
+              <h3 className="mb-2 text-sm font-medium">Enddatum</h3>
+              <CalendarComponent
+                mode="single"
+                selected={customDateEnd}
+                onSelect={setCustomDateEnd}
+                locale={de}
+                disabled={(date) => customDateStart ? isBefore(date, customDateStart) : false}
+                className="border rounded-md p-2"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" onClick={() => setCustomDateDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={applyCustomDateRange}>
+              Anwenden
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="mb-4">
