@@ -90,6 +90,7 @@ export function StatisticsTab() {
   const [customDateStart, setCustomDateStart] = useState<Date | undefined>(undefined);
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
   const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
+  const [dateSelectionMode, setDateSelectionMode] = useState<'start' | 'end'>('start');
 
   // Dialog öffnen, wenn benutzerdefinierter Zeitraum ausgewählt
   useEffect(() => {
@@ -104,6 +105,25 @@ export function StatisticsTab() {
     setCustomDateStart(undefined);
     setCustomDateEnd(undefined);
     setTimeRange('all');
+  };
+
+  // Funktion zum Umschalten des Auswahlmodus und Setzen der Daten
+  const handleDateSelect = (date: Date | undefined) => {
+    if (dateSelectionMode === 'start') {
+      setCustomDateStart(date);
+      setDateSelectionMode('end');
+    } else {
+      setCustomDateEnd(date);
+      // Automatisch zurück zum Start-Modus für die nächste Auswahl
+      setDateSelectionMode('start');
+    }
+  };
+
+  // Funktion für das Zurücksetzen der aktuellen Auswahl
+  const resetDateSelection = () => {
+    setCustomDateStart(undefined);
+    setCustomDateEnd(undefined);
+    setDateSelectionMode('start');
   };
 
   // Funktion für das Anwenden des benutzerdefinierten Zeitraums
@@ -465,34 +485,72 @@ export function StatisticsTab() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Startdatum</h3>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium">
+                {dateSelectionMode === 'start' ? 'Startdatum auswählen' : 'Enddatum auswählen'}
+              </h3>
+              
+              <div className="flex items-center gap-2">
+                {/* Zeigt die aktuelle Auswahl an */}
+                {customDateStart && (
+                  <Badge className="bg-blue-100 text-blue-800">
+                    Start: {format(customDateStart, 'dd.MM.yyyy')}
+                  </Badge>
+                )}
+                
+                {customDateEnd && (
+                  <Badge className="bg-green-100 text-green-800">
+                    Ende: {format(customDateEnd, 'dd.MM.yyyy')}
+                  </Badge>
+                )}
+                
+                {/* Button zum Zurücksetzen */}
+                {(customDateStart || customDateEnd) && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={resetDateSelection} 
+                    className="h-6 w-6"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="border rounded-md p-3">
               <CalendarComponent
                 mode="single"
-                selected={customDateStart}
-                onSelect={setCustomDateStart}
+                selected={dateSelectionMode === 'start' ? customDateStart : customDateEnd}
+                onSelect={handleDateSelect}
                 locale={de}
-                disabled={(date) => customDateEnd ? isAfter(date, customDateEnd) : false}
-                className="border rounded-md p-2"
+                disabled={(date) => {
+                  if (dateSelectionMode === 'start') {
+                    return customDateEnd ? isAfter(date, customDateEnd) : false;
+                  } else {
+                    return customDateStart ? isBefore(date, customDateStart) : false;
+                  }
+                }}
+                className="mx-auto"
               />
             </div>
             
-            <div>
-              <h3 className="mb-2 text-sm font-medium">Enddatum</h3>
-              <CalendarComponent
-                mode="single"
-                selected={customDateEnd}
-                onSelect={setCustomDateEnd}
-                locale={de}
-                disabled={(date) => customDateStart ? isBefore(date, customDateStart) : false}
-                className="border rounded-md p-2"
-              />
-            </div>
+            {/* Hilfetext */}
+            <p className="text-xs text-muted-foreground mt-1">
+              {dateSelectionMode === 'start' 
+                ? "Wählen Sie das Startdatum aus." 
+                : "Wählen Sie das Enddatum aus."}
+            </p>
           </div>
           
           <div className="flex justify-end gap-2 mt-2">
-            <Button variant="outline" onClick={() => setCustomDateDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setCustomDateDialogOpen(false);
+              if (timeRange === 'custom' && !customDateRangeActive) {
+                setTimeRange('all');
+              }
+            }}>
               Abbrechen
             </Button>
             <Button onClick={applyCustomDateRange}>
