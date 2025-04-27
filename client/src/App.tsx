@@ -7,6 +7,8 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -26,6 +28,8 @@ function Router() {
         <AdminPage />
       </ProtectedRoute>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route component={NotFound} />
     </Switch>
   );
