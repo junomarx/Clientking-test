@@ -53,6 +53,11 @@ interface DetailedStats {
   byBrand: Record<string, number>;
   byIssue: Record<string, number>;
   mostRecentRepairs: Repair[];
+  revenue: {
+    total: number;
+    byStatus: Record<string, number>;
+    byMonth: Record<string, number>;
+  };
 }
 
 interface Stats {
@@ -98,6 +103,7 @@ export function StatisticsTab() {
   const deviceTypeChartRef = useRef<HTMLDivElement>(null);
   const brandChartRef = useRef<HTMLDivElement>(null);
   const issueChartRef = useRef<HTMLDivElement>(null);
+  const revenueChartRef = useRef<HTMLDivElement>(null);
 
   // Dialog öffnen, wenn benutzerdefinierter Zeitraum ausgewählt
   useEffect(() => {
@@ -240,6 +246,30 @@ export function StatisticsTab() {
 
   // Neueste Reparaturen
   const recentRepairs = detailedStats?.mostRecentRepairs || [];
+  
+  // Daten für Umsatz-Diagramme vorbereiten
+  const revenueByStatusData = detailedStats?.revenue?.byStatus
+    ? Object.entries(detailedStats.revenue.byStatus).map(([key, value]) => ({
+        name: key,
+        value: parseFloat((value / 100).toFixed(2))  // Umwandlung in Euro mit 2 Dezimalstellen
+      }))
+    : [];
+    
+  // Daten für Umsatz nach Monat vorbereiten
+  const revenueByMonthData = detailedStats?.revenue?.byMonth
+    ? Object.entries(detailedStats.revenue.byMonth)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0])) // Nach Monatsnummer sortieren
+        .map(([key, value]) => {
+          // Monatsname basierend auf der Nummer erstellen (1 = Januar, usw.)
+          const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+          const monthIndex = parseInt(key) - 1; // 0-basierter Index
+          const name = monthNames[monthIndex];
+          return {
+            name,
+            value: parseFloat((value / 100).toFixed(2)) // Umwandlung in Euro mit 2 Dezimalstellen
+          };
+        })
+    : [];
 
   // Excel-Export-Funktion
   const exportToExcel = () => {
