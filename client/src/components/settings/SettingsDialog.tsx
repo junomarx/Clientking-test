@@ -53,10 +53,12 @@ import {
   Phone, 
   MapPin,
   Settings,
-  MessageSquare
+  MessageSquare,
+  UserCog
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
+import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
 
 const businessSettingsSchema = z.object({
   businessName: z.string().min(2, "Firmenname wird benötigt"),
@@ -321,7 +323,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-          <TabsList className="grid grid-cols-3 mb-4">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="business" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" /> Unternehmen
             </TabsTrigger>
@@ -330,6 +332,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center gap-2">
               <Settings className="h-4 w-4" /> Darstellung
+            </TabsTrigger>
+            <TabsTrigger value="user" className="flex items-center gap-2">
+              <UserCog className="h-4 w-4" /> Benutzer
             </TabsTrigger>
           </TabsList>
 
@@ -859,6 +864,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 </DialogFooter>
               </form>
             </Form>
+          </TabsContent>
+
+          {/* Tab: Benutzereinstellungen */}
+          <TabsContent value="user" className="max-h-[65vh] overflow-y-auto">
+            <UserSettingsTab />
           </TabsContent>
         </Tabs>
       </DialogContent>
