@@ -1243,7 +1243,6 @@ export default function AdminPage() {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="users">Benutzer</TabsTrigger>
           <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
-          <TabsTrigger value="logs">Aktivitätslog</TabsTrigger>
           <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
@@ -1255,9 +1254,7 @@ export default function AdminPage() {
         <TabsContent value="system">
           <SystemDiagnosticTab />
         </TabsContent>
-        <TabsContent value="logs">
-          <ActivityLogTab />
-        </TabsContent>
+
         <TabsContent value="backup">
           <BackupRestoreTab />
         </TabsContent>
