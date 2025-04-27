@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Tabs, 
@@ -40,6 +40,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { de } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -91,6 +92,12 @@ export function StatisticsTab() {
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
   const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
   const [dateSelectionMode, setDateSelectionMode] = useState<'start' | 'end'>('start');
+  const [isExporting, setIsExporting] = useState(false);
+  
+  // Referenzen für die Chart-Komponenten
+  const deviceTypeChartRef = useRef<HTMLDivElement>(null);
+  const brandChartRef = useRef<HTMLDivElement>(null);
+  const issueChartRef = useRef<HTMLDivElement>(null);
 
   // Dialog öffnen, wenn benutzerdefinierter Zeitraum ausgewählt
   useEffect(() => {
@@ -266,12 +273,14 @@ export function StatisticsTab() {
     document.body.removeChild(link);
   };
 
-  // PDF-Export-Funktion
-  const exportToPDF = () => {
+  // PDF-Export-Funktion mit Diagrammen
+  const exportToPDF = async () => {
     if (!repairs || repairs.length === 0) return;
     
     try {
-      // PDF im A4-Format erstellen
+      setIsExporting(true); // Exportstatus setzen
+
+      // PDF im A4-Format erstellen (Hochformat)
       const pdf = new jsPDF();
       
       // Dokumententitel
@@ -302,14 +311,133 @@ export function StatisticsTab() {
         pdf.text(`Gefilterte Reparaturen: ${stats?.filteredRepairCount || 0}`, 14, 90);
       }
       
+      // Diagramme hinzufügen
+      let currentY = 110;
+      
+      if (deviceTypeChartRef.current) {
+        pdf.setFontSize(12);
+        pdf.text('Verteilung nach Gerätetyp:', 14, currentY);
+        currentY += 10;
+        
+        // Gerätetypen-Diagramm rendern
+        try {
+          const deviceTypeCanvas = await html2canvas(deviceTypeChartRef.current, {
+            scale: 1,
+            backgroundColor: null,
+            logging: false
+          });
+          
+          // Bildgröße berechnen, um ins PDF zu passen
+          const imgWidth = 180;
+          const imgHeight = (deviceTypeCanvas.height * imgWidth) / deviceTypeCanvas.width;
+          
+          // Prüfen, ob genug Platz auf der aktuellen Seite ist
+          if (currentY + imgHeight > 280) {
+            pdf.addPage();
+            currentY = 20;
+            pdf.setFontSize(12);
+            pdf.text('Verteilung nach Gerätetyp:', 14, currentY);
+            currentY += 10;
+          }
+          
+          // Diagramm als Bild zum PDF hinzufügen
+          const deviceTypeImg = deviceTypeCanvas.toDataURL('image/png');
+          pdf.addImage(deviceTypeImg, 'PNG', 14, currentY, imgWidth, imgHeight);
+          currentY += imgHeight + 20;
+        } catch (e) {
+          console.error('Fehler beim Erfassen des Gerätetyp-Diagramms:', e);
+        }
+      }
+      
+      // Hersteller-Diagramm
+      if (brandChartRef.current) {
+        // Bei Bedarf neue Seite anfangen
+        if (currentY > 220) {
+          pdf.addPage();
+          currentY = 20;
+        }
+        
+        pdf.setFontSize(12);
+        pdf.text('Verteilung nach Herstellern:', 14, currentY);
+        currentY += 10;
+        
+        try {
+          const brandCanvas = await html2canvas(brandChartRef.current, {
+            scale: 1,
+            backgroundColor: null,
+            logging: false
+          });
+          
+          const imgWidth = 180;
+          const imgHeight = (brandCanvas.height * imgWidth) / brandCanvas.width;
+          
+          // Prüfen, ob genug Platz auf der aktuellen Seite ist
+          if (currentY + imgHeight > 280) {
+            pdf.addPage();
+            currentY = 20;
+            pdf.setFontSize(12);
+            pdf.text('Verteilung nach Herstellern:', 14, currentY);
+            currentY += 10;
+          }
+          
+          const brandImg = brandCanvas.toDataURL('image/png');
+          pdf.addImage(brandImg, 'PNG', 14, currentY, imgWidth, imgHeight);
+          currentY += imgHeight + 20;
+        } catch (e) {
+          console.error('Fehler beim Erfassen des Hersteller-Diagramms:', e);
+        }
+      }
+      
+      // Problem-Diagramm
+      if (issueChartRef.current) {
+        // Bei Bedarf neue Seite anfangen
+        if (currentY > 220) {
+          pdf.addPage();
+          currentY = 20;
+        }
+        
+        pdf.setFontSize(12);
+        pdf.text('Verteilung nach Problemen:', 14, currentY);
+        currentY += 10;
+        
+        try {
+          const issueCanvas = await html2canvas(issueChartRef.current, {
+            scale: 1,
+            backgroundColor: null,
+            logging: false
+          });
+          
+          const imgWidth = 180;
+          const imgHeight = (issueCanvas.height * imgWidth) / issueCanvas.width;
+          
+          // Prüfen, ob genug Platz auf der aktuellen Seite ist
+          if (currentY + imgHeight > 280) {
+            pdf.addPage();
+            currentY = 20;
+            pdf.setFontSize(12);
+            pdf.text('Verteilung nach Problemen:', 14, currentY);
+            currentY += 10;
+          }
+          
+          const issueImg = issueCanvas.toDataURL('image/png');
+          pdf.addImage(issueImg, 'PNG', 14, currentY, imgWidth, imgHeight);
+          currentY += imgHeight + 20;
+        } catch (e) {
+          console.error('Fehler beim Erfassen des Problem-Diagramms:', e);
+        }
+      }
+      
+      // Neue Seite für Tabelle
+      pdf.addPage();
+      
       // Reparaturtabelle
       pdf.setFontSize(12);
-      pdf.text('Letzte Reparaturen:', 14, 100);
+      pdf.text('Letzte Reparaturen:', 14, 20);
       
       // Tabellenkopf
       const headers = ['Auftragsnr.', 'Marke', 'Modell', 'Status', 'Datum'];
       const columnWidths = [30, 35, 50, 25, 35];
-      let y = 110;
+      let y = 30;
       
       // Spaltenüberschriften
       let x = 14;
@@ -360,8 +488,11 @@ export function StatisticsTab() {
       
       // PDF herunterladen
       pdf.save('reparatur-statistik.pdf');
+      
+      setIsExporting(false); // Exportstatus zurücksetzen
     } catch (error) {
       console.error('Fehler beim PDF-Export:', error);
+      setIsExporting(false);
       alert('Beim PDF-Export ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
     }
   };
@@ -585,7 +716,7 @@ export function StatisticsTab() {
                 <CardDescription>Verteilung der Reparaturen nach Gerätetyp</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                <div className="h-[300px]" ref={deviceTypeChartRef}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -617,7 +748,7 @@ export function StatisticsTab() {
                 <CardDescription>Die häufigsten Marken</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                <div className="h-[300px]" ref={brandChartRef}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={brandData}
@@ -646,7 +777,7 @@ export function StatisticsTab() {
               <CardDescription>Die am häufigsten aufgetretenen Probleme</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px]" ref={issueChartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={issueData}
