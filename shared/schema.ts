@@ -115,6 +115,9 @@ export const businessSettings = pgTable("business_settings", {
   smtpPassword: text("smtp_password"),     // SMTP Passwort
   smtpPort: text("smtp_port"),             // SMTP Port (z.B. 587)
   
+  // Link für Kundenbewertungen
+  reviewLink: text("review_link"),         // Link für Bewertungen (z.B. Google, Facebook, Yelp)
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),
