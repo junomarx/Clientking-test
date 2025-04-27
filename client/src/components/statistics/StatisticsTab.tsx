@@ -898,7 +898,7 @@ export function StatisticsTab() {
                           </span>
                         </td>
                         <td className="px-6 py-4 font-medium text-right">
-                          {repair.estimatedCost ? (parseFloat(repair.estimatedCost) / 100).toFixed(2) : '0.00'} €
+                          {repair.estimatedCost ? (parseFloat(repair.estimatedCost)).toFixed(2) : '0.00'} €
                         </td>
                         <td className="px-6 py-4">{new Date(repair.createdAt).toLocaleDateString()}</td>
                       </tr>
@@ -912,7 +912,10 @@ export function StatisticsTab() {
                       <td className="px-6 py-4 font-bold text-right">
                         {recentRepairs
                           .filter(repair => repair.status === 'abgeholt')
-                          .reduce((sum, repair) => sum + (repair.estimatedCost ? parseFloat(repair.estimatedCost) : 0), 0) / 100
+                          .reduce((sum, repair) => {
+                            const cost = repair.estimatedCost ? parseFloat(repair.estimatedCost) : 0;
+                            return sum + cost;
+                          }, 0)
                           .toFixed(2)} €
                       </td>
                       <td className="px-6 py-4"></td>
