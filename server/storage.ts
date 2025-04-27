@@ -11,7 +11,7 @@ import {
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
-import { eq, desc, and, or, sql, gte, lt, gt, count, isNotNull, like } from "drizzle-orm";
+import { eq, desc, and, or, sql, gte, lt, lte, gt, count, isNotNull, like } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -573,23 +573,26 @@ export class DatabaseStorage implements IStorage {
     
     const userFilter = eq(repairs.userId, currentUserId);
     
-    // Filter für den angegebenen Zeitraum aufbauen
-    let dateRangeFilter = undefined;
+    // Basisfilter für Benutzer erstellen
+    let combinedFilter = userFilter;
+    
+    // Füge Zeitraumfilter hinzu, wenn vorhanden
     if (startDate && endDate) {
-      dateRangeFilter = and(
+      combinedFilter = and(
+        userFilter,
         gte(repairs.createdAt, startDate),
         lte(repairs.createdAt, endDate)
       );
     } else if (startDate) {
-      dateRangeFilter = gte(repairs.createdAt, startDate);
+      combinedFilter = and(
+        userFilter,
+        gte(repairs.createdAt, startDate)
+      );
     } else if (endDate) {
-      dateRangeFilter = lte(repairs.createdAt, endDate);
-    }
-    
-    // Kombiniere Filter
-    let combinedFilter = userFilter;
-    if (dateRangeFilter) {
-      combinedFilter = and(userFilter, dateRangeFilter);
+      combinedFilter = and(
+        userFilter,
+        lte(repairs.createdAt, endDate)
+      );
     }
     
     // Get total number of orders with optional date range filter
@@ -680,24 +683,24 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
-      // Filter für die Benutzer-ID erstellen
-      let userFilter = eq(repairs.userId, currentUserId);
+      // Basisfilter für Benutzer erstellen
+      let combinedFilter = eq(repairs.userId, currentUserId);
       
-      // Filter für den angegebenen Zeitraum aufbauen
+      // Füge Zeitraumfilter hinzu, wenn vorhanden
       if (startDate && endDate) {
-        userFilter = and(
-          userFilter,
+        combinedFilter = and(
+          eq(repairs.userId, currentUserId),
           gte(repairs.createdAt, startDate),
           lte(repairs.createdAt, endDate)
         );
       } else if (startDate) {
-        userFilter = and(
-          userFilter,
+        combinedFilter = and(
+          eq(repairs.userId, currentUserId),
           gte(repairs.createdAt, startDate)
         );
       } else if (endDate) {
-        userFilter = and(
-          userFilter,
+        combinedFilter = and(
+          eq(repairs.userId, currentUserId),
           lte(repairs.createdAt, endDate)
         );
       }
@@ -706,7 +709,7 @@ export class DatabaseStorage implements IStorage {
       const userRepairs = await db
         .select()
         .from(repairs)
-        .where(userFilter);
+        .where(combinedFilter);
       
       // Statistiken nach Gerätetyp
       const byDeviceType: Record<string, number> = {};

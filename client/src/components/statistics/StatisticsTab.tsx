@@ -19,10 +19,23 @@ import {
   Cell, 
   ResponsiveContainer 
 } from 'recharts';
-import { FilePlus2, Smartphone, Database, Download } from 'lucide-react';
+import { 
+  FilePlus2, 
+  Smartphone, 
+  Database, 
+  Download, 
+  Users, 
+  FileText, 
+  Filter,
+  Calendar
+} from 'lucide-react';
 import { Repair } from '@shared/schema';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { de } from 'date-fns/locale';
 
 // Farben für Diagramme
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -34,24 +47,89 @@ interface DetailedStats {
   mostRecentRepairs: Repair[];
 }
 
+interface Stats {
+  totalOrders: number;
+  inRepair: number;
+  completed: number;
+  today: number;
+  readyForPickup: number;
+  outsourced: number;
+  customerCount?: number;
+  repairCount?: number;
+  filteredRepairCount?: number;
+}
+
 const deviceTypeLabels: Record<string, string> = {
   'smartphone': 'Smartphones',
   'tablet': 'Tablets',
-  'laptop': 'Laptops'
+  'laptop': 'Laptops',
+  'watch': 'Smartwatches',
+  'spielekonsole': 'Spielekonsolen'
 };
+
+const timeRangeOptions = [
+  { value: 'all', label: 'Alle Daten' },
+  { value: '7days', label: 'Letzte 7 Tage' },
+  { value: '30days', label: 'Letzte 30 Tage' },
+  { value: 'thisMonth', label: 'Diesen Monat' },
+  { value: 'lastMonth', label: 'Letzten Monat' }
+];
 
 export function StatisticsTab() {
   const [exportFormat, setExportFormat] = useState<'excel' | 'pdf'>('excel');
+  const [timeRange, setTimeRange] = useState<string>('all');
 
-  // Abfrage für detaillierte Statistiken
-  const { data: detailedStats, isLoading } = useQuery<DetailedStats>({
-    queryKey: ['/api/stats/detailed'],
+  // Datumsbereich basierend auf der ausgewählten Option berechnen
+  const getDateRange = () => {
+    const now = new Date();
+    switch(timeRange) {
+      case '7days':
+        return { start: subDays(now, 7), end: now };
+      case '30days':
+        return { start: subDays(now, 30), end: now };
+      case 'thisMonth':
+        return { start: startOfMonth(now), end: endOfMonth(now) };
+      case 'lastMonth':
+        const lastMonth = subMonths(now, 1);
+        return { 
+          start: startOfMonth(lastMonth), 
+          end: endOfMonth(lastMonth)
+        };
+      default:
+        return { start: undefined, end: undefined };
+    }
+  };
+
+  const dateRange = getDateRange();
+  
+  // Abfrage für allgemeine Statistiken mit Zeitraumfilterung
+  const statsQueryParams = new URLSearchParams();
+  if (dateRange.start) statsQueryParams.append('startDate', dateRange.start.toISOString());
+  if (dateRange.end) statsQueryParams.append('endDate', dateRange.end.toISOString());
+  
+  const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
+    queryKey: ['/api/stats', timeRange],
+    queryFn: async () => {
+      const res = await fetch(`/api/stats?${statsQueryParams.toString()}`);
+      return await res.json();
+    }
+  });
+
+  // Abfrage für detaillierte Statistiken mit Zeitraumfilterung
+  const { data: detailedStats, isLoading: detailedStatsLoading } = useQuery<DetailedStats>({
+    queryKey: ['/api/stats/detailed', timeRange],
+    queryFn: async () => {
+      const res = await fetch(`/api/stats/detailed?${statsQueryParams.toString()}`);
+      return await res.json();
+    }
   });
 
   // Alle Reparaturen für Export
   const { data: repairs } = useQuery<Repair[]>({
     queryKey: ['/api/repairs'],
   });
+
+  const isLoading = statsLoading || detailedStatsLoading;
 
   if (isLoading) {
     return (
@@ -143,35 +221,81 @@ export function StatisticsTab() {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary">
-          Reparaturstatistik
-        </h1>
-        <div className="flex gap-2">
-          <div className="flex gap-1 items-center bg-gray-100 p-1 rounded-lg">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">
+            Reparaturstatistik
+          </h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">Kunden:</span>
+              <Badge variant="outline" className="bg-blue-50">
+                {stats?.customerCount || 0}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <FileText className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium">Reparaturen gesamt:</span>
+              <Badge variant="outline" className="bg-green-50">
+                {stats?.repairCount || 0}
+              </Badge>
+            </div>
+            {timeRange !== 'all' && (
+              <div className="flex items-center gap-1.5">
+                <Filter className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium">Gefilterte Reparaturen:</span>
+                <Badge variant="outline" className="bg-purple-50">
+                  {stats?.filteredRepairCount || 0}
+                </Badge>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-600" />
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Zeitraum wählen" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeRangeOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="flex gap-1 items-center bg-gray-100 p-1 rounded-lg">
+              <Button 
+                variant={exportFormat === 'excel' ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setExportFormat('excel')}
+              >
+                Excel
+              </Button>
+              <Button 
+                variant={exportFormat === 'pdf' ? 'default' : 'outline'} 
+                size="sm" 
+                onClick={() => setExportFormat('pdf')}
+              >
+                PDF
+              </Button>
+            </div>
             <Button 
-              variant={exportFormat === 'excel' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setExportFormat('excel')}
+              onClick={handleExport} 
+              variant="default" 
+              className="flex items-center gap-2"
             >
-              Excel
-            </Button>
-            <Button 
-              variant={exportFormat === 'pdf' ? 'default' : 'outline'} 
-              size="sm" 
-              onClick={() => setExportFormat('pdf')}
-            >
-              PDF
+              <Download size={16} />
+              Export
             </Button>
           </div>
-          <Button 
-            onClick={handleExport} 
-            variant="default" 
-            className="flex items-center gap-2"
-          >
-            <Download size={16} />
-            Export
-          </Button>
         </div>
       </div>
 
