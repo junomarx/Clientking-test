@@ -552,8 +552,9 @@ export const getIssuesForDeviceType = (deviceType: string): string[] => {
   
   const defaultIssues = DEFAULT_ISSUES[deviceTypeKey as keyof typeof DEFAULT_ISSUES] || [];
   
-  // Entferne Duplikate und gib die kombinierte Liste zurück
-  return [...new Set([...defaultIssues, ...customIssues])];
+  // Entferne Duplikate
+  const combinedArray = [...defaultIssues, ...customIssues];
+  return combinedArray.filter((item, index) => combinedArray.indexOf(item) === index);
 };
 
 // Funktion zum Löschen einer benutzerdefinierten Fehlerbeschreibung

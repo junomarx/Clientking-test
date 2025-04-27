@@ -88,7 +88,10 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isDeviceTypeDropdownOpen, setIsDeviceTypeDropdownOpen] = useState(false);
   const [isBrandDropdownOpen, setIsBrandDropdownOpen] = useState(false);
+  const [isIssueDropdownOpen, setIsIssueDropdownOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [availableIssues, setAvailableIssues] = useState<string[]>([]);
+  const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);
   
   // Form definition
   const form = useForm<OrderFormValues>({
@@ -132,14 +135,20 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     }
   }, [open]);
   
-  // Update Marken basierend auf ausgewähltem Gerätetyp
+  // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
+      // Lade verfügbare Marken
       const brands = getBrandsForDeviceType(watchDeviceType);
       setAvailableBrands(brands);
       form.setValue('brand', '');
+      
+      // Lade verfügbare Fehlerbeschreibungen
+      const issues = getIssuesForDeviceType(watchDeviceType);
+      setAvailableIssues(issues);
     } else {
       setAvailableBrands([]);
+      setAvailableIssues([]);
     }
   }, [watchDeviceType, form]);
   
@@ -1195,12 +1204,101 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                     <FormItem>
                       <FormLabel>Fehlerbeschreibung</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Beschreiben Sie das Problem"
-                          className="resize-none min-h-[100px]"
-                        />
+                        <div className="relative">
+                          <Textarea 
+                            {...field} 
+                            placeholder="Beschreiben Sie das Problem oder wählen Sie aus typischen Fehlern"
+                            className="resize-none min-h-[100px]"
+                            onClick={() => {
+                              if (watchDeviceType && availableIssues.length > 0) {
+                                setIsIssueDropdownOpen(true);
+                              }
+                            }}
+                            onFocus={() => {
+                              if (watchDeviceType && availableIssues.length > 0) {
+                                setIsIssueDropdownOpen(true);
+                              }
+                            }}
+                            onBlur={() => {
+                              // Verzögerung hinzufügen, damit ein Klick auf die Dropdown-Elemente funktioniert
+                              setTimeout(() => {
+                                setIsIssueDropdownOpen(false);
+                              }, 200);
+                            }}
+                            onKeyDown={(e) => {
+                              // Verwende Pfeiltasten zur Navigation in der Dropdown-Liste
+                              if (isIssueDropdownOpen && availableIssues.length > 0) {
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedIssueIndex(prevIndex => 
+                                    prevIndex < availableIssues.length - 1 ? prevIndex + 1 : 0
+                                  );
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedIssueIndex(prevIndex => 
+                                    prevIndex > 0 ? prevIndex - 1 : availableIssues.length - 1
+                                  );
+                                } else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
+                                  e.preventDefault();
+                                  const selectedIssue = availableIssues[selectedIssueIndex];
+                                  
+                                  // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
+                                  if (field.value) {
+                                    field.onChange(`${field.value}\n${selectedIssue}`);
+                                  } else {
+                                    field.onChange(selectedIssue);
+                                  }
+                                  
+                                  setIsIssueDropdownOpen(false);
+                                  setSelectedIssueIndex(-1);
+                                }
+                              }
+                            }}
+                          />
+                          
+                          {/* Dropdown für die häufigen Fehlerbeschreibungen */}
+                          {isIssueDropdownOpen && watchDeviceType && availableIssues.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                              <div className="sticky top-0 bg-background border-b p-2">
+                                <span className="text-sm font-medium">Häufige Fehlerbeschreibungen für {watchDeviceType}</span>
+                              </div>
+                              
+                              {availableIssues.map((issue, index) => (
+                                <div 
+                                  key={index} 
+                                  className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedIssueIndex === index ? 'bg-muted' : ''}`}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                  }}
+                                  onClick={() => {
+                                    // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
+                                    if (field.value) {
+                                      field.onChange(`${field.value}\n${issue}`);
+                                    } else {
+                                      field.onChange(issue);
+                                    }
+                                    
+                                    // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
+                                    if (watchDeviceType) {
+                                      saveIssue(watchDeviceType, issue);
+                                    }
+                                    
+                                    setIsIssueDropdownOpen(false);
+                                  }}
+                                  onMouseEnter={() => {
+                                    setSelectedIssueIndex(index);
+                                  }}
+                                >
+                                  {issue}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
+                      <FormDescription>
+                        {watchDeviceType ? 'Klicken Sie in das Feld, um häufige Fehlerbeschreibungen anzuzeigen' : 'Bitte wählen Sie zuerst einen Gerätetyp aus'}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
