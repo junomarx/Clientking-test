@@ -130,8 +130,19 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
     if (open) {
       const deviceTypes = getSavedDeviceTypes();
       console.log('Geladene Gerätearten:', deviceTypes);
+      
       // Wenn keine gespeicherten Gerätetypen vorhanden sind, verwenden wir die Standardliste
-      setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
+      const typesToUse = deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes;
+      
+      // Wenn keine oder weniger als 5 Gerätetypen gespeichert sind,
+      // speichern wir die Standardliste als Basis
+      if (deviceTypes.length < 5) {
+        defaultDeviceTypes.forEach(type => {
+          saveDeviceType(type);
+        });
+      }
+      
+      setSavedDeviceTypes(typesToUse);
     }
   }, [open]);
   
@@ -1257,41 +1268,126 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                           />
                           
                           {/* Dropdown für die häufigen Fehlerbeschreibungen */}
-                          {isIssueDropdownOpen && watchDeviceType && availableIssues.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
-                              <div className="sticky top-0 bg-background border-b p-2">
-                                <span className="text-sm font-medium">Häufige Fehlerbeschreibungen für {watchDeviceType}</span>
+                          {isIssueDropdownOpen && watchDeviceType && (
+                            <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[250px] overflow-y-auto">
+                              <div className="sticky top-0 bg-background border-b p-2 flex justify-between items-center">
+                                <span className="text-sm font-medium">Fehlerbeschreibungen für {watchDeviceType}</span>
+                                <div className="flex items-center space-x-1">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2 text-xs"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      // Wenn Text im Feld eingegeben wurde, speichern wir diesen als neue Fehlerbeschreibung
+                                      if (field.value && field.value.trim() && watchDeviceType) {
+                                        saveIssue(watchDeviceType, field.value.trim());
+                                        
+                                        // Aktualisiere die Liste der Fehlerbeschreibungen
+                                        const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                        setAvailableIssues(updatedIssues);
+                                        
+                                        toast({
+                                          title: "Fehlerbeschreibung gespeichert",
+                                          description: `"${field.value.trim()}" wurde zu den Fehlerbeschreibungen für ${watchDeviceType} hinzugefügt.`,
+                                        });
+                                      } else {
+                                        toast({
+                                          title: "Keine Fehlerbeschreibung eingegeben",
+                                          description: "Bitte geben Sie zuerst eine Fehlerbeschreibung ein.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    + Aktuelle speichern
+                                  </Button>
+                                </div>
                               </div>
                               
-                              {availableIssues.map((issue, index) => (
-                                <div 
-                                  key={index} 
-                                  className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedIssueIndex === index ? 'bg-muted' : ''}`}
-                                  onMouseDown={(e) => {
-                                    e.preventDefault();
-                                  }}
-                                  onClick={() => {
-                                    // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
-                                    if (field.value) {
-                                      field.onChange(`${field.value}\n${issue}`);
-                                    } else {
-                                      field.onChange(issue);
-                                    }
+                              {availableIssues.length > 0 ? (
+                                availableIssues.map((issue, index) => (
+                                  <div 
+                                    key={index} 
+                                    className={`px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-muted' : ''}`}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                    }}
+                                    onMouseEnter={() => {
+                                      setSelectedIssueIndex(index);
+                                    }}
+                                  >
+                                    <div 
+                                      className="flex-grow"
+                                      onClick={() => {
+                                        // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
+                                        if (field.value) {
+                                          field.onChange(`${field.value}\n${issue}`);
+                                        } else {
+                                          field.onChange(issue);
+                                        }
+                                        
+                                        // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
+                                        if (watchDeviceType) {
+                                          saveIssue(watchDeviceType, issue);
+                                        }
+                                        
+                                        setIsIssueDropdownOpen(false);
+                                      }}
+                                    >
+                                      {issue}
+                                    </div>
                                     
-                                    // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
-                                    if (watchDeviceType) {
-                                      saveIssue(watchDeviceType, issue);
-                                    }
-                                    
-                                    setIsIssueDropdownOpen(false);
-                                  }}
-                                  onMouseEnter={() => {
-                                    setSelectedIssueIndex(index);
-                                  }}
-                                >
-                                  {issue}
+                                    {/* Nur benutzerdefinierte Fehler können gelöscht werden, keine Standardfehler */}
+                                    {!Object.values(DEFAULT_ISSUES).some(arr => arr.includes(issue)) && (
+                                      <button
+                                        type="button"
+                                        className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          if (watchDeviceType) {
+                                            deleteIssue(watchDeviceType, issue);
+                                            // Aktualisiere die Liste der Fehlerbeschreibungen
+                                            const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                            setAvailableIssues(updatedIssues);
+                                          }
+                                        }}
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="px-3 py-4 text-muted-foreground text-center">
+                                  Keine Fehlerbeschreibungen für {watchDeviceType} gefunden.
+                                  <div className="mt-2">
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        // Standard-Fehlerbeschreibungen wiederherstellen
+                                        if (watchDeviceType && DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES]) {
+                                          const defaultIssues = DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES] || [];
+                                          defaultIssues.forEach(issue => {
+                                            saveIssue(watchDeviceType, issue);
+                                          });
+                                          
+                                          // Aktualisiere die Liste der Fehlerbeschreibungen
+                                          const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                          setAvailableIssues(updatedIssues);
+                                        }
+                                      }}
+                                    >
+                                      Standard-Fehlerbeschreibungen wiederherstellen
+                                    </Button>
+                                  </div>
                                 </div>
-                              ))}
+                              )}
                             </div>
                           )}
                         </div>
