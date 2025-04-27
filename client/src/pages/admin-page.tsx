@@ -30,13 +30,15 @@ import {
   FileDown,
   FileUp,
   List,
-  Trash
+  Trash,
+  Shield,
+  UserIcon
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { type User, users } from "@shared/schema";
+import { type User } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 
