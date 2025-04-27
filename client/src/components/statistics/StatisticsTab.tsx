@@ -655,7 +655,7 @@ export function StatisticsTab() {
                         cx="50%"
                         cy="50%"
                         labelLine={true}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -664,7 +664,7 @@ export function StatisticsTab() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value) => [`${value} Geräte`, 'Anzahl']} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -687,9 +687,9 @@ export function StatisticsTab() {
                     >
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip formatter={(value) => [`${value} Geräte`, 'Anzahl']} />
                       <Legend />
-                      <Bar dataKey="value" name="Anzahl" fill="#8884d8">
+                      <Bar dataKey="value" name="Anzahl" fill="#8884d8" label={{ position: 'top', fill: '#666' }}>
                         {brandData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
@@ -717,9 +717,9 @@ export function StatisticsTab() {
                   >
                     <XAxis type="number" />
                     <YAxis type="category" dataKey="name" />
-                    <Tooltip />
+                    <Tooltip formatter={(value) => [`${value} Fälle`, 'Anzahl']} />
                     <Legend />
-                    <Bar dataKey="value" name="Anzahl" fill="#8884d8">
+                    <Bar dataKey="value" name="Anzahl" fill="#8884d8" label={{ position: 'right', fill: '#666' }}>
                       {issueData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
@@ -801,7 +801,7 @@ export function StatisticsTab() {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => [`${value} Geräte`, 'Anzahl']} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -826,9 +826,9 @@ export function StatisticsTab() {
                   >
                     <XAxis type="number" />
                     <YAxis type="category" dataKey="name" width={100} />
-                    <Tooltip />
+                    <Tooltip formatter={(value) => [`${value} Fälle`, 'Anzahl']} />
                     <Legend />
-                    <Bar dataKey="value" name="Anzahl" fill="#8884d8">
+                    <Bar dataKey="value" name="Anzahl" fill="#8884d8" label={{ position: 'right', fill: '#666' }}>
                       {issueData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
