@@ -11,7 +11,7 @@ import {
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
-import { eq, desc, and, or, sql, gte, lt, count, isNotNull, like } from "drizzle-orm";
+import { eq, desc, and, or, sql, gte, lt, gt, count, isNotNull, like } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -192,13 +192,14 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByResetToken(token: string): Promise<User | undefined> {
     try {
+      const now = new Date();
       const [user] = await db
         .select()
         .from(users)
         .where(
           and(
             eq(users.resetToken, token),
-            gt(users.resetTokenExpires as any, new Date())
+            sql`${users.resetTokenExpires} > ${now}`
           )
         );
       return user;

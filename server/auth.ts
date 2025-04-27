@@ -4,6 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import nodemailer from "nodemailer";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
@@ -207,4 +208,227 @@ export function setupAuth(app: Express) {
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);
   });
+  
+  // Route für Benutzer, um ihr Passwort zu ändern (wenn sie angemeldet sind)
+  app.post("/api/change-password", checkTokenAuth, async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+    
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Aktuelles Passwort und neues Passwort erforderlich" });
+    }
+    
+    // Überprüfe das aktuelle Passwort
+    const passwordValid = await comparePasswords(currentPassword, req.user.password);
+    if (!passwordValid) {
+      return res.status(401).json({ message: "Aktuelles Passwort ist falsch" });
+    }
+    
+    // Hash des neuen Passworts erstellen
+    const hashedPassword = await hashPassword(newPassword);
+    
+    // Passwort aktualisieren
+    const success = await storage.updateUserPassword(req.user.id, hashedPassword);
+    
+    if (success) {
+      res.status(200).json({ message: "Passwort erfolgreich geändert" });
+    } else {
+      res.status(500).json({ message: "Fehler beim Ändern des Passworts" });
+    }
+  });
+  
+  // Route zum Anfordern einer Passwort-Zurücksetzung
+  app.post("/api/forgot-password", async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "E-Mail-Adresse erforderlich" });
+    }
+    
+    // Suche nach einem Benutzer mit der angegebenen E-Mail-Adresse
+    const user = await storage.getUserByEmail(email);
+    
+    if (!user) {
+      // Aus Sicherheitsgründen geben wir dieselbe Nachricht zurück, auch wenn der Benutzer nicht existiert
+      return res.status(200).json({
+        message: "Wenn ein Konto mit dieser E-Mail-Adresse existiert, wurde eine Anleitung zum Zurücksetzen des Passworts gesendet."
+      });
+    }
+    
+    // Generiere einen zufälligen Token
+    const token = randomBytes(32).toString('hex');
+    const expiryTime = new Date(Date.now() + 3600000); // Token ist 1 Stunde gültig
+    
+    // Speichere den Token in der Datenbank
+    const success = await storage.setPasswordResetToken(email, token, expiryTime);
+    
+    if (!success) {
+      return res.status(500).json({ message: "Fehler beim Erstellen des Zurücksetzungstokens" });
+    }
+    
+    // Sende eine E-Mail mit dem Reset-Link
+    try {
+      // Hole die Geschäftseinstellungen für diese E-Mail
+      const businessSettings = await storage.getBusinessSettings(user.id);
+      
+      if (!businessSettings) {
+        return res.status(500).json({ message: "Geschäftseinstellungen nicht gefunden" });
+      }
+      
+      // Erstelle den Reset-Link, den wir in der E-Mail senden
+      const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`;
+      
+      // Variablen für die E-Mail-Vorlage
+      const variables = {
+        username: user.username,
+        companyName: businessSettings.businessName,
+        resetLink: resetUrl,
+        validUntil: expiryTime.toLocaleString('de-DE')
+      };
+      
+      // Hole die E-Mail-Vorlagen-ID für die Passwort-Zurücksetzung
+      // Normalerweise würden wir eine spezielle Vorlage verwenden, aber für dieses Beispiel senden wir direkt
+      // In einer produktiven Umgebung sollte eine spezielle Vorlage erstellt werden
+      
+      const emailHtml = `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .button { 
+                display: inline-block; 
+                background-color: #4a6ee0; 
+                color: white !important; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 4px; 
+                font-weight: bold;
+                margin: 20px 0;
+              }
+              .footer { margin-top: 30px; font-size: 12px; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h2>Passwort zurücksetzen für ${businessSettings.businessName}</h2>
+              <p>Hallo ${user.username},</p>
+              <p>Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt. Bitte klicken Sie auf den folgenden Link, um Ihr Passwort zurückzusetzen:</p>
+              
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <a href="${resetUrl}" class="button">Passwort zurücksetzen</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <p>Oder kopieren Sie diesen Link in Ihren Browser:</p>
+              <p><a href="${resetUrl}">${resetUrl}</a></p>
+              
+              <p>Dieser Link ist bis ${variables.validUntil} gültig.</p>
+              
+              <p>Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren und Ihr Passwort bleibt unverändert.</p>
+              
+              <div class="footer">
+                <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht auf diese Nachricht.</p>
+                <p>&copy; ${new Date().getFullYear()} ${businessSettings.businessName}</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      // Jetzt senden wir die E-Mail
+      const sent = await sendPasswordResetEmail(
+        user.email, 
+        `Zurücksetzen Ihres Passworts für ${businessSettings.businessName}`,
+        emailHtml,
+        user.id
+      );
+      
+      if (sent) {
+        res.status(200).json({
+          message: "Wenn ein Konto mit dieser E-Mail-Adresse existiert, wurde eine Anleitung zum Zurücksetzen des Passworts gesendet."
+        });
+      } else {
+        res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Senden der Passwort-Zurücksetzungs-E-Mail:", error);
+      res.status(500).json({ message: "Fehler beim Senden der E-Mail" });
+    }
+  });
+  
+  // Route zum Validieren eines Tokens und Zurücksetzen des Passworts
+  app.post("/api/reset-password", async (req, res) => {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token und neues Passwort sind erforderlich" });
+    }
+    
+    // Überprüfe, ob der Token gültig ist und finde den zugehörigen Benutzer
+    const user = await storage.getUserByResetToken(token);
+    
+    if (!user) {
+      return res.status(400).json({ message: "Ungültiger oder abgelaufener Token" });
+    }
+    
+    // Hash des neuen Passworts erstellen
+    const hashedPassword = await hashPassword(newPassword);
+    
+    // Aktualisiere das Passwort und lösche den Token
+    const success = await storage.updateUserPassword(user.id, hashedPassword);
+    
+    if (!success) {
+      return res.status(500).json({ message: "Fehler beim Aktualisieren des Passworts" });
+    }
+    
+    // Token löschen
+    await storage.clearResetToken(user.id);
+    
+    res.status(200).json({ message: "Passwort erfolgreich zurückgesetzt" });
+  });
+}
+
+// Hilfsfunktion zum Senden einer Passwort-Zurücksetzungs-E-Mail
+async function sendPasswordResetEmail(to: string, subject: string, html: string, userId: number): Promise<boolean> {
+  try {
+    // Hole die SMTP-Einstellungen aus den Geschäftseinstellungen
+    const businessSettings = await storage.getBusinessSettings(userId);
+    
+    if (!businessSettings) {
+      console.error("Geschäftseinstellungen nicht gefunden für Benutzer:", userId);
+      return false;
+    }
+    
+    // Erstelle einen SMTP-Transporter
+    const transporter = nodemailer.createTransport({
+      host: businessSettings.smtpHost || process.env.SMTP_HOST,
+      port: parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587"),
+      secure: parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587") === 465,
+      auth: {
+        user: businessSettings.smtpUser || process.env.SMTP_USER,
+        pass: businessSettings.smtpPassword || process.env.SMTP_PASSWORD
+      }
+    });
+    
+    // Sende die E-Mail
+    const info = await transporter.sendMail({
+      from: `"${businessSettings.smtpSenderName || businessSettings.businessName}" <${businessSettings.smtpUser || process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html
+    });
+    
+    console.log("Passwort-Zurücksetzungs-E-Mail gesendet:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Fehler beim Senden der Passwort-Zurücksetzungs-E-Mail:", error);
+    return false;
+  }
 }
