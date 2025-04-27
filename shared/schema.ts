@@ -75,6 +75,8 @@ export const users = pgTable("users", {
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.
   companyPhone: text("company_phone"),                     // Geschäftstelefon
   companyEmail: text("company_email"),                     // Geschäfts-E-Mail
+  resetToken: text("reset_token"),                         // Token für Passwort-Zurücksetzung
+  resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

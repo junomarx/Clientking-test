@@ -140,6 +140,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).where(eq(users.email, email));
   }
   
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+  
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
@@ -162,6 +167,59 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error updating user password:", error);
+      return false;
+    }
+  }
+  
+  async setPasswordResetToken(email: string, token: string, expiryTime: Date): Promise<boolean> {
+    try {
+      const user = await this.getUserByEmail(email);
+      if (!user) return false;
+      
+      await db
+        .update(users)
+        .set({ 
+          resetToken: token,
+          resetTokenExpires: expiryTime
+        })
+        .where(eq(users.id, user.id));
+      return true;
+    } catch (error) {
+      console.error("Error setting password reset token:", error);
+      return false;
+    }
+  }
+  
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.resetToken, token),
+            gt(users.resetTokenExpires as any, new Date())
+          )
+        );
+      return user;
+    } catch (error) {
+      console.error("Error finding user by reset token:", error);
+      return undefined;
+    }
+  }
+  
+  async clearResetToken(userId: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ 
+          resetToken: null,
+          resetTokenExpires: null
+        })
+        .where(eq(users.id, userId));
+      return true;
+    } catch (error) {
+      console.error("Error clearing reset token:", error);
       return false;
     }
   }
