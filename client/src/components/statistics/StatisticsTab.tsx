@@ -595,7 +595,7 @@ export function StatisticsTab() {
                 <Euro className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-medium">Umsatz:</span>
                 <Badge variant="outline" className="bg-amber-50">
-                  {(detailedStats.revenue.total / 100).toFixed(2)} €
+                  {detailedStats.revenue.total.toFixed(2)} €
                 </Badge>
               </div>
             )}
@@ -1020,7 +1020,7 @@ export function StatisticsTab() {
                     <Euro className="h-8 w-8 text-blue-600 mb-2" />
                     <p className="text-sm font-medium text-blue-800">Gesamtumsatz</p>
                     <h3 className="text-3xl font-bold text-blue-900">
-                      {detailedStats?.revenue ? (detailedStats.revenue.total / 100).toFixed(2) : '0.00'} €
+                      {detailedStats?.revenue ? detailedStats.revenue.total.toFixed(2) : '0.00'} €
                     </h3>
                   </div>
                   
@@ -1037,7 +1037,7 @@ export function StatisticsTab() {
                     <p className="text-sm font-medium text-purple-800">Durchschnittlicher Umsatz</p>
                     <h3 className="text-3xl font-bold text-purple-900">
                       {stats?.completed && detailedStats?.revenue?.total 
-                        ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2) 
+                        ? (detailedStats.revenue.total / stats.completed).toFixed(2) 
                         : '0.00'} €
                     </h3>
                   </div>
