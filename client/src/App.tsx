@@ -9,7 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
-import { ProtectedRoute } from "./lib/protected-route";
+import { ProtectedRoute, AdminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
@@ -24,9 +24,9 @@ function Router() {
       <ProtectedRoute path="/">
         <Home />
       </ProtectedRoute>
-      <ProtectedRoute path="/admin">
+      <AdminProtectedRoute path="/admin">
         <AdminPage />
-      </ProtectedRoute>
+      </AdminProtectedRoute>
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />

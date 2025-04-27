@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, Shield } from 'lucide-react';
 import { SettingsDialog } from '@/components/settings';
 import { useTheme } from '@/hooks/use-theme';
+import { Link } from 'wouter';
 
 export function Header() {
   const { user, logoutMutation } = useAuth();
@@ -35,6 +36,20 @@ export function Header() {
             <User size={18} />
             <span className="hidden md:inline">{user.username}</span>
           </div>
+          
+          {/* Admin Link für Benutzer mit Admin-Rechten */}
+          {user.isAdmin && (
+            <Link to="/admin">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
+              >
+                <Shield size={16} className="mr-1" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </Link>
+          )}
           
           <Button 
             variant="outline" 
