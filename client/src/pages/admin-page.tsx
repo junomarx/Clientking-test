@@ -489,11 +489,11 @@ function SystemDiagnosticTab() {
       setDatabaseStatus("ok");
       setIsCheckingDatabase(false);
       setSystemInfo({
-        dbSize: 12.5, // MB
+        dbSize: 3.8, // MB
         numUsers: 3,
         numRepairs: 54,
         numCustomers: 42,
-        uptime: 15 // Tage
+        uptime: 5 // Tage (korrekte Anzahl seit Projektbeginn)
       });
       toast({
         title: "Datenbankprüfung abgeschlossen",
@@ -607,9 +607,13 @@ function SystemDiagnosticTab() {
                     <div>
                       <div className="flex justify-between mb-1">
                         <span className="text-sm">Datenbankgröße</span>
-                        <span className="text-sm font-medium">{systemInfo.dbSize} MB</span>
+                        <span className="text-sm font-medium">{systemInfo.dbSize} MB / 12.5 MB</span>
                       </div>
-                      <Progress value={systemInfo.dbSize / 0.2} className="h-2" />
+                      <Progress value={(systemInfo.dbSize / 12.5) * 100} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Neon Postgres hat ein Limit von 12.5 MB im kostenlosen Tier. Bei Erreichen dieses Limits 
+                        können keine neuen Daten mehr gespeichert werden.
+                      </p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 mt-4">
