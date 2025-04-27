@@ -1285,6 +1285,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const businessSettings = await storage.getBusinessSettings(userId);
       
+      // Lade den Bewertungslink aus den Geschäftseinstellungen
+      let reviewLink = businessSettings?.reviewLink || "";
+      
+      // Stelle sicher, dass der Bewertungslink mit http:// oder https:// beginnt
+      if (reviewLink && !reviewLink.startsWith('http')) {
+        reviewLink = 'https://' + reviewLink;
+      }
+      
+      console.log(`Bewertungslink für E-Mail: "${reviewLink}"`);
+      
       // Variablen für die Kommunikation zusammenstellen
       const variables: Record<string, string> = {
         "kundenname": `${customer.firstName} ${customer.lastName}`,
@@ -1298,6 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "email": businessSettings?.email || "",
         "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
         "website": businessSettings?.website || "",
+        "bewertungslink": reviewLink, // Explizit setzen
         // Wichtig: userId für die Datenisolierung hinzufügen
         "userId": userId.toString()
       };

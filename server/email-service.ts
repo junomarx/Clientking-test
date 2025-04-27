@@ -266,12 +266,33 @@ export class EmailService {
         }
       }
       
+      // Debug-Ausgabe der Variablen vor der Ersetzung
+      console.log("Variablen für die E-Mail:", JSON.stringify(variables, null, 2));
+      
       // Ersetze Variablen im Format {{variableName}}
       Object.entries(variables).forEach(([key, value]) => {
-        if (value) { // Überprüfe, ob der Wert existiert
+        if (value !== undefined && value !== null) { // Überprüfe, ob der Wert existiert
           const placeholder = `{{${key}}}`;
-          subject = subject.replace(new RegExp(placeholder, 'g'), value);
-          body = body.replace(new RegExp(placeholder, 'g'), value);
+          
+          // Besondere Behandlung für den Bewertungslink
+          if (key === 'bewertungslink') {
+            console.log(`Ersetze Bewertungslink-Platzhalter: "${placeholder}" mit Wert: "${value}"`);
+            
+            // Stelle sicher, dass URLs sicher ersetzt werden
+            let safeValue = value;
+            if (!safeValue.startsWith('http')) {
+              safeValue = 'https://' + safeValue;
+            }
+            
+            subject = subject.replace(new RegExp(placeholder, 'g'), safeValue);
+            body = body.replace(new RegExp(placeholder, 'g'), safeValue);
+          } else {
+            // Normale Variablenersetzung für alle anderen Variablen
+            subject = subject.replace(new RegExp(placeholder, 'g'), value);
+            body = body.replace(new RegExp(placeholder, 'g'), value);
+          }
+        } else {
+          console.log(`Warnung: Variable ${key} hat keinen Wert und wird nicht ersetzt.`);
         }
       });
       
