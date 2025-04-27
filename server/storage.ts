@@ -125,6 +125,8 @@ export class DatabaseStorage implements IStorage {
   
   // Hilfsfunktion: Extrahiert eine Zahl aus einem String (z.B. "€ 150,99" -> 150.99)
   private extractNumberFromString(input: string): number {
+    if (!input) return 0;
+    
     // Entferne Währungssymbole, Kommas und andere nicht-numerische Zeichen
     // Behalte Zahlen, Punkte und Kommas
     const cleaned = input.replace(/[^0-9.,]/g, '');
