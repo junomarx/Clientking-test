@@ -288,12 +288,12 @@ function UserTable() {
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="bg-gray-50 font-medium">
-                      {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : 2}
+                      {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : user.username === 'simo' ? 2 : 0}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="bg-gray-50 font-medium">
-                      {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : 8}
+                      {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : user.username === 'simo' ? 2 : 0}
                     </Badge>
                   </TableCell>
                   <TableCell>
