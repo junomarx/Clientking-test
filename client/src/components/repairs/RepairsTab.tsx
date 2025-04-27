@@ -111,7 +111,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
         notes: repair.notes,
         createdAt: repair.createdAt.toString(),
-        updatedAt: repair.updatedAt.toString()
+        updatedAt: repair.updatedAt.toString(),
+        reviewRequestSent: repair.reviewRequestSent || false
       };
       return convertedRepair;
     });
@@ -365,10 +366,13 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                         {repair.status === 'abgeholt' && (
                           <button 
                             className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
-                            title="Bewertungsanfrage senden"
+                            title={repair.reviewRequestSent ? "Bewertungsanfrage erneut senden" : "Bewertungsanfrage senden"}
                             onClick={() => handleSendReviewRequest(repair.id)}
                           >
-                            <Star className="h-4 w-4" />
+                            {repair.reviewRequestSent ? 
+                              <Star className="h-4 w-4 fill-yellow-500" /> : 
+                              <Star className="h-4 w-4" />
+                            }
                           </button>
                         )}
                         <button 

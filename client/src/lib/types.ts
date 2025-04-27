@@ -30,6 +30,7 @@ export interface Repair {
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
+  reviewRequestSent?: boolean;
 }
 
 // Extended repair with customer name for display
