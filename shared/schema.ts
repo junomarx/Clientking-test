@@ -44,6 +44,8 @@ export const repairs = pgTable("repairs", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Reparatur gehört zu einem Benutzer/Unternehmen
   userId: integer("user_id").references(() => users.id),
+  // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
+  reviewRequestSent: boolean("review_request_sent").default(false),
 });
 
 export const insertRepairSchema = createInsertSchema(repairs).omit({
