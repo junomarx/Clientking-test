@@ -406,29 +406,46 @@ async function sendPasswordResetEmail(to: string, subject: string, html: string,
       return false;
     }
     
+    const smtpHost = businessSettings.smtpHost || process.env.SMTP_HOST;
+    const smtpPort = parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587");
+    const smtpUser = businessSettings.smtpUser || process.env.SMTP_USER;
+    const smtpPassword = businessSettings.smtpPassword || process.env.SMTP_PASSWORD;
+    const smtpSenderName = businessSettings.smtpSenderName || businessSettings.businessName;
+    
+    console.log("[E-Mail-Debug] Verwende SMTP-Konfiguration:", {
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      user: smtpUser,
+      senderName: smtpSenderName
+    });
+    
     // Erstelle einen SMTP-Transporter
     const transporter = nodemailer.createTransport({
-      host: businessSettings.smtpHost || process.env.SMTP_HOST,
-      port: parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587"),
-      secure: parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587") === 465,
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: businessSettings.smtpUser || process.env.SMTP_USER,
-        pass: businessSettings.smtpPassword || process.env.SMTP_PASSWORD
+        user: smtpUser,
+        pass: smtpPassword
       }
     });
     
+    console.log("[E-Mail-Debug] Sende E-Mail an:", to);
+    
     // Sende die E-Mail
     const info = await transporter.sendMail({
-      from: `"${businessSettings.smtpSenderName || businessSettings.businessName}" <${businessSettings.smtpUser || process.env.SMTP_USER}>`,
+      from: `"${smtpSenderName}" <${smtpUser}>`,
       to,
       subject,
       html
     });
     
-    console.log("Passwort-Zurücksetzungs-E-Mail gesendet:", info.messageId);
+    console.log("[E-Mail-Debug] Passwort-Zurücksetzungs-E-Mail gesendet:", info.messageId);
+    console.log("[E-Mail-Debug] Weitere Info:", info.response);
     return true;
   } catch (error) {
-    console.error("Fehler beim Senden der Passwort-Zurücksetzungs-E-Mail:", error);
+    console.error("[E-Mail-Debug] Fehler beim Senden der Passwort-Zurücksetzungs-E-Mail:", error);
     return false;
   }
 }
