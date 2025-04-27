@@ -30,7 +30,9 @@ import {
   Calendar,
   ChevronRight,
   ChevronLeft,
-  X
+  X,
+  DollarSign,
+  BarChart as BarChartIcon
 } from 'lucide-react';
 import { Repair } from '@shared/schema';
 import { Loader2 } from 'lucide-react';
@@ -350,7 +352,7 @@ export function StatisticsTab() {
       
       // Tabellarische Übersicht erstellen
       pdf.setFillColor(240, 249, 255); // Heller blauer Hintergrund für Tabelle
-      pdf.rect(14, 60, 85, 45, 'F'); // Hintergrund für Tabelle
+      pdf.rect(14, 60, 180, 45, 'F'); // Hintergrund für Tabelle
       
       // Tabelle mit Werten - erste Spalte
       pdf.setFontSize(9);
@@ -369,6 +371,24 @@ export function StatisticsTab() {
       pdf.text(`${stats?.repairCount || 0}`, 70, 83);
       pdf.text(`${stats?.inRepair || 0}`, 70, 91);
       pdf.text(`${stats?.completed || 0}`, 70, 99);
+      
+      // Umsatzdaten in der Tabelle
+      if (detailedStats?.revenue) {
+        // Dritte Spalte (Überschriften)
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Umsatz', 110, 67);
+        pdf.text('Gesamtumsatz', 110, 75);
+        pdf.text('Durchschnitt pro Reparatur', 110, 83);
+        
+        // Vierte Spalte (Umsatzwerte)
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('Wert (€)', 170, 67);
+        pdf.text(`${(detailedStats.revenue.total / 100).toFixed(2)} €`, 170, 75);
+        const avgRevenue = stats?.completed 
+          ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2)
+          : '0.00';
+        pdf.text(`${avgRevenue} €`, 170, 83);
+      }
       
       // Diagramme nebeneinander anordnen
       // Links: Gerätetypen
@@ -442,10 +462,76 @@ export function StatisticsTab() {
         }
       }
       
-      // Footer mit Seitenzahl
+      // Umsatz-Diagramm wenn verfügbar
+      if (revenueChartRef.current && detailedStats?.revenue) {
+        try {
+          // Neue Seite für Umsatzstatistiken
+          pdf.addPage();
+          
+          // Titel für Umsatz-Seite
+          pdf.setFontSize(16);
+          pdf.setTextColor(30, 41, 59);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Umsatzstatistik', 14, 20);
+          
+          // Umsatzübersicht
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Übersicht', 14, 30);
+          
+          // Tabelle für Umsatzübersicht
+          pdf.setFillColor(240, 249, 255);
+          pdf.rect(14, 35, 180, 25, 'F');
+          
+          // Tabelle mit Werten
+          pdf.setFontSize(9);
+          pdf.setTextColor(30, 41, 59);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Kategorie', 17, 42);
+          pdf.text('Gesamtumsatz', 17, 50);
+          pdf.text('Durchschnitt pro Reparatur', 17, 58);
+          
+          // Werte
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('Wert', 100, 42);
+          pdf.text(`${(detailedStats.revenue.total / 100).toFixed(2)} €`, 100, 50);
+          const avgRevenue = stats?.completed 
+            ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2)
+            : '0.00';
+          pdf.text(`${avgRevenue} €`, 100, 58);
+          
+          // Umsatz nach Status
+          pdf.setFontSize(11);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Umsatz nach Status', 14, 75);
+          
+          const revenueCanvas = await html2canvas(revenueChartRef.current, {
+            scale: 1,
+            backgroundColor: null,
+            logging: false
+          });
+          
+          const revenueImgWidth = 180;
+          const revenueImgHeight = Math.min(90, (revenueCanvas.height * revenueImgWidth) / revenueCanvas.width);
+          
+          const revenueImg = revenueCanvas.toDataURL('image/png');
+          pdf.addImage(revenueImg, 'PNG', 14, 80, revenueImgWidth, revenueImgHeight);
+          
+          // Footer für Umsatz-Seite
+          pdf.setFontSize(8);
+          pdf.setTextColor(128, 128, 128);
+          pdf.text(`Seite 2/2 | Handyshop | Umsatz-Statistik`, 14, 290);
+          
+        } catch (e) {
+          console.error('Fehler beim Erfassen des Umsatz-Diagramms:', e);
+        }
+      }
+      
+      // Footer mit Seitenzahl - beachte, dass es 2 Seiten gibt, wenn Umsatzdiagramm vorhanden ist
+      const totalPages = (revenueChartRef.current && detailedStats?.revenue) ? 2 : 1;
       pdf.setFontSize(8);
       pdf.setTextColor(128, 128, 128);
-      pdf.text(`Seite 1/1 | Handyshop | Statistik-Export`, 14, 290);
+      pdf.text(`Seite 1/${totalPages} | Handyshop | Statistik-Export`, 14, 290);
       
       // PDF herunterladen
       pdf.save('reparatur-statistik.pdf');
@@ -488,6 +574,15 @@ export function StatisticsTab() {
                 {stats?.repairCount || 0}
               </Badge>
             </div>
+            {detailedStats?.revenue && (
+              <div className="flex items-center gap-1.5">
+                <DollarSign className="h-4 w-4 text-amber-600" />
+                <span className="text-sm font-medium">Umsatz:</span>
+                <Badge variant="outline" className="bg-amber-50">
+                  {(detailedStats.revenue.total / 100).toFixed(2)} €
+                </Badge>
+              </div>
+            )}
             {timeRange !== 'all' && (
               <div className="flex items-center gap-1.5">
                 <Filter className="h-4 w-4 text-purple-600" />
@@ -665,6 +760,10 @@ export function StatisticsTab() {
           <TabsTrigger value="issues">
             <FilePlus2 className="mr-2 h-4 w-4" />
             Nach Problem
+          </TabsTrigger>
+          <TabsTrigger value="revenue">
+            <DollarSign className="mr-2 h-4 w-4" />
+            Umsatz
           </TabsTrigger>
         </TabsList>
 
@@ -868,6 +967,107 @@ export function StatisticsTab() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="revenue">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Gesamtumsatz Card */}
+            <Card className="col-span-1 md:col-span-2">
+              <CardHeader>
+                <CardTitle>Umsatzübersicht</CardTitle>
+                <CardDescription>Gesamtumsatz und Verteilung</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col items-center justify-center p-6 bg-blue-50 rounded-lg">
+                    <DollarSign className="h-8 w-8 text-blue-600 mb-2" />
+                    <p className="text-sm font-medium text-blue-800">Gesamtumsatz</p>
+                    <h3 className="text-3xl font-bold text-blue-900">
+                      {detailedStats?.revenue ? (detailedStats.revenue.total / 100).toFixed(2) : '0.00'} €
+                    </h3>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center p-6 bg-green-50 rounded-lg">
+                    <BarChartIcon className="h-8 w-8 text-green-600 mb-2" />
+                    <p className="text-sm font-medium text-green-800">Abgeschlossene Reparaturen</p>
+                    <h3 className="text-3xl font-bold text-green-900">
+                      {stats?.completed || 0}
+                    </h3>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center p-6 bg-purple-50 rounded-lg">
+                    <FileText className="h-8 w-8 text-purple-600 mb-2" />
+                    <p className="text-sm font-medium text-purple-800">Durchschnittlicher Umsatz</p>
+                    <h3 className="text-3xl font-bold text-purple-900">
+                      {stats?.completed && detailedStats?.revenue?.total 
+                        ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2) 
+                        : '0.00'} €
+                    </h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Umsatz nach Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Umsatz nach Status</CardTitle>
+                <CardDescription>Verteilung des Umsatzes nach Reparaturstatus</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]" ref={revenueChartRef}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={revenueByStatusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={true}
+                        label={({ name, value, percent }) => `${name}: ${value}€ (${(percent * 100).toFixed(0)}%)`}
+                        outerRadius={90}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {revenueByStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value} €`, 'Umsatz']} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Umsatz nach Monat */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Umsatz nach Monat</CardTitle>
+                <CardDescription>Monatliche Umsatzentwicklung</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={revenueByMonthData}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => [`${value} €`, 'Umsatz']} />
+                      <Legend />
+                      <Bar dataKey="value" name="Umsatz" fill="#8884d8" label={{ position: 'top', fill: '#666' }}>
+                        {revenueByMonthData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
