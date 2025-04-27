@@ -1,17 +1,17 @@
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import React, { useState } from "react";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -22,20 +22,24 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 
-// Schema für die Passwortänderung
-const changePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Aktuelles Passwort ist erforderlich"),
-    newPassword: z.string().min(6, "Neues Passwort muss mindestens 6 Zeichen haben"),
-    confirmPassword: z.string().min(1, "Passwort-Bestätigung ist erforderlich"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwörter stimmen nicht überein",
-    path: ["confirmPassword"],
-  });
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Aktuelles Passwort wird benötigt"),
+  newPassword: z
+    .string()
+    .min(8, "Passwort muss mindestens 8 Zeichen lang sein")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
+      "Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten"
+    ),
+  confirmPassword: z.string().min(1, "Passwort bestätigen wird benötigt"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwörter stimmen nicht überein",
+  path: ["confirmPassword"],
+});
 
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
@@ -46,6 +50,7 @@ interface ChangePasswordDialogProps {
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -56,49 +61,56 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
-      const response = await apiRequest("POST", "/api/change-password", data);
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: ChangePasswordFormValues) => {
+      const response = await apiRequest("POST", "/api/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Fehler beim Ändern des Passworts");
+        throw new Error(errorData.message || "Passwort konnte nicht geändert werden.");
       }
+      
       return await response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Erfolg",
+        title: "Erfolg!",
         description: "Ihr Passwort wurde erfolgreich geändert.",
-        variant: "default",
+        duration: 3000,
       });
-      onOpenChange(false);
       form.reset();
+      onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
+      setError(error.message);
     },
   });
 
   function onSubmit(data: ChangePasswordFormValues) {
-    mutation.mutate({
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
-    });
+    setError(null);
+    changePasswordMutation.mutate(data);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle>Passwort ändern</DialogTitle>
           <DialogDescription>
-            Geben Sie Ihr aktuelles Passwort ein und wählen Sie ein neues sicheres Passwort.
+            Ändern Sie Ihr Passwort für mehr Sicherheit. Ein starkes Passwort sollte mindestens 8 Zeichen lang sein und eine Mischung aus Groß- und Kleinbuchstaben sowie Zahlen enthalten.
           </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -108,12 +120,18 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 <FormItem>
                   <FormLabel>Aktuelles Passwort</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input 
+                      {...field} 
+                      type="password" 
+                      placeholder="Ihr aktuelles Passwort" 
+                      autoComplete="current-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="newPassword"
@@ -121,12 +139,18 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 <FormItem>
                   <FormLabel>Neues Passwort</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input 
+                      {...field} 
+                      type="password" 
+                      placeholder="Neues Passwort" 
+                      autoComplete="new-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="confirmPassword"
@@ -134,26 +158,34 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
                 <FormItem>
                   <FormLabel>Passwort bestätigen</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input 
+                      {...field} 
+                      type="password" 
+                      placeholder="Passwort wiederholen" 
+                      autoComplete="new-password"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <DialogFooter>
+
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="mr-2"
               >
                 Abbrechen
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? (
+              <Button 
+                type="submit" 
+                disabled={changePasswordMutation.isPending}
+              >
+                {changePasswordMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird gespeichert...
+                    Wird geändert...
                   </>
                 ) : (
                   "Passwort ändern"
