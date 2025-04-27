@@ -36,6 +36,7 @@ import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { de } from 'date-fns/locale';
+import { jsPDF } from 'jspdf';
 
 // Farben für Diagramme
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
@@ -205,10 +206,100 @@ export function StatisticsTab() {
   const exportToPDF = () => {
     if (!repairs || repairs.length === 0) return;
     
-    alert('PDF-Export wird vorbereitet... Diese Funktion benötigt die jsPDF-Bibliothek, die noch nicht installiert ist.');
-    
-    // In einer vollständigen Implementierung würden wir hier jsPDF verwenden
-    // um ein PDF zu erstellen und herunterzuladen
+    try {
+      // PDF im A4-Format erstellen
+      const pdf = new jsPDF();
+      
+      // Dokumententitel
+      const title = `Reparaturstatistik ${timeRange !== 'all' ? '(gefiltert)' : ''}`;
+      pdf.setFontSize(18);
+      pdf.text(title, 14, 20);
+      
+      // Datum
+      pdf.setFontSize(10);
+      pdf.text(`Erstellt am: ${new Date().toLocaleDateString()}`, 14, 30);
+      
+      // Statistik-Zusammenfassung
+      pdf.setFontSize(12);
+      pdf.text('Gesamtübersicht:', 14, 40);
+      
+      pdf.setFontSize(10);
+      pdf.text(`Anzahl Kunden: ${stats?.customerCount || 0}`, 14, 50);
+      pdf.text(`Gesamtzahl Reparaturen: ${stats?.repairCount || 0}`, 14, 55);
+      pdf.text(`Reparaturen in Bearbeitung: ${stats?.inRepair || 0}`, 14, 60);
+      pdf.text(`Abgeschlossene Reparaturen: ${stats?.completed || 0}`, 14, 65);
+      pdf.text(`Abholbereit: ${stats?.readyForPickup || 0}`, 14, 70);
+      pdf.text(`Bei Fremddienstleistern: ${stats?.outsourced || 0}`, 14, 75);
+      
+      // Zeitraumfilter-Info
+      if (timeRange !== 'all') {
+        const rangeOption = timeRangeOptions.find(opt => opt.value === timeRange);
+        pdf.text(`Zeitraum: ${rangeOption?.label || timeRange}`, 14, 85);
+        pdf.text(`Gefilterte Reparaturen: ${stats?.filteredRepairCount || 0}`, 14, 90);
+      }
+      
+      // Reparaturtabelle
+      pdf.setFontSize(12);
+      pdf.text('Letzte Reparaturen:', 14, 100);
+      
+      // Tabellenkopf
+      const headers = ['Auftragsnr.', 'Marke', 'Modell', 'Status', 'Datum'];
+      const columnWidths = [30, 35, 50, 25, 35];
+      let y = 110;
+      
+      // Spaltenüberschriften
+      let x = 14;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      
+      headers.forEach((header, i) => {
+        pdf.text(header, x, y);
+        x += columnWidths[i];
+      });
+      
+      // Trennlinie
+      pdf.line(14, y + 2, 200, y + 2);
+      
+      // Tabellendaten (nur die letzten 10 Reparaturen anzeigen)
+      pdf.setFont('helvetica', 'normal');
+      const tableData = repairs.slice(0, 10).map(repair => [
+        repair.orderCode || `#${repair.id}`,
+        repair.brand,
+        repair.model,
+        repair.status,
+        new Date(repair.createdAt).toLocaleDateString()
+      ]);
+      
+      // Tabellendaten einfügen
+      tableData.forEach((row, rowIndex) => {
+        y += 10;
+        
+        // Neue Seite, wenn am Ende der Seite
+        if (y > 280) {
+          pdf.addPage();
+          y = 20;
+        }
+        
+        let x = 14;
+        row.forEach((cell, cellIndex) => {
+          // Texte abschneiden, um in Spalten zu passen
+          const maxWidth = columnWidths[cellIndex] - 5;
+          const text = cell.toString();
+          const truncatedText = text.length > maxWidth / 2 
+            ? text.substring(0, maxWidth / 2) + '...' 
+            : text;
+            
+          pdf.text(truncatedText, x, y);
+          x += columnWidths[cellIndex];
+        });
+      });
+      
+      // PDF herunterladen
+      pdf.save('reparatur-statistik.pdf');
+    } catch (error) {
+      console.error('Fehler beim PDF-Export:', error);
+      alert('Beim PDF-Export ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.');
+    }
   };
 
   const handleExport = () => {
