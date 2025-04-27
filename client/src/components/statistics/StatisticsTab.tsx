@@ -875,6 +875,7 @@ export function StatisticsTab() {
                       <th className="px-6 py-3">Modell</th>
                       <th className="px-6 py-3">Problem</th>
                       <th className="px-6 py-3">Status</th>
+                      <th className="px-6 py-3">Preis</th>
                       <th className="px-6 py-3">Datum</th>
                     </tr>
                   </thead>
@@ -896,9 +897,26 @@ export function StatisticsTab() {
                             {repair.status}
                           </span>
                         </td>
+                        <td className="px-6 py-4 font-medium text-right">
+                          {repair.estimatedCost ? (parseFloat(repair.estimatedCost) / 100).toFixed(2) : '0.00'} €
+                        </td>
                         <td className="px-6 py-4">{new Date(repair.createdAt).toLocaleDateString()}</td>
                       </tr>
                     ))}
+                    {/* Summenzeile für abgeholte Reparaturen */}
+                    <tr className="bg-gray-100 font-medium border-t-2 border-gray-300">
+                      <td className="px-6 py-4" colSpan={4}>Summe abgeholter Reparaturen</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">abgeholt</span>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-right">
+                        {recentRepairs
+                          .filter(repair => repair.status === 'abgeholt')
+                          .reduce((sum, repair) => sum + (repair.estimatedCost ? parseFloat(repair.estimatedCost) : 0), 0) / 100
+                          .toFixed(2)} €
+                      </td>
+                      <td className="px-6 py-4"></td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
