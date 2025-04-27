@@ -551,7 +551,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Stats methods
-  async getStats(currentUserId?: number): Promise<{ 
+  async getStats(currentUserId?: number, startDate?: Date, endDate?: Date): Promise<{ 
     totalOrders: number; 
     inRepair: number; 
     completed: number; 
@@ -573,21 +573,40 @@ export class DatabaseStorage implements IStorage {
     
     const userFilter = eq(repairs.userId, currentUserId);
     
-    // Get total number of orders
+    // Filter für den angegebenen Zeitraum aufbauen
+    let dateRangeFilter = undefined;
+    if (startDate && endDate) {
+      dateRangeFilter = and(
+        gte(repairs.createdAt, startDate),
+        lte(repairs.createdAt, endDate)
+      );
+    } else if (startDate) {
+      dateRangeFilter = gte(repairs.createdAt, startDate);
+    } else if (endDate) {
+      dateRangeFilter = lte(repairs.createdAt, endDate);
+    }
+    
+    // Kombiniere Filter
+    let combinedFilter = userFilter;
+    if (dateRangeFilter) {
+      combinedFilter = and(userFilter, dateRangeFilter);
+    }
+    
+    // Get total number of orders with optional date range filter
     const [totalResult] = await db
       .select({ count: count() })
       .from(repairs)
-      .where(userFilter);
+      .where(combinedFilter);
     
-    // Get number of repairs in progress
+    // Get number of repairs in progress with optional date range filter
     const [inRepairResult] = await db
       .select({ count: count() })
       .from(repairs)
       .where(
-        and(eq(repairs.status, "in_reparatur"), userFilter)
+        and(eq(repairs.status, "in_reparatur"), combinedFilter)
       );
     
-    // Get number of completed repairs
+    // Get number of completed repairs with optional date range filter
     const [completedResult] = await db
       .select({ count: count() })
       .from(repairs)
@@ -597,24 +616,24 @@ export class DatabaseStorage implements IStorage {
             eq(repairs.status, "fertig"),
             eq(repairs.status, "abgeholt")
           ),
-          userFilter
+          combinedFilter
         )
       );
     
-    // Get number of repairs ready for pickup
+    // Get number of repairs ready for pickup with optional date range filter
     const [readyForPickupResult] = await db
       .select({ count: count() })
       .from(repairs)
       .where(
-        and(eq(repairs.status, "fertig"), userFilter)
+        and(eq(repairs.status, "fertig"), combinedFilter)
       );
       
-    // Get number of outsourced repairs
+    // Get number of outsourced repairs with optional date range filter
     const [outsourcedResult] = await db
       .select({ count: count() })
       .from(repairs)
       .where(
-        and(eq(repairs.status, "ausser_haus"), userFilter)
+        and(eq(repairs.status, "ausser_haus"), combinedFilter)
       );
     
     // Get number of repairs created today
@@ -623,17 +642,16 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    const dateFilter = and(
+    const todayFilter = and(
       gte(repairs.createdAt, today),
-      lt(repairs.createdAt, tomorrow)
+      lt(repairs.createdAt, tomorrow),
+      userFilter
     );
     
     const [todayResult] = await db
       .select({ count: count() })
       .from(repairs)
-      .where(
-        and(dateFilter, userFilter)
-      );
+      .where(todayFilter);
     
     return {
       totalOrders: totalResult?.count || 0,
@@ -646,7 +664,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Detaillierte Reparaturstatistiken nach Gerätetyp und häufigen Problemen
-  async getDetailedRepairStats(currentUserId?: number): Promise<{
+  async getDetailedRepairStats(currentUserId?: number, startDate?: Date, endDate?: Date): Promise<{
     byDeviceType: Record<string, number>;
     byBrand: Record<string, number>;
     byIssue: Record<string, number>;
@@ -662,11 +680,33 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
-      // Alle Reparaturen des Benutzers abrufen
+      // Filter für die Benutzer-ID erstellen
+      let userFilter = eq(repairs.userId, currentUserId);
+      
+      // Filter für den angegebenen Zeitraum aufbauen
+      if (startDate && endDate) {
+        userFilter = and(
+          userFilter,
+          gte(repairs.createdAt, startDate),
+          lte(repairs.createdAt, endDate)
+        );
+      } else if (startDate) {
+        userFilter = and(
+          userFilter,
+          gte(repairs.createdAt, startDate)
+        );
+      } else if (endDate) {
+        userFilter = and(
+          userFilter,
+          lte(repairs.createdAt, endDate)
+        );
+      }
+      
+      // Alle Reparaturen des Benutzers abrufen mit optionalem Zeitraumfilter
       const userRepairs = await db
         .select()
         .from(repairs)
-        .where(eq(repairs.userId, currentUserId));
+        .where(userFilter);
       
       // Statistiken nach Gerätetyp
       const byDeviceType: Record<string, number> = {};

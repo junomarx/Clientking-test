@@ -487,10 +487,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Statistiken mit Benutzerkontext abrufen
-      const stats = await storage.getStats(userId);
-      res.json(stats);
+      // Zeitraum-Filter aus Query-Parametern holen
+      let startDate: Date | undefined;
+      let endDate: Date | undefined;
+      
+      if (req.query.startDate) {
+        startDate = new Date(req.query.startDate as string);
+      }
+      
+      if (req.query.endDate) {
+        endDate = new Date(req.query.endDate as string);
+        // Setze den Endzeitpunkt auf das Ende des Tages
+        endDate.setHours(23, 59, 59, 999);
+      }
+      
+      // Statistiken mit Benutzerkontext und optionalem Zeitraumfilter abrufen
+      const stats = await storage.getStats(userId, startDate, endDate);
+      
+      // Zusätzlich Kunden- und Reparaturanzahl hinzufügen
+      const customers = await storage.getAllCustomers(userId);
+      const repairs = await storage.getAllRepairs(userId);
+      
+      res.json({
+        ...stats,
+        customerCount: customers.length,
+        repairCount: repairs.length,
+        filteredRepairCount: stats.totalOrders
+      });
     } catch (error) {
+      console.error("Error fetching statistics:", error);
       res.status(500).json({ message: "Failed to fetch statistics" });
     }
   });
@@ -501,8 +526,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Detaillierte Statistiken für den Benutzer abrufen
-      const detailedStats = await storage.getDetailedRepairStats(userId);
+      // Zeitraum-Filter aus Query-Parametern holen
+      let startDate: Date | undefined;
+      let endDate: Date | undefined;
+      
+      if (req.query.startDate) {
+        startDate = new Date(req.query.startDate as string);
+      }
+      
+      if (req.query.endDate) {
+        endDate = new Date(req.query.endDate as string);
+        // Setze den Endzeitpunkt auf das Ende des Tages
+        endDate.setHours(23, 59, 59, 999);
+      }
+      
+      // Detaillierte Statistiken für den Benutzer abrufen mit optionalem Zeitraum
+      const detailedStats = await storage.getDetailedRepairStats(userId, startDate, endDate);
       res.json(detailedStats);
     } catch (error) {
       console.error("Error fetching detailed stats:", error);
