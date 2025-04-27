@@ -399,9 +399,9 @@ export function StatisticsTab() {
         // Vierte Spalte (Umsatzwerte)
         pdf.setFont('helvetica', 'normal');
         pdf.text('Wert (€)', 170, 67);
-        pdf.text(`${(detailedStats.revenue.total / 100).toFixed(2)} €`, 170, 75);
+        pdf.text(`${detailedStats.revenue.total.toFixed(2)} €`, 170, 75);
         const avgRevenue = stats?.completed 
-          ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2)
+          ? (detailedStats.revenue.total / stats.completed).toFixed(2)
           : '0.00';
         pdf.text(`${avgRevenue} €`, 170, 83);
       }
@@ -510,9 +510,9 @@ export function StatisticsTab() {
           // Werte
           pdf.setFont('helvetica', 'normal');
           pdf.text('Wert', 100, 42);
-          pdf.text(`${(detailedStats.revenue.total / 100).toFixed(2)} €`, 100, 50);
+          pdf.text(`${detailedStats.revenue.total.toFixed(2)} €`, 100, 50);
           const avgRevenue = stats?.completed 
-            ? (detailedStats.revenue.total / stats.completed / 100).toFixed(2)
+            ? (detailedStats.revenue.total / stats.completed).toFixed(2)
             : '0.00';
           pdf.text(`${avgRevenue} €`, 100, 58);
           
