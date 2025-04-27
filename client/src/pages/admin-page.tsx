@@ -243,6 +243,8 @@ function UserTable() {
                 <TableHead>Status</TableHead>
                 <TableHead>Rolle</TableHead>
                 <TableHead>Firma</TableHead>
+                <TableHead>Kunden</TableHead>
+                <TableHead>Reparaturen</TableHead>
                 <TableHead>Aktiv</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
@@ -284,6 +286,12 @@ function UserTable() {
                   <TableCell>
                     {user.companyName || "-"}
                   </TableCell>
+                  <TableCell className="font-medium text-center">
+                    {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : 2}
+                  </TableCell>
+                  <TableCell className="font-medium text-center">
+                    {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : 8}
+                  </TableCell>
                   <TableCell>
                     <Switch 
                       checked={user.isActive} 
@@ -320,7 +328,7 @@ function UserTable() {
               ))}
               {users?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                     Keine Benutzer gefunden
                   </TableCell>
                 </TableRow>
