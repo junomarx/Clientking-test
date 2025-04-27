@@ -283,43 +283,70 @@ export function StatisticsTab() {
       // PDF im A4-Format erstellen (Hochformat)
       const pdf = new jsPDF();
       
+      // Hintergrund und Design für das Dokument
+      pdf.setFillColor(245, 247, 250); // Heller Hintergrund für Kopfbereich
+      pdf.rect(0, 0, 210, 40, 'F');
+      pdf.setDrawColor(0, 110, 183); // Blaue Linie
+      pdf.setLineWidth(0.5);
+      pdf.line(14, 40, 196, 40);
+      
       // Dokumententitel
       const title = `Reparaturstatistik ${timeRange !== 'all' ? '(gefiltert)' : ''}`;
-      pdf.setFontSize(18);
+      pdf.setFontSize(22);
+      pdf.setTextColor(30, 41, 59); // Dunkelblau für den Titel
+      pdf.setFont('helvetica', 'bold');
       pdf.text(title, 14, 20);
       
       // Datum
       pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128); // Grau für das Datum
+      pdf.setFont('helvetica', 'normal');
       pdf.text(`Erstellt am: ${new Date().toLocaleDateString()}`, 14, 30);
-      
-      // Statistik-Zusammenfassung
-      pdf.setFontSize(12);
-      pdf.text('Gesamtübersicht:', 14, 40);
-      
-      pdf.setFontSize(10);
-      pdf.text(`Anzahl Kunden: ${stats?.customerCount || 0}`, 14, 50);
-      pdf.text(`Gesamtzahl Reparaturen: ${stats?.repairCount || 0}`, 14, 55);
-      pdf.text(`Reparaturen in Bearbeitung: ${stats?.inRepair || 0}`, 14, 60);
-      pdf.text(`Abgeschlossene Reparaturen: ${stats?.completed || 0}`, 14, 65);
-      pdf.text(`Abholbereit: ${stats?.readyForPickup || 0}`, 14, 70);
-      pdf.text(`Bei Fremddienstleistern: ${stats?.outsourced || 0}`, 14, 75);
       
       // Zeitraumfilter-Info
       if (timeRange !== 'all') {
         const rangeOption = timeRangeOptions.find(opt => opt.value === timeRange);
-        pdf.text(`Zeitraum: ${rangeOption?.label || timeRange}`, 14, 85);
-        pdf.text(`Gefilterte Reparaturen: ${stats?.filteredRepairCount || 0}`, 14, 90);
+        pdf.text(`Zeitraum: ${rangeOption?.label || timeRange}`, 120, 30);
+        if (stats?.filteredRepairCount !== undefined) {
+          pdf.text(`Gefilterte Reparaturen: ${stats.filteredRepairCount}`, 160, 30);
+        }
       }
       
-      // Diagramme hinzufügen
-      let currentY = 110;
+      // Überschrift für die Gesamtübersicht
+      pdf.setFontSize(14);
+      pdf.setTextColor(30, 41, 59);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Gesamtübersicht', 14, 55);
       
+      // Tabellarische Übersicht erstellen
+      pdf.setFillColor(240, 249, 255); // Heller blauer Hintergrund für Tabelle
+      pdf.rect(14, 60, 85, 45, 'F'); // Hintergrund für Tabelle
+      
+      // Tabelle mit Werten - erste Spalte
+      pdf.setFontSize(9);
+      pdf.setTextColor(30, 41, 59);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Kategorie', 17, 67);
+      pdf.text('Anzahl Kunden', 17, 75);
+      pdf.text('Reparaturen gesamt', 17, 83);
+      pdf.text('In Bearbeitung', 17, 91);
+      pdf.text('Abgeschlossen', 17, 99);
+      
+      // Zweite Spalte (Werte)
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Wert', 70, 67);
+      pdf.text(`${stats?.customerCount || 0}`, 70, 75);
+      pdf.text(`${stats?.repairCount || 0}`, 70, 83);
+      pdf.text(`${stats?.inRepair || 0}`, 70, 91);
+      pdf.text(`${stats?.completed || 0}`, 70, 99);
+      
+      // Diagramme nebeneinander anordnen
+      // Links: Gerätetypen
       if (deviceTypeChartRef.current) {
-        pdf.setFontSize(12);
-        pdf.text('Verteilung nach Gerätetyp:', 14, currentY);
-        currentY += 10;
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Verteilung nach Gerätetyp', 14, 120);
         
-        // Gerätetypen-Diagramm rendern
         try {
           const deviceTypeCanvas = await html2canvas(deviceTypeChartRef.current, {
             scale: 1,
@@ -327,39 +354,23 @@ export function StatisticsTab() {
             logging: false
           });
           
-          // Bildgröße berechnen, um ins PDF zu passen
-          const imgWidth = 180;
+          // Kleineres Bild für das PDF
+          const imgWidth = 90;
           const imgHeight = (deviceTypeCanvas.height * imgWidth) / deviceTypeCanvas.width;
-          
-          // Prüfen, ob genug Platz auf der aktuellen Seite ist
-          if (currentY + imgHeight > 280) {
-            pdf.addPage();
-            currentY = 20;
-            pdf.setFontSize(12);
-            pdf.text('Verteilung nach Gerätetyp:', 14, currentY);
-            currentY += 10;
-          }
           
           // Diagramm als Bild zum PDF hinzufügen
           const deviceTypeImg = deviceTypeCanvas.toDataURL('image/png');
-          pdf.addImage(deviceTypeImg, 'PNG', 14, currentY, imgWidth, imgHeight);
-          currentY += imgHeight + 20;
+          pdf.addImage(deviceTypeImg, 'PNG', 14, 125, imgWidth, imgHeight);
         } catch (e) {
           console.error('Fehler beim Erfassen des Gerätetyp-Diagramms:', e);
         }
       }
       
-      // Hersteller-Diagramm
+      // Rechts: Hersteller-Diagramm
       if (brandChartRef.current) {
-        // Bei Bedarf neue Seite anfangen
-        if (currentY > 220) {
-          pdf.addPage();
-          currentY = 20;
-        }
-        
-        pdf.setFontSize(12);
-        pdf.text('Verteilung nach Herstellern:', 14, currentY);
-        currentY += 10;
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Verteilung nach Herstellern', 110, 120);
         
         try {
           const brandCanvas = await html2canvas(brandChartRef.current, {
@@ -368,37 +379,21 @@ export function StatisticsTab() {
             logging: false
           });
           
-          const imgWidth = 180;
+          const imgWidth = 90;
           const imgHeight = (brandCanvas.height * imgWidth) / brandCanvas.width;
           
-          // Prüfen, ob genug Platz auf der aktuellen Seite ist
-          if (currentY + imgHeight > 280) {
-            pdf.addPage();
-            currentY = 20;
-            pdf.setFontSize(12);
-            pdf.text('Verteilung nach Herstellern:', 14, currentY);
-            currentY += 10;
-          }
-          
           const brandImg = brandCanvas.toDataURL('image/png');
-          pdf.addImage(brandImg, 'PNG', 14, currentY, imgWidth, imgHeight);
-          currentY += imgHeight + 20;
+          pdf.addImage(brandImg, 'PNG', 110, 125, imgWidth, imgHeight);
         } catch (e) {
           console.error('Fehler beim Erfassen des Hersteller-Diagramms:', e);
         }
       }
       
-      // Problem-Diagramm
+      // Problem-Diagramm unten
       if (issueChartRef.current) {
-        // Bei Bedarf neue Seite anfangen
-        if (currentY > 220) {
-          pdf.addPage();
-          currentY = 20;
-        }
-        
-        pdf.setFontSize(12);
-        pdf.text('Verteilung nach Problemen:', 14, currentY);
-        currentY += 10;
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Verteilung nach Problemen', 14, 210);
         
         try {
           const issueCanvas = await html2canvas(issueChartRef.current, {
@@ -408,83 +403,19 @@ export function StatisticsTab() {
           });
           
           const imgWidth = 180;
-          const imgHeight = (issueCanvas.height * imgWidth) / issueCanvas.width;
-          
-          // Prüfen, ob genug Platz auf der aktuellen Seite ist
-          if (currentY + imgHeight > 280) {
-            pdf.addPage();
-            currentY = 20;
-            pdf.setFontSize(12);
-            pdf.text('Verteilung nach Problemen:', 14, currentY);
-            currentY += 10;
-          }
+          const imgHeight = Math.min(70, (issueCanvas.height * imgWidth) / issueCanvas.width);
           
           const issueImg = issueCanvas.toDataURL('image/png');
-          pdf.addImage(issueImg, 'PNG', 14, currentY, imgWidth, imgHeight);
-          currentY += imgHeight + 20;
+          pdf.addImage(issueImg, 'PNG', 14, 215, imgWidth, imgHeight);
         } catch (e) {
           console.error('Fehler beim Erfassen des Problem-Diagramms:', e);
         }
       }
       
-      // Neue Seite für Tabelle
-      pdf.addPage();
-      
-      // Reparaturtabelle
-      pdf.setFontSize(12);
-      pdf.text('Letzte Reparaturen:', 14, 20);
-      
-      // Tabellenkopf
-      const headers = ['Auftragsnr.', 'Marke', 'Modell', 'Status', 'Datum'];
-      const columnWidths = [30, 35, 50, 25, 35];
-      let y = 30;
-      
-      // Spaltenüberschriften
-      let x = 14;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      
-      headers.forEach((header, i) => {
-        pdf.text(header, x, y);
-        x += columnWidths[i];
-      });
-      
-      // Trennlinie
-      pdf.line(14, y + 2, 200, y + 2);
-      
-      // Tabellendaten (nur die letzten 10 Reparaturen anzeigen)
-      pdf.setFont('helvetica', 'normal');
-      const tableData = repairs.slice(0, 10).map(repair => [
-        repair.orderCode || `#${repair.id}`,
-        repair.brand,
-        repair.model,
-        repair.status,
-        new Date(repair.createdAt).toLocaleDateString()
-      ]);
-      
-      // Tabellendaten einfügen
-      tableData.forEach((row, rowIndex) => {
-        y += 10;
-        
-        // Neue Seite, wenn am Ende der Seite
-        if (y > 280) {
-          pdf.addPage();
-          y = 20;
-        }
-        
-        let x = 14;
-        row.forEach((cell, cellIndex) => {
-          // Texte abschneiden, um in Spalten zu passen
-          const maxWidth = columnWidths[cellIndex] - 5;
-          const text = cell.toString();
-          const truncatedText = text.length > maxWidth / 2 
-            ? text.substring(0, maxWidth / 2) + '...' 
-            : text;
-            
-          pdf.text(truncatedText, x, y);
-          x += columnWidths[cellIndex];
-        });
-      });
+      // Footer mit Seitenzahl
+      pdf.setFontSize(8);
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Seite 1/1 | Handyshop | Statistik-Export`, 14, 290);
       
       // PDF herunterladen
       pdf.save('reparatur-statistik.pdf');
