@@ -456,6 +456,8 @@ function SystemDiagnosticTab() {
   const { toast } = useToast();
   const [isCheckingDatabase, setIsCheckingDatabase] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
   const [databaseStatus, setDatabaseStatus] = useState<"unknown" | "ok" | "error">("unknown");
   const [emailStatus, setEmailStatus] = useState<"unknown" | "ok" | "error">("unknown");
   const [systemInfo, setSystemInfo] = useState<{
@@ -465,6 +467,17 @@ function SystemDiagnosticTab() {
     numCustomers: number;
     uptime: number;
   } | null>(null);
+  
+  // SMTP-Einstellungen für das System
+  const [smtpSettings, setSmtpSettings] = useState({
+    smtpHost: "smtp.example.com",
+    smtpPort: "587",
+    smtpUser: "system@handyshop-verwaltung.at",
+    smtpPassword: "",
+    smtpSenderName: "Handyshop Verwaltung System",
+    systemEmail: "system@handyshop-verwaltung.at",
+    testRecipient: ""
+  });
 
   // Simulierte Funktion zum Prüfen der Datenbankverbindung
   const checkDatabase = () => {
@@ -505,170 +518,369 @@ function SystemDiagnosticTab() {
     }, 2000);
   };
   
+  // Handler für Änderungen an den SMTP-Einstellungen
+  const handleSmtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSmtpSettings(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Simulierte Funktion zum Speichern der SMTP-Einstellungen
+  const saveSmtpSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    setIsSaving(true);
+    
+    // Simuliere Speichervorgang
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({
+        title: "SMTP-Einstellungen gespeichert",
+        description: "Die E-Mail-Server-Einstellungen wurden erfolgreich aktualisiert.",
+      });
+    }, 1000);
+  };
+  
+  // Simulierte Funktion zum Senden einer Test-E-Mail
+  const sendTestEmail = () => {
+    if (!smtpSettings.testRecipient) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie eine Test-E-Mail-Adresse ein.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSendingTest(true);
+    
+    // Simuliere E-Mail-Versand
+    setTimeout(() => {
+      setIsSendingTest(false);
+      toast({
+        title: "Test-E-Mail gesendet",
+        description: `Eine Test-E-Mail wurde an ${smtpSettings.testRecipient} gesendet.`,
+      });
+    }, 2000);
+  };
+  
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-primary" />
-            Datenbankstatus
-          </CardTitle>
-          <CardDescription>Überprüfen Sie den Status der Datenbankverbindung</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm font-medium">Status:</span>
-              {databaseStatus === "unknown" && <span className="text-sm text-gray-500">Unbekannt</span>}
-              {databaseStatus === "ok" && <span className="text-sm text-green-500 font-medium">Online</span>}
-              {databaseStatus === "error" && <span className="text-sm text-red-500 font-medium">Fehler</span>}
-            </div>
-            
-            {systemInfo && (
-              <div className="space-y-3 mt-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Datenbankgröße</span>
-                    <span className="text-sm font-medium">{systemInfo.dbSize} MB</span>
-                  </div>
-                  <Progress value={systemInfo.dbSize / 0.2} className="h-2" />
+    <div className="grid gap-4">
+      <Tabs defaultValue="database" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="database">
+            <Database className="mr-2 h-4 w-4" />
+            Datenbank
+          </TabsTrigger>
+          <TabsTrigger value="email">
+            <Mail className="mr-2 h-4 w-4" />
+            E-Mail-System
+          </TabsTrigger>
+          <TabsTrigger value="performance">
+            <HardDrive className="mr-2 h-4 w-4" />
+            Systemressourcen
+          </TabsTrigger>
+        </TabsList>
+          
+        <TabsContent value="database">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                Datenbankstatus
+              </CardTitle>
+              <CardDescription>Überprüfen Sie den Status der Datenbankverbindung</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">Status:</span>
+                  {databaseStatus === "unknown" && <span className="text-sm text-gray-500">Unbekannt</span>}
+                  {databaseStatus === "ok" && <span className="text-sm text-green-500 font-medium">Online</span>}
+                  {databaseStatus === "error" && <span className="text-sm text-red-500 font-medium">Fehler</span>}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="text-sm text-gray-500">Benutzer</div>
-                    <div className="text-xl font-semibold">{systemInfo.numUsers}</div>
+                {systemInfo && (
+                  <div className="space-y-3 mt-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Datenbankgröße</span>
+                        <span className="text-sm font-medium">{systemInfo.dbSize} MB</span>
+                      </div>
+                      <Progress value={systemInfo.dbSize / 0.2} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Benutzer</div>
+                        <div className="text-xl font-semibold">{systemInfo.numUsers}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Uptime</div>
+                        <div className="text-xl font-semibold">{systemInfo.uptime} Tage</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Kunden</div>
+                        <div className="text-xl font-semibold">{systemInfo.numCustomers}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Reparaturen</div>
+                        <div className="text-xl font-semibold">{systemInfo.numRepairs}</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="text-sm text-gray-500">Uptime</div>
-                    <div className="text-xl font-semibold">{systemInfo.uptime} Tage</div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={checkDatabase} disabled={isCheckingDatabase} className="w-full">
+                {isCheckingDatabase ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Prüfe Datenbank...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Datenbankstatus prüfen
+                  </>
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="email">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <form onSubmit={saveSmtpSettings}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    System-E-Mail-Einstellungen
+                  </CardTitle>
+                  <CardDescription>
+                    Konfigurieren Sie den E-Mail-Server für systemweite Benachrichtigungen, Benutzerregistrierungen und Passwort-Zurücksetzungen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="smtpHost">SMTP Server</Label>
+                      <Input 
+                        id="smtpHost" 
+                        name="smtpHost"
+                        value={smtpSettings.smtpHost} 
+                        onChange={handleSmtpChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="smtpPort">SMTP Port</Label>
+                      <Input 
+                        id="smtpPort" 
+                        name="smtpPort"
+                        value={smtpSettings.smtpPort} 
+                        onChange={handleSmtpChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="smtpUser">SMTP Benutzername</Label>
+                      <Input 
+                        id="smtpUser" 
+                        name="smtpUser"
+                        value={smtpSettings.smtpUser} 
+                        onChange={handleSmtpChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="smtpPassword">SMTP Passwort</Label>
+                      <Input 
+                        id="smtpPassword" 
+                        name="smtpPassword"
+                        type="password"
+                        value={smtpSettings.smtpPassword} 
+                        onChange={handleSmtpChange} 
+                        placeholder="••••••••"
+                        required 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="smtpSenderName">Absender-Name</Label>
+                      <Input 
+                        id="smtpSenderName" 
+                        name="smtpSenderName"
+                        value={smtpSettings.smtpSenderName} 
+                        onChange={handleSmtpChange} 
+                        required 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="systemEmail">System E-Mail-Adresse</Label>
+                      <Input 
+                        id="systemEmail" 
+                        name="systemEmail"
+                        type="email"
+                        value={smtpSettings.systemEmail} 
+                        onChange={handleSmtpChange} 
+                        required 
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Diese E-Mail-Adresse wird für alle systemweiten Benachrichtigungen verwendet.
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="text-sm text-gray-500">Kunden</div>
-                    <div className="text-xl font-semibold">{systemInfo.numCustomers}</div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button 
+                    type="submit" 
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Speichern...
+                      </>
+                    ) : (
+                      "Einstellungen speichern"
+                    )}
+                  </Button>
+                  <Button onClick={checkEmailServer} variant="outline" type="button" disabled={isCheckingEmail}>
+                    {isCheckingEmail ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Prüfen...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Verbindung prüfen
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  Test-E-Mail senden
+                </CardTitle>
+                <CardDescription>
+                  Senden Sie eine Test-E-Mail, um Ihre SMTP-Konfiguration zu überprüfen
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="testRecipient">Empfänger</Label>
+                    <Input 
+                      id="testRecipient" 
+                      name="testRecipient"
+                      type="email"
+                      value={smtpSettings.testRecipient} 
+                      onChange={handleSmtpChange}
+                      placeholder="test@example.com" 
+                      className="mt-1"
+                    />
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <div className="text-sm text-gray-500">Reparaturen</div>
-                    <div className="text-xl font-semibold">{systemInfo.numRepairs}</div>
+
+                  <div className="rounded-md bg-muted p-4 mt-4">
+                    <div className="text-sm font-medium mb-2">E-Mail-Status:</div>
+                    <div className="flex items-center gap-2">
+                      {emailStatus === "unknown" && <Clock className="h-4 w-4 text-gray-500" />}
+                      {emailStatus === "ok" && <Check className="h-4 w-4 text-green-500" />}
+                      {emailStatus === "error" && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                      
+                      {emailStatus === "unknown" && <span className="text-sm text-gray-500">Nicht geprüft</span>}
+                      {emailStatus === "ok" && <span className="text-sm text-green-500 font-medium">E-Mail-Server erreichbar</span>}
+                      {emailStatus === "error" && <span className="text-sm text-red-500 font-medium">Verbindungsfehler</span>}
+                    </div>
+                    
+                    {emailStatus === "error" && (
+                      <Alert variant="destructive" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Verbindungsfehler</AlertTitle>
+                        <AlertDescription>
+                          Es konnte keine Verbindung zum E-Mail-Server hergestellt werden. Überprüfen Sie Ihre Einstellungen.
+                        </AlertDescription>
+                      </Alert>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  onClick={sendTestEmail} 
+                  disabled={isSendingTest || !smtpSettings.testRecipient} 
+                  className="w-full"
+                >
+                  {isSendingTest ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sende Test-E-Mail...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      Test-E-Mail senden
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={checkDatabase} disabled={isCheckingDatabase} className="w-full">
-            {isCheckingDatabase ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Prüfe Datenbank...
-              </>
-            ) : (
-              <>
+        </TabsContent>
+        
+        <TabsContent value="performance">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HardDrive className="h-5 w-5 text-primary" />
+                Systemressourcen
+              </CardTitle>
+              <CardDescription>Überwachen Sie die Systemleistung</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">CPU-Auslastung</span>
+                    <span className="text-sm font-medium">24%</span>
+                  </div>
+                  <Progress value={24} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">Arbeitsspeicher</span>
+                    <span className="text-sm font-medium">512 MB / 2 GB</span>
+                  </div>
+                  <Progress value={25} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">Festplattenspeicher</span>
+                    <span className="text-sm font-medium">1.8 GB / 10 GB</span>
+                  </div>
+                  <Progress value={18} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full">
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Datenbankstatus prüfen
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            E-Mail-Server
-          </CardTitle>
-          <CardDescription>Überprüfen Sie die Verbindung zum E-Mail-Server</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-sm font-medium">Status:</span>
-              {emailStatus === "unknown" && <span className="text-sm text-gray-500">Unbekannt</span>}
-              {emailStatus === "ok" && <span className="text-sm text-green-500 font-medium">Online</span>}
-              {emailStatus === "error" && <span className="text-sm text-red-500 font-medium">Fehler</span>}
-            </div>
-            
-            <div className="mt-4 text-sm text-gray-600">
-              <p className="mb-2">
-                Hier können Sie die Verbindung zum konfigurierten E-Mail-Server testen.
-                Der Test versucht, eine Verbindung herzustellen und die SMTP-Einstellungen zu validieren.
-              </p>
-              
-              {emailStatus === "ok" && (
-                <Alert className="mt-4">
-                  <Check className="h-4 w-4" />
-                  <AlertTitle>E-Mail-Server erreichbar</AlertTitle>
-                  <AlertDescription>
-                    Der E-Mail-Server ist erreichbar und korrekt konfiguriert.
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {emailStatus === "error" && (
-                <Alert variant="destructive" className="mt-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Verbindungsfehler</AlertTitle>
-                  <AlertDescription>
-                    Es konnte keine Verbindung zum E-Mail-Server hergestellt werden. Überprüfen Sie Ihre Einstellungen.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={checkEmailServer} disabled={isCheckingEmail} className="w-full">
-            {isCheckingEmail ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Prüfe E-Mail-Server...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                E-Mail-Server prüfen
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
-      
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5 text-primary" />
-            Systemressourcen
-          </CardTitle>
-          <CardDescription>Überwachen Sie die Systemleistung</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">CPU-Auslastung</span>
-                <span className="text-sm font-medium">24%</span>
-              </div>
-              <Progress value={24} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Arbeitsspeicher</span>
-                <span className="text-sm font-medium">512 MB / 2 GB</span>
-              </div>
-              <Progress value={25} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Festplattenspeicher</span>
-                <span className="text-sm font-medium">1.8 GB / 10 GB</span>
-              </div>
-              <Progress value={18} className="h-2" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                Aktualisieren
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
