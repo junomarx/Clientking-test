@@ -1335,6 +1335,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
       
+      // Setze das reviewRequestSent-Flag in der Datenbank
+      await db.update(repairs)
+        .set({ reviewRequestSent: true })
+        .where(eq(repairs.id, repairId));
+      
       res.json({ success: true, message: "Bewertungs-E-Mail wurde gesendet" });
     } catch (error) {
       console.error("Error sending review request email:", error);
