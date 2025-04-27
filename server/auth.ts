@@ -240,6 +240,46 @@ export function setupAuth(app: Express) {
     }
   });
   
+  // Route für Benutzer, um ihr Profil zu aktualisieren (wenn sie angemeldet sind)
+  app.patch("/api/user/profile", checkTokenAuth, async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+    
+    const { username, email } = req.body;
+    
+    if (!username || !email) {
+      return res.status(400).json({ message: "Benutzername und E-Mail-Adresse erforderlich" });
+    }
+    
+    // Prüfen, ob der Benutzername bereits existiert (außer für den aktuellen Benutzer)
+    if (username !== req.user.username) {
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser && existingUser.id !== req.user.id) {
+        return res.status(400).json({ message: "Dieser Benutzername wird bereits verwendet" });
+      }
+    }
+    
+    // Prüfen, ob die E-Mail-Adresse bereits existiert (außer für den aktuellen Benutzer)
+    if (email !== req.user.email) {
+      const usersWithEmail = await storage.getUsersByEmail(email);
+      if (usersWithEmail.some(u => u.id !== req.user!.id)) {
+        return res.status(400).json({ message: "Diese E-Mail-Adresse wird bereits verwendet" });
+      }
+    }
+    
+    // Benutzerprofil aktualisieren
+    const updatedUser = await storage.updateUser(req.user.id, { username, email });
+    
+    if (updatedUser) {
+      // Gib den aktualisierten Benutzer ohne das Passwort zurück
+      const { password, resetToken, resetTokenExpires, ...userWithoutPassword } = updatedUser;
+      res.status(200).json(userWithoutPassword);
+    } else {
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Benutzerprofils" });
+    }
+  });
+  
   // Route zum Anfordern einer Passwort-Zurücksetzung
   app.post("/api/forgot-password", async (req, res) => {
     const { email } = req.body;
