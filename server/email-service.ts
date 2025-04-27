@@ -247,6 +247,11 @@ export class EmailService {
         if (!variables["website"] && bizSettings.website) {
           variables["website"] = bizSettings.website;
         }
+        
+        // Bewertungslink als Variable
+        if (!variables["bewertungslink"] && bizSettings.reviewLink) {
+          variables["bewertungslink"] = bizSettings.reviewLink;
+        }
       }
       
       // Ersetze Variablen im Format {{variableName}}
