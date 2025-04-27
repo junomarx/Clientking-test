@@ -610,6 +610,14 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                   // Nur wenn der Fokus auf ein anderes Element gesetzt wird (nicht bei Klick außerhalb)
                                   if (e.relatedTarget) {
                                     fillCustomerData(selectedCustomer);
+                                    
+                                    // Nach dem Ausfüllen der Kundendaten Fokus auf das nächste Feld (Geräteart) setzen
+                                    const deviceTypeInput = document.querySelector('input[name="deviceType"]');
+                                    if (deviceTypeInput) {
+                                      setTimeout(() => {
+                                        (deviceTypeInput as HTMLInputElement).focus();
+                                      }, 10);
+                                    }
                                   }
                                 }
                                 
@@ -642,10 +650,10 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
                                   const selectedCustomer = matchingCustomers[selectedCustomerIndex];
                                   fillCustomerData(selectedCustomer);
                                   
-                                  // Fokus zum nächsten Feld setzen
-                                  const phoneInput = document.querySelector('input[name="phone"]');
-                                  if (phoneInput) {
-                                    (phoneInput as HTMLInputElement).focus();
+                                  // Fokus zum nächsten Feld (Geräteart) setzen - gleich wie bei Tab
+                                  const deviceTypeInput = document.querySelector('input[name="deviceType"]');
+                                  if (deviceTypeInput) {
+                                    (deviceTypeInput as HTMLInputElement).focus();
                                   }
                                 }
                               }}
