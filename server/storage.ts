@@ -71,6 +71,11 @@ export interface IStorage {
     byBrand: Record<string, number>;
     byIssue: Record<string, number>;
     mostRecentRepairs: Repair[];
+    revenue: {
+      total: number;
+      byStatus: Record<string, number>;
+      byMonth: Record<number, number>;
+    };
   }>;
 
   // Feedback methods
@@ -117,6 +122,20 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
+  
+  // Hilfsfunktion: Extrahiert eine Zahl aus einem String (z.B. "€ 150,99" -> 150.99)
+  private extractNumberFromString(input: string): number {
+    // Entferne Währungssymbole, Kommas und andere nicht-numerische Zeichen
+    // Behalte Zahlen, Punkte und Kommas
+    const cleaned = input.replace(/[^0-9.,]/g, '');
+    
+    // Ersetze Kommas durch Punkte für die Umwandlung in eine Zahl
+    const normalized = cleaned.replace(',', '.');
+    
+    // Wandle in Zahl um, gib 0 zurück, wenn keine Zahl gefunden wurde
+    const number = parseFloat(normalized);
+    return isNaN(number) ? 0 : number;
+  }
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -684,7 +703,12 @@ export class DatabaseStorage implements IStorage {
           byDeviceType: {},
           byBrand: {},
           byIssue: {},
-          mostRecentRepairs: []
+          mostRecentRepairs: [],
+          revenue: {
+            total: 0,
+            byStatus: {},
+            byMonth: {}
+          }
         };
       }
       
@@ -770,11 +794,39 @@ export class DatabaseStorage implements IStorage {
         })
         .slice(0, 5);
       
+      // Umsatzberechnung
+      const revenue = {
+        total: 0,
+        byStatus: {} as Record<string, number>,
+        byMonth: {} as Record<number, number>
+      };
+      
+      // Gesamtumsatz und Umsatz nach Status berechnen
+      userRepairs.forEach(repair => {
+        // Extrahiere den geschätzten Kostenwert
+        const cost = this.extractNumberFromString(repair.estimatedCost || '0');
+        
+        // Addiere zum Gesamtumsatz
+        revenue.total += cost;
+        
+        // Gruppiere nach Status
+        const status = repair.status;
+        revenue.byStatus[status] = (revenue.byStatus[status] || 0) + cost;
+        
+        // Gruppiere nach Monat
+        if (repair.createdAt) {
+          const repairDate = new Date(repair.createdAt);
+          const monthKey = repairDate.getMonth(); // 0-11 für Jan-Dez
+          revenue.byMonth[monthKey] = (revenue.byMonth[monthKey] || 0) + cost;
+        }
+      });
+      
       return {
         byDeviceType,
         byBrand,
         byIssue,
-        mostRecentRepairs
+        mostRecentRepairs,
+        revenue
       };
     } catch (error) {
       console.error("Error getting detailed repair stats:", error);
@@ -782,7 +834,12 @@ export class DatabaseStorage implements IStorage {
         byDeviceType: {},
         byBrand: {},
         byIssue: {},
-        mostRecentRepairs: []
+        mostRecentRepairs: [],
+        revenue: {
+          total: 0,
+          byStatus: {},
+          byMonth: {}
+        }
       };
     }
   }
