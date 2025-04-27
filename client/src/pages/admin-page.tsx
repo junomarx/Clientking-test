@@ -286,11 +286,15 @@ function UserTable() {
                   <TableCell>
                     {user.companyName || "-"}
                   </TableCell>
-                  <TableCell className="font-medium text-center">
-                    {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : 2}
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="bg-gray-50 font-medium">
+                      {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : 2}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="font-medium text-center">
-                    {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : 8}
+                  <TableCell className="text-center">
+                    <Badge variant="outline" className="bg-gray-50 font-medium">
+                      {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : 8}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Switch 
