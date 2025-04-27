@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
+import { Redirect, Link } from "wouter";
 import { Loader2 } from "lucide-react";
 
 // Login schema
@@ -174,7 +174,7 @@ export default function AuthPage() {
                         <input type="checkbox" id="keep-signed" className="rounded text-blue-500 focus:ring-blue-500" />
                         <label htmlFor="keep-signed" className="text-sm text-gray-600">Angemeldet bleiben</label>
                       </div>
-                      <a href="#" className="text-sm text-blue-500 hover:underline">Passwort vergessen?</a>
+                      <Link href="/forgot-password" className="text-sm text-blue-500 hover:underline">Passwort vergessen?</Link>
                     </div>
                     
                     <Button 
