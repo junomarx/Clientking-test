@@ -806,8 +806,10 @@ export class DatabaseStorage implements IStorage {
         // Extrahiere den geschätzten Kostenwert
         const cost = this.extractNumberFromString(repair.estimatedCost || '0');
         
-        // Addiere zum Gesamtumsatz
-        revenue.total += cost;
+        // Der Gesamtumsatz wird nur aus Reparaturen mit Status "abgeholt" berechnet
+        if (repair.status === 'abgeholt') {
+          revenue.total += cost;
+        }
         
         // Gruppiere nach Status
         const status = repair.status;
