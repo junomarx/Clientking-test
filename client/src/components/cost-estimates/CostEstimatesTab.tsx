@@ -301,7 +301,7 @@ export default function CostEstimatesTab() {
                                   <FileText className="w-4 h-4" />
                                 </Button>
                               </SheetTrigger>
-                              <SheetContent className="w-[95%] md:w-[950px] sm:max-w-full overflow-y-auto" side="right">
+                              <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
                                 <SheetHeader>
                                   <SheetTitle>Kostenvoranschlag Details</SheetTitle>
                                 </SheetHeader>
@@ -321,7 +321,7 @@ export default function CostEstimatesTab() {
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </SheetTrigger>
-                              <SheetContent className="w-[95%] md:w-[950px] sm:max-w-full overflow-y-auto" side="right">
+                              <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
                                 <SheetHeader>
                                   <SheetTitle>Kostenvoranschlag bearbeiten</SheetTitle>
                                 </SheetHeader>

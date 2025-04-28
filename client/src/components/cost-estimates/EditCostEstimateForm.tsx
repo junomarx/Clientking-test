@@ -144,6 +144,42 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
     return date;
   };
   
+  // Berechnet alle Summen und formatiert die Preise für den Kostenvoranschlag
+  const calculateTotals = (data: FormValues) => {
+    // Stelle sicher, dass alle Preise korrekt formatiert sind
+    const items = data.items.map(item => ({
+      ...item,
+      unitPrice: formatPrice(item.unitPrice),
+      totalPrice: formatPrice(item.totalPrice),
+    }));
+    
+    // Extrahiere alle Preise aus den Positionen
+    const itemPrices = items.map(item => {
+      const priceStr = item.totalPrice.replace(/[^\d,]/g, '');
+      return parseFloat(priceStr.replace(',', '.'));
+    });
+    
+    // Berechne die Zwischensumme
+    const subtotalValue = itemPrices.reduce((sum, price) => sum + (isNaN(price) ? 0 : price), 0);
+    const subtotal = subtotalValue.toFixed(2).replace('.', ',') + ' €';
+    
+    // Berechne die MwSt
+    const taxRateValue = parseFloat(data.taxRate);
+    const taxAmountValue = subtotalValue * (taxRateValue / 100);
+    const taxAmount = taxAmountValue.toFixed(2).replace('.', ',') + ' €';
+    
+    // Berechne die Gesamtsumme
+    const totalValue = subtotalValue + taxAmountValue;
+    const total = totalValue.toFixed(2).replace('.', ',') + ' €';
+    
+    return {
+      items,
+      subtotal,
+      taxAmount,
+      total
+    };
+  };
+
   // Berechne die Gesamtpreise automatisch, wenn sich die Menge oder der Einzelpreis ändert
   const updateTotalPrice = (index: number) => {
     const items = form.getValues("items");
@@ -234,14 +270,17 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
   
   // Formular absenden
   const onSubmit = (data: FormValues) => {
-    // Stelle sicher, dass alle Preise korrekt formatiert sind
+    // Berechne alle Preise mit der zuvor definierten Funktion
+    const { items, subtotal, taxAmount, total } = calculateTotals(data);
+    
+    // Bereite die Daten für das Absenden vor
     const formattedData = {
       ...data,
-      items: data.items.map(item => ({
-        ...item,
-        unitPrice: formatPrice(item.unitPrice),
-        totalPrice: formatPrice(item.totalPrice),
-      })),
+      validUntil: data.validUntil ? formatDate(data.validUntil) : undefined,
+      items,
+      subtotal,
+      taxAmount,
+      total
     };
     
     updateMutation.mutate(formattedData);
