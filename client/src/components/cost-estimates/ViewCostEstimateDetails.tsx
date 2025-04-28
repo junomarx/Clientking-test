@@ -187,13 +187,27 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       <div ref={contentRef} className="space-y-6 p-4">
         {/* Briefkopf mit Unternehmensdaten und Kundeninformationen */}
         <div className="flex justify-between items-start">
-          {/* Kundeninformationen - Links */}
-          <div className="space-y-1">
-            <h3 className="font-medium mb-2">Kundeninformationen</h3>
-            <div>
-              <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
-              <p>{estimate.customer?.address}</p>
-              <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
+          {/* Linke Spalte: Logo und Kundeninformationen */}
+          <div className="space-y-4">
+            {/* Logo zuerst */}
+            {businessData.logoImage && (
+              <div className="mb-6">
+                <img 
+                  src={businessData.logoImage} 
+                  alt="Unternehmenslogo" 
+                  className="max-h-20 max-w-[200px] object-contain"
+                />
+              </div>
+            )}
+            
+            {/* Kundeninformationen darunter */}
+            <div className="mt-8 space-y-1">
+              <h3 className="font-medium mb-2">Kundeninformationen</h3>
+              <div>
+                <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
+                <p>{estimate.customer?.address}</p>
+                <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
+              </div>
             </div>
           </div>
           
