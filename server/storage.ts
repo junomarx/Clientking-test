@@ -1344,10 +1344,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(costEstimates.createdAt));
   }
   
-  async getCostEstimate(id: number, currentUserId?: number): Promise<CostEstimate | undefined> {
+  async getCostEstimate(id: number, currentUserId?: number): Promise<(CostEstimate & { customer?: any }) | undefined> {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
     const [estimate] = await db
       .select()
       .from(costEstimates)
@@ -1357,6 +1358,23 @@ export class DatabaseStorage implements IStorage {
           eq(costEstimates.userId, currentUserId)
         )
       );
+    
+    if (!estimate) {
+      return undefined;
+    }
+    
+    // Kundeninformationen aus der Datenbank abrufen
+    if (estimate.customerId) {
+      const customer = await this.getCustomer(estimate.customerId, currentUserId);
+      if (customer) {
+        // Kombiniere Kostenvoranschlag mit Kundendaten
+        return {
+          ...estimate,
+          customer
+        };
+      }
+    }
+    
     return estimate;
   }
   
