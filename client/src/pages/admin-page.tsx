@@ -492,8 +492,6 @@ function SystemDiagnosticTab() {
       setSystemInfo({
         dbSize: 3.8, // MB
         numUsers: 3,
-        numRepairs: 13, // Korrekter Wert aus den Logs
-        numCustomers: 4, // Korrekter Wert, wie vom Benutzer angegeben
         uptime: 5 // Tage (korrekte Anzahl seit Projektbeginn)
       });
       

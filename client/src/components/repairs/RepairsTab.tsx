@@ -18,7 +18,19 @@ import {
 import { EditRepairDialog } from './EditRepairDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { Pencil, Printer, Trash2, AlertCircle, Tag, Star, Mail } from 'lucide-react';
+import { 
+  Pencil, 
+  Printer, 
+  Trash2, 
+  AlertCircle, 
+  Tag, 
+  Star, 
+  Mail,
+  ChevronLeft, 
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
+} from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 
 interface RepairsTabProps {
@@ -44,6 +56,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   
   // For tracking if we're filtering by today's orders
   const [filterByToday, setFilterByToday] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const itemsPerPageOptions = [10, 20, 50, 100];
   
   // Mutation zum Senden von Bewertungsanfragen
   const sendReviewRequestMutation = useMutation({
@@ -259,6 +276,45 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const handleSendReviewRequest = (repairId: number) => {
     sendReviewRequestMutation.mutate(repairId);
   };
+  
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRepairs.length / itemsPerPage);
+  const paginatedRepairs = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredRepairs.slice(startIndex, endIndex);
+  }, [filteredRepairs, currentPage, itemsPerPage]);
+  
+  // Reset pagination when filtering changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, filterByToday]);
+  
+  // Pagination handlers
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  const handleFirstPage = () => {
+    setCurrentPage(1);
+  };
+  
+  const handleLastPage = () => {
+    setCurrentPage(totalPages);
+  };
+  
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
 
   return (
     <div>
@@ -328,7 +384,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   <td colSpan={8} className="py-4 text-center text-gray-500">Keine Reparaturen gefunden</td>
                 </tr>
               ) : (
-                filteredRepairs.map(repair => (
+                paginatedRepairs.map(repair => (
                   <tr key={repair.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
                     <td className="py-3 px-4">{repair.orderCode || `#${repair.id}`}</td>
                     <td className="py-3 px-4">{repair.customerName}</td>
@@ -401,6 +457,76 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               {/* Summenzeile wurde entfernt und ist nun nur noch im Statistik-Tab verfügbar */}
             </tbody>
           </table>
+          
+          {/* Pagination controls */}
+          {filteredRepairs.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  Zeige {paginatedRepairs.length} von {filteredRepairs.length} Einträgen
+                </span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={handleItemsPerPageChange}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Einträge pro Seite" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {itemsPerPageOptions.map(option => (
+                      <SelectItem key={option} value={option.toString()}>
+                        {option} pro Seite
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleFirstPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="mx-2 text-sm">
+                  Seite {currentPage} von {totalPages || 1}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleNextPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleLastPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
