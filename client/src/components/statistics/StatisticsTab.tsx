@@ -169,9 +169,9 @@ export function StatisticsTab() {
   };
 
   // Datumsbereich basierend auf der ausgewählten Option berechnen
-  const getDateRange = () => {
+  const getDateRange = (rangeType: string) => {
     // Wenn benutzerdefinierter Zeitraum aktiv ist, verwende diese Daten
-    if (customDateRangeActive && customDateStart && customDateEnd) {
+    if (rangeType === timeRange && customDateRangeActive && customDateStart && customDateEnd) {
       // Setze den Endzeitpunkt auf das Ende des Tages für korrekten Vergleich
       const endWithTime = new Date(customDateEnd);
       endWithTime.setHours(23, 59, 59, 999);
@@ -179,7 +179,7 @@ export function StatisticsTab() {
     }
 
     const now = new Date();
-    switch(timeRange) {
+    switch(rangeType) {
       case '7days':
         return { start: subDays(now, 7), end: now };
       case '30days':
@@ -197,7 +197,9 @@ export function StatisticsTab() {
     }
   };
 
-  const dateRange = getDateRange();
+  // Separate date ranges for general statistics and revenue statistics
+  const dateRange = getDateRange(timeRange);
+  const revenueDateRange = getDateRange(revenueTimeRange);
   
   // Abfrage für allgemeine Statistiken mit Zeitraumfilterung
   const statsQueryParams = new URLSearchParams();
@@ -220,13 +222,28 @@ export function StatisticsTab() {
       return await res.json();
     }
   });
+  
+  // Separate Abfrage für Umsatzstatistiken mit eigenem Zeitraumfilter
+  const revenueQueryParams = new URLSearchParams();
+  if (revenueDateRange.start) revenueQueryParams.append('startDate', revenueDateRange.start.toISOString());
+  if (revenueDateRange.end) revenueQueryParams.append('endDate', revenueDateRange.end.toISOString());
+  // Parameter für die Umsatzberechnung basierend auf Abholung (pickedUp status)
+  revenueQueryParams.append('revenueBasedOnPickup', 'true');
+  
+  const { data: revenueStats, isLoading: revenueStatsLoading } = useQuery<DetailedStats>({
+    queryKey: ['/api/stats/detailed', 'revenue', revenueTimeRange],
+    queryFn: async () => {
+      const res = await fetch(`/api/stats/detailed?${revenueQueryParams.toString()}`);
+      return await res.json();
+    }
+  });
 
   // Alle Reparaturen für Export
   const { data: repairs } = useQuery<Repair[]>({
     queryKey: ['/api/repairs'],
   });
 
-  const isLoading = statsLoading || detailedStatsLoading;
+  const isLoading = statsLoading || detailedStatsLoading || revenueStatsLoading;
 
   if (isLoading) {
     return (
@@ -266,7 +283,7 @@ export function StatisticsTab() {
   // Neueste Reparaturen
   const recentRepairs = detailedStats?.mostRecentRepairs || [];
   
-  // Daten für Umsatz-Diagramme vorbereiten
+  // Daten für Umsatz-Diagramme für allgemeine Statistiken vorbereiten
   const revenueByStatusData = detailedStats?.revenue?.byStatus
     ? Object.entries(detailedStats.revenue.byStatus).map(([key, value]) => ({
         name: key,
@@ -274,7 +291,6 @@ export function StatisticsTab() {
       }))
     : [];
     
-  // Daten für Umsatz nach Monat vorbereiten
   const revenueByMonthData = detailedStats?.revenue?.byMonth
     ? Object.entries(detailedStats.revenue.byMonth)
         .sort((a, b) => parseInt(a[0]) - parseInt(b[0])) // Nach Monatsnummer sortieren
@@ -286,6 +302,28 @@ export function StatisticsTab() {
           return {
             name,
             value: parseFloat(value.toFixed(2)) // Die Werte kommen jetzt direkt als Euro
+          };
+        })
+    : [];
+    
+  // Daten für die separate Umsatz-Ansicht mit eigener Filterung
+  const filteredRevenueByStatusData = revenueStats?.revenue?.byStatus
+    ? Object.entries(revenueStats.revenue.byStatus).map(([key, value]) => ({
+        name: key,
+        value: parseFloat(value.toFixed(2))
+      }))
+    : [];
+    
+  const filteredRevenueByMonthData = revenueStats?.revenue?.byMonth
+    ? Object.entries(revenueStats.revenue.byMonth)
+        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+        .map(([key, value]) => {
+          const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+          const monthIndex = parseInt(key) - 1;
+          const name = monthNames[monthIndex];
+          return {
+            name,
+            value: parseFloat(value.toFixed(2))
           };
         })
     : [];
@@ -1000,6 +1038,37 @@ export function StatisticsTab() {
         </TabsContent>
 
         <TabsContent value="revenue">
+          {/* Umsatz-Filter-Header */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4 p-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-md font-semibold text-primary">Umsatzstatistik</h3>
+              {revenueStats?.revenue && (
+                <Badge variant="outline" className="bg-amber-50 ml-2">
+                  {revenueStats.revenue.total.toFixed(2)} €
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-600" />
+              <Select 
+                value={revenueTimeRange} 
+                onValueChange={setRevenueTimeRange}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Zeitraum wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeRangeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Gesamtumsatz Card */}
             <Card className="col-span-1 md:col-span-2">
@@ -1013,7 +1082,7 @@ export function StatisticsTab() {
                     <Euro className="h-8 w-8 text-blue-600 mb-2" />
                     <p className="text-sm font-medium text-blue-800">Gesamtumsatz</p>
                     <h3 className="text-3xl font-bold text-blue-900">
-                      {detailedStats?.revenue ? detailedStats.revenue.total.toFixed(2) : '0.00'} €
+                      {revenueStats?.revenue ? revenueStats.revenue.total.toFixed(2) : '0.00'} €
                     </h3>
                   </div>
                   
