@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
   const handleNewOrder = (customerId?: number) => {
+    console.log("Home: handleNewOrder aufgerufen mit Kunden-ID:", customerId);
     if (customerId) {
       setSelectedCustomerId(customerId);
     } else {

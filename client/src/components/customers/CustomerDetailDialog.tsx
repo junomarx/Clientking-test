@@ -197,6 +197,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   
   function handleNewOrder() {
     if (customerId && onNewOrder) {
+      console.log("CustomerDetailDialog: onNewOrder aufgerufen mit Kunden-ID:", customerId);
       onNewOrder(customerId);
       onClose();
     }

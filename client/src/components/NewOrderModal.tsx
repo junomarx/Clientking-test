@@ -129,6 +129,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Laden des vorausgewählten Kunden
   useEffect(() => {
     if (open && customerId) {
+      console.log("Versuche Kunde zu laden mit ID:", customerId);
       const fetchCustomer = async () => {
         try {
           const response = await fetch(`/api/customers/${customerId}`, {
@@ -142,6 +143,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           }
           
           const customer = await response.json();
+          console.log("Kunde geladen:", customer);
           
           if (customer) {
             // Kundendaten in Formular eintragen
