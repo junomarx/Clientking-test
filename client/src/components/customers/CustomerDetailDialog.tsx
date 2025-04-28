@@ -233,15 +233,6 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           </TabsList>
           
           <TabsContent value="details" className="space-y-4 mt-4">
-            <div className="flex justify-end mb-4">
-              <Button 
-                onClick={handleNewOrder} 
-                className="flex items-center"
-                variant="secondary"
-              >
-                <Plus className="mr-1 h-4 w-4" /> Neuer Auftrag
-              </Button>
-            </div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
