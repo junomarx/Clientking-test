@@ -548,6 +548,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 } else if (value === 'abgeholt') {
                   setSendEmail(true); // Auto-select review request option when status is set to "abgeholt"
                   setSendSms(false);
+                } else if (value === 'ersatzteil_eingetroffen') {
+                  setSendEmail(true); // Auto-select email option when status is set to "ersatzteil_eingetroffen"
+                  setSendSms(false);
                 } else {
                   setSendEmail(false);
                   setSendSms(false);
@@ -593,6 +596,25 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   />
                   <label htmlFor="sendSms">
                     SMS-Benachrichtigung an Kunden senden
+                  </label>
+                </div>
+              </div>
+            )}
+            
+            {/* Benachrichtigungsoptionen für "ersatzteil_eingetroffen" Status */}
+            {newStatus === 'ersatzteil_eingetroffen' && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sendSparepartEmail"
+                    className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                  />
+                  <label htmlFor="sendSparepartEmail" className="flex items-center gap-1">
+                    <Mail className="h-4 w-4 text-teal-500" /> 
+                    E-Mail über Ersatzteillieferung senden
                   </label>
                 </div>
               </div>
