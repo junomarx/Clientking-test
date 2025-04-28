@@ -187,42 +187,41 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       <div ref={contentRef} className="space-y-6 p-4">
         {/* Briefkopf mit Unternehmensdaten und Kundeninformationen */}
         <div className="flex justify-between items-start">
-          {/* Unternehmensdaten */}
+          {/* Kundeninformationen - Links */}
           <div className="space-y-1">
-            <h1 className="text-xl font-bold">{businessData.businessName}</h1>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Building className="w-4 h-4 mr-1" />
-              <span>{businessData.address}</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span>{businessData.zipCode} {businessData.city}</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Phone className="w-4 h-4 mr-1" />
-              <span>{businessData.phone}</span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Mail className="w-4 h-4 mr-1" />
-              <span>{businessData.email}</span>
+            <h3 className="font-medium mb-2">Kundeninformationen</h3>
+            <div className="border p-4 inline-block">
+              <p className="font-bold">{estimate.customerName}</p>
+              {estimate.customer && (
+                <>
+                  {estimate.customer.address && <p>{estimate.customer.address}</p>}
+                  {estimate.customer.zipCode && estimate.customer.city && (
+                    <p>{estimate.customer.zipCode} {estimate.customer.city}</p>
+                  )}
+                  {estimate.customer.phone && <p>{estimate.customer.phone}</p>}
+                  {estimate.customer.email && <p>{estimate.customer.email}</p>}
+                </>
+              )}
             </div>
           </div>
           
-          {/* Kundeninformationen */}
+          {/* Unternehmensdaten - Rechts */}
           <div className="text-right">
-            <div className="border p-4 mb-2 inline-block text-left">
-              <p className="font-bold">{estimate.customerName}</p>
-            </div>
-            <div>
+            <h1 className="text-xl font-bold">{businessData.businessName}</h1>
+            <p className="text-sm text-muted-foreground">{businessData.address}</p>
+            <p className="text-sm text-muted-foreground">{businessData.zipCode} {businessData.city}</p>
+            <p className="text-sm text-muted-foreground">{businessData.phone}</p>
+            <p className="text-sm text-muted-foreground">{businessData.email}</p>
+            <div className="mt-4">
               <p className="text-muted-foreground text-sm">Referenznummer: {estimate.referenceNumber}</p>
               <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
-              <StatusBadge status={estimate.status} />
+              <p className="text-muted-foreground text-sm print:hidden">Status: {estimate.status}</p>
             </div>
           </div>
         </div>
         
         <div className="my-8">
-          <h2 className="text-2xl font-bold text-center mb-2">{estimate.title}</h2>
+          <h2 className="text-2xl font-bold text-center mb-2">Kostenvoranschlag</h2>
           <p className="text-center text-muted-foreground">Gültig bis: {validUntilFormatted}</p>
         </div>
         
