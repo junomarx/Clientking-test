@@ -14,8 +14,14 @@ type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimate
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
-  const handleNewOrder = () => {
+  const handleNewOrder = (customerId?: number) => {
+    if (customerId) {
+      setSelectedCustomerId(customerId);
+    } else {
+      setSelectedCustomerId(null);
+    }
     setIsNewOrderModalOpen(true);
   };
   
@@ -53,7 +59,8 @@ export default function Home() {
       
       <NewOrderModal 
         open={isNewOrderModalOpen} 
-        onClose={() => setIsNewOrderModalOpen(false)} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={selectedCustomerId}
       />
     </div>
   );
