@@ -204,8 +204,7 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
         // Setze Formularwerte
         form.reset({
           customerId: estimate.customerId,
-          title: estimate.title,
-          description: estimate.description || '',
+          title: "Kostenvoranschlag",
           deviceType: estimate.deviceType,
           brand: estimate.brand,
           model: estimate.model,

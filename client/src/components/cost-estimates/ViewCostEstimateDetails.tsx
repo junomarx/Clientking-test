@@ -257,13 +257,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         
 
         
-        {/* Beschreibung */}
-        {estimate.description && (
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Beschreibung</h3>
-            <p className="whitespace-pre-line">{estimate.description}</p>
-          </div>
-        )}
+        {/* Beschreibungsfeld entfernt */}
         
         {/* Positionen */}
         <div className="mt-6">

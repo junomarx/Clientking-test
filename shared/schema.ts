@@ -297,8 +297,7 @@ export const insertCostEstimateSchema = z.object({
   customerId: z.number({
     required_error: "Kunde ist erforderlich",
   }),
-  title: z.string().min(1, "Titel ist erforderlich"),
-  description: z.string().optional(),
+  title: z.string().default("Kostenvoranschlag"),
   deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
   brand: z.string().min(1, "Marke ist erforderlich"),
   model: z.string().min(1, "Modell ist erforderlich"),
