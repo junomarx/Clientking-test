@@ -30,6 +30,40 @@
   }
 }
 
+/* Klasse für PDF-Modus, die dieselben Styles wie @media print anwendet */
+.pdf-mode .screen-only {
+  display: none !important;
+}
+
+.pdf-mode .print-no-border {
+  border: none !important;
+}
+
+.pdf-mode .print-border-none * {
+  border: none !important;
+}
+
+.pdf-mode table, 
+.pdf-mode tr, 
+.pdf-mode td, 
+.pdf-mode th {
+  border: none !important;
+  border-collapse: collapse !important;
+}
+
+.pdf-mode input, 
+.pdf-mode select, 
+.pdf-mode textarea, 
+.pdf-mode .border, 
+.pdf-mode [class*="border-"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pdf-mode .hidden.print\:block {
+  display: block !important;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 20 14.3% 4.1%;

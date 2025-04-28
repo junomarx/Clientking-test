@@ -37,6 +37,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
+  const [isPdfMode, setIsPdfMode] = useState(false);
   
   // Kostenvoranschlag abrufen
   const { data: estimate, isLoading: isLoadingEstimate, isError: isErrorEstimate, refetch } = useQuery({
@@ -84,6 +85,12 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
     });
     
     try {
+      // PDF-Modus aktivieren und warten, bis das DOM aktualisiert wurde
+      setIsPdfMode(true);
+      
+      // Warten auf DOM-Update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const content = contentRef.current;
       const canvas = await html2canvas(content, {
         scale: 2,
@@ -91,6 +98,9 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         logging: false,
         allowTaint: true,
       });
+      
+      // PDF-Modus nach der Erfassung deaktivieren
+      setIsPdfMode(false);
       
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
@@ -111,6 +121,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       });
     } catch (error) {
       console.error('Fehler beim Erstellen des PDFs:', error);
+      setIsPdfMode(false); // Sicherstellen, dass der PDF-Modus deaktiviert wird
       toast({
         title: "Fehler",
         description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
@@ -184,7 +195,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       </div>
       
       {/* Inhaltsbereich für PDF-Export */}
-      <div ref={contentRef} className="space-y-6 p-4">
+      <div ref={contentRef} className={`space-y-6 p-4 ${isPdfMode ? 'pdf-mode' : ''}`}>
         {/* Briefkopf mit Unternehmensdaten und Kundeninformationen */}
         <div className="flex justify-between items-start">
           {/* Linke Spalte: Logo und Kundeninformationen */}
