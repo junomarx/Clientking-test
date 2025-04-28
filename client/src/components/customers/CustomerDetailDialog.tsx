@@ -24,6 +24,9 @@ const customerSchema = z.object({
   lastName: z.string().min(2, "Nachname muss mindestens 2 Zeichen haben"),
   phone: z.string().min(5, "Telefonnummer muss mindestens 5 Zeichen haben"),
   email: z.string().email("Ungültige E-Mail").optional().or(z.literal('')).transform(e => e === '' ? null : e),
+  address: z.string().optional().or(z.literal('')),
+  zipCode: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -101,6 +104,9 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         lastName: customer.lastName,
         phone: customer.phone,
         email: customer.email || '',
+        address: customer.address || '',
+        zipCode: customer.zipCode || '',
+        city: customer.city || '',
       });
     }
   }, [customer, form]);
@@ -285,6 +291,50 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                     </FormItem>
                   )}
                 />
+                
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Adresse (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Straße und Hausnummer" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PLZ (optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Postleitzahl" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ort (optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Stadt" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="flex justify-between pt-2">
                   <div className="flex space-x-2">
