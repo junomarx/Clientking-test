@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format, addMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CalendarIcon, Plus, Trash, Euro } from 'lucide-react';
+import { CalendarIcon, Plus, Trash, Euro, UserPlus } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -29,8 +29,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Schema für einen einzelnen Posten im Kostenvoranschlag
 const estimateItemSchema = z.object({
@@ -65,8 +74,24 @@ interface CreateCostEstimateFormProps {
   onSuccess?: () => void;
 }
 
+// Schema für einen neuen Kunden
+const newCustomerSchema = z.object({
+  firstName: z.string().min(1, "Vorname ist erforderlich"),
+  lastName: z.string().min(1, "Nachname ist erforderlich"),
+  email: z.string().email("Bitte geben Sie eine gültige E-Mail ein").optional().or(z.literal("")),
+  phone: z.string().min(1, "Telefonnummer ist erforderlich"),
+  street: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type NewCustomerFormValues = z.infer<typeof newCustomerSchema>;
+
 export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimateFormProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   
   // Query für Kunden
   const { data: customers, isLoading: isLoadingCustomers } = useQuery({
@@ -77,6 +102,54 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
         throw new Error('Fehler beim Laden der Kunden');
       }
       return response.json();
+    }
+  });
+  
+  // Formular für neuen Kunden
+  const customerForm = useForm<NewCustomerFormValues>({
+    resolver: zodResolver(newCustomerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      street: "",
+      city: "",
+      postalCode: "",
+      notes: "",
+    },
+  });
+  
+  // Mutation zum Erstellen eines neuen Kunden
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: NewCustomerFormValues) => {
+      const response = await apiRequest("POST", "/api/customers", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Fehler beim Erstellen des Kunden");
+      }
+      return response.json();
+    },
+    onSuccess: (newCustomer) => {
+      toast({
+        title: "Erfolg",
+        description: "Kunde wurde erfolgreich erstellt"
+      });
+      customerForm.reset();
+      setIsNewCustomerDialogOpen(false);
+      
+      // Kundenliste aktualisieren
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      
+      // Den neuen Kunden im Kostenvoranschlag auswählen
+      form.setValue("customerId", newCustomer.id);
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
   
@@ -170,16 +243,54 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     }
   });
   
+  // Berechne alle Preise für den Kostenvoranschlag
+  const calculateTotals = (data: FormValues) => {
+    // Stelle sicher, dass alle Preise korrekt formatiert sind
+    const items = data.items.map(item => ({
+      ...item,
+      unitPrice: formatPrice(item.unitPrice),
+      totalPrice: formatPrice(item.totalPrice),
+    }));
+    
+    // Extrahiere alle Preise aus den Positionen
+    const itemPrices = items.map(item => {
+      const priceStr = item.totalPrice.replace(/[^\d,]/g, '');
+      return parseFloat(priceStr.replace(',', '.'));
+    });
+    
+    // Berechne die Zwischensumme
+    const subtotalValue = itemPrices.reduce((sum, price) => sum + (isNaN(price) ? 0 : price), 0);
+    const subtotal = subtotalValue.toFixed(2).replace('.', ',') + ' €';
+    
+    // Berechne die MwSt
+    const taxRateValue = parseFloat(data.taxRate);
+    const taxAmountValue = subtotalValue * (taxRateValue / 100);
+    const taxAmount = taxAmountValue.toFixed(2).replace('.', ',') + ' €';
+    
+    // Berechne die Gesamtsumme
+    const totalValue = subtotalValue + taxAmountValue;
+    const total = totalValue.toFixed(2).replace('.', ',') + ' €';
+    
+    return {
+      items,
+      subtotal,
+      taxAmount,
+      total
+    };
+  };
+  
   // Formular absenden
   const onSubmit = (data: FormValues) => {
-    // Stelle sicher, dass alle Preise korrekt formatiert sind
+    // Berechne alle Preise
+    const { items, subtotal, taxAmount, total } = calculateTotals(data);
+    
+    // Bereite die Daten für das Absenden vor
     const formattedData = {
       ...data,
-      items: data.items.map(item => ({
-        ...item,
-        unitPrice: formatPrice(item.unitPrice),
-        totalPrice: formatPrice(item.totalPrice),
-      })),
+      items,
+      subtotal,
+      taxAmount,
+      total
     };
     
     createMutation.mutate(formattedData);
@@ -189,33 +300,181 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
         {/* Kundenauswahl */}
-        <FormField
-          control={form.control}
-          name="customerId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Kunde</FormLabel>
-              <Select 
-                onValueChange={(value) => field.onChange(parseInt(value))} 
-                value={field.value?.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Kunden auswählen" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {customers?.map((customer: any) => (
-                    <SelectItem key={customer.id} value={customer.id.toString()}>
-                      {customer.firstName} {customer.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex items-end space-x-2">
+          <div className="flex-1">
+            <FormField
+              control={form.control}
+              name="customerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kunde</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kunden auswählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers?.map((customer: any) => (
+                        <SelectItem key={customer.id} value={customer.id.toString()}>
+                          {customer.firstName} {customer.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" type="button" className="flex items-center gap-1">
+                <UserPlus className="h-4 w-4" />
+                <span>Neu</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Neuen Kunden erstellen</DialogTitle>
+                <DialogDescription>
+                  Geben Sie die Details des neuen Kunden ein. Felder mit * sind Pflichtfelder.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...customerForm}>
+                <form onSubmit={customerForm.handleSubmit((data) => createCustomerMutation.mutate(data))} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={customerForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vorname *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={customerForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nachname *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={customerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-Mail</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={customerForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefon *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-12 gap-4">
+                    <div className="col-span-12 md:col-span-8">
+                      <FormField
+                        control={customerForm.control}
+                        name="street"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Straße</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-4 md:col-span-4">
+                      <FormField
+                        control={customerForm.control}
+                        name="postalCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>PLZ</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="col-span-8 md:col-span-8">
+                      <FormField
+                        control={customerForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ort</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  <FormField
+                    control={customerForm.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notizen</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={3} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsNewCustomerDialogOpen(false)}>
+                      Abbrechen
+                    </Button>
+                    <Button type="submit" disabled={createCustomerMutation.isPending}>
+                      {createCustomerMutation.isPending ? "Wird erstellt..." : "Kunde erstellen"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
         
         {/* Titel und Beschreibung */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
