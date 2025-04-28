@@ -9,6 +9,8 @@ import {
   insertSmsTemplateSchema,
   insertUserDeviceTypeSchema,
   insertUserBrandSchema,
+  insertCostEstimateSchema,
+  costEstimateItemSchema,
   repairStatuses,
   deviceTypes,
   customers,
@@ -16,7 +18,8 @@ import {
   feedbacks,
   smsTemplates,
   userDeviceTypes,
-  userBrands
+  userBrands,
+  costEstimates
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";

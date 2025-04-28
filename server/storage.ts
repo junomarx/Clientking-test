@@ -1325,6 +1325,249 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Die Device Types und Brands Management Methoden wurden entfernt
+  
+  // Kostenvoranschlag-Methoden (CostEstimate)
+  async getAllCostEstimates(currentUserId?: number): Promise<CostEstimate[]> {
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
+    }
+    return await db
+      .select()
+      .from(costEstimates)
+      .where(eq(costEstimates.userId, currentUserId))
+      .orderBy(desc(costEstimates.createdAt));
+  }
+  
+  async getCostEstimate(id: number, currentUserId?: number): Promise<CostEstimate | undefined> {
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
+    }
+    const [estimate] = await db
+      .select()
+      .from(costEstimates)
+      .where(
+        and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.userId, currentUserId)
+        )
+      );
+    return estimate;
+  }
+  
+  async getCostEstimatesByCustomerId(customerId: number, currentUserId?: number): Promise<CostEstimate[]> {
+    if (!currentUserId) {
+      return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
+    }
+    return await db
+      .select()
+      .from(costEstimates)
+      .where(
+        and(
+          eq(costEstimates.customerId, customerId),
+          eq(costEstimates.userId, currentUserId)
+        )
+      )
+      .orderBy(desc(costEstimates.createdAt));
+  }
+  
+  async createCostEstimate(estimate: InsertCostEstimate, currentUserId?: number): Promise<CostEstimate> {
+    const now = new Date();
+    
+    // Generiere eine eindeutige Referenznummer für den Kostenvoranschlag
+    const referenceNumber = await this.generateUniqueReferenceNumber();
+    
+    // Berechne die Summen neu, um sicherzustellen, dass sie korrekt sind
+    const items = Array.isArray(estimate.items) ? estimate.items : [];
+    
+    // Extrahiere alle Preise aus den Positionen
+    const itemPrices = items.map(item => this.extractNumberFromString(item.totalPrice));
+    
+    // Berechne die Zwischensumme
+    const subtotalValue = itemPrices.reduce((sum, price) => sum + price, 0);
+    const subtotal = subtotalValue.toFixed(2) + ' €';
+    
+    // Berechne die MwSt
+    const taxRateValue = this.extractNumberFromString(estimate.taxRate || '20');
+    const taxAmountValue = subtotalValue * (taxRateValue / 100);
+    const taxAmount = taxAmountValue.toFixed(2) + ' €';
+    
+    // Berechne die Gesamtsumme
+    const totalValue = subtotalValue + taxAmountValue;
+    const total = totalValue.toFixed(2) + ' €';
+    
+    const costEstimateData = {
+      ...estimate,
+      referenceNumber,
+      subtotal,
+      taxAmount,
+      total,
+      createdAt: now,
+      updatedAt: now,
+      userId: currentUserId
+    };
+    
+    const [newEstimate] = await db.insert(costEstimates)
+      .values(costEstimateData)
+      .returning();
+    
+    return newEstimate;
+  }
+  
+  async updateCostEstimate(id: number, estimateUpdate: Partial<InsertCostEstimate>, currentUserId?: number): Promise<CostEstimate | undefined> {
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
+    }
+    
+    // Aktuellen Kostenvoranschlag abrufen
+    const currentEstimate = await this.getCostEstimate(id, currentUserId);
+    if (!currentEstimate) {
+      return undefined;
+    }
+    
+    // Wenn die Items aktualisiert werden, berechne die Summen neu
+    let updateData: any = { ...estimateUpdate, updatedAt: new Date() };
+    
+    if (estimateUpdate.items) {
+      const items = Array.isArray(estimateUpdate.items) ? estimateUpdate.items : [];
+      
+      // Extrahiere alle Preise aus den Positionen
+      const itemPrices = items.map(item => this.extractNumberFromString(item.totalPrice));
+      
+      // Berechne die Zwischensumme
+      const subtotalValue = itemPrices.reduce((sum, price) => sum + price, 0);
+      updateData.subtotal = subtotalValue.toFixed(2) + ' €';
+      
+      // Berechne die MwSt
+      const taxRateValue = this.extractNumberFromString(estimateUpdate.taxRate || currentEstimate.taxRate);
+      const taxAmountValue = subtotalValue * (taxRateValue / 100);
+      updateData.taxAmount = taxAmountValue.toFixed(2) + ' €';
+      
+      // Berechne die Gesamtsumme
+      const totalValue = subtotalValue + taxAmountValue;
+      updateData.total = totalValue.toFixed(2) + ' €';
+    } else if (estimateUpdate.taxRate) {
+      // Wenn nur der Steuersatz aktualisiert wird, berechne MwSt und Gesamtsumme neu
+      const subtotalValue = this.extractNumberFromString(currentEstimate.subtotal);
+      const taxRateValue = this.extractNumberFromString(estimateUpdate.taxRate);
+      const taxAmountValue = subtotalValue * (taxRateValue / 100);
+      updateData.taxAmount = taxAmountValue.toFixed(2) + ' €';
+      
+      // Berechne die Gesamtsumme
+      const totalValue = subtotalValue + taxAmountValue;
+      updateData.total = totalValue.toFixed(2) + ' €';
+    }
+    
+    const [updatedEstimate] = await db
+      .update(costEstimates)
+      .set(updateData)
+      .where(
+        and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.userId, currentUserId)
+        )
+      )
+      .returning();
+    
+    return updatedEstimate;
+  }
+  
+  async updateCostEstimateStatus(id: number, status: string, currentUserId?: number): Promise<CostEstimate | undefined> {
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
+    }
+    
+    let updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    // Wenn der Status auf "angenommen" gesetzt wird, aktualisiere das Annahmedatum
+    if (status === 'angenommen') {
+      updateData.acceptedAt = new Date();
+    }
+    
+    const [updatedEstimate] = await db
+      .update(costEstimates)
+      .set(updateData)
+      .where(
+        and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.userId, currentUserId)
+        )
+      )
+      .returning();
+    
+    return updatedEstimate;
+  }
+  
+  async deleteCostEstimate(id: number, currentUserId?: number): Promise<boolean> {
+    try {
+      if (!currentUserId) {
+        return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
+      }
+      
+      await db.delete(costEstimates).where(
+        and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.userId, currentUserId)
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error("Error deleting cost estimate:", error);
+      return false;
+    }
+  }
+  
+  async convertToRepair(id: number, currentUserId?: number): Promise<Repair | undefined> {
+    if (!currentUserId) {
+      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
+    }
+    
+    // Kostenvoranschlag abrufen
+    const estimate = await this.getCostEstimate(id, currentUserId);
+    if (!estimate) {
+      return undefined;
+    }
+    
+    // Erstelle einen neuen Reparaturauftrag basierend auf dem Kostenvoranschlag
+    const repairData: InsertRepair = {
+      customerId: estimate.customerId,
+      deviceType: estimate.deviceType,
+      brand: estimate.brand,
+      model: estimate.model,
+      serialNumber: estimate.serialNumber,
+      issue: estimate.issue || estimate.title,
+      estimatedCost: estimate.total,
+      status: 'eingegangen',
+      notes: `Erstellt aus Kostenvoranschlag ${estimate.referenceNumber}. ${estimate.notes || ''}`.trim(),
+    };
+    
+    try {
+      // Reparatur erstellen
+      const repair = await this.createRepair(repairData, currentUserId);
+      
+      // Kostenvoranschlag als umgewandelt markieren
+      await db
+        .update(costEstimates)
+        .set({
+          convertedToRepair: true,
+          repairId: repair.id,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(costEstimates.id, id),
+            eq(costEstimates.userId, currentUserId)
+          )
+        );
+      
+      return repair;
+    } catch (error) {
+      console.error("Error converting cost estimate to repair:", error);
+      return undefined;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
