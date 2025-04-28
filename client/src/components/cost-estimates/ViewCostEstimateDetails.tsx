@@ -286,9 +286,9 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
                     <td className="pb-1 text-sm text-gray-700">Seriennummer</td>
                   </tr>
                   <tr>
-                    <td className="pt-1 text-sm">{estimate.brand}</td>
-                    <td className="pt-1 text-sm">{estimate.model}</td>
-                    <td className="pt-1 text-sm">{estimate.serialNumber || '–'}</td>
+                    <td className="pt-1">{estimate.brand}</td>
+                    <td className="pt-1">{estimate.model}</td>
+                    <td className="pt-1">{estimate.serialNumber || '–'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -296,7 +296,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             
             <div>
               <div className="text-sm text-gray-700 pb-1">Schaden am Gerät</div>
-              <div className="pt-1 text-sm">{estimate.issue || '–'}</div>
+              <div className="pt-1">{estimate.issue || '–'}</div>
             </div>
           </div>
         </div>
