@@ -269,7 +269,7 @@ export function StatisticsTab() {
   const revenueByStatusData = detailedStats?.revenue?.byStatus
     ? Object.entries(detailedStats.revenue.byStatus).map(([key, value]) => ({
         name: key,
-        value: parseFloat((value / 100).toFixed(2))  // Umwandlung in Euro mit 2 Dezimalstellen
+        value: parseFloat(value.toFixed(2))  // Die Werte kommen jetzt direkt als Euro
       }))
     : [];
     
@@ -284,7 +284,7 @@ export function StatisticsTab() {
           const name = monthNames[monthIndex];
           return {
             name,
-            value: parseFloat((value / 100).toFixed(2)) // Umwandlung in Euro mit 2 Dezimalstellen
+            value: parseFloat(value.toFixed(2)) // Die Werte kommen jetzt direkt als Euro
           };
         })
     : [];
