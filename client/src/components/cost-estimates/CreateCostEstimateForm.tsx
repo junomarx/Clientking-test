@@ -80,9 +80,9 @@ const newCustomerSchema = z.object({
   lastName: z.string().min(1, "Nachname ist erforderlich"),
   email: z.string().email("Bitte geben Sie eine gültige E-Mail ein").optional().or(z.literal("")),
   phone: z.string().min(1, "Telefonnummer ist erforderlich"),
-  street: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
+  address: z.string().optional().or(z.literal("")),
+  zipCode: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
   notes: z.string().optional(),
 });
 
