@@ -248,6 +248,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         }
       });
     }
+    // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung
+    else if (newStatus === 'ersatzteil_eingetroffen') {
+      console.log("Status wird auf 'ersatzteil_eingetroffen' gesetzt mit sendEmail:", sendEmail);
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus,
+        sendEmail: sendEmail
+      });
+    }
     // Alle anderen Statusänderungen ohne zusätzliche Funktionen
     else {
       updateStatusMutation.mutate({ 

@@ -451,7 +451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const newTemplate = await storage.createEmailTemplate({
                   name: "Ersatzteil eingetroffen",
                   subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
-                  html: `
+                  body: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                     <div style="text-align: center; margin-bottom: 20px;">
                       <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
