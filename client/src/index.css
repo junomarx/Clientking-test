@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@media print {
-  .screen-only {
-    display: none !important;
+@layer base {
+  @media print {
+    .screen-only {
+      display: none !important;
+    }
   }
 }
 

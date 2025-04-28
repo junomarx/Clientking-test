@@ -192,9 +192,10 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             <h3 className="font-medium mb-2">Kundeninformationen</h3>
             <div className="border p-4 inline-block">
               <p className="font-bold">{estimate.customerName}</p>
-              {/* Erweiterte Kundenanzeige - fügt verfügbare Daten ein */}
-              {estimate.customerPhone && <p>Tel: {estimate.customerPhone}</p>}
-              {estimate.customerEmail && <p>E-Mail: {estimate.customerEmail}</p>}
+              <p>{estimate.customer?.address}</p>
+              <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
+              <p>Tel: {estimate.customerPhone}</p>
+              <p>E-Mail: {estimate.customerEmail}</p>
             </div>
           </div>
           
