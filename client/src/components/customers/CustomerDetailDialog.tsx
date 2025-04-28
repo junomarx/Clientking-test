@@ -196,9 +196,15 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   }
   
   function handleNewOrder() {
-    if (customerId && onNewOrder) {
-      console.log("CustomerDetailDialog: onNewOrder aufgerufen mit Kunden-ID:", customerId);
-      onNewOrder(customerId);
+    if (customer && onNewOrder) {
+      console.log("CustomerDetailDialog: onNewOrder aufgerufen mit Kunde:", customer);
+      
+      // Statt nur die ID zu übergeben, übergeben wir das gesamte Kundenobjekt als String
+      // Dies ist ein Workaround, da wir Probleme mit der ID-Übergabe haben
+      const customerDataString = JSON.stringify(customer);
+      localStorage.setItem('selectedCustomerData', customerDataString);
+      
+      onNewOrder(customer.id);
       onClose();
     }
   }

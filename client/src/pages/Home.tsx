@@ -16,13 +16,9 @@ export default function Home() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   
-  const handleNewOrder = (customerId?: number) => {
-    console.log("Home: handleNewOrder aufgerufen mit Kunden-ID:", customerId);
-    if (customerId) {
-      setSelectedCustomerId(customerId);
-    } else {
-      setSelectedCustomerId(null);
-    }
+  const handleNewOrder = () => {
+    // Wir benötigen keine Parameter mehr, da wir die Kundendaten im localStorage speichern
+    console.log("Home: handleNewOrder aufgerufen ohne Parameter");
     setIsNewOrderModalOpen(true);
   };
   

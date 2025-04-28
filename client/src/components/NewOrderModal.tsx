@@ -128,7 +128,46 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // Laden des vorausgewählten Kunden
   useEffect(() => {
-    if (open && customerId) {
+    // Prüfen, ob Kundendaten im LocalStorage vorhanden sind
+    const customerDataString = localStorage.getItem('selectedCustomerData');
+    
+    if (customerDataString) {
+      try {
+        // Kunde aus localStorage parsen
+        const customer = JSON.parse(customerDataString);
+        console.log("Kundendaten aus LocalStorage geladen:", customer);
+        
+        // Zur Sicherheit prüfen, ob wir ein gültiges Kundenobjekt haben
+        if (customer && customer.id) {
+          // Kundendaten in Formular eintragen
+          form.setValue('firstName', customer.firstName);
+          form.setValue('lastName', customer.lastName);
+          form.setValue('phone', customer.phone);
+          if (customer.email) {
+            form.setValue('email', customer.email);
+          }
+          
+          // Customer ID setzen
+          setSelectedCustomerId(customer.id);
+          
+          // Fokus auf das nächste Feld (Geräteart) setzen
+          setTimeout(() => {
+            const deviceTypeInput = document.querySelector('input[name="deviceType"]');
+            if (deviceTypeInput) {
+              (deviceTypeInput as HTMLInputElement).focus();
+            }
+          }, 100);
+          
+          console.log("Kundendaten wurden in Formular eingefügt");
+          
+          // LocalStorage leeren, damit es nur einmal verwendet wird
+          localStorage.removeItem('selectedCustomerData');
+        }
+      } catch (error) {
+        console.error("Fehler beim Parsen der Kundendaten:", error);
+        localStorage.removeItem('selectedCustomerData');
+      }
+    } else if (open && customerId) {
       console.log("Versuche Kunde zu laden mit ID:", customerId);
       const fetchCustomer = async () => {
         try {
