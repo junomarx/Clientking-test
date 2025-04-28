@@ -110,6 +110,7 @@ const timeRangeOptions = [
 export function StatisticsTab() {
   const [exportFormat, setExportFormat] = useState<'excel' | 'pdf'>('excel');
   const [timeRange, setTimeRange] = useState<string>('all');
+  const [revenueTimeRange, setRevenueTimeRange] = useState<string>('all');
   const [customDateDialogOpen, setCustomDateDialogOpen] = useState(false);
   const [customDateStart, setCustomDateStart] = useState<Date | undefined>(undefined);
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
@@ -590,15 +591,7 @@ export function StatisticsTab() {
                 {stats?.repairCount || 0}
               </Badge>
             </div>
-            {detailedStats?.revenue && (
-              <div className="flex items-center gap-1.5">
-                <Euro className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-medium">Umsatz:</span>
-                <Badge variant="outline" className="bg-amber-50">
-                  {detailedStats.revenue.total.toFixed(2)} €
-                </Badge>
-              </div>
-            )}
+{/* Umsatz-Anzeige entfernt, wird nur im Umsatz-Tab angezeigt */}
             {timeRange !== 'all' && (
               <div className="flex items-center gap-1.5">
                 <Filter className="h-4 w-4 text-purple-600" />
