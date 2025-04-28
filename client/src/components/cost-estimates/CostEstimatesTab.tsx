@@ -239,7 +239,7 @@ export default function CostEstimatesTab() {
               <Plus className="w-4 h-4 mr-2" /> Kostenvoranschlag erstellen
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+          <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
               <DialogDescription>
@@ -310,7 +310,7 @@ export default function CostEstimatesTab() {
                                   <FileText className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Kostenvoranschlag Details</DialogTitle>
                                 </DialogHeader>
@@ -330,7 +330,7 @@ export default function CostEstimatesTab() {
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Kostenvoranschlag bearbeiten</DialogTitle>
                                 </DialogHeader>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download, RefreshCcw } from "lucide-react";
 import { Euro } from "lucide-react";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface ViewCostEstimateDetailsProps {
   estimateId: number;
@@ -33,6 +35,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimateDetailsProps) {
   const { toast } = useToast();
+  const contentRef = useRef<HTMLDivElement>(null);
   
   // Kostenvoranschlag abrufen
   const { data: estimate, isLoading, isError, refetch } = useQuery({
@@ -48,20 +51,52 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
   
   // Funktion zum Ausdrucken des Kostenvoranschlags
   const handlePrint = () => {
-    // Print-Funktionalität wird später implementiert
-    toast({
-      title: "Druck vorbereitet",
-      description: "Der Kostenvoranschlag wird zum Drucken vorbereitet.",
-    });
+    window.print();
   };
   
   // Funktion zum Herunterladen des Kostenvoranschlags als PDF
-  const handleDownload = () => {
-    // PDF-Export-Funktionalität wird später implementiert
+  const handleDownload = async () => {
+    if (!contentRef.current || !estimate) return;
+    
     toast({
-      title: "PDF-Export",
-      description: "Der Kostenvoranschlag wird als PDF exportiert.",
+      title: "PDF wird erstellt",
+      description: "Bitte warten Sie einen Moment...",
     });
+    
+    try {
+      const content = contentRef.current;
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210;
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`Kostenvoranschlag-${estimate.referenceNumber}.pdf`);
+      
+      toast({
+        title: "PDF erstellt",
+        description: "Der Kostenvoranschlag wurde erfolgreich als PDF gespeichert.",
+      });
+    } catch (error) {
+      console.error('Fehler beim Erstellen des PDFs:', error);
+      toast({
+        title: "Fehler",
+        description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
+        variant: "destructive"
+      });
+    }
   };
   
   if (isLoading) {
