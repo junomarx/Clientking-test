@@ -278,7 +278,7 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {customers?.map((customer) => (
+                  {customers?.map((customer: any) => (
                     <SelectItem key={customer.id} value={customer.id.toString()}>
                       {customer.firstName} {customer.lastName}
                     </SelectItem>

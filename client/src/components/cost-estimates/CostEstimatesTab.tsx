@@ -19,6 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import CreateCostEstimateForm from './CreateCostEstimateForm';
+import EditCostEstimateForm from './EditCostEstimateForm';
+import ViewCostEstimateDetails from './ViewCostEstimateDetails';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -170,6 +173,12 @@ export default function CostEstimatesTab() {
     convertedToRepair?: boolean;
     acceptedAt?: string;
   };
+  
+  // Type-Guard für den costEstimates Array
+  let typedCostEstimates: CostEstimate[] = [];
+  if (costEstimates) {
+    typedCostEstimates = costEstimates as CostEstimate[];
+  }
 
   // Filtere die Kostenvoranschläge basierend auf dem ausgewählten Tab
   const filteredEstimates = React.useMemo(() => {
@@ -228,8 +237,15 @@ export default function CostEstimatesTab() {
                 Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
               </SheetDescription>
             </SheetHeader>
-            {/* Hier wird später das CreateCostEstimateForm eingebunden */}
-            <p className="py-4">Formular wird implementiert...</p>
+            <CreateCostEstimateForm 
+              onSuccess={() => {
+                toast({
+                  title: "Kostenvoranschlag erstellt",
+                  description: "Der Kostenvoranschlag wurde erfolgreich erstellt.",
+                });
+                queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+              }}
+            />
           </SheetContent>
         </Sheet>
       </div>
@@ -266,7 +282,7 @@ export default function CostEstimatesTab() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredEstimates?.map((estimate) => (
+                    {filteredEstimates?.map((estimate: CostEstimate) => (
                       <TableRow key={estimate.id}>
                         <TableCell className="font-medium">{estimate.referenceNumber}</TableCell>
                         <TableCell>{estimate.customerName}</TableCell>
@@ -289,8 +305,11 @@ export default function CostEstimatesTab() {
                                 <SheetHeader>
                                   <SheetTitle>Kostenvoranschlag Details</SheetTitle>
                                 </SheetHeader>
-                                {/* Hier wird später das ViewCostEstimateDetails eingebunden */}
-                                <p className="py-4">Detailansicht wird implementiert...</p>
+                                {selectedEstimateId && (
+                                  <ViewCostEstimateDetails 
+                                    estimateId={selectedEstimateId} 
+                                  />
+                                )}
                               </SheetContent>
                             </Sheet>
 
@@ -306,8 +325,18 @@ export default function CostEstimatesTab() {
                                 <SheetHeader>
                                   <SheetTitle>Kostenvoranschlag bearbeiten</SheetTitle>
                                 </SheetHeader>
-                                {/* Hier wird später das EditCostEstimateForm eingebunden */}
-                                <p className="py-4">Bearbeitungsformular wird implementiert...</p>
+                                {selectedEstimateId && (
+                                  <EditCostEstimateForm 
+                                    estimateId={selectedEstimateId}
+                                    onSuccess={() => {
+                                      toast({
+                                        title: "Kostenvoranschlag aktualisiert",
+                                        description: "Der Kostenvoranschlag wurde erfolgreich aktualisiert.",
+                                      });
+                                      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+                                    }}
+                                  />
+                                )}
                               </SheetContent>
                             </Sheet>
 
