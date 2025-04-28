@@ -233,9 +233,9 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         
 
         
-        {/* Geräte-Informationen */}
+        {/* Geräte-Informationen - nur für die Bildschirmansicht */}
         <div>
-          <h3 className="font-medium mb-2">Gerätedetails</h3>
+          <h3 className="font-medium mb-2 screen-only">Gerätedetails</h3>
           
           <div className="border rounded-lg p-4 mb-4 screen-only">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -268,28 +268,29 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             </div>
           </div>
 
-          {/* Nur für Druck/PDF - komplett ohne Rahmen, einfache Tabelle */}
-          <div className="hidden print:block print:mb-4">
-            <table className="w-full border-collapse mb-4">
-              <tbody>
-                <tr>
-                  <td className="py-1 pr-4 w-1/6 text-sm font-medium">Gerätetyp:</td>
-                  <td className="py-1 w-1/3">{estimate.deviceType}</td>
-                  <td className="py-1 pr-4 w-1/6 text-sm font-medium">Marke:</td>
-                  <td className="py-1 w-1/3">{estimate.brand}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 pr-4 text-sm font-medium">Modell:</td>
-                  <td className="py-1">{estimate.model}</td>
-                  <td className="py-1 pr-4 text-sm font-medium">Seriennummer:</td>
-                  <td className="py-1">{estimate.serialNumber || '–'}</td>
-                </tr>
-                <tr>
-                  <td className="py-1 pr-4 text-sm font-medium">Problem:</td>
-                  <td className="py-1" colSpan={3}>{estimate.issue || '–'}</td>
-                </tr>
-              </tbody>
-            </table>
+          {/* Nur für Druck/PDF - Gerätedetails exakt wie im Beispiel */}
+          <div className="hidden print:block print:mb-6">
+            <div className="mb-4">
+              <table className="w-full border-collapse mb-2">
+                <tbody>
+                  <tr>
+                    <td className="pb-1 pr-12 font-medium" style={{ minWidth: '120px' }}>Marke</td>
+                    <td className="pb-1 pr-12 font-medium" style={{ minWidth: '200px' }}>Modell</td>
+                    <td className="pb-1 font-medium">Seriennummer</td>
+                  </tr>
+                  <tr>
+                    <td className="pt-1">{estimate.brand}</td>
+                    <td className="pt-1">{estimate.model}</td>
+                    <td className="pt-1">{estimate.serialNumber || '–'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div>
+              <div className="font-medium pb-1">Schaden am Gerät</div>
+              <div className="pt-1">{estimate.issue || '–'}</div>
+            </div>
           </div>
         </div>
         
