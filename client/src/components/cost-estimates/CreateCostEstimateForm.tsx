@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, addMonths } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { CalendarIcon, Plus, Trash, Euro, UserPlus } from 'lucide-react';
 import {
@@ -156,8 +156,8 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     }
   });
   
-  // Standard-Gültigkeitsdatum (1 Monat ab heute)
-  const defaultValidUntil = addMonths(new Date(), 1);
+  // Standard-Gültigkeitsdatum (14 Tage ab heute)
+  const defaultValidUntil = addDays(new Date(), 14);
   
   // Formular mit Validierung initialisieren
   const form = useForm<FormValues>({

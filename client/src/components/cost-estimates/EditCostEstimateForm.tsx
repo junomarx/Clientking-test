@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { CalendarIcon, Plus, Trash, Euro } from 'lucide-react';
 import {
@@ -198,8 +198,8 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
   useEffect(() => {
     if (estimate) {
       try {
-        // Datumskonvertierung
-        const validUntil = estimate.validUntil ? new Date(estimate.validUntil) : undefined;
+        // Datumskonvertierung - wenn kein Datum, dann 14 Tage ab heute
+        const validUntil = estimate.validUntil ? new Date(estimate.validUntil) : addDays(new Date(), 14);
         
         // Setze Formularwerte
         form.reset({
@@ -361,7 +361,7 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
                     <Calendar
                       mode="single"
                       selected={field.value || undefined}
-                      onSelect={field.onChange}
+                      onSelect={(date) => field.onChange(date || addDays(new Date(), 14))}
                       initialFocus
                       locale={de}
                     />
