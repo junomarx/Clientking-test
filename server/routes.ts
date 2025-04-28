@@ -443,6 +443,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // E-Mail senden
               const emailSent = await storage.sendEmailWithTemplate(sparepartTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
+              
+              // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
+              if (emailSent) {
+                res.setHeader('X-Email-Sent', 'true');
+              }
             } else {
               console.log("Keine passende E-Mail-Vorlage für 'Ersatzteil eingetroffen' gefunden");
               console.log("Erstelle Standard-Ersatzteil-Vorlage...");
@@ -487,6 +492,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // E-Mail mit der neuen Vorlage senden
                 const emailSent = await storage.sendEmailWithTemplate(newTemplate.id, customer.email, variables);
                 console.log("E-Mail gesendet:", emailSent);
+                
+                // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
+                if (emailSent) {
+                  res.setHeader('X-Email-Sent', 'true');
+                }
               } catch (templateError) {
                 console.error("Fehler beim Erstellen der E-Mail-Vorlage:", templateError);
               }

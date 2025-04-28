@@ -98,9 +98,16 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       console.log("Clean data being sent:", cleanData);
       
       const response = await apiRequest('PATCH', `/api/repairs/${repair.id}`, cleanData);
-      return response.json();
+      
+      // Prüfe, ob eine E-Mail gesendet wurde (für Status "ersatzteil_eingetroffen")
+      const emailSent = response.headers.get('X-Email-Sent') === 'true';
+      
+      return { 
+        repair: await response.json(),
+        emailSent 
+      };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate the queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
@@ -114,6 +121,15 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         description: "Die Änderungen wurden erfolgreich gespeichert.",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      
+      // Wenn eine E-Mail gesendet wurde, zeige ein zusätzliches Toast
+      if (data && data.emailSent) {
+        toast({
+          title: "E-Mail gesendet",
+          description: "Der Kunde wurde per E-Mail über das eingetroffene Ersatzteil informiert.",
+          duration: 3000
+        });
+      }
     },
     onError: (error) => {
       toast({
