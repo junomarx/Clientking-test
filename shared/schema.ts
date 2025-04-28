@@ -10,6 +10,9 @@ export const customers = pgTable("customers", {
   lastName: text("last_name").notNull(),
   phone: text("phone").notNull(),
   email: text("email"),
+  address: text("address"),
+  zipCode: text("zip_code"),
+  city: text("city"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Jeder Kunde gehört zu einem Benutzer/Unternehmen
   userId: integer("user_id").references(() => users.id),
