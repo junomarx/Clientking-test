@@ -100,6 +100,7 @@ function extractPrice(priceString: string | null): number {
 
 const timeRangeOptions = [
   { value: 'all', label: 'Alle Daten' },
+  { value: 'today', label: 'Heute' },
   { value: '7days', label: 'Letzte 7 Tage' },
   { value: '30days', label: 'Letzte 30 Tage' },
   { value: 'thisMonth', label: 'Diesen Monat' },
@@ -197,6 +198,11 @@ export function StatisticsTab() {
 
     const now = new Date();
     switch(rangeType) {
+      case 'today':
+        // Nur der heutige Tag (von 00:00 bis jetzt)
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        return { start: todayStart, end: now };
       case '7days':
         return { start: subDays(now, 7), end: now };
       case '30days':
@@ -331,19 +337,51 @@ export function StatisticsTab() {
       }))
     : [];
     
-  const filteredRevenueByMonthData = revenueStats?.revenue?.byMonth
-    ? Object.entries(revenueStats.revenue.byMonth)
-        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-        .map(([key, value]) => {
-          const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-          const monthIndex = parseInt(key) - 1;
-          const name = monthNames[monthIndex];
-          return {
-            name,
-            value: parseFloat(value.toFixed(2))
-          };
-        })
-    : [];
+  // Formatiere die Balkendiagramm-Daten abhängig vom ausgewählten Zeitraum
+  const getRevenueBarChartData = () => {
+    if (!revenueStats?.revenue) return [];
+    
+    // Wenn nach Tagen gefiltert wird (heute, letzte 7 Tage, letzte 30 Tage, benutzerdefiniert)
+    if (revenueTimeRange === 'today' || revenueTimeRange === '7days' || revenueTimeRange === '30days' || 
+        (revenueTimeRange === 'custom' && customDateRangeActive)) {
+      
+      // Bei tagesgenauer Auswertung: prüfen ob Daten nach Tagen vorhanden sind
+      if (revenueStats.revenue.byDay) {
+        return Object.entries(revenueStats.revenue.byDay)
+          .sort((a, b) => {
+            // Datumsformat: YYYY-MM-DD
+            return new Date(a[0]).getTime() - new Date(b[0]).getTime();
+          })
+          .map(([key, value]) => {
+            // Formatiere das Datum als DD.MM.
+            const dateParts = key.split('-');
+            const day = dateParts[2];
+            const month = dateParts[1];
+            const formattedDate = `${day}.${month}.`;
+            
+            return {
+              name: formattedDate,
+              value: parseFloat(value.toFixed(2))
+            };
+          });
+      }
+    }
+    
+    // Standard: Nach Monaten gruppiert
+    return Object.entries(revenueStats.revenue.byMonth)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+      .map(([key, value]) => {
+        const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+        const monthIndex = parseInt(key) - 1;
+        const name = monthNames[monthIndex];
+        return {
+          name,
+          value: parseFloat(value.toFixed(2))
+        };
+      });
+  };
+  
+  const filteredRevenueByMonthData = getRevenueBarChartData();
 
   // Excel-Export-Funktion
   const exportToExcel = () => {
