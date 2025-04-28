@@ -269,7 +269,7 @@ export const costEstimates = pgTable("cost_estimates", {
   taxRate: text("tax_rate").default("20").notNull(), // MwSt-Satz in Prozent
   taxAmount: text("tax_amount").notNull(), // MwSt-Betrag
   total: text("total").notNull(), // Gesamtsumme (mit MwSt)
-  validUntil: timestamp("valid_until"), // Gültig bis
+  validUntil: text("valid_until"), // Gültig bis (als ISO-String gespeichert)
   status: text("status").default("offen").notNull(), // Status: offen, angenommen, abgelehnt, abgelaufen
   notes: text("notes"), // Zusätzliche Notizen
   acceptedAt: timestamp("accepted_at"), // Wann wurde der Kostenvoranschlag angenommen
@@ -280,14 +280,6 @@ export const costEstimates = pgTable("cost_estimates", {
   userId: integer("user_id").references(() => users.id), // Jeder Kostenvoranschlag gehört zu einem Benutzer
 });
 
-export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
-  id: true,
-  referenceNumber: true, // Wird automatisch generiert
-  createdAt: true,
-  updatedAt: true,
-  acceptedAt: true,
-});
-
 // Zod-Schema für einen Kostenvoranschlag-Posten
 export const costEstimateItemSchema = z.object({
   position: z.number(), // Positionsnummer
@@ -295,6 +287,31 @@ export const costEstimateItemSchema = z.object({
   quantity: z.number().default(1), // Menge
   unitPrice: z.string(), // Einzelpreis als String (mit €)
   totalPrice: z.string(), // Gesamtpreis als String (mit €)
+});
+
+// Wir erstellen das Schema manuell, um das Date-Objekt als String zu akzeptieren
+export const insertCostEstimateSchema = z.object({
+  customerId: z.number({
+    required_error: "Kunde ist erforderlich",
+  }),
+  title: z.string().min(1, "Titel ist erforderlich"),
+  description: z.string().optional(),
+  deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
+  brand: z.string().min(1, "Marke ist erforderlich"),
+  model: z.string().min(1, "Modell ist erforderlich"),
+  serialNumber: z.string().optional(),
+  issue: z.string().optional(),
+  items: z.array(costEstimateItemSchema),
+  subtotal: z.string().min(1, "Zwischensumme ist erforderlich"),
+  taxRate: z.string().default("20"),
+  taxAmount: z.string().min(1, "MwSt-Betrag ist erforderlich"),
+  total: z.string().min(1, "Gesamtsumme ist erforderlich"),
+  validUntil: z.string().optional(), // Akzeptiert ISO-String
+  status: z.string().default("offen"),
+  notes: z.string().optional(),
+  repairId: z.number().optional(),
+  convertedToRepair: z.boolean().optional(),
+  userId: z.number().optional(),
 });
 
 export const insertCostEstimateItemsSchema = z.array(costEstimateItemSchema);

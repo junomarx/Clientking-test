@@ -137,11 +137,11 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
     return isNaN(numericPrice) ? '0,00 €' : numericPrice.toFixed(2).replace('.', ',') + ' €';
   };
   
-  // Datum direkt ohne Umwandlung in String zurückgeben für die API
-  const formatDate = (date: Date | undefined): Date | undefined => {
+  // Datum als ISO-String formatieren für die API
+  const formatDate = (date: Date | undefined): string | undefined => {
     if (!date) return undefined;
-    // Direkt das Date-Objekt zurückgeben
-    return date;
+    // Als ISO-String zurückgeben
+    return date.toISOString();
   };
   
   // Berechnet alle Summen und formatiert die Preise für den Kostenvoranschlag

@@ -6,6 +6,15 @@ import { Plus, FileText, RefreshCcw, Trash, Edit, ClipboardCheck, Ban, Clock, Fi
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import {
   Sheet,
   SheetClose,
   SheetContent,
@@ -224,19 +233,19 @@ export default function CostEstimatesTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Kostenvoranschläge</h2>
-        <Sheet>
-          <SheetTrigger asChild>
+        <Dialog>
+          <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" /> Kostenvoranschlag erstellen
             </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Neuen Kostenvoranschlag erstellen</SheetTitle>
-              <SheetDescription>
+          </DialogTrigger>
+          <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
+              <DialogDescription>
                 Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
-              </SheetDescription>
-            </SheetHeader>
+              </DialogDescription>
+            </DialogHeader>
             <CreateCostEstimateForm 
               onSuccess={() => {
                 toast({
@@ -246,8 +255,8 @@ export default function CostEstimatesTab() {
                 queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
               }}
             />
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
@@ -294,37 +303,37 @@ export default function CostEstimatesTab() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {/* Detailansicht */}
-                            <Sheet>
-                              <SheetTrigger asChild>
+                            <Dialog>
+                              <DialogTrigger asChild>
                                 <Button variant="ghost" size="icon" 
                                   onClick={() => setSelectedEstimateId(estimate.id)}>
                                   <FileText className="w-4 h-4" />
                                 </Button>
-                              </SheetTrigger>
-                              <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
-                                <SheetHeader>
-                                  <SheetTitle>Kostenvoranschlag Details</SheetTitle>
-                                </SheetHeader>
+                              </DialogTrigger>
+                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Kostenvoranschlag Details</DialogTitle>
+                                </DialogHeader>
                                 {selectedEstimateId && (
                                   <ViewCostEstimateDetails 
                                     estimateId={selectedEstimateId} 
                                   />
                                 )}
-                              </SheetContent>
-                            </Sheet>
+                              </DialogContent>
+                            </Dialog>
 
                             {/* Bearbeiten-Button */}
-                            <Sheet>
-                              <SheetTrigger asChild>
+                            <Dialog>
+                              <DialogTrigger asChild>
                                 <Button variant="ghost" size="icon" 
                                   onClick={() => setSelectedEstimateId(estimate.id)}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
-                              </SheetTrigger>
-                              <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
-                                <SheetHeader>
-                                  <SheetTitle>Kostenvoranschlag bearbeiten</SheetTitle>
-                                </SheetHeader>
+                              </DialogTrigger>
+                              <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
+                                <DialogHeader>
+                                  <DialogTitle>Kostenvoranschlag bearbeiten</DialogTitle>
+                                </DialogHeader>
                                 {selectedEstimateId && (
                                   <EditCostEstimateForm 
                                     estimateId={selectedEstimateId}
@@ -337,8 +346,8 @@ export default function CostEstimatesTab() {
                                     }}
                                   />
                                 )}
-                              </SheetContent>
-                            </Sheet>
+                              </DialogContent>
+                            </Dialog>
 
                             {/* Status-Button (nur für offene Kostenvoranschläge) */}
                             {estimate.status === 'offen' && (

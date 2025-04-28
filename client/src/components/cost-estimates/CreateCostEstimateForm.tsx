@@ -219,11 +219,11 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     }
   };
   
-  // Datum direkt ohne Umwandlung in String zurückgeben für die API
-  const formatDate = (date: Date | undefined): Date | undefined => {
+  // Datum als ISO-String formatieren für die API
+  const formatDate = (date: Date | undefined): string | undefined => {
     if (!date) return undefined;
-    // Direkt das Date-Objekt zurückgeben
-    return date;
+    // Als ISO-String zurückgeben
+    return date.toISOString();
   };
   
   // Mutation zum Erstellen eines Kostenvoranschlags
