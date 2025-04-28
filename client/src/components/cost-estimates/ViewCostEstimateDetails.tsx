@@ -227,9 +227,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           </div>
         </div>
         
-        {/* 20mm Abstand nach unten (ca. 80px bei einem üblichen DPI) */}
-        <div className="hidden print:block print:h-20"></div>
-        <div className={`${isPdfMode ? 'h-20' : ''}`}></div>
+        {/* Abstand entfernt, da Text zu weit unten war */}
         
         {/* Kundeninformationen mit Abstand nach unten */}
         <div className="mt-2 space-y-1">
