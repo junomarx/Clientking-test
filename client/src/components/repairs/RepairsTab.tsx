@@ -146,12 +146,37 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, sendEmail, sendSms }: { id: number, status: string, sendEmail?: boolean, sendSms?: boolean }) => {
       const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, sendSms });
-      return response.json();
+      return { data: await response.json(), emailSent: sendEmail === true, status };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       setShowStatusDialog(false);
+      
+      // Basis-Nachricht für den Status
+      let title = "Status aktualisiert";
+      let description = "Der Reparaturstatus wurde erfolgreich aktualisiert.";
+      
+      // Wenn eine E-Mail gesendet wurde, zeige eine Benachrichtigung an
+      if (result.emailSent) {
+        let emailMessage = "";
+        
+        if (result.status === "ersatzteil_eingetroffen") {
+          emailMessage = "Die E-Mail über das eingetroffene Ersatzteil wurde an den Kunden gesendet.";
+          title = "Ersatzteil-Benachrichtigung gesendet";
+        } else if (result.status === "fertig") {
+          emailMessage = "Die Abholbenachrichtigung wurde an den Kunden gesendet.";
+          title = "Abhol-Benachrichtigung gesendet";
+        } else {
+          emailMessage = "Eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
+        }
+        
+        toast({
+          title,
+          description: emailMessage,
+          variant: "default",
+        });
+      }
     },
   });
   

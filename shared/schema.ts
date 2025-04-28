@@ -166,6 +166,7 @@ export const emailTemplates = pgTable("email_templates", {
   subject: text("subject").notNull(),
   body: text("body").notNull(),
   variables: text("variables").array(),  // Liste von Variablen, die in der Vorlage verwendet werden können
+  userId: integer("user_id"), // Benutzer, dem die Vorlage gehört
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

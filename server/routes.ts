@@ -448,7 +448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Erstelle eine Standard-Vorlage, wenn keine vorhanden ist
               try {
-                const newTemplate = await storage.createEmailTemplate({
+                // Erstelle die E-Mail-Vorlage
+                const templateData: InsertEmailTemplate = {
                   name: "Ersatzteil eingetroffen",
                   subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
                   body: `
@@ -475,8 +476,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     Ihr Team von {{geschaeftsname}}</p>
                   </div>
                   `,
-                  userId: userId
-                });
+                  userId
+                };
+                
+                const newTemplate = await storage.createEmailTemplate(templateData);
                 
                 console.log("Neue E-Mail-Vorlage erstellt:", newTemplate);
                 
