@@ -191,18 +191,9 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           <div className="space-y-1">
             <h3 className="font-medium mb-2">Kundeninformationen</h3>
             <div>
-              <table className="border-collapse">
-                <tbody>
-                  <tr>
-                    <td className="pr-4">Tel:</td>
-                    <td>{estimate.customerPhone}</td>
-                  </tr>
-                  <tr>
-                    <td className="pr-4">E-Mail:</td>
-                    <td>{estimate.customerEmail}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
+              <p>{estimate.customer?.address}</p>
+              <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
             </div>
           </div>
           
