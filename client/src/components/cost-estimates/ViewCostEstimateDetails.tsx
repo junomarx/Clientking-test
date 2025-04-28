@@ -130,165 +130,172 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
   
   return (
     <div className="space-y-6 py-4">
-      {/* Header mit Referenznummer und Status */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">{estimate.title}</h2>
-          <p className="text-muted-foreground">Referenznummer: {estimate.referenceNumber}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <StatusBadge status={estimate.status} />
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" /> Drucken
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-2" /> PDF
-          </Button>
-        </div>
+      {/* Aktions-Buttons für Druck und PDF-Export */}
+      <div className="flex justify-end items-center gap-2 print:hidden">
+        <Button variant="outline" size="sm" onClick={handlePrint}>
+          <Printer className="w-4 h-4 mr-2" /> Drucken
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleDownload}>
+          <Download className="w-4 h-4 mr-2" /> PDF
+        </Button>
       </div>
       
-      <Separator />
-      
-      {/* Allgemeine Informationen */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Inhaltsbereich für PDF-Export */}
+      <div ref={contentRef} className="space-y-6">
+        {/* Header mit Referenznummer und Status */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold">{estimate.title}</h2>
+            <p className="text-muted-foreground">Referenznummer: {estimate.referenceNumber}</p>
+          </div>
+          <div>
+            <StatusBadge status={estimate.status} />
+          </div>
+        </div>
+        
+        <Separator />
+        
+        {/* Allgemeine Informationen */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-4">Allgemeine Informationen</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Erstellt am</p>
+                  <p>{createdAtFormatted}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Gültig bis</p>
+                  <p>{validUntilFormatted}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p><StatusBadge status={estimate.status} /></p>
+                </div>
+                {estimate.status === 'angenommen' && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Angenommen am</p>
+                    <p>{acceptedAtFormatted}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-4">Kundeninformationen</h3>
+              <div>
+                <p className="text-sm text-muted-foreground">Kunde</p>
+                <p className="font-medium">{estimate.customerName}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Geräte-Informationen */}
         <Card>
           <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Allgemeine Informationen</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className="font-medium mb-4">Gerätedetails</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Erstellt am</p>
-                <p>{createdAtFormatted}</p>
+                <p className="text-sm text-muted-foreground">Gerätetyp</p>
+                <p>{estimate.deviceType}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Gültig bis</p>
-                <p>{validUntilFormatted}</p>
+                <p className="text-sm text-muted-foreground">Marke</p>
+                <p>{estimate.brand}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p><StatusBadge status={estimate.status} /></p>
+                <p className="text-sm text-muted-foreground">Modell</p>
+                <p>{estimate.model}</p>
               </div>
-              {estimate.status === 'angenommen' && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Angenommen am</p>
-                  <p>{acceptedAtFormatted}</p>
-                </div>
-              )}
+            </div>
+            {(estimate.serialNumber || estimate.issue) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {estimate.serialNumber && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Seriennummer</p>
+                    <p>{estimate.serialNumber}</p>
+                  </div>
+                )}
+                {estimate.issue && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Problem</p>
+                    <p>{estimate.issue}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Beschreibung */}
+        {estimate.description && (
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-2">Beschreibung</h3>
+              <p className="whitespace-pre-line">{estimate.description}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Positionen */}
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="font-medium mb-4">Positionen</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[80px]">Pos.</TableHead>
+                  <TableHead>Beschreibung</TableHead>
+                  <TableHead className="text-center">Menge</TableHead>
+                  <TableHead className="text-right">Einzelpreis</TableHead>
+                  <TableHead className="text-right">Gesamtpreis</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {estimate.items?.map((item: any) => (
+                  <TableRow key={item.position}>
+                    <TableCell>{item.position}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                    <TableCell className="text-center">{item.quantity}</TableCell>
+                    <TableCell className="text-right">{item.unitPrice}</TableCell>
+                    <TableCell className="text-right">{item.totalPrice}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            
+            {/* Summen */}
+            <div className="flex flex-col items-end mt-6 space-y-2">
+              <div className="flex justify-between w-64 text-sm">
+                <span>Zwischensumme:</span>
+                <span>{estimate.subtotal}</span>
+              </div>
+              <div className="flex justify-between w-64 text-sm">
+                <span>MwSt. ({estimate.taxRate}%):</span>
+                <span>{estimate.taxAmount}</span>
+              </div>
+              <div className="flex justify-between w-64 font-bold">
+                <span>Gesamtsumme:</span>
+                <span>{estimate.total}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Kundeninformationen</h3>
-            <div>
-              <p className="text-sm text-muted-foreground">Kunde</p>
-              <p className="font-medium">{estimate.customerName}</p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Notizen */}
+        {estimate.notes && (
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="font-medium mb-2">Notizen</h3>
+              <p className="whitespace-pre-line">{estimate.notes}</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-      
-      {/* Geräte-Informationen */}
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="font-medium mb-4">Gerätedetails</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Gerätetyp</p>
-              <p>{estimate.deviceType}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Marke</p>
-              <p>{estimate.brand}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Modell</p>
-              <p>{estimate.model}</p>
-            </div>
-          </div>
-          {(estimate.serialNumber || estimate.issue) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {estimate.serialNumber && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Seriennummer</p>
-                  <p>{estimate.serialNumber}</p>
-                </div>
-              )}
-              {estimate.issue && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Problem</p>
-                  <p>{estimate.issue}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      {/* Beschreibung */}
-      {estimate.description && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-2">Beschreibung</h3>
-            <p className="whitespace-pre-line">{estimate.description}</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Positionen */}
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="font-medium mb-4">Positionen</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[80px]">Pos.</TableHead>
-                <TableHead>Beschreibung</TableHead>
-                <TableHead className="text-center">Menge</TableHead>
-                <TableHead className="text-right">Einzelpreis</TableHead>
-                <TableHead className="text-right">Gesamtpreis</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {estimate.items?.map((item: any) => (
-                <TableRow key={item.position}>
-                  <TableCell>{item.position}</TableCell>
-                  <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-center">{item.quantity}</TableCell>
-                  <TableCell className="text-right">{item.unitPrice}</TableCell>
-                  <TableCell className="text-right">{item.totalPrice}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {/* Summen */}
-          <div className="flex flex-col items-end mt-6 space-y-2">
-            <div className="flex justify-between w-64 text-sm">
-              <span>Zwischensumme:</span>
-              <span>{estimate.subtotal}</span>
-            </div>
-            <div className="flex justify-between w-64 text-sm">
-              <span>MwSt. ({estimate.taxRate}%):</span>
-              <span>{estimate.taxAmount}</span>
-            </div>
-            <div className="flex justify-between w-64 font-bold">
-              <span>Gesamtsumme:</span>
-              <span>{estimate.total}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Notizen */}
-      {estimate.notes && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-2">Notizen</h3>
-            <p className="whitespace-pre-line">{estimate.notes}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
