@@ -219,10 +219,11 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     }
   };
   
-  // Formatiere das Datum korrekt für die API
+  // Datum direkt ohne Umwandlung in String zurückgeben für die API
   const formatDate = (date: Date | undefined): Date | undefined => {
     if (!date) return undefined;
-    return new Date(date);
+    // Direkt das Date-Objekt zurückgeben
+    return date;
   };
   
   // Mutation zum Erstellen eines Kostenvoranschlags

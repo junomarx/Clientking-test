@@ -230,7 +230,7 @@ export default function CostEstimatesTab() {
               <Plus className="w-4 h-4 mr-2" /> Kostenvoranschlag erstellen
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-[95%] md:w-[950px] sm:max-w-full overflow-y-auto" side="right">
+          <SheetContent className="w-[95%] md:w-[900px] sm:max-w-full overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Neuen Kostenvoranschlag erstellen</SheetTitle>
               <SheetDescription>
