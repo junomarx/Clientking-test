@@ -126,17 +126,24 @@ export function StatisticsTab() {
 
   // Dialog öffnen, wenn benutzerdefinierter Zeitraum ausgewählt
   useEffect(() => {
-    if (timeRange === 'custom' && !customDateRangeActive) {
+    if ((timeRange === 'custom' || revenueTimeRange === 'custom') && !customDateRangeActive) {
       setCustomDateDialogOpen(true);
     }
-  }, [timeRange, customDateRangeActive]);
+  }, [timeRange, revenueTimeRange, customDateRangeActive]);
 
   // Funktion für das Zurücksetzen des benutzerdefinierten Zeitraums
   const resetCustomDateRange = () => {
     setCustomDateRangeActive(false);
     setCustomDateStart(undefined);
     setCustomDateEnd(undefined);
-    setTimeRange('all');
+    
+    // Setze beide Zeitrahmen zurück, wenn sie auf 'custom' eingestellt sind
+    if (timeRange === 'custom') {
+      setTimeRange('all');
+    }
+    if (revenueTimeRange === 'custom') {
+      setRevenueTimeRange('all');
+    }
   };
 
   // Funktion zum Umschalten des Auswahlmodus und Setzen der Daten
@@ -163,6 +170,16 @@ export function StatisticsTab() {
     if (customDateStart && customDateEnd) {
       setCustomDateRangeActive(true);
       setCustomDateDialogOpen(false);
+      
+      // Wenn der Dialog für die Umsatzstatistik geöffnet wurde, behalte den benutzerdefinierten Zeitraum bei
+      // sonst setze ihn zurück wenn ein anderer Tab aktiv ist
+      if (timeRange === 'custom' && revenueTimeRange === 'custom') {
+        // Beide Tabs sind auf benutzerdefinierten Zeitraum eingestellt
+      } else if (timeRange === 'custom') {
+        // Nur der allgemeine Statistik-Tab benötigt den benutzerdefinierten Zeitraum
+      } else if (revenueTimeRange === 'custom') {
+        // Nur der Umsatz-Tab benötigt den benutzerdefinierten Zeitraum
+      }
     } else {
       alert('Bitte wählen Sie ein Start- und Enddatum aus.');
     }
@@ -171,7 +188,7 @@ export function StatisticsTab() {
   // Datumsbereich basierend auf der ausgewählten Option berechnen
   const getDateRange = (rangeType: string) => {
     // Wenn benutzerdefinierter Zeitraum aktiv ist, verwende diese Daten
-    if (rangeType === timeRange && customDateRangeActive && customDateStart && customDateEnd) {
+    if ((rangeType === 'custom') && customDateRangeActive && customDateStart && customDateEnd) {
       // Setze den Endzeitpunkt auf das Ende des Tages für korrekten Vergleich
       const endWithTime = new Date(customDateEnd);
       endWithTime.setHours(23, 59, 59, 999);
@@ -1098,8 +1115,8 @@ export function StatisticsTab() {
                     <FileText className="h-8 w-8 text-purple-600 mb-2" />
                     <p className="text-sm font-medium text-purple-800">Durchschnittlicher Umsatz</p>
                     <h3 className="text-3xl font-bold text-purple-900">
-                      {stats?.completed && detailedStats?.revenue?.total 
-                        ? (detailedStats.revenue.total / stats.completed).toFixed(2) 
+                      {stats?.completed && revenueStats?.revenue?.total 
+                        ? (revenueStats.revenue.total / stats.completed).toFixed(2) 
                         : '0.00'} €
                     </h3>
                   </div>
@@ -1118,7 +1135,7 @@ export function StatisticsTab() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={revenueByStatusData}
+                        data={filteredRevenueByStatusData}
                         cx="50%"
                         cy="50%"
                         labelLine={true}
@@ -1127,7 +1144,7 @@ export function StatisticsTab() {
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {revenueByStatusData.map((entry, index) => (
+                        {filteredRevenueByStatusData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -1149,7 +1166,7 @@ export function StatisticsTab() {
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={revenueByMonthData}
+                      data={filteredRevenueByMonthData}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
                       <XAxis dataKey="name" />
@@ -1157,7 +1174,7 @@ export function StatisticsTab() {
                       <Tooltip formatter={(value) => [`${value} €`, 'Umsatz']} />
                       <Legend />
                       <Bar dataKey="value" name="Umsatz" fill="#8884d8" label={{ position: 'top', fill: '#666' }}>
-                        {revenueByMonthData.map((entry, index) => (
+                        {filteredRevenueByMonthData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Bar>
