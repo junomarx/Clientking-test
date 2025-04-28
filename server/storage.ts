@@ -530,11 +530,15 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
+    const now = new Date();
+    
     const [updatedRepair] = await db
       .update(repairs)
       .set({
         status,
-        updatedAt: new Date()
+        updatedAt: now,
+        statusUpdatedAt: now // Setze den Zeitpunkt der Statusänderung für Umsatzanalysen
       })
       .where(
         and(

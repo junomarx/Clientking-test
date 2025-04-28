@@ -59,6 +59,7 @@ interface DetailedStats {
     total: number;
     byStatus: Record<string, number>;
     byMonth: Record<string, number>;
+    byDay: Record<string, number>;
   };
 }
 
