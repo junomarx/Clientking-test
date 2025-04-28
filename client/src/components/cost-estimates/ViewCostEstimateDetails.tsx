@@ -289,22 +289,22 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
               <table className="w-full border-collapse mb-2">
                 <tbody>
                   <tr>
-                    <td className="pb-1 pr-12 font-medium" style={{ minWidth: '120px' }}>Marke</td>
-                    <td className="pb-1 pr-12 font-medium" style={{ minWidth: '200px' }}>Modell</td>
-                    <td className="pb-1 font-medium">Seriennummer</td>
+                    <td className="pb-1 pr-12 text-sm text-gray-700" style={{ minWidth: '120px' }}>Marke</td>
+                    <td className="pb-1 pr-12 text-sm text-gray-700" style={{ minWidth: '200px' }}>Modell</td>
+                    <td className="pb-1 text-sm text-gray-700">Seriennummer</td>
                   </tr>
                   <tr>
-                    <td className="pt-1">{estimate.brand}</td>
-                    <td className="pt-1">{estimate.model}</td>
-                    <td className="pt-1">{estimate.serialNumber || '–'}</td>
+                    <td className="pt-1 text-sm">{estimate.brand}</td>
+                    <td className="pt-1 text-sm">{estimate.model}</td>
+                    <td className="pt-1 text-sm">{estimate.serialNumber || '–'}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             
             <div>
-              <div className="font-medium pb-1">Schaden am Gerät</div>
-              <div className="pt-1">{estimate.issue || '–'}</div>
+              <div className="text-sm text-gray-700 pb-1">Schaden am Gerät</div>
+              <div className="pt-1 text-sm">{estimate.issue || '–'}</div>
             </div>
           </div>
         </div>
