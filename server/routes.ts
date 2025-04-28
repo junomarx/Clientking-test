@@ -405,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             // Suche nach einer E-Mail-Vorlage mit name "fertig"
-            const templates = await storage.getAllEmailTemplates();
+            const templates = await storage.getAllEmailTemplates(userId);
             const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
                                                      t.name.toLowerCase().includes("abholbereit") ||
                                                      t.name.toLowerCase().includes("abholung"));

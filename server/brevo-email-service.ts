@@ -1,6 +1,6 @@
 import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull, or } from 'drizzle-orm';
 import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
 
@@ -69,13 +69,20 @@ export class BrevoEmailService {
         .where(
           // Entweder die userId entspricht der übergebenen userId ODER die userId ist NULL
           // Das stellt sicher, dass wir sowohl benutzerspezifische als auch globale Vorlagen zurückgeben
-          db.or(
-            eq(emailTemplates.userId, userId),
-            db.sql`${emailTemplates.userId} IS NULL`
-          )
+          eq(emailTemplates.userId, userId)
         )
         .orderBy(desc(emailTemplates.createdAt));
-      return templates;
+      
+      // Zusätzlich auch die globalen Vorlagen (ohne userId) abfragen
+      const globalTemplates = await db.select().from(emailTemplates)
+        .where(
+          // SQL-Ausdruck für "userId IS NULL"
+          eq(emailTemplates.userId, null as any)
+        )
+        .orderBy(desc(emailTemplates.createdAt));
+      
+      // Beide Ergebnisse kombinieren
+      return [...templates, ...globalTemplates];
     }
     
     // Ohne userId Filterung geben wir alle Vorlagen zurück
@@ -146,90 +153,85 @@ export class BrevoEmailService {
         body = body.replace(new RegExp(placeholder, 'g'), value);
       });
       
+      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden)
+      const userId = variables.userId ? parseInt(variables.userId) : 0;
+      
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
       const [businessSetting] = await db.select().from(businessSettings)
-        .where(eq(businessSettings.userId, variables.userId ? parseInt(variables.userId) : 0));
-      const senderEmail = businessSetting?.email || 'no-reply@example.com';
-      const senderName = businessSetting?.businessName || 'Handyshop Verwaltung';
+        .where(eq(businessSettings.userId, userId));
       
-      // Entwicklungsmodus-Information, aber senden trotzdem
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}`);
-        // Wir simulieren nicht mehr, sondern senden tatsächlich
+      if (!businessSetting) {
+        console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+        return false;
       }
-
-      // Versuche, die E-Mail über SMTP zu senden (bevorzugte Methode)
-      if (this.smtpTransporter) {
-        try {
-          console.log('Sende E-Mail über SMTP...');
-          
-          const mailOptions = {
-            from: `"${senderName}" <${process.env.SMTP_USER}>`, // Der SMTP-Login muss als Absender verwendet werden
-            to: to,
-            subject: subject,
-            html: body,
-            text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
-          };
-          
-          const info = await this.smtpTransporter.sendMail(mailOptions);
-          console.log('E-Mail erfolgreich über SMTP gesendet:', info.messageId);
-          return true;
-        } catch (smtpError) {
-          console.error('Fehler beim Senden der E-Mail über SMTP:', smtpError);
-          
-          // Wenn SMTP fehlschlägt, versuchen wir immer die API als Fallback
-          if (this.apiInstance) {
-            console.log('Versuche Fallback über API...');
-          } else {
-            // Ohne API-Instanz melden wir einen Fehler
-            console.error('SMTP fehlt und keine API-Konfiguration verfügbar');
+      
+      const senderEmail = businessSetting.email || 'no-reply@example.com';
+      const senderName = businessSetting.businessName || 'Handyshop Verwaltung';
+      
+      // Zusätzliche Debug-Informationen
+      console.log(`E-Mail-Versand für Benutzer ${userId}: ${businessSetting.businessName}`);
+      console.log(`SMTP-Einstellungen: ${businessSetting.smtpHost}:${businessSetting.smtpPort}`);
+      console.log(`Absender: "${senderName}" <${businessSetting.smtpUser}>`);
+      console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}`);
+      
+      // Benutzer-spezifischen SMTP-Transporter erstellen
+      if (!businessSetting.smtpHost || !businessSetting.smtpPort || !businessSetting.smtpUser || !businessSetting.smtpPassword) {
+        console.error(`Fehlende SMTP-Einstellungen für Benutzer ${userId}`);
+        return false;
+      }
+      
+      // SMTP-Transporter für diesen Benutzer erstellen
+      const userSmtpTransporter = nodemailer.createTransport({
+        host: businessSetting.smtpHost,
+        port: businessSetting.smtpPort,
+        secure: businessSetting.smtpPort === 465, // true für 465, false für andere Ports
+        auth: {
+          user: businessSetting.smtpUser,
+          pass: businessSetting.smtpPassword
+        }
+      });
+      
+      try {
+        console.log('Sende E-Mail über benutzerspezifischen SMTP-Server...');
+        
+        const mailOptions = {
+          from: `"${senderName}" <${businessSetting.smtpUser}>`, // Benutzer-SMTP als Absender
+          to: to,
+          subject: subject,
+          html: body,
+          text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+        };
+        
+        const info = await userSmtpTransporter.sendMail(mailOptions);
+        console.log('E-Mail erfolgreich über benutzerspezifischen SMTP-Server gesendet:', info.messageId);
+        return true;
+      } catch (smtpError) {
+        console.error('Fehler beim Senden der E-Mail über benutzerspezifischen SMTP-Server:', smtpError);
+        
+        // Bei Fehlern mit dem benutzerspezifischen Server verwenden wir den globalen SMTP-Server als Fallback
+        if (this.smtpTransporter) {
+          try {
+            console.log('Versuche Fallback über globalen SMTP-Server...');
+            
+            const mailOptions = {
+              from: `"${senderName}" <${process.env.SMTP_USER}>`, // Globalen SMTP-Login als Absender
+              to: to,
+              subject: subject,
+              html: body,
+              text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+            };
+            
+            const info = await this.smtpTransporter.sendMail(mailOptions);
+            console.log('E-Mail erfolgreich über globalen SMTP-Server gesendet:', info.messageId);
+            return true;
+          } catch (globalSmtpError) {
+            console.error('Fehler beim Senden der E-Mail über globalen SMTP-Server:', globalSmtpError);
             return false;
           }
-        }
-      }
-
-      // Fallback: Wenn SMTP fehlschlägt oder nicht konfiguriert ist, versuche die API
-      if (this.apiInstance) {
-        try {
-          console.log('Sende E-Mail über Brevo API...');
-          // Sende die E-Mail über Brevo API
-          const sendSmtpEmail = new SendSmtpEmail();
-          
-          // Absender-Informationen
-          sendSmtpEmail.sender = {
-            name: senderName,
-            email: senderEmail
-          };
-          
-          // Empfänger (kann auch mehrere enthalten)
-          sendSmtpEmail.to = [{ email: to }];
-          
-          // Betreff und Inhalt
-          sendSmtpEmail.subject = subject;
-          sendSmtpEmail.htmlContent = body;  // HTML-Inhalt
-          sendSmtpEmail.textContent = body.replace(/<[^>]*>/g, '');  // Plaintext-Inhalt
-          
-          // API-Key aus der Umgebungsvariable holen
-          const apiKey = process.env.BREVO_API_KEY || '';
-          
-          // Die Brevo-API erfordert den API-Key im Header
-          const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail, {
-            headers: { 'api-key': apiKey }
-          });
-          
-          console.log('E-Mail erfolgreich über API gesendet, Antwort:', response);
-          return true;
-        } catch (apiError) {
-          console.error('Fehler beim Senden der E-Mail über Brevo API:', apiError);
-          
-          // Bei API-Fehlern geben wir immer einen Fehler zurück
-          console.error('Fehler beim E-Mail-Versand über alle verfügbaren Methoden');
+        } else {
+          console.error('Kein globaler SMTP-Server als Fallback verfügbar');
           return false;
         }
-      } else {
-        // Wenn weder SMTP noch API konfiguriert sind, geben wir einen Fehler zurück
-        console.error('Keine gültige E-Mail-Konfiguration vorhanden');
-        return false;
       }
     } catch (error) {
       console.error("Error sending email with template:", error);

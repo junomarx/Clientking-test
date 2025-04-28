@@ -5,8 +5,8 @@ import { brevoEmailService as emailService } from './brevo-email-service';
 import type { EmailTemplate, InsertEmailTemplate } from '@shared/schema';
 
 // Re-export der grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
-export async function getAllEmailTemplates(): Promise<EmailTemplate[]> {
-  return await emailService.getAllEmailTemplates();
+export async function getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
+  return await emailService.getAllEmailTemplates(userId);
 }
 
 export async function getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {

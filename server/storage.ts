@@ -1012,8 +1012,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Email template methods
-  async getAllEmailTemplates(): Promise<EmailTemplate[]> {
-    return await emailService.getAllEmailTemplates();
+  async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
+    return await emailService.getAllEmailTemplates(userId);
   }
   
   async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
