@@ -113,9 +113,9 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
       lastName: "",
       email: "",
       phone: "",
-      street: "",
+      address: "",
+      zipCode: "",
       city: "",
-      postalCode: "",
       notes: "",
     },
   });
@@ -417,7 +417,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     <div className="col-span-12 md:col-span-8">
                       <FormField
                         control={customerForm.control}
-                        name="street"
+                        name="address"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Straße</FormLabel>
@@ -432,7 +432,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     <div className="col-span-4 md:col-span-4">
                       <FormField
                         control={customerForm.control}
-                        name="postalCode"
+                        name="zipCode"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>PLZ</FormLabel>
