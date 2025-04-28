@@ -734,7 +734,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Detaillierte Reparaturstatistiken nach Gerätetyp und häufigen Problemen
-  async getDetailedRepairStats(currentUserId?: number, startDate?: Date, endDate?: Date): Promise<{
+  async getDetailedRepairStats(currentUserId?: number, startDate?: Date, endDate?: Date, revenueBasedOnPickup: boolean = false): Promise<{
     byDeviceType: Record<string, number>;
     byBrand: Record<string, number>;
     byIssue: Record<string, number>;
@@ -743,6 +743,7 @@ export class DatabaseStorage implements IStorage {
       total: number;
       byStatus: Record<string, number>;
       byMonth: Record<number, number>;
+      byDay: Record<string, number>;
     };
   }> {
     try {
@@ -755,7 +756,8 @@ export class DatabaseStorage implements IStorage {
           revenue: {
             total: 0,
             byStatus: {},
-            byMonth: {}
+            byMonth: {},
+            byDay: {}
           }
         };
       }
@@ -849,7 +851,8 @@ export class DatabaseStorage implements IStorage {
       const revenue = {
         total: 0,
         byStatus: {} as Record<string, number>,
-        byMonth: {} as Record<number, number>
+        byMonth: {} as Record<number, number>,
+        byDay: {} as Record<string, number>
       };
       
       // Gesamtumsatz und Umsatz nach Status berechnen
@@ -866,12 +869,21 @@ export class DatabaseStorage implements IStorage {
         const status = repair.status;
         revenue.byStatus[status] = (revenue.byStatus[status] || 0) + cost;
         
+        // Wähle das Datum basierend auf dem Abholstatus oder Erstellungsdatum
+        const dateToUse = revenueBasedOnPickup && repair.statusUpdatedAt && repair.status === 'abgeholt'
+          ? new Date(repair.statusUpdatedAt)
+          : new Date(repair.createdAt);
+        
         // Gruppiere nach Monat
-        if (repair.createdAt) {
-          const repairDate = new Date(repair.createdAt);
-          const monthKey = repairDate.getMonth(); // 0-11 für Jan-Dez
-          revenue.byMonth[monthKey] = (revenue.byMonth[monthKey] || 0) + cost;
-        }
+        const monthKey = dateToUse.getMonth(); // 0-11 für Jan-Dez
+        revenue.byMonth[monthKey] = (revenue.byMonth[monthKey] || 0) + cost;
+        
+        // Gruppiere nach Tag im Format YYYY-MM-DD
+        const year = dateToUse.getFullYear();
+        const month = String(dateToUse.getMonth() + 1).padStart(2, '0');
+        const day = String(dateToUse.getDate()).padStart(2, '0');
+        const dayKey = `${year}-${month}-${day}`;
+        revenue.byDay[dayKey] = (revenue.byDay[dayKey] || 0) + cost;
       });
       
       return {
@@ -891,7 +903,8 @@ export class DatabaseStorage implements IStorage {
         revenue: {
           total: 0,
           byStatus: {},
-          byMonth: {}
+          byMonth: {},
+          byDay: {}
         }
       };
     }

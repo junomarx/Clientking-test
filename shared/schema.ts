@@ -45,6 +45,8 @@ export const repairs = pgTable("repairs", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Zeitpunkt der letzten Statusänderung (wichtig für Umsatzberechnungen)
+  statusUpdatedAt: timestamp("status_updated_at"),
   // Jede Reparatur gehört zu einem Benutzer/Unternehmen
   userId: integer("user_id").references(() => users.id),
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde

@@ -543,8 +543,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate.setHours(23, 59, 59, 999);
       }
       
+      // Prüfe, ob die Umsatzberechnung auf Basis des Abholdatums erfolgen soll
+      const revenueBasedOnPickup = req.query.revenueBasedOnPickup === 'true';
+      
       // Detaillierte Statistiken für den Benutzer abrufen mit optionalem Zeitraum
-      const detailedStats = await storage.getDetailedRepairStats(userId, startDate, endDate);
+      const detailedStats = await storage.getDetailedRepairStats(userId, startDate, endDate, revenueBasedOnPickup);
       res.json(detailedStats);
     } catch (error) {
       console.error("Error fetching detailed stats:", error);
