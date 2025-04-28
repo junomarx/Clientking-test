@@ -243,8 +243,7 @@ function UserTable() {
                 <TableHead>Status</TableHead>
                 <TableHead>Rolle</TableHead>
                 <TableHead>Firma</TableHead>
-                <TableHead>Kunden</TableHead>
-                <TableHead>Reparaturen</TableHead>
+                {/* Kunden- und Reparaturzahlen entfernt wegen Datenschutz */}
                 <TableHead>Aktiv</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
@@ -285,16 +284,6 @@ function UserTable() {
                   </TableCell>
                   <TableCell>
                     {user.companyName || "-"}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-gray-50 font-medium">
-                      {user.username === 'bugi' ? 4 : user.username === 'murat' ? 0 : user.username === 'simo' ? 2 : 0}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge variant="outline" className="bg-gray-50 font-medium">
-                      {user.username === 'bugi' ? 13 : user.username === 'murat' ? 0 : user.username === 'simo' ? 8 : 0}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Switch 
@@ -475,8 +464,6 @@ function SystemDiagnosticTab() {
   const [systemInfo, setSystemInfo] = useState<{
     dbSize: number;
     numUsers: number;
-    numRepairs: number;
-    numCustomers: number;
     uptime: number;
   } | null>(null);
   
@@ -640,13 +627,10 @@ function SystemDiagnosticTab() {
                         <div className="text-sm text-gray-500">Uptime</div>
                         <div className="text-xl font-semibold">{systemInfo.uptime} Tage</div>
                       </div>
+                      {/* Kunden- und Reparaturzahlen aus Datenschutzgründen entfernt */}
                       <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Kunden</div>
-                        <div className="text-xl font-semibold">{systemInfo.numCustomers}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Reparaturen</div>
-                        <div className="text-xl font-semibold">{systemInfo.numRepairs}</div>
+                        <div className="text-sm text-gray-500">Systemstatus</div>
+                        <div className="text-xl font-semibold text-green-600">Aktiv</div>
                       </div>
                     </div>
                   </div>
