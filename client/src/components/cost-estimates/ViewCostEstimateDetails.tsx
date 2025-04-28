@@ -210,16 +210,6 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
                 />
               </div>
             )}
-            
-            {/* Kundeninformationen darunter */}
-            <div className="mt-8 space-y-1">
-              <h3 className="font-medium mb-2">Kundeninformationen</h3>
-              <div>
-                <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
-                <p>{estimate.customer?.address}</p>
-                <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
-              </div>
-            </div>
           </div>
           
           {/* Unternehmensdaten - Rechts */}
@@ -234,6 +224,20 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
               <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
               <p className="text-muted-foreground text-sm screen-only">Status: {estimate.status}</p>
             </div>
+          </div>
+        </div>
+        
+        {/* 20mm Abstand nach unten (ca. 80px bei einem üblichen DPI) */}
+        <div className="hidden print:block print:h-20"></div>
+        <div className={`${isPdfMode ? 'h-20' : ''}`}></div>
+        
+        {/* Kundeninformationen mit Abstand nach unten */}
+        <div className="mt-2 space-y-1">
+          <h3 className="font-medium mb-2">Kundeninformationen</h3>
+          <div>
+            <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
+            <p>{estimate.customer?.address}</p>
+            <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
           </div>
         </div>
         
