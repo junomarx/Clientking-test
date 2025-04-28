@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Download, RefreshCcw } from "lucide-react";
+import { Printer, Download, RefreshCcw, Building, MapPin, Phone, Mail } from "lucide-react";
 import { Euro } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -36,9 +36,10 @@ const StatusBadge = ({ status }: { status: string }) => {
 export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimateDetailsProps) {
   const { toast } = useToast();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [businessSettings, setBusinessSettings] = useState<any>(null);
   
   // Kostenvoranschlag abrufen
-  const { data: estimate, isLoading, isError, refetch } = useQuery({
+  const { data: estimate, isLoading: isLoadingEstimate, isError: isErrorEstimate, refetch } = useQuery({
     queryKey: ['/api/cost-estimates', estimateId],
     queryFn: async () => {
       const response = await fetch(`/api/cost-estimates/${estimateId}`);
@@ -48,6 +49,25 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       return response.json();
     }
   });
+  
+  // Geschäftseinstellungen abrufen
+  const { data: businessData, isLoading: isLoadingBusiness, isError: isErrorBusiness } = useQuery({
+    queryKey: ['/api/business-settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/business-settings');
+      if (!response.ok) {
+        throw new Error('Fehler beim Laden der Geschäftseinstellungen');
+      }
+      return response.json();
+    }
+  });
+  
+  // Setze Geschäftseinstellungen
+  useEffect(() => {
+    if (businessData) {
+      setBusinessSettings(businessData);
+    }
+  }, [businessData]);
   
   // Funktion zum Ausdrucken des Kostenvoranschlags
   const handlePrint = () => {
@@ -99,7 +119,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
     }
   };
   
-  if (isLoading) {
+  if (isLoadingEstimate || isLoadingBusiness) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading"/>
@@ -107,7 +127,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
     );
   }
   
-  if (isError || !estimate) {
+  if (isErrorEstimate || !estimate || isErrorBusiness || !businessData) {
     return (
       <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-200">
         <h3 className="font-semibold mb-2">Fehler beim Laden der Daten</h3>
@@ -118,6 +138,29 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       </div>
     );
   }
+  
+  // Berechne die tatsächlichen Preise für die Positionen
+  const recalculateItem = (item: any) => {
+    const quantity = parseFloat(String(item.quantity).replace(',', '.')) || 0;
+    const unitPrice = parseFloat(item.unitPrice.replace('€', '').replace(',', '.').trim()) || 0;
+    const totalPriceCalculated = (quantity * unitPrice).toFixed(2).replace('.', ',') + ' €';
+    return {
+      ...item,
+      totalPrice: totalPriceCalculated
+    };
+  };
+  
+  // Berechne die Summen neu
+  const recalculatedItems = estimate.items.map(recalculateItem);
+  const subtotal = recalculatedItems.reduce((sum: number, item: any) => {
+    const totalPrice = parseFloat(item.totalPrice.replace('€', '').replace(',', '.').trim()) || 0;
+    return sum + totalPrice;
+  }, 0);
+  
+  const subtotalFormatted = subtotal.toFixed(2).replace('.', ',') + ' €';
+  const taxRate = parseFloat(estimate.taxRate) || 0;
+  const taxAmount = (subtotal * taxRate / 100).toFixed(2).replace('.', ',') + ' €';
+  const total = (subtotal + (subtotal * taxRate / 100)).toFixed(2).replace('.', ',') + ' €';
   
   // Berechne Datum-Strings
   const createdAtFormatted = format(new Date(estimate.createdAt), 'PPP', { locale: de });
@@ -141,160 +184,145 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       </div>
       
       {/* Inhaltsbereich für PDF-Export */}
-      <div ref={contentRef} className="space-y-6">
-        {/* Header mit Referenznummer und Status */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">{estimate.title}</h2>
-            <p className="text-muted-foreground">Referenznummer: {estimate.referenceNumber}</p>
+      <div ref={contentRef} className="space-y-6 p-4">
+        {/* Briefkopf mit Unternehmensdaten und Kundeninformationen */}
+        <div className="flex justify-between items-start">
+          {/* Unternehmensdaten */}
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold">{businessData.businessName}</h1>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Building className="w-4 h-4 mr-1" />
+              <span>{businessData.address}</span>
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="w-4 h-4 mr-1" />
+              <span>{businessData.zipCode} {businessData.city}</span>
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Phone className="w-4 h-4 mr-1" />
+              <span>{businessData.phone}</span>
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Mail className="w-4 h-4 mr-1" />
+              <span>{businessData.email}</span>
+            </div>
           </div>
-          <div>
-            <StatusBadge status={estimate.status} />
+          
+          {/* Kundeninformationen */}
+          <div className="text-right">
+            <div className="border p-4 mb-2 inline-block text-left">
+              <p className="font-bold">{estimate.customerName}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-sm">Referenznummer: {estimate.referenceNumber}</p>
+              <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
+              <StatusBadge status={estimate.status} />
+            </div>
           </div>
+        </div>
+        
+        <div className="my-8">
+          <h2 className="text-2xl font-bold text-center mb-2">{estimate.title}</h2>
+          <p className="text-center text-muted-foreground">Gültig bis: {validUntilFormatted}</p>
         </div>
         
         <Separator />
         
-        {/* Allgemeine Informationen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-4">Allgemeine Informationen</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Erstellt am</p>
-                  <p>{createdAtFormatted}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Gültig bis</p>
-                  <p>{validUntilFormatted}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <p><StatusBadge status={estimate.status} /></p>
-                </div>
-                {estimate.status === 'angenommen' && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Angenommen am</p>
-                    <p>{acceptedAtFormatted}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Geräte-Informationen */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-medium mb-2">Gerätedetails</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <p className="text-sm text-muted-foreground">Gerätetyp:</p>
+              <p>{estimate.deviceType}</p>
+              <p className="text-sm text-muted-foreground">Marke:</p>
+              <p>{estimate.brand}</p>
+              <p className="text-sm text-muted-foreground">Modell:</p>
+              <p>{estimate.model}</p>
+              {estimate.serialNumber && (
+                <>
+                  <p className="text-sm text-muted-foreground">Seriennummer:</p>
+                  <p>{estimate.serialNumber}</p>
+                </>
+              )}
+            </div>
+          </div>
           
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-4">Kundeninformationen</h3>
-              <div>
-                <p className="text-sm text-muted-foreground">Kunde</p>
-                <p className="font-medium">{estimate.customerName}</p>
-              </div>
-            </CardContent>
-          </Card>
+          {estimate.issue && (
+            <div>
+              <h3 className="font-medium mb-2">Problem</h3>
+              <p>{estimate.issue}</p>
+            </div>
+          )}
         </div>
         
-        {/* Geräte-Informationen */}
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Gerätedetails</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Gerätetyp</p>
-                <p>{estimate.deviceType}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Marke</p>
-                <p>{estimate.brand}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Modell</p>
-                <p>{estimate.model}</p>
-              </div>
-            </div>
-            {(estimate.serialNumber || estimate.issue) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {estimate.serialNumber && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Seriennummer</p>
-                    <p>{estimate.serialNumber}</p>
-                  </div>
-                )}
-                {estimate.issue && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Problem</p>
-                    <p>{estimate.issue}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+
         
         {/* Beschreibung */}
         {estimate.description && (
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Beschreibung</h3>
-              <p className="whitespace-pre-line">{estimate.description}</p>
-            </CardContent>
-          </Card>
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">Beschreibung</h3>
+            <p className="whitespace-pre-line">{estimate.description}</p>
+          </div>
         )}
         
         {/* Positionen */}
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Positionen</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[80px]">Pos.</TableHead>
-                  <TableHead>Beschreibung</TableHead>
-                  <TableHead className="text-center">Menge</TableHead>
-                  <TableHead className="text-right">Einzelpreis</TableHead>
-                  <TableHead className="text-right">Gesamtpreis</TableHead>
+        <div className="mt-6">
+          <h3 className="font-medium mb-4">Positionen</h3>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">Pos.</TableHead>
+                <TableHead>Beschreibung</TableHead>
+                <TableHead className="text-center w-[80px]">Menge</TableHead>
+                <TableHead className="text-right w-[120px]">Einzelpreis</TableHead>
+                <TableHead className="text-right w-[120px]">Gesamtpreis</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recalculatedItems.map((item: any) => (
+                <TableRow key={item.position}>
+                  <TableCell>{item.position}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell className="text-center">{item.quantity}</TableCell>
+                  <TableCell className="text-right">{item.unitPrice}</TableCell>
+                  <TableCell className="text-right">{item.totalPrice}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {estimate.items?.map((item: any) => (
-                  <TableRow key={item.position}>
-                    <TableCell>{item.position}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell className="text-center">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{item.unitPrice}</TableCell>
-                    <TableCell className="text-right">{item.totalPrice}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            
-            {/* Summen */}
-            <div className="flex flex-col items-end mt-6 space-y-2">
-              <div className="flex justify-between w-64 text-sm">
-                <span>Zwischensumme:</span>
-                <span>{estimate.subtotal}</span>
-              </div>
-              <div className="flex justify-between w-64 text-sm">
-                <span>MwSt. ({estimate.taxRate}%):</span>
-                <span>{estimate.taxAmount}</span>
-              </div>
-              <div className="flex justify-between w-64 font-bold">
-                <span>Gesamtsumme:</span>
-                <span>{estimate.total}</span>
-              </div>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {/* Summen */}
+          <div className="flex flex-col items-end mt-6 space-y-2">
+            <div className="flex justify-between w-64 text-sm">
+              <span>Zwischensumme:</span>
+              <span>{subtotalFormatted}</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between w-64 text-sm">
+              <span>MwSt. ({estimate.taxRate}%):</span>
+              <span>{taxAmount}</span>
+            </div>
+            <div className="flex justify-between w-64 font-bold">
+              <span>Gesamtsumme:</span>
+              <span>{total}</span>
+            </div>
+          </div>
+        </div>
         
         {/* Notizen */}
         {estimate.notes && (
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-medium mb-2">Notizen</h3>
-              <p className="whitespace-pre-line">{estimate.notes}</p>
-            </CardContent>
-          </Card>
+          <div className="mt-6">
+            <h3 className="font-medium mb-2">Notizen</h3>
+            <p className="whitespace-pre-line">{estimate.notes}</p>
+          </div>
         )}
+        
+        {/* Unterschrift und Bedingungen */}
+        <div className="mt-10 border-t pt-4">
+          <p className="text-sm text-muted-foreground mt-2">
+            Dieses Angebot wurde von {businessData.businessName} erstellt und ist gültig bis zum {validUntilFormatted}.
+          </p>
+        </div>
       </div>
     </div>
   );
