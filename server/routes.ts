@@ -13,6 +13,7 @@ import {
   costEstimateItemSchema,
   repairStatuses,
   deviceTypes,
+  type InsertEmailTemplate,
   customers,
   repairs,
   feedbacks,
@@ -431,7 +432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             // Suche nach einer E-Mail-Vorlage mit name "ersatzteil"
-            const templates = await storage.getAllEmailTemplates();
+            const templates = await storage.getAllEmailTemplates(userId);
             const sparepartTemplate = templates.find(t => t.name.toLowerCase().includes("ersatzteil") || 
                                                       t.name.toLowerCase().includes("ersatz") ||
                                                       t.name.toLowerCase().includes("teil"));

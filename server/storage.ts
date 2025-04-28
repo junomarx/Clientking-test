@@ -1013,7 +1013,12 @@ export class DatabaseStorage implements IStorage {
 
   // Email template methods
   async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
-    return await emailService.getAllEmailTemplates(userId);
+    try {
+      return await emailService.getAllEmailTemplates(userId);
+    } catch (error) {
+      console.error("Error getting email templates:", error);
+      return [];
+    }
   }
   
   async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {

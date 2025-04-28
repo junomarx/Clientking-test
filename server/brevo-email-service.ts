@@ -3,6 +3,7 @@ import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessS
 import { eq, desc, isNull, or } from 'drizzle-orm';
 import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
@@ -181,15 +182,16 @@ export class BrevoEmailService {
       }
       
       // SMTP-Transporter für diesen Benutzer erstellen
-      const userSmtpTransporter = nodemailer.createTransport({
+      const smtpConfig: SMTPTransport.Options = {
         host: businessSetting.smtpHost,
-        port: businessSetting.smtpPort,
-        secure: businessSetting.smtpPort === 465, // true für 465, false für andere Ports
+        port: parseInt(businessSetting.smtpPort.toString()), // Stellen Sie sicher, dass es eine Zahl ist
+        secure: parseInt(businessSetting.smtpPort.toString()) === 465, // true für 465, false für andere Ports
         auth: {
           user: businessSetting.smtpUser,
           pass: businessSetting.smtpPassword
         }
-      });
+      };
+      const userSmtpTransporter = nodemailer.createTransport(smtpConfig);
       
       try {
         console.log('Sende E-Mail über benutzerspezifischen SMTP-Server...');
