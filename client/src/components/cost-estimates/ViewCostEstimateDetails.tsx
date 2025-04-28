@@ -215,7 +215,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
               </TableRow>
             </TableHeader>
             <TableBody>
-              {estimate.items?.map((item) => (
+              {estimate.items?.map((item: any) => (
                 <TableRow key={item.position}>
                   <TableCell>{item.position}</TableCell>
                   <TableCell>{item.description}</TableCell>

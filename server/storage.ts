@@ -657,6 +657,9 @@ export class DatabaseStorage implements IStorage {
         userFilter,
         lte(repairs.createdAt, endDate)
       );
+    } else {
+      // Falls kein Datum gesetzt ist, behalte einfach den Benutzerfilter bei
+      combinedFilter = userFilter;
     }
     
     // Get total number of orders with optional date range filter
@@ -777,6 +780,9 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.userId, currentUserId),
           lte(repairs.createdAt, endDate)
         );
+      } else {
+        // Falls kein Datum gesetzt ist, behalte einfach den Benutzerfilter bei
+        combinedFilter = eq(repairs.userId, currentUserId);
       }
       
       // Alle Reparaturen des Benutzers abrufen mit optionalem Zeitraumfilter
