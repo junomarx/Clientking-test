@@ -46,8 +46,7 @@ const formSchema = z.object({
   customerId: z.number({
     required_error: "Bitte wählen Sie einen Kunden aus",
   }),
-  title: z.string().min(1, "Titel ist erforderlich"),
-  description: z.string().optional(),
+  title: z.string().default("Kostenvoranschlag"),
   deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
   brand: z.string().min(1, "Marke ist erforderlich"),
   model: z.string().min(1, "Modell ist erforderlich"),
@@ -98,8 +97,7 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      description: "",
+      title: "Kostenvoranschlag",
       deviceType: "",
       brand: "",
       model: "",
@@ -336,22 +334,8 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
           )}
         />
         
-        {/* Titel und Gültigkeitsdatum */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Titel</FormLabel>
-                <FormControl>
-                  <Input placeholder="Titel des Kostenvoranschlags" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
+        {/* Gültigkeitsdatum */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">          
           <FormField
             control={form.control}
             name="validUntil"
@@ -389,25 +373,6 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
             )}
           />
         </div>
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Beschreibung</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Beschreibung des Kostenvoranschlags"
-                  className="resize-none"
-                  rows={3}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         
         {/* Gerätedetails */}
         <Card>

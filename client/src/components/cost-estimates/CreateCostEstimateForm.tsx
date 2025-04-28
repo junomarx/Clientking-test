@@ -163,7 +163,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      title: "Kostenvoranschlag",
       description: "",
       deviceType: "",
       brand: "",
@@ -487,22 +487,8 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
           </Dialog>
         </div>
         
-        {/* Titel und Beschreibung */}
+        {/* Gültigkeitsdatum */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Titel</FormLabel>
-                <FormControl>
-                  <Input placeholder="Titel des Kostenvoranschlags" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
           <FormField
             control={form.control}
             name="validUntil"
@@ -540,25 +526,6 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
             )}
           />
         </div>
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Beschreibung</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Beschreibung des Kostenvoranschlags"
-                  className="resize-none"
-                  rows={3}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         
         {/* Gerätedetails */}
         <Card>
