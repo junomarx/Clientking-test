@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -251,3 +251,55 @@ export const insertUserBrandSchema = createInsertSchema(userBrands).omit({
 
 export type UserBrand = typeof userBrands.$inferSelect;
 export type InsertUserBrand = z.infer<typeof insertUserBrandSchema>;
+
+// Kostenvoranschläge (Angebote)
+export const costEstimates = pgTable("cost_estimates", {
+  id: serial("id").primaryKey(),
+  referenceNumber: text("reference_number").unique(), // Eindeutige Angebotsnummer (z.B. KV2025-0001)
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  title: text("title").notNull(), // Titel des Kostenvoranschlags
+  description: text("description"), // Beschreibung des Kostenvoranschlags
+  deviceType: text("device_type").notNull(),
+  brand: text("brand").notNull(),
+  model: text("model").notNull(),
+  serialNumber: text("serial_number"),
+  issue: text("issue"),
+  items: jsonb("items").notNull(), // JSON Array von Posten (Position, Beschreibung, Menge, Preis)
+  subtotal: text("subtotal").notNull(), // Zwischensumme (ohne MwSt)
+  taxRate: text("tax_rate").default("20").notNull(), // MwSt-Satz in Prozent
+  taxAmount: text("tax_amount").notNull(), // MwSt-Betrag
+  total: text("total").notNull(), // Gesamtsumme (mit MwSt)
+  validUntil: timestamp("valid_until"), // Gültig bis
+  status: text("status").default("offen").notNull(), // Status: offen, angenommen, abgelehnt, abgelaufen
+  notes: text("notes"), // Zusätzliche Notizen
+  acceptedAt: timestamp("accepted_at"), // Wann wurde der Kostenvoranschlag angenommen
+  convertedToRepair: boolean("converted_to_repair").default(false), // Wurde in Reparaturauftrag umgewandelt
+  repairId: integer("repair_id").references(() => repairs.id), // Referenz auf den Reparaturauftrag, falls umgewandelt
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  userId: integer("user_id").references(() => users.id), // Jeder Kostenvoranschlag gehört zu einem Benutzer
+});
+
+export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
+  id: true,
+  referenceNumber: true, // Wird automatisch generiert
+  createdAt: true,
+  updatedAt: true,
+  acceptedAt: true,
+});
+
+// Zod-Schema für einen Kostenvoranschlag-Posten
+export const costEstimateItemSchema = z.object({
+  position: z.number(), // Positionsnummer
+  description: z.string(), // Beschreibung des Postens
+  quantity: z.number().default(1), // Menge
+  unitPrice: z.string(), // Einzelpreis als String (mit €)
+  totalPrice: z.string(), // Gesamtpreis als String (mit €)
+});
+
+export const insertCostEstimateItemsSchema = z.array(costEstimateItemSchema);
+
+export type CostEstimate = typeof costEstimates.$inferSelect;
+export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
+export type CostEstimateItem = z.infer<typeof costEstimateItemSchema>;
+export type InsertCostEstimateItems = z.infer<typeof insertCostEstimateItemsSchema>;

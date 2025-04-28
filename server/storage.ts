@@ -7,7 +7,8 @@ import {
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
   smsTemplates, type SmsTemplate, type InsertSmsTemplate,
   userDeviceTypes, type UserDeviceType, type InsertUserDeviceType,
-  userBrands, type UserBrand, type InsertUserBrand
+  userBrands, type UserBrand, type InsertUserBrand,
+  costEstimates, type CostEstimate, type InsertCostEstimate, type CostEstimateItem
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -118,6 +119,16 @@ export interface IStorage {
   createUserBrand(brand: InsertUserBrand, userId: number): Promise<UserBrand>;
   updateUserBrand(id: number, brand: Partial<InsertUserBrand>, userId: number): Promise<UserBrand | undefined>;
   deleteUserBrand(id: number, userId: number): Promise<boolean>;
+  
+  // Kostenvoranschläge (CostEstimates) methods
+  getAllCostEstimates(currentUserId?: number): Promise<CostEstimate[]>;
+  getCostEstimate(id: number, currentUserId?: number): Promise<CostEstimate | undefined>;
+  getCostEstimatesByCustomerId(customerId: number, currentUserId?: number): Promise<CostEstimate[]>;
+  createCostEstimate(estimate: InsertCostEstimate, currentUserId?: number): Promise<CostEstimate>;
+  updateCostEstimate(id: number, estimateUpdate: Partial<InsertCostEstimate>, currentUserId?: number): Promise<CostEstimate | undefined>;
+  updateCostEstimateStatus(id: number, status: string, currentUserId?: number): Promise<CostEstimate | undefined>;
+  deleteCostEstimate(id: number, currentUserId?: number): Promise<boolean>;
+  convertToRepair(id: number, currentUserId?: number): Promise<Repair | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -433,6 +444,38 @@ export class DatabaseStorage implements IStorage {
     } while (usedNumbers.has(randomNum));
     
     return prefix + randomNum;
+  }
+  
+  // Generiert eine eindeutige Referenznummer für Kostenvoranschläge im Format: KV[Jahr]-[laufende Nummer]
+  // z.B. KV2025-0001
+  private async generateUniqueReferenceNumber(): Promise<string> {
+    const currentYear = new Date().getFullYear().toString();
+    const prefix = `KV${currentYear}-`;
+    
+    // Finde die höchste Nummer, die in diesem Jahr bereits vergeben wurde
+    const existingNumbers = await db
+      .select({ refNumber: costEstimates.referenceNumber })
+      .from(costEstimates)
+      .where(like(costEstimates.referenceNumber, `${prefix}%`));
+      
+    let highestNumber = 0;
+    
+    existingNumbers.forEach(entry => {
+      if (entry.refNumber) {
+        const numberPart = entry.refNumber.substring(prefix.length);
+        const number = parseInt(numberPart, 10);
+        if (!isNaN(number) && number > highestNumber) {
+          highestNumber = number;
+        }
+      }
+    });
+    
+    // Nächste Nummer
+    const nextNumber = highestNumber + 1;
+    // Formatiere die Nummer mit führenden Nullen (z.B. 0001, 0023, etc.)
+    const formattedNumber = nextNumber.toString().padStart(4, '0');
+    
+    return prefix + formattedNumber;
   }
 
   async createRepair(insertRepair: InsertRepair, currentUserId?: number): Promise<Repair> {
