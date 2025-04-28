@@ -282,7 +282,6 @@ export default function CostEstimatesTab() {
                     <TableRow>
                       <TableHead>Ref.-Nr.</TableHead>
                       <TableHead>Kunde</TableHead>
-                      <TableHead>Titel</TableHead>
                       <TableHead>Gerätedetails</TableHead>
                       <TableHead>Erstelldatum</TableHead>
                       <TableHead>Gesamtsumme</TableHead>
@@ -295,7 +294,6 @@ export default function CostEstimatesTab() {
                       <TableRow key={estimate.id}>
                         <TableCell className="font-medium">{estimate.referenceNumber}</TableCell>
                         <TableCell>{estimate.customerName}</TableCell>
-                        <TableCell>{estimate.title}</TableCell>
                         <TableCell>{estimate.brand} {estimate.model}</TableCell>
                         <TableCell>{new Date(estimate.createdAt).toLocaleDateString('de-DE')}</TableCell>
                         <TableCell className="font-medium">{estimate.total}</TableCell>
