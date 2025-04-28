@@ -193,8 +193,8 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             <div className="border p-4 inline-block">
               <p className="font-bold">{estimate.customerName}</p>
               {/* Erweiterte Kundenanzeige - fügt verfügbare Daten ein */}
-              <p>{estimate.customerPhone && `Tel: ${estimate.customerPhone}`}</p>
-              <p>{estimate.customerEmail && `E-Mail: ${estimate.customerEmail}`}</p>
+              {estimate.customerPhone && <p>Tel: {estimate.customerPhone}</p>}
+              {estimate.customerEmail && <p>E-Mail: {estimate.customerEmail}</p>}
             </div>
           </div>
           
@@ -208,7 +208,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             <div className="mt-4">
               <p className="text-muted-foreground text-sm">Referenznummer: {estimate.referenceNumber}</p>
               <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
-              <p className="text-muted-foreground text-sm print:hidden">Status: {estimate.status}</p>
+              <p className="text-muted-foreground text-sm screen-only">Status: {estimate.status}</p>
             </div>
           </div>
         </div>
