@@ -61,7 +61,24 @@ export class BrevoEmailService {
   }
 
   // Die grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
-  async getAllEmailTemplates(): Promise<EmailTemplate[]> {
+  async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
+    // Wenn eine userId angegeben ist, filtern wir nach Vorlagen dieses Benutzers
+    // und fügen zusätzlich Vorlagen ohne userId hinzu (Standard-Vorlagen)
+    if (userId !== undefined) {
+      const templates = await db.select().from(emailTemplates)
+        .where(
+          // Entweder die userId entspricht der übergebenen userId ODER die userId ist NULL
+          // Das stellt sicher, dass wir sowohl benutzerspezifische als auch globale Vorlagen zurückgeben
+          db.or(
+            eq(emailTemplates.userId, userId),
+            db.sql`${emailTemplates.userId} IS NULL`
+          )
+        )
+        .orderBy(desc(emailTemplates.createdAt));
+      return templates;
+    }
+    
+    // Ohne userId Filterung geben wir alle Vorlagen zurück
     return await db.select().from(emailTemplates).orderBy(desc(emailTemplates.createdAt));
   }
 
