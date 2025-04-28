@@ -192,23 +192,16 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             <h3 className="font-medium mb-2">Kundeninformationen</h3>
             <div className="border p-4 inline-block">
               <p className="font-bold">{estimate.customerName}</p>
-              {estimate.customer && (
-                <>
-                  {estimate.customer.address && <p>{estimate.customer.address}</p>}
-                  {estimate.customer.zipCode && estimate.customer.city && (
-                    <p>{estimate.customer.zipCode} {estimate.customer.city}</p>
-                  )}
-                  {estimate.customer.phone && <p>{estimate.customer.phone}</p>}
-                  {estimate.customer.email && <p>{estimate.customer.email}</p>}
-                </>
-              )}
+              {/* Erweiterte Kundenanzeige - fügt verfügbare Daten ein */}
+              <p>{estimate.customerPhone && `Tel: ${estimate.customerPhone}`}</p>
+              <p>{estimate.customerEmail && `E-Mail: ${estimate.customerEmail}`}</p>
             </div>
           </div>
           
           {/* Unternehmensdaten - Rechts */}
           <div className="text-right">
             <h1 className="text-xl font-bold">{businessData.businessName}</h1>
-            <p className="text-sm text-muted-foreground">{businessData.address}</p>
+            <p className="text-sm text-muted-foreground">{businessData.streetAddress}</p>
             <p className="text-sm text-muted-foreground">{businessData.zipCode} {businessData.city}</p>
             <p className="text-sm text-muted-foreground">{businessData.phone}</p>
             <p className="text-sm text-muted-foreground">{businessData.email}</p>
