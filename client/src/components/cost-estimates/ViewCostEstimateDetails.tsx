@@ -185,77 +185,72 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
       
       {/* Inhaltsbereich für PDF-Export */}
       <div ref={contentRef} className="space-y-6 p-4">
-        {/* Briefkopf mit Logo, Unternehmensdaten und Kundeninformationen */}
+        {/* Briefkopf mit Unternehmensdaten und Kundeninformationen */}
         <div className="flex justify-between items-start">
-          {/* Unternehmenslogo - Links */}
-          <div className="w-1/4">
-            {/* Logo als SVG - stilisiertes elektrisches Symbol */}
-            <div className="w-20 h-20 text-green-500">
-              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <rect x="25" y="25" width="50" height="50" rx="10" fill="#4CAF50" opacity="0.8" />
-                <path d="M60,30 L45,50 L55,50 L40,70" stroke="white" strokeWidth="6" fill="none" />
-              </svg>
+          {/* Kundeninformationen - Links */}
+          <div className="space-y-1">
+            <h3 className="font-medium mb-2">Kundeninformationen</h3>
+            <div>
+              <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
+              <p>{estimate.customer?.address}</p>
+              <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
             </div>
           </div>
           
           {/* Unternehmensdaten - Rechts */}
           <div className="text-right">
             <h1 className="text-xl font-bold">{businessData.businessName}</h1>
-            <p className="text-sm">{businessData.streetAddress}</p>
-            <p className="text-sm">{businessData.zipCode} {businessData.city}</p>
-            <div className="mt-2">
-              <p className="text-sm flex items-center justify-end">
-                <Mail className="w-4 h-4 mr-1" /> {businessData.email}
-              </p>
-              <p className="text-sm flex items-center justify-end">
-                <Phone className="w-4 h-4 mr-1" /> {businessData.phone}
-              </p>
+            <p className="text-sm text-muted-foreground">{businessData.streetAddress}</p>
+            <p className="text-sm text-muted-foreground">{businessData.zipCode} {businessData.city}</p>
+            <p className="text-sm text-muted-foreground">{businessData.phone}</p>
+            <p className="text-sm text-muted-foreground">{businessData.email}</p>
+            <div className="mt-4">
+              <p className="text-muted-foreground text-sm">Referenznummer: {estimate.referenceNumber}</p>
+              <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
+              <p className="text-muted-foreground text-sm screen-only">Status: {estimate.status}</p>
             </div>
           </div>
         </div>
         
-        {/* Kundeninformationen */}
-        <div className="mt-8">
-          <h3 className="text-sm uppercase font-medium text-gray-500 mb-1">Kundendaten</h3>
-          <div>
-            <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
-            <p>{estimate.customer?.address}</p>
-            <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
-          </div>
-        </div>
-        
-        {/* Angebotsinformationen */}
-        <div className="flex justify-between items-start mt-6">
-          <div>
-            <h2 className="text-xl font-bold">Angebot {estimate.referenceNumber}</h2>
-          </div>
-          <div className="text-right">
-            <p className="text-sm">Angebotsdatum: {createdAtFormatted}</p>
-            <p className="text-sm">Ablaufdatum: {validUntilFormatted}</p>
-            <p className="text-sm screen-only">Status: {estimate.status}</p>
-          </div>
+        <div className="my-8 border-t border-b py-4">
+          <h2 className="text-2xl font-bold text-center mb-2">Kostenvoranschlag</h2>
+          <p className="text-center text-muted-foreground">Gültig bis: {validUntilFormatted}</p>
         </div>
         
 
         
         {/* Geräte-Informationen */}
-        <div className="mt-6">
-          <h3 className="text-sm uppercase font-medium text-gray-500 mb-2">Gerätedetails</h3>
-          <div className="flex flex-col">
-            <div className="mb-1">
-              <span className="font-medium">{estimate.brand} {estimate.model} ({estimate.deviceType})</span>
-            </div>
-            {estimate.serialNumber && (
-              <div className="text-sm text-gray-600">
-                IMEI BITTE MIT AUSWEIS UND IHRE ANMELDEDATEN DER FIRMA {businessData.businessName} MITBRINGEN.
-              </div>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="font-medium mb-2">Gerätedetails</h3>
+            <table className="w-full">
+              <tbody>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Gerätetyp:</td>
+                  <td>{estimate.deviceType}</td>
+                </tr>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Marke:</td>
+                  <td>{estimate.brand}</td>
+                </tr>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Modell:</td>
+                  <td>{estimate.model}</td>
+                </tr>
+                {estimate.serialNumber && (
+                  <tr>
+                    <td className="text-sm text-muted-foreground pr-4">Seriennummer:</td>
+                    <td>{estimate.serialNumber}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
           
           {estimate.issue && (
-            <div className="mt-4">
-              <p>Hallo {estimate.customer?.firstName} {estimate.customer?.lastName},</p>
-              <p className="mt-2">Vielen Dank für Ihr Interesse an unserem Service. Wir unterbreiten Ihnen hiermit das folgende Angebot:</p>
+            <div>
+              <h3 className="font-medium mb-2">Problem</h3>
+              <p>{estimate.issue}</p>
             </div>
           )}
         </div>
@@ -272,20 +267,24 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         
         {/* Positionen */}
         <div className="mt-6">
-          <h3 className="font-medium mb-4">Reparaturen</h3>
+          <h3 className="font-medium mb-4">Positionen</h3>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">Anzahl</TableHead>
+                <TableHead className="w-[50px]">Pos.</TableHead>
                 <TableHead>Beschreibung</TableHead>
-                <TableHead className="text-right w-[120px]">€ {estimate.taxRate}%</TableHead>
+                <TableHead className="text-center w-[80px]">Menge</TableHead>
+                <TableHead className="text-right w-[120px]">Einzelpreis</TableHead>
+                <TableHead className="text-right w-[120px]">Gesamtpreis</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recalculatedItems.map((item: any) => (
                 <TableRow key={item.position}>
-                  <TableCell>{item.quantity} x</TableCell>
+                  <TableCell>{item.position}</TableCell>
                   <TableCell>{item.description}</TableCell>
+                  <TableCell className="text-center">{item.quantity}</TableCell>
+                  <TableCell className="text-right">{item.unitPrice}</TableCell>
                   <TableCell className="text-right">{item.totalPrice}</TableCell>
                 </TableRow>
               ))}
@@ -293,17 +292,17 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           </Table>
           
           {/* Summen */}
-          <div className="mt-6 border-t pt-4">
-            <div className="flex justify-between text-sm">
-              <span>Zwischensumme Exkl.</span>
+          <div className="flex flex-col items-end mt-6 space-y-2">
+            <div className="flex justify-between w-64 text-sm">
+              <span>Zwischensumme:</span>
               <span>{subtotalFormatted}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span>{estimate.taxRate}%</span>
+            <div className="flex justify-between w-64 text-sm">
+              <span>MwSt. ({estimate.taxRate}%):</span>
               <span>{taxAmount}</span>
             </div>
-            <div className="flex justify-between font-bold mt-2">
-              <span>Gesamt</span>
+            <div className="flex justify-between w-64 font-bold">
+              <span>Gesamtsumme:</span>
               <span>{total}</span>
             </div>
           </div>
@@ -317,16 +316,11 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           </div>
         )}
         
-        {/* Abschlusstext und Bedingungen */}
-        <div className="mt-10">
-          <p className="mb-4">Wenn Sie Fragen haben, zögern Sie nicht, uns zu kontaktieren.</p>
-          <p className="mb-6">Mit freundlichen Grüßen,</p>
-          <p className="font-medium">{businessData.businessName}</p>
-        </div>
-        
-        {/* Fußzeile */}
-        <div className="mt-16 border-t pt-4 text-xs text-gray-500">
-          <p>Dieses Angebot wurde von unserer Website generiert und ist als Richtwert zu verstehen. Es können keine Rechte aus den Informationen in diesem Angebot abgeleitet werden. Wir haften nicht für Fehler oder Falschinformationen.</p>
+        {/* Unterschrift und Bedingungen */}
+        <div className="mt-10 border-t pt-4">
+          <p className="text-sm text-muted-foreground mt-2">
+            Dieses Angebot wurde von {businessData.businessName} erstellt und ist gültig bis zum {validUntilFormatted}.
+          </p>
         </div>
       </div>
     </div>
