@@ -234,39 +234,39 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
 
         
         {/* Geräte-Informationen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-medium mb-2">Gerätedetails</h3>
-            <table className="w-full">
-              <tbody>
-                <tr>
-                  <td className="text-sm text-muted-foreground pr-4">Gerätetyp:</td>
-                  <td>{estimate.deviceType}</td>
-                </tr>
-                <tr>
-                  <td className="text-sm text-muted-foreground pr-4">Marke:</td>
-                  <td>{estimate.brand}</td>
-                </tr>
-                <tr>
-                  <td className="text-sm text-muted-foreground pr-4">Modell:</td>
-                  <td>{estimate.model}</td>
-                </tr>
-                {estimate.serialNumber && (
-                  <tr>
-                    <td className="text-sm text-muted-foreground pr-4">Seriennummer:</td>
-                    <td>{estimate.serialNumber}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div>
+          <h3 className="font-medium mb-2">Gerätedetails</h3>
           
-          {estimate.issue && (
-            <div>
-              <h3 className="font-medium mb-2">Problem</h3>
-              <p>{estimate.issue}</p>
+          <div className="border rounded-lg p-4 mb-4 print-no-border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Gerätetyp</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.deviceType}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Marke</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.brand}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Modell</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.model}</div>
+              </div>
             </div>
-          )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Seriennummer</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.serialNumber || '–'}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Problem</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.issue || '–'}</div>
+              </div>
+            </div>
+          </div>
         </div>
         
 

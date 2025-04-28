@@ -7,6 +7,14 @@
     .screen-only {
       display: none !important;
     }
+    
+    .print-no-border {
+      border: none !important;
+    }
+    
+    .print-border-none * {
+      border: none !important;
+    }
   }
 }
 
