@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Printer, Download, RefreshCcw, Building, MapPin, Phone, Mail } from "lucide-react";
+import { Download, RefreshCcw, Building, MapPin, Phone, Mail } from "lucide-react";
 import { Euro } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -70,10 +70,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
     }
   }, [businessData]);
   
-  // Funktion zum Ausdrucken des Kostenvoranschlags
-  const handlePrint = () => {
-    window.print();
-  };
+  // Druckfunktion entfernt und nur PDF-Erstellung beibehalten
   
   // Funktion zum Herunterladen des Kostenvoranschlags als PDF
   const handleDownload = async () => {
@@ -184,11 +181,8 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
   
   return (
     <div className="space-y-6 py-4">
-      {/* Aktions-Buttons für Druck und PDF-Export */}
+      {/* Nur PDF-Export-Button */}
       <div className="flex justify-end items-center gap-2 print:hidden">
-        <Button variant="outline" size="sm" onClick={handlePrint}>
-          <Printer className="w-4 h-4 mr-2" /> Drucken
-        </Button>
         <Button variant="outline" size="sm" onClick={handleDownload}>
           <Download className="w-4 h-4 mr-2" /> PDF
         </Button>
@@ -231,7 +225,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         
         {/* Kundeninformationen mit Abstand nach unten */}
         <div className="mt-2 space-y-1">
-          <h3 className="font-medium mb-2">Kundeninformationen</h3>
+          <h3 className="text-sm text-gray-700 mb-2">Kundeninformationen</h3>
           <div>
             <p className="font-bold">{estimate.customer?.firstName} {estimate.customer?.lastName}</p>
             <p>{estimate.customer?.address}</p>
@@ -313,7 +307,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         
         {/* Positionen */}
         <div className="mt-6">
-          <h3 className="font-medium mb-4">Positionen</h3>
+          <h3 className="text-sm text-gray-700 mb-4">Positionen</h3>
           <Table>
             <TableHeader>
               <TableRow>
@@ -357,8 +351,8 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         {/* Notizen */}
         {estimate.notes && (
           <div className="mt-6">
-            <h3 className="font-medium mb-2">Notizen</h3>
-            <p className="whitespace-pre-line">{estimate.notes}</p>
+            <h3 className="text-sm text-gray-700 mb-2">Notizen</h3>
+            <p className="whitespace-pre-line text-sm">{estimate.notes}</p>
           </div>
         )}
         
