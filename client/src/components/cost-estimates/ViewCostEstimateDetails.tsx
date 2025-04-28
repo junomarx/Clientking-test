@@ -190,12 +190,19 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           {/* Kundeninformationen - Links */}
           <div className="space-y-1">
             <h3 className="font-medium mb-2">Kundeninformationen</h3>
-            <div className="border p-4 inline-block">
-              <p className="font-bold">{estimate.customerName}</p>
-              <p>{estimate.customer?.address}</p>
-              <p>{estimate.customer?.zipCode} {estimate.customer?.city}</p>
-              <p>Tel: {estimate.customerPhone}</p>
-              <p>E-Mail: {estimate.customerEmail}</p>
+            <div>
+              <table className="border-collapse">
+                <tbody>
+                  <tr>
+                    <td className="pr-4">Tel:</td>
+                    <td>{estimate.customerPhone}</td>
+                  </tr>
+                  <tr>
+                    <td className="pr-4">E-Mail:</td>
+                    <td>{estimate.customerEmail}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
           
@@ -214,31 +221,39 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           </div>
         </div>
         
-        <div className="my-8">
+        <div className="my-8 border-t border-b py-4">
           <h2 className="text-2xl font-bold text-center mb-2">Kostenvoranschlag</h2>
           <p className="text-center text-muted-foreground">Gültig bis: {validUntilFormatted}</p>
         </div>
         
-        <Separator />
+
         
         {/* Geräte-Informationen */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <h3 className="font-medium mb-2">Gerätedetails</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <p className="text-sm text-muted-foreground">Gerätetyp:</p>
-              <p>{estimate.deviceType}</p>
-              <p className="text-sm text-muted-foreground">Marke:</p>
-              <p>{estimate.brand}</p>
-              <p className="text-sm text-muted-foreground">Modell:</p>
-              <p>{estimate.model}</p>
-              {estimate.serialNumber && (
-                <>
-                  <p className="text-sm text-muted-foreground">Seriennummer:</p>
-                  <p>{estimate.serialNumber}</p>
-                </>
-              )}
-            </div>
+            <table className="w-full">
+              <tbody>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Gerätetyp:</td>
+                  <td>{estimate.deviceType}</td>
+                </tr>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Marke:</td>
+                  <td>{estimate.brand}</td>
+                </tr>
+                <tr>
+                  <td className="text-sm text-muted-foreground pr-4">Modell:</td>
+                  <td>{estimate.model}</td>
+                </tr>
+                {estimate.serialNumber && (
+                  <tr>
+                    <td className="text-sm text-muted-foreground pr-4">Seriennummer:</td>
+                    <td>{estimate.serialNumber}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
           
           {estimate.issue && (
