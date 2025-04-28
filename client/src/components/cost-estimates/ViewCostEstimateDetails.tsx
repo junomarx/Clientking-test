@@ -237,33 +237,65 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         <div>
           <h3 className="font-medium mb-2">Gerätedetails</h3>
           
-          <div className="border rounded-lg p-4 mb-4 print-no-border">
+          <div className="border rounded-lg p-4 mb-4 screen-only">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Gerätetyp</div>
-                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.deviceType}</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.deviceType}</div>
               </div>
               
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Marke</div>
-                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.brand}</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.brand}</div>
               </div>
               
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Modell</div>
-                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.model}</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.model}</div>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Seriennummer</div>
-                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.serialNumber || '–'}</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.serialNumber || '–'}</div>
               </div>
               
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Problem</div>
-                <div className="border border-input rounded-md py-2 px-3 text-sm print-no-border">{estimate.issue || '–'}</div>
+                <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.issue || '–'}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nur für Druck/PDF - ohne Rahmen */}
+          <div className="hidden print:block print:mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Gerätetyp</div>
+                <div className="text-sm">{estimate.deviceType}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Marke</div>
+                <div className="text-sm">{estimate.brand}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Modell</div>
+                <div className="text-sm">{estimate.model}</div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Seriennummer</div>
+                <div className="text-sm">{estimate.serialNumber || '–'}</div>
+              </div>
+              
+              <div>
+                <div className="text-sm text-muted-foreground mb-1">Problem</div>
+                <div className="text-sm">{estimate.issue || '–'}</div>
               </div>
             </div>
           </div>
