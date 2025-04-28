@@ -129,7 +129,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         issue: repair.issue,
         estimatedCost: repair.estimatedCost,
         depositAmount: repair.depositAmount,
-        status: repair.status as 'eingegangen' | 'in_reparatur' | 'fertig' | 'abgeholt' | 'ausser_haus',
+        status: repair.status as 'eingegangen' | 'in_reparatur' | 'ersatzteil_eingetroffen' | 'fertig' | 'abgeholt' | 'ausser_haus',
         notes: repair.notes,
         createdAt: repair.createdAt.toString(),
         updatedAt: repair.updatedAt.toString(),
@@ -351,6 +351,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               <SelectItem value="all">Alle Status</SelectItem>
               <SelectItem value="eingegangen">Eingegangen</SelectItem>
               <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+              <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
               <SelectItem value="ausser_haus">Außer Haus</SelectItem>
               <SelectItem value="fertig">Fertig</SelectItem>
               <SelectItem value="abgeholt">Abgeholt</SelectItem>
@@ -559,6 +560,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               <SelectContent>
                 <SelectItem value="eingegangen">Eingegangen</SelectItem>
                 <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
                 <SelectItem value="ausser_haus">Außer Haus</SelectItem>
                 <SelectItem value="fertig">Fertig / Abholbereit</SelectItem>
                 <SelectItem value="abgeholt">Abgeholt</SelectItem>
