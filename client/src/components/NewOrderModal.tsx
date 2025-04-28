@@ -76,9 +76,10 @@ type OrderFormValues = z.infer<typeof orderFormSchema>;
 interface NewOrderModalProps {
   open: boolean;
   onClose: () => void;
+  customerId?: number | null;
 }
 
-export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
+export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
@@ -125,6 +126,57 @@ export function NewOrderModal({ open, onClose }: NewOrderModalProps) {
   const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   
+  // Laden des vorausgewählten Kunden
+  useEffect(() => {
+    if (open && customerId) {
+      const fetchCustomer = async () => {
+        try {
+          const response = await fetch(`/api/customers/${customerId}`, {
+            headers: {
+              "Authorization": `Bearer ${localStorage.getItem('auth_token')}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Kunde konnte nicht geladen werden');
+          }
+          
+          const customer = await response.json();
+          
+          if (customer) {
+            // Kundendaten in Formular eintragen
+            form.setValue('firstName', customer.firstName);
+            form.setValue('lastName', customer.lastName);
+            form.setValue('phone', customer.phone);
+            if (customer.email) {
+              form.setValue('email', customer.email);
+            }
+            
+            // Customer ID setzen
+            setSelectedCustomerId(customer.id);
+            
+            // Fokus auf das nächste Feld (Geräteart) setzen
+            setTimeout(() => {
+              const deviceTypeInput = document.querySelector('input[name="deviceType"]');
+              if (deviceTypeInput) {
+                (deviceTypeInput as HTMLInputElement).focus();
+              }
+            }, 100);
+          }
+        } catch (error) {
+          console.error("Error loading customer:", error);
+          toast({
+            title: "Fehler",
+            description: "Der Kunde konnte nicht geladen werden.",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      fetchCustomer();
+    }
+  }, [open, customerId, form, toast]);
+
   // Update Gerätetyp-Liste beim ersten Rendern und wenn das Modal geöffnet wird
   useEffect(() => {
     if (open) {
