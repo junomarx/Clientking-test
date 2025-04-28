@@ -268,36 +268,28 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
             </div>
           </div>
 
-          {/* Nur für Druck/PDF - ohne Rahmen */}
+          {/* Nur für Druck/PDF - komplett ohne Rahmen, einfache Tabelle */}
           <div className="hidden print:block print:mb-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Gerätetyp</div>
-                <div className="text-sm">{estimate.deviceType}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Marke</div>
-                <div className="text-sm">{estimate.brand}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Modell</div>
-                <div className="text-sm">{estimate.model}</div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Seriennummer</div>
-                <div className="text-sm">{estimate.serialNumber || '–'}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-muted-foreground mb-1">Problem</div>
-                <div className="text-sm">{estimate.issue || '–'}</div>
-              </div>
-            </div>
+            <table className="w-full border-collapse mb-4">
+              <tbody>
+                <tr>
+                  <td className="py-1 pr-4 w-1/6 text-sm font-medium">Gerätetyp:</td>
+                  <td className="py-1 w-1/3">{estimate.deviceType}</td>
+                  <td className="py-1 pr-4 w-1/6 text-sm font-medium">Marke:</td>
+                  <td className="py-1 w-1/3">{estimate.brand}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 pr-4 text-sm font-medium">Modell:</td>
+                  <td className="py-1">{estimate.model}</td>
+                  <td className="py-1 pr-4 text-sm font-medium">Seriennummer:</td>
+                  <td className="py-1">{estimate.serialNumber || '–'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 pr-4 text-sm font-medium">Problem:</td>
+                  <td className="py-1" colSpan={3}>{estimate.issue || '–'}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         

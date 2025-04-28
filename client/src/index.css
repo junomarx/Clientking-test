@@ -15,6 +15,18 @@
     .print-border-none * {
       border: none !important;
     }
+
+    /* Entfernt Rahmen von allen Tabellen beim Drucken */
+    table, tr, td, th {
+      border: none !important;
+      border-collapse: collapse !important;
+    }
+
+    /* Entfernt Rahmen von allen Elementen mit Input-Styling beim Drucken */
+    input, select, textarea, .border, [class*="border-"] {
+      border: none !important;
+      box-shadow: none !important;
+    }
   }
 }
 
