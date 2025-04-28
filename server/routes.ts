@@ -1437,6 +1437,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registriere die Admin-Routen
   registerAdminRoutes(app);
+  
+  // KOSTENVORANSCHLAG API (COST ESTIMATES)
+  // Alle Kostenvoranschläge abrufen
+  app.get("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschläge mit Benutzerfilterung abrufen
+      const estimates = await storage.getAllCostEstimates(userId);
+      res.json(estimates);
+    } catch (error) {
+      console.error("Error fetching cost estimates:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Kostenvoranschläge" });
+    }
+  });
+  
+  // Einen bestimmten Kostenvoranschlag abrufen
+  app.get("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschlag mit Benutzerfilterung abrufen
+      const estimate = await storage.getCostEstimate(id, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error fetching cost estimate:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Kostenvoranschlags" });
+    }
+  });
+  
+  // Kostenvoranschläge für einen bestimmten Kunden abrufen
+  app.get("/api/customers/:id/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschläge für den Kunden mit Benutzerfilterung abrufen
+      const estimates = await storage.getCostEstimatesByCustomerId(customerId, userId);
+      res.json(estimates);
+    } catch (error) {
+      console.error("Error fetching customer cost estimates:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Kostenvoranschläge für den Kunden" });
+    }
+  });
+  
+  // Einen neuen Kostenvoranschlag erstellen
+  app.post("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      console.log("Received cost estimate data:", req.body);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Verwende safeParse für bessere Fehlerdiagnose
+      const validationResult = insertCostEstimateSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        console.error("Validation failed:", validationResult.error);
+        return res.status(400).json({ 
+          message: "Ungültige Kostenvoranschlagsdaten", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const estimateData = validationResult.data;
+      
+      // Validiere, dass der Kunde existiert
+      const customer = await storage.getCustomer(estimateData.customerId, userId);
+      if (!customer) {
+        console.error("Customer not found:", estimateData.customerId, "for user:", userId);
+        return res.status(400).json({ message: "Ungültige Kunden-ID" });
+      }
+      
+      // Validiere die Positionen im Kostenvoranschlag
+      if (estimateData.items) {
+        const itemsValidation = Array.isArray(estimateData.items) 
+          ? estimateData.items.every(item => costEstimateItemSchema.safeParse(item).success)
+          : false;
+          
+        if (!itemsValidation) {
+          console.error("Invalid items in cost estimate");
+          return res.status(400).json({ message: "Ungültige Positionen im Kostenvoranschlag" });
+        }
+      }
+      
+      // Kostenvoranschlag mit Benutzerkontext erstellen
+      const estimate = await storage.createCostEstimate(estimateData, userId);
+      console.log("Created cost estimate:", estimate);
+      res.status(201).json(estimate);
+    } catch (error) {
+      console.error("Error creating cost estimate:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlagsdaten", errors: error.errors });
+      }
+      res.status(500).json({ message: "Fehler beim Erstellen des Kostenvoranschlags" });
+    }
+  });
+  
+  // Einen bestehenden Kostenvoranschlag aktualisieren
+  app.patch("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Daten validieren
+      const estimateData = insertCostEstimateSchema.partial().parse(req.body);
+      
+      // Wenn eine Kunden-ID angegeben ist, prüfen, ob der Kunde existiert
+      if (estimateData.customerId) {
+        const customer = await storage.getCustomer(estimateData.customerId, userId);
+        if (!customer) {
+          return res.status(400).json({ message: "Ungültige Kunden-ID" });
+        }
+      }
+      
+      // Wenn items aktualisiert werden, validieren
+      if (estimateData.items) {
+        const itemsValidation = Array.isArray(estimateData.items) 
+          ? estimateData.items.every(item => costEstimateItemSchema.safeParse(item).success)
+          : false;
+          
+        if (!itemsValidation) {
+          return res.status(400).json({ message: "Ungültige Positionen im Kostenvoranschlag" });
+        }
+      }
+      
+      // Kostenvoranschlag mit Benutzerkontext aktualisieren
+      const estimate = await storage.updateCostEstimate(id, estimateData, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error updating cost estimate:", error);
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlagsdaten", errors: error.errors });
+      }
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Kostenvoranschlags" });
+    }
+  });
+  
+  // Den Status eines Kostenvoranschlags aktualisieren
+  app.patch("/api/cost-estimates/:id/status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Validieren, dass ein Status angegeben wurde
+      if (!status) {
+        return res.status(400).json({ message: "Kein Status angegeben" });
+      }
+      
+      // Validieren, dass der Status gültig ist
+      const validStatuses = ["offen", "angenommen", "abgelehnt", "abgelaufen"];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschlagsstatus mit Benutzerkontext aktualisieren
+      const estimate = await storage.updateCostEstimateStatus(id, status, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      res.json(estimate);
+    } catch (error) {
+      console.error("Error updating cost estimate status:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Kostenvoranschlagsstatus" });
+    }
+  });
+  
+  // Einen Kostenvoranschlag löschen
+  app.delete("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschlag mit Benutzerkontext löschen
+      const deleted = await storage.deleteCostEstimate(id, userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting cost estimate:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Kostenvoranschlags" });
+    }
+  });
+  
+  // Einen Kostenvoranschlag in einen Reparaturauftrag umwandeln
+  app.post("/api/cost-estimates/:id/convert-to-repair", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschlag in Reparaturauftrag umwandeln
+      const repair = await storage.convertToRepair(id, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden oder Umwandlung fehlgeschlagen" });
+      }
+      
+      res.status(201).json(repair);
+    } catch (error) {
+      console.error("Error converting cost estimate to repair:", error);
+      res.status(500).json({ message: "Fehler bei der Umwandlung in einen Reparaturauftrag" });
+    }
+  });
 
   const httpServer = createServer(app);
 

@@ -5,10 +5,11 @@ import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTab } from '@/components/statistics/StatisticsTab';
+import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -42,6 +43,10 @@ export default function Home() {
           
           {activeTab === 'statistics' && (
             <StatisticsTab />
+          )}
+          
+          {activeTab === 'cost-estimates' && (
+            <CostEstimatesTab />
           )}
         </div>
       </div>

@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { BarChart } from 'lucide-react';
+import { BarChart, FileText } from 'lucide-react';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
 
 interface TabNavigationProps {
   activeTab: Tab;
@@ -52,6 +52,16 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
           onClick={() => onTabChange('statistics')}
         >
           <BarChart className="mr-2 h-4 w-4" /> Statistiken
+        </button>
+        <button 
+          className={`px-4 py-4 font-semibold ${
+            activeTab === 'cost-estimates' 
+              ? 'text-primary border-b-2 border-primary' 
+              : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
+          } transition-all flex items-center`}
+          onClick={() => onTabChange('cost-estimates')}
+        >
+          <FileText className="mr-2 h-4 w-4" /> Kostenvoranschläge
         </button>
       </div>
     </div>
