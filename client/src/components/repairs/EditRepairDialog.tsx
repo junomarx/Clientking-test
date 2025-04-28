@@ -259,6 +259,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                     <SelectContent>
                       <SelectItem value="eingegangen">Eingegangen</SelectItem>
                       <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+                      <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
                       <SelectItem value="ausser_haus">Außer Haus</SelectItem>
                       <SelectItem value="fertig">Fertig</SelectItem>
                       <SelectItem value="abgeholt">Abgeholt</SelectItem>
