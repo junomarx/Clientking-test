@@ -138,11 +138,14 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
       customerForm.reset();
       setIsNewCustomerDialogOpen(false);
       
-      // Kundenliste aktualisieren
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
-      
-      // Den neuen Kunden im Kostenvoranschlag auswählen
-      form.setValue("customerId", newCustomer.id);
+      // Kundenliste aktualisieren und dann den neuen Kunden auswählen
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] })
+        .then(() => {
+          // Warten bis die Abfrage abgeschlossen ist und dann den Kunden auswählen
+          setTimeout(() => {
+            form.setValue("customerId", newCustomer.id);
+          }, 100);
+        });
     },
     onError: (error) => {
       toast({
@@ -216,6 +219,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     }
   };
   
+  // Formatiere das Datum korrekt für die API
+  const formatDate = (date: Date | undefined): Date | undefined => {
+    if (!date) return undefined;
+    return new Date(date);
+  };
+  
   // Mutation zum Erstellen eines Kostenvoranschlags
   const createMutation = useMutation({
     mutationFn: async (data: FormValues) => {
@@ -287,6 +296,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     // Bereite die Daten für das Absenden vor
     const formattedData = {
       ...data,
+      validUntil: data.validUntil ? formatDate(data.validUntil) : undefined,
       items,
       subtotal,
       taxAmount,
@@ -664,17 +674,27 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
               </Button>
             </div>
             
+            {/* Tabellenkopf */}
+            <div className="border-b pb-2 mb-3 grid grid-cols-12 gap-2 font-medium text-sm">
+              <div className="col-span-1 text-center">Pos.</div>
+              <div className="col-span-4">Bezeichnung</div>
+              <div className="col-span-1 text-center">Menge</div>
+              <div className="col-span-1 text-center">Einheit</div>
+              <div className="col-span-2 text-right pr-8">Einzelpreis</div>
+              <div className="col-span-2 text-right pr-8">Gesamtpreis</div>
+              <div className="col-span-1"></div>
+            </div>
+            
             {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-12 gap-2 mb-3">
+              <div key={field.id} className="grid grid-cols-12 gap-2 mb-3 items-center">
                 <div className="col-span-1">
                   <FormField
                     control={form.control}
                     name={`items.${index}.position`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Pos.</FormLabel>
                         <FormControl>
-                          <Input {...field} readOnly className="text-center" />
+                          <Input {...field} readOnly className="text-center h-10" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -687,9 +707,8 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     name={`items.${index}.description`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Beschreibung</FormLabel>
                         <FormControl>
-                          <Input placeholder="z.B. Displaytausch" {...field} />
+                          <Input placeholder="z.B. Displaytausch" {...field} className="h-10" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -703,7 +722,6 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     name={`items.${index}.quantity`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Menge</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -713,7 +731,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                               field.onChange(parseInt(e.target.value));
                               updateTotalPrice(index);
                             }} 
-                            className="text-center" 
+                            className="text-center h-10" 
                           />
                         </FormControl>
                         <FormMessage />
@@ -722,13 +740,16 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                   />
                 </div>
                 
+                <div className="col-span-1">
+                  <Input value="Stück" readOnly className="text-center h-10 bg-gray-50" />
+                </div>
+                
                 <div className="col-span-2">
                   <FormField
                     control={form.control}
                     name={`items.${index}.unitPrice`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Einzelpreis</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
@@ -737,6 +758,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                                 field.onChange(formatPrice(e.target.value));
                                 updateTotalPrice(index);
                               }} 
+                              className="pr-6 text-right h-10" 
                             />
                             <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
                               <Euro className="h-4 w-4 text-gray-400" />
@@ -755,13 +777,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     name={`items.${index}.totalPrice`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Gesamtpreis</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
                               {...field} 
                               readOnly 
-                              className="bg-gray-50" 
+                              className="pr-6 text-right h-10 bg-gray-50" 
                             />
                             <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
                               <Euro className="h-4 w-4 text-gray-400" />
@@ -774,7 +795,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                   />
                 </div>
                 
-                <div className="col-span-2 flex items-end mb-1">
+                <div className="col-span-1 flex items-center justify-center">
                   <Button 
                     type="button" 
                     variant="ghost" 
