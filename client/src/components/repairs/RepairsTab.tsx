@@ -398,28 +398,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   </tr>
                 ))
               )}
-              {/* Summenzeile für abgeholte Reparaturen */}
-              {filteredRepairs.some(repair => repair.status === 'abgeholt') && (
-                <tr className="bg-gray-100 font-medium border-t-2 border-gray-300">
-                  <td className="py-3 px-4" colSpan={4}>Summe abgeholter Reparaturen</td>
-                  <td className="py-3 px-4">
-                    <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">abgeholt</span>
-                  </td>
-                  <td className="py-3 px-4 text-right font-bold">
-                    {filteredRepairs
-                      .filter(repair => repair.status === 'abgeholt')
-                      .reduce((sum, repair) => {
-                        if (!repair.estimatedCost) return sum;
-                        // Entferne das € Zeichen und konvertiere zu Zahl
-                        const costString = repair.estimatedCost.toString().replace('€', '').trim();
-                        const cost = parseFloat(costString.replace(',', '.'));
-                        return isNaN(cost) ? sum : sum + cost;
-                      }, 0)
-                      .toFixed(2)} €
-                  </td>
-                  <td className="py-3 px-4" colSpan={2}></td>
-                </tr>
-              )}
+              {/* Summenzeile wurde entfernt und ist nun nur noch im Statistik-Tab verfügbar */}
             </tbody>
           </table>
         </div>
