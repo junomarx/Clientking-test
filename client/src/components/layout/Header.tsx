@@ -24,14 +24,16 @@ export function Header() {
   };
   
   return (
-    <div className="bg-primary py-6 px-6 flex justify-between items-center">
-      <h1 className="text-white text-xl md:text-2xl font-semibold flex items-center gap-2">
-        <span className="text-2xl">📱</span> 
-        <span data-app-title>{appTitle}</span>
-      </h1>
+    <div className="bg-primary px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex justify-center sm:justify-start items-center py-4 sm:py-6 w-full">
+        <h1 className="text-white text-xl md:text-2xl font-semibold flex items-center gap-2">
+          <span className="text-2xl">📱</span> 
+          <span data-app-title>{appTitle}</span>
+        </h1>
+      </div>
       
       {user && (
-        <div className="flex items-center gap-3">
+        <div className="flex justify-center sm:justify-end items-center gap-3 pb-4 sm:pb-0 w-full">
           <div className="flex items-center gap-2 text-white">
             <User size={18} />
             <span className="hidden md:inline">{user.username}</span>
