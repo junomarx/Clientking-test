@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { 
-  saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
+  saveModelLegacy, getModelsForDeviceAndBrand, deleteModelLegacy, clearAllModels,
   saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands,
   getIssuesForDeviceType, saveIssue, deleteIssue, DEFAULT_ISSUES
 } from '@/lib/localStorage';
@@ -354,7 +354,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         
         // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveBrand(data.deviceType, data.brand);
-        saveModel(data.deviceType, data.brand, data.model);
+        saveModelLegacy(data.deviceType, data.brand, data.model);
         
         // Invalidate die Gerätetypen-Abfrage, um die Liste zu aktualisieren
         queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
@@ -1412,7 +1412,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                         className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          deleteModel(watchDeviceType, watchBrand, model);
+                                          deleteModelLegacy(watchDeviceType, watchBrand, model);
                                           setSavedModels(prev => prev.filter(m => m !== model));
                                         }}
                                       >
