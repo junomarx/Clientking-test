@@ -67,7 +67,18 @@ export default function AuthPage() {
   }
   
   function onLoginSubmit(data: LoginFormValues) {
+    console.log('Login-Versuch mit Benutzer:', data.username);
     loginMutation.mutate(data);
+    
+    // Nach der erfolgreichen Anmeldung prüfen wir, ob die userId im localStorage vorhanden ist
+    setTimeout(() => {
+      const userId = localStorage.getItem('userId');
+      const username = localStorage.getItem('username');
+      console.log('Nach Login: userId im localStorage:', userId, 'username:', username);
+      if (!userId) {
+        console.warn('WARNUNG: userId nicht im localStorage nach Login gefunden!');
+      }
+    }, 1000);
   }
   
   function onRegisterSubmit(data: RegisterFormValues) {
