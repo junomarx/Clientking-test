@@ -381,7 +381,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         
         // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveBrand(data.deviceType, data.brand);
-        saveModelLegacy(data.deviceType, data.brand, data.model);
+        
+        // Wenn eine Modellreihe vorhanden ist, verwenden wir die neue Speichermethode
+        if (data.modelSeries) {
+          saveModel(data.deviceType, data.brand, data.modelSeries, data.model);
+        } else {
+          // Sonst die Legacy-Methode für Abwärtskompatibilität
+          saveModelLegacy(data.deviceType, data.brand, data.model);
+        }
         
         // Invalidate die Gerätetypen-Abfrage, um die Liste zu aktualisieren
         queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
