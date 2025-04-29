@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { 
   saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
-  saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes,
   saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands,
   getIssuesForDeviceType, saveIssue, deleteIssue, DEFAULT_ISSUES
 } from '@/lib/localStorage';
@@ -82,6 +81,15 @@ interface NewOrderModalProps {
   customerId?: number | null;
 }
 
+// Schnittstelle für Gerätetyp aus der API
+interface DeviceType {
+  id: number;
+  name: string;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -96,6 +104,32 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);
+  
+  // Gerätetypen von der API abrufen
+  const { data: apiDeviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
+    queryKey: ["/api/device-types"],
+    enabled: open // Nur abfragen, wenn der Modal geöffnet ist
+  });
+  
+  // Mutation zum Erstellen eines neuen Gerätetyps
+  const createDeviceTypeMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const response = await apiRequest('POST', '/api/device-types', { name });
+      return response.json();
+    },
+    onSuccess: () => {
+      // Nach erfolgreicher Erstellung die Liste der Gerätetypen aktualisieren
+      queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
+    },
+    onError: (error: any) => {
+      console.error("Fehler beim Erstellen des Gerätetyps:", error);
+      toast({
+        title: "Fehler",
+        description: `Der Gerätetyp konnte nicht gespeichert werden: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
   
   // Form definition
   const form = useForm<OrderFormValues>({
@@ -226,24 +260,20 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
 
   // Update Gerätetyp-Liste beim ersten Rendern und wenn das Modal geöffnet wird
   useEffect(() => {
-    if (open) {
-      const deviceTypes = getSavedDeviceTypes();
-      console.log('Geladene Gerätearten:', deviceTypes);
+    if (open && apiDeviceTypes) {
+      // Aus den API-Gerätetypen nur die Namen für die Dropdown-Liste extrahieren
+      const deviceTypeNames = apiDeviceTypes.map(deviceType => deviceType.name);
+      console.log('Geladene Gerätearten von API:', deviceTypeNames);
       
-      // Wenn keine gespeicherten Gerätetypen vorhanden sind, verwenden wir die Standardliste
-      const typesToUse = deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes;
-      
-      // Wenn keine oder weniger als 5 Gerätetypen gespeichert sind,
-      // speichern wir die Standardliste als Basis
-      if (deviceTypes.length < 5) {
-        defaultDeviceTypes.forEach(type => {
-          saveDeviceType(type);
-        });
-      }
+      // Wenn keine API-Gerätetypen verfügbar sind, verwenden wir die Standardliste
+      const typesToUse = deviceTypeNames.length > 0 ? deviceTypeNames : defaultDeviceTypes;
       
       setSavedDeviceTypes(typesToUse);
+    } else if (open && !apiDeviceTypes) {
+      // Fallback zu den Standardtypen, wenn die API noch keine Daten geliefert hat
+      setSavedDeviceTypes(defaultDeviceTypes);
     }
-  }, [open]);
+  }, [open, apiDeviceTypes]);
   
   // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
