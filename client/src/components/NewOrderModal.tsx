@@ -92,6 +92,18 @@ interface DeviceType {
   updatedAt: string;
 }
 
+// Hilfsfunktion zum intelligent Speichern von Modellen (mit oder ohne Modellreihe)
+const saveModelIntelligent = (deviceType: string, brand: string, modelSeriesOrNull: string | undefined, model: string) => {
+  console.log("Intelligentes Speichern mit modelSeries:", modelSeriesOrNull);
+  if (modelSeriesOrNull) {
+    // Wenn eine Modellreihe vorhanden ist, verwenden wir die neue Hierarchie
+    saveModel(deviceType, brand, modelSeriesOrNull, model);
+  } else {
+    // Sonst die Legacy-Methode für Abwärtskompatibilität
+    saveModelLegacy(deviceType, brand, model);
+  }
+};
+
 export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -387,7 +399,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           saveModel(data.deviceType, data.brand, data.modelSeries, data.model);
         } else {
           // Sonst die Legacy-Methode für Abwärtskompatibilität
-          saveModelLegacy(data.deviceType, data.brand, data.model);
+          saveModelIntelligent(data.deviceType, data.brand, data.modelSeries, data.model);
         }
         
         // Invalidate die Gerätetypen-Abfrage, um die Liste zu aktualisieren
