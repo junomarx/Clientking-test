@@ -1200,15 +1200,24 @@ export function StatisticsTab() {
                     <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
                       <div className="font-medium">{repair.orderCode}</div>
                       <div>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          repair.status === 'fertig' 
-                            ? 'bg-green-100 text-green-800' 
-                            : repair.status === 'in_reparatur' 
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {repair.status}
-                        </span>
+                        {(() => {
+                          switch (repair.status) {
+                            case 'eingegangen':
+                              return <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">Eingegangen</span>;
+                            case 'in_reparatur':
+                              return <span className="px-2 py-1 rounded text-xs bg-orange-100 text-orange-800">In Reparatur</span>;
+                            case 'ersatzteil_eingetroffen':
+                              return <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">Ersatzteil eingetroffen</span>;
+                            case 'ausser_haus':
+                              return <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">Außer Haus</span>;
+                            case 'fertig':
+                              return <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Fertig</span>;
+                            case 'abgeholt':
+                              return <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">Abgeholt</span>;
+                            default:
+                              return <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">{repair.status}</span>;
+                          }
+                        })()}
                       </div>
                     </div>
                     <div className="p-4 space-y-2">
