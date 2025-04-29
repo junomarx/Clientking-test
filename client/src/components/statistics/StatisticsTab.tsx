@@ -248,14 +248,17 @@ export function StatisticsTab() {
   });
   
   // Separate Abfrage für Umsatzstatistiken mit eigenem Zeitraumfilter
-  const revenueQueryParams = new URLSearchParams();
-  if (revenueDateRange.start) revenueQueryParams.append('startDate', revenueDateRange.start.toISOString());
-  if (revenueDateRange.end) revenueQueryParams.append('endDate', revenueDateRange.end.toISOString());
-  // Parameter für die Umsatzberechnung basierend auf Abholung (pickedUp status)
-  revenueQueryParams.append('revenueBasedOnPickup', 'true');
+  const revenueQueryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (revenueDateRange.start) params.append('startDate', revenueDateRange.start.toISOString());
+    if (revenueDateRange.end) params.append('endDate', revenueDateRange.end.toISOString());
+    // Parameter für die Umsatzberechnung basierend auf Abholung (pickedUp status)
+    params.append('revenueBasedOnPickup', 'true');
+    return params;
+  }, [revenueDateRange]);
   
   const { data: revenueStats, isLoading: revenueStatsLoading } = useQuery<DetailedStats>({
-    queryKey: ['/api/stats/detailed', 'revenue', revenueTimeRange],
+    queryKey: ['/api/stats/detailed', 'revenue', revenueTimeRange, revenueQueryParams.toString()],
     queryFn: async () => {
       const res = await fetch(`/api/stats/detailed?${revenueQueryParams.toString()}`);
       return await res.json();
@@ -304,14 +307,13 @@ export function StatisticsTab() {
         }))
     : [];
 
-  // Neueste Reparaturen
-  // Kunden für die Anzeige der Kundennamen laden
+  // Erweiterte Repair-Typ, der customerName beinhaltet
+  type ExtendedRepair = Repair & { customerName?: string };
+
+  // Kunden für die Anzeige der Kundennamen laden - diese Query MUSS immer ausgeführt werden
   const { data: customers } = useQuery({
     queryKey: ['/api/customers']
   });
-
-  // Erweiterte Repair-Typ, der customerName beinhaltet
-  type ExtendedRepair = Repair & { customerName?: string };
   
   // Repair-Daten mit Kundennamen anreichern
   const recentRepairs: ExtendedRepair[] = useMemo(() => {
