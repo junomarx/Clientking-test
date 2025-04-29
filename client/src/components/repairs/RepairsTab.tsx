@@ -23,7 +23,6 @@ import {
   Printer, 
   Trash2, 
   AlertCircle, 
-  Tag, 
   Star, 
   Mail,
   ChevronLeft, 
@@ -394,8 +393,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         </div>
       </div>
       
-      <div className="px-6 pb-6">
-        <div className="overflow-x-auto">
+      <div className="px-3 sm:px-6 pb-6">
+        {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full rounded-lg overflow-hidden shadow-sm">
             <thead>
               <tr className="bg-primary text-white">
@@ -469,7 +469,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                             onClick={() => handleSendReviewRequest(repair.id)}
                           >
                             {repair.reviewRequestSent ? 
-                              <Star className="h-4 w-4 fill-yellow-500" /> : 
+                             <Star className="h-4 w-4 fill-yellow-500" /> : 
                               <Star className="h-4 w-4" />
                             }
                           </button>
@@ -489,11 +489,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   </tr>
                 ))
               )}
-              {/* Summenzeile wurde entfernt und ist nun nur noch im Statistik-Tab verfügbar */}
             </tbody>
           </table>
           
-          {/* Pagination controls */}
+          {/* Pagination controls für die Desktop-Ansicht */}
           {filteredRepairs.length > 0 && (
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 px-2">
               <div className="flex items-center gap-2">
@@ -559,6 +558,143 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 >
                   <ChevronsRight className="h-4 w-4" />
                 </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Mobile Karten-Ansicht (nur auf kleinen Bildschirmen anzeigen) */}
+        <div className="md:hidden space-y-4">
+          {repairsLoading || customersLoading ? (
+            <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Lädt Daten...</div>
+          ) : filteredRepairs.length === 0 ? (
+            <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Keine Reparaturen gefunden</div>
+          ) : (
+            paginatedRepairs.map(repair => (
+              <div key={repair.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+                  <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
+                  <div>{getStatusBadge(repair.status)}</div>
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <div className="text-sm text-gray-500">Kunde:</div>
+                    <div className="font-medium">{repair.customerName}</div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="text-sm text-gray-500">Gerät:</div>
+                    <div>{repair.model}</div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="text-sm text-gray-500">Problem:</div>
+                    <div className="text-right">{repair.issue}</div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="text-sm text-gray-500">Preis:</div>
+                    <div className="font-medium">{repair.estimatedCost ? `${repair.estimatedCost} €` : '-'}</div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="text-sm text-gray-500">Datum:</div>
+                    <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between p-3 bg-gray-50 border-t border-gray-100">
+                  <button 
+                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={() => openStatusDialog(repair.id, repair.status)}
+                  >
+                    <AlertCircle className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className="text-orange-600 hover:text-orange-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={() => {
+                      setSelectedRepairId(repair.id);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Pencil className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={() => showPrintOptions(repair.id)}
+                  >
+                    <Printer className="h-5 w-5" />
+                  </button>
+                  {repair.status === 'abgeholt' ? (
+                    <button 
+                      className="text-yellow-600 hover:text-yellow-800 p-2 rounded-full hover:bg-white transition-colors" 
+                      onClick={() => handleSendReviewRequest(repair.id)}
+                    >
+                      {repair.reviewRequestSent ? 
+                       <Star className="h-5 w-5 fill-yellow-500" /> : 
+                        <Star className="h-5 w-5" />
+                      }
+                    </button>
+                  ) : (
+                    <div className="w-9" aria-hidden="true"></div>
+                  )}
+                  <button 
+                    className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={() => {
+                      setSelectedRepairId(repair.id);
+                      setShowDeleteDialog(true);
+                    }}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+          
+          {/* Paginierung für die Mobile-Ansicht */}
+          {filteredRepairs.length > 0 && (
+            <div className="flex flex-col items-center gap-4 py-4 px-2">
+              <div className="flex justify-center items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <span className="mx-2 text-sm">
+                  Seite {currentPage} von {totalPages || 1}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleNextPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={handleItemsPerPageChange}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Einträge pro Seite" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {itemsPerPageOptions.map(option => (
+                      <SelectItem key={option} value={option.toString()}>
+                        {option} pro Seite
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-gray-600">
+                  {paginatedRepairs.length} von {filteredRepairs.length}
+                </span>
               </div>
             </div>
           )}
@@ -695,8 +831,6 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           repair={repairs.find(r => r.id === selectedRepairId) || null}
         />
       )}
-
-      {/* Kein separater Druckdialog mehr nötig, wird durch PrintManager abgedeckt */}
       
       {/* Delete Confirmation Dialog */}
       {selectedRepairId && repairs && (
