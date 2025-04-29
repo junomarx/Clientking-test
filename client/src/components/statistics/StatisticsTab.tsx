@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Tabs, 
@@ -314,10 +314,10 @@ export function StatisticsTab() {
   type ExtendedRepair = Repair & { customerName?: string };
   
   // Repair-Daten mit Kundennamen anreichern
-  const recentRepairs = useMemo(() => {
+  const recentRepairs: ExtendedRepair[] = useMemo(() => {
     const repairs = detailedStats?.mostRecentRepairs || [];
     
-    if (!customers) return repairs as ExtendedRepair[];
+    if (!customers || !Array.isArray(customers)) return repairs as ExtendedRepair[];
     
     return repairs.map(repair => {
       const customer = customers.find((c: any) => c.id === repair.customerId);
