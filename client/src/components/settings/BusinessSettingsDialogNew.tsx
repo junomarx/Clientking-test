@@ -98,7 +98,8 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("unternehmen");
+  // Verwende den initialActiveTab als Anfangswert
+  const [activeTab, setActiveTab] = useState(initialActiveTab);
   
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
@@ -352,7 +353,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="unternehmen" value={activeTab} onValueChange={(value) => {
+            <Tabs defaultValue={initialActiveTab} value={activeTab} onValueChange={(value: "unternehmen" | "email" | "design") => {
               // Verhindert, dass ein neues Fenster geöffnet wird
               setActiveTab(value);
             }}>
