@@ -28,6 +28,7 @@ const getUserPrefix = () => {
 const getSavedModelsKey = () => `${getUserPrefix()}repair-shop-models`;
 const getSavedBrandsKey = () => `${getUserPrefix()}repair-shop-brands`;
 const getSavedDeviceTypesKey = () => `${getUserPrefix()}repair-shop-device-types`;
+const getSavedModelSeriesKey = () => `${getUserPrefix()}repair-shop-model-series`;
 
 // Customer functions
 export const saveCustomers = (customers: Customer[]): void => {
@@ -170,7 +171,12 @@ export const getStatistics = () => {
 
 // Typ für gespeicherte Modelle
 interface StoredModels {
-  [key: string]: string[]; // Format: "deviceType:brand" => ["Modell 1", "Modell 2", ...]
+  [key: string]: string[]; // Format: "deviceType:brand:modelSeries" => ["Modell 1", "Modell 2", ...]
+}
+
+// Typ für gespeicherte Modellreihen
+interface StoredModelSeries {
+  [key: string]: string[]; // Format: "deviceType:brand" => ["Modellreihe 1", "Modellreihe 2", ...]
 }
 
 // Typ für gespeicherte Marken
@@ -178,11 +184,11 @@ interface StoredBrands {
   [key: string]: string[]; // Format: "deviceType" => ["Marke 1", "Marke 2", ...]
 }
 
-// Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Marke-Kombination
-export const saveModel = (deviceType: string, brand: string, model: string): void => {
+// Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Marke/Modellreihe-Kombination
+export const saveModel = (deviceType: string, brand: string, modelSeries: string, model: string): void => {
   if (!deviceType || !brand || !model) return;
   
-  const key = `${deviceType}:${brand}`.toLowerCase();
+  const key = `${deviceType}:${brand}:${modelSeries || 'default'}`.toLowerCase();
   
   let storedModels: StoredModels = {};
   const storedData = localStorage.getItem(getSavedModelsKey());
@@ -207,11 +213,16 @@ export const saveModel = (deviceType: string, brand: string, model: string): voi
   }
 };
 
-// Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp und Marke
-export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
+// Legacy-Funktion zum Speichern eines Modells ohne Modellreihe (für Kompatibilität)
+export const saveModelLegacy = (deviceType: string, brand: string, model: string): void => {
+  saveModel(deviceType, brand, 'default', model);
+};
+
+// Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp, Marke und Modellreihe
+export const getModelsForDeviceAndBrandAndSeries = (deviceType: string, brand: string, modelSeries: string): string[] => {
   if (!deviceType || !brand) return [];
   
-  const key = `${deviceType}:${brand}`.toLowerCase();
+  const key = `${deviceType}:${brand}:${modelSeries || 'default'}`.toLowerCase();
   
   const storedData = localStorage.getItem(getSavedModelsKey());
   if (!storedData) return [];
@@ -225,11 +236,44 @@ export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): s
   }
 };
 
-// Funktion zum Löschen eines einzelnen Modells
-export const deleteModel = (deviceType: string, brand: string, model: string): void => {
-  if (!deviceType || !brand) return;
+// Legacy-Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp und Marke
+// Diese Funktion sammelt alle Modelle aus allen Modellreihen einer Marke
+export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
+  if (!deviceType || !brand) return [];
   
-  const key = `${deviceType}:${brand}`.toLowerCase();
+  const baseKey = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedModelsKey());
+  if (!storedData) return [];
+  
+  try {
+    const storedModels: StoredModels = JSON.parse(storedData);
+    let allModels: string[] = [];
+    
+    // Sammle alle Modelle aller Modellreihen für diesen Gerätetyp und diese Marke
+    Object.keys(storedModels).forEach(key => {
+      if (key.startsWith(baseKey)) {
+        allModels = [...allModels, ...storedModels[key]];
+      }
+    });
+    
+    // Suche auch nach dem alten Key-Format für Abwärtskompatibilität
+    if (storedModels[baseKey]) {
+      allModels = [...allModels, ...storedModels[baseKey]];
+    }
+    
+    return [...new Set(allModels)]; // Entferne Duplikate
+  } catch (err) {
+    console.error('Fehler beim Abrufen der gespeicherten Modelle:', err);
+    return [];
+  }
+};
+
+// Funktion zum Löschen eines einzelnen Modells aus einer bestimmten Modellreihe
+export const deleteModel = (deviceType: string, brand: string, modelSeries: string, model: string): void => {
+  if (!deviceType || !brand || !model) return;
+  
+  const key = `${deviceType}:${brand}:${modelSeries || 'default'}`.toLowerCase();
   
   const storedData = localStorage.getItem(getSavedModelsKey());
   if (!storedData) return;
@@ -251,6 +295,123 @@ export const deleteModel = (deviceType: string, brand: string, model: string): v
     }
   } catch (err) {
     console.error('Fehler beim Löschen des Modells:', err);
+  }
+};
+
+// Legacy-Funktion zum Löschen eines einzelnen Modells ohne Modellreihe
+export const deleteModelLegacy = (deviceType: string, brand: string, model: string): void => {
+  // Versuche zuerst, das Modell aus der Standard-Modellreihe zu löschen
+  deleteModel(deviceType, brand, 'default', model);
+  
+  // Alternativ: Lösche das Modell auch aus dem alten Key-Format für Abwärtskompatibilität
+  const legacyKey = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedModelsKey());
+  if (!storedData) return;
+  
+  try {
+    const storedModels: StoredModels = JSON.parse(storedData);
+    
+    if (storedModels[legacyKey]) {
+      // Filtere das zu löschende Modell heraus
+      storedModels[legacyKey] = storedModels[legacyKey].filter(m => m !== model);
+      
+      // Wenn die Liste für diesen Key leer ist, entferne den Key
+      if (storedModels[legacyKey].length === 0) {
+        delete storedModels[legacyKey];
+      }
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(getSavedModelsKey(), JSON.stringify(storedModels));
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen des Modells (Legacy-Format):', err);
+  }
+};
+
+// Funktionen für die Modellreihen-Verwaltung
+export const saveModelSeries = (deviceType: string, brand: string, modelSeries: string): void => {
+  if (!deviceType || !brand || !modelSeries) return;
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  let storedModelSeries: StoredModelSeries = {};
+  const storedData = localStorage.getItem(getSavedModelSeriesKey());
+  
+  if (storedData) {
+    try {
+      storedModelSeries = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Modellreihen:', err);
+    }
+  }
+  
+  // Erstelle Array für diesen Schlüssel, falls es noch nicht existiert
+  if (!storedModelSeries[key]) {
+    storedModelSeries[key] = [];
+  }
+  
+  // Füge Modellreihe hinzu, wenn sie noch nicht existiert
+  if (!storedModelSeries[key].includes(modelSeries)) {
+    storedModelSeries[key].push(modelSeries);
+    localStorage.setItem(getSavedModelSeriesKey(), JSON.stringify(storedModelSeries));
+  }
+};
+
+// Funktion zum Abrufen von gespeicherten Modellreihen für einen bestimmten Gerätetyp und Marke
+export const getModelSeriesForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
+  if (!deviceType || !brand) return [];
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedModelSeriesKey());
+  if (!storedData) return [];
+  
+  try {
+    const storedModelSeries: StoredModelSeries = JSON.parse(storedData);
+    return storedModelSeries[key] || [];
+  } catch (err) {
+    console.error('Fehler beim Abrufen der gespeicherten Modellreihen:', err);
+    return [];
+  }
+};
+
+// Funktion zum Löschen einer einzelnen Modellreihe
+export const deleteModelSeries = (deviceType: string, brand: string, modelSeries: string): void => {
+  if (!deviceType || !brand) return;
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedModelSeriesKey());
+  if (!storedData) return;
+  
+  try {
+    const storedModelSeries: StoredModelSeries = JSON.parse(storedData);
+    
+    if (storedModelSeries[key]) {
+      // Filtere die zu löschende Modellreihe heraus
+      storedModelSeries[key] = storedModelSeries[key].filter(ms => ms !== modelSeries);
+      
+      // Wenn die Liste für diesen Key leer ist, entferne den Key
+      if (storedModelSeries[key].length === 0) {
+        delete storedModelSeries[key];
+      }
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(getSavedModelSeriesKey(), JSON.stringify(storedModelSeries));
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen der Modellreihe:', err);
+  }
+};
+
+// Funktion zum Zurücksetzen aller gespeicherten Modellreihen
+export const clearAllModelSeries = (): void => {
+  try {
+    localStorage.removeItem(getSavedModelSeriesKey());
+    console.log('Alle gespeicherten Modellreihen wurden gelöscht.');
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen aller Modellreihen:', err);
   }
 };
 
