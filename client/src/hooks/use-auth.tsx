@@ -62,6 +62,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Token saved to localStorage');
       }
       
+      // WICHTIG: Benutzer-ID im localStorage speichern, damit sie für API-Anfragen verfügbar ist
+      if (data.id) {
+        localStorage.setItem('userId', data.id.toString());
+        console.log('UserId saved to localStorage:', data.id);
+      }
+      
+      // Benutzername im localStorage speichern für Debugging
+      if (data.username) {
+        localStorage.setItem('username', data.username);
+        console.log('Username saved to localStorage:', data.username);
+      }
+      
       // Benutzer-Daten setzen
       queryClient.setQueryData(["/api/user"], data);
       
@@ -111,8 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      // Token bei Abmeldung entfernen
+      // Token und Benutzerinformationen bei Abmeldung entfernen
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
       queryClient.setQueryData(["/api/user"], null);
       
       // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
