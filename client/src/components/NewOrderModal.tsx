@@ -283,7 +283,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       firstName: string; 
       lastName: string; 
       phone: string; 
-      email?: string 
+      email?: string; 
+      address?: string;
+      zipCode?: string;
+      city?: string;
     }) => {
       const response = await apiRequest('POST', '/api/customers', data);
       return response.json();
@@ -427,6 +430,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     if (customer.email) {
       form.setValue('email', customer.email);
     }
+    if (customer.address) {
+      form.setValue('address', customer.address);
+    }
+    if (customer.zipCode) {
+      form.setValue('zipCode', customer.zipCode);
+    }
+    if (customer.city) {
+      form.setValue('city', customer.city);
+    }
     
     // Setzt auch die customerId, um den Auftrag diesem Kunden zuzuweisen
     setSelectedCustomerId(customer.id);
@@ -494,7 +506,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           firstName: data.firstName,
           lastName: data.lastName,
           phone: data.phone || '0000000000', // Standardwert für Telefonnummer
-          email: data.email
+          email: data.email,
+          address: data.address,
+          zipCode: data.zipCode,
+          city: data.city
         };
         
         const customer = await createCustomerMutation.mutateAsync(customerData);
@@ -552,6 +567,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     form.setValue('lastName', customer.lastName);
     form.setValue('phone', customer.phone);
     form.setValue('email', customer.email || '');
+    if (customer.address) {
+      form.setValue('address', customer.address);
+    }
+    if (customer.zipCode) {
+      form.setValue('zipCode', customer.zipCode);
+    }
+    if (customer.city) {
+      form.setValue('city', customer.city);
+    }
     
     // Dialog schließen
     setShowExistingCustomerDialog(false);
@@ -572,7 +596,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone || '0000000000', // Standardwert für Telefonnummer
-        email: formData.email
+        email: formData.email,
+        address: formData.address,
+        zipCode: formData.zipCode,
+        city: formData.city
       };
       
       const customer = await createCustomerMutation.mutateAsync(customerData);
@@ -855,6 +882,54 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       </FormItem>
                     )}
                   />
+                </div>
+                
+                <div className="grid grid-cols-12 gap-4">
+                  <div className="col-span-12 md:col-span-8">
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Adresse, Nr</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Musterstraße 10" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="col-span-4 md:col-span-4">
+                    <FormField
+                      control={form.control}
+                      name="zipCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PLZ</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="1010" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="col-span-8 md:col-span-8">
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ort</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Wien" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
               
