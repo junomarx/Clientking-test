@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,12 +45,20 @@ export function StatisticsTabRebuilt() {
   // Tab-Auswahl
   const [activeTab, setActiveTab] = useState('general');
   
+  // Navigation mit wouter
+  const [, setLocation] = useLocation();
+  
   // Zeitraum-Filter
   const [timeRange, setTimeRange] = useState('all');
   const [customDateStart, setCustomDateStart] = useState<Date | undefined>(undefined);
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
   const [customDatePickerOpen, setCustomDatePickerOpen] = useState(false);
   const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
+  
+  // Funktion zum Navigieren zur Reparaturseite mit Statusfilter
+  const navigateToRepairsWithFilter = (status: string) => {
+    setLocation(`/?statusFilter=${encodeURIComponent(status)}`);
+  };
   
   // Basisdaten für Statistiken laden
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
@@ -283,7 +292,10 @@ export function StatisticsTabRebuilt() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => navigateToRepairsWithFilter('Eingegangen')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Eingegangen</CardTitle>
                 <PackageOpen className="h-4 w-4 text-muted-foreground" />
@@ -294,7 +306,10 @@ export function StatisticsTabRebuilt() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => navigateToRepairsWithFilter('In Reparatur')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">In Reparatur</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -305,7 +320,10 @@ export function StatisticsTabRebuilt() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => navigateToRepairsWithFilter('Außer Haus')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Außer Haus</CardTitle>
                 <Truck className="h-4 w-4 text-muted-foreground" />
@@ -316,7 +334,10 @@ export function StatisticsTabRebuilt() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => navigateToRepairsWithFilter('Abholbereit')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Abholbereit</CardTitle>
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -327,7 +348,10 @@ export function StatisticsTabRebuilt() {
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:border-primary transition-colors" 
+              onClick={() => navigateToRepairsWithFilter('Abgeholt')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Abgeholt</CardTitle>
                 <Database className="h-4 w-4 text-muted-foreground" />
