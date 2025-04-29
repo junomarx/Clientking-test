@@ -89,9 +89,10 @@ interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSett
 interface BusinessSettingsDialogProps {
   open: boolean;
   onClose: () => void;
+  initialActiveTab?: "unternehmen" | "email" | "design";
 }
 
-export function BusinessSettingsDialogNew({ open, onClose }: BusinessSettingsDialogProps) {
+export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "unternehmen" }: BusinessSettingsDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);

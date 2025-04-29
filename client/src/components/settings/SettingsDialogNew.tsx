@@ -44,8 +44,12 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
     onClose(); // Dialog schließen
   };
   
+  // Standardwert für den Tab beim Öffnen der Geschäftseinstellungen
+  const [initialTab, setInitialTab] = useState<"unternehmen" | "email" | "design">("unternehmen");
+  
   // Geschäftseinstellungen öffnen
   const openBusinessSettings = () => {
+    setInitialTab("unternehmen"); // Default-Tab
     setShowBusinessSettings(true);
   };
   
@@ -128,7 +132,14 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
                 <p className="text-muted-foreground mb-4">
                   Passen Sie das Erscheinungsbild der Anwendung und Ihre Druckereinstellungen an.
                 </p>
-                <Button onClick={openBusinessSettings} className="w-full sm:w-auto">
+                <Button 
+                  onClick={() => {
+                    // Öffnet die Geschäftseinstellungen und setzt direkt den Design-Tab
+                    setInitialTab("design");
+                    setShowBusinessSettings(true);
+                  }} 
+                  className="w-full sm:w-auto"
+                >
                   Design-Einstellungen bearbeiten
                 </Button>
               </div>
@@ -183,6 +194,7 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
       <BusinessSettingsDialogNew 
         open={showBusinessSettings} 
         onClose={closeBusinessSettings}
+        initialActiveTab={initialTab}
       />
     </>
   );
