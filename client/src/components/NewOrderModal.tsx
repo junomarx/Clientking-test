@@ -343,13 +343,18 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     onSuccess: (data) => {
       // Hier nochmals speichern, um sicherzustellen, dass die Daten für den nächsten Auftrag verfügbar sind
       if (data.deviceType && data.brand && data.model) {
-        saveDeviceType(data.deviceType);
+        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === data.deviceType.toLowerCase());
+        if (!exists) {
+          createDeviceTypeMutation.mutate(data.deviceType);
+        }
+        
+        // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveBrand(data.deviceType, data.brand);
         saveModel(data.deviceType, data.brand, data.model);
         
-        // Aktualisiere die gespeicherten Gerätetypen im State
-        const deviceTypes = getSavedDeviceTypes();
-        setSavedDeviceTypes(deviceTypes.length > 0 ? deviceTypes : defaultDeviceTypes);
+        // Invalidate die Gerätetypen-Abfrage, um die Liste zu aktualisieren
+        queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
       }
       
       // Invalidate the queries to refresh the data
@@ -497,8 +502,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
+        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        if (!exists) {
+          createDeviceTypeMutation.mutate(repairData.deviceType);
+        }
+        
+        // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
-        saveDeviceType(repairData.deviceType);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
@@ -562,8 +573,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
+        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        if (!exists) {
+          createDeviceTypeMutation.mutate(repairData.deviceType);
+        }
+        
+        // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
-        saveDeviceType(repairData.deviceType);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
@@ -650,8 +667,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
+        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        if (!exists) {
+          createDeviceTypeMutation.mutate(repairData.deviceType);
+        }
+        
+        // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
         saveModel(repairData.deviceType, repairData.brand, repairData.model);
-        saveDeviceType(repairData.deviceType);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
