@@ -1134,7 +1134,8 @@ export function StatisticsTab() {
               <CardDescription>Die 5 zuletzt erstellten Aufträge</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs uppercase bg-gray-50">
                     <tr>
@@ -1190,6 +1191,55 @@ export function StatisticsTab() {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+              
+              {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
+              <div className="block md:hidden space-y-4">
+                {recentRepairs.map((repair) => (
+                  <div key={repair.id} className="bg-white rounded-lg p-4 shadow-sm border">
+                    <div className="flex justify-between mb-3">
+                      <span className="font-bold">{repair.orderCode}</span>
+                      <span className="text-sm">{new Date(repair.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-sm mb-2">
+                      <p><span className="font-medium">Gerät:</span> {repair.brand} {repair.model}</p>
+                      <p className="truncate"><span className="font-medium">Problem:</span> {repair.issue}</p>
+                    </div>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        repair.status === 'fertig' 
+                          ? 'bg-green-100 text-green-800' 
+                          : repair.status === 'in_reparatur' 
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {repair.status}
+                      </span>
+                      <span className="font-medium">
+                        {repair.estimatedCost ? extractPrice(repair.estimatedCost).toFixed(2) : '0.00'} €
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Zusammenfassung */}
+                <div className="bg-gray-100 rounded-lg p-4 shadow-sm border-t-2 border-gray-300">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">Summe abgeholter Reparaturen</p>
+                      <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800 mt-1 inline-block">abgeholt</span>
+                    </div>
+                    <span className="font-bold">
+                      {recentRepairs
+                        .filter(repair => repair.status === 'abgeholt')
+                        .reduce((sum, repair) => {
+                          const cost = repair.estimatedCost ? extractPrice(repair.estimatedCost) : 0;
+                          return sum + cost;
+                        }, 0)
+                        .toFixed(2)} €
+                    </span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
