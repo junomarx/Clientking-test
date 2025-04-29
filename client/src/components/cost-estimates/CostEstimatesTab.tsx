@@ -239,23 +239,26 @@ export default function CostEstimatesTab() {
               <Plus className="w-4 h-4 mr-2" /> Kostenvoranschlag erstellen
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
-              <DialogDescription>
-                Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
-              </DialogDescription>
-            </DialogHeader>
-            <CreateCostEstimateForm 
-              onSuccess={() => {
-                toast({
-                  title: "Kostenvoranschlag erstellt",
-                  description: "Der Kostenvoranschlag wurde erfolgreich erstellt.",
-                });
-                queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
-              }}
-            />
-          </DialogContent>
+          {open => (
+            <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
+                <DialogDescription>
+                  Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
+                </DialogDescription>
+              </DialogHeader>
+              <CreateCostEstimateForm 
+                onSuccess={() => {
+                  toast({
+                    title: "Kostenvoranschlag erstellt",
+                    description: "Der Kostenvoranschlag wurde erfolgreich erstellt.",
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+                  open.setOpen(false); // Dialog schließen
+                }}
+              />
+            </DialogContent>
+          )}
         </Dialog>
       </div>
 
