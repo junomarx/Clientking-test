@@ -7,9 +7,10 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { 
-  saveModelLegacy, getModelsForDeviceAndBrand, deleteModelLegacy, clearAllModels,
-  saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands,
-  getIssuesForDeviceType, saveIssue, deleteIssue, DEFAULT_ISSUES
+  saveModelLegacy, getModelsForDeviceAndBrand, getModelsForDeviceAndBrandAndSeries,
+  deleteModelLegacy, clearAllModels, saveBrand, getBrandsForDeviceType, 
+  deleteBrand, clearAllBrands, getIssuesForDeviceType, saveIssue, deleteIssue, 
+  DEFAULT_ISSUES, getModelSeriesForDeviceAndBrand, saveModel
 } from '@/lib/localStorage';
 
 import {
@@ -60,6 +61,7 @@ const orderFormSchema = z.object({
   // Device info
   deviceType: z.string().min(1, { message: 'Bitte Geräteart eingeben' }),
   brand: z.string().min(1, { message: 'Bitte Marke auswählen' }),
+  modelSeries: z.string().optional().or(z.literal('')),
   model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
   serialNumber: z.string().optional(),
   
@@ -159,15 +161,19 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   const watchDeviceType = form.watch('deviceType');
   const watchBrand = form.watch('brand');
+  const watchModelSeries = form.watch('modelSeries');
   const watchModel = form.watch('model');
   
   // Zustand für die gespeicherten Modelle und Gerätetypen
   const [savedModels, setSavedModels] = useState<string[]>([]);
+  const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
   const [savedDeviceTypes, setSavedDeviceTypes] = useState<string[]>([]);
   const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
   const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
+  const [selectedModelSeriesIndex, setSelectedModelSeriesIndex] = useState<number>(-1);
   const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
+  const [isModelSeriesDropdownOpen, setIsModelSeriesDropdownOpen] = useState(false);
   
   // Laden des vorausgewählten Kunden
   useEffect(() => {
@@ -297,15 +303,34 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
 
   
-  // Lade gespeicherte Modelle, wenn sich Geräteart oder Marke ändert
+  // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Marke ändert
   useEffect(() => {
     if (watchDeviceType && watchBrand) {
-      const models = getModelsForDeviceAndBrand(watchDeviceType, watchBrand);
-      setSavedModels(models);
+      const modelSeries = getModelSeriesForDeviceAndBrand(watchDeviceType, watchBrand);
+      setSavedModelSeries(modelSeries);
+      form.setValue('modelSeries', '');
+      form.setValue('model', '');
+    } else {
+      setSavedModelSeries([]);
+      setSavedModels([]);
+    }
+  }, [watchDeviceType, watchBrand, form]);
+  
+  // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
+  useEffect(() => {
+    if (watchDeviceType && watchBrand) {
+      if (watchModelSeries) {
+        const models = getModelsForDeviceAndBrandAndSeries(watchDeviceType, watchBrand, watchModelSeries);
+        setSavedModels(models);
+      } else {
+        // Wenn keine Modellreihe ausgewählt ist, zeige alle Modelle der Marke an
+        const models = getModelsForDeviceAndBrand(watchDeviceType, watchBrand);
+        setSavedModels(models);
+      }
     } else {
       setSavedModels([]);
     }
-  }, [watchDeviceType, watchBrand]);
+  }, [watchDeviceType, watchBrand, watchModelSeries]);
   
   // Diese automatische Speicherung bei Änderungen ist entfernt, da Modelle nur gespeichert werden
   // sollen, wenn der Auftrag tatsächlich gespeichert wird
