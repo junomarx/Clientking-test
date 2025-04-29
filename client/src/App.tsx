@@ -35,10 +35,11 @@ function Router() {
   );
 }
 
-// Component to update the document title
+// Component to update the document title and sync user session
 function TitleUpdater() {
   const { companyName } = useTheme();
   
+  // Dokument-Titel aktualisieren, wenn sich der Firmenname ändert
   useEffect(() => {
     if (companyName) {
       // Setze den Firmennamen als Dokumenttitel
@@ -51,6 +52,48 @@ function TitleUpdater() {
       }
     }
   }, [companyName]);
+  
+  // Nach dem Laden der App überprüfen wir, ob ein Benutzer in der Session ist
+  // und synchronisieren mit dem localStorage, falls nötig
+  useEffect(() => {
+    // Wir überprüfen, ob es eine Sitzung gibt, aber keine userId im localStorage
+    const checkAndSyncUserSession = async () => {
+      try {
+        // Nur abrufen, wenn derzeit kein userId im localStorage vorhanden ist
+        const userId = localStorage.getItem('userId');
+        
+        if (!userId) {
+          console.log('Keine userId im localStorage gefunden, Sitzung wird überprüft...');
+          
+          const response = await fetch('/api/user', {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const user = await response.json();
+            
+            if (user && user.id) {
+              console.log('Aktive Sitzung gefunden für Benutzer:', user.username);
+              localStorage.setItem('userId', user.id.toString());
+              localStorage.setItem('username', user.username);
+              console.log('User-Daten wurden im localStorage gespeichert. userId:', user.id);
+              
+              // QueryClient neu initialisieren, damit alle Anfragen die neue UserID verwenden
+              queryClient.invalidateQueries();
+            }
+          } else {
+            console.log('Keine aktive Sitzung gefunden, Benutzer ist nicht angemeldet');
+          }
+        } else {
+          console.log('UserId bereits im localStorage: ' + userId);
+        }
+      } catch (error) {
+        console.error('Fehler beim Überprüfen der Benutzersitzung:', error);
+      }
+    };
+    
+    checkAndSyncUserSession();
+  }, []);
   
   return null;
 }
