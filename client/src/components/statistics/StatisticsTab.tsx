@@ -647,15 +647,16 @@ export function StatisticsTab() {
     try {
       setIsExporting(true);
 
-      // PDF im A4-Format erstellen (Hochformat für Umsatzdiagramme)
+      // PDF im A4-Format erstellen (Querformat für mehr Platz bei Diagrammen)
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: 'landscape',
         unit: 'mm',
         format: 'a4'
       });
       
-      // A4 Hochformat: 210 x 297 mm
-      const pageWidth = 210;
+      // A4 Querformat: 297 x 210 mm
+      const pageWidth = 297;
+      const pageHeight = 210;
       
       // Hintergrund und Design für das Dokument
       pdf.setFillColor(245, 247, 250); // Heller Hintergrund für Kopfbereich
@@ -664,133 +665,143 @@ export function StatisticsTab() {
       pdf.setLineWidth(0.5);
       pdf.line(14, 30, pageWidth - 14, 30);
       
-      // Dokumententitel mit Zeitraum direkt im Titel
+      // Dokumententitel mit Zeitraum im Titel hervorheben
       let titleText = 'Umsatzstatistik';
+      let timeRangeText = '';
       
-      // Zeitraum in Titel einfügen
+      // Zeitraum deutlich formatieren
       if (revenueTimeRange !== 'all') {
         const rangeOption = timeRangeOptions.find(opt => opt.value === revenueTimeRange);
         if (rangeOption) {
-          titleText += ` - ${rangeOption.label}`;
+          timeRangeText = rangeOption.label;
         } else if (revenueTimeRange === 'custom' && customDateStart && customDateEnd) {
           const formatDate = (date: Date) => date.toLocaleDateString('de-DE');
-          titleText += ` - ${formatDate(customDateStart)} bis ${formatDate(customDateEnd)}`;
+          timeRangeText = `${formatDate(customDateStart)} bis ${formatDate(customDateEnd)}`;
         }
+      } else {
+        timeRangeText = 'Alle Daten';
       }
       
-      pdf.setFontSize(18);
+      pdf.setFontSize(20);
       pdf.setTextColor(30, 41, 59); // Dunkelblau für den Titel
       pdf.setFont('helvetica', 'bold');
       pdf.text(titleText, 14, 15);
       
       // Datum und Gesamtumsatz
-      pdf.setFontSize(10);
+      pdf.setFontSize(12);
       pdf.setTextColor(107, 114, 128); // Grau für das Datum
       pdf.setFont('helvetica', 'normal');
       pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 14, 25);
-      pdf.text(`Gesamtumsatz: ${revenueStats.revenue.total.toFixed(2)} €`, pageWidth - 80, 25);
       
-      // Gesamtübersicht-Box
-      const startY = 40;
-      pdf.setFillColor(248, 250, 252); // Heller Hintergrund
-      pdf.rect(10, startY, pageWidth - 20, 70, 'F');
-      
-      // Überschrift für die Gesamtübersicht
-      pdf.setFontSize(14);
-      pdf.setTextColor(30, 41, 59);
+      // Zeitraum deutlich sichtbar machen
+      pdf.setFontSize(12);
+      pdf.setTextColor(30, 64, 175); // Blau für den Zeitraum
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Umsatzübersicht', 14, startY + 8);
+      pdf.text(`Zeitraum: ${timeRangeText}`, pageWidth - 120, 15);
       
-      // Drei Infokarten nebeneinander
-      const cardWidth = (pageWidth - 40) / 3;
+      // Gesamtumsatz anzeigen
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 112, 60); // Grün für den Umsatz
+      pdf.text(`Gesamtumsatz: ${revenueStats.revenue.total.toFixed(2)} €`, pageWidth - 120, 25);
+      
+      // Layout für bessere Darstellung
+      const startY = 40;
+      
+      // Drei Infokarten in einer Reihe
+      const cardWidth = 80;
+      const cardHeight = 60;
+      const margin = 10;
       
       // Karte 1: Gesamtumsatz
       pdf.setFillColor(235, 245, 255); // Heller blauer Hintergrund
-      pdf.rect(14, startY + 15, cardWidth, 45, 'F');
-      pdf.setFontSize(10);
+      pdf.rect(14, startY, cardWidth, cardHeight, 'F');
+      pdf.setFontSize(12);
       pdf.setTextColor(30, 64, 175); // Dunkelblau
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Gesamtumsatz', 20, startY + 25);
-      pdf.setFontSize(16);
-      pdf.text(`${revenueStats.revenue.total.toFixed(2)} €`, 20, startY + 45);
+      pdf.text('Gesamtumsatz', 20, startY + 15);
+      pdf.setFontSize(18);
+      pdf.text(`${revenueStats.revenue.total.toFixed(2)} €`, 20, startY + 35);
       
       // Karte 2: Anzahl Reparaturen
       pdf.setFillColor(236, 253, 245); // Heller grüner Hintergrund
-      pdf.rect(20 + cardWidth, startY + 15, cardWidth, 45, 'F');
-      pdf.setFontSize(10);
+      pdf.rect(14 + cardWidth + margin, startY, cardWidth, cardHeight, 'F');
+      pdf.setFontSize(12);
       pdf.setTextColor(6, 95, 70); // Dunkelgrün
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Abgeschlossene Reparaturen', 26 + cardWidth, startY + 25);
-      pdf.setFontSize(16);
-      pdf.text(`${stats?.completed || 0}`, 26 + cardWidth, startY + 45);
+      pdf.text('Abgeschlossene Reparaturen', 20 + cardWidth + margin, startY + 15);
+      pdf.setFontSize(18);
+      pdf.text(`${stats?.completed || 0}`, 20 + cardWidth + margin, startY + 35);
       
       // Karte 3: Durchschnittlicher Umsatz pro Reparatur
       pdf.setFillColor(243, 232, 255); // Heller lila Hintergrund
-      pdf.rect(26 + cardWidth * 2, startY + 15, cardWidth, 45, 'F');
-      pdf.setFontSize(10);
+      pdf.rect(14 + (cardWidth + margin) * 2, startY, cardWidth, cardHeight, 'F');
+      pdf.setFontSize(12);
       pdf.setTextColor(107, 33, 168); // Dunkellila
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Durchschnitt pro Reparatur', 32 + cardWidth * 2, startY + 25);
-      pdf.setFontSize(16);
+      pdf.text('Durchschnitt pro Reparatur', 20 + (cardWidth + margin) * 2, startY + 15);
+      pdf.setFontSize(18);
       const avgRevenue = stats?.completed && revenueStats.revenue.total 
         ? (revenueStats.revenue.total / stats.completed).toFixed(2)
         : '0.00';
-      pdf.text(`${avgRevenue} €`, 32 + cardWidth * 2, startY + 45);
+      pdf.text(`${avgRevenue} €`, 20 + (cardWidth + margin) * 2, startY + 35);
       
-      // Umsatzdiagramm nach Status (Kreisdiagramm)
-      const chartY = startY + 95;
-      pdf.setFontSize(12);
+      // Diagramme in zwei Spalten anordnen für bessere Lesbarkeit
+      const leftCol = 14;
+      const rightCol = pageWidth / 2 + 10;
+      const diagramsY = startY + cardHeight + 20;
+      
+      // Umsatzdiagramm nach Status (Kreisdiagramm) - linke Spalte
+      pdf.setFontSize(14);
       pdf.setTextColor(30, 41, 59);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Umsatzverteilung nach Status', 14, chartY - 5);
+      pdf.text('Umsatzverteilung nach Status', leftCol, diagramsY - 5);
       
       try {
         if (revenueChartRef.current) {
           const revenueCanvas = await html2canvas(revenueChartRef.current, {
-            scale: 2,
+            scale: 1.5,
             backgroundColor: null,
             logging: false
           });
           
-          const imgWidth = 190;
-          const imgHeight = (revenueCanvas.height * imgWidth) / revenueCanvas.width;
+          const imgWidth = pageWidth / 2 - 30;
+          const imgHeight = Math.min(110, (revenueCanvas.height * imgWidth) / revenueCanvas.width);
           
           const revenueImg = revenueCanvas.toDataURL('image/png');
-          pdf.addImage(revenueImg, 'PNG', 10, chartY, imgWidth, Math.min(90, imgHeight));
+          pdf.addImage(revenueImg, 'PNG', leftCol, diagramsY, imgWidth, imgHeight);
         }
       } catch (e) {
         console.error('Fehler beim Erfassen des Umsatz-Diagramms:', e);
       }
       
-      // Balkendiagramm für Umsatz nach Monat/Tag
-      const barChartY = chartY + 100;
-      pdf.setFontSize(12);
+      // Balkendiagramm für Umsatz nach Monat/Tag - rechte Spalte
+      pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Umsatzentwicklung im Zeitraum', 14, barChartY - 5);
+      pdf.text('Umsatzentwicklung im Zeitraum', rightCol, diagramsY - 5);
       
       try {
         const barChartContainer = document.querySelector('.revenue-bar-chart-container');
         if (barChartContainer) {
           const barCanvas = await html2canvas(barChartContainer as HTMLElement, {
-            scale: 2,
+            scale: 1.5,
             backgroundColor: null,
             logging: false
           });
           
-          const imgWidth = 190;
-          const imgHeight = (barCanvas.height * imgWidth) / barCanvas.width;
+          const imgWidth = pageWidth / 2 - 30;
+          const imgHeight = Math.min(110, (barCanvas.height * imgWidth) / barCanvas.width);
           
           const barImg = barCanvas.toDataURL('image/png');
-          pdf.addImage(barImg, 'PNG', 10, barChartY, imgWidth, Math.min(90, imgHeight));
+          pdf.addImage(barImg, 'PNG', rightCol, diagramsY, imgWidth, imgHeight);
         }
       } catch (e) {
         console.error('Fehler beim Erfassen des Balkendiagramms:', e);
       }
       
-      // Footer
+      // Footer am unteren Rand
       pdf.setFontSize(8);
       pdf.setTextColor(128, 128, 128);
-      pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')} | Handyshop | Umsatzstatistik-Export`, 14, 287);
+      pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')} | Handyshop | Umsatzstatistik-Export`, 14, pageHeight - 10);
       
       // PDF herunterladen
       pdf.save('umsatzstatistik.pdf');
