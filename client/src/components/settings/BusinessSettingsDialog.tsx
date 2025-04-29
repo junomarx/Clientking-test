@@ -334,14 +334,35 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
     const userId = localStorage.getItem('userId');
     console.log(`Form submitted by user ${username} (ID: ${userId})`);
     
-    // Stellen wir sicher, dass die Benutzer-ID in den Formulardaten steht
-    const enhancedData = {
-      ...data,
-      userId: Number(userId) // Konvertieren wir den String zur Nummer
-    };
+    // Überprüfen, ob die userId vorhanden ist
+    if (!userId) {
+      console.error('KRITISCH: Keine userId im localStorage gefunden!');
+      toast({
+        title: "Fehler!",
+        description: "Benutzer-ID nicht gefunden. Bitte melden Sie sich ab und wieder an.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    console.log('Calling updateMutation with enhanced data, userId:', enhancedData.userId);
-    updateMutation.mutate(enhancedData);
+    try {
+      // Stellen wir sicher, dass die Benutzer-ID in den Formulardaten steht
+      const enhancedData = {
+        ...data,
+        userId: Number(userId) // Konvertieren wir den String zur Nummer
+      };
+      
+      console.log('Calling updateMutation with enhanced data, userId:', enhancedData.userId);
+      console.log('Vollständige Daten:', JSON.stringify(enhancedData, null, 2));
+      updateMutation.mutate(enhancedData);
+    } catch (error) {
+      console.error('Fehler bei der Vorbereitung der Formulardaten:', error);
+      toast({
+        title: "Fehler!",
+        description: "Beim Verarbeiten der Formulardaten ist ein Fehler aufgetreten.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
