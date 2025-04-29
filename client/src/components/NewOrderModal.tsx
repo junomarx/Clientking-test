@@ -1549,6 +1549,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     field.onChange(selectedIssue);
                                   }
                                   
+                                  // Setze den Filtertext zurück
+                                  setFilterText("");
+                                  
                                   // Schließe das Dropdown
                                   setIsIssueDropdownOpen(false);
                                   setSelectedIssueIndex(-1);
@@ -1652,7 +1655,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   return (
                                     <div key="no-results" className="px-3 py-2 text-muted-foreground text-sm">
                                       Keine passenden Fehlerbeschreibungen gefunden.
-                                      {field.value && field.value.trim() && (
+                                      {filterText && filterText.trim() && (
                                         <div className="mt-1">
                                           <button 
                                             className="text-blue-500 hover:underline text-xs"
@@ -1660,7 +1663,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                             onClick={(e) => {
                                               e.preventDefault();
                                               if (watchDeviceType) {
-                                                saveIssue(watchDeviceType, field.value.trim());
+                                                saveIssue(watchDeviceType, filterText.trim());
                                                 
                                                 // Aktualisiere die Liste der Fehlerbeschreibungen
                                                 const updatedIssues = getIssuesForDeviceType(watchDeviceType);
@@ -1668,7 +1671,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                                 
                                                 toast({
                                                   title: "Fehlerbeschreibung gespeichert",
-                                                  description: `"${field.value.trim()}" wurde zu den Fehlerbeschreibungen für ${watchDeviceType} hinzugefügt.`,
+                                                  description: `"${filterText.trim()}" wurde zu den Fehlerbeschreibungen für ${watchDeviceType} hinzugefügt.`,
                                                 });
                                               }
                                             }}
@@ -1703,6 +1706,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                               } else {
                                                 field.onChange(issue);
                                               }
+                                              
+                                              // Setze den Filtertext zurück
+                                              setFilterText("");
                                               
                                               // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
                                               if (watchDeviceType) {
