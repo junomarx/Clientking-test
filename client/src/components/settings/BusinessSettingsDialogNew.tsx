@@ -99,7 +99,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
   // Verwende den initialActiveTab als Anfangswert
-  const [activeTab, setActiveTab] = useState(initialActiveTab);
+  const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design">(initialActiveTab);
   
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
@@ -353,9 +353,9 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue={initialActiveTab} value={activeTab} onValueChange={(value: "unternehmen" | "email" | "design") => {
+            <Tabs defaultValue={initialActiveTab} value={activeTab} onValueChange={(value) => {
               // Verhindert, dass ein neues Fenster geöffnet wird
-              setActiveTab(value);
+              setActiveTab(value as "unternehmen" | "email" | "design");
             }}>
 
               <TabsList className="w-full flex">
@@ -589,24 +589,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="reviewLink"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="flex items-center gap-2">
-                          <Globe className="h-4 w-4" /> Bewertungslink
-                        </FormLabel>
-                        <FormDescription>
-                          Link zu Ihrer Google-Bewertungsseite oder ähnlichem
-                        </FormDescription>
-                        <FormControl>
-                          <Input {...field} placeholder="https://g.page/r/..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
                 </div>
               </TabsContent>
               
@@ -694,6 +677,31 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                         <FormLabel>SMTP Passwort</FormLabel>
                         <FormControl>
                           <Input {...field} type="password" placeholder="**********" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="sm:col-span-2">
+                    <div className="mt-2 mb-4 border-t border-border pt-4">
+                      <h4 className="text-sm font-medium mb-2">Kommunikation mit Kunden</h4>
+                    </div>
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="reviewLink"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2">
+                        <FormLabel className="flex items-center gap-2">
+                          <Globe className="h-4 w-4" /> Bewertungslink
+                        </FormLabel>
+                        <FormDescription>
+                          Link zu Ihrer Google-Bewertungsseite oder ähnlichem. Wird für Kundenbewertungsanfragen verwendet.
+                        </FormDescription>
+                        <FormControl>
+                          <Input {...field} placeholder="https://g.page/r/..." />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
