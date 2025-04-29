@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar } from 'lucide-react';
+import { SimpleDatePicker } from './SimpleDatePicker';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -44,6 +45,10 @@ export function StatisticsTabRebuilt() {
   
   // Zeitraum-Filter
   const [timeRange, setTimeRange] = useState('all');
+  const [customDateStart, setCustomDateStart] = useState<Date | undefined>(undefined);
+  const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
+  const [customDatePickerOpen, setCustomDatePickerOpen] = useState(false);
+  const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
   
   // Basisdaten für Statistiken laden
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
@@ -149,7 +154,8 @@ export function StatisticsTabRebuilt() {
     { value: '7days', label: 'Letzte 7 Tage' },
     { value: '30days', label: 'Letzte 30 Tage' },
     { value: 'thisMonth', label: 'Aktueller Monat' },
-    { value: 'lastMonth', label: 'Letzter Monat' }
+    { value: 'lastMonth', label: 'Letzter Monat' },
+    { value: 'custom', label: 'Benutzerdefiniert' }
   ];
   
   return (
@@ -168,7 +174,15 @@ export function StatisticsTabRebuilt() {
           <div className="flex w-full sm:w-auto">
             <Select
               value={timeRange}
-              onValueChange={(value) => setTimeRange(value)}
+              onValueChange={(value) => {
+                setTimeRange(value);
+                // Beim Wechsel zu "Benutzerdefiniert" das Datumsfenster öffnen
+                if (value === 'custom') {
+                  setCustomDatePickerOpen(true);
+                } else {
+                  setCustomDateRangeActive(false);
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Zeitraum wählen" />
@@ -193,6 +207,22 @@ export function StatisticsTabRebuilt() {
           </Button>
         </div>
       </div>
+      
+      {/* Datumsauswahl für benutzerdefinierten Zeitraum */}
+      <SimpleDatePicker 
+        isOpen={customDatePickerOpen}
+        onClose={() => setCustomDatePickerOpen(false)}
+        startDate={customDateStart}
+        endDate={customDateEnd}
+        onStartDateChange={setCustomDateStart}
+        onEndDateChange={setCustomDateEnd}
+        onApply={() => {
+          if (customDateStart && customDateEnd) {
+            setCustomDateRangeActive(true);
+            setCustomDatePickerOpen(false);
+          }
+        }}
+      />
       
       {/* Zeitraum-Anzeige wenn Filter aktiv */}
       {timeRange !== 'all' && (
