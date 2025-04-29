@@ -1483,8 +1483,17 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               }, 200);
                             }}
                             onKeyDown={(e) => {
+                              // Öffne die Dropdown-Liste bei Pfeil nach unten, wenn nicht bereits geöffnet
+                              if (!isIssueDropdownOpen && e.key === 'ArrowDown' && watchDeviceType && availableIssues.length > 0) {
+                                e.preventDefault();
+                                setIsIssueDropdownOpen(true);
+                                setSelectedIssueIndex(0); // Wähle das erste Element
+                                return;
+                              }
+                              
                               // Verwende Pfeiltasten zur Navigation in der Dropdown-Liste
                               if (isIssueDropdownOpen && availableIssues.length > 0) {
+                                // Navigation mit Pfeiltasten
                                 if (e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   setSelectedIssueIndex(prevIndex => 
@@ -1495,7 +1504,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   setSelectedIssueIndex(prevIndex => 
                                     prevIndex > 0 ? prevIndex - 1 : availableIssues.length - 1
                                   );
-                                } else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
+                                } 
+                                // Auswahl mit Enter = Fehler auswählen + neue Zeile für weiteren Fehler
+                                else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
                                   e.preventDefault();
                                   const selectedIssue = availableIssues[selectedIssueIndex];
                                   
@@ -1506,6 +1517,35 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     field.onChange(selectedIssue);
                                   }
                                   
+                                  // Dropdown geöffnet lassen, damit weitere Fehler ausgewählt werden können
+                                  // Cursor bleibt im Textfeld zum Hinzufügen weiterer Fehler
+                                }
+                                // Auswahl mit Tab = Fehler auswählen + zum nächsten Feld springen
+                                else if (e.key === 'Tab' && selectedIssueIndex >= 0) {
+                                  // Vermeide Standardverhalten von Tab
+                                  e.preventDefault();
+                                  const selectedIssue = availableIssues[selectedIssueIndex];
+                                  
+                                  // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
+                                  if (field.value) {
+                                    field.onChange(`${field.value}\n${selectedIssue}`);
+                                  } else {
+                                    field.onChange(selectedIssue);
+                                  }
+                                  
+                                  // Schließe das Dropdown
+                                  setIsIssueDropdownOpen(false);
+                                  setSelectedIssueIndex(-1);
+                                  
+                                  // Fokus zum nächsten Feld (Kostenvoranschlag) setzen
+                                  const nextInput = document.querySelector('input[name="estimatedCost"]');
+                                  if (nextInput) {
+                                    (nextInput as HTMLInputElement).focus();
+                                  }
+                                }
+                                // Schließe Dropdown mit Escape
+                                else if (e.key === 'Escape') {
+                                  e.preventDefault();
                                   setIsIssueDropdownOpen(false);
                                   setSelectedIssueIndex(-1);
                                 }
@@ -1553,90 +1593,135 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 </div>
                               </div>
                               
-                              {availableIssues.length > 0 ? (
-                                availableIssues.map((issue, index) => (
-                                  <div 
-                                    key={index} 
-                                    className={`px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-muted' : ''}`}
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                    }}
-                                    onMouseEnter={() => {
-                                      setSelectedIssueIndex(index);
-                                    }}
-                                  >
-                                    <div 
-                                      className="flex-grow"
-                                      onClick={() => {
-                                        // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
-                                        if (field.value) {
-                                          field.onChange(`${field.value}\n${issue}`);
-                                        } else {
-                                          field.onChange(issue);
-                                        }
-                                        
-                                        // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
-                                        if (watchDeviceType) {
-                                          saveIssue(watchDeviceType, issue);
-                                        }
-                                        
-                                        setIsIssueDropdownOpen(false);
-                                      }}
-                                    >
-                                      {issue}
+                              {/* Anzeige der Fehlerbeschreibungen auf Basis der Filterung */}
+                              {(() => {
+                                // Filtere die passenden Fehlerbeschreibungen
+                                const filteredIssues = availableIssues
+                                  .filter(issue => !field.value || issue.toLowerCase().includes(field.value.toLowerCase()) || field.value.split('\n').some(line => issue.toLowerCase().includes(line.toLowerCase())));
+                                
+                                if (availableIssues.length === 0) {
+                                  // Wenn keine Beschreibungen für diesen Gerätetyp vorhanden sind
+                                  return (
+                                    <div className="px-3 py-4 text-muted-foreground text-center">
+                                      Keine Fehlerbeschreibungen für {watchDeviceType} gefunden.
+                                      <div className="mt-2">
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            // Standard-Fehlerbeschreibungen wiederherstellen
+                                            if (watchDeviceType && DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES]) {
+                                              const defaultIssues = DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES] || [];
+                                              defaultIssues.forEach(issue => {
+                                                saveIssue(watchDeviceType, issue);
+                                              });
+                                              
+                                              // Aktualisiere die Liste der Fehlerbeschreibungen
+                                              const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                              setAvailableIssues(updatedIssues);
+                                            }
+                                          }}
+                                        >
+                                          Standard-Fehlerbeschreibungen wiederherstellen
+                                        </Button>
+                                      </div>
                                     </div>
-                                    
-                                    {/* Alle Fehler können gelöscht werden */}
-                                    {(
-                                      <button
-                                        type="button"
-                                        tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
-                                        className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          e.preventDefault();
-                                          if (watchDeviceType) {
-                                            deleteIssue(watchDeviceType, issue);
-                                            // Aktualisiere die Liste der Fehlerbeschreibungen
-                                            const updatedIssues = getIssuesForDeviceType(watchDeviceType);
-                                            setAvailableIssues(updatedIssues);
-                                          }
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="px-3 py-4 text-muted-foreground text-center">
-                                  Keine Fehlerbeschreibungen für {watchDeviceType} gefunden.
-                                  <div className="mt-2">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        // Standard-Fehlerbeschreibungen wiederherstellen
-                                        if (watchDeviceType && DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES]) {
-                                          const defaultIssues = DEFAULT_ISSUES[watchDeviceType as keyof typeof DEFAULT_ISSUES] || [];
-                                          defaultIssues.forEach(issue => {
-                                            saveIssue(watchDeviceType, issue);
-                                          });
+                                  );
+                                } else if (filteredIssues.length === 0) {
+                                  // Wenn keine Ergebnisse bei der Filterung gefunden wurden
+                                  return (
+                                    <div key="no-results" className="px-3 py-2 text-muted-foreground text-sm">
+                                      Keine passenden Fehlerbeschreibungen gefunden.
+                                      {field.value && field.value.trim() && (
+                                        <div className="mt-1">
+                                          <button 
+                                            className="text-blue-500 hover:underline text-xs"
+                                            tabIndex={-1}
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              if (watchDeviceType) {
+                                                saveIssue(watchDeviceType, field.value.trim());
+                                                
+                                                // Aktualisiere die Liste der Fehlerbeschreibungen
+                                                const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                                setAvailableIssues(updatedIssues);
+                                                
+                                                toast({
+                                                  title: "Fehlerbeschreibung gespeichert",
+                                                  description: `"${field.value.trim()}" wurde zu den Fehlerbeschreibungen für ${watchDeviceType} hinzugefügt.`,
+                                                });
+                                              }
+                                            }}
+                                          >
+                                            + Aktuelle Eingabe als neue Fehlerbeschreibung speichern
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                } else {
+                                  // Zeige die filtrierten Ergebnisse an
+                                  return (
+                                    <div>
+                                      {filteredIssues.map((issue, index) => (
+                                        <div 
+                                          key={index} 
+                                          className={`px-3 py-2 hover:bg-muted cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-muted' : ''}`}
+                                          onMouseDown={(e) => {
+                                            e.preventDefault();
+                                          }}
+                                          onMouseEnter={() => {
+                                            setSelectedIssueIndex(index);
+                                          }}
+                                        >
+                                          <div 
+                                            className="flex-grow"
+                                            onClick={() => {
+                                              // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
+                                              if (field.value) {
+                                                field.onChange(`${field.value}\n${issue}`);
+                                              } else {
+                                                field.onChange(issue);
+                                              }
+                                              
+                                              // Speichere den ausgewählten Fehler für diesen Gerätetyp, falls er noch nicht existiert
+                                              if (watchDeviceType) {
+                                                saveIssue(watchDeviceType, issue);
+                                              }
+                                              
+                                              setIsIssueDropdownOpen(false);
+                                            }}
+                                          >
+                                            {issue}
+                                          </div>
                                           
-                                          // Aktualisiere die Liste der Fehlerbeschreibungen
-                                          const updatedIssues = getIssuesForDeviceType(watchDeviceType);
-                                          setAvailableIssues(updatedIssues);
-                                        }
-                                      }}
-                                    >
-                                      Standard-Fehlerbeschreibungen wiederherstellen
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
+                                          {/* Alle Fehler können gelöscht werden */}
+                                          <button
+                                            type="button"
+                                            tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
+                                            className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              e.preventDefault();
+                                              if (watchDeviceType) {
+                                                deleteIssue(watchDeviceType, issue);
+                                                // Aktualisiere die Liste der Fehlerbeschreibungen
+                                                const updatedIssues = getIssuesForDeviceType(watchDeviceType);
+                                                setAvailableIssues(updatedIssues);
+                                              }
+                                            }}
+                                          >
+                                            ×
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                }
+                              })()}
                             </div>
                           )}
                         </div>
