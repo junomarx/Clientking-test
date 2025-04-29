@@ -512,7 +512,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
         
         // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
-        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveModelLegacy(repairData.deviceType, repairData.brand, repairData.model);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
@@ -583,7 +583,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
         
         // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
-        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveModelLegacy(repairData.deviceType, repairData.brand, repairData.model);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
@@ -677,7 +677,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
         
         // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
-        saveModel(repairData.deviceType, repairData.brand, repairData.model);
+        saveModelLegacy(repairData.deviceType, repairData.brand, repairData.model);
         saveBrand(repairData.deviceType, repairData.brand);
       }
       
