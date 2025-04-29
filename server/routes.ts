@@ -691,6 +691,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Updating business settings for user ${userId} (${req.user?.username})`);
       console.log('Request body keys:', Object.keys(req.body));
       
+      // Überprüfen, ob eine userId im Body ist und ob sie mit der authentifizierten User-ID übereinstimmt
+      if (req.body.userId && req.body.userId !== userId) {
+        console.warn(`WARNUNG: userId in Request Body (${req.body.userId}) stimmt nicht mit authentifizierter userId (${userId}) überein!`);
+        return res.status(403).json({ 
+          message: "Sicherheitswarnung: Sie versuchen, Einstellungen für einen anderen Benutzer zu ändern."
+        });
+      }
+      
       // Wir extrahieren das logoImage und colorTheme aus dem Request-Body, bevor wir die Validierung durchführen
       const { logoImage, colorTheme, receiptWidth, ...settingsData } = req.body;
       
@@ -705,7 +713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validierung der Geschäftsdaten
       const validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
       
-      // Zusätzliche Daten für die Speicherung
+      // Zusätzliche Daten für die Speicherung - wir überschreiben IMMER die userId mit der authentifizierten ID
       const additionalData: any = {
         userId // Wichtig: Wir müssen die Benutzer-ID immer in die Daten einfügen
       };

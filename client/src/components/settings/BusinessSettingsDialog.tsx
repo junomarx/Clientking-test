@@ -267,18 +267,35 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
       console.log('Sending data to server:', { ...data, logoImageLength: logoPreview?.length });
-      console.log('Current user:', localStorage.getItem('username'));
+      console.log('Current user:', localStorage.getItem('username'), 'userId:', localStorage.getItem('userId'));
       console.log('Auth token exists:', !!localStorage.getItem('auth_token'));
       
       try {
-        // Wir senden das Logo als Base64-String mit
+        // Wir holen die Benutzer-ID aus dem Local Storage und fügen sie den Daten hinzu
+        const userId = Number(localStorage.getItem('userId'));
+        if (!userId || isNaN(userId)) {
+          throw new Error('Keine gültige Benutzer-ID im Local Storage gefunden!');
+        }
+        
+        // Wir senden das Logo als Base64-String mit und fügen die userId explizit hinzu
         const requestData = {
-          ...data,
-          logoImage: logoPreview
+          ...data, // Die regulären Formulardaten
+          logoImage: logoPreview, // Das Logo als Base64
+          userId: userId // Die Benutzer-ID explizit setzen
         };
+        
+        console.log('Sending request with userId:', userId);
         console.log('Request data keys:', Object.keys(requestData));
         
         const response = await apiRequest("POST", "/api/business-settings", requestData);
+        console.log('Response status:', response.status);
+        
+        // Wenn der Response nicht ok ist, werfen wir einen Fehler
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server-Fehler: ${response.status} ${errorText}`);
+        }
+        
         const responseData = await response.json();
         console.log('Response from server:', responseData);
         return responseData;
