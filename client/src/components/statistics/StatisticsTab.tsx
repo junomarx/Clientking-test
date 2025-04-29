@@ -305,7 +305,28 @@ export function StatisticsTab() {
     : [];
 
   // Neueste Reparaturen
-  const recentRepairs = detailedStats?.mostRecentRepairs || [];
+  // Kunden für die Anzeige der Kundennamen laden
+  const { data: customers } = useQuery({
+    queryKey: ['/api/customers']
+  });
+
+  // Erweiterte Repair-Typ, der customerName beinhaltet
+  type ExtendedRepair = Repair & { customerName?: string };
+  
+  // Repair-Daten mit Kundennamen anreichern
+  const recentRepairs = useMemo(() => {
+    const repairs = detailedStats?.mostRecentRepairs || [];
+    
+    if (!customers) return repairs as ExtendedRepair[];
+    
+    return repairs.map(repair => {
+      const customer = customers.find((c: any) => c.id === repair.customerId);
+      return {
+        ...repair,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unbekannt'
+      } as ExtendedRepair;
+    });
+  }, [detailedStats, customers]);
   
   // Daten für Umsatz-Diagramme für allgemeine Statistiken vorbereiten
   const revenueByStatusData = detailedStats?.revenue?.byStatus
