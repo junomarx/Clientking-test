@@ -109,7 +109,8 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
       </div>
       
       <div className="px-6 pb-6">
-        <div className="overflow-x-auto">
+        {/* Desktop-Tabellenansicht (versteckt auf mobilen Geräten) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full rounded-lg overflow-hidden shadow-sm">
             <thead>
               <tr className="bg-primary text-white">
@@ -152,6 +153,48 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
               )}
             </tbody>
           </table>
+        </div>
+        
+        {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
+        <div className="md:hidden space-y-2">
+          {customersLoading || repairsLoading ? (
+            <div className="p-4 text-center text-gray-500">Lädt Daten...</div>
+          ) : customerWithRepairs.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">Keine Kunden gefunden</div>
+          ) : (
+            customerWithRepairs.map(customer => (
+              <div 
+                key={customer.id} 
+                className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden cursor-pointer"
+                onClick={() => handleCustomerClick(customer.id)}
+              >
+                <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
+                  <div className="font-medium text-sm">{customer.firstName} {customer.lastName}</div>
+                  <div className="text-xs bg-blue-100 text-blue-800 rounded px-2 py-1">{customer.orderCount} Aufträge</div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  <div className="p-3 flex justify-between">
+                    <span className="text-xs text-gray-500">Telefon</span>
+                    <span className="text-sm">{customer.phone}</span>
+                  </div>
+                  {customer.email && (
+                    <div className="p-3 flex justify-between">
+                      <span className="text-xs text-gray-500">Email</span>
+                      <span className="text-sm">{customer.email}</span>
+                    </div>
+                  )}
+                  <div className="p-3 flex justify-between">
+                    <span className="text-xs text-gray-500">Letzter Auftrag</span>
+                    <span className="text-sm font-medium">
+                      {customer.lastOrderDate 
+                        ? new Date(customer.lastOrderDate).toLocaleDateString('de-DE') 
+                        : '-'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
