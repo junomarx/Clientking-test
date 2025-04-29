@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen } from 'lucide-react';
+import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen, Truck, CheckCircle } from 'lucide-react';
 import { SimpleDatePicker } from './SimpleDatePicker';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -271,7 +271,7 @@ export function StatisticsTabRebuilt() {
         {/* Übersichts-Tab */}
         <TabsContent value="general" className="space-y-4">
           {/* Kennzahlenkarten */}
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Gesamt</CardTitle>
@@ -280,33 +280,6 @@ export function StatisticsTabRebuilt() {
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
                 <p className="text-xs text-muted-foreground">Aufträge</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">In Bearbeitung</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.inRepair || 0}</div>
-                <p className="text-xs text-muted-foreground">offene Aufträge</p>
-                {stats && stats.readyForPickup > 0 && (
-                  <Badge variant="outline" className="mt-1">
-                    {stats.readyForPickup} abholbereit
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Abgeschlossen</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.completed || 0}</div>
-                <p className="text-xs text-muted-foreground">erledigte Aufträge</p>
               </CardContent>
             </Card>
             
@@ -323,14 +296,60 @@ export function StatisticsTabRebuilt() {
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Kunden</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">In Reparatur</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.customerCount || 0}</div>
-                <p className="text-xs text-muted-foreground">registrierte Kunden</p>
+                <div className="text-2xl font-bold">{stats?.inRepair || 0}</div>
+                <p className="text-xs text-muted-foreground">in Bearbeitung</p>
               </CardContent>
             </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Außer Haus</CardTitle>
+                <Truck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.outsourced || 0}</div>
+                <p className="text-xs text-muted-foreground">ausgelagert</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Abholbereit</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.readyForPickup || 0}</div>
+                <p className="text-xs text-muted-foreground">fertig</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Abgeholt</CardTitle>
+                <Database className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{(stats?.completed || 0) - (stats?.readyForPickup || 0)}</div>
+                <p className="text-xs text-muted-foreground">abgeschlossen</p>
+              </CardContent>
+            </Card>
+            
+            <div className="col-span-2 lg:col-span-3 xl:col-span-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Kunden</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.customerCount || 0}</div>
+                  <p className="text-xs text-muted-foreground">registrierte Kunden</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
           
           {/* Jüngste Reparaturen */}
