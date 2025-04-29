@@ -613,7 +613,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                         <FormControl>
                           <Input {...field} placeholder="Handyshop Support" />
                         </FormControl>
-                        <FormDescription>
+                        <FormDescription className="text-xs sm:text-sm">
                           Name, der beim Empfänger als Absender angezeigt wird
                         </FormDescription>
                         <FormMessage />
@@ -651,7 +651,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                   
                   <div className="sm:col-span-2">
                     <div className="mt-2 mb-4 border-t border-border pt-4">
-                      <h4 className="text-sm font-medium mb-2">Anmeldeinformationen</h4>
+                      <h4 className="text-xs sm:text-sm font-medium mb-2">Anmeldeinformationen</h4>
                     </div>
                   </div>
                   
@@ -685,7 +685,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                   
                   <div className="sm:col-span-2">
                     <div className="mt-2 mb-4 border-t border-border pt-4">
-                      <h4 className="text-sm font-medium mb-2">Kommunikation mit Kunden</h4>
+                      <h4 className="text-xs sm:text-sm font-medium mb-2">Kommunikation mit Kunden</h4>
                     </div>
                   </div>
                   
@@ -697,7 +697,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                         <FormLabel className="flex items-center gap-1 sm:gap-2">
                           <Globe className="h-3 w-3 sm:h-4 sm:w-4" /> Bewertungslink
                         </FormLabel>
-                        <FormDescription>
+                        <FormDescription className="text-xs sm:text-sm">
                           Link zu Ihrer Google-Bewertungsseite oder ähnlichem. Wird für Kundenbewertungsanfragen verwendet.
                         </FormDescription>
                         <FormControl>
@@ -719,7 +719,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                       <FormLabel className="flex items-center gap-1 sm:gap-2">
                         <Palette className="h-3 w-3 sm:h-4 sm:w-4" /> Farbpalette
                       </FormLabel>
-                      <FormDescription>
+                      <FormDescription className="text-xs sm:text-sm">
                         Wählen Sie eine Farbpalette für die Anwendung.
                       </FormDescription>
                       <FormControl>
@@ -767,7 +767,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                       <FormLabel className="flex items-center gap-1 sm:gap-2">
                         <Printer className="h-3 w-3 sm:h-4 sm:w-4" /> Bonbreite
                       </FormLabel>
-                      <FormDescription>
+                      <FormDescription className="text-xs sm:text-sm">
                         Wählen Sie die Breite Ihres Bondruckers für die richtige Formatierung der Belege.
                       </FormDescription>
                       <FormControl>
