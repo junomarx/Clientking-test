@@ -759,7 +759,19 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       {/* Hauptdialog zum Erstellen eines neuen Auftrags */}
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onKeyDown={(e) => {
+          // Auto-Scroll zum fokussierten Element
+          if (e.key === 'Tab') {
+            // Eine kleine Verzögerung, damit das nächste Element Zeit hat, den Fokus zu erhalten
+            setTimeout(() => {
+              const activeElement = document.activeElement;
+              if (activeElement && e.currentTarget.contains(activeElement)) {
+                // Stelle sicher, dass das Element im sichtbaren Bereich ist
+                activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 100);
+          }
+        }}>
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-primary">Neuen Auftrag erfassen</DialogTitle>
           </DialogHeader>
