@@ -351,7 +351,11 @@ export function BusinessSettingsDialogNew({ open, onClose }: BusinessSettingsDia
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="unternehmen" value={activeTab} onValueChange={setActiveTab}>
+            <Tabs defaultValue="unternehmen" value={activeTab} onValueChange={(value) => {
+              // Verhindert, dass ein neues Fenster geöffnet wird
+              setActiveTab(value);
+            }}>
+
               <TabsList className="w-full flex">
                 <TabsTrigger value="unternehmen" className="flex-1">
                   <Building2 className="h-4 w-4 mr-2" /> Unternehmen
