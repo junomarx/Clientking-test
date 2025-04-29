@@ -317,13 +317,14 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
     const userId = localStorage.getItem('userId');
     console.log(`Form submitted by user ${username} (ID: ${userId})`);
     
-    // Setze einen Timeout, damit wir sehen können, ob der Submit-Handler überhaupt aufgerufen wird
-    console.log('About to call updateMutation.mutate...');
-    setTimeout(() => {
-      console.log('Inside timeout, calling updateMutation.mutate now');
-      updateMutation.mutate(data);
-      console.log('Called updateMutation.mutate');
-    }, 500);
+    // Stellen wir sicher, dass die Benutzer-ID in den Formulardaten steht
+    const enhancedData = {
+      ...data,
+      userId: Number(userId) // Konvertieren wir den String zur Nummer
+    };
+    
+    console.log('Calling updateMutation with enhanced data, userId:', enhancedData.userId);
+    updateMutation.mutate(enhancedData);
   }
 
   return (
