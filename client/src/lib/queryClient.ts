@@ -14,6 +14,9 @@ export async function apiRequest(
 ): Promise<Response> {
   // Auth-Token aus dem lokalen Speicher holen
   const authToken = localStorage.getItem('auth_token');
+  const username = localStorage.getItem('username');
+  
+  console.log(`API request ${method} ${url} for user ${username || 'unknown'} with auth token:`, authToken ? 'exists' : 'none');
   
   const headers: Record<string, string> = {};
   if (data) {
@@ -23,15 +26,28 @@ export async function apiRequest(
     headers["Authorization"] = `Bearer ${authToken}`;
   }
   
-  const res = await fetch(url, {
-    method,
-    headers: headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include", // Behalte dies für die Kompatibilität bei
-  });
+  console.log('Request headers:', headers);
+  
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include", // Behalte dies für die Kompatibilität bei
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    if (!res.ok) {
+      console.error(`API error ${res.status} ${res.statusText} for ${method} ${url}`);
+      const text = await res.text();
+      console.error('Error response body:', text);
+      throw new Error(`${res.status}: ${text || res.statusText}`);
+    }
+    
+    return res;
+  } catch (error) {
+    console.error(`API request error for ${method} ${url}:`, error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

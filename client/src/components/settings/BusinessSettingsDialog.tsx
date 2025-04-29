@@ -267,17 +267,27 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
       console.log('Sending data to server:', { ...data, logoImageLength: logoPreview?.length });
+      console.log('Current user:', localStorage.getItem('username'));
+      console.log('Auth token exists:', !!localStorage.getItem('auth_token'));
+      
       try {
         // Wir senden das Logo als Base64-String mit
-        const response = await apiRequest("POST", "/api/business-settings", {
+        const requestData = {
           ...data,
           logoImage: logoPreview
-        });
+        };
+        console.log('Request data keys:', Object.keys(requestData));
+        
+        const response = await apiRequest("POST", "/api/business-settings", requestData);
         const responseData = await response.json();
         console.log('Response from server:', responseData);
         return responseData;
       } catch (error) {
         console.error('Error in mutation:', error);
+        if (error instanceof Error) {
+          console.error('Error message:', error.message);
+          console.error('Error stack:', error.stack);
+        }
         throw error;
       }
     },
