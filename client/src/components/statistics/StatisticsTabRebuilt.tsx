@@ -52,10 +52,17 @@ export function StatisticsTabRebuilt() {
   
   // Basisdaten für Statistiken laden
   const { data: stats, isLoading: statsLoading } = useQuery<Stats>({
-    queryKey: ['/api/stats', timeRange],
+    queryKey: ['/api/stats', timeRange, customDateRangeActive, customDateStart, customDateEnd],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (timeRange === 'today') {
+      
+      // Benutzerdefinierter Zeitraum
+      if (timeRange === 'custom' && customDateRangeActive && customDateStart && customDateEnd) {
+        params.append('startDate', format(customDateStart, 'yyyy-MM-dd'));
+        params.append('endDate', format(customDateEnd, 'yyyy-MM-dd'));
+      }
+      // Vordefinierte Zeiträume
+      else if (timeRange === 'today') {
         params.append('startDate', format(new Date(), 'yyyy-MM-dd'));
       } else if (timeRange === '7days') {
         params.append('startDate', format(subDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -77,10 +84,17 @@ export function StatisticsTabRebuilt() {
   
   // Detaillierte Statistiken laden
   const { data: detailedStats, isLoading: detailedStatsLoading } = useQuery<DetailedStats>({
-    queryKey: ['/api/stats/detailed', timeRange],
+    queryKey: ['/api/stats/detailed', timeRange, customDateRangeActive, customDateStart, customDateEnd],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (timeRange === 'today') {
+      
+      // Benutzerdefinierter Zeitraum
+      if (timeRange === 'custom' && customDateRangeActive && customDateStart && customDateEnd) {
+        params.append('startDate', format(customDateStart, 'yyyy-MM-dd'));
+        params.append('endDate', format(customDateEnd, 'yyyy-MM-dd'));
+      }
+      // Vordefinierte Zeiträume
+      else if (timeRange === 'today') {
         params.append('startDate', format(new Date(), 'yyyy-MM-dd'));
       } else if (timeRange === '7days') {
         params.append('startDate', format(subDays(new Date(), 7), 'yyyy-MM-dd'));
@@ -225,11 +239,13 @@ export function StatisticsTabRebuilt() {
       />
       
       {/* Zeitraum-Anzeige wenn Filter aktiv */}
-      {timeRange !== 'all' && (
+      {(timeRange !== 'all' || customDateRangeActive) && (
         <div className="mb-4">
           <Badge variant="outline" className="mb-4">
             <Calendar className="h-3 w-3 mr-1" />
-            Zeitraum: {timeRangeOptions.find(o => o.value === timeRange)?.label}
+            Zeitraum: {timeRange === 'custom' && customDateRangeActive 
+              ? `${customDateStart?.toLocaleDateString()} - ${customDateEnd?.toLocaleDateString()}`
+              : timeRangeOptions.find(o => o.value === timeRange)?.label}
           </Badge>
         </div>
       )}
