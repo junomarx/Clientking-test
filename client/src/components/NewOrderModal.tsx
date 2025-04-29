@@ -104,6 +104,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);
+  const [filterText, setFilterText] = useState<string>("");
   
   // Das automatische Scrollen wird direkt im Form Element implementiert
   
@@ -1466,6 +1467,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                             {...field} 
                             placeholder="Beschreiben Sie das Problem oder wählen Sie aus typischen Fehlern"
                             className="resize-none min-h-[100px]"
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              setFilterText(e.target.value);
+                            }}
                             onClick={() => {
                               if (watchDeviceType && availableIssues.length > 0) {
                                 setIsIssueDropdownOpen(true);
@@ -1516,6 +1521,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   } else {
                                     field.onChange(`${selectedIssue}\n`);
                                   }
+                                  
+                                  // Setze den Filtertext zurück, damit man weitere Fehlerbeschreibungen sehen kann
+                                  setFilterText("");
                                   
                                   // Setze Cursor ans Ende des Textes
                                   setTimeout(() => {
@@ -1604,8 +1612,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               {/* Anzeige der Fehlerbeschreibungen auf Basis der Filterung */}
                               {(() => {
                                 // Filtere die passenden Fehlerbeschreibungen
+                                // Verwende filterText statt field.value für die Filterung
                                 const filteredIssues = availableIssues
-                                  .filter(issue => !field.value || issue.toLowerCase().includes(field.value.toLowerCase()) || field.value.split('\n').some(line => issue.toLowerCase().includes(line.toLowerCase())));
+                                  .filter(issue => !filterText || issue.toLowerCase().includes(filterText.toLowerCase()));
                                 
                                 if (availableIssues.length === 0) {
                                   // Wenn keine Beschreibungen für diesen Gerätetyp vorhanden sind
