@@ -266,12 +266,20 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      // Wir senden das Logo als Base64-String mit
-      const response = await apiRequest("POST", "/api/business-settings", {
-        ...data,
-        logoImage: logoPreview
-      });
-      return await response.json();
+      console.log('Sending data to server:', { ...data, logoImageLength: logoPreview?.length });
+      try {
+        // Wir senden das Logo als Base64-String mit
+        const response = await apiRequest("POST", "/api/business-settings", {
+          ...data,
+          logoImage: logoPreview
+        });
+        const responseData = await response.json();
+        console.log('Response from server:', responseData);
+        return responseData;
+      } catch (error) {
+        console.error('Error in mutation:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
@@ -283,9 +291,10 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       onClose(); // Dialog schließen
     },
     onError: (error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Fehler!",
-        description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        description: `Die Einstellungen konnten nicht gespeichert werden: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
