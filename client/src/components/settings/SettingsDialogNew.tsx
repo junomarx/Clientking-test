@@ -26,6 +26,7 @@ import {
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
 import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
+import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 
 interface SettingsDialogNewProps {
   open: boolean;
@@ -37,6 +38,7 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
   const [activeTab, setActiveTab] = useState("business");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
   const [showBusinessSettings, setShowBusinessSettings] = useState(false);
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   
   // Abmelden-Funktion
   const handleLogout = () => {
@@ -170,7 +172,11 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
                     <div>
                       <h4 className="font-medium text-sm mb-2">Aktionen</h4>
                       <div className="flex flex-col space-y-2">
-                        <Button variant="outline" className="w-full justify-start">
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={() => setIsChangePasswordDialogOpen(true)}
+                        >
                           <Lock className="h-4 w-4 mr-2" /> Passwort ändern
                         </Button>
                         <Button 
@@ -195,6 +201,12 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
         open={showBusinessSettings} 
         onClose={closeBusinessSettings}
         initialActiveTab={initialTab}
+      />
+      
+      {/* Passwort-Ändern-Dialog */}
+      <ChangePasswordDialog
+        open={isChangePasswordDialogOpen}
+        onOpenChange={setIsChangePasswordDialogOpen}
       />
     </>
   );
