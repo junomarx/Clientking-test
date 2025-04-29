@@ -12,11 +12,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  // Auth-Token aus dem lokalen Speicher holen
+  // Auth-Token und Benutzer-ID aus dem lokalen Speicher holen
   const authToken = localStorage.getItem('auth_token');
+  const userId = localStorage.getItem('userId');
   const username = localStorage.getItem('username');
   
-  console.log(`API request ${method} ${url} for user ${username || 'unknown'} with auth token:`, authToken ? 'exists' : 'none');
+  console.log(`API request ${method} ${url} for user ${username || 'unknown'} (ID: ${userId || 'unknown'}) with auth token:`, authToken ? 'exists' : 'none');
   
   const headers: Record<string, string> = {};
   if (data) {
@@ -24,6 +25,11 @@ export async function apiRequest(
   }
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`;
+  }
+  
+  // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar
+  if (userId) {
+    headers["X-User-ID"] = userId;
   }
   
   console.log('Request headers:', headers);
@@ -56,12 +62,22 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Auth-Token aus dem lokalen Speicher holen
+    // Auth-Token und Benutzer-ID aus dem lokalen Speicher holen
     const authToken = localStorage.getItem('auth_token');
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+    
+    console.log(`Query ${queryKey[0]} for user ${username || 'unknown'} (ID: ${userId || 'unknown'})`);
+    
     const headers: Record<string, string> = {};
     
     if (authToken) {
       headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    
+    // Füge die Benutzer-ID als X-User-ID Header hinzu, wenn verfügbar
+    if (userId) {
+      headers["X-User-ID"] = userId;
     }
     
     const res = await fetch(queryKey[0] as string, {

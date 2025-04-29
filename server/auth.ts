@@ -147,6 +147,8 @@ export function setupAuth(app: Express) {
         // Generate a simple token (in production we would use JWT)
         const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
         
+        console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id})`);
+        
         // Return the user without the password and token
         const { password, ...userWithoutPassword } = user;
         res.status(200).json({ 
