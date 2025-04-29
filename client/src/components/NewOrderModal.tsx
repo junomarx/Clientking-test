@@ -54,6 +54,9 @@ const orderFormSchema = z.object({
   lastName: z.string().min(2, { message: 'Nachname muss mindestens 2 Zeichen lang sein' }),
   phone: z.string().min(5, { message: 'Telefonnummer eingeben' }),
   email: z.string().email({ message: 'Gültige E-Mail-Adresse eingeben' }).optional().or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  zipCode: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
   
   // Device info
   deviceType: z.string().min(1, { message: 'Bitte Geräteart eingeben' }),
@@ -102,6 +105,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       lastName: '',
       phone: '',
       email: '',
+      address: '',
+      zipCode: '',
+      city: '',
       deviceType: '',
       brand: '',
       model: '',

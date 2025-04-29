@@ -420,9 +420,9 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Straße</FormLabel>
+                            <FormLabel>Adresse, Nr</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} placeholder="Musterstraße 10" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
