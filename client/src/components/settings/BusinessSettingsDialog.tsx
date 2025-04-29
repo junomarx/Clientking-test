@@ -101,10 +101,15 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   // Max. Logo-Größe in Bytes (1MB)
   const MAX_LOGO_SIZE = 1024 * 1024;
 
-  // Lade die bestehenden Unternehmenseinstellungen
+  // Benutzer-ID aus dem localStorage abrufen
+  const userId = localStorage.getItem('userId');
+  const username = localStorage.getItem('username');
+  console.log(`BusinessSettingsDialog opened by user ${username} (ID: ${userId})`);
+  
+  // Lade die bestehenden Unternehmenseinstellungen mit der Benutzer-ID im Query-Key
   const { data: settings, isLoading } = useQuery<BusinessSettings | null>({
-    queryKey: ["/api/business-settings"],
-    enabled: open,
+    queryKey: ["/api/business-settings", userId], // userId als Teil des Query-Keys
+    enabled: open && !!userId, // Aktiviere die Abfrage nur, wenn die Benutzer-ID vorhanden ist
   });
 
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -309,7 +314,10 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
+      // Benutzer-ID für die Cache-Invalidierung verwenden, damit der richtige Cache gelöscht wird
+      const userId = localStorage.getItem('userId');
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings", userId] });
+      
       toast({
         title: "Erfolg!",
         description: "Unternehmenseinstellungen wurden aktualisiert.",
