@@ -358,6 +358,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       customerId: number;
       deviceType: string;
       brand: string;
+      modelSeries?: string;
       model: string;
       serialNumber?: string;
       issue: string;
@@ -520,6 +521,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
+        modelSeries: formData.modelSeries || undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
         issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
@@ -591,6 +593,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId,
         deviceType: data.deviceType || 'smartphone', // Standardwert
         brand: data.brand || 'apple', // Standardwert
+        modelSeries: data.modelSeries || undefined, // Optional
         model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
         depositAmount: data.depositAmount === "" ? null : data.depositAmount,
@@ -685,6 +688,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
+        modelSeries: formData.modelSeries || undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         serialNumber: formData.serialNumber,
@@ -1295,6 +1299,128 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Modellreihen-Auswahlfeld, nur anzeigen wenn Modellreihen für Geräteart+Marke vorhanden sind */}
+                  {savedModelSeries.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="modelSeries"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modellreihe</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input 
+                                {...field} 
+                                placeholder="z.B. iPhone 12-Serie"
+                                onChange={(e) => {
+                                  field.onChange(e.target.value);
+                                  setIsModelSeriesDropdownOpen(e.target.value.length > 0);
+                                  setSelectedModelSeriesIndex(-1);
+                                }}
+                                onBlur={(e) => {
+                                  const filteredModelSeries = savedModelSeries
+                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()));
+                                  
+                                  if (selectedModelSeriesIndex >= 0 && filteredModelSeries.length > 0) {
+                                    const selectedSeries = filteredModelSeries[selectedModelSeriesIndex];
+                                    field.onChange(selectedSeries);
+                                    
+                                    if (e.relatedTarget) {
+                                      const modelInput = document.querySelector('input[name="model"]');
+                                      if (modelInput) {
+                                        setTimeout(() => {
+                                          (modelInput as HTMLInputElement).focus();
+                                        }, 10);
+                                      }
+                                    }
+                                  }
+                                  
+                                  setTimeout(() => {
+                                    setIsModelSeriesDropdownOpen(false);
+                                    setSelectedModelSeriesIndex(-1);
+                                  }, 200);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (!isModelSeriesDropdownOpen) return;
+                                  
+                                  const filteredModelSeries = savedModelSeries
+                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()));
+                                  
+                                  // Pfeiltaste nach unten
+                                  if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setSelectedModelSeriesIndex(prev => 
+                                      prev < filteredModelSeries.length - 1 ? prev + 1 : 0
+                                    );
+                                  } 
+                                  // Pfeiltaste nach oben
+                                  else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setSelectedModelSeriesIndex(prev => 
+                                      prev > 0 ? prev - 1 : filteredModelSeries.length - 1
+                                    );
+                                  } 
+                                  // Enter-Taste
+                                  else if (e.key === 'Enter' && selectedModelSeriesIndex >= 0 && filteredModelSeries.length > 0) {
+                                    e.preventDefault();
+                                    const selectedSeries = filteredModelSeries[selectedModelSeriesIndex];
+                                    field.onChange(selectedSeries);
+                                    setIsModelSeriesDropdownOpen(false);
+                                    setSelectedModelSeriesIndex(-1);
+                                    
+                                    const modelInput = document.querySelector('input[name="model"]');
+                                    if (modelInput) {
+                                      (modelInput as HTMLInputElement).focus();
+                                    }
+                                  }
+                                }}
+                              />
+                              
+                              {/* Dropdown für die gespeicherten Modellreihen */}
+                              {savedModelSeries.length > 0 && field.value && isModelSeriesDropdownOpen && (
+                                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+                                  <div className="sticky top-0 bg-background border-b p-2">
+                                    <span className="text-sm font-medium">Gespeicherte Modellreihen</span>
+                                  </div>
+                                  
+                                  {savedModelSeries
+                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()))
+                                    .map((series, index) => (
+                                    <div 
+                                      key={index} 
+                                      className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedModelSeriesIndex === index ? 'bg-muted' : ''}`}
+                                      onMouseDown={(e) => {
+                                        // Verhindert onBlur vor dem Klick
+                                        e.preventDefault();
+                                      }}
+                                      onClick={() => {
+                                        field.onChange(series);
+                                        // Nach der Auswahl den Fokus zum nächsten Feld setzen
+                                        const modelInput = document.querySelector('input[name="model"]');
+                                        if (modelInput) {
+                                          (modelInput as HTMLInputElement).focus();
+                                        }
+                                      }}
+                                      onMouseEnter={() => {
+                                        setSelectedModelSeriesIndex(index);
+                                      }}
+                                    >
+                                      {series}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Wählen Sie die Modellreihe (z.B. iPhone 13-Serie)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   <FormField
                     control={form.control}
