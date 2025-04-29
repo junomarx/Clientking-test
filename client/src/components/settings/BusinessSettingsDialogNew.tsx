@@ -358,15 +358,15 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               setActiveTab(value as "unternehmen" | "email" | "design");
             }}>
 
-              <TabsList className="w-full flex">
-                <TabsTrigger value="unternehmen" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
-                  <Building2 className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Unternehmen</span>
+              <TabsList className="w-full grid grid-cols-3 gap-1">
+                <TabsTrigger value="unternehmen" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
+                  <Building2 className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Firma</span>
                 </TabsTrigger>
-                <TabsTrigger value="email" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
-                  <MailPlus className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">E-Mail Server</span><span className="sm:hidden">E-Mail</span>
+                <TabsTrigger value="email" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
+                  <MailPlus className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>E-Mail</span>
                 </TabsTrigger>
-                <TabsTrigger value="design" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
-                  <Palette className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Design</span><span className="sm:hidden">Design</span>
+                <TabsTrigger value="design" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
+                  <Palette className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Design</span>
                 </TabsTrigger>
               </TabsList>
               
