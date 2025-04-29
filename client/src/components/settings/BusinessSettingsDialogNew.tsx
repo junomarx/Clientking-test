@@ -101,7 +101,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
   // Verwende den initialActiveTab als Anfangswert
-  const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design">(initialActiveTab);
+  const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design" | "geraete">(initialActiveTab);
   
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
@@ -357,10 +357,10 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue={initialActiveTab} value={activeTab} onValueChange={(value) => {
               // Verhindert, dass ein neues Fenster geöffnet wird
-              setActiveTab(value as "unternehmen" | "email" | "design");
+              setActiveTab(value as "unternehmen" | "email" | "design" | "geraete");
             }}>
 
-              <TabsList className="w-full grid grid-cols-3 gap-1">
+              <TabsList className="w-full grid grid-cols-4 gap-1">
                 <TabsTrigger value="unternehmen" className="flex items-center justify-center text-xs sm:text-sm">
                   <Building2 className="h-4 w-4 mr-1 sm:mr-2" /> <span>Firma</span>
                 </TabsTrigger>
@@ -369,6 +369,9 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                 </TabsTrigger>
                 <TabsTrigger value="design" className="flex items-center justify-center text-xs sm:text-sm">
                   <Palette className="h-4 w-4 mr-1 sm:mr-2" /> <span>Design</span>
+                </TabsTrigger>
+                <TabsTrigger value="geraete" className="flex items-center justify-center text-xs sm:text-sm">
+                  <Smartphone className="h-4 w-4 mr-1 sm:mr-2" /> <span>Geräte</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -790,6 +793,10 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                     </FormItem>
                   )}
                 />
+              </TabsContent>
+              
+              <TabsContent value="geraete" className="mt-4 space-y-4">
+                <DeviceTypeSettings />
               </TabsContent>
             </Tabs>
             
