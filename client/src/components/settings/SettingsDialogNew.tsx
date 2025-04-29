@@ -77,18 +77,18 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
           </DialogHeader>
 
           <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-            <TabsList className="grid grid-cols-4 mb-4">
-              <TabsTrigger value="business" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" /> Unternehmen
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-4">
+              <TabsTrigger value="business" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
+                <Building2 className="h-4 w-4" /> <span className="hidden xs:inline">Unternehmen</span><span className="xs:hidden">Firma</span>
               </TabsTrigger>
-              <TabsTrigger value="communication" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" /> Kommunikation
+              <TabsTrigger value="communication" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
+                <Mail className="h-4 w-4" /> <span className="hidden xs:inline">Kommunikation</span><span className="xs:hidden">Komm.</span>
               </TabsTrigger>
-              <TabsTrigger value="appearance" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" /> Darstellung
+              <TabsTrigger value="appearance" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
+                <Settings className="h-4 w-4" /> <span className="hidden xs:inline">Darstellung</span><span className="xs:hidden">Design</span>
               </TabsTrigger>
-              <TabsTrigger value="user" className="flex items-center gap-2">
-                <UserCog className="h-4 w-4" /> Benutzer
+              <TabsTrigger value="user" className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2">
+                <UserCog className="h-4 w-4" /> <span className="hidden xs:inline">Benutzer</span><span className="xs:hidden">User</span>
               </TabsTrigger>
             </TabsList>
 
@@ -110,9 +110,9 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
             {/* Tab: Kommunikation */}
             <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
               <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
-                <TabsList className="mb-4">
-                  <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
-                  <TabsTrigger value="sms">SMS-Vorlagen</TabsTrigger>
+                <TabsList className="mb-4 grid grid-cols-2 gap-1">
+                  <TabsTrigger value="templates" className="text-xs sm:text-sm p-1 sm:p-2">E-Mail-Vorlagen</TabsTrigger>
+                  <TabsTrigger value="sms" className="text-xs sm:text-sm p-1 sm:p-2">SMS-Vorlagen</TabsTrigger>
                 </TabsList>
                 
                 {/* E-Mail-Vorlagen */}
