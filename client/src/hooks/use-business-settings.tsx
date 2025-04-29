@@ -7,23 +7,29 @@ interface BusinessSettingsContextType {
   settings: BusinessSettings | null;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => Promise<any>;
 }
 
 const BusinessSettingsContext = createContext<BusinessSettingsContextType | null>(null);
 
+/**
+ * KOMPLETT NEU GESCHRIEBEN:
+ * - Die Benutzer-ID wird nicht mehr im Query-Key verwendet
+ * - Die Authentifizierung und Datenisolierung erfolgt komplett auf dem Server
+ * - Die Komponente stellt die Daten und Refetch-Funktion zur Verfügung
+ */
 export function BusinessSettingsProvider({ children }: { children: ReactNode }) {
-  // Wir nutzen die User-ID aus dem Auth-Hook, um den Query-Key zu aktualisieren
   const { user } = useAuth();
-  const userId = user?.id;
   
   const { 
     data: settings, 
     isLoading, 
-    error 
+    error,
+    refetch 
   } = useQuery<BusinessSettings | null, Error>({
-    queryKey: ["/api/business-settings", userId], // Benutzer-ID in den Query-Key einbinden
-    // Deaktivieren der Abfrage, wenn kein Benutzer angemeldet ist
-    enabled: !!userId,
+    queryKey: ["/api/business-settings"], // KEIN userId mehr im Query-Key
+    // Abfrage nur aktivieren, wenn der Benutzer angemeldet ist
+    enabled: !!user,
   });
 
   return (
@@ -32,6 +38,7 @@ export function BusinessSettingsProvider({ children }: { children: ReactNode }) 
         settings: settings ?? null,
         isLoading,
         error,
+        refetch, // Refetch-Funktion bereitstellen
       }}
     >
       {children}
