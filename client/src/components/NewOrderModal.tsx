@@ -105,6 +105,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);
   
+  // Das automatische Scrollen wird direkt im Form Element implementiert
+  
   // Gerätetypen von der API abrufen
   const { data: apiDeviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
     queryKey: ["/api/device-types"],
@@ -759,25 +761,28 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       {/* Hauptdialog zum Erstellen eines neuen Auftrags */}
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onKeyDown={(e) => {
-          // Auto-Scroll zum fokussierten Element
-          if (e.key === 'Tab') {
-            // Eine kleine Verzögerung, damit das nächste Element Zeit hat, den Fokus zu erhalten
-            setTimeout(() => {
-              const activeElement = document.activeElement;
-              if (activeElement && e.currentTarget.contains(activeElement)) {
-                // Stelle sicher, dass das Element im sichtbaren Bereich ist
-                activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }, 100);
-          }
-        }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-primary">Neuen Auftrag erfassen</DialogTitle>
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+            <form 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              className="space-y-6 py-4" 
+              onKeyDown={(e) => {
+                if (e.key === 'Tab') {
+                  // Wir warten kurz, bis das neue Element fokussiert ist
+                  setTimeout(() => {
+                    const activeElement = document.activeElement;
+                    if (activeElement && activeElement instanceof HTMLElement) {
+                      // Scrollen zum fokussierten Element
+                      activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }, 10);
+                }
+              }}
+            >
               {/* Customer Information Section */}
               <div className="space-y-4">
                 <h3 className="font-medium text-lg border-b pb-2">Kundeninformationen</h3>
@@ -793,7 +798,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <div className="relative">
                             <Input 
                               {...field} 
-                              placeholder="Vorname" 
+                              placeholder="Vorname"
                               onChange={(e) => {
                                 field.onChange(e);
                                 // Keine Suche nach Kunden bei Änderung des Vornamens
