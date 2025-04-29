@@ -40,13 +40,14 @@ interface DetailedStats {
   };
 }
 
+interface StatisticsTabRebuiltProps {
+  onTabChange?: (tab: 'dashboard' | 'repairs' | 'customers' | 'statistics') => void;
+}
+
 // Neu aufgebaute Statistik-Komponente ohne die problematischen Hook-Abhängigkeiten
-export function StatisticsTabRebuilt() {
+export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps) {
   // Tab-Auswahl
   const [activeTab, setActiveTab] = useState('general');
-  
-  // Navigation mit wouter
-  const [, setLocation] = useLocation();
   
   // Zeitraum-Filter
   const [timeRange, setTimeRange] = useState('all');
@@ -57,7 +58,15 @@ export function StatisticsTabRebuilt() {
   
   // Funktion zum Navigieren zur Reparaturseite mit Statusfilter
   const navigateToRepairsWithFilter = (status: string) => {
-    setLocation(`/?statusFilter=${encodeURIComponent(status)}`);
+    // Setze den URL-Parameter, ohne die Seite zu wechseln
+    const currentUrl = window.location.pathname;
+    const newUrl = `${currentUrl}?status=${status}`;
+    window.history.pushState({}, '', newUrl);
+    
+    // Wechsle zum Repairs-Tab
+    if (onTabChange) {
+      onTabChange('repairs');
+    }
   };
   
   // Basisdaten für Statistiken laden

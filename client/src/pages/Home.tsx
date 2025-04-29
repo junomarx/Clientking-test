@@ -45,7 +45,7 @@ export default function Home() {
           )}
           
           {activeTab === 'statistics' && (
-            <StatisticsTab />
+            <StatisticsTab onTabChange={setActiveTab} />
           )}
           
           {activeTab === 'cost-estimates' && (
