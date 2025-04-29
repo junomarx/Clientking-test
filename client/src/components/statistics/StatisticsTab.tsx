@@ -360,7 +360,7 @@ export function StatisticsTab() {
     : [];
     
   // Formatiere die Balkendiagramm-Daten abhängig vom ausgewählten Zeitraum
-  const getRevenueBarChartData = () => {
+  const filteredRevenueByMonthData = useMemo(() => {
     if (!revenueStats?.revenue) return [];
     
     // Wenn nach Tagen gefiltert wird (heute, letzte 7 Tage, letzte 30 Tage, benutzerdefiniert)
@@ -401,9 +401,7 @@ export function StatisticsTab() {
           value: parseFloat(value.toFixed(2))
         };
       });
-  };
-  
-  const filteredRevenueByMonthData = getRevenueBarChartData();
+  }, [revenueStats, revenueTimeRange, customDateRangeActive]);
 
   // Excel-Export-Funktion
   const exportToExcel = () => {
