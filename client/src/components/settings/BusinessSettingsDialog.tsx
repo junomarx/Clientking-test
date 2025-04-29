@@ -313,7 +313,17 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
   function onSubmit(data: ExtendedBusinessSettingsFormValues) {
     console.log('BusinessSettingsDialog - Form submitted with data:', Object.keys(data));
-    updateMutation.mutate(data);
+    const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId');
+    console.log(`Form submitted by user ${username} (ID: ${userId})`);
+    
+    // Setze einen Timeout, damit wir sehen können, ob der Submit-Handler überhaupt aufgerufen wird
+    console.log('About to call updateMutation.mutate...');
+    setTimeout(() => {
+      console.log('Inside timeout, calling updateMutation.mutate now');
+      updateMutation.mutate(data);
+      console.log('Called updateMutation.mutate');
+    }, 500);
   }
 
   return (
