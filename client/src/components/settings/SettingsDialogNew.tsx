@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +19,9 @@ import {
   Mail, 
   Settings, 
   MessageSquare,
-  UserCog
+  UserCog,
+  LogOut,
+  Lock
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
@@ -30,9 +33,16 @@ interface SettingsDialogNewProps {
 }
 
 export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
+  const { user, logoutMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("business");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
   const [showBusinessSettings, setShowBusinessSettings] = useState(false);
+  
+  // Abmelden-Funktion
+  const handleLogout = () => {
+    logoutMutation.mutate();
+    onClose(); // Dialog schließen
+  };
   
   // Geschäftseinstellungen öffnen
   const openBusinessSettings = () => {
@@ -132,9 +142,36 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
                   <p className="text-muted-foreground mb-4">
                     Verwalten Sie Ihr Benutzerkonto, Passwort und Sicherheitseinstellungen.
                   </p>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    Passwort ändern
-                  </Button>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Angemeldeter Benutzer</h4>
+                      <div className="border rounded-md p-3 bg-muted/20">
+                        <div className="flex items-center gap-2 mb-1">
+                          <UserCog className="h-4 w-4 text-primary" /> 
+                          {user?.username}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {user?.email}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Aktionen</h4>
+                      <div className="flex flex-col space-y-2">
+                        <Button variant="outline" className="w-full justify-start">
+                          <Lock className="h-4 w-4 mr-2" /> Passwort ändern
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start"
+                          onClick={handleLogout}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" /> Abmelden
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </TabsContent>
