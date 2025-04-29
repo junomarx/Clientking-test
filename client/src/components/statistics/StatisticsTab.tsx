@@ -1194,36 +1194,50 @@ export function StatisticsTab() {
               </div>
               
               {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
-              <div className="block md:hidden space-y-4">
+              <div className="block md:hidden space-y-1">
                 {recentRepairs.map((repair) => (
-                  <div key={repair.id} className="bg-white rounded-lg p-4 shadow-sm border">
-                    <div className="flex justify-between mb-3">
-                      <span className="font-bold">{repair.orderCode}</span>
-                      <span className="text-sm">{new Date(repair.createdAt).toLocaleDateString()}</span>
+                  <div key={repair.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+                      <div className="font-medium">{repair.orderCode}</div>
+                      <div>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          repair.status === 'fertig' 
+                            ? 'bg-green-100 text-green-800' 
+                            : repair.status === 'in_reparatur' 
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {repair.status}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-sm mb-2">
-                      <p><span className="font-medium">Gerät:</span> {repair.brand} {repair.model}</p>
-                      <p className="truncate"><span className="font-medium">Problem:</span> {repair.issue}</p>
-                    </div>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        repair.status === 'fertig' 
-                          ? 'bg-green-100 text-green-800' 
-                          : repair.status === 'in_reparatur' 
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {repair.status}
-                      </span>
-                      <span className="font-medium">
-                        {repair.estimatedCost ? extractPrice(repair.estimatedCost).toFixed(2) : '0.00'} €
-                      </span>
+                    <div className="p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <div className="text-sm text-gray-500">Kunde:</div>
+                        <div className="font-medium">{repair.customerName || repair.customerId || "Unbekannt"}</div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="text-sm text-gray-500">Gerät:</div>
+                        <div>{repair.brand} {repair.model}</div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="text-sm text-gray-500">Problem:</div>
+                        <div className="text-right">{repair.issue}</div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="text-sm text-gray-500">Preis:</div>
+                        <div className="font-medium">{repair.estimatedCost ? `${extractPrice(repair.estimatedCost).toFixed(2)} €` : '-'}</div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="text-sm text-gray-500">Datum:</div>
+                        <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
                 
                 {/* Zusammenfassung */}
-                <div className="bg-gray-100 rounded-lg p-4 shadow-sm border-t-2 border-gray-300">
+                <div className="bg-gray-100 rounded-lg p-4 mt-4 shadow-sm border-t-2 border-gray-300">
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="font-medium">Summe abgeholter Reparaturen</p>
