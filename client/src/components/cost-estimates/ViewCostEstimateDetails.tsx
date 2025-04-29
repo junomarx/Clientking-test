@@ -195,10 +195,10 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           {/* Linke Spalte: Logo und Kundeninformationen */}
           <div className="space-y-4">
             {/* Logo zuerst */}
-            {businessData.logoImage && (
+            {businessSettings?.logoImage && (
               <div className="mb-6">
                 <img 
-                  src={businessData.logoImage} 
+                  src={businessSettings.logoImage} 
                   alt="Unternehmenslogo" 
                   className="max-h-20 max-w-[200px] object-contain"
                 />
@@ -208,11 +208,11 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
           
           {/* Unternehmensdaten - Rechts */}
           <div className="text-right">
-            <h1 className="text-xl font-bold">{businessData.businessName}</h1>
-            <p className="text-sm text-muted-foreground">{businessData.streetAddress}</p>
-            <p className="text-sm text-muted-foreground">{businessData.zipCode} {businessData.city}</p>
-            <p className="text-sm text-muted-foreground">{businessData.phone}</p>
-            <p className="text-sm text-muted-foreground">{businessData.email}</p>
+            <h1 className="text-xl font-bold">{businessSettings?.businessName}</h1>
+            <p className="text-sm text-muted-foreground">{businessSettings?.streetAddress}</p>
+            <p className="text-sm text-muted-foreground">{businessSettings?.zipCode} {businessSettings?.city}</p>
+            <p className="text-sm text-muted-foreground">{businessSettings?.phone}</p>
+            <p className="text-sm text-muted-foreground">{businessSettings?.email}</p>
             <div className="mt-4">
               <p className="text-muted-foreground text-sm">Referenznummer: {estimate.referenceNumber}</p>
               <p className="text-muted-foreground text-sm">Datum: {createdAtFormatted}</p>
@@ -359,7 +359,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         {/* Unterschrift und Bedingungen */}
         <div className="mt-10 border-t pt-4">
           <p className="text-sm text-muted-foreground mt-2">
-            Dieses Angebot wurde von {businessData.businessName} erstellt und ist gültig bis zum {validUntilFormatted}.
+            Dieses Angebot wurde von {businessSettings?.businessName} erstellt und ist gültig bis zum {validUntilFormatted}.
           </p>
         </div>
       </div>
