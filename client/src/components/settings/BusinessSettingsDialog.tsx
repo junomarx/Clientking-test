@@ -302,6 +302,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   });
 
   function onSubmit(data: ExtendedBusinessSettingsFormValues) {
+    console.log('BusinessSettingsDialog - Form submitted with data:', Object.keys(data));
     updateMutation.mutate(data);
   }
 

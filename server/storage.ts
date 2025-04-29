@@ -586,35 +586,71 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>, userId?: number): Promise<BusinessSettings> {
+    // Debug-Informationen
+    console.log('updateBusinessSettings called with userId:', userId);
+    console.log('Settings data keys:', Object.keys(settingsData));
+    
     // Wenn eine Benutzer-ID angegeben ist, versuche die Einstellungen für diesen Benutzer zu finden
     const existingSettings = userId ? 
       await this.getBusinessSettings(userId) : 
       await this.getBusinessSettings();
     
-    if (existingSettings) {
-      // Update existing settings
-      const [updatedSettings] = await db
-        .update(businessSettings)
-        .set({
+    console.log('Existing settings found:', existingSettings ? existingSettings.id : 'none');
+    
+    try {
+      if (existingSettings) {
+        // Update existing settings
+        console.log(`Updating settings with ID ${existingSettings.id}`);
+        
+        // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
+        const dataToUpdate = {
           ...settingsData,
           updatedAt: new Date()
-        })
-        .where(eq(businessSettings.id, existingSettings.id))
-        .returning();
-      
-      return updatedSettings;
-    } else {
-      // Create new settings for this user
-      const [newSettings] = await db
-        .insert(businessSettings)
-        .values({
-          ...settingsData as InsertBusinessSettings,
+        };
+        
+        const [updatedSettings] = await db
+          .update(businessSettings)
+          .set(dataToUpdate)
+          .where(eq(businessSettings.id, existingSettings.id))
+          .returning();
+        
+        console.log('Settings updated successfully:', updatedSettings.id);
+        return updatedSettings;
+      } else {
+        // Create new settings for this user
+        console.log('Creating new business settings for user', userId);
+        
+        // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
+        const requiredFields = {
+          businessName: settingsData.businessName || 'Mein Unternehmen',
+          ownerFirstName: settingsData.ownerFirstName || 'Vorname',
+          ownerLastName: settingsData.ownerLastName || 'Nachname',
+          streetAddress: settingsData.streetAddress || 'Straße 1',
+          city: settingsData.city || 'Stadt',
+          zipCode: settingsData.zipCode || '1000',
+          country: settingsData.country || 'Österreich',
+        };
+        
+        const dataToInsert = {
+          ...requiredFields,
+          ...settingsData,
           updatedAt: new Date(),
           userId: userId // Speichere die Benutzer-ID
-        })
-        .returning();
-      
-      return newSettings;
+        };
+        
+        console.log('Insert data:', Object.keys(dataToInsert));
+        
+        const [newSettings] = await db
+          .insert(businessSettings)
+          .values(dataToInsert as InsertBusinessSettings)
+          .returning();
+        
+        console.log('New settings created with ID:', newSettings.id);
+        return newSettings;
+      }
+    } catch (error) {
+      console.error('Error in updateBusinessSettings:', error);
+      throw error;
     }
   }
   

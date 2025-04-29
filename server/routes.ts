@@ -689,9 +689,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       console.log(`Updating business settings for user ${userId} (${req.user?.username})`);
+      console.log('Request body keys:', Object.keys(req.body));
       
       // Wir extrahieren das logoImage und colorTheme aus dem Request-Body, bevor wir die Validierung durchführen
-      const { logoImage, colorTheme, ...settingsData } = req.body;
+      const { logoImage, colorTheme, receiptWidth, ...settingsData } = req.body;
+      
+      console.log('Processing form data:', { 
+        hasLogo: !!logoImage, 
+        logoLength: logoImage ? logoImage.length : 0,
+        colorTheme,
+        receiptWidth,
+        dataKeys: Object.keys(settingsData)
+      });
       
       // Validierung der Geschäftsdaten
       const validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
@@ -703,6 +712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (logoImage) {
         // Basis-Validierung: Prüfen, ob es sich um einen gültigen Base64-String handelt
         if (typeof logoImage !== 'string' || !logoImage.startsWith('data:image/')) {
+          console.log('Ungültiges Logo-Format:', typeof logoImage, logoImage ? logoImage.substring(0, 20) + '...' : 'leer');
           return res.status(400).json({ 
             message: "Ungültiges Logo-Format. Nur Base64-codierte Bilder werden unterstützt." 
           });
@@ -717,25 +727,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (typeof colorTheme === 'string' && ['blue', 'green', 'purple', 'red', 'orange'].includes(colorTheme)) {
           additionalData.colorTheme = colorTheme;
         } else {
+          console.log('Ungültiges Farbthema:', colorTheme);
           return res.status(400).json({ 
             message: "Ungültiges Farbthema. Erlaubte Werte sind: blue, green, purple, red, orange." 
           });
         }
       }
       
-      // Speichere die Daten einschließlich der zusätzlichen Daten mit der Benutzer-ID
-      const settings = await storage.updateBusinessSettings({
+      // Bonbreite validieren
+      if (receiptWidth) {
+        if (typeof receiptWidth === 'string' && ['58mm', '80mm'].includes(receiptWidth)) {
+          additionalData.receiptWidth = receiptWidth;
+        } else {
+          console.log('Ungültige Bonbreite:', receiptWidth);
+          return res.status(400).json({
+            message: "Ungültige Bonbreite. Erlaubte Werte sind: 58mm, 80mm."
+          });
+        }
+      }
+      
+      const finalData = {
         ...validatedData,
         ...additionalData
-      }, userId);
+      };
       
+      console.log('Final data being saved:', Object.keys(finalData));
+      
+      // Speichere die Daten einschließlich der zusätzlichen Daten mit der Benutzer-ID
+      const settings = await storage.updateBusinessSettings(finalData, userId);
+      
+      console.log('Business settings updated successfully');
       return res.json(settings);
     } catch (error) {
       console.error("Error updating business settings:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ message: "Invalid business settings data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update business settings" });
+      res.status(500).json({ message: "Failed to update business settings", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
