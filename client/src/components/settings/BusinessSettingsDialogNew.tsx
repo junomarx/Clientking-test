@@ -359,14 +359,14 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
             }}>
 
               <TabsList className="w-full flex">
-                <TabsTrigger value="unternehmen" className="flex-1">
-                  <Building2 className="h-4 w-4 mr-2" /> Unternehmen
+                <TabsTrigger value="unternehmen" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
+                  <Building2 className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Unternehmen</span>
                 </TabsTrigger>
-                <TabsTrigger value="email" className="flex-1">
-                  <MailPlus className="h-4 w-4 mr-2" /> E-Mail Server
+                <TabsTrigger value="email" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
+                  <MailPlus className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">E-Mail Server</span><span className="sm:hidden">E-Mail</span>
                 </TabsTrigger>
-                <TabsTrigger value="design" className="flex-1">
-                  <Palette className="h-4 w-4 mr-2" /> Design
+                <TabsTrigger value="design" className="flex-1 text-xs sm:text-sm p-1 sm:p-2">
+                  <Palette className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Design</span><span className="sm:hidden">Design</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -374,7 +374,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                 {/* Logo Upload UI */}
                 <div className="mb-6">
                   <FormLabel>Firmenlogo</FormLabel>
-                  <FormDescription>
+                  <FormDescription className="text-xs sm:text-sm">
                     Laden Sie Ihr Firmenlogo hoch (max. 1MB, PNG, JPG, SVG, GIF oder WEBP). Hochauflösende Bilder werden automatisch skaliert.
                   </FormDescription>
                   
@@ -595,10 +595,10 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               
               <TabsContent value="email" className="mt-4 space-y-4">
                 <div>
-                  <h3 className="text-lg font-medium flex items-center gap-2 mb-2">
-                    <Mail className="h-5 w-5" /> SMTP-Einstellungen
+                  <h3 className="text-base sm:text-lg font-medium flex items-center gap-2 mb-2">
+                    <Mail className="h-4 w-4 sm:h-5 sm:w-5" /> SMTP-Einstellungen
                   </h3>
-                  <p className="text-muted-foreground text-sm mb-4">
+                  <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                     Geben Sie die SMTP-Einstellungen Ihres E-Mail-Servers ein. Diese werden verwendet, um E-Mails an Ihre Kunden zu senden.
                   </p>
                 </div>
@@ -694,8 +694,8 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                     name="reviewLink"
                     render={({ field }) => (
                       <FormItem className="sm:col-span-2">
-                        <FormLabel className="flex items-center gap-2">
-                          <Globe className="h-4 w-4" /> Bewertungslink
+                        <FormLabel className="flex items-center gap-1 sm:gap-2">
+                          <Globe className="h-3 w-3 sm:h-4 sm:w-4" /> Bewertungslink
                         </FormLabel>
                         <FormDescription>
                           Link zu Ihrer Google-Bewertungsseite oder ähnlichem. Wird für Kundenbewertungsanfragen verwendet.
@@ -716,8 +716,8 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                   name="colorTheme"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="flex items-center gap-2">
-                        <Palette className="h-4 w-4" /> Farbpalette
+                      <FormLabel className="flex items-center gap-1 sm:gap-2">
+                        <Palette className="h-3 w-3 sm:h-4 sm:w-4" /> Farbpalette
                       </FormLabel>
                       <FormDescription>
                         Wählen Sie eine Farbpalette für die Anwendung.
@@ -764,8 +764,8 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                   name="receiptWidth"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel className="flex items-center gap-2">
-                        <Printer className="h-4 w-4" /> Bonbreite
+                      <FormLabel className="flex items-center gap-1 sm:gap-2">
+                        <Printer className="h-3 w-3 sm:h-4 sm:w-4" /> Bonbreite
                       </FormLabel>
                       <FormDescription>
                         Wählen Sie die Breite Ihres Bondruckers für die richtige Formatierung der Belege.
