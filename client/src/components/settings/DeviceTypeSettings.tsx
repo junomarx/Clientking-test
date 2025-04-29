@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2, Smartphone, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { updateAppleModels } from '@/lib/updateAppleModels';
 
 import {
   AlertDialog,
@@ -212,8 +213,52 @@ export function DeviceTypeSettings() {
     );
   }
 
+  // Funktion zum Aktualisieren der iPhone-Modelle
+  const handleUpdateAppleModels = () => {
+    try {
+      const result = updateAppleModels();
+      toast({
+        title: 'iPhone-Modelle aktualisiert',
+        description: `${result.oldCount} alte Modelle wurden durch ${result.newCount} aktuelle iPhone-Modelle ersetzt.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Fehler',
+        description: `Fehler beim Aktualisieren der iPhone-Modelle: ${error instanceof Error ? error.message : String(error)}`,
+        variant: 'destructive'
+      });
+    }
+  };
+  
   return (
     <>
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Modelle verwalten</CardTitle>
+            <CardDescription>Aktualisieren Sie Gerätemarken und -modelle</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            className="ml-auto flex items-center gap-1"
+            onClick={handleUpdateAppleModels}
+          >
+            <Smartphone className="mr-1 h-4 w-4" />
+            <RefreshCw className="h-3 w-3" />
+            iPhone-Modelle aktualisieren
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Durch Klicken auf den Button werden alle Apple iPhone-Modelle aktualisiert. 
+            Dabei werden alle bestehenden iPhone-Modelle durch die aktualisierte Liste ersetzt.
+          </p>
+          <div className="text-xs text-muted-foreground bg-secondary/30 p-3 rounded">
+            Die Liste enthält alle iPhone-Modelle von iPhone 5 bis iPhone 16, inklusive aller Varianten (mini, Plus, Pro, Pro Max).
+          </div>
+        </CardContent>
+      </Card>
+      
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
