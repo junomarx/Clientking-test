@@ -598,68 +598,60 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>, userId?: number): Promise<BusinessSettings> {
-    // Debug-Informationen
-    console.log('updateBusinessSettings called with userId:', userId);
-    console.log('Settings data keys:', Object.keys(settingsData));
-    
-    if (!userId) {
-      console.error('updateBusinessSettings: KRITISCHER FEHLER - Keine userId angegeben!');
-      throw new Error('User ID ist erforderlich, um Geschäftseinstellungen zu aktualisieren');
-    }
-    
-    // Überprüfung: Ist die userId in den Daten enthalten?
-    if (settingsData.userId !== undefined && settingsData.userId !== userId) {
-      console.warn(`Warnung: UserID in Daten (${settingsData.userId}) stimmt nicht mit angegebener UserID (${userId}) überein.`);
-      // Korrigieren wir die userId in den Daten
-      settingsData = { ...settingsData, userId };
-    }
-    
-    // Fügen wir die userId immer den Daten hinzu
-    if (settingsData.userId === undefined) {
-      settingsData = { ...settingsData, userId };
-    }
-    
-    console.log('Using userId in settingsData:', settingsData.userId === userId ? 'MATCH' : 'MISMATCH');
-    
-    // Einstellungen für diesen Benutzer suchen
-    const existingSettings = await this.getBusinessSettings(userId);
-    
-    console.log('Existing settings found:', existingSettings ? `ID: ${existingSettings.id} für User: ${existingSettings.userId}` : 'keine');
-    
     try {
+      // Debug-Informationen
+      console.log('⭐ updateBusinessSettings called with userId:', userId);
+      console.log('⭐ Settings data keys:', Object.keys(settingsData));
+      
+      if (!userId) {
+        console.error('⭐⭐⭐ KRITISCHER FEHLER - Keine userId angegeben!');
+        throw new Error('User ID ist erforderlich, um Geschäftseinstellungen zu aktualisieren');
+      }
+      
+      // Stellen wir sicher, dass die userId in den Daten genau der angegebenen userId entspricht
+      settingsData = { 
+        ...settingsData, 
+        userId // Erzwingen, dass die richtige userId verwendet wird
+      };
+      
+      console.log('⭐ Using forced userId in settingsData:', userId);
+      
+      // Einstellungen für diesen Benutzer suchen
+      const userSettings = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      const existingSettings = userSettings.length > 0 ? userSettings[0] : null;
+      
+      console.log('⭐ Existing settings found:', existingSettings ? 
+        `ID: ${existingSettings.id} für User: ${existingSettings.userId}` : 
+        'keine');
+      
       if (existingSettings) {
-        // Update existing settings - Stellen wir sicher, dass wir wirklich die Einstellungen des richtigen Benutzers aktualisieren
-        if (existingSettings.userId !== userId) {
-          console.error(`Sicherheitsproblem: Versuche Einstellungen für User ${userId} zu aktualisieren, aber die gefundenen Einstellungen gehören User ${existingSettings.userId}!`);
-          throw new Error('Sicherheitsproblem: Versuche Einstellungen für den falschen Benutzer zu aktualisieren');
-        }
+        console.log(`⭐ Updating settings with ID ${existingSettings.id} for user ${userId}`);
         
-        console.log(`Updating settings with ID ${existingSettings.id} for user ${userId}`);
-        
-        // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
+        // Bereite die Daten für das Update vor
         const dataToUpdate = {
           ...settingsData,
-          userId, // Stellen wir sicher, dass die richtige userId gesetzt ist
           updatedAt: new Date()
         };
         
-        console.log('Update data prepared with userId:', dataToUpdate.userId);
+        console.log('⭐ Ready to save with keys:', Object.keys(dataToUpdate));
         
+        // Führe ein direktes Update mit der Einstellungs-ID und der Benutzer-ID durch
         const [updatedSettings] = await db
           .update(businessSettings)
           .set(dataToUpdate)
-          .where(and(
-            eq(businessSettings.id, existingSettings.id),
-            eq(businessSettings.userId, userId)
-          ))
+          .where(eq(businessSettings.id, existingSettings.id))
           .returning();
         
         if (!updatedSettings) {
-          console.error(`Konnte Einstellungen für User ${userId} nicht aktualisieren!`);
+          console.error(`⭐⭐⭐ Update fehlgeschlagen für User ${userId}!`);
           throw new Error('Einstellungen konnten nicht aktualisiert werden');
         }
         
-        console.log('Settings updated successfully:', updatedSettings.id, 'for user', updatedSettings.userId);
+        console.log('⭐ Settings updated successfully:', updatedSettings.id, 'for user', updatedSettings.userId);
         return updatedSettings;
       } else {
         // Create new settings for this user
