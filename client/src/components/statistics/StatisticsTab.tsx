@@ -1154,7 +1154,7 @@ export function StatisticsTab() {
               <CardTitle>Neueste Reparaturen</CardTitle>
               <CardDescription>Die 5 zuletzt erstellten Aufträge</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0 sm:px-6">
               {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm text-left">
@@ -1215,11 +1215,11 @@ export function StatisticsTab() {
               </div>
               
               {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
-              <div className="block md:hidden space-y-1">
+              <div className="md:hidden space-y-2 px-4">
                 {recentRepairs.map((repair) => (
-                  <div key={repair.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
-                      <div className="font-medium">{repair.orderCode}</div>
+                  <div key={repair.id} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                    <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
+                      <div className="font-medium text-sm">{repair.orderCode}</div>
                       <div>
                         {(() => {
                           switch (repair.status) {
@@ -1228,7 +1228,7 @@ export function StatisticsTab() {
                             case 'in_reparatur':
                               return <span className="px-2 py-1 rounded text-xs bg-orange-100 text-orange-800">In Reparatur</span>;
                             case 'ersatzteil_eingetroffen':
-                              return <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">Ersatzteil eingetroffen</span>;
+                              return <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">Ersatzteil da</span>;
                             case 'ausser_haus':
                               return <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">Außer Haus</span>;
                             case 'fertig':
@@ -1241,39 +1241,32 @@ export function StatisticsTab() {
                         })()}
                       </div>
                     </div>
-                    <div className="p-4 space-y-2">
-                      <div className="flex justify-between">
-                        <div className="text-sm text-gray-500">Kunde:</div>
-                        <div className="font-medium">{repair.customerName || repair.customerId || "Unbekannt"}</div>
+                    <div className="divide-y divide-gray-100">
+                      <div className="p-3 flex justify-between">
+                        <span className="text-xs text-gray-500">Kunde</span>
+                        <span className="text-sm font-medium">{repair.customerName || repair.customerId || "Unbekannt"}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <div className="text-sm text-gray-500">Gerät:</div>
-                        <div>{repair.brand} {repair.model}</div>
+                      <div className="p-3 flex justify-between">
+                        <span className="text-xs text-gray-500">Gerät</span>
+                        <span className="text-sm">{repair.brand} {repair.model}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <div className="text-sm text-gray-500">Problem:</div>
-                        <div className="text-right">{repair.issue}</div>
+                      <div className="p-3 flex justify-between">
+                        <span className="text-xs text-gray-500">Problem</span>
+                        <span className="text-sm text-right max-w-[60%]">{repair.issue.substring(0, 30)}...</span>
                       </div>
-                      <div className="flex justify-between">
-                        <div className="text-sm text-gray-500">Preis:</div>
-                        <div className="font-medium">{repair.estimatedCost ? `${extractPrice(repair.estimatedCost).toFixed(2)} €` : '-'}</div>
-                      </div>
-                      <div className="flex justify-between">
-                        <div className="text-sm text-gray-500">Datum:</div>
-                        <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+                      <div className="p-3 flex justify-between">
+                        <span className="text-xs text-gray-500">Preis</span>
+                        <span className="text-sm font-medium">{repair.estimatedCost ? extractPrice(repair.estimatedCost).toFixed(2) : '0.00'} €</span>
                       </div>
                     </div>
                   </div>
                 ))}
                 
-                {/* Zusammenfassung */}
-                <div className="bg-gray-100 rounded-lg p-4 mt-4 shadow-sm border-t-2 border-gray-300">
+                {/* Summen in der Mobil-Ansicht */}
+                <div className="bg-gray-100 rounded-lg p-3 mt-2 font-medium text-sm">
                   <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">Summe abgeholter Reparaturen</p>
-                      <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800 mt-1 inline-block">abgeholt</span>
-                    </div>
-                    <span className="font-bold">
+                    <span>Summe abgeholter Reparaturen:</span>
+                    <span>
                       {recentRepairs
                         .filter(repair => repair.status === 'abgeholt')
                         .reduce((sum, repair) => {
