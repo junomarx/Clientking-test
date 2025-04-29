@@ -20,7 +20,8 @@ import {
   smsTemplates,
   userDeviceTypes,
   userBrands,
-  costEstimates
+  costEstimates,
+  businessSettings
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -655,149 +656,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // BUSINESS SETTINGS API
+  // BUSINESS SETTINGS API - KOMPLETT NEU IMPLEMENTIERT
   app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID direkt aus der Session nehmen
       const userId = (req.user as any).id;
-      console.log(`Fetching business settings for user ${userId} (${req.user?.username})`);
+      const username = (req.user as any).username;
+      console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId} (${username})`);
       
-      // Einstellungen für diesen spezifischen Benutzer abrufen
-      const settings = await storage.getBusinessSettings(userId);
+      // Versuche direkt aus der Datenbank abzurufen
+      const userSettings = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId))
+        .limit(1);
       
-      // Wenn der Benutzer noch keine eigenen Einstellungen hat,
-      // initialisieren wir sie mit den Firmendaten aus seinem Profil
-      if (!settings) {
-        console.log(`No settings found for user ${userId}, creating default settings`);
-        // Verwende die Firmendaten des angemeldeten Benutzers
-        const userData = req.user as any;
+      // Wenn keine Einstellungen gefunden wurden, erstelle Standardeinstellungen
+      if (userSettings.length === 0) {
+        console.log(`Keine Einstellungen für Benutzer ${userId} gefunden, erstelle Standardeinstellungen`);
         
-        // Erstelle ein Business-Settings-Objekt aus den Benutzerdaten
-        const userSettings = {
-          businessName: userData?.companyName || "Mein Reparaturshop",
+        // Erstelle ein Business-Settings-Objekt mit Standardwerten
+        const userData = req.user as any;
+        const defaultSettings = {
+          businessName: userData?.companyName || `Reparaturshop ${username}`,
           ownerFirstName: "", 
           ownerLastName: "",
           taxId: userData?.companyVatNumber || "",
-          streetAddress: userData?.companyAddress || "",
+          streetAddress: "",
           city: "",
           zipCode: "",
           country: "Österreich",
-          phone: userData?.companyPhone || "",
-          email: userData?.companyEmail || userData?.email || "",
+          phone: "",
+          email: userData?.email || "",
           website: "",
           colorTheme: "blue",
-          receiptWidth: "80mm"
+          receiptWidth: "80mm",
+          userId: userId // WICHTIG: Benutzer-ID setzen
         };
         
-        // Speichere die Einstellungen für diesen Benutzer in der Datenbank
-        const newSettings = await storage.updateBusinessSettings(userSettings, userId);
+        // Speichere die Standardeinstellungen direkt in der Datenbank
+        const [newSettings] = await db
+          .insert(businessSettings)
+          .values(defaultSettings)
+          .returning();
+          
+        console.log(`Standardeinstellungen für Benutzer ${userId} erstellt:`, newSettings.id);
         return res.json(newSettings);
       }
       
       // Ansonsten geben wir die gespeicherten Einstellungen zurück
-      res.json(settings);
+      console.log(`Einstellungen für Benutzer ${userId} gefunden:`, userSettings[0].id);
+      res.json(userSettings[0]);
     } catch (error) {
-      console.error("Error fetching business settings:", error);
-      res.status(500).json({ message: "Failed to fetch business settings" });
+      console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
     }
   });
 
   app.post("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID direkt aus der Session nehmen
       const userId = (req.user as any).id;
-      console.log(`❗ Updating business settings for user ${userId} (${req.user?.username})`);
-      console.log('❗ Vollständiger Request-Body:', JSON.stringify(req.body, null, 2));
-      console.log('❗ Request body keys:', Object.keys(req.body));
+      const username = (req.user as any).username;
+      console.log(`NEUE IMPLEMENTATION: Updating business settings for user ${userId} (${username})`);
       
-      // NEUER ANSATZ: Wir ignorieren die userId im Body komplett
-      // und verwenden nur die authentifizierte userId
+      // Daten aus dem Request-Body extrahieren
+      const { logoImage, colorTheme, receiptWidth, ...otherData } = req.body;
       
-      // Wir extrahieren das logoImage und colorTheme aus dem Request-Body, bevor wir die Validierung durchführen
-      const { logoImage, colorTheme, receiptWidth, ...settingsData } = req.body;
+      // Versuche die aktuellen Einstellungen zu finden
+      const currentSettings = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId))
+        .limit(1);
       
-      console.log('❗ Processing form data:', { 
-        hasLogo: !!logoImage, 
-        logoLength: logoImage ? logoImage.length : 0,
-        colorTheme,
-        receiptWidth,
-        dataKeys: Object.keys(settingsData)
-      });
-      
-      // Validierung der Geschäftsdaten - wir machen die Validierung optional
-      let validatedData = settingsData;
-      try {
-        validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
-      } catch (validationError) {
-        console.warn('❗ Validierungsfehler, aber wir führen trotzdem fort:', validationError);
-      }
-      
-      // Zusätzliche Daten für die Speicherung - wir überschreiben IMMER die userId mit der authentifizierten ID
-      const additionalData: any = {
-        userId // KRITISCH: Wir müssen die Benutzer-ID immer in die Daten einfügen und niemals vom Client nehmen
-      };
-      
-      // Wenn ein Logo im Request ist, validieren wir es
-      if (logoImage) {
-        // Basis-Validierung: Prüfen, ob es sich um einen gültigen Base64-String handelt
-        if (typeof logoImage !== 'string' || !logoImage.startsWith('data:image/')) {
-          console.log('Ungültiges Logo-Format:', typeof logoImage, logoImage ? logoImage.substring(0, 20) + '...' : 'leer');
-          return res.status(400).json({ 
-            message: "Ungültiges Logo-Format. Nur Base64-codierte Bilder werden unterstützt." 
-          });
-        }
+      // Prüfe, ob die Einstellungen existieren
+      if (currentSettings.length === 0) {
+        console.log(`Keine bestehenden Einstellungen für Benutzer ${userId} gefunden`);
         
-        additionalData.logoImage = logoImage;
+        // Erstelle vollständige Einstellungen mit allen Eingaben
+        const newSettingsData = {
+          ...otherData,
+          logoImage: logoImage || "",
+          colorTheme: colorTheme || "blue",
+          receiptWidth: receiptWidth || "80mm",
+          userId: userId // WICHTIG: Benutzer-ID setzen
+        };
+        
+        // Füge die neuen Einstellungen in die Datenbank ein
+        const [insertedSettings] = await db
+          .insert(businessSettings)
+          .values(newSettingsData)
+          .returning();
+        
+        console.log(`Neue Einstellungen für Benutzer ${userId} erstellt:`, insertedSettings.id);
+        return res.json(insertedSettings);
       }
       
-      // Wenn ein Farbthema im Request ist, validieren wir es
-      if (colorTheme) {
-        // Validierung: Prüfen, ob es sich um ein gültiges Farbthema handelt
-        if (typeof colorTheme === 'string' && ['blue', 'green', 'purple', 'red', 'orange'].includes(colorTheme)) {
-          additionalData.colorTheme = colorTheme;
-        } else {
-          console.log('Ungültiges Farbthema:', colorTheme);
-          return res.status(400).json({ 
-            message: "Ungültiges Farbthema. Erlaubte Werte sind: blue, green, purple, red, orange." 
-          });
-        }
-      }
+      // Bestehende Einstellungen aktualisieren
+      const settingsId = currentSettings[0].id;
+      console.log(`Aktualisiere bestehende Einstellungen für Benutzer ${userId} (Settings-ID: ${settingsId})`);
       
-      // Bonbreite validieren
-      if (receiptWidth) {
-        if (typeof receiptWidth === 'string' && ['58mm', '80mm'].includes(receiptWidth)) {
-          additionalData.receiptWidth = receiptWidth;
-        } else {
-          console.log('Ungültige Bonbreite:', receiptWidth);
-          return res.status(400).json({
-            message: "Ungültige Bonbreite. Erlaubte Werte sind: 58mm, 80mm."
-          });
-        }
-      }
-      
-      const finalData = {
-        ...validatedData,
-        ...additionalData
+      // Bereite die aktualisierten Daten vor
+      const updateData = {
+        ...otherData,
+        logoImage: logoImage !== undefined ? logoImage : currentSettings[0].logoImage,
+        colorTheme: colorTheme || currentSettings[0].colorTheme,
+        receiptWidth: receiptWidth || currentSettings[0].receiptWidth,
+        // userId wird nicht aktualisiert, bleibt die des authentifizierten Benutzers
       };
       
-      console.log('Final data being saved:', Object.keys(finalData));
-      console.log('User ID included in data:', finalData.userId === userId ? 'YES' : 'NO');
+      // Führe das Update durch
+      const [updatedSettings] = await db
+        .update(businessSettings)
+        .set(updateData)
+        .where(eq(businessSettings.id, settingsId))
+        .returning();
       
-      // Prüfen, ob es bereits existierende Einstellungen gibt
-      const existingSettings = await storage.getBusinessSettings(userId);
-      
-      // Speichere die Daten einschließlich der zusätzlichen Daten mit der Benutzer-ID
-      const settings = await storage.updateBusinessSettings(finalData, userId);
-      
-      console.log('Business settings updated successfully for user', userId);
-      console.log('Settings ID:', settings.id, 'User ID in settings:', settings.userId);
-      return res.json(settings);
+      console.log(`Einstellungen für Benutzer ${userId} erfolgreich aktualisiert (Settings-ID: ${updatedSettings.id})`);
+      res.json(updatedSettings);
     } catch (error) {
-      console.error("Error updating business settings:", error);
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Invalid business settings data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update business settings", error: error instanceof Error ? error.message : String(error) });
+      console.error("Fehler beim Aktualisieren der Geschäftseinstellungen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Geschäftseinstellungen",
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
