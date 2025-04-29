@@ -824,6 +824,7 @@ export class DatabaseStorage implements IStorage {
       today: todayResult?.count || 0,
       readyForPickup: readyForPickupResult?.count || 0,
       outsourced: outsourcedResult?.count || 0,
+      received: receivedResult?.count || 0,
     };
   }
   

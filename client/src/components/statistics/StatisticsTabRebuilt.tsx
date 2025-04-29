@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar } from 'lucide-react';
+import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen } from 'lucide-react';
 import { SimpleDatePicker } from './SimpleDatePicker';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -19,6 +19,7 @@ interface Stats {
   today: number;
   readyForPickup: number;
   outsourced: number;
+  received: number; // Neu: Anzahl der eingegangenen Reparaturen
   customerCount?: number;
   repairCount?: number;
   filteredRepairCount?: number;
@@ -306,6 +307,17 @@ export function StatisticsTabRebuilt() {
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.completed || 0}</div>
                 <p className="text-xs text-muted-foreground">erledigte Aufträge</p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Eingegangen</CardTitle>
+                <PackageOpen className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.received || 0}</div>
+                <p className="text-xs text-muted-foreground">neue Aufträge</p>
               </CardContent>
             </Card>
             
