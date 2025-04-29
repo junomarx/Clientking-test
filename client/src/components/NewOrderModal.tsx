@@ -149,6 +149,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       city: '',
       deviceType: '',
       brand: '',
+      modelSeries: '',
       model: '',
       serialNumber: '',
       issue: '',
