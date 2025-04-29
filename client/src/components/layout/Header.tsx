@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, User, Settings, Shield } from 'lucide-react';
-import { SettingsDialog } from '@/components/settings';
+import { SettingsDialogNew as SettingsDialog } from '@/components/settings';
 import { useTheme } from '@/hooks/use-theme';
 import { Link } from 'wouter';
 

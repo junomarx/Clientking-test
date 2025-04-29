@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -58,6 +58,8 @@ import {
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
+import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
+
 import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
 
 const businessSettingsSchema = z.object({
