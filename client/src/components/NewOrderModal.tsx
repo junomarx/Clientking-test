@@ -1512,10 +1512,18 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   
                                   // Wenn bereits Text vorhanden ist, füge einen Zeilenumbruch hinzu
                                   if (field.value) {
-                                    field.onChange(`${field.value}\n${selectedIssue}`);
+                                    field.onChange(`${field.value}\n${selectedIssue}\n`);
                                   } else {
-                                    field.onChange(selectedIssue);
+                                    field.onChange(`${selectedIssue}\n`);
                                   }
+                                  
+                                  // Setze Cursor ans Ende des Textes
+                                  setTimeout(() => {
+                                    const textarea = document.querySelector(`textarea[name="${field.name}"]`) as HTMLTextAreaElement;
+                                    if (textarea) {
+                                      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                                    }
+                                  }, 0);
                                   
                                   // Dropdown geöffnet lassen, damit weitere Fehler ausgewählt werden können
                                   // Cursor bleibt im Textfeld zum Hinzufügen weiterer Fehler
