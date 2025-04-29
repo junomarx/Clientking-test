@@ -229,7 +229,13 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
   // Mutation zum Erstellen eines Kostenvoranschlags
   const createMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const response = await apiRequest("POST", "/api/cost-estimates", data);
+      // Transformiere das validUntil-Feld zu einem String für die API
+      const apiData = {
+        ...data,
+        validUntil: data.validUntil ? formatDate(data.validUntil) : undefined
+      };
+      
+      const response = await apiRequest("POST", "/api/cost-estimates", apiData);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Fehler beim Erstellen des Kostenvoranschlags");
@@ -297,7 +303,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     // Bereite die Daten für das Absenden vor
     const formattedData = {
       ...data,
-      validUntil: data.validUntil ? formatDate(data.validUntil) : undefined,
+      // Wir behalten das Date-Objekt, damit der Typ übereinstimmt
       items,
       subtotal,
       taxAmount,

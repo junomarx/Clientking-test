@@ -463,6 +463,13 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     <p><span className="font-medium">Name:</span> {customer?.firstName} {customer?.lastName}</p>
                     <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
                     {customer?.email && <p><span className="font-medium">E-Mail:</span> {customer?.email}</p>}
+                    {(customer?.address || customer?.zipCode || customer?.city) && (
+                      <p>
+                        <span className="font-medium">Adresse:</span> 
+                        {customer?.address}{customer?.address && (customer?.zipCode || customer?.city) ? ', ' : ''}
+                        {customer?.zipCode} {customer?.city}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
