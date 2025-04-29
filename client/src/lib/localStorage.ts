@@ -534,12 +534,21 @@ export const getIssuesForDeviceType = (deviceType: string): string[] => {
   const key = deviceType.toLowerCase();
   const storedData = localStorage.getItem(getSavedIssuesKey());
   let customIssues: string[] = [];
+  let deletedIssues: string[] = [];
   
-  // Lade benutzerdefinierte Fehlerbeschreibungen
+  // Lade benutzerdefinierte Fehlerbeschreibungen und Löschmarker
   if (storedData) {
     try {
       const storedIssues: Record<string, string[]> = JSON.parse(storedData);
-      customIssues = storedIssues[key] || [];
+      const storedItems = storedIssues[key] || [];
+      
+      // Trenne Löschmarker von regulären Fehlerbeschreibungen
+      customIssues = storedItems.filter(item => !item.startsWith('__DELETE__'));
+      
+      // Extrahiere die zu löschenden Fehlerbeschreibungen aus den Markern
+      deletedIssues = storedItems
+        .filter(item => item.startsWith('__DELETE__'))
+        .map(item => item.replace('__DELETE__', ''));
     } catch (err) {
       console.error('Fehler beim Abrufen der gespeicherten Fehlerbeschreibungen:', err);
     }
@@ -552,38 +561,51 @@ export const getIssuesForDeviceType = (deviceType: string): string[] => {
   
   const defaultIssues = DEFAULT_ISSUES[deviceTypeKey as keyof typeof DEFAULT_ISSUES] || [];
   
+  // Kombiniere Standardfehlerbeschreibungen und benutzerdefinierte Beschreibungen
+  // und filtere gelöschte Fehlerbeschreibungen heraus
+  const combinedArray = [...defaultIssues, ...customIssues]
+    .filter(item => !deletedIssues.includes(item));
+  
   // Entferne Duplikate
-  const combinedArray = [...defaultIssues, ...customIssues];
   return combinedArray.filter((item, index) => combinedArray.indexOf(item) === index);
 };
 
-// Funktion zum Löschen einer benutzerdefinierten Fehlerbeschreibung
+// Funktion zum Löschen einer Fehlerbeschreibung (auch Standard-Fehlerbeschreibungen)
 export const deleteIssue = (deviceType: string, issue: string): void => {
   if (!deviceType) return;
   
   const key = deviceType.toLowerCase();
   
   const storedData = localStorage.getItem(getSavedIssuesKey());
-  if (!storedData) return;
+  let storedIssues: Record<string, string[]> = {};
   
-  try {
-    const storedIssues: Record<string, string[]> = JSON.parse(storedData);
-    
-    if (storedIssues[key]) {
-      // Filtere die zu löschende Fehlerbeschreibung heraus
-      storedIssues[key] = storedIssues[key].filter(i => i !== issue);
-      
-      // Wenn die Liste für diesen Key leer ist, entferne den Key
-      if (storedIssues[key].length === 0) {
-        delete storedIssues[key];
-      }
-      
-      // Speichere die aktualisierte Liste
-      localStorage.setItem(getSavedIssuesKey(), JSON.stringify(storedIssues));
+  if (storedData) {
+    try {
+      storedIssues = JSON.parse(storedData);
+    } catch (err) {
+      console.error('Fehler beim Parsen der gespeicherten Fehlerbeschreibungen:', err);
     }
-  } catch (err) {
-    console.error('Fehler beim Löschen der Fehlerbeschreibung:', err);
   }
+  
+  // Erstelle Array für diesen Gerätetyp, falls es noch nicht existiert
+  if (!storedIssues[key]) {
+    storedIssues[key] = [];
+  }
+  
+  // 1. Lösche die vorhandene Fehlerbeschreibung, falls vorhanden
+  storedIssues[key] = storedIssues[key].filter(i => i !== issue);
+  
+  // 2. Füge einen Marker ein, der anzeigt, dass diese Fehlerbeschreibung gelöscht werden soll
+  // Wir verwenden ein spezielles Präfix für den Marker
+  const deleteMarker = `__DELETE__${issue}`;
+  if (!storedIssues[key].includes(deleteMarker)) {
+    storedIssues[key].push(deleteMarker);
+  }
+      
+  // Speichere die aktualisierte Liste
+  localStorage.setItem(getSavedIssuesKey(), JSON.stringify(storedIssues));
+  
+  console.log(`Fehlerbeschreibung "${issue}" für ${deviceType} wurde gelöscht.`);
 };
 
 // Funktion zum Zurücksetzen aller gespeicherten benutzerdefinierten Fehlerbeschreibungen

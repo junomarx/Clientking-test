@@ -1586,8 +1586,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                       {issue}
                                     </div>
                                     
-                                    {/* Nur benutzerdefinierte Fehler können gelöscht werden, keine Standardfehler */}
-                                    {!Object.values(DEFAULT_ISSUES).some(arr => arr.includes(issue)) && (
+                                    {/* Alle Fehler können gelöscht werden */}
+                                    {(
                                       <button
                                         type="button"
                                         tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
