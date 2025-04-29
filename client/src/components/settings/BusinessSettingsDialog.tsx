@@ -101,15 +101,14 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   // Max. Logo-Größe in Bytes (1MB)
   const MAX_LOGO_SIZE = 1024 * 1024;
 
-  // Benutzer-ID aus dem localStorage abrufen
-  const userId = localStorage.getItem('userId');
-  const username = localStorage.getItem('username');
-  console.log(`BusinessSettingsDialog opened by user ${username} (ID: ${userId})`);
+  // Wir verwenden nur die authentifizierte Sitzung ohne localStorage
+  console.log(`BusinessSettingsDialog geöffnet`);
   
-  // Lade die bestehenden Unternehmenseinstellungen mit der Benutzer-ID im Query-Key
+  // Lade die bestehenden Unternehmenseinstellungen direkt ohne Benutzer-ID im Query-Key
+  // Die Datenisolierung wird komplett vom Server sichergestellt
   const { data: settings, isLoading } = useQuery<BusinessSettings | null>({
-    queryKey: ["/api/business-settings", userId], // userId als Teil des Query-Keys
-    enabled: open && !!userId, // Aktiviere die Abfrage nur, wenn die Benutzer-ID vorhanden ist
+    queryKey: ["/api/business-settings"],
+    enabled: open, // Aktiviere die Abfrage nur, wenn der Dialog geöffnet ist
   });
 
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -271,25 +270,16 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      console.log('Sending data to server:', { ...data, logoImageLength: logoPreview?.length });
-      console.log('Current user:', localStorage.getItem('username'), 'userId:', localStorage.getItem('userId'));
-      console.log('Auth token exists:', !!localStorage.getItem('auth_token'));
+      console.log('Sending data to server (new version):', { hasLogo: !!logoPreview });
       
       try {
-        // Wir holen die Benutzer-ID aus dem Local Storage und fügen sie den Daten hinzu
-        const userId = Number(localStorage.getItem('userId'));
-        if (!userId || isNaN(userId)) {
-          throw new Error('Keine gültige Benutzer-ID im Local Storage gefunden!');
-        }
-        
-        // Wir senden das Logo als Base64-String mit und fügen die userId explizit hinzu
+        // NEUER ANSATZ: Wir senden keine userId in den Daten mit
+        // Die Authentifizierung und Datenisolierung übernimmt komplett der Server
         const requestData = {
           ...data, // Die regulären Formulardaten
-          logoImage: logoPreview, // Das Logo als Base64
-          userId: userId // Die Benutzer-ID explizit setzen
+          logoImage: logoPreview // Das Logo als Base64
         };
         
-        console.log('Sending request with userId:', userId);
         console.log('Request data keys:', Object.keys(requestData));
         
         const response = await apiRequest("POST", "/api/business-settings", requestData);
@@ -308,15 +298,13 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         console.error('Error in mutation:', error);
         if (error instanceof Error) {
           console.error('Error message:', error.message);
-          console.error('Error stack:', error.stack);
         }
         throw error;
       }
     },
     onSuccess: () => {
-      // Benutzer-ID für die Cache-Invalidierung verwenden, damit der richtige Cache gelöscht wird
-      const userId = localStorage.getItem('userId');
-      queryClient.invalidateQueries({ queryKey: ["/api/business-settings", userId] });
+      // Invalidiere den Cache global ohne spezifische User-ID
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
       
       toast({
         title: "Erfolg!",
@@ -337,34 +325,15 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   });
 
   function onSubmit(data: ExtendedBusinessSettingsFormValues) {
-    console.log('BusinessSettingsDialog - Form submitted with data:', Object.keys(data));
-    const username = localStorage.getItem('username');
-    const userId = localStorage.getItem('userId');
-    console.log(`Form submitted by user ${username} (ID: ${userId})`);
+    console.log('BusinessSettingsDialog - Form submitted with data (new version):', Object.keys(data));
     
-    // Überprüfen, ob die userId vorhanden ist
-    if (!userId) {
-      console.error('KRITISCH: Keine userId im localStorage gefunden!');
-      toast({
-        title: "Fehler!",
-        description: "Benutzer-ID nicht gefunden. Bitte melden Sie sich ab und wieder an.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // NEUER ANSATZ: Wir senden die Daten direkt ohne Benutzer-ID
+    // Die Datenisolierung wird vollständig vom Server über die Session-Authentifizierung gehandhabt
     try {
-      // Stellen wir sicher, dass die Benutzer-ID in den Formulardaten steht
-      const enhancedData = {
-        ...data,
-        userId: Number(userId) // Konvertieren wir den String zur Nummer
-      };
-      
-      console.log('Calling updateMutation with enhanced data, userId:', enhancedData.userId);
-      console.log('Vollständige Daten:', JSON.stringify(enhancedData, null, 2));
-      updateMutation.mutate(enhancedData);
+      console.log('Submitting form data directly without userId');
+      updateMutation.mutate(data);
     } catch (error) {
-      console.error('Fehler bei der Vorbereitung der Formulardaten:', error);
+      console.error('Fehler bei der Formularverarbeitung:', error);
       toast({
         title: "Fehler!",
         description: "Beim Verarbeiten der Formulardaten ist ein Fehler aufgetreten.",
