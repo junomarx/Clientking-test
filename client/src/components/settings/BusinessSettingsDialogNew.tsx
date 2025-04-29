@@ -359,14 +359,14 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
             }}>
 
               <TabsList className="w-full grid grid-cols-3 gap-1">
-                <TabsTrigger value="unternehmen" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                  <Building2 className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Firma</span>
+                <TabsTrigger value="unternehmen" className="flex items-center justify-center text-xs sm:text-sm">
+                  <Building2 className="h-4 w-4 mr-1 sm:mr-2" /> <span>Firma</span>
                 </TabsTrigger>
-                <TabsTrigger value="email" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                  <MailPlus className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>E-Mail</span>
+                <TabsTrigger value="email" className="flex items-center justify-center text-xs sm:text-sm">
+                  <MailPlus className="h-4 w-4 mr-1 sm:mr-2" /> <span>E-Mail</span>
                 </TabsTrigger>
-                <TabsTrigger value="design" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                  <Palette className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Design</span>
+                <TabsTrigger value="design" className="flex items-center justify-center text-xs sm:text-sm">
+                  <Palette className="h-4 w-4 mr-1 sm:mr-2" /> <span>Design</span>
                 </TabsTrigger>
               </TabsList>
               

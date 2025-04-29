@@ -77,18 +77,18 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
           </DialogHeader>
 
           <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-            <TabsList className="grid grid-cols-2 grid-rows-2 md:grid-cols-4 md:grid-rows-1 mb-4 gap-1">
-              <TabsTrigger value="business" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                <Building2 className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Firma</span>
+            <TabsList className="grid grid-cols-4 mb-4">
+              <TabsTrigger value="business" className="flex items-center justify-center text-xs sm:text-sm">
+                <Building2 className="h-4 w-4 mr-1 sm:mr-2" /> <span>Firma</span>
               </TabsTrigger>
-              <TabsTrigger value="communication" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                <Mail className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Komm.</span>
+              <TabsTrigger value="communication" className="flex items-center justify-center text-xs sm:text-sm">
+                <Mail className="h-4 w-4 mr-1 sm:mr-2" /> <span>Komm.</span>
               </TabsTrigger>
-              <TabsTrigger value="appearance" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                <Settings className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>Design</span>
+              <TabsTrigger value="appearance" className="flex items-center justify-center text-xs sm:text-sm">
+                <Settings className="h-4 w-4 mr-1 sm:mr-2" /> <span>Design</span>
               </TabsTrigger>
-              <TabsTrigger value="user" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                <UserCog className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>User</span>
+              <TabsTrigger value="user" className="flex items-center justify-center text-xs sm:text-sm">
+                <UserCog className="h-4 w-4 mr-1 sm:mr-2" /> <span>User</span>
               </TabsTrigger>
             </TabsList>
 
@@ -111,11 +111,11 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
             <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
               <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
                 <TabsList className="mb-4 grid grid-cols-2 gap-1">
-                  <TabsTrigger value="templates" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                    <Mail className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>E-Mail</span>
+                  <TabsTrigger value="templates" className="flex items-center justify-center text-xs sm:text-sm">
+                    <Mail className="h-4 w-4 mr-1 sm:mr-2" /> <span>E-Mail</span>
                   </TabsTrigger>
-                  <TabsTrigger value="sms" className="text-[10px] sm:text-xs md:text-sm p-1 sm:p-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start">
-                    <MessageSquare className="h-4 w-4 mb-1 sm:mb-0 sm:mr-2" /> <span>SMS</span>
+                  <TabsTrigger value="sms" className="flex items-center justify-center text-xs sm:text-sm">
+                    <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" /> <span>SMS</span>
                   </TabsTrigger>
                 </TabsList>
                 
