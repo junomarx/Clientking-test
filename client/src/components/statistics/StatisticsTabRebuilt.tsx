@@ -58,9 +58,33 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
   
   // Funktion zum Navigieren zur Reparaturseite mit Statusfilter
   const navigateToRepairsWithFilter = (status: string) => {
+    // Statusparameter konvertieren
+    let statusParam = '';
+    
+    // Karte-Status zum URL-Parameter konvertieren
+    switch(status) {
+      case 'Eingegangen':
+        statusParam = 'eingegangen';
+        break;
+      case 'In Reparatur':
+        statusParam = 'in_reparatur';
+        break;
+      case 'Außer Haus':
+        statusParam = 'ausser_haus';
+        break;
+      case 'Abholbereit':
+        statusParam = 'fertig';
+        break;
+      case 'Abgeholt':
+        statusParam = 'abgeholt';
+        break;
+      default:
+        statusParam = status.toLowerCase();
+    }
+    
     // Setze den URL-Parameter, ohne die Seite zu wechseln
     const currentUrl = window.location.pathname;
-    const newUrl = `${currentUrl}?status=${status}`;
+    const newUrl = `${currentUrl}?status=${statusParam}`;
     window.history.pushState({}, '', newUrl);
     
     // Wechsle zum Repairs-Tab
