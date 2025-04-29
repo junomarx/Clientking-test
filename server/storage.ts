@@ -572,17 +572,29 @@ export class DatabaseStorage implements IStorage {
   
   // Business settings methods
   async getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined> {
-    // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser
-    if (userId) {
-      const [settings] = await db.select()
-        .from(businessSettings)
-        .where(eq(businessSettings.userId, userId));
-      return settings;
-    }
+    console.log('getBusinessSettings called with userId:', userId);
     
-    // Ansonsten gebe die erste Einstellung zurück (für Kompatibilität)
-    const [settings] = await db.select().from(businessSettings);
-    return settings;
+    try {
+      // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser
+      if (userId) {
+        console.log(`Suche nach Geschäftseinstellungen für Benutzer ID ${userId}`);
+        const [settings] = await db.select()
+          .from(businessSettings)
+          .where(eq(businessSettings.userId, userId));
+        
+        console.log(`Gefundene Einstellungen:`, settings ? `ID ${settings.id} für User ${settings.userId}` : 'keine');
+        return settings;
+      }
+      
+      // Ansonsten gebe die erste Einstellung zurück (für Kompatibilität)
+      console.log('Keine Benutzer-ID angegeben, gebe erste Einstellung zurück');
+      const [settings] = await db.select().from(businessSettings);
+      console.log(`Erste verfügbare Einstellungen:`, settings ? `ID ${settings.id} für User ${settings.userId}` : 'keine');
+      return settings;
+    } catch (error) {
+      console.error('Fehler in getBusinessSettings:', error);
+      throw error;
+    }
   }
   
   async updateBusinessSettings(settingsData: Partial<InsertBusinessSettings>, userId?: number): Promise<BusinessSettings> {
@@ -635,8 +647,14 @@ export class DatabaseStorage implements IStorage {
           ...requiredFields,
           ...settingsData,
           updatedAt: new Date(),
-          userId: userId // Speichere die Benutzer-ID
+          userId // Speichere die Benutzer-ID
         };
+        
+        // Sicherstellen, dass die Benutzer-ID nicht null oder undefined ist
+        if (!dataToInsert.userId) {
+          console.warn('User ID is undefined in insert data, forcing to user ID:', userId);
+          dataToInsert.userId = userId;
+        }
         
         console.log('Insert data:', Object.keys(dataToInsert));
         

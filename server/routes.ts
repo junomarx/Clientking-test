@@ -706,7 +706,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertBusinessSettingsSchema.partial().parse(settingsData);
       
       // Zusätzliche Daten für die Speicherung
-      const additionalData: any = {};
+      const additionalData: any = {
+        userId // Wichtig: Wir müssen die Benutzer-ID immer in die Daten einfügen
+      };
       
       // Wenn ein Logo im Request ist, validieren wir es
       if (logoImage) {
@@ -752,11 +754,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       console.log('Final data being saved:', Object.keys(finalData));
+      console.log('User ID included in data:', finalData.userId === userId ? 'YES' : 'NO');
+      
+      // Prüfen, ob es bereits existierende Einstellungen gibt
+      const existingSettings = await storage.getBusinessSettings(userId);
       
       // Speichere die Daten einschließlich der zusätzlichen Daten mit der Benutzer-ID
       const settings = await storage.updateBusinessSettings(finalData, userId);
       
-      console.log('Business settings updated successfully');
+      console.log('Business settings updated successfully for user', userId);
+      console.log('Settings ID:', settings.id, 'User ID in settings:', settings.userId);
       return res.json(settings);
     } catch (error) {
       console.error("Error updating business settings:", error);
