@@ -63,6 +63,9 @@ export default function CostEstimatesTab() {
   const { toast } = useToast();
   const [selectedEstimateId, setSelectedEstimateId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   
   // Query für alle Kostenvoranschläge
   const { data: costEstimates, isLoading, isError, refetch } = useQuery({
@@ -233,32 +236,30 @@ export default function CostEstimatesTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Kostenvoranschläge</h2>
-        <Dialog>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" /> Kostenvoranschlag erstellen
             </Button>
           </DialogTrigger>
-          {open => (
-            <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
-                <DialogDescription>
-                  Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
-                </DialogDescription>
-              </DialogHeader>
-              <CreateCostEstimateForm 
-                onSuccess={() => {
-                  toast({
-                    title: "Kostenvoranschlag erstellt",
-                    description: "Der Kostenvoranschlag wurde erfolgreich erstellt.",
-                  });
-                  queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
-                  open.setOpen(false); // Dialog schließen
-                }}
-              />
-            </DialogContent>
-          )}
+          <DialogContent className="w-[95%] md:w-[900px] sm:max-w-full max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Neuen Kostenvoranschlag erstellen</DialogTitle>
+              <DialogDescription>
+                Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.
+              </DialogDescription>
+            </DialogHeader>
+            <CreateCostEstimateForm 
+              onSuccess={() => {
+                toast({
+                  title: "Kostenvoranschlag erstellt",
+                  description: "Der Kostenvoranschlag wurde erfolgreich erstellt.",
+                });
+                queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+                setIsCreateDialogOpen(false); // Dialog schließen
+              }}
+            />
+          </DialogContent>
         </Dialog>
       </div>
 
@@ -304,10 +305,13 @@ export default function CostEstimatesTab() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {/* Detailansicht */}
-                            <Dialog>
+                            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
                               <DialogTrigger asChild>
                                 <Button variant="ghost" size="icon" 
-                                  onClick={() => setSelectedEstimateId(estimate.id)}>
+                                  onClick={() => {
+                                    setSelectedEstimateId(estimate.id);
+                                    setIsViewDialogOpen(true);
+                                  }}>
                                   <FileText className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
@@ -324,10 +328,13 @@ export default function CostEstimatesTab() {
                             </Dialog>
 
                             {/* Bearbeiten-Button */}
-                            <Dialog>
+                            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                               <DialogTrigger asChild>
                                 <Button variant="ghost" size="icon" 
-                                  onClick={() => setSelectedEstimateId(estimate.id)}>
+                                  onClick={() => {
+                                    setSelectedEstimateId(estimate.id);
+                                    setIsEditDialogOpen(true);
+                                  }}>
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
@@ -344,6 +351,7 @@ export default function CostEstimatesTab() {
                                         description: "Der Kostenvoranschlag wurde erfolgreich aktualisiert.",
                                       });
                                       queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+                                      setIsEditDialogOpen(false); // Dialog schließen nach erfolgreicher Aktualisierung
                                     }}
                                   />
                                 )}
