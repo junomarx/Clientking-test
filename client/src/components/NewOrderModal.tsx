@@ -1363,6 +1363,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
+                                    tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
                                     className="h-7 px-2 text-xs text-destructive hover:text-destructive"
                                     onClick={() => {
                                       if (window.confirm('Möchten Sie wirklich alle gespeicherten Modelle löschen?')) {
@@ -1406,6 +1407,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                       </div>
                                       <button
                                         type="button"
+                                        tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
                                         className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1521,6 +1523,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     type="button"
                                     variant="outline"
                                     size="sm"
+                                    tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
                                     className="h-7 px-2 text-xs"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -1587,6 +1590,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     {!Object.values(DEFAULT_ISSUES).some(arr => arr.includes(issue)) && (
                                       <button
                                         type="button"
+                                        tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
                                         className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1612,6 +1616,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                       type="button"
                                       variant="outline"
                                       size="sm"
+                                      tabIndex={-1} // Negativer tabIndex verhindert Fokus beim Tabben
                                       onClick={(e) => {
                                         e.preventDefault();
                                         // Standard-Fehlerbeschreibungen wiederherstellen
