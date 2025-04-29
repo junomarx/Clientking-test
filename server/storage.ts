@@ -64,6 +64,7 @@ export interface IStorage {
     today: number;
     readyForPickup: number;
     outsourced: number;
+    received: number; // Neu: Anzahl der eingegangenen Reparaturen
   }>;
   
   // Detaillierte Reparaturstatistiken für erweiterte Analysen
@@ -705,6 +706,7 @@ export class DatabaseStorage implements IStorage {
     today: number;
     readyForPickup: number; 
     outsourced: number; 
+    received: number; // Neu: Anzahl der eingegangenen Reparaturen
   }> {
     if (!currentUserId) {
       // Wenn keine Benutzer-ID angegeben ist, gebe Nullwerte zurück
@@ -715,6 +717,7 @@ export class DatabaseStorage implements IStorage {
         today: 0,
         readyForPickup: 0,
         outsourced: 0,
+        received: 0, // Neu: Anzahl der eingegangenen Reparaturen
       };
     }
     
@@ -787,6 +790,14 @@ export class DatabaseStorage implements IStorage {
       .from(repairs)
       .where(
         and(eq(repairs.status, "ausser_haus"), combinedFilter)
+      );
+      
+    // Get number of received repairs with optional date range filter
+    const [receivedResult] = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(
+        and(eq(repairs.status, "eingegangen"), combinedFilter)
       );
     
     // Get number of repairs created today
