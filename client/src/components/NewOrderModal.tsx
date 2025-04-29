@@ -10,7 +10,7 @@ import {
   saveModel, getModelsForDeviceAndBrand, deleteModel, clearAllModels,
   saveDeviceType, getSavedDeviceTypes, deleteDeviceType, clearAllDeviceTypes,
   saveBrand, getBrandsForDeviceType, deleteBrand, clearAllBrands,
-  getIssuesForDeviceType, saveIssue, DEFAULT_ISSUES
+  getIssuesForDeviceType, saveIssue, deleteIssue, DEFAULT_ISSUES
 } from '@/lib/localStorage';
 
 import {
