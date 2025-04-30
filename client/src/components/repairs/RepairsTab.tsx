@@ -850,15 +850,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
 
       {/* Repair Details Dialog */}
       <RepairDetailsDialog
-        open={showDetailsDialog}
+        open={showDetailsDialog && !showEditDialog}
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
         onStatusChange={openStatusDialog}
         onEdit={(id) => {
-          setSelectedRepairId(id);
           // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung den Edit-Dialog öffnen
           setShowDetailsDialog(false);
           setTimeout(() => {
+            setSelectedRepairId(id);
             setShowEditDialog(true);
           }, 100);
         }}

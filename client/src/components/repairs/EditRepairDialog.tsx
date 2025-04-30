@@ -51,6 +51,7 @@ interface EditRepairDialogProps {
 }
 
 export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProps) {
+  console.log('EditRepairDialog geöffnet:', open, 'repair:', repair?.id);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
