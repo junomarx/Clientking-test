@@ -292,7 +292,7 @@ export function BrandSettings() {
                   <SelectValue placeholder="Nach Gerätetyp filtern" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Alle Gerätetypen</SelectItem>
+                  <SelectItem value="all">Alle Gerätetypen</SelectItem>
                   {deviceTypes?.map((deviceType) => (
                     <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
                       {deviceType.name}

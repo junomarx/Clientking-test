@@ -387,7 +387,7 @@ export function ModelSeriesSettings() {
                     <SelectValue placeholder="Nach Gerätetyp filtern" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Gerätetypen</SelectItem>
+                    <SelectItem value="all">Alle Gerätetypen</SelectItem>
                     {deviceTypes?.map((deviceType) => (
                       <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
                         {deviceType.name}
@@ -419,7 +419,7 @@ export function ModelSeriesSettings() {
                     } />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Marken</SelectItem>
+                    <SelectItem value="all">Alle Marken</SelectItem>
                     {brands?.map((brand) => (
                       <SelectItem key={brand.id} value={brand.id.toString()}>
                         {brand.name}
