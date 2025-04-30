@@ -1253,9 +1253,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modelle bearbeiten" });
+      }
+      
       const modelData = insertUserModelSchema.partial().parse(req.body);
       
-      const updatedModel = await storage.updateUserModel(id, modelData, userId);
+      // WORKAROUND: Wir aktualisieren immer Bugis Modelle
+      const bugisUserId = 3;
+      const updatedModel = await storage.updateUserModel(id, modelData, bugisUserId);
       
       if (!updatedModel) {
         return res.status(404).json({ message: "Modell nicht gefunden" });
@@ -1278,7 +1285,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const success = await storage.deleteUserModel(id, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modelle löschen" });
+      }
+      
+      // WORKAROUND: Wir löschen immer Bugis Modelle
+      const bugisUserId = 3;
+      const success = await storage.deleteUserModel(id, bugisUserId);
       
       if (!success) {
         return res.status(500).json({ message: "Modell konnte nicht gelöscht werden" });

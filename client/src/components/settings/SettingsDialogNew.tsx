@@ -112,9 +112,19 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
               </div>
             </TabsContent>
 
-            {/* Tab: Modellverwaltung */}
+            {/* Tab: Modellverwaltung - nur für Bugi (Admin) sichtbar */}
             <TabsContent value="models" className="max-h-[65vh] overflow-y-auto">
-              <ModelManagementTab />
+              {user?.id === 3 ? (
+                <ModelManagementTab />
+              ) : (
+                <div className="p-4 border rounded-lg">
+                  <h3 className="text-lg font-medium mb-2">Geräteverwaltung</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Die Verwaltung von Gerätetypen, Marken und Modellen ist nur für Administratoren verfügbar.
+                    Alle Benutzer können die globalen Gerätedaten in der Anwendung verwenden.
+                  </p>
+                </div>
+              )}
             </TabsContent>
             
             {/* Tab: Kommunikation */}
