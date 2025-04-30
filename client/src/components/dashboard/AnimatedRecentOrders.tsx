@@ -171,10 +171,12 @@ export function AnimatedRecentOrders({
         onStatusChange={onStatusChange}
         onEdit={onEdit ? (id) => {
           // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung die Edit-Funktion aufrufen
+          console.log('Schließe Details-Dialog und öffne Edit-Form für ID:', id);
           setShowDetailsDialog(false);
+          // Etwas längere Verzögerung für die Animation
           setTimeout(() => {
             onEdit(id);
-          }, 100);
+          }, 300);
         } : undefined}
       />
     </motion.div>

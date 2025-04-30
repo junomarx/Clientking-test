@@ -44,6 +44,7 @@ interface RepairDetailsDialogProps {
 }
 
 export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, onEdit }: RepairDetailsDialogProps) {
+  console.log('RepairDetailsDialog geöffnet:', open, 'repairId:', repairId);
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   
