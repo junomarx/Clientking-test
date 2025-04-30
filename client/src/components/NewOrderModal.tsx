@@ -122,6 +122,33 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
+  // Formular zurücksetzen, wenn das Modal geöffnet wird
+  useEffect(() => {
+    if (open) {
+      // Alle Zustandsvariablen zurücksetzen
+      setAvailableIssues([]);
+      setAvailableBrands([]);
+      setSavedModelSeries([]);
+      setSavedModels([]);
+      setIssueFields(['']); // Nur ein leeres Feld für Fehlerbeschreibung
+      setSelectedDeviceTypeId(null);
+      setSelectedBrandId(null);
+      setSelectedModelSeriesId(null);
+      if (!customerId) {
+        setSelectedCustomerId(null);
+      }
+      setFilterText('');
+      setSelectedIssueIndex(-1);
+      setSelectedCustomerIndex(-1);
+      setShowIssueDropdown(false);
+      setIsModelChanged(false);
+      setMatchingCustomers([]);
+      
+      // Formular zurücksetzen
+      form.reset();
+    }
+  }, [open, customerId]);
+  
   // States für die Dropdown-Menüs für Geräteauswahl
   const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
   const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
@@ -401,10 +428,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Kunden im State speichern für das Dropdown
       setMatchingCustomers(customers);
       
-      // Wenn nur ein Kunde gefunden wurde, automatisch dessen Daten eintragen
-      if (customers.length === 1) {
-        fillCustomerData(customers[0]);
-      }
+      // WICHTIG: Auto-Vervollständigung nur anzeigen, nicht automatisch ausfüllen
+      // Benutzer soll selbst auswählen können
     } catch (error) {
       console.error('Error searching for customers:', error);
     }
