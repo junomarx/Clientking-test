@@ -45,10 +45,27 @@ export const saveModelDb = (
       brandId: brandId
     }, {
       onSuccess: (data: any) => {
-        createModelsMut.mutate({
-          modelSeriesId: data.id,
-          names: [model]
-        });
+        // Prüfen, ob das Modell bereits existiert
+        // Wir rufen die API auf, um alle Modelle für diese ModelSeries zu laden
+        fetch(`/api/models?modelSeriesId=${data.id}`)
+          .then(response => response.json())
+          .then(existingModels => {
+            // Prüfen, ob das Modell bereits existiert
+            const modelExists = existingModels.some((m: any) => 
+              m.name.toLowerCase() === model.toLowerCase()
+            );
+            
+            // Nur speichern, wenn das Modell noch nicht existiert
+            if (!modelExists) {
+              createModelsMut.mutate({
+                modelSeriesId: data.id,
+                names: [model]
+              });
+              console.log("Neues Modell wird erstellt:", model);
+            } else {
+              console.log("Modell existiert bereits, wird nicht erneut erstellt:", model);
+            }
+          });
       }
     });
   } else if (deviceTypeId && brandId) {
@@ -58,10 +75,26 @@ export const saveModelDb = (
       brandId: brandId
     }, {
       onSuccess: (data: any) => {
-        createModelsMut.mutate({
-          modelSeriesId: data.id,
-          names: [model]
-        });
+        // Prüfen, ob das Modell bereits existiert
+        fetch(`/api/models?modelSeriesId=${data.id}`)
+          .then(response => response.json())
+          .then(existingModels => {
+            // Prüfen, ob das Modell bereits existiert
+            const modelExists = existingModels.some((m: any) => 
+              m.name.toLowerCase() === model.toLowerCase()
+            );
+            
+            // Nur speichern, wenn das Modell noch nicht existiert
+            if (!modelExists) {
+              createModelsMut.mutate({
+                modelSeriesId: data.id,
+                names: [model]
+              });
+              console.log("Neues Modell wird erstellt:", model);
+            } else {
+              console.log("Modell existiert bereits, wird nicht erneut erstellt:", model);
+            }
+          });
       }
     });
   }

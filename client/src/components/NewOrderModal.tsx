@@ -660,8 +660,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       }
       
       // Fehlerbeschreibung im localStorage speichern, wenn sie nicht existiert
-      if (data.issue && !availableIssues.includes(data.issue)) {
-        saveNewIssue(data.issue, data.deviceType);
+      // Nur wenn der Benutzer manuell eine Fehlerbeschreibung eingegeben hat (nicht aus den Vorschlägen ausgewählt)
+      // und diese auch nicht bereits in der Liste ist
+      if (data.issue && !issueFields.some(field => field === "") && !availableIssues.includes(data.issue)) {
+        // Zusätzlich prüfen, ob die Fehlerbeschreibung nicht aus mehreren kombinierten Fehlerbeschreibungen besteht
+        if (!data.issue.includes(",")) {
+          saveNewIssue(data.issue, data.deviceType);
+        }
       }
       
       // Auftrag erstellen
