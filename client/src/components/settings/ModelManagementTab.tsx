@@ -27,7 +27,7 @@ export function ModelManagementTab() {
   // API-Hooks
   const { getAllDeviceTypes } = useDeviceTypes();
   const { getBrandsByDeviceTypeId, createBrand } = useBrands();
-  const { getModelSeriesByBrandId, getModelSeriesByDeviceTypeAndBrand, createModelSeries, deleteModelSeries, deleteAllModelSeriesForBrand } = useModelSeries();
+  const { getModelSeriesByBrandId, createModelSeries, deleteModelSeries, deleteAllModelSeriesForBrand } = useModelSeries();
   const { getModelsByModelSeriesId, updateAllModelsForModelSeries } = useModels();
 
   // Abfragen für Daten

@@ -6,11 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
+import { useDeviceTypes } from '@/hooks/useDeviceTypes';
+import { useBrands } from '@/hooks/useBrands';
+import { useModelSeries } from '@/hooks/useModelSeries';
+import { useModels } from '@/hooks/useModels';
 import { 
-  saveModelLegacy, getModelsForDeviceAndBrand, getModelsForDeviceAndBrandAndSeries,
-  deleteModelLegacy, clearAllModels, saveBrand, getBrandsForDeviceType, 
-  deleteBrand, clearAllBrands, getIssuesForDeviceType, saveIssue, deleteIssue, 
-  DEFAULT_ISSUES, getModelSeriesForDeviceAndBrand, saveModel
+  getIssuesForDeviceType, saveIssue, deleteIssue, 
+  DEFAULT_ISSUES
 } from '@/lib/localStorage';
 
 import {
@@ -100,17 +102,10 @@ interface DeviceType {
   updatedAt: string;
 }
 
-// Hilfsfunktion zum intelligent Speichern von Modellen (mit oder ohne Modellreihe)
-const saveModelIntelligent = (deviceType: string, brand: string, modelSeriesOrNull: string | undefined, model: string) => {
-  console.log("Intelligentes Speichern mit modelSeries:", modelSeriesOrNull);
-  if (modelSeriesOrNull) {
-    // Wenn eine Modellreihe vorhanden ist, verwenden wir die neue Hierarchie
-    saveModel(deviceType, brand, modelSeriesOrNull, model);
-  } else {
-    // Sonst die Legacy-Methode für Abwärtskompatibilität
-    saveModelLegacy(deviceType, brand, model);
-  }
-};
+// Hilfsfunktion zum intelligenten Speichern von Modellen mit den API-Hooks
+// Diese Funktion sollte innerhalb der Komponente verwendet werden,
+// um Zugang zu den Mutations zu haben
+// Die Funktion wird später in der Komponente neu implementiert
 
 export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
@@ -129,6 +124,25 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [filterText, setFilterText] = useState<string>("");
   
   // Das automatische Scrollen wird direkt im Form Element implementiert
+  
+  // API-Hooks initialisieren
+  const { getAllDeviceTypes } = useDeviceTypes();
+  const { getBrandsByDeviceTypeId, createBrand } = useBrands();
+  const { getModelSeriesByDeviceTypeAndBrand, createModelSeries } = useModelSeries();
+  const { getModelsByModelSeriesId, createModels } = useModels();
+  
+  // API-Abfragen
+  const deviceTypesQuery = getAllDeviceTypes();
+  
+  // API-Mutations
+  const createBrandMutation = createBrand();
+  const createModelSeriesMutation = createModelSeries();
+  const createModelsMutation = createModels();
+  
+  // Hilfsvariablen für DeviceType und Brand IDs
+  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
   
   // Gerätetypen von der API abrufen
   const { data: apiDeviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
@@ -305,66 +319,116 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   }, [open, apiDeviceTypes]);
   
+  // Setze selectedDeviceTypeId basierend auf watchDeviceType
+  useEffect(() => {
+    if (watchDeviceType && deviceTypesQuery.data) {
+      const deviceType = deviceTypesQuery.data.find(dt => dt.name === watchDeviceType);
+      if (deviceType) {
+        setSelectedDeviceTypeId(deviceType.id);
+      } else {
+        setSelectedDeviceTypeId(null);
+      }
+    } else {
+      setSelectedDeviceTypeId(null);
+    }
+  }, [watchDeviceType, deviceTypesQuery.data]);
+  
+  // Abfrage für Marken basierend auf DeviceType
+  const brandsQuery = getBrandsByDeviceTypeId(selectedDeviceTypeId);
+  
   // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
-      // Lade verfügbare Marken
-      const brands = getBrandsForDeviceType(watchDeviceType);
-      setAvailableBrands(brands);
-      form.setValue('brand', '');
-      
-      // Lade verfügbare Fehlerbeschreibungen
+      // Lade verfügbare Fehlerbeschreibungen aus localStorage
       const issues = getIssuesForDeviceType(watchDeviceType);
       setAvailableIssues(issues);
+      
+      // Zurücksetzen der Marke
+      form.setValue('brand', '');
     } else {
-      setAvailableBrands([]);
       setAvailableIssues([]);
     }
   }, [watchDeviceType, form]);
   
-
+  // Update availableBrands wenn brandsQuery sich ändert
+  useEffect(() => {
+    if (brandsQuery.data) {
+      const brandNames = brandsQuery.data.map(brand => brand.name);
+      setAvailableBrands(brandNames);
+    } else {
+      setAvailableBrands([]);
+    }
+  }, [brandsQuery.data]);
+  
+  // Setze selectedBrandId basierend auf watchBrand
+  useEffect(() => {
+    if (watchBrand && brandsQuery.data) {
+      const brand = brandsQuery.data.find(b => b.name === watchBrand);
+      if (brand) {
+        setSelectedBrandId(brand.id);
+      } else {
+        setSelectedBrandId(null);
+      }
+    } else {
+      setSelectedBrandId(null);
+    }
+  }, [watchBrand, brandsQuery.data]);
+  
+  // Abfrage für Modellreihen basierend auf Brand
+  const modelSeriesQuery = getModelSeriesByBrandId(selectedBrandId);
   
   // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Marke ändert
   useEffect(() => {
-    if (watchDeviceType && watchBrand) {
+    if (modelSeriesQuery.data) {
+      // Extrahiere die Namen der Modellreihen
+      const modelSeriesNames = modelSeriesQuery.data.map(ms => ms.name);
+      setSavedModelSeries(modelSeriesNames);
+      
       // Bei Apple Smartphones keine Modellreihen anzeigen
-      if (watchDeviceType.toLowerCase() === 'smartphone' && watchBrand.toLowerCase() === 'apple') {
+      if (watchDeviceType?.toLowerCase() === 'smartphone' && watchBrand?.toLowerCase() === 'apple') {
         setSavedModelSeries([]);
-      } else {
-        const modelSeries = getModelSeriesForDeviceAndBrand(watchDeviceType, watchBrand);
-        setSavedModelSeries(modelSeries);
-        
+      } else if (modelSeriesNames.length === 1) {
         // Wenn genau eine Modellreihe verfügbar ist, diese automatisch auswählen
-        if (modelSeries.length === 1) {
-          console.log(`Genau eine Modellreihe (${modelSeries[0]}) für ${watchDeviceType}/${watchBrand} gefunden, wird automatisch ausgewählt.`);
-          form.setValue('modelSeries', modelSeries[0]);
-        } else {
-          // Sonst das Modellreihe-Feld zurücksetzen
-          form.setValue('modelSeries', '');
-        }
+        console.log(`Genau eine Modellreihe (${modelSeriesNames[0]}) gefunden, wird automatisch ausgewählt.`);
+        form.setValue('modelSeries', modelSeriesNames[0]);
+      } else {
+        // Sonst das Modellreihe-Feld zurücksetzen
+        form.setValue('modelSeries', '');
       }
+      
       form.setValue('model', '');
     } else {
       setSavedModelSeries([]);
-      setSavedModels([]);
     }
-  }, [watchDeviceType, watchBrand, form]);
+  }, [modelSeriesQuery.data, watchDeviceType, watchBrand, form]);
+  
+  // Setze selectedModelSeriesId basierend auf watchModelSeries
+  useEffect(() => {
+    if (watchModelSeries && modelSeriesQuery.data) {
+      const modelSeries = modelSeriesQuery.data.find(ms => ms.name === watchModelSeries);
+      if (modelSeries) {
+        setSelectedModelSeriesId(modelSeries.id);
+      } else {
+        setSelectedModelSeriesId(null);
+      }
+    } else {
+      setSelectedModelSeriesId(null);
+    }
+  }, [watchModelSeries, modelSeriesQuery.data]);
+  
+  // Abfrage für Modelle basierend auf ModelSeries
+  const modelsQuery = getModelsByModelSeriesId(selectedModelSeriesId);
   
   // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
   useEffect(() => {
-    if (watchDeviceType && watchBrand) {
-      if (watchModelSeries) {
-        const models = getModelsForDeviceAndBrandAndSeries(watchDeviceType, watchBrand, watchModelSeries);
-        setSavedModels(models);
-      } else {
-        // Wenn keine Modellreihe ausgewählt ist, zeige alle Modelle der Marke an
-        const models = getModelsForDeviceAndBrand(watchDeviceType, watchBrand);
-        setSavedModels(models);
-      }
+    if (modelsQuery.data) {
+      // Extrahiere die Namen der Modelle
+      const modelNames = modelsQuery.data.map(m => m.name);
+      setSavedModels(modelNames);
     } else {
       setSavedModels([]);
     }
-  }, [watchDeviceType, watchBrand, watchModelSeries]);
+  }, [modelsQuery.data, selectedModelSeriesId]);
   
   // Diese automatische Speicherung bei Änderungen ist entfernt, da Modelle nur gespeichert werden
   // sollen, wenn der Auftrag tatsächlich gespeichert wird
@@ -407,19 +471,78 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Hier nochmals speichern, um sicherzustellen, dass die Daten für den nächsten Auftrag verfügbar sind
       if (data.deviceType && data.brand && data.model) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === data.deviceType.toLowerCase());
+        const exists = deviceTypesQuery.data?.some(dt => dt.name.toLowerCase() === data.deviceType.toLowerCase());
         if (!exists) {
           createDeviceTypeMutation.mutate(data.deviceType);
         }
         
-        // Marke und Modell weiterhin im localStorage speichern (bis diese auch migriert sind)
-        saveBrand(data.deviceType, data.brand);
+        // Finde oder erstelle die Brand in der Datenbank
+        const deviceType = deviceTypesQuery.data?.find(dt => dt.name.toLowerCase() === data.deviceType.toLowerCase());
+        if (deviceType) {
+          const brandExists = brandsQuery.data?.some(b => b.name.toLowerCase() === data.brand.toLowerCase());
+          if (!brandExists) {
+            createBrandMutation.mutate({
+              name: data.brand,
+              deviceTypeId: deviceType.id
+            });
+          }
+          
+          // Finde die Brand ID
+          const brand = brandsQuery.data?.find(b => b.name.toLowerCase() === data.brand.toLowerCase());
+          if (brand) {
+            // Wenn eine Modellreihe angegeben ist
+            if (data.modelSeries) {
+              // Finde oder erstelle die Modellreihe
+              const modelSeriesExists = modelSeriesQuery.data?.some(ms => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
+              if (!modelSeriesExists && data.modelSeries) {
+                createModelSeriesMutation.mutate({
+                  name: data.modelSeries,
+                  brandId: brand.id
+                }, {
+                  onSuccess: (newModelSeries) => {
+                    // Erstelle das Modell mit der neuen Modellreihe
+                    createModelsMutation.mutate({
+                      modelSeriesId: newModelSeries.id,
+                      names: [data.model]
+                    });
+                  }
+                });
+              } else {
+                // Modellreihe existiert bereits, finde sie und erstelle das Modell
+                const modelSeries = modelSeriesQuery.data?.find(ms => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
+                if (modelSeries) {
+                  const modelExists = modelsQuery.data?.some(m => m.name.toLowerCase() === data.model.toLowerCase());
+                  if (!modelExists) {
+                    createModelsMutation.mutate({
+                      modelSeriesId: modelSeries.id,
+                      names: [data.model]
+                    });
+                  }
+                }
+              }
+            } else {
+              // Wenn keine Modellreihe angegeben ist, erstelle eine Standard-Modellreihe
+              createModelSeriesMutation.mutate({
+                name: 'Standard',
+                brandId: brand.id
+              }, {
+                onSuccess: (newModelSeries) => {
+                  // Erstelle das Modell mit der neuen Modellreihe
+                  createModelsMutation.mutate({
+                    modelSeriesId: newModelSeries.id,
+                    names: [data.model]
+                  });
+                }
+              });
+            }
+          }
+        }
         
-        // Modell mit der intelligenten Hilfsfunktion speichern (mit oder ohne Modellreihe)
-        saveModelIntelligent(data.deviceType, data.brand, data.modelSeries, data.model);
-        
-        // Invalidate die Gerätetypen-Abfrage, um die Liste zu aktualisieren
+        // Invalidate die Abfragen, um die Listen zu aktualisieren
         queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/brands"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/model-series"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/models"] });
       }
       
       // Invalidate the queries to refresh the data
