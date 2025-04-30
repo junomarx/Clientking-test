@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash, Loader2, Smartphone } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-
 import {
   Form,
   FormControl,
@@ -35,7 +33,8 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -44,7 +43,6 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-
 import {
   Select,
   SelectContent,
@@ -53,11 +51,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-// Schnittstellen für Device-Typen und Marken
 interface DeviceType {
   id: number;
   name: string;
@@ -77,8 +70,8 @@ interface Brand {
 
 // Schema zur Validierung des Formulars
 const brandSchema = z.object({
-  name: z.string().min(1, 'Markenname darf nicht leer sein'),
-  deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt werden')
+  deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
+  name: z.string().min(1, 'Markenname darf nicht leer sein')
 });
 
 type BrandFormValues = z.infer<typeof brandSchema>;
@@ -89,28 +82,11 @@ export function BrandSettings() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
 
-  // Formulare initialisieren
-  const addForm = useForm<BrandFormValues>({
-    resolver: zodResolver(brandSchema),
-    defaultValues: {
-      name: '',
-      deviceTypeId: ''
-    }
-  });
-
-  const editForm = useForm<BrandFormValues>({
-    resolver: zodResolver(brandSchema),
-    defaultValues: {
-      name: '',
-      deviceTypeId: ''
-    }
-  });
-
-  // Abfrage zum Abrufen aller Gerätetypen
-  const { data: deviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
+  // Gerätetypen abrufen
+  const { data: deviceTypes } = useQuery<DeviceType[]>({
     queryKey: ['/api/device-types'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/device-types');
@@ -118,9 +94,9 @@ export function BrandSettings() {
     }
   });
 
-  // Abfrage zum Abrufen aller Marken, optional nach Gerätetyp gefiltert
-  const { data: brands, isLoading: isLoadingBrands, refetch: refetchBrands } = useQuery<Brand[]>({
-    queryKey: ['/api/brands', selectedDeviceType ? { deviceTypeId: selectedDeviceType } : {}],
+  // Marken abrufen
+  const { data: brands, isLoading: isLoadingBrands } = useQuery<Brand[]>({
+    queryKey: ['/api/brands', selectedDeviceType],
     queryFn: async () => {
       const url = selectedDeviceType 
         ? `/api/brands?deviceTypeId=${selectedDeviceType}` 
@@ -130,18 +106,29 @@ export function BrandSettings() {
     }
   });
 
-  // Effekt zum Aktualisieren der Marken-Liste, wenn ein Gerätetyp ausgewählt wurde
-  useEffect(() => {
-    if (selectedDeviceType) {
-      refetchBrands();
+  // Formular für das Hinzufügen einer neuen Marke
+  const addForm = useForm<BrandFormValues>({
+    resolver: zodResolver(brandSchema),
+    defaultValues: {
+      deviceTypeId: '',
+      name: ''
     }
-  }, [selectedDeviceType, refetchBrands]);
+  });
+
+  // Formular für das Bearbeiten einer Marke
+  const editForm = useForm<BrandFormValues>({
+    resolver: zodResolver(brandSchema),
+    defaultValues: {
+      deviceTypeId: '',
+      name: ''
+    }
+  });
 
   // Mutation zum Hinzufügen einer neuen Marke
   const addBrandMutation = useMutation({
     mutationFn: async (data: BrandFormValues) => {
       const res = await apiRequest('POST', '/api/brands', {
-        name: data.name,
+        ...data,
         deviceTypeId: parseInt(data.deviceTypeId)
       });
       return res.json();
@@ -152,13 +139,13 @@ export function BrandSettings() {
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       toast({
         title: 'Marke hinzugefügt',
-        description: 'Die neue Marke wurde erfolgreich gespeichert.'
+        description: 'Die Marke wurde erfolgreich hinzugefügt.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Hinzufügen der Marke: ${error.message}`,
+        description: `Konnte Marke nicht hinzufügen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -168,7 +155,7 @@ export function BrandSettings() {
   const updateBrandMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: BrandFormValues }) => {
       const res = await apiRequest('PATCH', `/api/brands/${id}`, {
-        name: data.name,
+        ...data,
         deviceTypeId: parseInt(data.deviceTypeId)
       });
       return res.json();
@@ -179,13 +166,13 @@ export function BrandSettings() {
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       toast({
         title: 'Marke aktualisiert',
-        description: 'Die Marke wurde erfolgreich aktualisiert.'
+        description: 'Die Marke wurde erfolgreich aktualisiert.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Aktualisieren der Marke: ${error.message}`,
+        description: `Konnte Marke nicht aktualisieren: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -198,17 +185,16 @@ export function BrandSettings() {
     },
     onSuccess: () => {
       setIsDeleteDialogOpen(false);
-      setSelectedBrand(null);
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       toast({
         title: 'Marke gelöscht',
-        description: 'Die Marke wurde erfolgreich gelöscht.'
+        description: 'Die Marke wurde erfolgreich gelöscht.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Löschen der Marke: ${error.message}`,
+        description: `Konnte Marke nicht löschen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -219,15 +205,16 @@ export function BrandSettings() {
   };
 
   const handleEditSubmit = (data: BrandFormValues) => {
-    if (!selectedBrand) return;
-    updateBrandMutation.mutate({ id: selectedBrand.id, data });
+    if (selectedBrand) {
+      updateBrandMutation.mutate({ id: selectedBrand.id, data });
+    }
   };
 
   const handleEdit = (brand: Brand) => {
     setSelectedBrand(brand);
     editForm.reset({
-      name: brand.name,
-      deviceTypeId: brand.deviceTypeId.toString()
+      deviceTypeId: brand.deviceTypeId.toString(),
+      name: brand.name
     });
     setIsEditDialogOpen(true);
   };
@@ -238,22 +225,21 @@ export function BrandSettings() {
   };
 
   const confirmDelete = () => {
-    if (!selectedBrand) return;
-    deleteBrandMutation.mutate(selectedBrand.id);
+    if (selectedBrand) {
+      deleteBrandMutation.mutate(selectedBrand.id);
+    }
   };
 
-  const handleDeviceTypeChange = (deviceTypeId: string) => {
-    setSelectedDeviceType(deviceTypeId);
+  const handleDeviceTypeChange = (value: string) => {
+    setSelectedDeviceType(value === 'all' ? null : value);
   };
 
-  // Hilfsfunktion zum Abrufen des Gerätetyp-Namens anhand der ID
   const getDeviceTypeName = (deviceTypeId: number): string => {
-    if (!deviceTypes) return 'Lädt...';
-    const deviceType = deviceTypes.find(dt => dt.id === deviceTypeId);
+    const deviceType = deviceTypes?.find(dt => dt.id === deviceTypeId);
     return deviceType ? deviceType.name : 'Unbekannt';
   };
 
-  if (isLoadingDeviceTypes) {
+  if (!deviceTypes) {
     return (
       <div className="flex justify-center py-10">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -263,29 +249,30 @@ export function BrandSettings() {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <div>
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <CardTitle>Marken verwalten</CardTitle>
-            <CardDescription>Hier können Sie Marken für Ihre Reparaturaufträge verwalten.</CardDescription>
+            <h3 className="text-lg font-semibold">Marken verwalten</h3>
+            <p className="text-sm text-muted-foreground">
+              Fügen Sie Marken hinzu, die von allen Benutzern verwendet werden können.
+            </p>
           </div>
-          <Button
-            className="ml-auto"
+          <Button 
+            size="sm"
             onClick={() => {
               addForm.reset();
               setIsAddDialogOpen(true);
             }}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Marke hinzufügen
+            <Plus className="mr-2 h-4 w-4" /> Hinzufügen
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Gerätetyp-Filter */}
+        </div>
+        
+        <div className="mb-4">
           <div className="flex gap-2 items-center">
             <div className="w-64">
               <Select
-                value={selectedDeviceType || ''}
+                value={selectedDeviceType || 'all'}
                 onValueChange={handleDeviceTypeChange}
               >
                 <SelectTrigger>
@@ -307,63 +294,62 @@ export function BrandSettings() {
               </Button>
             )}
           </div>
+        </div>
 
-          {/* Markentabelle */}
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Gerätetyp</TableHead>
+              <TableHead>Erstellt am</TableHead>
+              <TableHead className="text-right">Aktionen</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoadingBrands ? (
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Gerätetyp</TableHead>
-                <TableHead>Erstellt am</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
+                <TableCell colSpan={4} className="text-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingBrands ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+            ) : brands?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                  {selectedDeviceType 
+                    ? 'Keine Marken für diesen Gerätetyp gefunden' 
+                    : 'Keine Marken gefunden'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              brands?.map((brand) => (
+                <TableRow key={brand.id}>
+                  <TableCell className="font-medium">{brand.name}</TableCell>
+                  <TableCell>{getDeviceTypeName(brand.deviceTypeId)}</TableCell>
+                  <TableCell>{new Date(brand.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(brand)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Bearbeiten</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(brand)}
+                    >
+                      <Trash className="h-4 w-4" />
+                      <span className="sr-only">Löschen</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ) : brands?.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                    {selectedDeviceType 
-                      ? 'Keine Marken für diesen Gerätetyp gefunden' 
-                      : 'Keine Marken gefunden'}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                brands?.map((brand) => (
-                  <TableRow key={brand.id}>
-                    <TableCell className="font-medium">{brand.name}</TableCell>
-                    <TableCell>{getDeviceTypeName(brand.deviceTypeId)}</TableCell>
-                    <TableCell>{new Date(brand.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(brand)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Bearbeiten</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(brand)}
-                      >
-                        <Trash className="h-4 w-4" />
-                        <span className="sr-only">Löschen</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Dialog zum Hinzufügen einer neuen Marke */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
