@@ -21,6 +21,7 @@ import {
   deleteModelLegacy
 } from '@/lib/deviceHelpers';
 import { saveModelDb } from '@/utils/modelUtils';
+import { X } from 'lucide-react';
 
 import {
   Dialog,
@@ -108,6 +109,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
   const [savedModels, setSavedModels] = useState<string[]>([]);
+  const [issueFields, setIssueFields] = useState<string[]>(['']); // Array für mehrere Fehlerbeschreibungsfelder
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
@@ -332,24 +334,27 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   };
   
-  // Funktion zum Hinzufügen einer Fehlerbeschreibung zur aktuellen Eingabe
-  const addIssueToField = (issue: string) => {
-    // Aktuelle Fehlerbeschreibung holen
-    const currentIssue = form.getValues('issue');
+  // Funktion zum Hinzufügen einer neuen Fehlerbeschreibung
+  const addIssueToField = (issue: string, index: number = 0) => {
+    // Aktualisiere das entsprechende Feld im Array
+    const newIssueFields = [...issueFields];
+    newIssueFields[index] = issue;
     
-    // Wenn bereits Text vorhanden ist, mit Komma anhängen
-    if (currentIssue && currentIssue.trim() !== '') {
-      form.setValue('issue', `${currentIssue}, ${issue}`);
-    } else {
-      // Sonst einfach den neuen Wert setzen
-      form.setValue('issue', issue);
-    }
+    // Füge ein neues leeres Feld hinzu
+    newIssueFields.push('');
+    
+    // Aktualisiere den State
+    setIssueFields(newIssueFields);
+    
+    // Aktualisiere auch das Formular-Feld für die Submission
+    const combinedIssues = newIssueFields.filter(i => i.trim() !== '').join(', ');
+    form.setValue('issue', combinedIssues);
     
     // Dropdown schließen
     setShowIssueDropdown(false);
   };
   
-  // Funktion zum Löschen einer Fehlerbeschreibung
+  // Funktion zum Löschen einer Fehlerbeschreibung aus dem Dropdown
   const handleDeleteIssue = (issue: string, deviceType: string) => {
     if (issue && deviceType) {
       deleteIssue(deviceType, issue);
@@ -362,6 +367,23 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         description: `Fehlerbeschreibung für ${deviceType} wurde gelöscht.`,
       });
     }
+  };
+  
+  // Funktion zum Löschen einer eingegebenen Fehlerbeschreibung aus dem Formular
+  const removeIssueField = (index: number) => {
+    const newIssueFields = [...issueFields];
+    newIssueFields.splice(index, 1);
+    
+    // Wenn alle Felder gelöscht wurden, füge ein leeres Feld hinzu
+    if (newIssueFields.length === 0) {
+      newIssueFields.push('');
+    }
+    
+    setIssueFields(newIssueFields);
+    
+    // Aktualisiere das Formular-Feld
+    const combinedIssues = newIssueFields.filter(i => i.trim() !== '').join(', ');
+    form.setValue('issue', combinedIssues);
   };
   
   // Funktion zum Überprüfen, ob ein Kunde bereits existiert
@@ -1266,50 +1288,77 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                         <FormItem>
                           <FormLabel>Fehlerbeschreibung</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <Input 
-                                placeholder="Beschreibung des Problems" 
-                                {...field} 
-                                onFocus={() => {
-                                  setSelectedIssueIndex(-1);
-                                  setShowIssueDropdown(true);
-                                }}
-                                onBlur={() => {
-                                  // Dropdown mit Verzögerung ausblenden
-                                  setTimeout(() => setShowIssueDropdown(false), 200);
-                                }}
-                                onKeyDown={(e) => handleKeyDown(e, 'issue')}
-                              />
-                              {showIssueDropdown && availableIssues.length > 0 && (
-                                <div className="absolute z-10 w-full bg-white rounded-md border shadow-lg max-h-60 overflow-y-auto mt-1">
-                                  {availableIssues
-                                    .filter(issue => !filterText || issue.toLowerCase().includes(field.value.toLowerCase()))
-                                    .map((issue, index) => (
-                                      <div 
-                                        key={index}
-                                        className={`px-4 py-2 cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
-                                        onClick={() => {
-                                          // Hinzufügen zur aktuellen Beschreibung statt Ersetzen
-                                          addIssueToField(issue);
-                                          setSelectedIssueIndex(-1);
-                                        }}
-                                      >
-                                        <span>{issue}</span>
-                                        <button 
-                                          type="button"
-                                          className="text-red-500 hover:text-red-700"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteIssue(issue, watchDeviceType);
-                                          }}
-                                        >
-                                          ×
-                                        </button>
-                                      </div>
-                                    ))
-                                  }
+                            <div className="space-y-2">
+                              {/* Für jedes Feld im issueFields-Array */}
+                              {issueFields.map((issueText, index) => (
+                                <div key={index} className="relative flex items-center">
+                                  <Input 
+                                    placeholder="Beschreibung des Problems" 
+                                    value={issueText}
+                                    onChange={(e) => {
+                                      const newIssueFields = [...issueFields];
+                                      newIssueFields[index] = e.target.value;
+                                      setIssueFields(newIssueFields);
+                                      
+                                      // Aktualisiere auch das Formular-Feld
+                                      const combinedIssues = newIssueFields.filter(i => i.trim() !== '').join(', ');
+                                      field.onChange(combinedIssues);
+                                    }}
+                                    onFocus={() => {
+                                      setSelectedIssueIndex(-1);
+                                      setShowIssueDropdown(true);
+                                    }}
+                                    onBlur={() => {
+                                      // Dropdown mit Verzögerung ausblenden
+                                      setTimeout(() => setShowIssueDropdown(false), 200);
+                                    }}
+                                    onKeyDown={(e) => handleKeyDown(e, 'issue')}
+                                  />
+                                  
+                                  {/* X-Button zum Löschen des Feldes */}
+                                  {issueFields.length > 1 && (
+                                    <Button 
+                                      type="button" 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="ml-2 h-8 w-8 text-red-500 hover:text-red-700"
+                                      onClick={() => removeIssueField(index)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  
+                                  {/* Dropdown für verfügbare Fehlerbeschreibungen */}
+                                  {showIssueDropdown && availableIssues.length > 0 && index === issueFields.length - 1 && (
+                                    <div className="absolute z-10 w-full left-0 top-full bg-white rounded-md border shadow-lg max-h-60 overflow-y-auto mt-1">
+                                      {availableIssues
+                                        .filter(issue => !issueText || issue.toLowerCase().includes(issueText.toLowerCase()))
+                                        .map((issue, idx) => (
+                                          <div 
+                                            key={idx}
+                                            className={`px-4 py-2 cursor-pointer flex justify-between items-center ${selectedIssueIndex === idx ? 'bg-primary/20' : 'hover:bg-muted'}`}
+                                            onClick={() => {
+                                              addIssueToField(issue, index);
+                                              setSelectedIssueIndex(-1);
+                                            }}
+                                          >
+                                            <span>{issue}</span>
+                                            <button 
+                                              type="button"
+                                              className="text-red-500 hover:text-red-700"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteIssue(issue, watchDeviceType);
+                                              }}
+                                            >
+                                              <X className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              ))}
                             </div>
                           </FormControl>
                           <FormMessage />
