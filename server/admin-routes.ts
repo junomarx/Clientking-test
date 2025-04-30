@@ -335,28 +335,50 @@ export function registerAdminRoutes(app: Express) {
         
         console.log(`${existingDeviceTypes.length} vorhandene Gerätetypen gefunden für Benutzer ${req.user?.id || 3}.`);        
         
-        // 1. Erst Modelle löschen, weil sie von Modellreihen abhängen
-        if (importModels && importModels.length > 0) {
-          // Selektives Löschen ist in dieser Phase zu kompliziert,
-          // wir lassen die komplette Löschung für diesen Import
-          await db.delete(userModels)
-            .where(eq(userModels.userId, req.user?.id || 3));
-          console.log("Alle vorhandenen Modelle des Benutzers wurden gelöscht.");
-        }
+        // Wir holen alle vorhandenen Daten, um sie beim Import zu berücksichtigen
+        console.log("Hole vorhandene Daten...");
         
-        // 2. Dann Modellreihen löschen, weil sie von Marken abhängen
-        if (importModelSeries && importModelSeries.length > 0) {
-          await db.delete(userModelSeries)
-            .where(eq(userModelSeries.userId, req.user?.id || 3));
-          console.log("Alle vorhandenen Modellreihen des Benutzers wurden gelöscht.");
-        }
+        // Vorhandene Marken sammeln
+        const existingBrands = await db
+          .select()
+          .from(userBrands)
+          .where(eq(userBrands.userId, req.user?.id || 3));
+          
+        // Mapping von (Name + deviceTypeId) zu existierenden Marken erstellen
+        const existingBrandsByKey = new Map();
+        existingBrands.forEach(brand => {
+          const key = `${brand.name}-${brand.deviceTypeId}`;
+          existingBrandsByKey.set(key, brand);
+        });
+        console.log(`${existingBrands.length} vorhandene Marken gefunden für Benutzer ${req.user?.id || 3}.`);        
         
-        // 3. Dann Marken löschen, weil sie von Gerätetypen abhängen
-        if (importBrands && importBrands.length > 0) {
-          await db.delete(userBrands)
-            .where(eq(userBrands.userId, req.user?.id || 3));
-          console.log("Alle vorhandenen Marken des Benutzers wurden gelöscht.");
-        }
+        // Vorhandene Modellreihen sammeln
+        const existingModelSeries = await db
+          .select()
+          .from(userModelSeries)
+          .where(eq(userModelSeries.userId, req.user?.id || 3));
+          
+        // Mapping von (Name + brandId) zu existierenden Modellreihen erstellen
+        const existingModelSeriesByKey = new Map();
+        existingModelSeries.forEach(ms => {
+          const key = `${ms.name}-${ms.brandId}`;
+          existingModelSeriesByKey.set(key, ms);
+        });
+        console.log(`${existingModelSeries.length} vorhandene Modellreihen gefunden für Benutzer ${req.user?.id || 3}.`);        
+        
+        // Vorhandene Modelle sammeln
+        const existingModels = await db
+          .select()
+          .from(userModels)
+          .where(eq(userModels.userId, req.user?.id || 3));
+          
+        // Mapping von (Name + modelSeriesId) zu existierenden Modellen erstellen
+        const existingModelsByKey = new Map();
+        existingModels.forEach(model => {
+          const key = `${model.name}-${model.modelSeriesId}`;
+          existingModelsByKey.set(key, model);
+        });
+        console.log(`${existingModels.length} vorhandene Modelle gefunden für Benutzer ${req.user?.id || 3}.`);
         
         // Mapping für alte und neue IDs erstellen
         const idMappings: {
@@ -482,7 +504,12 @@ export function registerAdminRoutes(app: Express) {
             }
           }
           
-          const newBrands = importBrands.map((b: any) => {
+          // Initialisiere Arrays für neue und vorhandene Marken
+          const brandsToInsert: any[] = [];
+          const reusedBrands: any[] = [];
+          
+          // Gehe durch jede zu importierende Marke
+          for (const b of importBrands) {
             const oldId = b.id;
             const oldDeviceTypeId = b.deviceTypeId;
             const { id, createdAt, updatedAt, ...brandData } = b;
@@ -498,40 +525,74 @@ export function registerAdminRoutes(app: Express) {
             if (!newDeviceTypeId) {
               console.warn(`Keine neue ID für Gerätetyp mit ID ${oldDeviceTypeId} gefunden, obwohl wir versucht haben, fehlende Gerätetypen zu erstellen.`);
               // Dies sollte eigentlich nicht mehr passieren
+              continue; // Diese Marke überspringen, da wir keinen gültigen Gerätetyp haben
             }
             
-            return {
-              ...brandData,
-              originalId: oldId, // Temporär zur Identifikation
-              deviceTypeId: newDeviceTypeId, // Immer die neue ID verwenden
-              userId: req.user?.id || 3,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-          });
-          
-          // Batch-Insert und die neuen IDs zurückerhalten
-          const insertedBrands = await db.insert(userBrands)
-            .values(newBrands.map((b: any) => {
-              const { originalId, ...restB } = b;
-              return restB;
-            }))
-            .returning();
+            // Prüfe, ob bereits eine Marke mit diesem Namen und Gerätetyp existiert
+            const key = `${b.name}-${newDeviceTypeId}`;
+            const existingBrand = existingBrandsByKey.get(key);
             
-          // Mapping zwischen alten und neuen IDs erstellen
-          insertedBrands.forEach((newB, index) => {
-            const oldId = newBrands[index].originalId;
-            idMappings.brands.set(oldId, newB.id);
-          });
+            if (existingBrand) {
+              // Wenn eine Marke mit dem Namen und Gerätetyp existiert, verwende sie
+              console.log(`Wiederverwendung vorhandener Marke: ${b.name} für Gerätetyp ${newDeviceTypeId} (ID: ${existingBrand.id})`);
+              
+              // Füge das Mapping zwischen alter und bestehender ID hinzu
+              idMappings.brands.set(oldId, existingBrand.id);
+              
+              // Füge zum Array der wiederverwendeten Marken hinzu
+              reusedBrands.push({
+                ...existingBrand,
+                originalId: oldId
+              });
+            } else {
+              // Ansonsten erstelle eine neue Marke
+              brandsToInsert.push({
+                ...brandData,
+                originalId: oldId,
+                deviceTypeId: newDeviceTypeId,
+                userId: req.user?.id || 3,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            }
+          }
           
-          stats.brands = insertedBrands.length;
-          console.log(`${insertedBrands.length} Marken wurden importiert.`);
-          console.log(`Marken-ID-Mapping erstellt:`, Object.fromEntries(idMappings.brands));
+          // Nur neue Marken einfügen, wenn welche vorhanden sind
+          let insertedBrands: any[] = [];
+          if (brandsToInsert.length > 0) {
+            insertedBrands = await db.insert(userBrands)
+              .values(brandsToInsert.map((b: any) => {
+                // originalId entfernen, da es kein Feld in der Datenbank ist
+                const { originalId, ...restB } = b;
+                return restB;
+              }))
+              .returning();
+            
+            // Mapping zwischen alten und neuen IDs für neu eingefügte Marken erstellen
+            insertedBrands.forEach((newB, index) => {
+              const oldId = brandsToInsert[index].originalId;
+              idMappings.brands.set(oldId, newB.id);
+              console.log(`Marken-Mapping (neu): alte ID ${oldId} -> neue ID ${newB.id}`);
+            });
+          }
+          
+          // Statistiken aktualisieren
+          stats.brands = insertedBrands.length + reusedBrands.length;
+          
+          // Protokollierung
+          console.log(`${insertedBrands.length} neue Marken wurden erstellt.`);
+          console.log(`${reusedBrands.length} vorhandene Marken wurden wiederverwendet.`);
+          console.log(`Gesamtes Marken-ID-Mapping:`, Array.from(idMappings.brands.entries()));
         }
         
         // Modellreihen importieren
         if (importModelSeries && importModelSeries.length > 0) {
-          const newModelSeries = importModelSeries.map((ms: any) => {
+          // Initialisiere Arrays für neue und vorhandene Modellreihen
+          const modelSeriesToInsert: any[] = [];
+          const reusedModelSeries: any[] = [];
+          
+          // Gehe durch jede zu importierende Modellreihe
+          for (const ms of importModelSeries) {
             const oldId = ms.id;
             const oldBrandId = ms.brandId;
             const { id, createdAt, updatedAt, ...msData } = ms;
@@ -540,41 +601,75 @@ export function registerAdminRoutes(app: Express) {
             const newBrandId = idMappings.brands.get(oldBrandId);
             
             if (!newBrandId) {
-              console.warn(`Keine neue ID für Marke mit ID ${oldBrandId} gefunden. Verwende originale ID.`);
+              console.warn(`Keine neue ID für Marke mit ID ${oldBrandId} gefunden. Überspringe diese Modellreihe.`);
+              continue; // Diese Modellreihe überspringen, da wir keine gültige Marke haben
             }
             
-            return {
-              ...msData,
-              originalId: oldId, // Temporär zur Identifikation
-              brandId: newBrandId || oldBrandId, // Neue ID verwenden, sonst die alte
-              userId: req.user?.id || 3,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-          });
-          
-          // Batch-Insert und die neuen IDs zurückerhalten
-          const insertedModelSeries = await db.insert(userModelSeries)
-            .values(newModelSeries.map((ms: any) => {
-              const { originalId, ...restMs } = ms;
-              return restMs;
-            }))
-            .returning();
+            // Prüfe, ob bereits eine Modellreihe mit diesem Namen und dieser Marke existiert
+            const key = `${ms.name}-${newBrandId}`;
+            const existingModelSeries = existingModelSeriesByKey.get(key);
             
-          // Mapping zwischen alten und neuen IDs erstellen
-          insertedModelSeries.forEach((newMs, index) => {
-            const oldId = newModelSeries[index].originalId;
-            idMappings.modelSeries.set(oldId, newMs.id);
-          });
+            if (existingModelSeries) {
+              // Wenn eine Modellreihe mit dem Namen und der Marke existiert, verwende sie
+              console.log(`Wiederverwendung vorhandene Modellreihe: ${ms.name} für Marke ${newBrandId} (ID: ${existingModelSeries.id})`);
+              
+              // Füge das Mapping zwischen alter und bestehender ID hinzu
+              idMappings.modelSeries.set(oldId, existingModelSeries.id);
+              
+              // Füge zum Array der wiederverwendeten Modellreihen hinzu
+              reusedModelSeries.push({
+                ...existingModelSeries,
+                originalId: oldId
+              });
+            } else {
+              // Ansonsten erstelle eine neue Modellreihe
+              modelSeriesToInsert.push({
+                ...msData,
+                originalId: oldId,
+                brandId: newBrandId,
+                userId: req.user?.id || 3,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            }
+          }
           
-          stats.modelSeries = insertedModelSeries.length;
-          console.log(`${insertedModelSeries.length} Modellreihen wurden importiert.`);
-          console.log(`Modellreihen-ID-Mapping erstellt:`, Object.fromEntries(idMappings.modelSeries));
+          // Nur neue Modellreihen einfügen, wenn welche vorhanden sind
+          let insertedModelSeries: any[] = [];
+          if (modelSeriesToInsert.length > 0) {
+            insertedModelSeries = await db.insert(userModelSeries)
+              .values(modelSeriesToInsert.map((ms: any) => {
+                // originalId entfernen, da es kein Feld in der Datenbank ist
+                const { originalId, ...restMs } = ms;
+                return restMs;
+              }))
+              .returning();
+            
+            // Mapping zwischen alten und neuen IDs für neu eingefügte Modellreihen erstellen
+            insertedModelSeries.forEach((newMs, index) => {
+              const oldId = modelSeriesToInsert[index].originalId;
+              idMappings.modelSeries.set(oldId, newMs.id);
+              console.log(`Modellreihen-Mapping (neu): alte ID ${oldId} -> neue ID ${newMs.id}`);
+            });
+          }
+          
+          // Statistiken aktualisieren
+          stats.modelSeries = insertedModelSeries.length + reusedModelSeries.length;
+          
+          // Protokollierung
+          console.log(`${insertedModelSeries.length} neue Modellreihen wurden erstellt.`);
+          console.log(`${reusedModelSeries.length} vorhandene Modellreihen wurden wiederverwendet.`);
+          console.log(`Gesamtes Modellreihen-ID-Mapping:`, Array.from(idMappings.modelSeries.entries()));
         }
         
         // Modelle importieren
         if (importModels && importModels.length > 0) {
-          const newModels = importModels.map((m: any) => {
+          // Initialisiere Arrays für neue und vorhandene Modelle
+          const modelsToInsert: any[] = [];
+          const reusedModels: any[] = [];
+          
+          // Gehe durch jedes zu importierende Modell
+          for (const m of importModels) {
             const oldId = m.id;
             const oldModelSeriesId = m.modelSeriesId;
             const { id, createdAt, updatedAt, ...modelData } = m;
@@ -583,25 +678,51 @@ export function registerAdminRoutes(app: Express) {
             const newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
             
             if (!newModelSeriesId) {
-              console.warn(`Keine neue ID für Modellreihe mit ID ${oldModelSeriesId} gefunden. Verwende originale ID.`);
+              console.warn(`Keine neue ID für Modellreihe mit ID ${oldModelSeriesId} gefunden. Überspringe dieses Modell.`);
+              continue; // Dieses Modell überspringen, da wir keine gültige Modellreihe haben
             }
             
-            return {
-              ...modelData,
-              modelSeriesId: newModelSeriesId || oldModelSeriesId, // Neue ID verwenden, sonst die alte
-              userId: req.user?.id || 3,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-          });
-          
-          // Batch-Insert der Modelle
-          const insertedModels = await db.insert(userModels)
-            .values(newModels)
-            .returning();
+            // Prüfe, ob bereits ein Modell mit diesem Namen und dieser Modellreihe existiert
+            const key = `${m.name}-${newModelSeriesId}`;
+            const existingModel = existingModelsByKey.get(key);
             
-          stats.models = insertedModels.length;
-          console.log(`${insertedModels.length} Modelle wurden importiert.`);
+            if (existingModel) {
+              // Wenn ein Modell mit dem Namen und der Modellreihe existiert, verwende es
+              console.log(`Wiederverwendung vorhandenes Modell: ${m.name} für Modellreihe ${newModelSeriesId} (ID: ${existingModel.id})`);
+              
+              // Es wird kein Mapping für die Modelle benötigt, da sie die unterste Ebene sind
+              
+              // Füge zum Array der wiederverwendeten Modelle hinzu
+              reusedModels.push({
+                ...existingModel,
+                originalId: oldId
+              });
+            } else {
+              // Ansonsten erstelle ein neues Modell
+              modelsToInsert.push({
+                ...modelData,
+                modelSeriesId: newModelSeriesId,
+                userId: req.user?.id || 3,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            }
+          }
+          
+          // Nur neue Modelle einfügen, wenn welche vorhanden sind
+          let insertedModels: any[] = [];
+          if (modelsToInsert.length > 0) {
+            insertedModels = await db.insert(userModels)
+              .values(modelsToInsert)
+              .returning();
+          }
+          
+          // Statistiken aktualisieren
+          stats.models = insertedModels.length + reusedModels.length;
+          
+          // Protokollierung
+          console.log(`${insertedModels.length} neue Modelle wurden erstellt.`);
+          console.log(`${reusedModels.length} vorhandene Modelle wurden wiederverwendet.`);
         }
       } catch (err) {
         console.error("Fehler beim Import der Daten:", err);
