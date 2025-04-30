@@ -1447,6 +1447,10 @@ export class DatabaseStorage implements IStorage {
   
   async deleteUserBrand(id: number, userId: number): Promise<boolean> {
     try {
+      // Zuerst alle zugehörigen Modellreihen löschen
+      await this.deleteAllUserModelSeriesForBrand(id, userId);
+      
+      // Dann die Marke löschen
       await db
         .delete(userBrands)
         .where(
@@ -1458,6 +1462,222 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error deleting brand:", error);
+      return false;
+    }
+  }
+  
+  // User model series methods
+  async getUserModelSeries(userId: number): Promise<UserModelSeries[]> {
+    return await db
+      .select()
+      .from(userModelSeries)
+      .where(eq(userModelSeries.userId, userId))
+      .orderBy(userModelSeries.name);
+  }
+  
+  async getUserModelSeriesByBrandId(brandId: number, userId: number): Promise<UserModelSeries[]> {
+    return await db
+      .select()
+      .from(userModelSeries)
+      .where(
+        and(
+          eq(userModelSeries.brandId, brandId),
+          eq(userModelSeries.userId, userId)
+        )
+      )
+      .orderBy(userModelSeries.name);
+  }
+  
+  async getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId: number, brandId: number, userId: number): Promise<UserModelSeries[]> {
+    // Diese Methode holt Modellreihen für eine bestimmte Gerätetyp-Marken-Kombination
+    // Wir müssen zuerst die Marke mit dem passenden Gerätetyp finden
+    const [brand] = await db
+      .select()
+      .from(userBrands)
+      .where(
+        and(
+          eq(userBrands.id, brandId),
+          eq(userBrands.deviceTypeId, deviceTypeId),
+          eq(userBrands.userId, userId)
+        )
+      );
+    
+    if (!brand) {
+      return [];
+    }
+    
+    // Dann die Modellreihen für diese Marke holen
+    return await db
+      .select()
+      .from(userModelSeries)
+      .where(
+        and(
+          eq(userModelSeries.brandId, brandId),
+          eq(userModelSeries.userId, userId)
+        )
+      )
+      .orderBy(userModelSeries.name);
+  }
+  
+  async createUserModelSeries(modelSeries: InsertUserModelSeries, userId: number): Promise<UserModelSeries> {
+    const [newModelSeries] = await db
+      .insert(userModelSeries)
+      .values({
+        ...modelSeries,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newModelSeries;
+  }
+  
+  async updateUserModelSeries(id: number, modelSeriesData: Partial<InsertUserModelSeries>, userId: number): Promise<UserModelSeries | undefined> {
+    const [updatedModelSeries] = await db
+      .update(userModelSeries)
+      .set({
+        ...modelSeriesData,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userModelSeries.id, id),
+          eq(userModelSeries.userId, userId)
+        )
+      )
+      .returning();
+    return updatedModelSeries;
+  }
+  
+  async deleteUserModelSeries(id: number, userId: number): Promise<boolean> {
+    try {
+      // Zuerst alle zugehörigen Modelle löschen
+      await this.deleteAllUserModelsForModelSeries(id, userId);
+      
+      // Dann die Modellreihe löschen
+      await db
+        .delete(userModelSeries)
+        .where(
+          and(
+            eq(userModelSeries.id, id),
+            eq(userModelSeries.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting user model series:", error);
+      return false;
+    }
+  }
+  
+  async deleteAllUserModelSeriesForBrand(brandId: number, userId: number): Promise<boolean> {
+    try {
+      // Hole alle Modellreihen für diese Marke
+      const modelSeriesList = await this.getUserModelSeriesByBrandId(brandId, userId);
+      
+      // Lösche alle zugehörigen Modelle für jede Modellreihe
+      for (const modelSeries of modelSeriesList) {
+        await this.deleteAllUserModelsForModelSeries(modelSeries.id, userId);
+      }
+      
+      // Lösche alle Modellreihen für diese Marke
+      await db
+        .delete(userModelSeries)
+        .where(
+          and(
+            eq(userModelSeries.brandId, brandId),
+            eq(userModelSeries.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting all user model series for brand:", error);
+      return false;
+    }
+  }
+  
+  // User models methods
+  async getUserModels(userId: number): Promise<UserModel[]> {
+    return await db
+      .select()
+      .from(userModels)
+      .where(eq(userModels.userId, userId))
+      .orderBy(userModels.name);
+  }
+  
+  async getUserModelsByModelSeriesId(modelSeriesId: number, userId: number): Promise<UserModel[]> {
+    return await db
+      .select()
+      .from(userModels)
+      .where(
+        and(
+          eq(userModels.modelSeriesId, modelSeriesId),
+          eq(userModels.userId, userId)
+        )
+      )
+      .orderBy(userModels.name);
+  }
+  
+  async createUserModel(model: InsertUserModel, userId: number): Promise<UserModel> {
+    const [newModel] = await db
+      .insert(userModels)
+      .values({
+        ...model,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newModel;
+  }
+  
+  async updateUserModel(id: number, modelData: Partial<InsertUserModel>, userId: number): Promise<UserModel | undefined> {
+    const [updatedModel] = await db
+      .update(userModels)
+      .set({
+        ...modelData,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userModels.id, id),
+          eq(userModels.userId, userId)
+        )
+      )
+      .returning();
+    return updatedModel;
+  }
+  
+  async deleteUserModel(id: number, userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(userModels)
+        .where(
+          and(
+            eq(userModels.id, id),
+            eq(userModels.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting user model:", error);
+      return false;
+    }
+  }
+  
+  async deleteAllUserModelsForModelSeries(modelSeriesId: number, userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(userModels)
+        .where(
+          and(
+            eq(userModels.modelSeriesId, modelSeriesId),
+            eq(userModels.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting all user models for model series:", error);
       return false;
     }
   }

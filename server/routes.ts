@@ -9,6 +9,8 @@ import {
   insertSmsTemplateSchema,
   insertUserDeviceTypeSchema,
   insertUserBrandSchema,
+  insertUserModelSeriesSchema,
+  insertUserModelSchema,
   insertCostEstimateSchema,
   costEstimateItemSchema,
   repairStatuses,
@@ -1007,6 +1009,262 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting brand:", error);
       res.status(500).json({ message: "Fehler beim Löschen der Marke" });
+    }
+  });
+  
+  // MODEL SERIES API
+  // Alle benutzerspezifischen Modellreihen abrufen (optional nach Marke gefiltert)
+  app.get("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
+      
+      let modelSeries;
+      if (brandId) {
+        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, userId);
+      } else {
+        modelSeries = await storage.getUserModelSeries(userId);
+      }
+      
+      res.json(modelSeries);
+    } catch (error) {
+      console.error("Error retrieving model series:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihen" });
+    }
+  });
+  
+  // Modellreihen für eine spezifische Gerätetyp-Marken-Kombination abrufen
+  app.get("/api/device-types/:deviceTypeId/brands/:brandId/model-series", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const deviceTypeId = parseInt(req.params.deviceTypeId);
+      const brandId = parseInt(req.params.brandId);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, userId);
+      
+      res.json(modelSeries);
+    } catch (error) {
+      console.error("Error retrieving model series for device type and brand:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihen für Gerätetyp und Marke" });
+    }
+  });
+  
+  // Benutzerspezifische Modellreihe nach ID abrufen
+  app.get("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Diese Methode existiert nicht direkt, daher holen wir alle Modellreihen und filtern nach ID
+      const allModelSeries = await storage.getUserModelSeries(userId);
+      const modelSeries = allModelSeries.find(ms => ms.id === id);
+      
+      if (!modelSeries) {
+        return res.status(404).json({ message: "Modellreihe nicht gefunden" });
+      }
+      
+      res.json(modelSeries);
+    } catch (error) {
+      console.error("Error retrieving model series:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihe" });
+    }
+  });
+  
+  // Benutzerspezifische Modellreihe erstellen
+  app.post("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelSeriesData = insertUserModelSeriesSchema.parse(req.body);
+      
+      const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
+      
+      res.status(201).json(modelSeries);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Modellreihe-Daten", errors: error.errors });
+      }
+      console.error("Error creating model series:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Modellreihe" });
+    }
+  });
+  
+  // Benutzerspezifische Modellreihe aktualisieren
+  app.patch("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelSeriesData = insertUserModelSeriesSchema.partial().parse(req.body);
+      
+      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, userId);
+      
+      if (!updatedModelSeries) {
+        return res.status(404).json({ message: "Modellreihe nicht gefunden" });
+      }
+      
+      res.json(updatedModelSeries);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Modellreihe-Daten", errors: error.errors });
+      }
+      console.error("Error updating model series:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Modellreihe" });
+    }
+  });
+  
+  // Benutzerspezifische Modellreihe löschen
+  app.delete("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteUserModelSeries(id, userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Modellreihe konnte nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting model series:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Modellreihe" });
+    }
+  });
+  
+  // Alle Modellreihen für eine bestimmte Marke löschen
+  app.delete("/api/brands/:brandId/model-series", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const brandId = parseInt(req.params.brandId);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Modellreihen konnten nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting all model series for brand:", error);
+      res.status(500).json({ message: "Fehler beim Löschen aller Modellreihen für die Marke" });
+    }
+  });
+  
+  // MODELS API
+  // Alle benutzerspezifischen Modelle abrufen (optional nach Modellreihe gefiltert)
+  app.get("/api/models", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelSeriesId = req.query.modelSeriesId ? parseInt(req.query.modelSeriesId as string) : undefined;
+      
+      let models;
+      if (modelSeriesId) {
+        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, userId);
+      } else {
+        models = await storage.getUserModels(userId);
+      }
+      
+      res.json(models);
+    } catch (error) {
+      console.error("Error retrieving models:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modelle" });
+    }
+  });
+  
+  // Benutzerspezifisches Modell erstellen
+  app.post("/api/models", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelData = insertUserModelSchema.parse(req.body);
+      
+      const model = await storage.createUserModel(modelData, userId);
+      
+      res.status(201).json(model);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Modell-Daten", errors: error.errors });
+      }
+      console.error("Error creating model:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Modells" });
+    }
+  });
+  
+  // Benutzerspezifisches Modell aktualisieren
+  app.patch("/api/models/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const modelData = insertUserModelSchema.partial().parse(req.body);
+      
+      const updatedModel = await storage.updateUserModel(id, modelData, userId);
+      
+      if (!updatedModel) {
+        return res.status(404).json({ message: "Modell nicht gefunden" });
+      }
+      
+      res.json(updatedModel);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Modell-Daten", errors: error.errors });
+      }
+      console.error("Error updating model:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Modells" });
+    }
+  });
+  
+  // Benutzerspezifisches Modell löschen
+  app.delete("/api/models/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteUserModel(id, userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Modell konnte nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting model:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Modells" });
+    }
+  });
+  
+  // Alle Modelle für eine bestimmte Modellreihe löschen
+  app.delete("/api/model-series/:modelSeriesId/models", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const modelSeriesId = parseInt(req.params.modelSeriesId);
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, userId);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Modelle konnten nicht gelöscht werden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting all models for model series:", error);
+      res.status(500).json({ message: "Fehler beim Löschen aller Modelle für die Modellreihe" });
     }
   });
   
