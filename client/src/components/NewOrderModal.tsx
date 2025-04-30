@@ -659,13 +659,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   };
   
   // Tastatur-Navigation für Dropdown-Listen
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: string) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: string, index: number = 0) => {
     if (type === 'issue') {
       // Für die Fehlerbeschreibung
       if (availableIssues.length > 0) {
+        // Hole den aktuellen Wert des aktiven Feldes
+        const currentValue = issueFields[index];
+        
         // Filter basierend auf aktueller Eingabe
         const filtered = availableIssues.filter(issue => 
-          issue.toLowerCase().includes(form.getValues('issue').toLowerCase())
+          !currentValue || issue.toLowerCase().includes(currentValue.toLowerCase())
         );
         
         if (e.key === 'ArrowDown') {
@@ -679,15 +682,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         } else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
-            // Ausgewählte Fehlerbeschreibung hinzufügen (nicht ersetzen)
-            addIssueToField(filtered[selectedIssueIndex]);
+            // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
+            addIssueToField(filtered[selectedIssueIndex], index);
             setSelectedIssueIndex(-1);
           }
         } else if (e.key === 'Tab' && selectedIssueIndex >= 0) {
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
-            // Ausgewählte Fehlerbeschreibung hinzufügen (nicht ersetzen)
-            addIssueToField(filtered[selectedIssueIndex]);
+            // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
+            addIssueToField(filtered[selectedIssueIndex], index);
             
             // Fokus auf das nächste Feld setzen
             setTimeout(() => {
@@ -1312,7 +1315,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                       // Dropdown mit Verzögerung ausblenden
                                       setTimeout(() => setShowIssueDropdown(false), 200);
                                     }}
-                                    onKeyDown={(e) => handleKeyDown(e, 'issue')}
+                                    onKeyDown={(e) => handleKeyDown(e, 'issue', index)}
                                   />
                                   
                                   {/* X-Button zum Löschen des Feldes */}
