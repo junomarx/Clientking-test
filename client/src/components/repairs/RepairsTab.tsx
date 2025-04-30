@@ -456,38 +456,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
                         <button 
-                          className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Status ändern"
+                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
+                          title="Druckoptionen anzeigen"
                           onClick={(e) => {
                             e.stopPropagation();
-                            openStatusDialog(repair.id, repair.status);
+                            showPrintOptions(repair.id);
                           }}
                         >
-                          <AlertCircle className="h-4 w-4" />
+                          <Printer className="h-4 w-4" />
                         </button>
-                        <button 
-                          className="text-orange-600 hover:text-orange-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Auftrag bearbeiten"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRepairId(repair.id);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <div className="flex gap-1">
-                          <button 
-                            className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
-                            title="Druckoptionen anzeigen"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              showPrintOptions(repair.id);
-                            }}
-                          >
-                            <Printer className="h-4 w-4" />
-                          </button>
-                        </div>
                         {repair.status === 'abgeholt' && (
                           <button 
                             className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
@@ -632,26 +609,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                     <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
                   </div>
                 </div>
-                <div className="flex justify-between p-3 bg-gray-50 border-t border-gray-100">
-                  <button 
-                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openStatusDialog(repair.id, repair.status);
-                    }}
-                  >
-                    <AlertCircle className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="text-orange-600 hover:text-orange-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRepairId(repair.id);
-                      setShowEditDialog(true);
-                    }}
-                  >
-                    <Pencil className="h-5 w-5" />
-                  </button>
+                <div className="flex justify-center gap-8 p-3 bg-gray-50 border-t border-gray-100">
                   <button 
                     className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors" 
                     onClick={(e) => {

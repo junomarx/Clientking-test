@@ -31,16 +31,19 @@ import {
   Euro,
   FileText,
   User,
-  Clipboard
+  Clipboard,
+  Pencil
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
   open: boolean;
   onClose: () => void;
   repairId: number | null;
+  onStatusChange?: (id: number, currentStatus: string) => void;
+  onEdit?: (id: number) => void;
 }
 
-export function RepairDetailsDialog({ open, onClose, repairId }: RepairDetailsDialogProps) {
+export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, onEdit }: RepairDetailsDialogProps) {
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   
@@ -261,7 +264,37 @@ export function RepairDetailsDialog({ open, onClose, repairId }: RepairDetailsDi
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-wrap gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              // Status ändern Dialog öffnen
+              if (onStatusChange && repair) {
+                onStatusChange(repair.id, repair.status);
+                handleClose();
+              }
+            }}
+            className="flex items-center gap-1"
+          >
+            <AlertCircle className="h-4 w-4" />
+            Status ändern
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              // Bearbeiten Dialog öffnen
+              if (onEdit && repair) {
+                onEdit(repair.id);
+                handleClose();
+              }
+            }}
+            className="flex items-center gap-1"
+          >
+            <Pencil className="h-4 w-4" />
+            Bearbeiten
+          </Button>
+          
           <Button 
             variant="outline" 
             onClick={handleClose}
