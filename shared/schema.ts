@@ -258,6 +258,69 @@ export const insertUserBrandSchema = createInsertSchema(userBrands).omit({
 export type UserBrand = typeof userBrands.$inferSelect;
 export type InsertUserBrand = z.infer<typeof insertUserBrandSchema>;
 
+// Benutzerspezifische Modellreihen
+export const userModelSeries = pgTable("user_model_series", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  brandId: integer("brand_id").notNull().references(() => userBrands.id), // Jede Modellreihe gehört zu einer Marke
+  userId: integer("user_id").notNull().references(() => users.id), // Jede Modellreihe gehört zu einem Benutzer
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Beziehungen definieren - userModelSeries zu userBrands und users
+export const userModelSeriesRelations = relations(userModelSeries, ({ one, many }) => ({
+  brand: one(userBrands, {
+    fields: [userModelSeries.brandId],
+    references: [userBrands.id],
+  }),
+  user: one(users, {
+    fields: [userModelSeries.userId],
+    references: [users.id],
+  }),
+  models: many(userModels)
+}));
+
+export const insertUserModelSeriesSchema = createInsertSchema(userModelSeries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type UserModelSeries = typeof userModelSeries.$inferSelect;
+export type InsertUserModelSeries = z.infer<typeof insertUserModelSeriesSchema>;
+
+// Benutzerspezifische Modelle
+export const userModels = pgTable("user_models", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  modelSeriesId: integer("model_series_id").notNull().references(() => userModelSeries.id), // Jedes Modell gehört zu einer Modellreihe
+  userId: integer("user_id").notNull().references(() => users.id), // Jedes Modell gehört zu einem Benutzer
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Beziehungen definieren - userModels zu userModelSeries und users
+export const userModelsRelations = relations(userModels, ({ one }) => ({
+  modelSeries: one(userModelSeries, {
+    fields: [userModels.modelSeriesId],
+    references: [userModelSeries.id],
+  }),
+  user: one(users, {
+    fields: [userModels.userId],
+    references: [users.id],
+  })
+}));
+
+export const insertUserModelSchema = createInsertSchema(userModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type UserModel = typeof userModels.$inferSelect;
+export type InsertUserModel = z.infer<typeof insertUserModelSchema>;
+
 // Kostenvoranschläge (Angebote)
 export const costEstimates = pgTable("cost_estimates", {
   id: serial("id").primaryKey(),

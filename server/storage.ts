@@ -8,6 +8,8 @@ import {
   smsTemplates, type SmsTemplate, type InsertSmsTemplate,
   userDeviceTypes, type UserDeviceType, type InsertUserDeviceType,
   userBrands, type UserBrand, type InsertUserBrand,
+  userModelSeries, type UserModelSeries, type InsertUserModelSeries,
+  userModels, type UserModel, type InsertUserModel,
   costEstimates, type CostEstimate, type InsertCostEstimate, type CostEstimateItem
 } from "@shared/schema";
 import crypto from "crypto";
@@ -120,6 +122,23 @@ export interface IStorage {
   createUserBrand(brand: InsertUserBrand, userId: number): Promise<UserBrand>;
   updateUserBrand(id: number, brand: Partial<InsertUserBrand>, userId: number): Promise<UserBrand | undefined>;
   deleteUserBrand(id: number, userId: number): Promise<boolean>;
+
+  // User model series methods
+  getUserModelSeries(userId: number): Promise<UserModelSeries[]>;
+  getUserModelSeriesByBrandId(brandId: number, userId: number): Promise<UserModelSeries[]>;
+  getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId: number, brandId: number, userId: number): Promise<UserModelSeries[]>;
+  createUserModelSeries(modelSeries: InsertUserModelSeries, userId: number): Promise<UserModelSeries>;
+  updateUserModelSeries(id: number, modelSeries: Partial<InsertUserModelSeries>, userId: number): Promise<UserModelSeries | undefined>;
+  deleteUserModelSeries(id: number, userId: number): Promise<boolean>;
+  deleteAllUserModelSeriesForBrand(brandId: number, userId: number): Promise<boolean>;
+  
+  // User models methods
+  getUserModels(userId: number): Promise<UserModel[]>;
+  getUserModelsByModelSeriesId(modelSeriesId: number, userId: number): Promise<UserModel[]>;
+  createUserModel(model: InsertUserModel, userId: number): Promise<UserModel>;
+  updateUserModel(id: number, model: Partial<InsertUserModel>, userId: number): Promise<UserModel | undefined>;
+  deleteUserModel(id: number, userId: number): Promise<boolean>;
+  deleteAllUserModelsForModelSeries(modelSeriesId: number, userId: number): Promise<boolean>;
   
   // Kostenvoranschläge (CostEstimates) methods
   getAllCostEstimates(currentUserId?: number): Promise<CostEstimate[]>;
