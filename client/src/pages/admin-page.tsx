@@ -1473,18 +1473,7 @@ export default function AdminPage() {
           <UserTable />
         </TabsContent>
         <TabsContent value="devices">
-          <Card>
-            <CardHeader>
-              <CardTitle>Globale Geräteverwaltung</CardTitle>
-              <CardDescription>
-                Hier können Sie die zentrale Geräteverwaltung für alle Benutzer administrieren.
-                Alle hier definierten Gerätetypen, Marken und Modellreihen sind für alle Benutzer verfügbar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DeviceManagementTab />
-            </CardContent>
-          </Card>
+          <DeviceManagementTab />
         </TabsContent>
         <TabsContent value="system">
           <SystemDiagnosticTab />

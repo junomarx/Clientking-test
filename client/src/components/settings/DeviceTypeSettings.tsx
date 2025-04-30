@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash, Loader2, Smartphone, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { updateAppleModels } from '@/lib/updateAppleModels';
 
 import {
   AlertDialog,
@@ -18,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-
 import {
   Dialog,
   DialogContent,
@@ -27,7 +25,6 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
-
 import {
   Form,
   FormControl,
@@ -36,7 +33,8 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -46,11 +44,6 @@ import {
   TableRow
 } from '@/components/ui/table';
 
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-// Schnittstellen für Gerätetyp-Daten
 interface DeviceType {
   id: number;
   name: string;
@@ -90,8 +83,8 @@ export function DeviceTypeSettings() {
     }
   });
 
-  // Abfrage zum Abrufen aller Gerätetypen
-  const { data: deviceTypes, isLoading, error } = useQuery<DeviceType[]>({
+  // Gerätetypen abrufen
+  const { data: deviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
     queryKey: ['/api/device-types'],
     queryFn: async () => {
       const res = await apiRequest('GET', '/api/device-types');
@@ -111,13 +104,13 @@ export function DeviceTypeSettings() {
       queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
       toast({
         title: 'Gerätetyp hinzugefügt',
-        description: 'Der neue Gerätetyp wurde erfolgreich gespeichert.'
+        description: 'Der Gerätetyp wurde erfolgreich hinzugefügt.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Hinzufügen des Gerätetyps: ${error.message}`,
+        description: `Konnte Gerätetyp nicht hinzufügen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -135,13 +128,13 @@ export function DeviceTypeSettings() {
       queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
       toast({
         title: 'Gerätetyp aktualisiert',
-        description: 'Der Gerätetyp wurde erfolgreich aktualisiert.'
+        description: 'Der Gerätetyp wurde erfolgreich aktualisiert.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Aktualisieren des Gerätetyps: ${error.message}`,
+        description: `Konnte Gerätetyp nicht aktualisieren: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -154,17 +147,16 @@ export function DeviceTypeSettings() {
     },
     onSuccess: () => {
       setIsDeleteDialogOpen(false);
-      setSelectedDeviceType(null);
       queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
       toast({
         title: 'Gerätetyp gelöscht',
-        description: 'Der Gerätetyp wurde erfolgreich gelöscht.'
+        description: 'Der Gerätetyp wurde erfolgreich gelöscht.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Löschen des Gerätetyps: ${error.message}`,
+        description: `Konnte Gerätetyp nicht löschen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -175,8 +167,9 @@ export function DeviceTypeSettings() {
   };
 
   const handleEditSubmit = (data: DeviceTypeFormValues) => {
-    if (!selectedDeviceType) return;
-    updateDeviceTypeMutation.mutate({ id: selectedDeviceType.id, data });
+    if (selectedDeviceType) {
+      updateDeviceTypeMutation.mutate({ id: selectedDeviceType.id, data });
+    }
   };
 
   const handleEdit = (deviceType: DeviceType) => {
@@ -193,134 +186,80 @@ export function DeviceTypeSettings() {
   };
 
   const confirmDelete = () => {
-    if (!selectedDeviceType) return;
-    deleteDeviceTypeMutation.mutate(selectedDeviceType.id);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-10">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-destructive/10 text-destructive p-3 rounded-md mb-4">
-        <p>Fehler beim Laden der Gerätetypen: {(error as Error).message}</p>
-      </div>
-    );
-  }
-
-  // Funktion zum Aktualisieren der iPhone-Modelle
-  const handleUpdateAppleModels = () => {
-    try {
-      const result = updateAppleModels();
-      toast({
-        title: 'iPhone-Modelle aktualisiert',
-        description: `${result.oldCount} alte Modelle wurden durch ${result.newCount} aktuelle iPhone-Modelle ersetzt.`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Fehler',
-        description: `Fehler beim Aktualisieren der iPhone-Modelle: ${error instanceof Error ? error.message : String(error)}`,
-        variant: 'destructive'
-      });
+    if (selectedDeviceType) {
+      deleteDeviceTypeMutation.mutate(selectedDeviceType.id);
     }
   };
   
   return (
     <>
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Modelle verwalten</CardTitle>
-            <CardDescription>Aktualisieren Sie Gerätemarken und -modelle</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            className="ml-auto flex items-center gap-1"
-            onClick={handleUpdateAppleModels}
-          >
-            <Smartphone className="mr-1 h-4 w-4" />
-            <RefreshCw className="h-3 w-3" />
-            iPhone-Modelle aktualisieren
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Durch Klicken auf den Button werden alle Apple iPhone-Modelle aktualisiert. 
-            Dabei werden alle bestehenden iPhone-Modelle durch die aktualisierte Liste ersetzt.
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h3 className="text-lg font-semibold">Gerätetypen verwalten</h3>
+          <p className="text-sm text-muted-foreground">
+            Fügen Sie Gerätetypen hinzu, die von allen Benutzern verwendet werden können.
           </p>
-          <div className="text-xs text-muted-foreground bg-secondary/30 p-3 rounded">
-            Die Liste enthält alle iPhone-Modelle von iPhone 5 bis iPhone 16, inklusive aller Varianten (mini, Plus, Pro, Pro Max).
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <Button 
+          onClick={() => {
+            addForm.reset();
+            setIsAddDialogOpen(true);
+          }}
+          size="sm"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Hinzufügen
+        </Button>
+      </div>
       
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Gerätetypen verwalten</CardTitle>
-            <CardDescription>Hier können Sie Ihre Gerätetypen für Reparaturaufträge verwalten.</CardDescription>
-          </div>
-          <Button
-            className="ml-auto"
-            onClick={() => {
-              addForm.reset();
-              setIsAddDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Gerätetyp hinzufügen
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Erstellt am</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Erstellt am</TableHead>
+            <TableHead className="text-right">Aktionen</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoadingDeviceTypes ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+              </TableCell>
+            </TableRow>
+          ) : deviceTypes?.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                Keine Gerätetypen gefunden
+              </TableCell>
+            </TableRow>
+          ) : (
+            deviceTypes?.map((deviceType) => (
+              <TableRow key={deviceType.id}>
+                <TableCell className="font-medium">{deviceType.name}</TableCell>
+                <TableCell>{new Date(deviceType.createdAt).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(deviceType)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="sr-only">Bearbeiten</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(deviceType)}
+                  >
+                    <Trash className="h-4 w-4" />
+                    <span className="sr-only">Löschen</span>
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deviceTypes?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
-                    Keine Gerätetypen gefunden
-                  </TableCell>
-                </TableRow>
-              )}
-              {deviceTypes?.map((deviceType) => (
-                <TableRow key={deviceType.id}>
-                  <TableCell className="font-medium">{deviceType.name}</TableCell>
-                  <TableCell>{new Date(deviceType.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(deviceType)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Bearbeiten</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(deviceType)}
-                    >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Löschen</span>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {/* Dialog zum Hinzufügen eines neuen Gerätetyps */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
