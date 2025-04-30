@@ -1093,11 +1093,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modellreihen erstellen" });
-      }
-      
       // WORKAROUND: Wir erstellen immer Modellreihen für Bugi (ID 3)
       const bugisUserId = 3;
       console.log(`[Modellreihe] Erstelle neue Modellreihe für globale Verwendung (Bugi ${bugisUserId})`);
@@ -1265,11 +1260,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modelle erstellen" });
-      }
       
       // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
       const bugisUserId = 3;
