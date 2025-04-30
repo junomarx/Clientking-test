@@ -1358,8 +1358,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Zuerst alle vorhandenen Modelle für diese Marke und diesen Gerätetyp löschen
-      await storage.deleteAllUserModelsForBrand(brandId, deviceTypeId, bugisUserId);
+      // Finde oder erstelle eine Standard-Modellreihe für diese Marke
+      // Da das Datenbankschema nicht geändert werden soll, verwenden wir eine Dummy-Modellreihe
+      let defaultModelSeries = await storage.getUserModelSeriesByNameAndBrand("_default", parseInt(brandId), bugisUserId);
+      
+      if (!defaultModelSeries) {
+        // Erstelle eine Standard-Modellreihe für diese Marke
+        defaultModelSeries = await storage.createUserModelSeries({
+          name: "_default",
+          brandId: parseInt(brandId),
+          userId: bugisUserId
+        }, bugisUserId);
+      }
+      
+      // Zuerst alle vorhandenen Modelle für diese Modellreihe löschen
+      await storage.deleteAllUserModelsForModelSeries(defaultModelSeries.id, bugisUserId);
       
       // Dann die neuen Modelle erstellen
       const createdModels = [];
@@ -1369,9 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const modelData = {
           name: modelName.trim(),
-          brandId: parseInt(brandId),
-          deviceTypeId: parseInt(deviceTypeId),
-          modelSeriesId: null, // Da wir keine Modellreihen mehr verwenden
+          modelSeriesId: defaultModelSeries.id,
           userId: bugisUserId
         };
         

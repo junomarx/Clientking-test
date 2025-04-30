@@ -1489,6 +1489,20 @@ export class DatabaseStorage implements IStorage {
       .orderBy(userModelSeries.name);
   }
   
+  async getUserModelSeriesByNameAndBrand(name: string, brandId: number, userId: number): Promise<UserModelSeries | undefined> {
+    const [modelSeries] = await db
+      .select()
+      .from(userModelSeries)
+      .where(
+        and(
+          eq(userModelSeries.name, name),
+          eq(userModelSeries.brandId, brandId),
+          eq(userModelSeries.userId, userId)
+        )
+      );
+    return modelSeries;
+  }
+  
   async getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId: number, brandId: number, userId: number): Promise<UserModelSeries[]> {
     // Diese Methode holt Modellreihen für eine bestimmte Gerätetyp-Marken-Kombination
     // Wir müssen zuerst die Marke mit dem passenden Gerätetyp finden
@@ -1706,15 +1720,15 @@ export class DatabaseStorage implements IStorage {
   
   async deleteAllUserModelsForBrand(brandId: number, deviceTypeId: number, userId: number): Promise<boolean> {
     try {
-      await db
-        .delete(userModels)
-        .where(
-          and(
-            eq(userModels.brandId, brandId),
-            eq(userModels.deviceTypeId, deviceTypeId),
-            eq(userModels.userId, userId)
-          )
-        );
+      // Da userModels kein direktes brandId-Feld hat, müssen wir einen Umweg gehen
+      // Wir holen zuerst alle Modellreihen für diese Marke
+      const modelSeriesList = await this.getUserModelSeriesByBrandId(brandId, userId);
+      
+      // Lösche alle Modelle für diese Modellreihen
+      for (const modelSeries of modelSeriesList) {
+        await this.deleteAllUserModelsForModelSeries(modelSeries.id, userId);
+      }
+      
       return true;
     } catch (error) {
       console.error("Error deleting all user models for brand and device type:", error);
