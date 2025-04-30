@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { RefreshCw, Loader2, Edit, Plus } from 'lucide-react';
+import { RefreshCw, Loader2, Edit, Plus, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -88,10 +89,14 @@ type NewBrandFormValues = z.infer<typeof newBrandSchema>;
 export function ModelManagementTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isAddBrandDialogOpen, setIsAddBrandDialogOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [models, setModels] = useState<Model[]>([]);
+  
+  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
+  const isAdmin = user?.id === 3;
 
   // Formular für die Modellverwaltung
   const form = useForm<ModelFormValues>({
@@ -315,7 +320,11 @@ export function ModelManagementTab() {
         <CardHeader>
           <CardTitle>Modelle verwalten</CardTitle>
           <CardDescription>
-            Wählen Sie Gerätetyp und Marke aus, um Modelle zu verwalten. Geben Sie dann alle Modelle ein, eines pro Zeile.
+            {isAdmin 
+              ? "Als Administrator können Sie Modelle hinzufügen und bearbeiten, die von allen Benutzern verwendet werden können."
+              : "Die Modelle werden zentral verwaltet. Als normaler Benutzer können Sie Modelle nur ansehen, aber nicht bearbeiten."
+            }
+            Wählen Sie Gerätetyp und Marke aus, um die verfügbaren Modelle zu sehen.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -380,15 +389,26 @@ export function ModelManagementTab() {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => setIsAddBrandDialogOpen(true)}
-                            disabled={!selectedDeviceType}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                          {isAdmin ? (
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => setIsAddBrandDialogOpen(true)}
+                              disabled={!selectedDeviceType}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon"
+                              disabled={true}
+                            >
+                              <Lock className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -417,7 +437,8 @@ export function ModelManagementTab() {
                         {...field} 
                         placeholder="z.B.\niPhone 13\niPhone 13 Pro\niPhone 13 Pro Max"
                         rows={10}
-                        disabled={!selectedDeviceType || !selectedBrand}
+                        disabled={!selectedDeviceType || !selectedBrand || !isAdmin}
+                        readOnly={!isAdmin}
                       />
                     </FormControl>
                     <FormMessage />
@@ -425,24 +446,36 @@ export function ModelManagementTab() {
                 )}
               />
 
-              <Button 
-                type="button"
-                onClick={form.handleSubmit(handleUpdateModels)}
-                disabled={updateModelsMutation.isPending || !selectedDeviceType || !selectedBrand}
-                className="w-full md:w-auto"
-              >
-                {updateModelsMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Modelle werden aktualisiert...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Modelle aktualisieren
-                  </>
-                )}
-              </Button>
+              {isAdmin ? (
+                <Button 
+                  type="button"
+                  onClick={form.handleSubmit(handleUpdateModels)}
+                  disabled={updateModelsMutation.isPending || !selectedDeviceType || !selectedBrand}
+                  className="w-full md:w-auto"
+                >
+                  {updateModelsMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Modelle werden aktualisiert...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Modelle aktualisieren
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button 
+                  type="button"
+                  disabled={true}
+                  variant="outline"
+                  className="w-full md:w-auto"
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Nur für Administratoren
+                </Button>
+              )}
             </form>
           </Form>
         </CardContent>
