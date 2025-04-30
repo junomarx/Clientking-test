@@ -114,6 +114,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(customerId || null);
   const [filterText, setFilterText] = useState<string>('');  
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);  
+  const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   const [isModelChanged, setIsModelChanged] = useState(false);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
@@ -698,16 +699,55 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 checkCustomerAfterLastNameInput(form.getValues('firstName'), e.target.value);
                               }
                             }}
+                            onKeyDown={(e) => {
+                              // Tastaturnavigation im Dropdown
+                              if (matchingCustomers.length > 0) {
+                                if (e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  setSelectedCustomerIndex(prev => Math.min(prev + 1, matchingCustomers.length - 1));
+                                } else if (e.key === 'ArrowUp') {
+                                  e.preventDefault();
+                                  setSelectedCustomerIndex(prev => Math.max(prev - 1, 0));
+                                } else if (e.key === 'Enter' && selectedCustomerIndex >= 0) {
+                                  e.preventDefault();
+                                  const selectedCustomer = matchingCustomers[selectedCustomerIndex];
+                                  if (selectedCustomer) {
+                                    fillCustomerData(selectedCustomer);
+                                    // Dropdown schließen
+                                    setMatchingCustomers([]);
+                                  }
+                                } else if (e.key === 'Tab' && selectedCustomerIndex >= 0) {
+                                  e.preventDefault();
+                                  const selectedCustomer = matchingCustomers[selectedCustomerIndex];
+                                  if (selectedCustomer) {
+                                    fillCustomerData(selectedCustomer);
+                                    // Dropdown schließen
+                                    setMatchingCustomers([]);
+                                    
+                                    // Fokus auf das Gerätetyp-Feld setzen
+                                    setTimeout(() => {
+                                      const deviceTypeInput = document.querySelector('input[name="deviceType"]');
+                                      if (deviceTypeInput) {
+                                        (deviceTypeInput as HTMLInputElement).focus();
+                                      }
+                                    }, 100);
+                                  }
+                                } else if (e.key === 'Escape') {
+                                  // Dropdown schließen bei Escape
+                                  setMatchingCustomers([]);
+                                }
+                              }
+                            }}
                           />
                         </FormControl>
                         {/* Dropdown für gefundene Kunden direkt unter dem Eingabefeld */}
                         {matchingCustomers.length > 0 && (
                           <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
                             <div className="py-1 max-h-60 overflow-auto">
-                              {matchingCustomers.map((customer) => (
+                              {matchingCustomers.map((customer, index) => (
                                 <div 
                                   key={customer.id} 
-                                  className="px-3 py-2 cursor-pointer hover:bg-muted"
+                                  className={`px-3 py-2 cursor-pointer ${selectedCustomerIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
                                   onClick={() => fillCustomerData(customer)}
                                 >
                                   <div className="font-medium">{customer.firstName} {customer.lastName}</div>
