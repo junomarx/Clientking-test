@@ -21,12 +21,11 @@ import {
   MessageSquare,
   UserCog,
   LogOut,
-  Lock,
-  Smartphone
+  Lock
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
-import { ModelManagementTab } from "@/components/settings/ModelManagementTab";
+// ModelManagementTab nicht mehr verwendet
 import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 
@@ -79,12 +78,9 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
           </DialogHeader>
 
           <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-            <TabsList className="grid grid-cols-5 mb-4">
+            <TabsList className="grid grid-cols-4 mb-4">
               <TabsTrigger value="business" className="flex items-center justify-center text-xs sm:text-sm">
                 <Building2 className="h-4 w-4 mr-1 sm:mr-2" /> <span>Firma</span>
-              </TabsTrigger>
-              <TabsTrigger value="models" className="flex items-center justify-center text-xs sm:text-sm">
-                <Smartphone className="h-4 w-4 mr-1 sm:mr-2" /> <span>Modelle</span>
               </TabsTrigger>
               <TabsTrigger value="communication" className="flex items-center justify-center text-xs sm:text-sm">
                 <Mail className="h-4 w-4 mr-1 sm:mr-2" /> <span>Komm.</span>
@@ -112,20 +108,7 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
               </div>
             </TabsContent>
 
-            {/* Tab: Modellverwaltung - nur für Bugi (Admin) sichtbar */}
-            <TabsContent value="models" className="max-h-[65vh] overflow-y-auto">
-              {user?.id === 3 ? (
-                <ModelManagementTab />
-              ) : (
-                <div className="p-4 border rounded-lg">
-                  <h3 className="text-lg font-medium mb-2">Geräteverwaltung</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Die Verwaltung von Gerätetypen, Marken und Modellen ist nur für Administratoren verfügbar.
-                    Alle Benutzer können die globalen Gerätedaten in der Anwendung verwenden.
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+            {/* Tab: Modellverwaltung wurde entfernt */}
             
             {/* Tab: Kommunikation */}
             <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
