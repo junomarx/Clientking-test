@@ -32,7 +32,8 @@ import {
   List,
   Trash,
   Shield,
-  UserIcon
+  UserIcon,
+  Smartphone
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
