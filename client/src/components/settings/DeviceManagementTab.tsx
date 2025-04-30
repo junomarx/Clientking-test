@@ -81,9 +81,9 @@ export function DeviceManagementTab() {
                 <Tag className="h-4 w-4" />
                 Marken
               </TabsTrigger>
-              <TabsTrigger value="modelSeries" className="flex items-center gap-2">
+              <TabsTrigger value="models" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
-                Modellreihen
+                Modelle
               </TabsTrigger>
             </TabsList>
             
@@ -95,7 +95,7 @@ export function DeviceManagementTab() {
               <BrandSettings />
             </TabsContent>
             
-            <TabsContent value="modelSeries">
+            <TabsContent value="models">
               <ModelManagementTab />
             </TabsContent>
           </Tabs>
