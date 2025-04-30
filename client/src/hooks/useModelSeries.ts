@@ -15,6 +15,7 @@ export interface ModelSeries {
 export interface CreateModelSeriesDTO {
   name: string;
   brandId: number;
+  userId?: number; // Optional, wird vom Server aus dem Auth-Token gesetzt
 }
 
 // Hook für Modellreihen-Operationen
