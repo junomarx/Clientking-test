@@ -303,34 +303,47 @@ export function registerAdminRoutes(app: Express) {
       };
       
       try {
-        // Zuerst alle bestehenden Daten löschen, da wir überschreiben wollen
+        // Zuerst alle bestehenden Daten löschen, aber in der richtigen Reihenfolge (von oben nach unten in der Hierarchie)
+        // 1. Erst Modelle löschen, weil sie von Modellreihen abhängen
         if (importModels && importModels.length > 0) {
           await db.delete(userModels);
           console.log("Alle vorhandenen Modelle wurden gelöscht.");
         }
         
+        // 2. Dann Modellreihen löschen, weil sie von Marken abhängen
         if (importModelSeries && importModelSeries.length > 0) {
           await db.delete(userModelSeries);
           console.log("Alle vorhandenen Modellreihen wurden gelöscht.");
         }
         
+        // 3. Dann Marken löschen, weil sie von Gerätetypen abhängen
         if (importBrands && importBrands.length > 0) {
           await db.delete(userBrands);
           console.log("Alle vorhandenen Marken wurden gelöscht.");
         }
         
-        if (importDeviceTypes && importDeviceTypes.length > 0) {
-          await db.delete(userDeviceTypes);
-          console.log("Alle vorhandenen Gerätetypen wurden gelöscht.");
-        }
-        
+        // Mapping für alte und neue IDs erstellen
+        const idMappings: {
+          deviceTypes: Map<number, number>;
+          brands: Map<number, number>;
+          modelSeries: Map<number, number>;
+        } = {
+          deviceTypes: new Map(),
+          brands: new Map(),
+          modelSeries: new Map()
+        };
+
         // Gerätetypen importieren
         if (importDeviceTypes && importDeviceTypes.length > 0) {
+          // Erstelle ein Array von Gerätetypen mit neuen Zeitstempeln
           const newDeviceTypes = importDeviceTypes.map((dt: any) => {
+            // ID speichern, bevor wir sie entfernen
+            const oldId = dt.id;
             // ID, createdAt, updatedAt weglassen und neue Zeitstempel setzen
             const { id, createdAt, updatedAt, ...deviceTypeData } = dt;
             return {
               ...deviceTypeData,
+              originalId: oldId, // Temporär zur Identifikation behalten
               userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist, Fallback auf bugi (ID 3)
               createdAt: new Date(),
               updatedAt: new Date()
@@ -338,60 +351,142 @@ export function registerAdminRoutes(app: Express) {
           });
           
           // Batch-Insert für bessere Performance
-          await db.insert(userDeviceTypes).values(newDeviceTypes);
-          stats.deviceTypes = newDeviceTypes.length;
-          console.log(`${newDeviceTypes.length} Gerätetypen wurden importiert.`);
+          // Speichere die Einträge und erhalte sie zurück mit den neuen IDs
+          const insertedDeviceTypes = await db.insert(userDeviceTypes)
+            .values(newDeviceTypes.map((dt: any) => {
+              // originalId entfernen, da es kein Feld in der Datenbank ist
+              const { originalId, ...restDt } = dt;
+              return restDt;
+            }))
+            .returning();
+
+          // Mapping zwischen alten und neuen IDs erstellen
+          insertedDeviceTypes.forEach((newDt, index) => {
+            const oldId = newDeviceTypes[index].originalId;
+            idMappings.deviceTypes.set(oldId, newDt.id);
+          });
+          
+          stats.deviceTypes = insertedDeviceTypes.length;
+          console.log(`${insertedDeviceTypes.length} Gerätetypen wurden importiert.`);
+          console.log(`Gerätetyp-ID-Mapping erstellt:`, Object.fromEntries(idMappings.deviceTypes));
         }
         
         // Marken importieren
         if (importBrands && importBrands.length > 0) {
           const newBrands = importBrands.map((b: any) => {
+            const oldId = b.id;
+            const oldDeviceTypeId = b.deviceTypeId;
             const { id, createdAt, updatedAt, ...brandData } = b;
+            
+            // Neue deviceTypeId aus dem Mapping holen
+            const newDeviceTypeId = idMappings.deviceTypes.get(oldDeviceTypeId);
+            
+            if (!newDeviceTypeId) {
+              console.warn(`Keine neue ID für Gerätetyp mit ID ${oldDeviceTypeId} gefunden. Verwende originale ID.`);
+            }
+            
             return {
               ...brandData,
-              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
+              originalId: oldId, // Temporär zur Identifikation
+              deviceTypeId: newDeviceTypeId || oldDeviceTypeId, // Neue ID verwenden, sonst die alte
+              userId: req.user?.id || 3,
               createdAt: new Date(),
               updatedAt: new Date()
             };
           });
           
-          await db.insert(userBrands).values(newBrands);
-          stats.brands = newBrands.length;
-          console.log(`${newBrands.length} Marken wurden importiert.`);
+          // Batch-Insert und die neuen IDs zurückerhalten
+          const insertedBrands = await db.insert(userBrands)
+            .values(newBrands.map((b: any) => {
+              const { originalId, ...restB } = b;
+              return restB;
+            }))
+            .returning();
+            
+          // Mapping zwischen alten und neuen IDs erstellen
+          insertedBrands.forEach((newB, index) => {
+            const oldId = newBrands[index].originalId;
+            idMappings.brands.set(oldId, newB.id);
+          });
+          
+          stats.brands = insertedBrands.length;
+          console.log(`${insertedBrands.length} Marken wurden importiert.`);
+          console.log(`Marken-ID-Mapping erstellt:`, Object.fromEntries(idMappings.brands));
         }
         
         // Modellreihen importieren
         if (importModelSeries && importModelSeries.length > 0) {
           const newModelSeries = importModelSeries.map((ms: any) => {
+            const oldId = ms.id;
+            const oldBrandId = ms.brandId;
             const { id, createdAt, updatedAt, ...msData } = ms;
+            
+            // Neue brandId aus dem Mapping holen
+            const newBrandId = idMappings.brands.get(oldBrandId);
+            
+            if (!newBrandId) {
+              console.warn(`Keine neue ID für Marke mit ID ${oldBrandId} gefunden. Verwende originale ID.`);
+            }
+            
             return {
               ...msData,
-              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
+              originalId: oldId, // Temporär zur Identifikation
+              brandId: newBrandId || oldBrandId, // Neue ID verwenden, sonst die alte
+              userId: req.user?.id || 3,
               createdAt: new Date(),
               updatedAt: new Date()
             };
           });
           
-          await db.insert(userModelSeries).values(newModelSeries);
-          stats.modelSeries = newModelSeries.length;
-          console.log(`${newModelSeries.length} Modellreihen wurden importiert.`);
+          // Batch-Insert und die neuen IDs zurückerhalten
+          const insertedModelSeries = await db.insert(userModelSeries)
+            .values(newModelSeries.map((ms: any) => {
+              const { originalId, ...restMs } = ms;
+              return restMs;
+            }))
+            .returning();
+            
+          // Mapping zwischen alten und neuen IDs erstellen
+          insertedModelSeries.forEach((newMs, index) => {
+            const oldId = newModelSeries[index].originalId;
+            idMappings.modelSeries.set(oldId, newMs.id);
+          });
+          
+          stats.modelSeries = insertedModelSeries.length;
+          console.log(`${insertedModelSeries.length} Modellreihen wurden importiert.`);
+          console.log(`Modellreihen-ID-Mapping erstellt:`, Object.fromEntries(idMappings.modelSeries));
         }
         
         // Modelle importieren
         if (importModels && importModels.length > 0) {
           const newModels = importModels.map((m: any) => {
+            const oldId = m.id;
+            const oldModelSeriesId = m.modelSeriesId;
             const { id, createdAt, updatedAt, ...modelData } = m;
+            
+            // Neue modelSeriesId aus dem Mapping holen
+            const newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
+            
+            if (!newModelSeriesId) {
+              console.warn(`Keine neue ID für Modellreihe mit ID ${oldModelSeriesId} gefunden. Verwende originale ID.`);
+            }
+            
             return {
               ...modelData,
-              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
+              modelSeriesId: newModelSeriesId || oldModelSeriesId, // Neue ID verwenden, sonst die alte
+              userId: req.user?.id || 3,
               createdAt: new Date(),
               updatedAt: new Date()
             };
           });
           
-          await db.insert(userModels).values(newModels);
-          stats.models = newModels.length;
-          console.log(`${newModels.length} Modelle wurden importiert.`);
+          // Batch-Insert der Modelle
+          const insertedModels = await db.insert(userModels)
+            .values(newModels)
+            .returning();
+            
+          stats.models = insertedModels.length;
+          console.log(`${insertedModels.length} Modelle wurden importiert.`);
         }
       } catch (err) {
         console.error("Fehler beim Import der Daten:", err);
