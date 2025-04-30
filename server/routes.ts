@@ -894,16 +894,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alle benutzerspezifischen Marken abrufen (optional nach Gerätetyp gefiltert)
   app.get("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Marken (ID 3)
+      const bugisUserId = 3;
       
       const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
       
       let brands;
       if (deviceTypeId) {
-        brands = await storage.getUserBrandsByDeviceTypeId(deviceTypeId, userId);
+        brands = await storage.getUserBrandsByDeviceTypeId(deviceTypeId, bugisUserId);
       } else {
-        brands = await storage.getUserBrands(userId);
+        brands = await storage.getUserBrands(bugisUserId);
       }
       
       res.json(brands);
@@ -936,23 +936,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Marke erstellen
   app.post("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const authUserId = (req.user as any).id;
+      // WORKAROUND: Alle Gerätetypen und Marken werden immer unter Bugi gespeichert (ID 3)
+      // Das ist eine temporäre Lösung, bis globale Gerätetypen implementiert sind
+      const bugisUserId = 3;
       
-      // Falls req.body.userId nicht definiert ist, nehmen wir die userId aus der Authentifizierung
-      if (!req.body.userId) {
-        req.body.userId = authUserId;
-      }
+      const brandData = insertUserBrandSchema.parse({
+        ...req.body,
+        userId: bugisUserId  // Wir überschreiben immer mit Bugis User-ID
+      });
       
-      const brandData = insertUserBrandSchema.parse(req.body);
-      
-      // Prüfen, ob der Gerätetyp existiert und dem Benutzer gehört
-      const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, brandData.userId);
+      // Prüfen, ob der Gerätetyp existiert
+      const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, bugisUserId);
       if (!deviceType) {
         return res.status(400).json({ message: "Ungültiger Gerätetyp" });
       }
       
-      const brand = await storage.createUserBrand(brandData, brandData.userId);
+      const brand = await storage.createUserBrand(brandData, bugisUserId);
       
       res.status(201).json(brand);
     } catch (error) {
