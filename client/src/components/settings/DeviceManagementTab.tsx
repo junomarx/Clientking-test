@@ -62,8 +62,7 @@ export function DeviceManagementTab() {
       
       toast({
         title: "Export erfolgreich",
-        description: "Die Gerätedaten wurden erfolgreich exportiert.",
-        variant: "success"
+        description: "Die Gerätedaten wurden erfolgreich exportiert."
       });
     } catch (error) {
       console.error("Fehler beim Exportieren der Gerätedaten:", error);
@@ -110,8 +109,7 @@ export function DeviceManagementTab() {
         
         toast({
           title: "Import erfolgreich",
-          description: `Die Gerätedaten wurden erfolgreich importiert. Hinzugefügt: ${result.stats.deviceTypes} Gerätetypen, ${result.stats.brands} Marken, ${result.stats.modelSeries} Modellreihen, ${result.stats.models} Modelle.`,
-          variant: "success"
+          description: `Die Gerätedaten wurden erfolgreich importiert. Hinzugefügt: ${result.stats.deviceTypes} Gerätetypen, ${result.stats.brands} Marken, ${result.stats.modelSeries} Modellreihen, ${result.stats.models} Modelle.`
         });
       };
       
