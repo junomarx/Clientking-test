@@ -350,8 +350,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       console.log(`Found ${customers.length} matching customers for ${firstName} ${lastName}`);
       setMatchingCustomers(customers);
       
-      if (customers.length > 0) {
-        setShowExistingCustomerDialog(true);
+      // Wir zeigen kein Dialog mehr an, stattdessen werden die Kunden im Dropdown angezeigt
+      // Wenn nur ein Kunde gefunden wurde, automatisch dessen Daten eintragen
+      if (customers.length === 1) {
+        fillCustomerData(customers[0]);
       }
     } catch (error) {
       console.error('Error searching for customers:', error);
@@ -435,11 +437,24 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   };
   
-  // Überprüft den Nachnamen, sobald er eingegeben wird
-  const checkCustomerAfterLastNameInput = async (firstName: string, lastName: string) => {
+  // Debounce-Timer-ID
+  const [searchTimerId, setSearchTimerId] = useState<number | null>(null);
+  
+  // Überprüft den Nachnamen, sobald er eingegeben wird, aber mit Verzögerung (Debouncing)
+  const checkCustomerAfterLastNameInput = (firstName: string, lastName: string) => {
     // Bereits bei einem einzigen Buchstaben im Nachnamen nach Kunden suchen
     if (firstName.length >= 1 && lastName.length >= 1) {
-      await checkForExistingCustomer(firstName, lastName);
+      // Bestehenden Timer löschen, wenn einer existiert
+      if (searchTimerId) {
+        window.clearTimeout(searchTimerId);
+      }
+      
+      // Neuen Timer setzen (300ms Verzögerung)
+      const timerId = window.setTimeout(() => {
+        checkForExistingCustomer(firstName, lastName);
+      }, 300);
+      
+      setSearchTimerId(timerId as unknown as number);
     }
   };
   
@@ -688,6 +703,31 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       </FormItem>
                     )}
                   />
+                  
+                  {/* Dropdown für gefundene Kunden */}
+                  {matchingCustomers.length > 1 && (
+                    <div className="sm:col-span-2 bg-muted/30 p-2 rounded-lg">
+                      <FormLabel className="mb-2 block">Gefundene Kunden</FormLabel>
+                      <Select onValueChange={(value) => {
+                        // Finde den ausgewählten Kunden
+                        const selectedCustomer = matchingCustomers.find(c => c.id.toString() === value);
+                        if (selectedCustomer) {
+                          fillCustomerData(selectedCustomer);
+                        }
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kunde auswählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {matchingCustomers.map((customer) => (
+                            <SelectItem key={customer.id} value={customer.id.toString()}>
+                              {customer.firstName} {customer.lastName} - {customer.phone}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <FormField
                     control={form.control}
                     name="phone"
@@ -1059,36 +1099,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zur Bestätigung existierender Kunden */}
-      <AlertDialog open={showExistingCustomerDialog} onOpenChange={setShowExistingCustomerDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Existierender Kunde gefunden</AlertDialogTitle>
-            <AlertDialogDescription>
-              Es wurden bereits Kunden mit diesem Namen gefunden. Möchten Sie einen dieser Kunden auswählen?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="max-h-[300px] overflow-y-auto">
-            {matchingCustomers.map((customer, index) => (
-              <div 
-                key={index} 
-                className="p-3 mb-2 border rounded-md hover:bg-gray-50 cursor-pointer"
-                onClick={() => handleUseExistingCustomer(customer)}
-              >
-                <p className="font-semibold">{customer.firstName} {customer.lastName}</p>
-                <p className="text-sm">{customer.phone}</p>
-                {customer.email && <p className="text-sm">{customer.email}</p>}
-                {customer.address && customer.zipCode && customer.city && (
-                  <p className="text-sm">{customer.address}, {customer.zipCode} {customer.city}</p>
-                )}
-              </div>
-            ))}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Neuen Kunden erstellen</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Kein Dialog mehr nötig, da wir die Kunden direkt im Formular anzeigen */}
     </>
   );
 }
