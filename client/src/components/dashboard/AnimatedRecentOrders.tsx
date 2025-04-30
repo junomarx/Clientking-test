@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer } from 'lucide-react';
+import { Printer, Info } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
+import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
 interface RepairWithCustomer {
   id: number;
@@ -23,6 +24,21 @@ export function AnimatedRecentOrders({
   isLoading, 
   onPrintClick 
 }: AnimatedRecentOrdersProps) {
+  // State für den Detaildialog
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
+  
+  // Funktion zum Öffnen des Detaildialogs
+  const openDetailsDialog = (repairId: number) => {
+    setSelectedRepairId(repairId);
+    setShowDetailsDialog(true);
+  };
+  
+  // Funktion zum Schließen des Detaildialogs
+  const closeDetailsDialog = () => {
+    setShowDetailsDialog(false);
+    setTimeout(() => setSelectedRepairId(null), 300); // Verzögerung für die Animation
+  };
   return (
     <motion.div
       className="bg-white rounded-lg shadow-sm overflow-hidden"
@@ -76,7 +92,7 @@ export function AnimatedRecentOrders({
                 repairs.map((repair, index) => (
                   <motion.tr 
                     key={repair.id} 
-                    className="border-b border-gray-200 hover:bg-blue-50 transition-all"
+                    className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
@@ -88,6 +104,7 @@ export function AnimatedRecentOrders({
                     whileHover={{ 
                       backgroundColor: "rgba(59, 130, 246, 0.1)" 
                     }}
+                    onClick={() => openDetailsDialog(repair.id)}
                   >
                     <td className="py-3 px-4">
                       <motion.div whileHover={{ scale: 1.1 }}>
@@ -107,13 +124,30 @@ export function AnimatedRecentOrders({
                         <motion.button 
                           className="text-gray-600 hover:text-gray-800 p-1"
                           title="Druckoptionen anzeigen"
-                          onClick={() => onPrintClick(repair.id)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Verhindert, dass der Klick auf die Tröffnet
+                            onPrintClick(repair.id);
+                          }}
                           whileHover={{ 
                             scale: 1.2 
                           }}
                           whileTap={{ scale: 0.9 }}
                         >
                           <Printer className="h-4 w-4" />
+                        </motion.button>
+                        <motion.button 
+                          className="text-blue-600 hover:text-blue-800 p-1"
+                          title="Details anzeigen"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Verhindert, dass der Klick auf die Tröffnet
+                            openDetailsDialog(repair.id);
+                          }}
+                          whileHover={{ 
+                            scale: 1.2 
+                          }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Info className="h-4 w-4" />
                         </motion.button>
                       </div>
                     </td>
@@ -124,6 +158,13 @@ export function AnimatedRecentOrders({
           </tbody>
         </table>
       </div>
+      
+      {/* Repair Details Dialog */}
+      <RepairDetailsDialog
+        open={showDetailsDialog}
+        onClose={closeDetailsDialog}
+        repairId={selectedRepairId}
+      />
     </motion.div>
   );
 }
