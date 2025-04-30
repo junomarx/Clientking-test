@@ -343,12 +343,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     
     try {
       // API aufrufen, um nach existierenden Kunden zu suchen
-      const response = await fetch(`/api/customers/search?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`);
-      if (!response.ok) {
-        throw new Error('Fehler bei der Kundensuche');
-      }
-      
+      // Die API filtert bereits nach der UserID des eingeloggten Benutzers
+      const response = await apiRequest('GET', `/api/customers?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`);
       const customers = await response.json();
+      
+      console.log(`Found ${customers.length} matching customers for ${firstName} ${lastName}`);
       setMatchingCustomers(customers);
       
       if (customers.length > 0) {
@@ -438,6 +437,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // Überprüft den Nachnamen, sobald er eingegeben wird
   const checkCustomerAfterLastNameInput = async (firstName: string, lastName: string) => {
+    // Bereits bei einem einzigen Buchstaben im Nachnamen nach Kunden suchen
     if (firstName.length >= 1 && lastName.length >= 1) {
       await checkForExistingCustomer(firstName, lastName);
     }
@@ -652,8 +652,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <Input 
                             placeholder="Vorname" 
                             {...field} 
-                            onBlur={(e) => {
-                              field.onBlur();
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Sofortige Prüfung beim Tippen, nicht erst beim onBlur
                               if (form.getValues('lastName')) {
                                 checkCustomerAfterLastNameInput(e.target.value, form.getValues('lastName'));
                               }
@@ -674,8 +675,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <Input 
                             placeholder="Nachname" 
                             {...field} 
-                            onBlur={(e) => {
-                              field.onBlur();
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Sofortige Prüfung beim Tippen, nicht erst beim onBlur
                               if (form.getValues('firstName')) {
                                 checkCustomerAfterLastNameInput(form.getValues('firstName'), e.target.value);
                               }
