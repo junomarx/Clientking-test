@@ -67,7 +67,28 @@ export function useModelSeries() {
   const createModelSeries = () => {
     return useMutation({
       mutationFn: async (data: CreateModelSeriesDTO) => {
-        const res = await apiRequest('POST', '/api/model-series', data);
+        console.log('Sende Modellreihe-Daten:', data);
+        
+        // Validiere Daten vor dem Senden
+        if (!data.name || !data.name.trim()) {
+          throw new Error('Bitte geben Sie einen Namen für die Modellreihe ein');
+        }
+        
+        if (!data.brandId || isNaN(Number(data.brandId))) {
+          throw new Error('Bitte wählen Sie eine gültige Marke aus');
+        }
+        
+        // userId wird vom Server automatisch ergänzt
+        const modelSeriesData = {
+          name: data.name.trim(),
+          brandId: Number(data.brandId)
+        };
+        
+        const res = await apiRequest('POST', '/api/model-series', modelSeriesData);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Fehler beim Erstellen der Modellreihe');
+        }
         return await res.json();
       },
       onSuccess: () => {
@@ -81,6 +102,7 @@ export function useModelSeries() {
         });
       },
       onError: (error: Error) => {
+        console.error('Fehler beim Erstellen der Modellreihe:', error);
         toast({
           title: 'Fehler',
           description: `Fehler beim Erstellen der Modellreihe: ${error.message}`,

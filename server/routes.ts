@@ -1080,35 +1080,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
-      console.log("Verwende User-ID für Modellreihe:", userId);
-      console.log("Request Body:", req.body);
+      console.log(`[Modellreihe] Erstelle neue Modellreihe für Benutzer ${userId}`);
+      console.log(`[Modellreihe] Eingangsdaten:`, req.body);
       
       // Manuelle, einfache Validierung
-      if (!req.body.name || !req.body.brandId) {
-        console.log("Name oder brandId fehlt in der Anfrage");
-        return res.status(400).json({ message: "Name und brandId sind erforderlich" });
+      if (!req.body.name || req.body.name.trim() === '') {
+        console.log("[Modellreihe] Fehler: Name fehlt");
+        return res.status(400).json({ message: "Der Name der Modellreihe darf nicht leer sein" });
+      }
+      
+      if (req.body.brandId === undefined || req.body.brandId === null) {
+        console.log("[Modellreihe] Fehler: brandId fehlt");
+        return res.status(400).json({ message: "Die Marke-ID ist erforderlich" });
+      }
+      
+      // Validiere brandId als Zahl
+      const brandId = Number(req.body.brandId);
+      if (isNaN(brandId) || brandId <= 0) {
+        console.log(`[Modellreihe] Fehler: Ungültige brandId: ${req.body.brandId}`);
+        return res.status(400).json({ message: "Ungültige Marke-ID" });
       }
       
       // Direkt ein neues Objekt erstellen, ohne Schema-Validierung
       const modelSeriesData = {
-        name: req.body.name,
-        brandId: Number(req.body.brandId),
+        name: req.body.name.trim(),
+        brandId: brandId,
         userId: userId  // userId explizit einbinden
       };
       
-      console.log("Bereite Daten für Modellreihe vor:", modelSeriesData);
+      console.log(`[Modellreihe] Validierte Daten:`, modelSeriesData);
       
       try {
+        // In der Storage-Funktion wird die userId nochmals explizit übergeben
         const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
-        console.log("Modellreihe erfolgreich erstellt:", modelSeries);
+        console.log(`[Modellreihe] Erfolgreich erstellt mit ID ${modelSeries.id}`);
         return res.status(201).json(modelSeries);
       } catch (storageError: any) {
-        console.error("Fehler beim Speichern der Modellreihe in der Datenbank:", storageError);
-        return res.status(500).json({ message: "Fehler beim Speichern der Modellreihe in der Datenbank", error: storageError.message });
+        console.error("[Modellreihe] Datenbank-Fehler:", storageError);
+        return res.status(500).json({ 
+          message: "Fehler beim Speichern der Modellreihe in der Datenbank", 
+          error: storageError.message 
+        });
       }
     } catch (error: any) {
-      console.error("Allgemeiner Fehler beim Erstellen der Modellreihe:", error);
-      return res.status(500).json({ message: "Fehler beim Erstellen der Modellreihe", error: error.message });
+      console.error("[Modellreihe] Allgemeiner Fehler:", error);
+      return res.status(500).json({ 
+        message: "Fehler beim Erstellen der Modellreihe", 
+        error: error.message 
+      });
     }
   });
   

@@ -99,16 +99,43 @@ export function ModelManagementTab() {
 
   // Funktion zum Hinzufügen einer neuen Modellreihe
   const handleAddNewModelSeries = () => {
-    if (!selectedBrandId || !newModelSeries) return;
+    if (!selectedBrandId) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte wählen Sie erst eine Marke aus',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (!newModelSeries || newModelSeries.trim() === '') {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie einen Namen für die Modellreihe ein',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    console.log(`Erstelle neue Modellreihe: ${newModelSeries} für Marke ${selectedBrandId}`);
     
     createModelSeriesMutation.mutate({
-      name: newModelSeries,
+      name: newModelSeries.trim(),
       brandId: selectedBrandId
     }, {
       onSuccess: (newModelSeries) => {
+        console.log('Modellreihe erstellt:', newModelSeries);
         setSelectedModelSeriesId(newModelSeries.id);
         setSelectedModelSeriesName(newModelSeries.name);
         setNewModelSeries(''); // Leere das Eingabefeld
+      },
+      onError: (error) => {
+        console.error('Fehler beim Erstellen der Modellreihe:', error);
+        toast({
+          title: 'Fehler',
+          description: `Fehler beim Erstellen der Modellreihe: ${error instanceof Error ? error.message : String(error)}`,
+          variant: 'destructive'
+        });
       }
     });
   };
@@ -147,16 +174,43 @@ export function ModelManagementTab() {
 
   // Neue Marke hinzufügen
   const handleAddNewBrand = () => {
-    if (!selectedDeviceTypeId || !newBrandName) return;
+    if (!selectedDeviceTypeId) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte wählen Sie erst einen Gerätetyp aus',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    if (!newBrandName || newBrandName.trim() === '') {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie einen Namen für die Marke ein',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    console.log(`Erstelle neue Marke: ${newBrandName} für Gerätetyp ${selectedDeviceTypeId}`);
     
     createBrandMutation.mutate({
-      name: newBrandName,
+      name: newBrandName.trim(),
       deviceTypeId: selectedDeviceTypeId
     }, {
       onSuccess: (newBrand) => {
+        console.log('Marke erstellt:', newBrand);
         setSelectedBrandId(newBrand.id);
         setSelectedBrandName(newBrand.name);
         setNewBrandName('');
+      },
+      onError: (error) => {
+        console.error('Fehler beim Erstellen der Marke:', error);
+        toast({
+          title: 'Fehler',
+          description: `Fehler beim Erstellen der Marke: ${error instanceof Error ? error.message : String(error)}`,
+          variant: 'destructive'
+        });
       }
     });
   };
