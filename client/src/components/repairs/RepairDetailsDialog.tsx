@@ -31,8 +31,7 @@ import {
   Euro,
   FileText,
   User,
-  Clipboard,
-  X
+  Clipboard
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -106,19 +105,9 @@ export function RepairDetailsDialog({ open, onClose, repairId }: RepairDetailsDi
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl font-semibold">
-              Reparaturauftrag {repair.orderCode || `#${repair.id}`}
-            </DialogTitle>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleClose} 
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-semibold">
+            Reparaturauftrag {repair.orderCode || `#${repair.id}`}
+          </DialogTitle>
           <DialogDescription>
             Vollständige Informationen zum Reparaturauftrag und Kundendaten
           </DialogDescription>
