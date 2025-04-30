@@ -375,13 +375,21 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   }, [watchBrand, brandsQuery.data]);
   
   // Abfrage für Modellreihen basierend auf Brand
-  const modelSeriesQuery = getModelSeriesByBrandId(selectedBrandId);
+  const { data: modelSeriesData, isLoading: isLoadingModelSeries } = useQuery({
+    queryKey: ['/api/model-series', { brandId: selectedBrandId }],
+    enabled: !!selectedBrandId,
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/model-series?brandId=${selectedBrandId}`);
+      return await res.json();
+    },
+    staleTime: 30000, // 30 Sekunden Caching
+  });
   
   // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Marke ändert
   useEffect(() => {
-    if (modelSeriesQuery.data) {
+    if (modelSeriesData) {
       // Extrahiere die Namen der Modellreihen
-      const modelSeriesNames = modelSeriesQuery.data.map(ms => ms.name);
+      const modelSeriesNames = modelSeriesData.map((ms: any) => ms.name);
       setSavedModelSeries(modelSeriesNames);
       
       // Bei Apple Smartphones keine Modellreihen anzeigen
@@ -400,12 +408,12 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else {
       setSavedModelSeries([]);
     }
-  }, [modelSeriesQuery.data, watchDeviceType, watchBrand, form]);
+  }, [modelSeriesData, watchDeviceType, watchBrand, form]);
   
   // Setze selectedModelSeriesId basierend auf watchModelSeries
   useEffect(() => {
-    if (watchModelSeries && modelSeriesQuery.data) {
-      const modelSeries = modelSeriesQuery.data.find(ms => ms.name === watchModelSeries);
+    if (watchModelSeries && modelSeriesData) {
+      const modelSeries = modelSeriesData.find((ms: any) => ms.name === watchModelSeries);
       if (modelSeries) {
         setSelectedModelSeriesId(modelSeries.id);
       } else {
@@ -414,21 +422,29 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else {
       setSelectedModelSeriesId(null);
     }
-  }, [watchModelSeries, modelSeriesQuery.data]);
+  }, [watchModelSeries, modelSeriesData]);
   
   // Abfrage für Modelle basierend auf ModelSeries
-  const modelsQuery = getModelsByModelSeriesId(selectedModelSeriesId);
+  const { data: modelsData, isLoading: isLoadingModels } = useQuery({
+    queryKey: ['/api/models', { modelSeriesId: selectedModelSeriesId }],
+    enabled: !!selectedModelSeriesId,
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/models?modelSeriesId=${selectedModelSeriesId}`);
+      return await res.json();
+    },
+    staleTime: 30000, // 30 Sekunden Caching
+  });
   
   // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
   useEffect(() => {
-    if (modelsQuery.data) {
+    if (modelsData) {
       // Extrahiere die Namen der Modelle
-      const modelNames = modelsQuery.data.map(m => m.name);
+      const modelNames = modelsData.map((m: any) => m.name);
       setSavedModels(modelNames);
     } else {
       setSavedModels([]);
     }
-  }, [modelsQuery.data, selectedModelSeriesId]);
+  }, [modelsData, selectedModelSeriesId]);
   
   // Diese automatische Speicherung bei Änderungen ist entfernt, da Modelle nur gespeichert werden
   // sollen, wenn der Auftrag tatsächlich gespeichert wird
@@ -493,7 +509,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
             // Wenn eine Modellreihe angegeben ist
             if (data.modelSeries) {
               // Finde oder erstelle die Modellreihe
-              const modelSeriesExists = modelSeriesQuery.data?.some(ms => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
+              const modelSeriesExists = modelSeriesData?.some((ms: any) => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
               if (!modelSeriesExists && data.modelSeries) {
                 createModelSeriesMutation.mutate({
                   name: data.modelSeries,
@@ -509,9 +525,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                 });
               } else {
                 // Modellreihe existiert bereits, finde sie und erstelle das Modell
-                const modelSeries = modelSeriesQuery.data?.find(ms => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
+                const modelSeries = modelSeriesData?.find((ms: any) => ms.name.toLowerCase() === data.modelSeries?.toLowerCase());
                 if (modelSeries) {
-                  const modelExists = modelsQuery.data?.some(m => m.name.toLowerCase() === data.model.toLowerCase());
+                  const modelExists = modelsData?.some((m: any) => m.name.toLowerCase() === data.model.toLowerCase());
                   if (!modelExists) {
                     createModelsMutation.mutate({
                       modelSeriesId: modelSeries.id,
