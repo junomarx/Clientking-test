@@ -11,10 +11,8 @@ import { useDeviceTypes } from '@/hooks/useDeviceTypes';
 import { useBrands } from '@/hooks/useBrands';
 import { useModels } from '@/hooks/useModels';
 import { useModelSeries, type CreateModelSeriesDTO } from '@/hooks/useModelSeries';
-import { 
-  getIssuesForDeviceType, saveIssue, deleteIssue, 
-  DEFAULT_ISSUES
-} from '@/lib/localStorage';
+// Die lokalen Fehlerbeschreibungen werden nicht mehr verwendet
+// Stattdessen werden die Fehlerbeschreibungen aus der Datenbank geladen
 import { 
   getBrandsForDeviceType,
   clearAllModels,
@@ -224,19 +222,33 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Abfrage für Marken basierend auf DeviceType
   const brandsQuery = brands.getBrandsByDeviceTypeId(selectedDeviceTypeId);
   
+  // Fehlerbeschreibungen von der Datenbank laden
+  const { data: deviceIssues, isLoading: isLoadingIssues } = useQuery({
+    queryKey: ['/api/device-issues', watchDeviceType],
+    enabled: !!watchDeviceType,
+    queryFn: async () => {
+      if (!watchDeviceType) return [];
+      const response = await apiRequest('GET', `/api/device-issues/${watchDeviceType}`);
+      return await response.json();
+    },
+  });
+
   // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
-      // Lade verfügbare Fehlerbeschreibungen aus localStorage
-      const issues = getIssuesForDeviceType(watchDeviceType);
-      setAvailableIssues(issues);
-      
       // Zurücksetzen der Marke
       form.setValue('brand', '');
+    }
+  }, [watchDeviceType, form]);
+  
+  // Aktualisiere die verfügbaren Fehlerbeschreibungen, wenn die API-Abfrage abgeschlossen ist
+  useEffect(() => {
+    if (deviceIssues) {
+      setAvailableIssues(deviceIssues);
     } else {
       setAvailableIssues([]);
     }
-  }, [watchDeviceType, form]);
+  }, [deviceIssues]);
   
   // Update availableBrands wenn brandsQuery sich ändert
   useEffect(() => {
@@ -346,21 +358,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     createDeviceTypeMutation.mutate({ name: deviceType });
   };
   
-  // Funktion zum Speichern einer neuen Fehlerbeschreibung
-  const saveNewIssue = (issue: string, deviceType: string) => {
-    if (issue && deviceType) {
-      saveIssue(deviceType, issue);
-      
-      // Aktualisiere die Liste
-      setAvailableIssues([...getIssuesForDeviceType(deviceType)]);
-      
-      toast({
-        title: "Fehlerbeschreibung gespeichert",
-        description: `Fehlerbeschreibung für ${deviceType} wurde gespeichert.`,
-      });
-    }
-  };
-  
   // Funktion zum Hinzufügen einer neuen Fehlerbeschreibung
   const addIssueToField = (issue: string, index: number = 0) => {
     // Aktualisiere das entsprechende Feld im Array
@@ -379,21 +376,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     
     // Dropdown schließen
     setShowIssueDropdown(false);
-  };
-  
-  // Funktion zum Löschen einer Fehlerbeschreibung aus dem Dropdown
-  const handleDeleteIssue = (issue: string, deviceType: string) => {
-    if (issue && deviceType) {
-      deleteIssue(deviceType, issue);
-      
-      // Aktualisiere die Liste
-      setAvailableIssues(getIssuesForDeviceType(deviceType));
-      
-      toast({
-        title: "Fehlerbeschreibung gelöscht",
-        description: `Fehlerbeschreibung für ${deviceType} wurde gelöscht.`,
-      });
-    }
   };
   
   // Funktion zum Löschen einer eingegebenen Fehlerbeschreibung aus dem Formular
@@ -659,15 +641,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
       }
       
-      // Fehlerbeschreibung im localStorage speichern, wenn sie nicht existiert
-      // Nur wenn der Benutzer manuell eine Fehlerbeschreibung eingegeben hat (nicht aus den Vorschlägen ausgewählt)
-      // und diese auch nicht bereits in der Liste ist
-      if (data.issue && !issueFields.some(field => field === "") && !availableIssues.includes(data.issue)) {
-        // Zusätzlich prüfen, ob die Fehlerbeschreibung nicht aus mehreren kombinierten Fehlerbeschreibungen besteht
-        if (!data.issue.includes(",")) {
-          saveNewIssue(data.issue, data.deviceType);
-        }
-      }
+      // Fehlerbeschreibungen werden jetzt zentral vom Admin verwaltet
+      // Kein Speichern im localStorage mehr
       
       // Auftrag erstellen
       await createRepairMutation.mutateAsync(repairData);
@@ -1386,16 +1361,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                             }}
                                           >
                                             <span>{issue}</span>
-                                            <button 
-                                              type="button"
-                                              className="text-red-500 hover:text-red-700"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteIssue(issue, watchDeviceType);
-                                              }}
-                                            >
-                                              <X className="h-4 w-4" />
-                                            </button>
                                           </div>
                                         ))}
                                     </div>
