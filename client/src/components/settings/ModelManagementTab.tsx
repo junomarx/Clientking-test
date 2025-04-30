@@ -141,6 +141,7 @@ export function ModelManagementTab() {
       if (!selectedDeviceType || !selectedBrand) return [];
       
       const url = `/api/models?deviceTypeId=${selectedDeviceType}&brandId=${selectedBrand}`;
+      console.log("Fetching models with URL:", url);
       const res = await apiRequest('GET', url);
       return res.json();
     },

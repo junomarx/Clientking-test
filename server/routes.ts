@@ -95,6 +95,26 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
   res.status(401).json({ message: "Nicht angemeldet" });
 }
 
+// Hilfsfunktionen
+// Findet oder erstellt eine Standard-Modellreihe für eine bestimmte Marke
+async function findOrCreateDefaultModelSeries(brandId: number, userId: number): Promise<any> {
+  // Zuerst versuchen, eine existierende Standard-Modellreihe zu finden
+  let defaultModelSeries = await storage.getUserModelSeriesByNameAndBrand("_default", brandId, userId);
+  
+  if (!defaultModelSeries) {
+    // Wenn keine existiert, erstelle eine neue
+    defaultModelSeries = await storage.createUserModelSeries({
+      name: "_default",
+      brandId: brandId,
+      userId: userId
+    }, userId);
+    
+    console.log(`Default-Modellreihe für Marke ${brandId} erstellt`);
+  }
+  
+  return defaultModelSeries;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
@@ -1233,18 +1253,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // MODELS API
-  // Alle benutzerspezifischen Modelle abrufen (optional nach Modellreihe gefiltert)
+  // Alle benutzerspezifischen Modelle abrufen 
+  // (optional nach Modellreihe, Gerätetyp oder Marke gefiltert)
   app.get("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // WORKAROUND: Wir holen immer Bugis Modelle (ID 3)
       const bugisUserId = 3;
       
       const modelSeriesId = req.query.modelSeriesId ? parseInt(req.query.modelSeriesId as string) : undefined;
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
+      const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
       
-      let models;
-      if (modelSeriesId) {
+      let models: any[] = [];
+      
+      if (deviceTypeId && brandId) {
+        // Standardmodellreihe finden oder erstellen
+        let defaultModelSeries = await findOrCreateDefaultModelSeries(brandId, bugisUserId);
+        
+        // Modelle für diese Modellreihe abrufen
+        models = await storage.getUserModelsByModelSeriesId(defaultModelSeries.id, bugisUserId);
+      } else if (modelSeriesId) {
+        // Nach Modellreihe filtern (bestehende Logik)
         models = await storage.getUserModelsByModelSeriesId(modelSeriesId, bugisUserId);
       } else {
+        // Alle Modelle holen (bestehende Logik)
         models = await storage.getUserModels(bugisUserId);
       }
       
@@ -1358,18 +1390,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Finde oder erstelle eine Standard-Modellreihe für diese Marke
-      // Da das Datenbankschema nicht geändert werden soll, verwenden wir eine Dummy-Modellreihe
-      let defaultModelSeries = await storage.getUserModelSeriesByNameAndBrand("_default", parseInt(brandId), bugisUserId);
-      
-      if (!defaultModelSeries) {
-        // Erstelle eine Standard-Modellreihe für diese Marke
-        defaultModelSeries = await storage.createUserModelSeries({
-          name: "_default",
-          brandId: parseInt(brandId),
-          userId: bugisUserId
-        }, bugisUserId);
-      }
+      // Standardmodellreihe finden oder erstellen
+      let defaultModelSeries = await findOrCreateDefaultModelSeries(parseInt(brandId), bugisUserId);
       
       // Zuerst alle vorhandenen Modelle für diese Modellreihe löschen
       await storage.deleteAllUserModelsForModelSeries(defaultModelSeries.id, bugisUserId);

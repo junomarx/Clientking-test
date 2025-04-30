@@ -126,6 +126,7 @@ export interface IStorage {
   // User model series methods
   getUserModelSeries(userId: number): Promise<UserModelSeries[]>;
   getUserModelSeriesByBrandId(brandId: number, userId: number): Promise<UserModelSeries[]>;
+  getUserModelSeriesByNameAndBrand(name: string, brandId: number, userId: number): Promise<UserModelSeries | undefined>;
   getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId: number, brandId: number, userId: number): Promise<UserModelSeries[]>;
   createUserModelSeries(modelSeries: InsertUserModelSeries, userId: number): Promise<UserModelSeries>;
   updateUserModelSeries(id: number, modelSeries: Partial<InsertUserModelSeries>, userId: number): Promise<UserModelSeries | undefined>;
