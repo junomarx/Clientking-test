@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Repair, Customer } from '@shared/schema';
 import { useLocation } from 'wouter';
@@ -16,6 +16,9 @@ import { AnimatedStatCard } from './AnimatedStatCard';
 import { RepairStatusChart } from './RepairStatusChart';
 import { AnimatedRecentOrders } from './AnimatedRecentOrders';
 import { motion } from 'framer-motion';
+import { apiRequest } from '@/lib/queryClient';
+import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
+import { ChangeStatusDialog } from '@/components/repairs/ChangeStatusDialog';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -27,8 +30,50 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   // und setzen den Status-Filter über URL-Parameter
   const [, setLocation] = useLocation();
   
+  // State für Status- und Bearbeitungsdialoge
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<string>('');
+  
+  // QueryClient für Cache-Invalidierung
+  const queryClient = useQueryClient();
+  
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
+
+  // Status-Änderung Mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async (variables: { id: number; status: string }) => {
+      const response = await apiRequest(
+        'PATCH',
+        `/api/repairs/${variables.id}/status`,
+        { status: variables.status }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      // Aktualisiere die Reparaturen und Statistiken
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      
+      // Schließe den Dialog
+      setShowStatusDialog(false);
+    }
+  });
+  
+  // Handler für Status-Änderung öffnen
+  const openStatusDialog = (id: number, status: string) => {
+    setSelectedRepairId(id);
+    setCurrentStatus(status);
+    setShowStatusDialog(true);
+  };
+  
+  // Handler für Bearbeiten öffnen
+  const handleEdit = (id: number) => {
+    setSelectedRepairId(id);
+    setShowEditDialog(true);
+  };
   
   const { data: stats, isLoading: statsLoading } = useQuery<{
     totalOrders: number;
