@@ -119,6 +119,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
+  // States für die Dropdown-Menüs für Geräteauswahl
+  const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
+  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
+  const [brandDropdown, setBrandDropdown] = useState<string[]>([]);
+  const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
+  const [modelDropdown, setModelDropdown] = useState<string[]>([]);
+  const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
+  
   // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
   const isAdmin = user?.id === 3;
   
@@ -845,7 +853,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <div className="relative">
                             <Input 
                               placeholder="z.B. Smartphone, Tablet, etc." 
-                              list="deviceTypeOptions"
                               {...field} 
                               onChange={(e) => {
                                 field.onChange(e);
@@ -853,19 +860,88 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 form.setValue('brand', '');
                                 form.setValue('modelSeries', '');
                                 form.setValue('model', '');
+                                
+                                // Filter die Gerätetypen
+                                if (e.target.value && apiDeviceTypes) {
+                                  const filteredTypes = apiDeviceTypes
+                                    .map(dt => dt.name)
+                                    .filter(name => name.toLowerCase().includes(e.target.value.toLowerCase()));
+                                  setDeviceTypeDropdown(filteredTypes);
+                                  setSelectedDeviceTypeIndex(-1);
+                                } else if (!e.target.value && apiDeviceTypes) {
+                                  // Alle Gerätetypen anzeigen wenn Feld leer
+                                  setDeviceTypeDropdown(apiDeviceTypes.map(dt => dt.name));
+                                  setSelectedDeviceTypeIndex(-1);
+                                } else {
+                                  setDeviceTypeDropdown([]);
+                                }
+                              }}
+                              onFocus={() => {
+                                // Zeige alle verfügbaren Gerätetypen an, wenn Fokus aufs Feld gesetzt wird
+                                if (apiDeviceTypes) {
+                                  setDeviceTypeDropdown(apiDeviceTypes.map(dt => dt.name));
+                                } else {
+                                  setDeviceTypeDropdown(defaultDeviceTypes);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Dropdown ausblenden wenn Fokus verloren geht
+                                // Verzögerung, damit Klick auf Dropdown-Element möglich ist
+                                setTimeout(() => setDeviceTypeDropdown([]), 200);
+                              }}
+                              onKeyDown={(e) => {
+                                // Tastaturnavigation im Dropdown
+                                if (deviceTypeDropdown.length > 0) {
+                                  if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setSelectedDeviceTypeIndex(prev => Math.min(prev + 1, deviceTypeDropdown.length - 1));
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setSelectedDeviceTypeIndex(prev => Math.max(prev - 1, 0));
+                                  } else if (e.key === 'Enter' && selectedDeviceTypeIndex >= 0) {
+                                    e.preventDefault();
+                                    const selectedType = deviceTypeDropdown[selectedDeviceTypeIndex];
+                                    form.setValue('deviceType', selectedType);
+                                    setDeviceTypeDropdown([]);
+                                  } else if (e.key === 'Tab' && selectedDeviceTypeIndex >= 0) {
+                                    e.preventDefault();
+                                    const selectedType = deviceTypeDropdown[selectedDeviceTypeIndex];
+                                    form.setValue('deviceType', selectedType);
+                                    setDeviceTypeDropdown([]);
+                                    
+                                    // Fokus auf das nächste Feld setzen
+                                    setTimeout(() => {
+                                      const brandInput = document.querySelector('input[name="brand"]');
+                                      if (brandInput) {
+                                        (brandInput as HTMLInputElement).focus();
+                                      }
+                                    }, 100);
+                                  } else if (e.key === 'Escape') {
+                                    // Dropdown schließen bei Escape
+                                    setDeviceTypeDropdown([]);
+                                  }
+                                }
                               }}
                             />
-                            <datalist id="deviceTypeOptions">
-                              {apiDeviceTypes?.map((dt: any) => (
-                                <option key={dt.id} value={dt.name} />
-                              ))}
-                              {/* Fallback, wenn keine Gerätetypen gefunden wurden */}
-                              {(!apiDeviceTypes || apiDeviceTypes.length === 0) &&
-                                defaultDeviceTypes.map((type, index) => (
-                                  <option key={index} value={type} />
-                                ))
-                              }
-                            </datalist>
+                            {/* Dropdown für Gerätearten */}
+                            {deviceTypeDropdown.length > 0 && (
+                              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div className="py-1 max-h-60 overflow-auto">
+                                  {deviceTypeDropdown.map((type, index) => (
+                                    <div 
+                                      key={index} 
+                                      className={`px-3 py-2 cursor-pointer ${selectedDeviceTypeIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
+                                      onClick={() => {
+                                        form.setValue('deviceType', type);
+                                        setDeviceTypeDropdown([]);
+                                      }}
+                                    >
+                                      <div className="font-medium">{type}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -882,7 +958,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <div className="relative">
                             <Input 
                               placeholder="z.B. Apple, Samsung, etc." 
-                              list="brandOptions"
                               {...field} 
                               disabled={!watchDeviceType}
                               onChange={(e) => {
@@ -890,19 +965,100 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 // Reset dependent fields
                                 form.setValue('modelSeries', '');
                                 form.setValue('model', '');
+                                
+                                // Filter die Marken
+                                if (e.target.value && availableBrands.length > 0) {
+                                  const filteredBrands = availableBrands
+                                    .filter(name => name.toLowerCase().includes(e.target.value.toLowerCase()));
+                                  setBrandDropdown(filteredBrands);
+                                  setSelectedBrandIndex(-1);
+                                } else if (!e.target.value && availableBrands.length > 0) {
+                                  // Alle Marken anzeigen wenn Feld leer
+                                  setBrandDropdown(availableBrands);
+                                  setSelectedBrandIndex(-1);
+                                } else if (watchDeviceType && defaultBrands[watchDeviceType.toLowerCase()]) {
+                                  // Fallback zu Standard-Marken
+                                  const defaultBrandList = defaultBrands[watchDeviceType.toLowerCase()];
+                                  setBrandDropdown(defaultBrandList);
+                                } else {
+                                  setBrandDropdown([]);
+                                }
+                              }}
+                              onFocus={() => {
+                                // Zeige alle verfügbaren Marken an, wenn Fokus aufs Feld gesetzt wird
+                                if (availableBrands.length > 0) {
+                                  setBrandDropdown(availableBrands);
+                                } else if (watchDeviceType && defaultBrands[watchDeviceType.toLowerCase()]) {
+                                  // Fallback zu Standard-Marken
+                                  setBrandDropdown(defaultBrands[watchDeviceType.toLowerCase()]);
+                                }
+                              }}
+                              onBlur={() => {
+                                // Dropdown ausblenden wenn Fokus verloren geht (mit Verzögerung)
+                                setTimeout(() => setBrandDropdown([]), 200);
+                              }}
+                              onKeyDown={(e) => {
+                                // Tastaturnavigation im Dropdown
+                                if (brandDropdown.length > 0) {
+                                  if (e.key === 'ArrowDown') {
+                                    e.preventDefault();
+                                    setSelectedBrandIndex(prev => Math.min(prev + 1, brandDropdown.length - 1));
+                                  } else if (e.key === 'ArrowUp') {
+                                    e.preventDefault();
+                                    setSelectedBrandIndex(prev => Math.max(prev - 1, 0));
+                                  } else if (e.key === 'Enter' && selectedBrandIndex >= 0) {
+                                    e.preventDefault();
+                                    const selectedBrand = brandDropdown[selectedBrandIndex];
+                                    form.setValue('brand', selectedBrand);
+                                    setBrandDropdown([]);
+                                  } else if (e.key === 'Tab' && selectedBrandIndex >= 0) {
+                                    e.preventDefault();
+                                    const selectedBrand = brandDropdown[selectedBrandIndex];
+                                    form.setValue('brand', selectedBrand);
+                                    setBrandDropdown([]);
+                                    
+                                    // Fokus auf das nächste Feld setzen
+                                    setTimeout(() => {
+                                      if (savedModelSeries.length > 0) {
+                                        // Falls Modellreihen vorhanden, setze Fokus auf Modellreihen-Dropdown
+                                        const modelSeriesButton = document.querySelector('.modelseries-select button');
+                                        if (modelSeriesButton) {
+                                          (modelSeriesButton as HTMLButtonElement).focus();
+                                        }
+                                      } else {
+                                        // Ansonsten direkt auf das Modell-Feld
+                                        const modelInput = document.querySelector('input[name="model"]');
+                                        if (modelInput) {
+                                          (modelInput as HTMLInputElement).focus();
+                                        }
+                                      }
+                                    }, 100);
+                                  } else if (e.key === 'Escape') {
+                                    // Dropdown schließen bei Escape
+                                    setBrandDropdown([]);
+                                  }
+                                }
                               }}
                             />
-                            <datalist id="brandOptions">
-                              {availableBrands.map((brand, index) => (
-                                <option key={index} value={brand} />
-                              ))}
-                              {/* Fallback für Standardmarken, wenn API keine Ergebnisse liefert */}
-                              {(!availableBrands || availableBrands.length === 0) && watchDeviceType &&
-                                defaultBrands[watchDeviceType.toLowerCase()]?.map((brand, index) => (
-                                  <option key={index} value={brand} />
-                                ))
-                              }
-                            </datalist>
+                            {/* Dropdown für Marken */}
+                            {brandDropdown.length > 0 && (
+                              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                                <div className="py-1 max-h-60 overflow-auto">
+                                  {brandDropdown.map((brand, index) => (
+                                    <div 
+                                      key={index} 
+                                      className={`px-3 py-2 cursor-pointer ${selectedBrandIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
+                                      onClick={() => {
+                                        form.setValue('brand', brand);
+                                        setBrandDropdown([]);
+                                      }}
+                                    >
+                                      <div className="font-medium">{brand}</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -925,7 +1081,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="modelseries-select">
                                 <SelectValue placeholder="Modellreihe auswählen" />
                               </SelectTrigger>
                             </FormControl>
@@ -956,19 +1112,89 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                             <div className="relative">
                               <Input 
                                 placeholder="z.B. iPhone 13, Galaxy S21, etc." 
-                                list="modelOptions"
                                 {...field} 
                                 disabled={isDisabled}
                                 onChange={(e) => {
                                   field.onChange(e);
                                   setIsModelChanged(true);
+                                  
+                                  // Filter die Modelle
+                                  if (e.target.value && savedModels.length > 0) {
+                                    const filteredModels = savedModels
+                                      .filter(name => name.toLowerCase().includes(e.target.value.toLowerCase()));
+                                    setModelDropdown(filteredModels);
+                                    setSelectedModelIndex(-1);
+                                  } else if (!e.target.value && savedModels.length > 0) {
+                                    // Alle Modelle anzeigen wenn Feld leer
+                                    setModelDropdown(savedModels);
+                                    setSelectedModelIndex(-1);
+                                  } else {
+                                    setModelDropdown([]);
+                                  }
+                                }}
+                                onFocus={() => {
+                                  // Zeige alle verfügbaren Modelle an, wenn Fokus aufs Feld gesetzt wird
+                                  if (savedModels.length > 0) {
+                                    setModelDropdown(savedModels);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  // Dropdown ausblenden wenn Fokus verloren geht (mit Verzögerung)
+                                  setTimeout(() => setModelDropdown([]), 200);
+                                }}
+                                onKeyDown={(e) => {
+                                  // Tastaturnavigation im Dropdown
+                                  if (modelDropdown.length > 0) {
+                                    if (e.key === 'ArrowDown') {
+                                      e.preventDefault();
+                                      setSelectedModelIndex(prev => Math.min(prev + 1, modelDropdown.length - 1));
+                                    } else if (e.key === 'ArrowUp') {
+                                      e.preventDefault();
+                                      setSelectedModelIndex(prev => Math.max(prev - 1, 0));
+                                    } else if (e.key === 'Enter' && selectedModelIndex >= 0) {
+                                      e.preventDefault();
+                                      const selectedModel = modelDropdown[selectedModelIndex];
+                                      form.setValue('model', selectedModel);
+                                      setModelDropdown([]);
+                                    } else if (e.key === 'Tab' && selectedModelIndex >= 0) {
+                                      e.preventDefault();
+                                      const selectedModel = modelDropdown[selectedModelIndex];
+                                      form.setValue('model', selectedModel);
+                                      setModelDropdown([]);
+                                      
+                                      // Fokus auf das nächste Feld setzen
+                                      setTimeout(() => {
+                                        const serialNumberInput = document.querySelector('input[name="serialNumber"]');
+                                        if (serialNumberInput) {
+                                          (serialNumberInput as HTMLInputElement).focus();
+                                        }
+                                      }, 100);
+                                    } else if (e.key === 'Escape') {
+                                      // Dropdown schließen bei Escape
+                                      setModelDropdown([]);
+                                    }
+                                  }
                                 }}
                               />
-                              <datalist id="modelOptions">
-                                {savedModels.map((model, index) => (
-                                  <option key={index} value={model} />
-                                ))}
-                              </datalist>
+                              {/* Dropdown für Modelle */}
+                              {modelDropdown.length > 0 && (
+                                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                                  <div className="py-1 max-h-60 overflow-auto">
+                                    {modelDropdown.map((model, index) => (
+                                      <div 
+                                        key={index} 
+                                        className={`px-3 py-2 cursor-pointer ${selectedModelIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
+                                        onClick={() => {
+                                          form.setValue('model', model);
+                                          setModelDropdown([]);
+                                        }}
+                                      >
+                                        <div className="font-medium">{model}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </FormControl>
                           <FormMessage />
