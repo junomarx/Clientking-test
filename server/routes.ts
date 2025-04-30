@@ -1080,19 +1080,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      console.log("Verwende User-ID für Modellreihe:", userId);
+      console.log("Request Body:", req.body);
       
-      const modelSeriesData = insertUserModelSeriesSchema.parse(req.body);
-      
-      const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
-      
-      res.status(201).json(modelSeries);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Ungültige Modellreihe-Daten", errors: error.errors });
+      // Manuelle, einfache Validierung
+      if (!req.body.name || !req.body.brandId) {
+        console.log("Name oder brandId fehlt in der Anfrage");
+        return res.status(400).json({ message: "Name und brandId sind erforderlich" });
       }
-      console.error("Error creating model series:", error);
-      res.status(500).json({ message: "Fehler beim Erstellen der Modellreihe" });
+      
+      // Direkt ein neues Objekt erstellen, ohne Schema-Validierung
+      const modelSeriesData = {
+        name: req.body.name,
+        brandId: Number(req.body.brandId),
+        userId: userId  // userId explizit einbinden
+      };
+      
+      console.log("Bereite Daten für Modellreihe vor:", modelSeriesData);
+      
+      try {
+        const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
+        console.log("Modellreihe erfolgreich erstellt:", modelSeries);
+        return res.status(201).json(modelSeries);
+      } catch (storageError) {
+        console.error("Fehler beim Speichern der Modellreihe in der Datenbank:", storageError);
+        return res.status(500).json({ message: "Fehler beim Speichern der Modellreihe in der Datenbank", error: storageError.message });
+      }
+    } catch (error) {
+      console.error("Allgemeiner Fehler beim Erstellen der Modellreihe:", error);
+      return res.status(500).json({ message: "Fehler beim Erstellen der Modellreihe", error: error.message });
     }
+  
   });
   
   // Benutzerspezifische Modellreihe aktualisieren
