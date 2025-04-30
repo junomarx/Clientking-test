@@ -191,8 +191,10 @@ export function registerAdminRoutes(app: Express) {
       
       // Alle Fehlerbeschreibungen für diesen Gerätetyp abrufen
       const issues = await db.select().from(deviceIssues)
-        .where(eq(deviceIssues.deviceType, deviceType))
-        .orderBy(deviceIssues.description);
+        .where(eq(deviceIssues.deviceType, deviceType));
+      
+      // Sortieren nach Beschreibung
+      issues.sort((a, b) => a.description.localeCompare(b.description));
       
       // Nur die description zurückgeben für einfache Verwendung
       const issueDescriptions = issues.map(issue => issue.description);
