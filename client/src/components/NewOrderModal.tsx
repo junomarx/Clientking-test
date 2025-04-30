@@ -460,7 +460,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
         
         // Marke und Modell jetzt in der Datenbank speichern
-        saveModelDb(
+        const success = saveModelDb(
           repairData.deviceType, 
           repairData.brand, 
           repairData.modelSeries, 
@@ -470,8 +470,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           createDeviceTypeMutation,
           brandMutation,
           modelSeriesMutation,
-          modelsMutation
+          modelsMutation,
+          user
         );
+        
+        if (!success) {
+          console.log("Keine Berechtigung zum Erstellen neuer Modelle - nur vorhandene Modelle können genutzt werden");
+        }
       }
       
       console.log("Sending repair data:", repairData);
