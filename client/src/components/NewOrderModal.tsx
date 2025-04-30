@@ -117,15 +117,17 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
   // Hooks für API-Anfragen
-  const { getAllDeviceTypes, createDeviceType } = useDeviceTypes();
-  const deviceTypesQuery = getAllDeviceTypes();
-  const createDeviceTypeMutation = createDeviceType();
-  const { createBrand, getBrandsByDeviceTypeId } = useBrands();
-  const brandMutation = createBrand();
-  const { createModelSeries } = useModelSeries();
-  const modelSeriesMutation = createModelSeries();
-  const { createModels } = useModels();
-  const modelsMutation = createModels();
+  const deviceTypes = useDeviceTypes();
+  const brands = useBrands();
+  const modelSeries = useModelSeries();
+  const models = useModels();
+  
+  // Query-Hooks aufrufen
+  const deviceTypesQuery = deviceTypes.getAllDeviceTypes();
+  const createDeviceTypeMutation = deviceTypes.createDeviceType();
+  const brandMutation = brands.createBrand();
+  const modelSeriesMutation = modelSeries.createModelSeries();
+  const modelsMutation = models.createModels();
   
   // API Device Types
   const apiDeviceTypes = deviceTypesQuery.data;
@@ -164,7 +166,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Setze device type id basierend auf watchDeviceType
   useEffect(() => {
     if (watchDeviceType && apiDeviceTypes) {
-      const deviceType = apiDeviceTypes.find((dt: any) => dt.name === watchDeviceType);
+      const deviceType = apiDeviceTypes.find(dt => dt.name === watchDeviceType);
       if (deviceType) {
         setSelectedDeviceTypeId(deviceType.id);
       } else {
@@ -173,10 +175,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else {
       setSelectedDeviceTypeId(null);
     }
-  }, [watchDeviceType, apiDeviceTypes]);
+  }, [watchDeviceType, deviceTypesQuery.data]);
   
   // Abfrage für Marken basierend auf DeviceType
-  const brandsQuery = getBrandsByDeviceTypeId(selectedDeviceTypeId);
+  const brandsQuery = brands.getBrandsByDeviceTypeId(selectedDeviceTypeId);
   
   // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
@@ -395,9 +397,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some((dt: any) => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
-          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
+          createDeviceTypeMutation.mutate(repairData.deviceType);
         }
         
         // Marke und Modell jetzt in der Datenbank speichern
@@ -409,8 +411,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           selectedDeviceTypeId,
           selectedBrandId,
           createDeviceTypeMutation,
-          createBrand(),
-          createModelSeries(),
+          createBrandMutation,
+          createModelSeriesMutation,
           createModelsMutation
         );
       }
@@ -530,9 +532,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Speichern des Gerätehierarchie mit der Datenbank-API
       if (repairData.model && repairData.deviceType && repairData.brand) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some((dt: any) => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
-          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
+          createDeviceTypeMutation.mutate(repairData.deviceType);
         }
         
         // Marke und Modell jetzt in der Datenbank speichern
@@ -544,8 +546,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           selectedDeviceTypeId,
           selectedBrandId,
           createDeviceTypeMutation,
-          createBrand(),
-          createModelSeries(),
+          createBrandMutation,
+          createModelSeriesMutation,
           createModelsMutation
         );
       }
