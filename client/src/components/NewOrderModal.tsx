@@ -446,21 +446,27 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   }, [watchModelSeries, modelSeriesData]);
   
-  // Abfrage für Modelle basierend auf Modellreihe oder Marke
-  const modelsQuery = selectedModelSeriesId 
-    ? getModelsByModelSeriesId(selectedModelSeriesId) 
-    : { data: null, isLoading: false };
+  // Abfrage für Modelle basierend auf Modellreihe
+  const { data: modelsData, isLoading: isLoadingModels } = useQuery({
+    queryKey: ['/api/models', { modelSeriesId: selectedModelSeriesId }],
+    enabled: !!selectedModelSeriesId,
+    queryFn: async () => {
+      const res = await apiRequest('GET', `/api/models?modelSeriesId=${selectedModelSeriesId}`);
+      return await res.json();
+    },
+    staleTime: 30000, // 30 Sekunden Caching
+  });
   
   // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
   useEffect(() => {
-    if (modelsQuery.data) {
+    if (modelsData) {
       // Extrahiere die Namen der Modelle
-      const modelNames = modelsQuery.data.map(model => model.name);
+      const modelNames = modelsData.map((model: any) => model.name);
       setSavedModels(modelNames);
     } else {
       setSavedModels([]);
     }
-  }, [modelsQuery.data]);
+  }, [modelsData]);
   
   // Funktion zum Speichern eines Gerätetyps, wenn er nicht existiert
   const saveDeviceType = (deviceType: string) => {
