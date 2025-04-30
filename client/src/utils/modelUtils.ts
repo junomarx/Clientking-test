@@ -1,4 +1,4 @@
-// Hilfsfunktion für Modellspeicherung
+// Hilfsfunktion für Modellspeicherung - nur für Admins (bugi)
 export const saveModelDb = (
   deviceType: string,
   brand: string,
@@ -9,8 +9,15 @@ export const saveModelDb = (
   createDeviceTypeMut: any,
   createBrandMut: any,
   createModelSeriesMut: any,
-  createModelsMut: any
+  createModelsMut: any,
+  user: any
 ) => {
+  // Prüfen ob der Benutzer Admin-Rechte hat (nur bugi)
+  if (!user || user.username !== 'bugi') {
+    console.log("Keine Admin-Rechte zum Erstellen neuer Modelle");
+    return false; // Nur Admin darf Modelle erstellen
+  }
+  
   // Implementierung der Modellspeicherung
   console.log("Speichere Modell:", model, "für", deviceType, brand, modelSeries);
   
@@ -47,7 +54,7 @@ export const saveModelDb = (
   } else if (deviceTypeId && brandId) {
     // Ohne Modellreihe - Standard-Modellreihe erstellen oder finden
     createModelSeriesMut.mutate({
-      name: "Standard",
+      name: "_default",
       brandId: brandId
     }, {
       onSuccess: (data: any) => {
@@ -58,4 +65,6 @@ export const saveModelDb = (
       }
     });
   }
+  
+  return true; // Erfolgreich gespeichert
 };
