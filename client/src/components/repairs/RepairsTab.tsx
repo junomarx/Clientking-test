@@ -458,14 +458,18 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                         <button 
                           className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
                           title="Status ändern"
-                          onClick={() => openStatusDialog(repair.id, repair.status)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openStatusDialog(repair.id, repair.status);
+                          }}
                         >
                           <AlertCircle className="h-4 w-4" />
                         </button>
                         <button 
                           className="text-orange-600 hover:text-orange-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag bearbeiten"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedRepairId(repair.id);
                             setShowEditDialog(true);
                           }}
@@ -476,7 +480,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                           <button 
                             className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
                             title="Druckoptionen anzeigen"
-                            onClick={() => showPrintOptions(repair.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              showPrintOptions(repair.id);
+                            }}
                           >
                             <Printer className="h-4 w-4" />
                           </button>
@@ -485,7 +492,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                           <button 
                             className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
                             title={repair.reviewRequestSent ? "Bewertungsanfrage erneut senden" : "Bewertungsanfrage senden"}
-                            onClick={() => handleSendReviewRequest(repair.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendReviewRequest(repair.id);
+                            }}
                           >
                             {repair.reviewRequestSent ? 
                              <Star className="h-4 w-4 fill-yellow-500" /> : 
@@ -496,7 +506,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                         <button 
                           className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag löschen"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedRepairId(repair.id);
                             setShowDeleteDialog(true);
                           }}
@@ -624,7 +635,10 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 <div className="flex justify-between p-3 bg-gray-50 border-t border-gray-100">
                   <button 
                     className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={() => openStatusDialog(repair.id, repair.status)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openStatusDialog(repair.id, repair.status);
+                    }}
                   >
                     <AlertCircle className="h-5 w-5" />
                   </button>
@@ -867,6 +881,13 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           itemName="Reparatur"
         />
       )}
+
+      {/* Repair Details Dialog */}
+      <RepairDetailsDialog
+        open={showDetailsDialog}
+        onClose={closeDetailsDialog}
+        repairId={selectedRepairId}
+      />
     </div>
   );
 }
