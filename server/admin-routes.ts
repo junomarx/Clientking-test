@@ -282,6 +282,24 @@ export function registerAdminRoutes(app: Express) {
         if (jsonData.models && jsonData.models.length > 0) {
           console.log("Beispiel model:", jsonData.models[0]);
         }
+        
+        // Prüfe, ob alle referenzierten Gerätetyp-IDs in den importierten Gerätetypen existieren
+        const deviceTypeIds = new Set(jsonData.deviceTypes?.map((dt: any) => dt.id) || []);
+        const missingDeviceTypeIds = [];
+        
+        if (jsonData.brands && jsonData.brands.length > 0) {
+          for (const brand of jsonData.brands) {
+            if (!deviceTypeIds.has(brand.deviceTypeId)) {
+              missingDeviceTypeIds.push(brand.deviceTypeId);
+              console.warn(`Warnung: Marke '${brand.name}' (ID: ${brand.id}) referenziert einen Gerätetyp mit ID ${brand.deviceTypeId}, der nicht im Import enthalten ist.`);
+            }
+          }
+        }
+        
+        if (missingDeviceTypeIds.length > 0) {
+          console.warn(`Es wurden ${missingDeviceTypeIds.length} Gerätetyp-IDs in Marken referenziert, die nicht im Import enthalten sind.`);
+          console.warn(`Dies wird wahrscheinlich zu Fehlern führen, weil die Fremdschlüssel-Beziehungen nicht erfüllt werden können.`);
+        }
       } catch (e) {
         console.error("JSON parse error:", e);
         return res.status(400).json({ message: "Ungültiges JSON-Format" });
@@ -364,15 +382,54 @@ export function registerAdminRoutes(app: Express) {
           insertedDeviceTypes.forEach((newDt, index) => {
             const oldId = newDeviceTypes[index].originalId;
             idMappings.deviceTypes.set(oldId, newDt.id);
+            console.log(`Gerätetyp-Mapping: alte ID ${oldId} -> neue ID ${newDt.id}`);
           });
           
           stats.deviceTypes = insertedDeviceTypes.length;
           console.log(`${insertedDeviceTypes.length} Gerätetypen wurden importiert.`);
-          console.log(`Gerätetyp-ID-Mapping erstellt:`, Object.fromEntries(idMappings.deviceTypes));
+          console.log(`Gesamtes Gerätetyp-ID-Mapping:`, Array.from(idMappings.deviceTypes.entries()));
+          
+          // Gebe eine Liste aller importierten Gerätetypen aus
+          console.log("Importierte Gerätetypen mit neuen IDs:");
+          insertedDeviceTypes.forEach(dt => console.log(`ID: ${dt.id}, Name: ${dt.name}, userId: ${dt.userId}`));
         }
         
         // Marken importieren
         if (importBrands && importBrands.length > 0) {
+          // Prüfe, ob alle benötigten Gerätetypen vorhanden sind
+          const missingDeviceTypes = new Set<number>();
+          for (const brand of importBrands) {
+            const oldDeviceTypeId = brand.deviceTypeId;
+            if (!idMappings.deviceTypes.has(oldDeviceTypeId)) {
+              missingDeviceTypes.add(oldDeviceTypeId);
+            }
+          }
+          
+          // Erstelle fehlende Gerätetypen
+          if (missingDeviceTypes.size > 0) {
+            console.warn(`Es fehlen ${missingDeviceTypes.size} Gerätetypen, die von Marken benötigt werden.`);
+            
+            for (const missingId of missingDeviceTypes) {
+              // Erstelle einen Platzhalter-Gerätetyp
+              console.log(`Erstelle fehlenden Gerätetyp mit ID ${missingId}...`);
+              
+              const [newDeviceType] = await db.insert(userDeviceTypes)
+                .values({
+                  name: `Importierter Gerätetyp ${missingId}`,
+                  userId: req.user?.id || 3,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+                
+              // Füge ihn zum Mapping hinzu
+              if (newDeviceType) {
+                idMappings.deviceTypes.set(missingId, newDeviceType.id);
+                console.log(`Fehlender Gerätetyp mit alter ID ${missingId} wurde als neuer Gerätetyp mit ID ${newDeviceType.id} erstellt.`);
+              }
+            }
+          }
+          
           const newBrands = importBrands.map((b: any) => {
             const oldId = b.id;
             const oldDeviceTypeId = b.deviceTypeId;
@@ -381,14 +438,20 @@ export function registerAdminRoutes(app: Express) {
             // Neue deviceTypeId aus dem Mapping holen
             const newDeviceTypeId = idMappings.deviceTypes.get(oldDeviceTypeId);
             
+            // Ausführlicheres Logging
+            console.log(`Marke '${b.name}' mit ID ${oldId}:`);
+            console.log(`  - Benötigt Gerätetyp mit alter ID: ${oldDeviceTypeId}`);
+            console.log(`  - Im Mapping gefundene neue ID: ${newDeviceTypeId || 'KEINE'}`);
+            
             if (!newDeviceTypeId) {
-              console.warn(`Keine neue ID für Gerätetyp mit ID ${oldDeviceTypeId} gefunden. Verwende originale ID.`);
+              console.warn(`Keine neue ID für Gerätetyp mit ID ${oldDeviceTypeId} gefunden, obwohl wir versucht haben, fehlende Gerätetypen zu erstellen.`);
+              // Dies sollte eigentlich nicht mehr passieren
             }
             
             return {
               ...brandData,
               originalId: oldId, // Temporär zur Identifikation
-              deviceTypeId: newDeviceTypeId || oldDeviceTypeId, // Neue ID verwenden, sonst die alte
+              deviceTypeId: newDeviceTypeId, // Immer die neue ID verwenden
               userId: req.user?.id || 3,
               createdAt: new Date(),
               updatedAt: new Date()
