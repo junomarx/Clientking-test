@@ -685,7 +685,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                     control={form.control}
                     name="lastName"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="relative">
                         <FormLabel>Nachname</FormLabel>
                         <FormControl>
                           <Input 
@@ -700,35 +700,27 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                             }}
                           />
                         </FormControl>
+                        {/* Dropdown für gefundene Kunden direkt unter dem Eingabefeld */}
+                        {matchingCustomers.length > 0 && (
+                          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                            <div className="py-1 max-h-60 overflow-auto">
+                              {matchingCustomers.map((customer) => (
+                                <div 
+                                  key={customer.id} 
+                                  className="px-3 py-2 cursor-pointer hover:bg-muted"
+                                  onClick={() => fillCustomerData(customer)}
+                                >
+                                  <div className="font-medium">{customer.firstName} {customer.lastName}</div>
+                                  <div className="text-sm text-gray-500">{customer.phone}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
-                  {/* Dropdown für gefundene Kunden */}
-                  {matchingCustomers.length > 0 && (
-                    <div className="sm:col-span-2 bg-muted/30 p-2 rounded-lg">
-                      <FormLabel className="mb-2 block">Gefundene Kunden ({matchingCustomers.length})</FormLabel>
-                      <Select onValueChange={(value) => {
-                        // Finde den ausgewählten Kunden
-                        const selectedCustomer = matchingCustomers.find(c => c.id.toString() === value);
-                        if (selectedCustomer) {
-                          fillCustomerData(selectedCustomer);
-                        }
-                      }}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Kunde auswählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {matchingCustomers.map((customer) => (
-                            <SelectItem key={customer.id} value={customer.id.toString()}>
-                              {customer.firstName} {customer.lastName} - {customer.phone}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                   <FormField
                     control={form.control}
                     name="phone"
