@@ -723,7 +723,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
-        modelSeries: (formData.modelSeries && formData.modelSeries !== 'none') ? formData.modelSeries : undefined, // Optional
+        modelSeries: formData.modelSeries ? formData.modelSeries : undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         serialNumber: formData.serialNumber,
