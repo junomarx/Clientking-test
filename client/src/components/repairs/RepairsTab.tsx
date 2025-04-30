@@ -856,7 +856,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         onStatusChange={openStatusDialog}
         onEdit={(id) => {
           setSelectedRepairId(id);
-          setShowEditDialog(true);
+          // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung den Edit-Dialog öffnen
+          setShowDetailsDialog(false);
+          setTimeout(() => {
+            setShowEditDialog(true);
+          }, 100);
         }}
       />
     </div>

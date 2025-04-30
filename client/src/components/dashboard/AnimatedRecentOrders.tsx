@@ -169,7 +169,13 @@ export function AnimatedRecentOrders({
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
         onStatusChange={onStatusChange}
-        onEdit={onEdit}
+        onEdit={onEdit ? (id) => {
+          // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung die Edit-Funktion aufrufen
+          setShowDetailsDialog(false);
+          setTimeout(() => {
+            onEdit(id);
+          }, 100);
+        } : undefined}
       />
     </motion.div>
   );
