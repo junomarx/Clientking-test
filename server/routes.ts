@@ -1102,15 +1102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
         console.log("Modellreihe erfolgreich erstellt:", modelSeries);
         return res.status(201).json(modelSeries);
-      } catch (storageError) {
+      } catch (storageError: any) {
         console.error("Fehler beim Speichern der Modellreihe in der Datenbank:", storageError);
         return res.status(500).json({ message: "Fehler beim Speichern der Modellreihe in der Datenbank", error: storageError.message });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Allgemeiner Fehler beim Erstellen der Modellreihe:", error);
       return res.status(500).json({ message: "Fehler beim Erstellen der Modellreihe", error: error.message });
     }
-  
   });
   
   // Benutzerspezifische Modellreihe aktualisieren
