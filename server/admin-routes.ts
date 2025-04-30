@@ -220,13 +220,13 @@ export function registerAdminRoutes(app: Express) {
       }
       
       // Alle Gerätetypen abrufen
-      const allDeviceTypes = await db.select().from(deviceTypes);
+      const allDeviceTypes = await db.select().from(userDeviceTypes);
       // Alle Marken abrufen
-      const allBrands = await db.select().from(brands);
+      const allBrands = await db.select().from(userBrands);
       // Alle Modellreihen abrufen
-      const allModelSeries = await db.select().from(modelSeries);
+      const allModelSeries = await db.select().from(userModelSeries);
       // Alle Modelle abrufen
-      const allModels = await db.select().from(models);
+      const allModels = await db.select().from(userModels);
       
       // CSV-Daten vorbereiten
       const csvData = {
@@ -296,11 +296,11 @@ export function registerAdminRoutes(app: Express) {
         for (const dt of importDeviceTypes) {
           const { id, ...deviceTypeData } = dt;
           // Prüfen, ob Gerätetyp bereits existiert
-          const existingDT = await db.select().from(deviceTypes).where(eq(deviceTypes.name, deviceTypeData.name));
+          const existingDT = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceTypeData.name));
           
           if (existingDT.length === 0) {
             // Neuen Gerätetyp erstellen
-            await db.insert(deviceTypes).values(deviceTypeData);
+            await db.insert(userDeviceTypes).values(deviceTypeData);
             stats.deviceTypes++;
           }
         }
@@ -311,15 +311,15 @@ export function registerAdminRoutes(app: Express) {
         for (const b of importBrands) {
           const { id, ...brandData } = b;
           // Prüfen, ob Marke bereits existiert
-          const existingBrand = await db.select().from(brands)
+          const existingBrand = await db.select().from(userBrands)
             .where(and(
-              eq(brands.name, brandData.name),
-              eq(brands.deviceTypeId, brandData.deviceTypeId)
+              eq(userBrands.name, brandData.name),
+              eq(userBrands.deviceTypeId, brandData.deviceTypeId)
             ));
           
           if (existingBrand.length === 0) {
             // Neue Marke erstellen
-            await db.insert(brands).values(brandData);
+            await db.insert(userBrands).values(brandData);
             stats.brands++;
           }
         }
@@ -330,15 +330,15 @@ export function registerAdminRoutes(app: Express) {
         for (const ms of importModelSeries) {
           const { id, ...msData } = ms;
           // Prüfen, ob Modellreihe bereits existiert
-          const existingMS = await db.select().from(modelSeries)
+          const existingMS = await db.select().from(userModelSeries)
             .where(and(
-              eq(modelSeries.name, msData.name),
-              eq(modelSeries.brandId, msData.brandId)
+              eq(userModelSeries.name, msData.name),
+              eq(userModelSeries.brandId, msData.brandId)
             ));
           
           if (existingMS.length === 0) {
             // Neue Modellreihe erstellen
-            await db.insert(modelSeries).values(msData);
+            await db.insert(userModelSeries).values(msData);
             stats.modelSeries++;
           }
         }
@@ -349,15 +349,15 @@ export function registerAdminRoutes(app: Express) {
         for (const m of importModels) {
           const { id, ...modelData } = m;
           // Prüfen, ob Modell bereits existiert
-          const existingModel = await db.select().from(models)
+          const existingModel = await db.select().from(userModels)
             .where(and(
-              eq(models.name, modelData.name),
-              eq(models.modelSeriesId, modelData.modelSeriesId)
+              eq(userModels.name, modelData.name),
+              eq(userModels.modelSeriesId, modelData.modelSeriesId)
             ));
           
           if (existingModel.length === 0) {
             // Neues Modell erstellen
-            await db.insert(models).values(modelData);
+            await db.insert(userModels).values(modelData);
             stats.models++;
           }
         }
