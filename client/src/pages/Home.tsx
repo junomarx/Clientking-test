@@ -62,6 +62,18 @@ export default function Home() {
         onClose={() => setIsNewOrderModalOpen(false)}
         customerId={selectedCustomerId}
       />
+      
+      <ToastTestDialog
+        open={isToastTestOpen}
+        onOpenChange={setIsToastTestOpen}
+      />
+
+      {/* Toast-Test-Button */}
+      <div className="fixed bottom-4 left-4 z-10">
+        <Button onClick={() => setIsToastTestOpen(true)} variant="outline" className="flex items-center gap-2">
+          <span>Toast-Test</span>
+        </Button>
+      </div>
     </div>
   );
 }
