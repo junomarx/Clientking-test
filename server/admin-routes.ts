@@ -289,13 +289,17 @@ export function registerAdminRoutes(app: Express) {
       // Gerätetypen importieren
       if (importDeviceTypes && importDeviceTypes.length > 0) {
         for (const dt of importDeviceTypes) {
-          const { id, ...deviceTypeData } = dt;
+          const { id, createdAt, updatedAt, ...deviceTypeData } = dt;
           // Prüfen, ob Gerätetyp bereits existiert
           const existingDT = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceTypeData.name));
           
           if (existingDT.length === 0) {
             // Neuen Gerätetyp erstellen
-            await db.insert(userDeviceTypes).values(deviceTypeData);
+            await db.insert(userDeviceTypes).values({
+              ...deviceTypeData,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
             stats.deviceTypes++;
           }
         }
@@ -304,7 +308,7 @@ export function registerAdminRoutes(app: Express) {
       // Marken importieren
       if (importBrands && importBrands.length > 0) {
         for (const b of importBrands) {
-          const { id, ...brandData } = b;
+          const { id, createdAt, updatedAt, ...brandData } = b;
           // Prüfen, ob Marke bereits existiert
           const existingBrand = await db.select().from(userBrands)
             .where(and(
@@ -314,7 +318,11 @@ export function registerAdminRoutes(app: Express) {
           
           if (existingBrand.length === 0) {
             // Neue Marke erstellen
-            await db.insert(userBrands).values(brandData);
+            await db.insert(userBrands).values({
+              ...brandData,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
             stats.brands++;
           }
         }
@@ -323,7 +331,7 @@ export function registerAdminRoutes(app: Express) {
       // Modellreihen importieren
       if (importModelSeries && importModelSeries.length > 0) {
         for (const ms of importModelSeries) {
-          const { id, ...msData } = ms;
+          const { id, createdAt, updatedAt, ...msData } = ms;
           // Prüfen, ob Modellreihe bereits existiert
           const existingMS = await db.select().from(userModelSeries)
             .where(and(
@@ -333,7 +341,11 @@ export function registerAdminRoutes(app: Express) {
           
           if (existingMS.length === 0) {
             // Neue Modellreihe erstellen
-            await db.insert(userModelSeries).values(msData);
+            await db.insert(userModelSeries).values({
+              ...msData,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
             stats.modelSeries++;
           }
         }
@@ -342,7 +354,7 @@ export function registerAdminRoutes(app: Express) {
       // Modelle importieren
       if (importModels && importModels.length > 0) {
         for (const m of importModels) {
-          const { id, ...modelData } = m;
+          const { id, createdAt, updatedAt, ...modelData } = m;
           // Prüfen, ob Modell bereits existiert
           const existingModel = await db.select().from(userModels)
             .where(and(
@@ -352,7 +364,11 @@ export function registerAdminRoutes(app: Express) {
           
           if (existingModel.length === 0) {
             // Neues Modell erstellen
-            await db.insert(userModels).values(modelData);
+            await db.insert(userModels).values({
+              ...modelData,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
             stats.models++;
           }
         }
