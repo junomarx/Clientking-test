@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash, Loader2, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -79,11 +80,15 @@ type BrandFormValues = z.infer<typeof brandSchema>;
 export function BrandSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  
+  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
+  const isAdmin = user?.id === 3;
 
   // Gerätetypen abrufen
   const { data: deviceTypes } = useQuery<DeviceType[]>({
@@ -254,18 +259,31 @@ export function BrandSettings() {
           <div>
             <h3 className="text-lg font-semibold">Marken verwalten</h3>
             <p className="text-sm text-muted-foreground">
-              Fügen Sie Marken hinzu, die von allen Benutzern verwendet werden können.
+              {isAdmin 
+                ? "Als Administrator können Sie Marken hinzufügen, die von allen Benutzern verwendet werden können."
+                : "Die Marken werden zentral verwaltet. Nur Administratoren können Änderungen vornehmen."
+              }
             </p>
           </div>
-          <Button 
-            size="sm"
-            onClick={() => {
-              addForm.reset();
-              setIsAddDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Hinzufügen
-          </Button>
+          {isAdmin ? (
+            <Button 
+              size="sm"
+              onClick={() => {
+                addForm.reset();
+                setIsAddDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Hinzufügen
+            </Button>
+          ) : (
+            <Button 
+              variant="outline"
+              size="sm"
+              disabled
+            >
+              <Lock className="mr-2 h-4 w-4" /> Nur für Administratoren
+            </Button>
+          )}
         </div>
         
         <div className="mb-4">

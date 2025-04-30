@@ -63,10 +63,14 @@ type DeviceTypeFormValues = z.infer<typeof deviceTypeSchema>;
 export function DeviceTypeSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<DeviceType | null>(null);
+  
+  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
+  const isAdmin = user?.id === 3;
 
   // Formular für das Hinzufügen eines neuen Gerätetyps
   const addForm = useForm<DeviceTypeFormValues>({
@@ -198,18 +202,31 @@ export function DeviceTypeSettings() {
         <div>
           <h3 className="text-lg font-semibold">Gerätetypen verwalten</h3>
           <p className="text-sm text-muted-foreground">
-            Fügen Sie Gerätetypen hinzu, die von allen Benutzern verwendet werden können.
+            {isAdmin 
+              ? "Als Administrator können Sie Gerätetypen hinzufügen, die von allen Benutzern verwendet werden können."
+              : "Die Gerätetypen werden zentral verwaltet. Nur Administratoren können Änderungen vornehmen."
+            }
           </p>
         </div>
-        <Button 
-          onClick={() => {
-            addForm.reset();
-            setIsAddDialogOpen(true);
-          }}
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Hinzufügen
-        </Button>
+        {isAdmin ? (
+          <Button 
+            onClick={() => {
+              addForm.reset();
+              setIsAddDialogOpen(true);
+            }}
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Hinzufügen
+          </Button>
+        ) : (
+          <Button 
+            variant="outline"
+            size="sm"
+            disabled
+          >
+            <Lock className="mr-2 h-4 w-4" /> Nur für Administratoren
+          </Button>
+        )}
       </div>
       
       <Table>
@@ -239,22 +256,31 @@ export function DeviceTypeSettings() {
                 <TableCell className="font-medium">{deviceType.name}</TableCell>
                 <TableCell>{new Date(deviceType.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(deviceType)}
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Bearbeiten</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(deviceType)}
-                  >
-                    <Trash className="h-4 w-4" />
-                    <span className="sr-only">Löschen</span>
-                  </Button>
+                  {isAdmin ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(deviceType)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Bearbeiten</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(deviceType)}
+                      >
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Löschen</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <span className="text-sm text-muted-foreground italic px-2">
+                      <Lock className="h-3 w-3 inline-block mr-1" />
+                      Gesperrt
+                    </span>
+                  )}
                 </TableCell>
               </TableRow>
             ))
