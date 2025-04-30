@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
 import { ModelManagementTab } from './ModelManagementTab';
-import { Smartphone, Layers, Tag, Plus, RefreshCw } from 'lucide-react';
+import { DeviceIssuesTab } from './DeviceIssuesTab';
+import { Smartphone, Layers, Tag, AlertCircle, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { updateAppleModels } from '@/lib/updateAppleModels';
@@ -72,7 +73,7 @@ export function DeviceManagementTab() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="deviceTypes" onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-3">
+            <TabsList className="grid grid-cols-4">
               <TabsTrigger value="deviceTypes" className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
                 Gerätetypen
@@ -84,6 +85,10 @@ export function DeviceManagementTab() {
               <TabsTrigger value="models" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
                 Modelle
+              </TabsTrigger>
+              <TabsTrigger value="issues" className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Fehlerbeschreibungen
               </TabsTrigger>
             </TabsList>
             
@@ -97,6 +102,10 @@ export function DeviceManagementTab() {
             
             <TabsContent value="models">
               <ModelManagementTab />
+            </TabsContent>
+            
+            <TabsContent value="issues">
+              <DeviceIssuesTab />
             </TabsContent>
           </Tabs>
         </CardContent>

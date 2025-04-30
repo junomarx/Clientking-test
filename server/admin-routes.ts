@@ -85,8 +85,10 @@ export function registerAdminRoutes(app: Express) {
       
       // Prüfen, ob die Fehlerbeschreibung bereits existiert
       const existingIssue = await db.select().from(deviceIssues)
-        .where(eq(deviceIssues.description, issueData.description))
-        .where(eq(deviceIssues.deviceType, issueData.deviceType));
+        .where(and(
+          eq(deviceIssues.description, issueData.description),
+          eq(deviceIssues.deviceType, issueData.deviceType)
+        ));
       
       if (existingIssue.length > 0) {
         return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
