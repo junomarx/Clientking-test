@@ -5,7 +5,7 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from "./db";
 import { deviceIssues, insertDeviceIssueSchema } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // Helper-Funktion für das Passwort-Hashing
 const scryptAsync = promisify(scrypt);
@@ -37,7 +37,14 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/device-issues", isAdmin, async (req: Request, res: Response) => {
     try {
       // Alle Fehlerbeschreibungen aus der Datenbank abrufen
-      const allIssues = await db.select().from(deviceIssues).orderBy(deviceIssues.deviceType, deviceIssues.description);
+      const allIssues = await db.select().from(deviceIssues);
+      // Nach Gerätetyp und Beschreibung sortieren
+      allIssues.sort((a, b) => {
+        if (a.deviceType !== b.deviceType) {
+          return a.deviceType.localeCompare(b.deviceType);
+        }
+        return a.description.localeCompare(b.description);
+      });
       
       // Nach Gerätetyp gruppieren für bessere Frontend-Darstellung
       const issuesByDeviceType: {[key: string]: any[]} = {};
@@ -63,8 +70,10 @@ export function registerAdminRoutes(app: Express) {
       
       // Alle Fehlerbeschreibungen für diesen Gerätetyp abrufen
       const issues = await db.select().from(deviceIssues)
-        .where(eq(deviceIssues.deviceType, deviceType))
-        .orderBy(deviceIssues.description);
+        .where(eq(deviceIssues.deviceType, deviceType));
+      
+      // Sortieren nach Beschreibung
+      issues.sort((a, b) => a.description.localeCompare(b.description));
       
       res.json(issues);
     } catch (error) {
