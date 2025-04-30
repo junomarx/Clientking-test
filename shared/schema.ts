@@ -209,6 +209,25 @@ export const userDeviceTypes = pgTable("user_device_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Admin (Bugi)
+export const deviceIssues = pgTable("device_issues", {
+  id: serial("id").primaryKey(),
+  description: text("description").notNull(),      // Die Fehlerbeschreibung
+  deviceType: text("device_type").notNull(),       // Für welche Geräteart ist die Fehlerbeschreibung
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Nur Bugi (Admin) darf Fehlerbeschreibungen erstellen, daher kein userId hier
+});
+
+export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DeviceIssue = typeof deviceIssues.$inferSelect;
+export type InsertDeviceIssue = z.infer<typeof insertDeviceIssueSchema>;
+
 // Beziehungen definieren - userDeviceTypes zu userBrands
 export const userDeviceTypesRelations = relations(userDeviceTypes, ({ one, many }) => ({
   user: one(users, {
