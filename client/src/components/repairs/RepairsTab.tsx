@@ -853,6 +853,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         open={showDetailsDialog}
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
+        onStatusChange={openStatusDialog}
+        onEdit={(id) => {
+          setSelectedRepairId(id);
+          setShowEditDialog(true);
+        }}
       />
     </div>
   );

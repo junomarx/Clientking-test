@@ -17,12 +17,16 @@ interface AnimatedRecentOrdersProps {
   repairs: RepairWithCustomer[];
   isLoading: boolean;
   onPrintClick: (repairId: number) => void;
+  onStatusChange?: (id: number, currentStatus: string) => void;
+  onEdit?: (id: number) => void;
 }
 
 export function AnimatedRecentOrders({ 
   repairs, 
   isLoading, 
-  onPrintClick 
+  onPrintClick,
+  onStatusChange,
+  onEdit
 }: AnimatedRecentOrdersProps) {
   // State für den Detaildialog
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -164,6 +168,8 @@ export function AnimatedRecentOrders({
         open={showDetailsDialog}
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
+        onStatusChange={onStatusChange}
+        onEdit={onEdit}
       />
     </motion.div>
   );
