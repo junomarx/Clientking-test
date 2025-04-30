@@ -267,7 +267,23 @@ export function registerAdminRoutes(app: Express) {
       try {
         // JSON-String parsen
         jsonData = JSON.parse(jsonString);
+        console.log("Import-Daten erhalten:", Object.keys(jsonData));
+        
+        // Debug-Ausgabe für die ersten Einträge, um deren Struktur zu untersuchen
+        if (jsonData.deviceTypes && jsonData.deviceTypes.length > 0) {
+          console.log("Beispiel deviceType:", jsonData.deviceTypes[0]);
+        }
+        if (jsonData.brands && jsonData.brands.length > 0) {
+          console.log("Beispiel brand:", jsonData.brands[0]);
+        }
+        if (jsonData.modelSeries && jsonData.modelSeries.length > 0) {
+          console.log("Beispiel modelSeries:", jsonData.modelSeries[0]);
+        }
+        if (jsonData.models && jsonData.models.length > 0) {
+          console.log("Beispiel model:", jsonData.models[0]);
+        }
       } catch (e) {
+        console.error("JSON parse error:", e);
         return res.status(400).json({ message: "Ungültiges JSON-Format" });
       }
       
@@ -286,92 +302,100 @@ export function registerAdminRoutes(app: Express) {
         models: 0
       };
       
-      // Gerätetypen importieren
-      if (importDeviceTypes && importDeviceTypes.length > 0) {
-        for (const dt of importDeviceTypes) {
-          const { id, createdAt, updatedAt, ...deviceTypeData } = dt;
-          // Prüfen, ob Gerätetyp bereits existiert
-          const existingDT = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceTypeData.name));
-          
-          if (existingDT.length === 0) {
-            // Neuen Gerätetyp erstellen
-            await db.insert(userDeviceTypes).values({
+      try {
+        // Zuerst alle bestehenden Daten löschen, da wir überschreiben wollen
+        if (importModels && importModels.length > 0) {
+          await db.delete(userModels);
+          console.log("Alle vorhandenen Modelle wurden gelöscht.");
+        }
+        
+        if (importModelSeries && importModelSeries.length > 0) {
+          await db.delete(userModelSeries);
+          console.log("Alle vorhandenen Modellreihen wurden gelöscht.");
+        }
+        
+        if (importBrands && importBrands.length > 0) {
+          await db.delete(userBrands);
+          console.log("Alle vorhandenen Marken wurden gelöscht.");
+        }
+        
+        if (importDeviceTypes && importDeviceTypes.length > 0) {
+          await db.delete(userDeviceTypes);
+          console.log("Alle vorhandenen Gerätetypen wurden gelöscht.");
+        }
+        
+        // Gerätetypen importieren
+        if (importDeviceTypes && importDeviceTypes.length > 0) {
+          const newDeviceTypes = importDeviceTypes.map((dt: any) => {
+            // ID, createdAt, updatedAt weglassen und neue Zeitstempel setzen
+            const { id, createdAt, updatedAt, ...deviceTypeData } = dt;
+            return {
               ...deviceTypeData,
+              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist, Fallback auf bugi (ID 3)
               createdAt: new Date(),
               updatedAt: new Date()
-            });
-            stats.deviceTypes++;
-          }
-        }
-      }
-      
-      // Marken importieren
-      if (importBrands && importBrands.length > 0) {
-        for (const b of importBrands) {
-          const { id, createdAt, updatedAt, ...brandData } = b;
-          // Prüfen, ob Marke bereits existiert
-          const existingBrand = await db.select().from(userBrands)
-            .where(and(
-              eq(userBrands.name, brandData.name),
-              eq(userBrands.deviceTypeId, brandData.deviceTypeId)
-            ));
+            };
+          });
           
-          if (existingBrand.length === 0) {
-            // Neue Marke erstellen
-            await db.insert(userBrands).values({
+          // Batch-Insert für bessere Performance
+          await db.insert(userDeviceTypes).values(newDeviceTypes);
+          stats.deviceTypes = newDeviceTypes.length;
+          console.log(`${newDeviceTypes.length} Gerätetypen wurden importiert.`);
+        }
+        
+        // Marken importieren
+        if (importBrands && importBrands.length > 0) {
+          const newBrands = importBrands.map((b: any) => {
+            const { id, createdAt, updatedAt, ...brandData } = b;
+            return {
               ...brandData,
+              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
               createdAt: new Date(),
               updatedAt: new Date()
-            });
-            stats.brands++;
-          }
-        }
-      }
-      
-      // Modellreihen importieren
-      if (importModelSeries && importModelSeries.length > 0) {
-        for (const ms of importModelSeries) {
-          const { id, createdAt, updatedAt, ...msData } = ms;
-          // Prüfen, ob Modellreihe bereits existiert
-          const existingMS = await db.select().from(userModelSeries)
-            .where(and(
-              eq(userModelSeries.name, msData.name),
-              eq(userModelSeries.brandId, msData.brandId)
-            ));
+            };
+          });
           
-          if (existingMS.length === 0) {
-            // Neue Modellreihe erstellen
-            await db.insert(userModelSeries).values({
+          await db.insert(userBrands).values(newBrands);
+          stats.brands = newBrands.length;
+          console.log(`${newBrands.length} Marken wurden importiert.`);
+        }
+        
+        // Modellreihen importieren
+        if (importModelSeries && importModelSeries.length > 0) {
+          const newModelSeries = importModelSeries.map((ms: any) => {
+            const { id, createdAt, updatedAt, ...msData } = ms;
+            return {
               ...msData,
+              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
               createdAt: new Date(),
               updatedAt: new Date()
-            });
-            stats.modelSeries++;
-          }
-        }
-      }
-      
-      // Modelle importieren
-      if (importModels && importModels.length > 0) {
-        for (const m of importModels) {
-          const { id, createdAt, updatedAt, ...modelData } = m;
-          // Prüfen, ob Modell bereits existiert
-          const existingModel = await db.select().from(userModels)
-            .where(and(
-              eq(userModels.name, modelData.name),
-              eq(userModels.modelSeriesId, modelData.modelSeriesId)
-            ));
+            };
+          });
           
-          if (existingModel.length === 0) {
-            // Neues Modell erstellen
-            await db.insert(userModels).values({
+          await db.insert(userModelSeries).values(newModelSeries);
+          stats.modelSeries = newModelSeries.length;
+          console.log(`${newModelSeries.length} Modellreihen wurden importiert.`);
+        }
+        
+        // Modelle importieren
+        if (importModels && importModels.length > 0) {
+          const newModels = importModels.map((m: any) => {
+            const { id, createdAt, updatedAt, ...modelData } = m;
+            return {
               ...modelData,
+              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist
               createdAt: new Date(),
               updatedAt: new Date()
-            });
-            stats.models++;
-          }
+            };
+          });
+          
+          await db.insert(userModels).values(newModels);
+          stats.models = newModels.length;
+          console.log(`${newModels.length} Modelle wurden importiert.`);
         }
+      } catch (err) {
+        console.error("Fehler beim Import der Daten:", err);
+        throw err; // Fehler weiterwerfen, damit er im äußeren catch-Block behandelt wird
       }
       
       res.json({
