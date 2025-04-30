@@ -117,10 +117,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
   // Hooks für API-Anfragen
-  const { deviceTypesQuery, createDeviceTypeMutation } = useDeviceTypes();
-  const { createBrandMutation, getBrandsByDeviceTypeId } = useBrands();
-  const { createModelSeriesMutation } = useModelSeries();
-  const { createModels: createModelsMutation } = useModels();
+  const { getAllDeviceTypes, createDeviceType } = useDeviceTypes();
+  const deviceTypesQuery = getAllDeviceTypes();
+  const createDeviceTypeMutation = createDeviceType();
+  const { createBrand, getBrandsByDeviceTypeId } = useBrands();
+  const brandMutation = createBrand();
+  const { createModelSeries } = useModelSeries();
+  const modelSeriesMutation = createModelSeries();
+  const { createModels } = useModels();
+  const modelsMutation = createModels();
   
   // API Device Types
   const apiDeviceTypes = deviceTypesQuery.data;
@@ -159,7 +164,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Setze device type id basierend auf watchDeviceType
   useEffect(() => {
     if (watchDeviceType && apiDeviceTypes) {
-      const deviceType = apiDeviceTypes.find(dt => dt.name === watchDeviceType);
+      const deviceType = apiDeviceTypes.find((dt: any) => dt.name === watchDeviceType);
       if (deviceType) {
         setSelectedDeviceTypeId(deviceType.id);
       } else {
@@ -168,7 +173,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else {
       setSelectedDeviceTypeId(null);
     }
-  }, [watchDeviceType, deviceTypesQuery.data]);
+  }, [watchDeviceType, apiDeviceTypes]);
   
   // Abfrage für Marken basierend auf DeviceType
   const brandsQuery = getBrandsByDeviceTypeId(selectedDeviceTypeId);
@@ -390,9 +395,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       if (repairData.model && repairData.deviceType && repairData.brand) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        const exists = apiDeviceTypes?.some((dt: any) => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
-          createDeviceTypeMutation.mutate(repairData.deviceType);
+          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
         }
         
         // Marke und Modell jetzt in der Datenbank speichern
@@ -404,8 +409,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           selectedDeviceTypeId,
           selectedBrandId,
           createDeviceTypeMutation,
-          createBrandMutation,
-          createModelSeriesMutation,
+          createBrand(),
+          createModelSeries(),
           createModelsMutation
         );
       }
@@ -525,9 +530,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Speichern des Gerätehierarchie mit der Datenbank-API
       if (repairData.model && repairData.deviceType && repairData.brand) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
+        const exists = apiDeviceTypes?.some((dt: any) => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
-          createDeviceTypeMutation.mutate(repairData.deviceType);
+          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
         }
         
         // Marke und Modell jetzt in der Datenbank speichern
@@ -539,8 +544,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           selectedDeviceTypeId,
           selectedBrandId,
           createDeviceTypeMutation,
-          createBrandMutation,
-          createModelSeriesMutation,
+          createBrand(),
+          createModelSeries(),
           createModelsMutation
         );
       }
