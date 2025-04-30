@@ -15,6 +15,7 @@ export interface Brand {
 export interface CreateBrandDTO {
   name: string;
   deviceTypeId: number;
+  userId?: number;
 }
 
 // Hook für Marken-Operationen

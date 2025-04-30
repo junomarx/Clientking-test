@@ -937,17 +937,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      const authUserId = (req.user as any).id;
+      
+      // Falls req.body.userId nicht definiert ist, nehmen wir die userId aus der Authentifizierung
+      if (!req.body.userId) {
+        req.body.userId = authUserId;
+      }
       
       const brandData = insertUserBrandSchema.parse(req.body);
       
       // Prüfen, ob der Gerätetyp existiert und dem Benutzer gehört
-      const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, userId);
+      const deviceType = await storage.getUserDeviceType(brandData.deviceTypeId, brandData.userId);
       if (!deviceType) {
         return res.status(400).json({ message: "Ungültiger Gerätetyp" });
       }
       
-      const brand = await storage.createUserBrand(brandData, userId);
+      const brand = await storage.createUserBrand(brandData, brandData.userId);
       
       res.status(201).json(brand);
     } catch (error) {
