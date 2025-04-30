@@ -798,10 +798,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Gerätearten abrufen
   app.get("/api/device-types", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Gerätetypen (ID 3)
+      const bugisUserId = 3;
       
-      const deviceTypes = await storage.getUserDeviceTypes(userId);
+      const deviceTypes = await storage.getUserDeviceTypes(bugisUserId);
       res.json(deviceTypes);
     } catch (error) {
       console.error("Error retrieving device types:", error);
@@ -1020,16 +1020,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alle benutzerspezifischen Modellreihen abrufen (optional nach Marke gefiltert)
   app.get("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
+      const bugisUserId = 3;
       
       const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
       
       let modelSeries;
       if (brandId) {
-        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, userId);
+        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, bugisUserId);
       } else {
-        modelSeries = await storage.getUserModelSeries(userId);
+        modelSeries = await storage.getUserModelSeries(bugisUserId);
       }
       
       res.json(modelSeries);
@@ -1045,10 +1045,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deviceTypeId = parseInt(req.params.deviceTypeId);
       const brandId = parseInt(req.params.brandId);
       
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
+      const bugisUserId = 3;
       
-      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, userId);
+      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, bugisUserId);
       
       res.json(modelSeries);
     } catch (error) {
@@ -1061,11 +1061,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
+      const bugisUserId = 3;
       
       // Diese Methode existiert nicht direkt, daher holen wir alle Modellreihen und filtern nach ID
-      const allModelSeries = await storage.getUserModelSeries(userId);
+      const allModelSeries = await storage.getUserModelSeries(bugisUserId);
       const modelSeries = allModelSeries.find(ms => ms.id === id);
       
       if (!modelSeries) {
@@ -1082,9 +1082,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Modellreihe erstellen
   app.post("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      console.log(`[Modellreihe] Erstelle neue Modellreihe für Benutzer ${userId}`);
+      // WORKAROUND: Wir erstellen immer Modellreihen für Bugi (ID 3)
+      const bugisUserId = 3;
+      console.log(`[Modellreihe] Erstelle neue Modellreihe für globale Verwendung (Bugi ${bugisUserId})`);
       console.log(`[Modellreihe] Eingangsdaten:`, req.body);
       
       // Manuelle, einfache Validierung
@@ -1109,14 +1109,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const modelSeriesData = {
         name: req.body.name.trim(),
         brandId: brandId,
-        userId: userId  // userId explizit einbinden
+        userId: bugisUserId  // userId von Bugi verwenden
       };
       
       console.log(`[Modellreihe] Validierte Daten:`, modelSeriesData);
       
       try {
         // In der Storage-Funktion wird die userId nochmals explizit übergeben
-        const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
+        const modelSeries = await storage.createUserModelSeries(modelSeriesData, bugisUserId);
         console.log(`[Modellreihe] Erfolgreich erstellt mit ID ${modelSeries.id}`);
         return res.status(201).json(modelSeries);
       } catch (storageError: any) {
@@ -1204,16 +1204,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alle benutzerspezifischen Modelle abrufen (optional nach Modellreihe gefiltert)
   app.get("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir holen immer Bugis Modelle (ID 3)
+      const bugisUserId = 3;
       
       const modelSeriesId = req.query.modelSeriesId ? parseInt(req.query.modelSeriesId as string) : undefined;
       
       let models;
       if (modelSeriesId) {
-        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, userId);
+        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, bugisUserId);
       } else {
-        models = await storage.getUserModels(userId);
+        models = await storage.getUserModels(bugisUserId);
       }
       
       res.json(models);
@@ -1226,12 +1226,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifisches Modell erstellen
   app.post("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
+      const bugisUserId = 3;
       
-      const modelData = insertUserModelSchema.parse(req.body);
+      const modelData = insertUserModelSchema.parse({
+        ...req.body,
+        userId: bugisUserId  // Wir überschreiben immer mit Bugis User-ID
+      });
       
-      const model = await storage.createUserModel(modelData, userId);
+      const model = await storage.createUserModel(modelData, bugisUserId);
       
       res.status(201).json(model);
     } catch (error) {
