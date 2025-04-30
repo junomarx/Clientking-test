@@ -7,6 +7,8 @@ import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
+import ToastTestDialog from '@/components/ToastTestDialog';
+import { Button } from '@/components/ui/button';
 
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
@@ -15,6 +17,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [isToastTestOpen, setIsToastTestOpen] = useState(false);
   
   const handleNewOrder = () => {
     // Wir benötigen keine Parameter mehr, da wir die Kundendaten im localStorage speichern

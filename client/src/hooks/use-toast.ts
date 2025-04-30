@@ -168,6 +168,35 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// Hilfsfunktionen für die verschiedenen Toast-Typen
+toast.success = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({
+    ...props,
+    variant: "success",
+  });
+};
+
+toast.info = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({
+    ...props,
+    variant: "info",
+  });
+};
+
+toast.warning = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({
+    ...props,
+    variant: "warning",
+  });
+};
+
+toast.error = (props: Omit<ToasterToast, "id" | "variant">) => {
+  return toast({
+    ...props,
+    variant: "destructive",
+  });
+}
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
