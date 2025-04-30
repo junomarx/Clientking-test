@@ -283,7 +283,38 @@ export function ModelManagementTab() {
                     </SelectTrigger>
                     <SelectContent>
                       {availableModelSeries.map((series) => (
-                        <SelectItem key={series} value={series}>{series}</SelectItem>
+                        <div key={series} className="flex items-center justify-between px-2">
+                          <SelectItem value={series}>{series}</SelectItem>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 text-destructive hover:text-destructive/80"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Bestätigung abfragen
+                              if (window.confirm(`Möchten Sie die Modellreihe "${series}" wirklich löschen?`)) {
+                                // Modellreihe löschen
+                                deleteModelSeries(deviceType, brand, series);
+                                // Liste der Modellreihen aktualisieren
+                                const updatedSeries = getModelSeriesForDeviceAndBrand(deviceType, brand);
+                                setAvailableModelSeries(updatedSeries);
+                                // Wenn die aktuell ausgewählte Modellreihe gelöscht wurde, Auswahl zurücksetzen
+                                if (modelSeries === series) {
+                                  setModelSeries('');
+                                  setAvailableModels([]);
+                                  setModels('');
+                                }
+                                // Erfolgsmeldung anzeigen
+                                toast({
+                                  title: 'Modellreihe gelöscht',
+                                  description: `Die Modellreihe "${series}" wurde erfolgreich gelöscht.`
+                                });
+                              }
+                            }}
+                          >
+                            <span className="text-red-500">✕</span>
+                          </Button>
+                        </div>
                       ))}
                     </SelectContent>
                   </Select>
