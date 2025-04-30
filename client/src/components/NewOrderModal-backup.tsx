@@ -17,9 +17,9 @@ import {
 import { 
   getBrandsForDeviceType,
   clearAllModels,
-  deleteModelLegacy
+  deleteModelLegacy,
+  saveModelIntelligent as saveModelDb
 } from '@/lib/deviceHelpers';
-import { saveModelDb } from '@/utils/modelUtils';
 
 import {
   Dialog,
