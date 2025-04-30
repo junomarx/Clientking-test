@@ -321,23 +321,41 @@ export function registerAdminRoutes(app: Express) {
       };
       
       try {
-        // Zuerst alle bestehenden Daten löschen, aber in der richtigen Reihenfolge (von oben nach unten in der Hierarchie)
+        // Vor dem Import holen wir vorhandene Gerätetypen, um sie wiederzuverwenden
+        // Dadurch vermeiden wir das Problem der doppelten Gerätetypen
+        const existingDeviceTypes = await db
+          .select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.userId, req.user?.id || 3));
+        
+        // Mapping von Namen zu existierenden Gerätetypen erstellen
+        const existingDeviceTypesByName = new Map(
+          existingDeviceTypes.map(dt => [dt.name, dt])
+        );
+        
+        console.log(`${existingDeviceTypes.length} vorhandene Gerätetypen gefunden für Benutzer ${req.user?.id || 3}.`);        
+        
         // 1. Erst Modelle löschen, weil sie von Modellreihen abhängen
         if (importModels && importModels.length > 0) {
-          await db.delete(userModels);
-          console.log("Alle vorhandenen Modelle wurden gelöscht.");
+          // Selektives Löschen ist in dieser Phase zu kompliziert,
+          // wir lassen die komplette Löschung für diesen Import
+          await db.delete(userModels)
+            .where(eq(userModels.userId, req.user?.id || 3));
+          console.log("Alle vorhandenen Modelle des Benutzers wurden gelöscht.");
         }
         
         // 2. Dann Modellreihen löschen, weil sie von Marken abhängen
         if (importModelSeries && importModelSeries.length > 0) {
-          await db.delete(userModelSeries);
-          console.log("Alle vorhandenen Modellreihen wurden gelöscht.");
+          await db.delete(userModelSeries)
+            .where(eq(userModelSeries.userId, req.user?.id || 3));
+          console.log("Alle vorhandenen Modellreihen des Benutzers wurden gelöscht.");
         }
         
         // 3. Dann Marken löschen, weil sie von Gerätetypen abhängen
         if (importBrands && importBrands.length > 0) {
-          await db.delete(userBrands);
-          console.log("Alle vorhandenen Marken wurden gelöscht.");
+          await db.delete(userBrands)
+            .where(eq(userBrands.userId, req.user?.id || 3));
+          console.log("Alle vorhandenen Marken des Benutzers wurden gelöscht.");
         }
         
         // Mapping für alte und neue IDs erstellen
@@ -351,47 +369,80 @@ export function registerAdminRoutes(app: Express) {
           modelSeries: new Map()
         };
 
-        // Gerätetypen importieren
+        // Gerätetypen importieren - mit Wiederverwendung vorhandener Einträge
         if (importDeviceTypes && importDeviceTypes.length > 0) {
-          // Erstelle ein Array von Gerätetypen mit neuen Zeitstempeln
-          const newDeviceTypes = importDeviceTypes.map((dt: any) => {
-            // ID speichern, bevor wir sie entfernen
+          // Initialisiere Arrays für neue und vorhandene Gerätetypen
+          const deviceTypesToInsert: any[] = [];
+          const reusedDeviceTypes: any[] = [];
+          
+          // Gehe durch jeden zu importierenden Gerätetyp
+          for (const dt of importDeviceTypes) {
             const oldId = dt.id;
-            // ID, createdAt, updatedAt weglassen und neue Zeitstempel setzen
             const { id, createdAt, updatedAt, ...deviceTypeData } = dt;
-            return {
-              ...deviceTypeData,
-              originalId: oldId, // Temporär zur Identifikation behalten
-              userId: req.user?.id || 3, // Stelle sicher, dass der korrekte Benutzer zugeordnet ist, Fallback auf bugi (ID 3)
-              createdAt: new Date(),
-              updatedAt: new Date()
-            };
-          });
+            
+            // Prüfe, ob bereits ein Gerätetyp mit diesem Namen existiert
+            const existingDeviceType = existingDeviceTypesByName.get(dt.name);
+            
+            if (existingDeviceType) {
+              // Wenn ein Gerätetyp mit dem Namen existiert, verwende ihn
+              console.log(`Wiederverwendung vorhandener Gerätetyp: ${dt.name} (ID: ${existingDeviceType.id})`);
+              
+              // Füge das Mapping zwischen alter und bestehender ID hinzu
+              idMappings.deviceTypes.set(oldId, existingDeviceType.id);
+              
+              // Füge zum Array der wiederverwendeten Gerätetypen hinzu
+              reusedDeviceTypes.push({
+                ...existingDeviceType,
+                originalId: oldId
+              });
+            } else {
+              // Ansonsten erstelle einen neuen Gerätetyp
+              deviceTypesToInsert.push({
+                ...deviceTypeData,
+                originalId: oldId,
+                userId: req.user?.id || 3,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            }
+          }
           
-          // Batch-Insert für bessere Performance
-          // Speichere die Einträge und erhalte sie zurück mit den neuen IDs
-          const insertedDeviceTypes = await db.insert(userDeviceTypes)
-            .values(newDeviceTypes.map((dt: any) => {
-              // originalId entfernen, da es kein Feld in der Datenbank ist
-              const { originalId, ...restDt } = dt;
-              return restDt;
-            }))
-            .returning();
-
-          // Mapping zwischen alten und neuen IDs erstellen
-          insertedDeviceTypes.forEach((newDt, index) => {
-            const oldId = newDeviceTypes[index].originalId;
-            idMappings.deviceTypes.set(oldId, newDt.id);
-            console.log(`Gerätetyp-Mapping: alte ID ${oldId} -> neue ID ${newDt.id}`);
-          });
+          // Nur neue Gerätetypen einfügen, wenn welche vorhanden sind
+          let insertedDeviceTypes = [];
+          if (deviceTypesToInsert.length > 0) {
+            insertedDeviceTypes = await db.insert(userDeviceTypes)
+              .values(deviceTypesToInsert.map((dt: any) => {
+                // originalId entfernen, da es kein Feld in der Datenbank ist
+                const { originalId, ...restDt } = dt;
+                return restDt;
+              }))
+              .returning();
+            
+            // Mapping zwischen alten und neuen IDs für neu eingefügte Gerätetypen erstellen
+            insertedDeviceTypes.forEach((newDt, index) => {
+              const oldId = deviceTypesToInsert[index].originalId;
+              idMappings.deviceTypes.set(oldId, newDt.id);
+              console.log(`Gerätetyp-Mapping (neu): alte ID ${oldId} -> neue ID ${newDt.id}`);
+            });
+          }
           
-          stats.deviceTypes = insertedDeviceTypes.length;
-          console.log(`${insertedDeviceTypes.length} Gerätetypen wurden importiert.`);
+          // Statistiken aktualisieren
+          stats.deviceTypes = insertedDeviceTypes.length + reusedDeviceTypes.length;
+          
+          // Protokollierung
+          console.log(`${insertedDeviceTypes.length} neue Gerätetypen wurden erstellt.`);
+          console.log(`${reusedDeviceTypes.length} vorhandene Gerätetypen wurden wiederverwendet.`);
           console.log(`Gesamtes Gerätetyp-ID-Mapping:`, Array.from(idMappings.deviceTypes.entries()));
           
-          // Gebe eine Liste aller importierten Gerätetypen aus
-          console.log("Importierte Gerätetypen mit neuen IDs:");
-          insertedDeviceTypes.forEach(dt => console.log(`ID: ${dt.id}, Name: ${dt.name}, userId: ${dt.userId}`));
+          if (insertedDeviceTypes.length > 0) {
+            console.log("Neu eingefügte Gerätetypen:");
+            insertedDeviceTypes.forEach(dt => console.log(`ID: ${dt.id}, Name: ${dt.name}, userId: ${dt.userId}`));
+          }
+          
+          if (reusedDeviceTypes.length > 0) {
+            console.log("Wiederverwendete Gerätetypen:");
+            reusedDeviceTypes.forEach(dt => console.log(`ID: ${dt.id}, Name: ${dt.name}, userId: ${dt.userId}, originalId: ${dt.originalId}`));
+          }
         }
         
         // Marken importieren
@@ -409,7 +460,8 @@ export function registerAdminRoutes(app: Express) {
           if (missingDeviceTypes.size > 0) {
             console.warn(`Es fehlen ${missingDeviceTypes.size} Gerätetypen, die von Marken benötigt werden.`);
             
-            for (const missingId of missingDeviceTypes) {
+            // Konvertieren des Sets zu einem Array für die Iteration
+            for (const missingId of Array.from(missingDeviceTypes)) {
               // Erstelle einen Platzhalter-Gerätetyp
               console.log(`Erstelle fehlenden Gerätetyp mit ID ${missingId}...`);
               
