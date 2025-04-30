@@ -53,10 +53,9 @@ import {
   MapPin,
   MailPlus,
   BellRing,
-  Globe,
-  Smartphone
+  Globe
 } from "lucide-react";
-import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
+// DeviceTypeSettings wird nicht mehr verwendet
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
