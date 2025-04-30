@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, Smartphone, Save, Plus } from 'lucide-react';
-import { updateAppleModels } from '@/lib/updateAppleModels';
+import { Save, Plus } from 'lucide-react';
+// Die Funktion updateAppleModels wird nicht mehr verwendet
 import {
   saveModel,
   saveModelLegacy,
@@ -78,43 +78,8 @@ export function ModelManagementTab() {
     }
   }, [deviceType, brand, modelSeries]);
 
-  // Funktion zum Aktualisieren der iPhone-Modelle
-  const handleUpdateAppleModels = () => {
-    try {
-      const result = updateAppleModels();
-      toast({
-        title: 'iPhone-Modelle aktualisiert',
-        description: `${result.oldCount} alte Modelle wurden durch ${result.newCount} aktuelle iPhone-Modelle ersetzt, organisiert in ${result.series.length} Modellreihen.`,
-      });
-      
-      // Wenn aktuell Smartphone/Apple ausgewählt ist, aktualisiere die Modellreihen
-      if (deviceType === 'Smartphone' && brand === 'Apple') {
-        // Aktualisiere die Liste der verfügbaren Modellreihen
-        const updatedSeries = getModelSeriesForDeviceAndBrand('Smartphone', 'Apple');
-        setAvailableModelSeries(updatedSeries);
-        
-        // Wenn eine Modellreihe ausgewählt ist, aktualisiere auch die Modelle
-        if (modelSeries && updatedSeries.includes(modelSeries)) {
-          const updatedModels = getModelsForDeviceAndBrandAndSeries('Smartphone', 'Apple', modelSeries);
-          setAvailableModels(updatedModels);
-          setModels(updatedModels.join('\n'));
-        } else if (updatedSeries.length > 0) {
-          // Setze auf die erste verfügbare Modellreihe
-          const firstSeries = updatedSeries[0];
-          setModelSeries(firstSeries);
-          const updatedModels = getModelsForDeviceAndBrandAndSeries('Smartphone', 'Apple', firstSeries);
-          setAvailableModels(updatedModels);
-          setModels(updatedModels.join('\n'));
-        }
-      }
-    } catch (error) {
-      toast({
-        title: 'Fehler',
-        description: `Fehler beim Aktualisieren der iPhone-Modelle: ${error instanceof Error ? error.message : String(error)}`,
-        variant: 'destructive'
-      });
-    }
-  };
+  // Die automatische Aktualisierung von iPhone-Modellen wurde entfernt,
+  // um ein einheitliches System für alle Gerätetypen zu gewährleisten
 
   // Funktion zum Hinzufügen einer neuen Modellreihe
   const handleAddNewModelSeries = () => {
@@ -354,18 +319,7 @@ export function ModelManagementTab() {
                   : 'Modelle'} (ein Modell pro Zeile)
               </Label>
               <div className="flex gap-2">
-                {deviceType === 'Smartphone' && brand === 'Apple' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleUpdateAppleModels}
-                    className="flex items-center gap-1"
-                  >
-                    <Smartphone className="h-3 w-3" />
-                    <RefreshCw className="h-3 w-3" />
-                    iPhone-Modelle aktualisieren
-                  </Button>
-                )}
+
                 <Button 
                   onClick={handleSaveModels} 
                   size="sm"
