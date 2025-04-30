@@ -230,7 +230,32 @@ export function BrandSettings() {
   });
 
   const handleAddSubmit = (data: BrandFormValues) => {
-    addBrandMutation.mutate(data);
+    // Text in Zeilen aufteilen und leere Zeilen entfernen
+    const brandLines = data.name
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    // Wenn es mehrere Zeilen gibt, diese als separate Marken hinzufügen
+    if (brandLines.length > 1) {
+      addBrandMutation.mutate({
+        deviceTypeId: data.deviceTypeId,
+        brands: brandLines
+      });
+    } else if (brandLines.length === 1) {
+      // Wenn es nur eine Zeile gibt, diese als einzelne Marke hinzufügen
+      addBrandMutation.mutate({
+        deviceTypeId: data.deviceTypeId,
+        name: brandLines[0]
+      });
+    } else {
+      // Wenn keine gültigen Marken eingegeben wurden
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie mindestens eine Marke ein.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleEditSubmit = (data: BrandFormValues) => {
