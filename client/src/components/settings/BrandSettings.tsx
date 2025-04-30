@@ -345,22 +345,31 @@ export function BrandSettings() {
                   <TableCell>{getDeviceTypeName(brand.deviceTypeId)}</TableCell>
                   <TableCell>{new Date(brand.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(brand)}
-                    >
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Bearbeiten</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(brand)}
-                    >
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Löschen</span>
-                    </Button>
+                    {isAdmin ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(brand)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Bearbeiten</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(brand)}
+                        >
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Löschen</span>
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-sm text-muted-foreground italic px-2">
+                        <Lock className="h-3 w-3 inline-block mr-1" />
+                        Gesperrt
+                      </span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
