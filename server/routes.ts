@@ -936,6 +936,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Marke erstellen
   app.post("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Marken erstellen" });
+      }
+      
       // WORKAROUND: Alle Gerätetypen und Marken werden immer unter Bugi gespeichert (ID 3)
       // Das ist eine temporäre Lösung, bis globale Gerätetypen implementiert sind
       const bugisUserId = 3;
@@ -1082,6 +1090,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Modellreihe erstellen
   app.post("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modellreihen erstellen" });
+      }
+      
       // WORKAROUND: Wir erstellen immer Modellreihen für Bugi (ID 3)
       const bugisUserId = 3;
       console.log(`[Modellreihe] Erstelle neue Modellreihe für globale Verwendung (Bugi ${bugisUserId})`);
@@ -1142,9 +1158,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modellreihen bearbeiten" });
+      }
+      
       const modelSeriesData = insertUserModelSeriesSchema.partial().parse(req.body);
       
-      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, userId);
+      // WORKAROUND: Wir aktualisieren immer Bugis Modellreihen
+      const bugisUserId = 3;
+      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, bugisUserId);
       
       if (!updatedModelSeries) {
         return res.status(404).json({ message: "Modellreihe nicht gefunden" });
@@ -1167,7 +1190,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const success = await storage.deleteUserModelSeries(id, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modellreihen löschen" });
+      }
+      
+      // WORKAROUND: Wir löschen immer Bugis Modellreihen
+      const bugisUserId = 3;
+      const success = await storage.deleteUserModelSeries(id, bugisUserId);
       
       if (!success) {
         return res.status(500).json({ message: "Modellreihe konnte nicht gelöscht werden" });
@@ -1187,7 +1217,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modellreihen löschen" });
+      }
+      
+      // WORKAROUND: Wir löschen immer Bugis Modellreihen
+      const bugisUserId = 3;
+      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, bugisUserId);
       
       if (!success) {
         return res.status(500).json({ message: "Modellreihen konnten nicht gelöscht werden" });
@@ -1226,6 +1263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifisches Modell erstellen
   app.post("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modelle erstellen" });
+      }
+      
       // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
       const bugisUserId = 3;
       
@@ -1312,7 +1357,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Modelle löschen" });
+      }
+      
+      // WORKAROUND: Wir löschen immer Bugis Modelle
+      const bugisUserId = 3;
+      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, bugisUserId);
       
       if (!success) {
         return res.status(500).json({ message: "Modelle konnten nicht gelöscht werden" });
