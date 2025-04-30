@@ -641,9 +641,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         }
       }
       
-      // Fehlerbeschreibungen werden jetzt zentral vom Admin verwaltet
-      // Kein Speichern im localStorage mehr
-      
       // Auftrag erstellen
       await createRepairMutation.mutateAsync(repairData);
     } catch (error) {
