@@ -337,7 +337,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
   useEffect(() => {
     if (watchDeviceType && watchBrand) {
-      if (watchModelSeries) {
+      if (watchModelSeries && watchModelSeries !== 'none') {
         const models = getModelsForDeviceAndBrandAndSeries(watchDeviceType, watchBrand, watchModelSeries);
         setSavedModels(models);
       } else {
@@ -540,7 +540,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
-        modelSeries: formData.modelSeries || undefined, // Optional
+        modelSeries: (formData.modelSeries && formData.modelSeries !== 'none') ? formData.modelSeries : undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
         issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
@@ -612,7 +612,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId,
         deviceType: data.deviceType || 'smartphone', // Standardwert
         brand: data.brand || 'apple', // Standardwert
-        modelSeries: data.modelSeries || undefined, // Optional
+        modelSeries: (data.modelSeries && data.modelSeries !== 'none') ? data.modelSeries : undefined, // Optional
         model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
         depositAmount: data.depositAmount === "" ? null : data.depositAmount,
@@ -707,7 +707,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
-        modelSeries: formData.modelSeries || undefined, // Optional
+        modelSeries: (formData.modelSeries && formData.modelSeries !== 'none') ? formData.modelSeries : undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         serialNumber: formData.serialNumber,
@@ -1329,8 +1329,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                           <FormLabel>Modellreihe</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            value={field.value}
+                            defaultValue={field.value || undefined}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -1338,7 +1337,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Keine Modellreihe</SelectItem>
+                              <SelectItem key="none" value="none">Keine Modellreihe</SelectItem>
                               {savedModelSeries.map((series, index) => (
                                 <SelectItem key={index} value={series}>
                                   {series}
