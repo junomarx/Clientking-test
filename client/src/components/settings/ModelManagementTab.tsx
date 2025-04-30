@@ -19,7 +19,8 @@ import {
   saveBrand,
   saveModelSeries,
   getModelSeriesForDeviceAndBrand,
-  deleteModelSeries
+  deleteModelSeries,
+  deleteAllModelSeriesForDeviceAndBrand
 } from '@/lib/localStorage';
 
 export function ModelManagementTab() {
@@ -237,7 +238,35 @@ export function ModelManagementTab() {
           {deviceType && brand && (
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="modelSeries">Modellreihe</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="modelSeries">Modellreihe</Label>
+                  {availableModelSeries.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (window.confirm(`Möchten Sie wirklich alle Modellreihen für ${deviceType} - ${brand} löschen?`)) {
+                          // Alle Modellreihen für diese Kombination löschen
+                          deleteAllModelSeriesForDeviceAndBrand(deviceType, brand);
+                          // Liste der Modellreihen aktualisieren (leere Liste)
+                          setAvailableModelSeries([]);
+                          // Auswahl zurücksetzen
+                          setModelSeries('');
+                          setAvailableModels([]);
+                          setModels('');
+                          // Erfolgsmeldung anzeigen
+                          toast({
+                            title: 'Alle Modellreihen gelöscht',
+                            description: `Alle Modellreihen für ${deviceType} - ${brand} wurden erfolgreich gelöscht.`
+                          });
+                        }
+                      }}
+                    >
+                      Alle Modellreihen löschen
+                    </Button>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <Select 
                     value={modelSeries} 

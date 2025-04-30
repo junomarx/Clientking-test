@@ -262,7 +262,8 @@ export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): s
       allModels = [...allModels, ...storedModels[baseKey]];
     }
     
-    return [...new Set(allModels)]; // Entferne Duplikate
+    // Entferne Duplikate mit Filter-Methode statt mit Set zur Umgehung des LSP-Fehlers
+    return allModels.filter((value, index, self) => self.indexOf(value) === index);
   } catch (err) {
     console.error('Fehler beim Abrufen der gespeicherten Modelle:', err);
     return [];
@@ -402,6 +403,31 @@ export const deleteModelSeries = (deviceType: string, brand: string, modelSeries
     }
   } catch (err) {
     console.error('Fehler beim Löschen der Modellreihe:', err);
+  }
+};
+
+// Funktion zum Löschen aller Modellreihen für eine bestimmte Geräte-Marke-Kombination
+export const deleteAllModelSeriesForDeviceAndBrand = (deviceType: string, brand: string): void => {
+  if (!deviceType || !brand) return;
+  
+  const key = `${deviceType}:${brand}`.toLowerCase();
+  
+  const storedData = localStorage.getItem(getSavedModelSeriesKey());
+  if (!storedData) return;
+  
+  try {
+    const storedModelSeries: StoredModelSeries = JSON.parse(storedData);
+    
+    if (storedModelSeries[key]) {
+      // Entferne den kompletten Eintrag für diese Geräte-Marke-Kombination
+      delete storedModelSeries[key];
+      
+      // Speichere die aktualisierte Liste
+      localStorage.setItem(getSavedModelSeriesKey(), JSON.stringify(storedModelSeries));
+      console.log(`Alle Modellreihen für ${deviceType} - ${brand} wurden gelöscht.`);
+    }
+  } catch (err) {
+    console.error('Fehler beim Löschen aller Modellreihen für eine Geräte-Marke-Kombination:', err);
   }
 };
 
