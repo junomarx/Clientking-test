@@ -190,7 +190,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
+      <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl max-h-[85vh] overflow-y-auto scrollbar-thin">
         <DialogHeader className="pb-2 border-b">
           <DialogTitle className="text-xl font-semibold text-primary">Auftrag bearbeiten</DialogTitle>
           <DialogDescription className="mt-1">
@@ -199,7 +199,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4 px-1">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4 px-1 overflow-y-auto">
             <FormField
               control={form.control}
               name="issue"
@@ -210,7 +210,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                     <Textarea 
                       {...field} 
                       placeholder="Beschreiben Sie das Problem"
-                      className="resize-none min-h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      className="resize-none h-[70px] md:h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                     />
                   </FormControl>
                   <FormMessage />
@@ -298,7 +298,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                   <FormControl>
                     <Textarea 
                       placeholder="Interne Notizen"
-                      className="resize-none min-h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      className="resize-none h-[70px] md:h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                       value={field.value === null ? '' : (field.value || '')}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
