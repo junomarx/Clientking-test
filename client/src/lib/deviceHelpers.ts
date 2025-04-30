@@ -26,6 +26,12 @@ export const deleteModelLegacy = (deviceType: string, brand: string, model: stri
 };
 
 // Hilfsfunktion zum intelligenten Speichern von Modellen
+/**
+ * Speichert ein Modell in der Datenbank mit intelligenter Hierarchie-Verwaltung
+ * 
+ * Diese Funktion prüft, ob der Gerätetyp, die Marke und ggf. die Modellserie bereits existieren.
+ * Falls nicht, werden diese erstellt, bevor das Modell gespeichert wird.
+ */
 export function saveModelIntelligent(
   deviceType: string, 
   brand: string, 
@@ -39,11 +45,11 @@ export function saveModelIntelligent(
   createModelMutation: any
 ): void {
   // Diese Funktion verwendet die API-Mutations, um Modellhierarchien zu speichern
-  console.log("Saving model intelligent with:", { deviceType, brand, modelSeries, model, deviceTypeId, brandId });
+  console.log("Speichere Modell mit:", { deviceType, brand, modelSeries, model, deviceTypeId, brandId });
   
   // 1. Überprüfen, ob der Gerätetyp existiert, sonst erstellen
   if (!deviceTypeId && deviceType) {
-    createDeviceTypeMutation.mutate({ name: deviceType }, {
+    createDeviceTypeMutation.mutate(deviceType, {
       onSuccess: (newDeviceType: any) => {
         // 2. Überprüfen, ob die Marke existiert, sonst erstellen
         if (brand) {
@@ -61,16 +67,16 @@ export function saveModelIntelligent(
                   onSuccess: (newModelSeries: any) => {
                     // 4. Modell zur neuen Modellreihe hinzufügen
                     createModelMutation.mutate({
-                      name: model,
-                      modelSeriesId: newModelSeries.id
+                      modelSeriesId: newModelSeries.id,
+                      names: [model]
                     });
                   }
                 });
               } else {
                 // Wenn keine Modellreihe, direkt zur Marke hinzufügen
                 createModelMutation.mutate({
-                  name: model,
-                  brandId: newBrand.id
+                  brandId: newBrand.id,
+                  names: [model]
                 });
               }
             }
@@ -92,15 +98,15 @@ export function saveModelIntelligent(
           }, {
             onSuccess: (newModelSeries: any) => {
               createModelMutation.mutate({
-                name: model,
-                modelSeriesId: newModelSeries.id
+                modelSeriesId: newModelSeries.id,
+                names: [model]
               });
             }
           });
         } else {
           createModelMutation.mutate({
-            name: model,
-            brandId: newBrand.id
+            brandId: newBrand.id,
+            names: [model]
           });
         }
       }
@@ -115,16 +121,16 @@ export function saveModelIntelligent(
       }, {
         onSuccess: (newModelSeries: any) => {
           createModelMutation.mutate({
-            name: model,
-            modelSeriesId: newModelSeries.id
+            modelSeriesId: newModelSeries.id,
+            names: [model]
           });
         }
       });
     } else {
       // Wenn keine Modellreihe, direkt zur Marke hinzufügen
       createModelMutation.mutate({
-        name: model,
-        brandId: brandId
+        brandId: brandId,
+        names: [model]
       });
     }
   }
