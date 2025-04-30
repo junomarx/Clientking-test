@@ -4,8 +4,10 @@ import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from "./db";
-import { deviceIssues, insertDeviceIssueSchema } from "@shared/schema";
+import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { stringify as csvStringify } from "csv-stringify/sync";
+import { parse as csvParse } from "csv-parse/sync";
 
 // Helper-Funktion für das Passwort-Hashing
 const scryptAsync = promisify(scrypt);
@@ -203,6 +205,171 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error retrieving device issues for type:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });
+    }
+  });
+  
+  //==========================================================================
+  // EXPORT/IMPORT ROUTEN
+  //==========================================================================
+  // Alle Gerätetypen, Marken, Modellreihen und Modelle als CSV exportieren
+  app.get("/api/admin/device-management/export", isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Nur Bugi darf exportieren (zusätzliche Prüfung)
+      if (!req.user || req.user.username !== 'bugi') {
+        return res.status(403).json({ message: "Nur der Hauptadministrator darf Gerätedaten exportieren" });
+      }
+      
+      // Alle Gerätetypen abrufen
+      const allDeviceTypes = await db.select().from(deviceTypes);
+      // Alle Marken abrufen
+      const allBrands = await db.select().from(brands);
+      // Alle Modellreihen abrufen
+      const allModelSeries = await db.select().from(modelSeries);
+      // Alle Modelle abrufen
+      const allModels = await db.select().from(models);
+      
+      // CSV-Daten vorbereiten
+      const csvData = {
+        deviceTypes: allDeviceTypes,
+        brands: allBrands,
+        modelSeries: allModelSeries,
+        models: allModels
+      };
+      
+      // JSON in CSV konvertieren
+      const csvString = csvStringify([JSON.stringify(csvData)], {
+        header: true,
+        columns: ['data']
+      });
+      
+      // CSV-Datei zum Download bereitstellen
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=device-management-data.csv');
+      res.send(csvString);
+    } catch (error) {
+      console.error("Error exporting device data:", error);
+      res.status(500).json({ message: "Fehler beim Exportieren der Gerätedaten" });
+    }
+  });
+  
+  // Gerätetypen, Marken, Modellreihen und Modelle aus CSV importieren
+  app.post("/api/admin/device-management/import", isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Nur Bugi darf importieren (zusätzliche Prüfung)
+      if (!req.user || req.user.username !== 'bugi') {
+        return res.status(403).json({ message: "Nur der Hauptadministrator darf Gerätedaten importieren" });
+      }
+      
+      // CSV-Daten aus der Anfrage auslesen
+      const csvString = req.body.csvData;
+      
+      if (!csvString) {
+        return res.status(400).json({ message: "Keine CSV-Daten gefunden" });
+      }
+      
+      // CSV-Daten in JSON umwandeln
+      const records = csvParse(csvString, {
+        columns: true,
+        skipEmptyLines: true
+      });
+      
+      if (!records || records.length === 0) {
+        return res.status(400).json({ message: "Keine gültigen Daten in der CSV-Datei gefunden" });
+      }
+      
+      // Erste Zeile enthält die JSON-Daten
+      const jsonData = JSON.parse(records[0].data);
+      
+      // Daten aus dem JSON extrahieren
+      const { deviceTypes: importDeviceTypes, brands: importBrands, modelSeries: importModelSeries, models: importModels } = jsonData;
+      
+      // Statistiken für die Rückmeldung
+      const stats = {
+        deviceTypes: 0,
+        brands: 0,
+        modelSeries: 0,
+        models: 0
+      };
+      
+      // Gerätetypen importieren
+      if (importDeviceTypes && importDeviceTypes.length > 0) {
+        for (const dt of importDeviceTypes) {
+          const { id, ...deviceTypeData } = dt;
+          // Prüfen, ob Gerätetyp bereits existiert
+          const existingDT = await db.select().from(deviceTypes).where(eq(deviceTypes.name, deviceTypeData.name));
+          
+          if (existingDT.length === 0) {
+            // Neuen Gerätetyp erstellen
+            await db.insert(deviceTypes).values(deviceTypeData);
+            stats.deviceTypes++;
+          }
+        }
+      }
+      
+      // Marken importieren
+      if (importBrands && importBrands.length > 0) {
+        for (const b of importBrands) {
+          const { id, ...brandData } = b;
+          // Prüfen, ob Marke bereits existiert
+          const existingBrand = await db.select().from(brands)
+            .where(and(
+              eq(brands.name, brandData.name),
+              eq(brands.deviceTypeId, brandData.deviceTypeId)
+            ));
+          
+          if (existingBrand.length === 0) {
+            // Neue Marke erstellen
+            await db.insert(brands).values(brandData);
+            stats.brands++;
+          }
+        }
+      }
+      
+      // Modellreihen importieren
+      if (importModelSeries && importModelSeries.length > 0) {
+        for (const ms of importModelSeries) {
+          const { id, ...msData } = ms;
+          // Prüfen, ob Modellreihe bereits existiert
+          const existingMS = await db.select().from(modelSeries)
+            .where(and(
+              eq(modelSeries.name, msData.name),
+              eq(modelSeries.brandId, msData.brandId)
+            ));
+          
+          if (existingMS.length === 0) {
+            // Neue Modellreihe erstellen
+            await db.insert(modelSeries).values(msData);
+            stats.modelSeries++;
+          }
+        }
+      }
+      
+      // Modelle importieren
+      if (importModels && importModels.length > 0) {
+        for (const m of importModels) {
+          const { id, ...modelData } = m;
+          // Prüfen, ob Modell bereits existiert
+          const existingModel = await db.select().from(models)
+            .where(and(
+              eq(models.name, modelData.name),
+              eq(models.modelSeriesId, modelData.modelSeriesId)
+            ));
+          
+          if (existingModel.length === 0) {
+            // Neues Modell erstellen
+            await db.insert(models).values(modelData);
+            stats.models++;
+          }
+        }
+      }
+      
+      res.json({
+        message: "Import erfolgreich abgeschlossen",
+        stats: stats
+      });
+    } catch (error) {
+      console.error("Error importing device data:", error);
+      res.status(500).json({ message: "Fehler beim Importieren der Gerätedaten" });
     }
   });
   
