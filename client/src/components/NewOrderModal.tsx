@@ -333,8 +333,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       } else {
         const modelSeries = getModelSeriesForDeviceAndBrand(watchDeviceType, watchBrand);
         setSavedModelSeries(modelSeries);
+        
+        // Wenn genau eine Modellreihe verfügbar ist, diese automatisch auswählen
+        if (modelSeries.length === 1) {
+          console.log(`Genau eine Modellreihe (${modelSeries[0]}) für ${watchDeviceType}/${watchBrand} gefunden, wird automatisch ausgewählt.`);
+          form.setValue('modelSeries', modelSeries[0]);
+        } else {
+          // Sonst das Modellreihe-Feld zurücksetzen
+          form.setValue('modelSeries', '');
+        }
       }
-      form.setValue('modelSeries', '');
       form.setValue('model', '');
     } else {
       setSavedModelSeries([]);
