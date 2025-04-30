@@ -47,6 +47,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   
+  // Dialog schließen mit Verzögerung für Animationen
+  const handleClose = () => {
+    onClose();
+    // Kurze Verzögerung, um Flackern zu vermeiden
+    setTimeout(() => {
+      setRepair(null);
+      setCustomer(null);
+    }, 300);
+  };
+  
   // Daten der Reparatur abrufen
   const { data: repairs } = useQuery<Repair[]>({
     queryKey: ['/api/repairs'],
@@ -88,16 +98,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Formatiere das Datum im deutschen Format
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
-  };
-  
-  // Dialog schließen mit Verzögerung für Animationen
-  const handleClose = () => {
-    onClose();
-    // Kurze Verzögerung, um Flackern zu vermeiden
-    setTimeout(() => {
-      setRepair(null);
-      setCustomer(null);
-    }, 300);
   };
   
   if (!repair) {
