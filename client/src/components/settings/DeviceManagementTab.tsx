@@ -17,36 +17,16 @@ import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
 import { ModelManagementTab } from './ModelManagementTab';
 import { DeviceIssuesTab } from './DeviceIssuesTab';
-import { Smartphone, Layers, Tag, AlertCircle, RefreshCw } from 'lucide-react';
+import { Smartphone, Layers, Tag, AlertCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { updateAppleModels } from '@/lib/updateAppleModels';
 
 export function DeviceManagementTab() {
   const [activeTab, setActiveTab] = useState("deviceTypes");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const handleAppleModelUpdate = async () => {
-    try {
-      await updateAppleModels();
-      
-      // Aktualisiere die Daten
-      queryClient.invalidateQueries({ queryKey: ['/api/model-series'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/models'] });
-      
-      toast({
-        title: "iPhone Modelle aktualisiert",
-        description: "Alle iPhone Modelle wurden erfolgreich aktualisiert.",
-      });
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "iPhone Modelle konnten nicht aktualisiert werden.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Die Funktion handleAppleModelUpdate wurde entfernt
 
   return (
     <div className="space-y-6">
@@ -59,16 +39,7 @@ export function DeviceManagementTab() {
                 Zentrale Verwaltung für alle Gerätetypen, Marken und Modellreihen
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleAppleModelUpdate}
-                className="flex items-center gap-1"
-              >
-                <RefreshCw className="h-4 w-4" /> iPhone Modelle aktualisieren
-              </Button>
-            </div>
+            {/* Der Button 'iPhone Modelle aktualisieren' wurde entfernt */}
           </div>
         </CardHeader>
         <CardContent>
