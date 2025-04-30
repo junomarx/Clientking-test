@@ -556,7 +556,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId: customer.id,
         deviceType: formData.deviceType || 'smartphone', // Standardwert
         brand: formData.brand || 'apple', // Standardwert
-        modelSeries: (formData.modelSeries && formData.modelSeries !== 'none') ? formData.modelSeries : undefined, // Optional
+        modelSeries: formData.modelSeries ? formData.modelSeries : undefined, // Optional
         model: formData.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: formData.serialNumber,
         issue: formData.issue || 'Wird später hinzugefügt', // Standardwert
@@ -628,7 +628,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         customerId,
         deviceType: data.deviceType || 'smartphone', // Standardwert
         brand: data.brand || 'apple', // Standardwert
-        modelSeries: (data.modelSeries && data.modelSeries !== 'none') ? data.modelSeries : undefined, // Optional
+        modelSeries: data.modelSeries ? data.modelSeries : undefined, // Optional
         model: data.model || 'Unbekanntes Modell', // Standardwert
         serialNumber: data.serialNumber,
         depositAmount: data.depositAmount === "" ? null : data.depositAmount,
