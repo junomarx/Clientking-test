@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import type { Customer } from '@/lib/types';
 import { useDeviceTypes } from '@/hooks/useDeviceTypes';
 import { useBrands } from '@/hooks/useBrands';
@@ -102,6 +103,7 @@ interface NewOrderModalProps {
 export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
@@ -115,6 +117,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [isModelChanged, setIsModelChanged] = useState(false);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
+  
+  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
+  const isAdmin = user?.id === 3;
   
   // Hooks für API-Anfragen
   const deviceTypes = useDeviceTypes();
@@ -395,7 +400,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       };
       
       // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
-      if (repairData.model && repairData.deviceType && repairData.brand) {
+      // und nur wenn der Benutzer Admin ist (Bugi, ID 3)
+      if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
         const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
@@ -530,7 +536,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       };
       
       // Speichern des Gerätehierarchie mit der Datenbank-API
-      if (repairData.model && repairData.deviceType && repairData.brand) {
+      // aber nur wenn der Benutzer Admin ist (Bugi, ID 3)
+      if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
         const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
         if (!exists) {
