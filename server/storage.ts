@@ -1520,6 +1520,27 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createUserModelSeries(modelSeries: InsertUserModelSeries, userId: number): Promise<UserModelSeries> {
+    // Prüfen, ob bereits eine Modellreihe mit diesem Namen für dieselbe Marke existiert
+    const existingModelSeries = await db
+      .select()
+      .from(userModelSeries)
+      .where(
+        and(
+          eq(userModelSeries.brandId, modelSeries.brandId),
+          eq(userModelSeries.name, modelSeries.name),
+          eq(userModelSeries.userId, userId)
+        )
+      )
+      .limit(1);
+    
+    // Wenn bereits eine Modellreihe mit diesem Namen existiert, geben wir diese zurück
+    if (existingModelSeries.length > 0) {
+      console.log(`[Modellreihe] Eine Modellreihe mit dem Namen '${modelSeries.name}' existiert bereits für Brand ${modelSeries.brandId}`);
+      return existingModelSeries[0];
+    }
+    
+    // Ansonsten erstellen wir eine neue Modellreihe
+    console.log(`[Modellreihe] Erstelle neue Modellreihe '${modelSeries.name}' für Brand ${modelSeries.brandId}`);
     const [newModelSeries] = await db
       .insert(userModelSeries)
       .values({
