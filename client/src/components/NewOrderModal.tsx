@@ -319,8 +319,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Marke ändert
   useEffect(() => {
     if (watchDeviceType && watchBrand) {
-      const modelSeries = getModelSeriesForDeviceAndBrand(watchDeviceType, watchBrand);
-      setSavedModelSeries(modelSeries);
+      // Bei Apple Smartphones keine Modellreihen anzeigen
+      if (watchDeviceType.toLowerCase() === 'smartphone' && watchBrand.toLowerCase() === 'apple') {
+        setSavedModelSeries([]);
+      } else {
+        const modelSeries = getModelSeriesForDeviceAndBrand(watchDeviceType, watchBrand);
+        setSavedModelSeries(modelSeries);
+      }
       form.setValue('modelSeries', '');
       form.setValue('model', '');
     } else {
@@ -1314,7 +1319,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                     )}
                   />
                   
-                  {/* Modellreihen-Auswahlfeld, nur anzeigen wenn Modellreihen für Geräteart+Marke vorhanden sind */}
+                  {/* Modellreihen-Auswahlfeld, nur anzeigen wenn Modellreihen für Geräteart+Marke vorhanden sind und es sich nicht um ein Apple Smartphone handelt */}
                   {savedModelSeries.length > 0 && (
                     <FormField
                       control={form.control}
@@ -1322,113 +1327,27 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Modellreihe</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input 
-                                {...field} 
-                                placeholder="z.B. iPhone 12-Serie"
-                                onChange={(e) => {
-                                  field.onChange(e.target.value);
-                                  setIsModelSeriesDropdownOpen(e.target.value.length > 0);
-                                  setSelectedModelSeriesIndex(-1);
-                                }}
-                                onBlur={(e) => {
-                                  const filteredModelSeries = savedModelSeries
-                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()));
-                                  
-                                  if (selectedModelSeriesIndex >= 0 && filteredModelSeries.length > 0) {
-                                    const selectedSeries = filteredModelSeries[selectedModelSeriesIndex];
-                                    field.onChange(selectedSeries);
-                                    
-                                    if (e.relatedTarget) {
-                                      const modelInput = document.querySelector('input[name="model"]');
-                                      if (modelInput) {
-                                        setTimeout(() => {
-                                          (modelInput as HTMLInputElement).focus();
-                                        }, 10);
-                                      }
-                                    }
-                                  }
-                                  
-                                  setTimeout(() => {
-                                    setIsModelSeriesDropdownOpen(false);
-                                    setSelectedModelSeriesIndex(-1);
-                                  }, 200);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (!isModelSeriesDropdownOpen) return;
-                                  
-                                  const filteredModelSeries = savedModelSeries
-                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()));
-                                  
-                                  // Pfeiltaste nach unten
-                                  if (e.key === 'ArrowDown') {
-                                    e.preventDefault();
-                                    setSelectedModelSeriesIndex(prev => 
-                                      prev < filteredModelSeries.length - 1 ? prev + 1 : 0
-                                    );
-                                  } 
-                                  // Pfeiltaste nach oben
-                                  else if (e.key === 'ArrowUp') {
-                                    e.preventDefault();
-                                    setSelectedModelSeriesIndex(prev => 
-                                      prev > 0 ? prev - 1 : filteredModelSeries.length - 1
-                                    );
-                                  } 
-                                  // Enter-Taste
-                                  else if (e.key === 'Enter' && selectedModelSeriesIndex >= 0 && filteredModelSeries.length > 0) {
-                                    e.preventDefault();
-                                    const selectedSeries = filteredModelSeries[selectedModelSeriesIndex];
-                                    field.onChange(selectedSeries);
-                                    setIsModelSeriesDropdownOpen(false);
-                                    setSelectedModelSeriesIndex(-1);
-                                    
-                                    const modelInput = document.querySelector('input[name="model"]');
-                                    if (modelInput) {
-                                      (modelInput as HTMLInputElement).focus();
-                                    }
-                                  }
-                                }}
-                              />
-                              
-                              {/* Dropdown für die gespeicherten Modellreihen */}
-                              {savedModelSeries.length > 0 && field.value && isModelSeriesDropdownOpen && (
-                                <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
-                                  <div className="sticky top-0 bg-background border-b p-2">
-                                    <span className="text-sm font-medium">Gespeicherte Modellreihen</span>
-                                  </div>
-                                  
-                                  {savedModelSeries
-                                    .filter(series => !field.value || series.toLowerCase().includes(field.value.toLowerCase()))
-                                    .map((series, index) => (
-                                    <div 
-                                      key={index} 
-                                      className={`px-3 py-2 hover:bg-muted cursor-pointer ${selectedModelSeriesIndex === index ? 'bg-muted' : ''}`}
-                                      onMouseDown={(e) => {
-                                        // Verhindert onBlur vor dem Klick
-                                        e.preventDefault();
-                                      }}
-                                      onClick={() => {
-                                        field.onChange(series);
-                                        // Nach der Auswahl den Fokus zum nächsten Feld setzen
-                                        const modelInput = document.querySelector('input[name="model"]');
-                                        if (modelInput) {
-                                          (modelInput as HTMLInputElement).focus();
-                                        }
-                                      }}
-                                      onMouseEnter={() => {
-                                        setSelectedModelSeriesIndex(index);
-                                      }}
-                                    >
-                                      {series}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Modellreihe auswählen" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="">Keine Modellreihe</SelectItem>
+                              {savedModelSeries.map((series, index) => (
+                                <SelectItem key={index} value={series}>
+                                  {series}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormDescription>
-                            Wählen Sie die Modellreihe (z.B. iPhone 13-Serie)
+                            Wählen Sie die Modellreihe aus
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
