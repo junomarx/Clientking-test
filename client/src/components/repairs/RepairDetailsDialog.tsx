@@ -90,7 +90,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
   };
   
-  // Dialog schließen
+  // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
     onClose();
     // Kurze Verzögerung, um Flackern zu vermeiden
