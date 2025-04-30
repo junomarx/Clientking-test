@@ -348,9 +348,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       const customers = await response.json();
       
       console.log(`Found ${customers.length} matching customers for ${firstName} ${lastName}`);
+      
+      // Kunden im State speichern für das Dropdown
       setMatchingCustomers(customers);
       
-      // Wir zeigen kein Dialog mehr an, stattdessen werden die Kunden im Dropdown angezeigt
       // Wenn nur ein Kunde gefunden wurde, automatisch dessen Daten eintragen
       if (customers.length === 1) {
         fillCustomerData(customers[0]);
@@ -705,9 +706,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                   />
                   
                   {/* Dropdown für gefundene Kunden */}
-                  {matchingCustomers.length > 1 && (
+                  {matchingCustomers.length > 0 && (
                     <div className="sm:col-span-2 bg-muted/30 p-2 rounded-lg">
-                      <FormLabel className="mb-2 block">Gefundene Kunden</FormLabel>
+                      <FormLabel className="mb-2 block">Gefundene Kunden ({matchingCustomers.length})</FormLabel>
                       <Select onValueChange={(value) => {
                         // Finde den ausgewählten Kunden
                         const selectedCustomer = matchingCustomers.find(c => c.id.toString() === value);
