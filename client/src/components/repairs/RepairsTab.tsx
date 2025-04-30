@@ -16,6 +16,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { EditRepairDialog } from './EditRepairDialog';
+import { RepairDetailsDialog } from './RepairDetailsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { 
@@ -28,7 +29,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Info
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
 
@@ -44,6 +46,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
   const [sendSms, setSendSms] = useState(false);
@@ -349,6 +352,18 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     setCurrentPage(1); // Reset to first page when changing items per page
   };
 
+  // Öffnen des Detailsdialogs
+  const openDetailsDialog = (id: number) => {
+    setSelectedRepairId(id);
+    setShowDetailsDialog(true);
+  };
+  
+  // Schließen des Detailsdialogs
+  const closeDetailsDialog = () => {
+    setShowDetailsDialog(false);
+    setSelectedRepairId(null);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center p-6">
@@ -420,7 +435,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 </tr>
               ) : (
                 paginatedRepairs.map(repair => (
-                  <tr key={repair.id} className="border-b border-gray-200 hover:bg-blue-50 transition-all">
+                  <tr 
+                    key={repair.id} 
+                    className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer" 
+                    onClick={() => openDetailsDialog(repair.id)}
+                  >
                     <td className="py-3 px-4">{repair.orderCode || `#${repair.id}`}</td>
                     <td className="py-3 px-4">{repair.customerName}</td>
                     <td className="py-3 px-4">{repair.model}</td>
@@ -571,7 +590,11 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
             <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Keine Reparaturen gefunden</div>
           ) : (
             paginatedRepairs.map(repair => (
-              <div key={repair.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+              <div 
+                key={repair.id} 
+                className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden cursor-pointer" 
+                onClick={() => openDetailsDialog(repair.id)}
+              >
                 <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
                   <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
                   <div>{getStatusBadge(repair.status)}</div>
