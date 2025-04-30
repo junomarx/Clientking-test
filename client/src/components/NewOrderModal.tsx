@@ -115,6 +115,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [filterText, setFilterText] = useState<string>('');  
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);  
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
+  const [showIssueDropdown, setShowIssueDropdown] = useState<boolean>(false);
   const [isModelChanged, setIsModelChanged] = useState(false);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
@@ -329,6 +330,23 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         description: `Fehlerbeschreibung für ${deviceType} wurde gespeichert.`,
       });
     }
+  };
+  
+  // Funktion zum Hinzufügen einer Fehlerbeschreibung zur aktuellen Eingabe
+  const addIssueToField = (issue: string) => {
+    // Aktuelle Fehlerbeschreibung holen
+    const currentIssue = form.getValues('issue');
+    
+    // Wenn bereits Text vorhanden ist, mit Komma anhängen
+    if (currentIssue && currentIssue.trim() !== '') {
+      form.setValue('issue', `${currentIssue}, ${issue}`);
+    } else {
+      // Sonst einfach den neuen Wert setzen
+      form.setValue('issue', issue);
+    }
+    
+    // Dropdown schließen
+    setShowIssueDropdown(false);
   };
   
   // Funktion zum Löschen einer Fehlerbeschreibung
@@ -622,32 +640,49 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, type: string) => {
     if (type === 'issue') {
       // Für die Fehlerbeschreibung
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setSelectedIssueIndex(prev => {
-          const filtered = availableIssues.filter(issue => 
-            !filterText || issue.toLowerCase().includes(filterText.toLowerCase())
-          );
-          return Math.min(prev + 1, filtered.length - 1);
-        });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setSelectedIssueIndex(prev => Math.max(prev - 1, 0));
-      } else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
-        e.preventDefault();
+      if (availableIssues.length > 0) {
+        // Filter basierend auf aktueller Eingabe
         const filtered = availableIssues.filter(issue => 
-          !filterText || issue.toLowerCase().includes(filterText.toLowerCase())
+          issue.toLowerCase().includes(form.getValues('issue').toLowerCase())
         );
-        if (filtered[selectedIssueIndex]) {
-          form.setValue('issue', filtered[selectedIssueIndex]);
+        
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedIssueIndex(prev => Math.min(prev + 1, filtered.length - 1));
+          setShowIssueDropdown(true);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedIssueIndex(prev => Math.max(prev - 1, 0));
+          setShowIssueDropdown(true);
+        } else if (e.key === 'Enter' && selectedIssueIndex >= 0) {
+          e.preventDefault();
+          if (filtered[selectedIssueIndex]) {
+            // Ausgewählte Fehlerbeschreibung hinzufügen (nicht ersetzen)
+            addIssueToField(filtered[selectedIssueIndex]);
+            setSelectedIssueIndex(-1);
+          }
+        } else if (e.key === 'Tab' && selectedIssueIndex >= 0) {
+          e.preventDefault();
+          if (filtered[selectedIssueIndex]) {
+            // Ausgewählte Fehlerbeschreibung hinzufügen (nicht ersetzen)
+            addIssueToField(filtered[selectedIssueIndex]);
+            
+            // Fokus auf das nächste Feld setzen
+            setTimeout(() => {
+              const nextField = document.querySelector('input[name="estimatedCost"]');
+              if (nextField) {
+                (nextField as HTMLInputElement).focus();
+              }
+            }, 100);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
           setSelectedIssueIndex(-1);
+          setShowIssueDropdown(false);
+        } else {
+          // Zeige Dropdown bei Eingabe
+          setShowIssueDropdown(true);
         }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setSelectedIssueIndex(-1);
-      } else {
-        // Update des Filtertexts bei Eingabe
-        setFilterText(e.currentTarget.value);
       }
     }
   };
@@ -1235,19 +1270,27 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               <Input 
                                 placeholder="Beschreibung des Problems" 
                                 {...field} 
-                                onFocus={() => setSelectedIssueIndex(-1)}
+                                onFocus={() => {
+                                  setSelectedIssueIndex(-1);
+                                  setShowIssueDropdown(true);
+                                }}
+                                onBlur={() => {
+                                  // Dropdown mit Verzögerung ausblenden
+                                  setTimeout(() => setShowIssueDropdown(false), 200);
+                                }}
                                 onKeyDown={(e) => handleKeyDown(e, 'issue')}
                               />
-                              {availableIssues.length > 0 && field.value && (
+                              {showIssueDropdown && availableIssues.length > 0 && (
                                 <div className="absolute z-10 w-full bg-white rounded-md border shadow-lg max-h-60 overflow-y-auto mt-1">
                                   {availableIssues
                                     .filter(issue => !filterText || issue.toLowerCase().includes(field.value.toLowerCase()))
                                     .map((issue, index) => (
                                       <div 
                                         key={index}
-                                        className={`px-4 py-2 cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                                        className={`px-4 py-2 cursor-pointer flex justify-between items-center ${selectedIssueIndex === index ? 'bg-primary/20' : 'hover:bg-muted'}`}
                                         onClick={() => {
-                                          form.setValue('issue', issue);
+                                          // Hinzufügen zur aktuellen Beschreibung statt Ersetzen
+                                          addIssueToField(issue);
                                           setSelectedIssueIndex(-1);
                                         }}
                                       >
