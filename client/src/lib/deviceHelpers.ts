@@ -73,7 +73,7 @@ export function saveModelIntelligent(
   
   // 1. Überprüfen, ob der Gerätetyp existiert, sonst erstellen
   if (!deviceTypeId && deviceType) {
-    createDeviceTypeMutation.mutate(deviceType, {
+    createDeviceTypeMutation.mutate({ name: deviceType }, {
       onSuccess: (newDeviceType: any) => {
         // 2. Überprüfen, ob die Marke existiert, sonst erstellen
         if (brand) {

@@ -297,7 +297,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     if (!deviceType) return;
     
     // API aufrufen, um den Gerätetyp zu speichern
-    createDeviceTypeMutation.mutate(deviceType);
+    createDeviceTypeMutation.mutate({ name: deviceType });
   };
   
   // Funktion zum Speichern einer neuen Fehlerbeschreibung
