@@ -47,6 +47,30 @@ export function saveModelIntelligent(
   // Diese Funktion verwendet die API-Mutations, um Modellhierarchien zu speichern
   console.log("Speichere Modell mit:", { deviceType, brand, modelSeries, model, deviceTypeId, brandId });
   
+  // Modellreihen-Erstellung nur vornehmen, wenn auch tatsächlich ein Modell angegeben wurde
+  if (!model || model.trim() === '') {
+    console.log("Kein Modell angegeben, überspringe Hierarchie-Erstellung");
+    return;
+  }
+  
+  // Hilffunktion zum Erstellen eines Modells für eine bestimmte Modellreihe
+  const createModelForSeries = (seriesId: number) => {
+    console.log(`Erstelle Modell '${model}' für Modellreihe ID ${seriesId}`);
+    createModelMutation.mutate({
+      modelSeriesId: seriesId,
+      names: [model]
+    });
+  };
+  
+  // Hilfsfunktion zum Erstellen eines Modells direkt für eine Marke
+  const createModelForBrand = (brandId: number) => {
+    console.log(`Erstelle Modell '${model}' direkt für Marke ID ${brandId}`);
+    createModelMutation.mutate({
+      brandId: brandId,
+      names: [model]
+    });
+  };
+  
   // 1. Überprüfen, ob der Gerätetyp existiert, sonst erstellen
   if (!deviceTypeId && deviceType) {
     createDeviceTypeMutation.mutate(deviceType, {
@@ -59,25 +83,17 @@ export function saveModelIntelligent(
           }, {
             onSuccess: (newBrand: any) => {
               // 3. Überprüfen, ob eine Modellreihe angegeben wurde
-              if (modelSeries) {
+              if (modelSeries && modelSeries.trim() !== '') {
+                // Nur einmal die Modellreihe erstellen und dann das Modell hinzufügen
                 createModelSeriesMutation.mutate({
                   name: modelSeries,
                   brandId: newBrand.id
                 }, {
-                  onSuccess: (newModelSeries: any) => {
-                    // 4. Modell zur neuen Modellreihe hinzufügen
-                    createModelMutation.mutate({
-                      modelSeriesId: newModelSeries.id,
-                      names: [model]
-                    });
-                  }
+                  onSuccess: createModelForSeries
                 });
               } else {
                 // Wenn keine Modellreihe, direkt zur Marke hinzufügen
-                createModelMutation.mutate({
-                  brandId: newBrand.id,
-                  names: [model]
-                });
+                createModelForBrand(newBrand.id);
               }
             }
           });
@@ -91,47 +107,33 @@ export function saveModelIntelligent(
       deviceTypeId: deviceTypeId
     }, {
       onSuccess: (newBrand: any) => {
-        if (modelSeries) {
+        if (modelSeries && modelSeries.trim() !== '') {
+          // Nur einmal die Modellreihe erstellen und dann das Modell hinzufügen
           createModelSeriesMutation.mutate({
             name: modelSeries,
             brandId: newBrand.id
           }, {
-            onSuccess: (newModelSeries: any) => {
-              createModelMutation.mutate({
-                modelSeriesId: newModelSeries.id,
-                names: [model]
-              });
-            }
+            onSuccess: createModelForSeries
           });
         } else {
-          createModelMutation.mutate({
-            brandId: newBrand.id,
-            names: [model]
-          });
+          // Wenn keine Modellreihe, direkt zur Marke hinzufügen
+          createModelForBrand(newBrand.id);
         }
       }
     });
   } else if (deviceTypeId && brandId) {
     // Wenn sowohl Gerätetyp als auch Marke existieren
-    if (modelSeries) {
+    if (modelSeries && modelSeries.trim() !== '') {
       // Prüfen, ob die Modellreihe bereits existiert
       createModelSeriesMutation.mutate({
         name: modelSeries,
         brandId: brandId
       }, {
-        onSuccess: (newModelSeries: any) => {
-          createModelMutation.mutate({
-            modelSeriesId: newModelSeries.id,
-            names: [model]
-          });
-        }
+        onSuccess: createModelForSeries
       });
     } else {
       // Wenn keine Modellreihe, direkt zur Marke hinzufügen
-      createModelMutation.mutate({
-        brandId: brandId,
-        names: [model]
-      });
+      createModelForBrand(brandId);
     }
   }
 }

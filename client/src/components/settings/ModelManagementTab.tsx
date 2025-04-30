@@ -66,10 +66,14 @@ export function ModelManagementTab() {
       setSelectedModelSeriesName('');
       setModels('');
       
-      // Wenn modelSeriesQuery geladen hat und keine Modellreihen vorhanden sind,
-      // füge automatisch "Standard" hinzu
-      if (modelSeriesQuery.data && modelSeriesQuery.data.length === 0) {
-        // Füge "Standard" als default Modellreihe hinzu
+      // Nur wenn wir Daten haben und keine Modellreihen vorhanden sind
+      // und noch keine Mutation läuft (wichtig, um Mehrfachaufrufe zu verhindern)
+      if (modelSeriesQuery.data && 
+          modelSeriesQuery.data.length === 0 && 
+          !createModelSeriesMutation.isPending) {
+        console.log(`Keine Modellreihen für Marke ${selectedBrandId} gefunden, erstelle Standard-Modellreihe`);
+        
+        // Füge "Standard" als default Modellreihe hinzu, aber nur einmal
         createModelSeriesMutation.mutate({
           name: 'Standard',
           brandId: selectedBrandId
@@ -85,7 +89,7 @@ export function ModelManagementTab() {
         setSelectedModelSeriesName(modelSeriesQuery.data[0].name);
       }
     }
-  }, [selectedBrandId, modelSeriesQuery.data, createModelSeriesMutation]);
+  }, [selectedBrandId, modelSeriesQuery.data, createModelSeriesMutation.isPending]);
 
   // Wenn eine Modellreihe ausgewählt wird, lade die zugehörigen Modelle
   useEffect(() => {
