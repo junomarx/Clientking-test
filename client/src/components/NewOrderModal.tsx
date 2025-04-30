@@ -310,16 +310,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     if (watchDeviceType) {
       // Lade verfügbare Marken
       const brands = getBrandsForDeviceType(watchDeviceType);
-      
-      // Wenn keine gespeicherten Marken verfügbar sind, verwende die Standardmarken als Fallback
-      if (brands.length === 0 && defaultBrands[watchDeviceType.toLowerCase()]) {
-        console.log(`Keine Marken für ${watchDeviceType} gefunden, verwende Standardmarken:`, 
-                   defaultBrands[watchDeviceType.toLowerCase()]);
-        setAvailableBrands(defaultBrands[watchDeviceType.toLowerCase()] || []);
-      } else {
-        setAvailableBrands(brands);
-      }
-      
+      setAvailableBrands(brands);
       form.setValue('brand', '');
       
       // Lade verfügbare Fehlerbeschreibungen
@@ -1219,15 +1210,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 field.onChange(e);
                                 // Bei Eingabe das Dropdown öffnen
                                 if (watchDeviceType) {
-                                  // Lade verfügbare Marken
-                                  const brands = getBrandsForDeviceType(watchDeviceType);
-                                  
-                                  // Fallback zu Standardmarken, wenn keine gespeicherten verfügbar sind
-                                  if (brands.length === 0 && defaultBrands[watchDeviceType.toLowerCase()]) {
-                                    setAvailableBrands(defaultBrands[watchDeviceType.toLowerCase()] || []);
-                                  } else {
-                                    setAvailableBrands(brands);
-                                  }
+                                  // Nur gespeicherte Marken anzeigen, keine Standardmarken mehr
+                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
                                   setIsBrandDropdownOpen(e.target.value.length > 0);
                                   // Bei jeder Eingabe den Index zurücksetzen
                                   setSelectedBrandIndex(-1);
