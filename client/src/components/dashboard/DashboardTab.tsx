@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Repair, Customer } from '@shared/schema';
+import { Customer } from '@shared/schema';
+import { Repair } from '@/lib/types';
 import { useLocation } from 'wouter';
 import { getStatusBadge } from '@/lib/utils';
 import { 
@@ -18,7 +19,7 @@ import { AnimatedRecentOrders } from './AnimatedRecentOrders';
 import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/queryClient';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
-import { ChangeStatusDialog } from '@/components/repairs/ChangeStatusDialog';
+import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -43,8 +44,8 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const { showPrintOptions } = usePrintManager();
 
   // Status-Änderung Mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async (variables: { id: number; status: string }) => {
+  const updateStatusMutation = useMutation<any, Error, { id: number; status: string }>({
+    mutationFn: async (variables) => {
       const response = await apiRequest(
         'PATCH',
         `/api/repairs/${variables.id}/status`,
@@ -222,6 +223,8 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
             repairs={recentRepairs}
             isLoading={repairsLoading || customersLoading}
             onPrintClick={showPrintOptions}
+            onStatusChange={openStatusDialog}
+            onEdit={handleEdit}
           />
         </div>
         <div>
@@ -230,6 +233,24 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           )}
         </div>
       </div>
+
+      {/* Status-Änderungsdialog */}
+      <ChangeStatusDialog
+        open={showStatusDialog}
+        onClose={() => setShowStatusDialog(false)}
+        repairId={selectedRepairId}
+        currentStatus={currentStatus}
+        onUpdateStatus={(id, status) => updateStatusMutation.mutate({ id, status })}
+      />
+
+      {/* Repair bearbeiten Dialog */}
+      {repairs && selectedRepairId && (
+        <EditRepairDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          repair={repairs.find(r => r.id === selectedRepairId) as any || null}
+        />
+      )}
     </motion.div>
   );
 }
