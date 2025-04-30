@@ -54,7 +54,7 @@ export function DeviceManagementTab() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `device-data-${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `device-data-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -95,10 +95,10 @@ export function DeviceManagementTab() {
       const reader = new FileReader();
       
       reader.onload = async (e) => {
-        const csvData = e.target?.result as string;
+        const jsonData = e.target?.result as string;
         
         // API-Anfrage an den Import-Endpunkt
-        const response = await apiRequest('POST', '/api/admin/device-management/import', { csvData });
+        const response = await apiRequest('POST', '/api/admin/device-management/import', { jsonData });
         const result = await response.json();
         
         // Alle relevanten Abfragen invalidieren, um die UI zu aktualisieren
@@ -177,7 +177,7 @@ export function DeviceManagementTab() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImportDeviceData}
-                  accept=".csv"
+                  accept=".json"
                   className="hidden"
                 />
               </div>

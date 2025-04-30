@@ -6,8 +6,7 @@ import { promisify } from "util";
 import { db } from "./db";
 import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-import { stringify as csvStringify } from "csv-stringify/sync";
-import { parse as csvParse } from "csv-parse/sync";
+// CSV-Bibliotheken werden nicht mehr benötigt, da wir JSON verwenden
 
 // Helper-Funktion für das Passwort-Hashing
 const scryptAsync = promisify(scrypt);
@@ -228,24 +227,21 @@ export function registerAdminRoutes(app: Express) {
       // Alle Modelle abrufen
       const allModels = await db.select().from(userModels);
       
-      // CSV-Daten vorbereiten
-      const csvData = {
+      // Daten als JSON-Datei vorbereiten (kein CSV, da die Struktur zu komplex ist)
+      const jsonData = {
         deviceTypes: allDeviceTypes,
         brands: allBrands,
         modelSeries: allModelSeries,
         models: allModels
       };
       
-      // JSON in CSV konvertieren
-      const csvString = csvStringify([JSON.stringify(csvData)], {
-        header: true,
-        columns: ['data']
-      });
+      // JSON-String erzeugen
+      const jsonString = JSON.stringify(jsonData, null, 2);
       
-      // CSV-Datei zum Download bereitstellen
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename=device-management-data.csv');
-      res.send(csvString);
+      // Datei zum Download bereitstellen
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename=device-management-data.json');
+      res.send(jsonString);
     } catch (error) {
       console.error("Error exporting device data:", error);
       res.status(500).json({ message: "Fehler beim Exportieren der Gerätedaten" });
@@ -260,25 +256,24 @@ export function registerAdminRoutes(app: Express) {
         return res.status(403).json({ message: "Nur der Hauptadministrator darf Gerätedaten importieren" });
       }
       
-      // CSV-Daten aus der Anfrage auslesen
-      const csvString = req.body.csvData;
+      // JSON-Daten aus der Anfrage auslesen
+      const jsonString = req.body.jsonData;
       
-      if (!csvString) {
-        return res.status(400).json({ message: "Keine CSV-Daten gefunden" });
+      if (!jsonString) {
+        return res.status(400).json({ message: "Keine JSON-Daten gefunden" });
       }
       
-      // CSV-Daten in JSON umwandeln
-      const records = csvParse(csvString, {
-        columns: true,
-        skipEmptyLines: true
-      });
-      
-      if (!records || records.length === 0) {
-        return res.status(400).json({ message: "Keine gültigen Daten in der CSV-Datei gefunden" });
+      let jsonData;
+      try {
+        // JSON-String parsen
+        jsonData = JSON.parse(jsonString);
+      } catch (e) {
+        return res.status(400).json({ message: "Ungültiges JSON-Format" });
       }
       
-      // Erste Zeile enthält die JSON-Daten
-      const jsonData = JSON.parse(records[0].data);
+      if (!jsonData) {
+        return res.status(400).json({ message: "Keine gültigen Daten in der JSON-Datei gefunden" });
+      }
       
       // Daten aus dem JSON extrahieren
       const { deviceTypes: importDeviceTypes, brands: importBrands, modelSeries: importModelSeries, models: importModels } = jsonData;
