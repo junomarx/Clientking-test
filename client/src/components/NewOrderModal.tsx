@@ -1437,8 +1437,26 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 field.onChange(e);
                                 // Bei Eingabe das Dropdown öffnen
                                 if (watchDeviceType) {
-                                  // Nur gespeicherte Marken anzeigen, keine Standardmarken mehr
-                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
+                                  // API-basierte Funktion zum Abrufen von Marken für einen Gerätetyp
+                                  if (selectedDeviceTypeId) {
+                                    getBrandsByDeviceTypeId(selectedDeviceTypeId)
+                                      .refetch()
+                                      .then(result => {
+                                        if (result.data) {
+                                          setAvailableBrands(result.data.map(brand => brand.name));
+                                        } else {
+                                          // Fallback zu Standard-Marken, wenn keine vom Server zurückgegeben werden
+                                          const deviceTypeLower = watchDeviceType.toLowerCase();
+                                          const fallbackBrands = defaultBrands[deviceTypeLower] || [];
+                                          setAvailableBrands(fallbackBrands);
+                                        }
+                                      });
+                                  } else {
+                                    // Fallback zu Standard-Marken
+                                    const deviceTypeLower = watchDeviceType.toLowerCase();
+                                    const fallbackBrands = defaultBrands[deviceTypeLower] || [];
+                                    setAvailableBrands(fallbackBrands);
+                                  }
                                   setIsBrandDropdownOpen(true); // Immer öffnen
                                   // Bei jeder Eingabe den Index zurücksetzen
                                   setSelectedBrandIndex(-1);
@@ -1447,7 +1465,25 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               onFocus={() => {
                                 if (watchDeviceType) {
                                   // Beim Fokus immer das Dropdown öffnen und Marken laden
-                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
+                                  if (selectedDeviceTypeId) {
+                                    getBrandsByDeviceTypeId(selectedDeviceTypeId)
+                                      .refetch()
+                                      .then(result => {
+                                        if (result.data) {
+                                          setAvailableBrands(result.data.map(brand => brand.name));
+                                        } else {
+                                          // Fallback zu Standard-Marken
+                                          const deviceTypeLower = watchDeviceType.toLowerCase();
+                                          const fallbackBrands = defaultBrands[deviceTypeLower] || [];
+                                          setAvailableBrands(fallbackBrands);
+                                        }
+                                      });
+                                  } else {
+                                    // Fallback zu Standard-Marken
+                                    const deviceTypeLower = watchDeviceType.toLowerCase();
+                                    const fallbackBrands = defaultBrands[deviceTypeLower] || [];
+                                    setAvailableBrands(fallbackBrands);
+                                  }
                                   setIsBrandDropdownOpen(true);
                                 }
                               }}
@@ -1701,7 +1737,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     className="h-7 px-2 text-xs text-destructive hover:text-destructive"
                                     onClick={() => {
                                       if (window.confirm('Möchten Sie wirklich alle gespeicherten Modelle löschen?')) {
-                                        clearAllModels(); // Importierte Funktion aus localStorage.ts
+                                        // Keine Modelle mehr zu löschen, da sie nun in der Datenbank gespeichert sind
+                                        // Wir könnten hier später eine API-Funktion zum Löschen aller Modelle implementieren
+                                        toast({
+                                          title: "Hinweis",
+                                          description: "Modelle werden nun in der Datenbank gespeichert und können nicht mehr über diese Funktion gelöscht werden.",
+                                          variant: "default"
+                                        });
                                         setSavedModels([]);
                                       }
                                     }}
@@ -1745,8 +1787,17 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                         className="text-destructive hover:bg-destructive hover:text-white rounded-full w-5 h-5 flex items-center justify-center"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          deleteModelLegacy(watchDeviceType, watchBrand, model);
-                                          setSavedModels(prev => prev.filter(m => m !== model));
+                                          // API-basierte Löschfunktion
+                                          if (watchDeviceType && watchBrand) {
+                                            // Hier könnte später eine Löschfunktion für Modelle aus der Datenbank implementiert werden
+                                            toast({
+                                              title: "Hinweis",
+                                              description: "Modelle werden nun in der Datenbank gespeichert und können nicht mehr über diese Funktion gelöscht werden.",
+                                              variant: "default"
+                                            });
+                                            // Trotzdem UI aktualisieren
+                                            setSavedModels(prev => prev.filter(m => m !== model));
+                                          }
                                         }}
                                       >
                                         ×
