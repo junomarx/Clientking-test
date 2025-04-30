@@ -14,6 +14,12 @@ import {
   getIssuesForDeviceType, saveIssue, deleteIssue, 
   DEFAULT_ISSUES
 } from '@/lib/localStorage';
+import { 
+  getBrandsForDeviceType,
+  clearAllModels,
+  deleteModelLegacy,
+  saveModelIntelligent as saveModelDb
+} from '@/lib/deviceHelpers';
 
 import {
   Dialog,
@@ -102,72 +108,8 @@ interface DeviceType {
   updatedAt: string;
 }
 
-// Hilfsfunktion zum intelligenten Speichern von Modellen mit den API-Hooks
-// Diese Funktion muss innerhalb der NewOrderModal-Komponente definiert werden,
-// damit sie Zugriff auf die entsprechenden Mutations hat
-function saveModelIntelligent(
-  deviceType: string, 
-  brand: string, 
-  modelSeries: string | undefined | null,
-  model: string,
-  deviceTypeId: number | null,
-  brandId: number | null,
-  createDeviceTypeMutation: any,
-  createBrandMutation: any,
-  createModelSeriesMutation: any,
-  createModelsMutation: any
-): void {
-  // Diese Funktion verwendet die API-Mutations, um Modellhierarchien zu speichern
-  // 1. Überprüfen, ob der Gerätetyp existiert, sonst erstellen
-  if (!deviceTypeId && deviceType) {
-    createDeviceTypeMutation.mutate(deviceType, {
-      onSuccess: (newDeviceType: any) => {
-        // 2. Überprüfen, ob die Marke existiert, sonst erstellen
-        if (brand) {
-          createBrandMutation.mutate({
-            name: brand,
-            deviceTypeId: newDeviceType.id
-          }, {
-            onSuccess: (newBrand: any) => {
-              // 3. Überprüfen, ob eine Modellreihe angegeben wurde
-              if (modelSeries) {
-                createModelSeriesMutation.mutate({
-                  name: modelSeries,
-                  brandId: newBrand.id
-                }, {
-                  onSuccess: (newModelSeries: any) => {
-                    // 4. Modell zur neuen Modellreihe hinzufügen
-                    createModelsMutation.mutate({
-                      modelSeriesId: newModelSeries.id,
-                      names: [model]
-                    });
-                  }
-                });
-              }
-            }
-          });
-        }
-      }
-    });
-  } else if (brandId && model) {
-    // Gerätetyp existiert, aber wir müssen prüfen, ob eine Modellreihe angegeben wurde
-    if (modelSeries) {
-      // Erstellle die Modellreihe
-      createModelSeriesMutation.mutate({
-        name: modelSeries,
-        brandId: brandId
-      }, {
-        onSuccess: (newModelSeries: any) => {
-          // Füge das Modell zur neuen Modellreihe hinzu
-          createModelsMutation.mutate({
-            modelSeriesId: newModelSeries.id,
-            names: [model]
-          });
-        }
-      });
-    }
-  }
-}
+// Hilfsfunktion zum intelligenten Speichern von Modellen
+// Die Implementierung dieser Funktion wurde in deviceHelpers.ts verschoben
 
 // Hilfsfunktion zum Speichern einer Marke
 function saveBrand(
