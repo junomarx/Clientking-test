@@ -42,6 +42,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 
 // Typendefinition für User ohne Passwort
 type UserResponse = Omit<User, "password">;
@@ -1456,6 +1457,12 @@ export default function AdminPage() {
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="users">Benutzer</TabsTrigger>
+          <TabsTrigger value="devices">
+            <div className="flex items-center gap-1">
+              <Smartphone className="h-4 w-4" />
+              Geräte
+            </div>
+          </TabsTrigger>
           <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
           <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
@@ -1464,6 +1471,20 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="users">
           <UserTable />
+        </TabsContent>
+        <TabsContent value="devices">
+          <Card>
+            <CardHeader>
+              <CardTitle>Globale Geräteverwaltung</CardTitle>
+              <CardDescription>
+                Hier können Sie die zentrale Geräteverwaltung für alle Benutzer administrieren.
+                Alle hier definierten Gerätetypen, Marken und Modellreihen sind für alle Benutzer verfügbar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DeviceManagementTab />
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="system">
           <SystemDiagnosticTab />
