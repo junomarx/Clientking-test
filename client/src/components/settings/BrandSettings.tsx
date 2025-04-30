@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -131,26 +132,49 @@ export function BrandSettings() {
 
   // Mutation zum Hinzufügen einer neuen Marke
   const addBrandMutation = useMutation({
-    mutationFn: async (data: BrandFormValues) => {
-      const res = await apiRequest('POST', '/api/brands', {
-        ...data,
-        deviceTypeId: parseInt(data.deviceTypeId)
-      });
-      return res.json();
+    mutationFn: async (data: BrandFormValues | { deviceTypeId: string, brands: string[] }) => {
+      // Wenn mehrere Marken übergeben werden (Array)
+      if ('brands' in data) {
+        const deviceTypeId = parseInt(data.deviceTypeId);
+        const promises = data.brands.map(brandName => 
+          apiRequest('POST', '/api/brands', {
+            deviceTypeId,
+            name: brandName
+          })
+        );
+        await Promise.all(promises);
+        return { success: true, count: data.brands.length };
+      } else {
+        // Einzelne Marke (ursprüngliche Funktionalität)
+        const res = await apiRequest('POST', '/api/brands', {
+          ...data,
+          deviceTypeId: parseInt(data.deviceTypeId)
+        });
+        return res.json();
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       setIsAddDialogOpen(false);
       addForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-      toast({
-        title: 'Marke hinzugefügt',
-        description: 'Die Marke wurde erfolgreich hinzugefügt.',
-      });
+      
+      // Unterschiedliche Nachricht basierend auf der Anzahl der hinzugefügten Marken
+      if (result && typeof result === 'object' && 'count' in result) {
+        toast({
+          title: 'Marken hinzugefügt',
+          description: `${result.count} Marken wurden erfolgreich hinzugefügt.`,
+        });
+      } else {
+        toast({
+          title: 'Marke hinzugefügt',
+          description: 'Die Marke wurde erfolgreich hinzugefügt.',
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Konnte Marke nicht hinzufügen: ${error.message}`,
+        description: `Konnte Marke(n) nicht hinzufügen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -421,11 +445,21 @@ export function BrandSettings() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Marken (eine Marke pro Zeile)</FormLabel>
                     <FormControl>
-                      <Input placeholder="z.B. Apple, Samsung, Xiaomi" {...field} />
+                      <Textarea 
+                        placeholder="z.B. Apple
+Samsung
+Xiaomi
+Huawei" 
+                        className="min-h-[120px]" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Geben Sie jede Marke in einer neuen Zeile ein.
+                    </p>
                   </FormItem>
                 )}
               />
