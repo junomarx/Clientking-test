@@ -353,7 +353,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
   useEffect(() => {
     if (watchDeviceType && watchBrand) {
-      if (watchModelSeries && watchModelSeries !== 'none') {
+      if (watchModelSeries) {
         const models = getModelsForDeviceAndBrandAndSeries(watchDeviceType, watchBrand, watchModelSeries);
         setSavedModels(models);
       } else {
@@ -1308,11 +1308,18 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                     }}
                                     onClick={() => {
                                       field.onChange(brand);
-                                      // Nach der Auswahl den Fokus zum nächsten Feld setzen
+                                      // Nach der Auswahl den Fokus zum Modellreihen-Feld setzen, falls vorhanden, sonst zum Modell-Feld
+                                      const modelSeriesTrigger = document.querySelector('button[aria-expanded]');
                                       const modelInput = document.querySelector('input[name="model"]');
-                                      if (modelInput) {
-                                        (modelInput as HTMLInputElement).focus();
-                                      }
+                                      
+                                      // Verzögerung, damit die Modellreihen-Auswahl Zeit hat zu erscheinen
+                                      setTimeout(() => {
+                                        if (modelSeriesTrigger && savedModelSeries.length > 0) {
+                                          (modelSeriesTrigger as HTMLButtonElement).focus();
+                                        } else if (modelInput) {
+                                          (modelInput as HTMLInputElement).focus();
+                                        }
+                                      }, 50);
                                     }}
                                     onMouseEnter={() => {
                                       setSelectedBrandIndex(index);
@@ -1354,7 +1361,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem key="none" value="none">Keine Modellreihe</SelectItem>
                               {savedModelSeries.map((series, index) => (
                                 <SelectItem key={index} value={series}>
                                   {series}
