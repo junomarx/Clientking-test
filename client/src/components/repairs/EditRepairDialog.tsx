@@ -190,16 +190,16 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
+        <DialogHeader className="pb-2 border-b">
           <DialogTitle className="text-xl font-semibold text-primary">Auftrag bearbeiten</DialogTitle>
-          <DialogDescription>
-            Auftrag #{repair.id} für das Gerät {repair.model}
+          <DialogDescription className="mt-1">
+            Auftrag {repair.orderCode || `#${repair.id}`} für das Gerät {repair.brand} {repair.model}
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4 px-1">
             <FormField
               control={form.control}
               name="issue"
@@ -210,7 +210,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                     <Textarea 
                       {...field} 
                       placeholder="Beschreiben Sie das Problem"
-                      className="resize-none min-h-[80px]"
+                      className="resize-none min-h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                     />
                   </FormControl>
                   <FormMessage />
@@ -230,6 +230,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                         placeholder="z.B. 150 oder 150-180"
                         {...field}
                         value={field.value === null || field.value === undefined ? '' : field.value}
+                        className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                       />
                     </FormControl>
                     <FormMessage />
@@ -248,6 +249,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                         placeholder="z.B. 50"
                         {...field}
                         value={field.value === null || field.value === undefined ? '' : field.value}
+                        className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                       />
                     </FormControl>
                         <FormDescription>Gerät beim Kunden, wenn ausgefüllt</FormDescription>
@@ -269,17 +271,17 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary bg-white">
                         <SelectValue placeholder="Status auswählen" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                      <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                      <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
-                      <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                      <SelectItem value="fertig">Fertig</SelectItem>
-                      <SelectItem value="abgeholt">Abgeholt</SelectItem>
+                    <SelectContent className="rounded-lg border-gray-300 shadow-lg">
+                      <SelectItem value="eingegangen" className="hover:bg-primary/10">Eingegangen</SelectItem>
+                      <SelectItem value="in_reparatur" className="hover:bg-primary/10">In Reparatur</SelectItem>
+                      <SelectItem value="ersatzteil_eingetroffen" className="hover:bg-primary/10">Ersatzteil eingetroffen</SelectItem>
+                      <SelectItem value="ausser_haus" className="hover:bg-primary/10">Außer Haus</SelectItem>
+                      <SelectItem value="fertig" className="hover:bg-primary/10">Fertig</SelectItem>
+                      <SelectItem value="abgeholt" className="hover:bg-primary/10">Abgeholt</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -296,7 +298,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                   <FormControl>
                     <Textarea 
                       placeholder="Interne Notizen"
-                      className="resize-none min-h-[80px]"
+                      className="resize-none min-h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                       value={field.value === null ? '' : (field.value || '')}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -309,12 +311,13 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
               )}
             />
             
-            <DialogFooter className="pt-4 flex justify-between">
+            <DialogFooter className="pt-6 mt-2 flex justify-between border-t">
               <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
                   onClick={handleClose} 
                   type="button"
+                  className="rounded-lg hover:bg-gray-100"
                 >
                   Abbrechen
                 </Button>
@@ -322,6 +325,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                   type="button"
                   variant="destructive"
                   onClick={() => setShowDeleteDialog(true)}
+                  className="rounded-lg"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Löschen
@@ -330,6 +334,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
               <Button 
                 type="submit"
                 disabled={isSubmitting}
+                className="rounded-lg bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary"
               >
                 {isSubmitting ? (
                   <>
