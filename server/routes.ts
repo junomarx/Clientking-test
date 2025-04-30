@@ -854,8 +854,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const deviceTypeData = insertUserDeviceTypeSchema.parse(req.body);
-      const deviceType = await storage.createUserDeviceType(deviceTypeData, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Gerätetypen erstellen" });
+      }
+      
+      // WORKAROUND: Wir erstellen immer Gerätetypen für Bugi (ID 3)
+      const bugisUserId = 3;
+      
+      const deviceTypeData = insertUserDeviceTypeSchema.parse({
+        ...req.body,
+        userId: bugisUserId  // Wir überschreiben immer mit Bugis User-ID
+      });
+      
+      const deviceType = await storage.createUserDeviceType(deviceTypeData, bugisUserId);
       
       res.status(201).json(deviceType);
     } catch (error) {
@@ -874,8 +886,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Gerätetypen bearbeiten" });
+      }
+      
+      // WORKAROUND: Wir aktualisieren immer Bugis Gerätetypen
+      const bugisUserId = 3;
+      
       const deviceTypeData = insertUserDeviceTypeSchema.partial().parse(req.body);
-      const deviceType = await storage.updateUserDeviceType(id, deviceTypeData, userId);
+      const deviceType = await storage.updateUserDeviceType(id, deviceTypeData, bugisUserId);
       
       if (!deviceType) {
         return res.status(404).json({ message: "Geräteart nicht gefunden" });
@@ -898,7 +918,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      const success = await storage.deleteUserDeviceType(id, userId);
+      // Prüfen, ob der Benutzer Bugi (Admin) ist
+      if (userId !== 3) {
+        return res.status(403).json({ message: "Nur Administratoren können Gerätetypen löschen" });
+      }
+      
+      // WORKAROUND: Wir löschen immer Bugis Gerätetypen
+      const bugisUserId = 3;
+      
+      const success = await storage.deleteUserDeviceType(id, bugisUserId);
       
       if (!success) {
         return res.status(400).json({ message: "Geräteart konnte nicht gelöscht werden. Möglicherweise wird sie noch von Marken verwendet." });
