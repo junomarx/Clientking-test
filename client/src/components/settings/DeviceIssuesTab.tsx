@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -80,22 +81,44 @@ export function DeviceIssuesTab() {
 
   // Neue Fehlerbeschreibung erstellen
   const createIssueMutation = useMutation({
-    mutationFn: async (data: { description: string; deviceType: string }) => {
-      const response = await apiRequest('POST', '/api/admin/device-issues', data);
-      return await response.json();
+    mutationFn: async (data: { description: string; deviceType: string } | { descriptions: string[]; deviceType: string }) => {
+      // Wenn mehrere Beschreibungen übergeben werden (Array)
+      if ('descriptions' in data) {
+        const promises = data.descriptions.map(description => 
+          apiRequest('POST', '/api/admin/device-issues', {
+            deviceType: data.deviceType,
+            description
+          })
+        );
+        await Promise.all(promises);
+        return { success: true, count: data.descriptions.length };
+      } else {
+        // Einzelne Beschreibung (ursprüngliche Funktionalität)
+        const response = await apiRequest('POST', '/api/admin/device-issues', data);
+        return await response.json();
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/device-issues', selectedDeviceType] });
       setNewIssueDescription('');
-      toast({
-        title: 'Erfolg',
-        description: 'Fehlerbeschreibung wurde erstellt.',
-      });
+      
+      // Unterschiedliche Nachricht basierend auf der Anzahl der hinzugefügten Beschreibungen
+      if (result && typeof result === 'object' && 'count' in result) {
+        toast({
+          title: 'Erfolg',
+          description: `${result.count} Fehlerbeschreibungen wurden erstellt.`,
+        });
+      } else {
+        toast({
+          title: 'Erfolg',
+          description: 'Fehlerbeschreibung wurde erstellt.',
+        });
+      }
     },
     onError: (error: any) => {
       toast({
         title: 'Fehler',
-        description: `Fehlerbeschreibung konnte nicht erstellt werden: ${error.message}`,
+        description: `Fehlerbeschreibung(en) konnte(n) nicht erstellt werden: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -158,10 +181,32 @@ export function DeviceIssuesTab() {
       return;
     }
     
-    createIssueMutation.mutate({
-      description: newIssueDescription,
-      deviceType: selectedDeviceType,
-    });
+    // Text in Zeilen aufteilen und leere Zeilen entfernen
+    const descriptionLines = newIssueDescription
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    // Wenn es mehrere Zeilen gibt, diese als separate Fehlerbeschreibungen hinzufügen
+    if (descriptionLines.length > 1) {
+      createIssueMutation.mutate({
+        descriptions: descriptionLines,
+        deviceType: selectedDeviceType
+      });
+    } else if (descriptionLines.length === 1) {
+      // Wenn es nur eine Zeile gibt, diese als einzelne Fehlerbeschreibung hinzufügen
+      createIssueMutation.mutate({
+        description: descriptionLines[0],
+        deviceType: selectedDeviceType
+      });
+    } else {
+      // Wenn keine gültigen Fehlerbeschreibungen eingegeben wurden
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie mindestens eine Fehlerbeschreibung ein.',
+        variant: 'destructive'
+      });
+    }
   };
 
   // Handler für Bearbeitung speichern
@@ -271,18 +316,24 @@ export function DeviceIssuesTab() {
             <form onSubmit={handleAddIssue} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="newIssueDescription">
-                  Neue Fehlerbeschreibung für {selectedDeviceType}
+                  Neue Fehlerbeschreibungen für {selectedDeviceType} (eine pro Zeile)
                 </Label>
-                <div className="flex gap-2">
-                  <Input
+                <div className="grid gap-2">
+                  <Textarea
                     id="newIssueDescription"
-                    placeholder="Fehlerbeschreibung eingeben..."
+                    placeholder="z.B. Display defekt
+Akku schwach
+Wasserschaden
+Lautsprecher defekt"
+                    className="min-h-[120px]"
                     value={newIssueDescription}
                     onChange={(e) => setNewIssueDescription(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Geben Sie jede Fehlerbeschreibung in einer neuen Zeile ein.
+                  </p>
                   <Button 
                     type="submit" 
-                    size="sm" 
                     disabled={createIssueMutation.isPending || !newIssueDescription.trim()}
                   >
                     {createIssueMutation.isPending ? (
@@ -290,7 +341,7 @@ export function DeviceIssuesTab() {
                     ) : (
                       <Plus className="h-4 w-4 mr-2" />
                     )}
-                    Hinzufügen
+                    Fehlerbeschreibungen hinzufügen
                   </Button>
                 </div>
               </div>
