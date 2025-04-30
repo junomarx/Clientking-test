@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
-import { ModelSeriesSettings } from './ModelSeriesSettings';
+import { ModelManagementTab } from './ModelManagementTab';
 import { Smartphone, Layers, Tag, Plus, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -96,7 +96,7 @@ export function DeviceManagementTab() {
             </TabsContent>
             
             <TabsContent value="modelSeries">
-              <ModelSeriesSettings />
+              <ModelManagementTab />
             </TabsContent>
           </Tabs>
         </CardContent>

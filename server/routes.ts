@@ -1339,6 +1339,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Fehler beim Löschen des Modells" });
     }
   });
+
+  // Mehrere Modelle auf einmal aktualisieren/erstellen (Batch)
+  app.post("/api/models/batch", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
+      const bugisUserId = 3;
+      
+      // Request Validierung
+      const { deviceTypeId, brandId, models } = req.body;
+      
+      if (!deviceTypeId || !brandId || !models || !Array.isArray(models)) {
+        return res.status(400).json({ 
+          message: "Ungültige Daten. deviceTypeId, brandId und ein models-Array werden benötigt" 
+        });
+      }
+      
+      // Zuerst alle vorhandenen Modelle für diese Marke und diesen Gerätetyp löschen
+      await storage.deleteAllUserModelsForBrand(brandId, deviceTypeId, bugisUserId);
+      
+      // Dann die neuen Modelle erstellen
+      const createdModels = [];
+      
+      for (const modelName of models) {
+        if (modelName.trim() === '') continue;
+        
+        const modelData = {
+          name: modelName.trim(),
+          brandId: parseInt(brandId),
+          deviceTypeId: parseInt(deviceTypeId),
+          modelSeriesId: null, // Da wir keine Modellreihen mehr verwenden
+          userId: bugisUserId
+        };
+        
+        const model = await storage.createUserModel(modelData, bugisUserId);
+        createdModels.push(model);
+      }
+      
+      res.status(201).json({
+        message: `${createdModels.length} Modelle wurden erfolgreich erstellt`,
+        models: createdModels
+      });
+    } catch (error) {
+      console.error("Error creating models in batch:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Modelle" });
+    }
+  });
   
   // Alle Modelle für eine bestimmte Modellreihe löschen
   app.delete("/api/model-series/:modelSeriesId/models", isAuthenticated, async (req: Request, res: Response) => {

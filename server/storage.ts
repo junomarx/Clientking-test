@@ -139,6 +139,7 @@ export interface IStorage {
   updateUserModel(id: number, model: Partial<InsertUserModel>, userId: number): Promise<UserModel | undefined>;
   deleteUserModel(id: number, userId: number): Promise<boolean>;
   deleteAllUserModelsForModelSeries(modelSeriesId: number, userId: number): Promise<boolean>;
+  deleteAllUserModelsForBrand(brandId: number, deviceTypeId: number, userId: number): Promise<boolean>;
   
   // Kostenvoranschläge (CostEstimates) methods
   getAllCostEstimates(currentUserId?: number): Promise<CostEstimate[]>;
@@ -1699,6 +1700,24 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error deleting all user models for model series:", error);
+      return false;
+    }
+  }
+  
+  async deleteAllUserModelsForBrand(brandId: number, deviceTypeId: number, userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(userModels)
+        .where(
+          and(
+            eq(userModels.brandId, brandId),
+            eq(userModels.deviceTypeId, deviceTypeId),
+            eq(userModels.userId, userId)
+          )
+        );
+      return true;
+    } catch (error) {
+      console.error("Error deleting all user models for brand and device type:", error);
       return false;
     }
   }

@@ -1,208 +1,312 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { RefreshCw, Loader2, Edit, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Loader2 } from 'lucide-react';
-import { useDeviceTypes } from '@/hooks/useDeviceTypes';
-import { useBrands } from '@/hooks/useBrands';
-import { useModelSeries } from '@/hooks/useModelSeries';
-import { useModels } from '@/hooks/useModels';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog';
+
+interface DeviceType {
+  id: number;
+  name: string;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  deviceTypeId: number;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  brandId: number;
+  modelSeriesId: number | null;
+  deviceTypeId: number;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Schema für das Formular
+const modelFormSchema = z.object({
+  deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
+  brandId: z.string().min(1, 'Marke muss ausgewählt sein'),
+  models: z.string().min(1, 'Bitte geben Sie mindestens ein Modell ein')
+});
+
+type ModelFormValues = z.infer<typeof modelFormSchema>;
+
+// Schema für neue Marke
+const newBrandSchema = z.object({
+  deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
+  name: z.string().min(1, 'Markenname darf nicht leer sein')
+});
+
+type NewBrandFormValues = z.infer<typeof newBrandSchema>;
 
 export function ModelManagementTab() {
   const { toast } = useToast();
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedDeviceTypeName, setSelectedDeviceTypeName] = useState<string>('');
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [selectedBrandName, setSelectedBrandName] = useState<string>('');
-  const [newBrandName, setNewBrandName] = useState<string>('');
-  const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
-  const [selectedModelSeriesName, setSelectedModelSeriesName] = useState<string>('');
-  const [newModelSeries, setNewModelSeries] = useState<string>('');
-  const [models, setModels] = useState<string>('');
+  const queryClient = useQueryClient();
+  const [isAddBrandDialogOpen, setIsAddBrandDialogOpen] = useState(false);
+  const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [models, setModels] = useState<Model[]>([]);
 
-  // API-Hooks
-  const { getAllDeviceTypes } = useDeviceTypes();
-  const { getBrandsByDeviceTypeId, createBrand } = useBrands();
-  const { getModelSeriesByBrandId, createModelSeries, deleteModelSeries, deleteAllModelSeriesForBrand } = useModelSeries();
-  const { getModelsByModelSeriesId, updateAllModelsForModelSeries } = useModels();
-
-  // Abfragen für Daten
-  const deviceTypesQuery = getAllDeviceTypes();
-  const brandsQuery = getBrandsByDeviceTypeId(selectedDeviceTypeId);
-  const modelSeriesQuery = getModelSeriesByBrandId(selectedBrandId);
-  const modelsQuery = getModelsByModelSeriesId(selectedModelSeriesId);
-
-  // Mutations
-  const createBrandMutation = createBrand();
-  const createModelSeriesMutation = createModelSeries();
-  const deleteModelSeriesMutation = deleteModelSeries();
-  const deleteAllModelSeriesForBrandMutation = deleteAllModelSeriesForBrand();
-  const updateAllModelsForModelSeriesMutation = updateAllModelsForModelSeries();
-
-  // Standard-Gerätetypen für die Auswahl, wenn noch keine in der DB vorhanden sind
-  const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop', 'Spielekonsole'];
-
-  // Wenn ein Gerätetyp ausgewählt wird
-  useEffect(() => {
-    if (selectedDeviceTypeId) {
-      // Zurücksetzen der abhängigen Auswahlen
-      setSelectedBrandId(null);
-      setSelectedBrandName('');
-      setSelectedModelSeriesId(null);
-      setSelectedModelSeriesName('');
-      setModels('');
+  // Formular für die Modellverwaltung
+  const form = useForm<ModelFormValues>({
+    resolver: zodResolver(modelFormSchema),
+    defaultValues: {
+      deviceTypeId: '',
+      brandId: '',
+      models: ''
     }
-  }, [selectedDeviceTypeId]);
+  });
 
-  // Wenn eine Marke ausgewählt wird
-  useEffect(() => {
-    if (selectedBrandId) {
-      // Zurücksetzen der abhängigen Auswahlen
-      setSelectedModelSeriesId(null);
-      setSelectedModelSeriesName('');
-      setModels('');
+  // Formular für neue Marke
+  const brandForm = useForm<NewBrandFormValues>({
+    resolver: zodResolver(newBrandSchema),
+    defaultValues: {
+      deviceTypeId: '',
+      name: ''
+    }
+  });
+
+  // Gerätetypen abrufen
+  const { data: deviceTypes, isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
+    queryKey: ['/api/device-types'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/device-types');
+      return res.json();
+    }
+  });
+
+  // Marken abrufen
+  const { data: brands, isLoading: isLoadingBrands } = useQuery<Brand[]>({
+    queryKey: ['/api/brands', selectedDeviceType],
+    queryFn: async () => {
+      const url = selectedDeviceType 
+        ? `/api/brands?deviceTypeId=${selectedDeviceType}` 
+        : '/api/brands';
+      const res = await apiRequest('GET', url);
+      return res.json();
+    },
+    enabled: !!deviceTypes && deviceTypes.length > 0
+  });
+
+  // Modelle abrufen
+  const { data: existingModels, isLoading: isLoadingModels, refetch: refetchModels } = useQuery<Model[]>({
+    queryKey: ['/api/models', selectedDeviceType, selectedBrand],
+    queryFn: async () => {
+      if (!selectedDeviceType || !selectedBrand) return [];
       
-      // Wähle die erste verfügbare Modellreihe aus, falls vorhanden
-      if (modelSeriesQuery.data && modelSeriesQuery.data.length > 0) {
-        setSelectedModelSeriesId(modelSeriesQuery.data[0].id);
-        setSelectedModelSeriesName(modelSeriesQuery.data[0].name);
-      }
-      // Hinweis: Die automatische Erstellung der Standard-Modellreihe wurde entfernt,
-      // da sie zu unerwünschten Toast-Nachrichten führte
-    }
-  }, [selectedBrandId, modelSeriesQuery.data]);
+      const url = `/api/models?deviceTypeId=${selectedDeviceType}&brandId=${selectedBrand}`;
+      const res = await apiRequest('GET', url);
+      return res.json();
+    },
+    enabled: !!selectedDeviceType && !!selectedBrand
+  });
 
-  // Wenn eine Modellreihe ausgewählt wird, lade die zugehörigen Modelle
+  // Wenn Gerätetyp oder Marke geändert wird, hole Modelle und aktualisiere Textfeld
   useEffect(() => {
-    if (selectedModelSeriesId && modelsQuery.data) {
-      // Formatiere die Modelle als mehrzeiligen Text
-      setModels(modelsQuery.data.map(model => model.name).join('\n'));
+    if (selectedDeviceType && selectedBrand && existingModels) {
+      setModels(existingModels);
+      
+      // Fülle das Textfeld mit vorhandenen Modellen
+      const modelNames = existingModels.map(model => model.name).join('\n');
+      form.setValue('models', modelNames);
     } else {
-      setModels('');
+      setModels([]);
+      form.setValue('models', '');
     }
-  }, [selectedModelSeriesId, modelsQuery.data]);
+  }, [selectedDeviceType, selectedBrand, existingModels, form]);
 
-  // Funktion zum Hinzufügen einer neuen Modellreihe
-  const handleAddNewModelSeries = () => {
-    if (!selectedBrandId) {
+  // Wenn sich der Gerätetyp im Formular ändert
+  useEffect(() => {
+    const deviceTypeId = form.watch('deviceTypeId');
+    
+    if (deviceTypeId) {
+      setSelectedDeviceType(deviceTypeId);
+      // Zurücksetzen der Marke
+      form.setValue('brandId', '');
+      setSelectedBrand(null);
+    } else {
+      setSelectedDeviceType(null);
+    }
+  }, [form.watch('deviceTypeId')]);
+
+  // Wenn sich die Marke im Formular ändert
+  useEffect(() => {
+    const brandId = form.watch('brandId');
+    
+    if (brandId) {
+      setSelectedBrand(brandId);
+    } else {
+      setSelectedBrand(null);
+    }
+  }, [form.watch('brandId')]);
+
+  // Für das Hinzufügen einer neuen Marke
+  const addBrandMutation = useMutation({
+    mutationFn: async (data: NewBrandFormValues) => {
+      const res = await apiRequest('POST', '/api/brands', {
+        deviceTypeId: parseInt(data.deviceTypeId),
+        name: data.name
+      });
+      return res.json();
+    },
+    onSuccess: (newBrand: Brand) => {
+      setIsAddBrandDialogOpen(false);
+      brandForm.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
+      
+      // Automatisch die neue Marke auswählen
+      form.setValue('brandId', newBrand.id.toString());
+      setSelectedBrand(newBrand.id.toString());
+      
+      toast({
+        title: 'Marke hinzugefügt',
+        description: `Die Marke ${newBrand.name} wurde erfolgreich hinzugefügt.`
+      });
+    },
+    onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: 'Bitte wählen Sie erst eine Marke aus',
+        description: `Fehler beim Hinzufügen der Marke: ${error.message}`,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  // Für das Aktualisieren von Modellen
+  const updateModelsMutation = useMutation({
+    mutationFn: async ({ 
+      deviceTypeId, 
+      brandId, 
+      modelLines 
+    }: { 
+      deviceTypeId: number, 
+      brandId: number, 
+      modelLines: string[] 
+    }) => {
+      const res = await apiRequest('POST', '/api/models/batch', {
+        deviceTypeId,
+        brandId,
+        models: modelLines
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/models'] });
+      refetchModels();
+      
+      toast({
+        title: 'Modelle aktualisiert',
+        description: 'Die Modelle wurden erfolgreich aktualisiert.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fehler',
+        description: `Fehler beim Aktualisieren der Modelle: ${error.message}`,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const handleBrandFormSubmit = (data: NewBrandFormValues) => {
+    addBrandMutation.mutate(data);
+  };
+
+  const handleUpdateModels = (data: ModelFormValues) => {
+    if (!data.deviceTypeId || !data.brandId || !data.models) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte wählen Sie Gerätetyp und Marke aus und geben Sie mindestens ein Modell ein.',
         variant: 'destructive'
       });
       return;
     }
+
+    // Zeilen aufteilen und leere Zeilen entfernen
+    const modelLines = data.models
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
     
-    if (!newModelSeries || newModelSeries.trim() === '') {
+    if (modelLines.length === 0) {
       toast({
         title: 'Fehler',
-        description: 'Bitte geben Sie einen Namen für die Modellreihe ein',
+        description: 'Bitte geben Sie mindestens ein Modell ein.',
         variant: 'destructive'
       });
       return;
     }
-    
-    console.log(`Erstelle neue Modellreihe: ${newModelSeries} für Marke ${selectedBrandId}`);
-    
-    createModelSeriesMutation.mutate({
-      name: newModelSeries.trim(),
-      brandId: selectedBrandId
-    }, {
-      onSuccess: (newModelSeries) => {
-        console.log('Modellreihe erstellt:', newModelSeries);
-        setSelectedModelSeriesId(newModelSeries.id);
-        setSelectedModelSeriesName(newModelSeries.name);
-        setNewModelSeries(''); // Leere das Eingabefeld
-      },
-      onError: (error) => {
-        console.error('Fehler beim Erstellen der Modellreihe:', error);
-        toast({
-          title: 'Fehler',
-          description: `Fehler beim Erstellen der Modellreihe: ${error instanceof Error ? error.message : String(error)}`,
-          variant: 'destructive'
-        });
-      }
+
+    updateModelsMutation.mutate({
+      deviceTypeId: parseInt(data.deviceTypeId),
+      brandId: parseInt(data.brandId),
+      modelLines
     });
   };
 
-  // Funktion zum Speichern der eingegebenen Modelle
-  const handleSaveModels = () => {
-    if (!selectedModelSeriesId) {
-      toast({
-        title: 'Fehler',
-        description: 'Bitte wählen Sie einen Gerätetyp, eine Marke und eine Modellreihe aus.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      // Teile den Text in Zeilen und entferne leere Zeilen
-      const newModels = models
-        .split('\n')
-        .map(model => model.trim())
-        .filter(model => model.length > 0);
-
-      // Speichere alle neuen Modelle
-      updateAllModelsForModelSeriesMutation.mutate({
-        modelSeriesId: selectedModelSeriesId,
-        models: newModels
-      });
-    } catch (error) {
-      toast({
-        title: 'Fehler',
-        description: `Fehler beim Speichern der Modelle: ${error instanceof Error ? error.message : String(error)}`,
-        variant: 'destructive'
-      });
-    }
-  };
-
-  // Neue Marke hinzufügen
-  const handleAddNewBrand = () => {
-    if (!selectedDeviceTypeId) {
-      toast({
-        title: 'Fehler',
-        description: 'Bitte wählen Sie erst einen Gerätetyp aus',
-        variant: 'destructive'
-      });
-      return;
-    }
+  // Wenn der ausgewählte Gerätetyp im Brand-Formular geändert wird,
+  // nehme den Wert aus dem Hauptformular
+  useEffect(() => {
+    const deviceTypeId = form.watch('deviceTypeId');
     
-    if (!newBrandName || newBrandName.trim() === '') {
-      toast({
-        title: 'Fehler',
-        description: 'Bitte geben Sie einen Namen für die Marke ein',
-        variant: 'destructive'
-      });
-      return;
+    if (deviceTypeId) {
+      brandForm.setValue('deviceTypeId', deviceTypeId);
     }
-    
-    console.log(`Erstelle neue Marke: ${newBrandName} für Gerätetyp ${selectedDeviceTypeId}`);
-    
-    createBrandMutation.mutate({
-      name: newBrandName.trim(),
-      deviceTypeId: selectedDeviceTypeId
-    }, {
-      onSuccess: (newBrand) => {
-        console.log('Marke erstellt:', newBrand);
-        setSelectedBrandId(newBrand.id);
-        setSelectedBrandName(newBrand.name);
-        setNewBrandName('');
-      },
-      onError: (error) => {
-        console.error('Fehler beim Erstellen der Marke:', error);
-        toast({
-          title: 'Fehler',
-          description: `Fehler beim Erstellen der Marke: ${error instanceof Error ? error.message : String(error)}`,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
+  }, [form.watch('deviceTypeId')]);
+
+  if (isLoadingDeviceTypes) {
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -210,295 +314,218 @@ export function ModelManagementTab() {
         <CardHeader>
           <CardTitle>Modelle verwalten</CardTitle>
           <CardDescription>
-            Verwalten Sie Gerätemodelle für verschiedene Marken und Gerätetypen
+            Wählen Sie Gerätetyp und Marke aus, um Modelle zu verwalten. Geben Sie dann alle Modelle ein, eines pro Zeile.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Lade-Indikator anzeigen, wenn Daten geladen werden */}
-          {deviceTypesQuery.isLoading && (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-
-          {/* Fehler anzeigen, wenn etwas schief gelaufen ist */}
-          {deviceTypesQuery.isError && (
-            <div className="bg-destructive/10 text-destructive p-4 rounded-md">
-              <p>Fehler beim Laden der Daten. Bitte versuchen Sie es später erneut.</p>
-              <p className="text-xs mt-2">{deviceTypesQuery.error instanceof Error ? deviceTypesQuery.error.message : 'Unbekannter Fehler'}</p>
-            </div>
-          )}
-
-          {/* Hauptinhalt anzeigen, wenn Daten geladen sind */}
-          {deviceTypesQuery.isSuccess && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Gerätetyp-Auswahl */}
-                <div className="space-y-2">
-                  <Label htmlFor="deviceType">Gerätetyp</Label>
-                  <Select 
-                    value={selectedDeviceTypeId?.toString() || ''} 
-                    onValueChange={(value) => {
-                      const deviceType = deviceTypesQuery.data.find(dt => dt.id.toString() === value);
-                      if (deviceType) {
-                        setSelectedDeviceTypeId(deviceType.id);
-                        setSelectedDeviceTypeName(deviceType.name);
-                      } else {
-                        setSelectedDeviceTypeId(null);
-                        setSelectedDeviceTypeName('');
-                      }
-                    }}
-                  >
-                    <SelectTrigger id="deviceType">
-                      <SelectValue placeholder="Gerätetyp auswählen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {deviceTypesQuery.data.length > 0 ? (
-                        deviceTypesQuery.data.map((type) => (
-                          <SelectItem key={type.id} value={type.id.toString()}>{type.name}</SelectItem>
-                        ))
-                      ) : (
-                        defaultDeviceTypes.map((type, index) => (
-                          <SelectItem key={index} value={`default-${index}`}>{type}</SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Marken-Auswahl mit Option für neue Marke */}
-                <div className="space-y-2">
-                  <Label htmlFor="brand">Marke</Label>
-                  <div className="flex gap-2">
-                    {brandsQuery.isLoading ? (
-                      <div className="flex justify-center items-center w-full h-10 bg-muted rounded-md">
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : (
-                      <Select 
-                        value={selectedBrandId?.toString() || ''}
-                        onValueChange={(value) => {
-                          if (brandsQuery.data) {
-                            const brand = brandsQuery.data.find(b => b.id.toString() === value);
-                            if (brand) {
-                              setSelectedBrandId(brand.id);
-                              setSelectedBrandName(brand.name);
-                            }
-                          }
-                        }}
-                        disabled={!selectedDeviceTypeId || brandsQuery.isLoading}
+        <CardContent>
+          <Form {...form}>
+            <form className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="deviceTypeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gerätetyp</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
                       >
-                        <SelectTrigger id="brand" className="flex-grow">
-                          <SelectValue placeholder={selectedDeviceTypeId ? "Marke auswählen" : "Erst Gerätetyp auswählen"} />
-                        </SelectTrigger>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Gerätetyp auswählen" />
+                          </SelectTrigger>
+                        </FormControl>
                         <SelectContent>
-                          {brandsQuery.data && brandsQuery.data.map((b) => (
-                            <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                          {deviceTypes?.map((deviceType) => (
+                            <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
+                              {deviceType.name}
+                            </SelectItem>
                           ))}
-                          {/* Eingabefeld für neue Marke */}
-                          <div className="px-2 py-1.5 text-sm border-t">
-                            <input 
-                              type="text" 
-                              className="w-full p-1 border rounded"
-                              placeholder="Neue Marke eingeben"
-                              value={newBrandName}
-                              onChange={(e) => setNewBrandName(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
                         </SelectContent>
                       </Select>
-                    )}
-                    
-                    {/* Button zum Hinzufügen neuer Marke */}
-                    {selectedDeviceTypeId && newBrandName && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={handleAddNewBrand}
-                        className="whitespace-nowrap"
-                        disabled={createBrandMutation.isPending}
-                      >
-                        {createBrandMutation.isPending ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        ) : null}
-                        Marke hinzufügen
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Modellreihen-Auswahl, nur anzeigen wenn eine Marke ausgewählt ist */}
-              {selectedDeviceTypeId && selectedBrandId && (
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="modelSeries">Modellreihe</Label>
-                      {modelSeriesQuery.data && modelSeriesQuery.data.length > 0 && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                          onClick={() => {
-                            if (window.confirm(`Möchten Sie wirklich alle Modellreihen für ${selectedDeviceTypeName} - ${selectedBrandName} löschen?`)) {
-                              // Alle Modellreihen für diese Marke löschen
-                              deleteAllModelSeriesForBrandMutation.mutate(selectedBrandId);
-                              // Auswahl zurücksetzen
-                              setSelectedModelSeriesId(null);
-                              setSelectedModelSeriesName('');
-                              setModels('');
-                            }
-                          }}
-                          disabled={deleteAllModelSeriesForBrandMutation.isPending}
-                        >
-                          {deleteAllModelSeriesForBrandMutation.isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                          ) : null}
-                          Alle Modellreihen löschen
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {modelSeriesQuery.isLoading ? (
-                        <div className="flex justify-center items-center w-full h-10 bg-muted rounded-md">
-                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marke</FormLabel>
+                        <div className="flex gap-2">
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            value={field.value}
+                            disabled={!selectedDeviceType}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder={selectedDeviceType ? "Marke auswählen" : "Erst Gerätetyp wählen"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {brands?.filter(brand => 
+                                !selectedDeviceType || brand.deviceTypeId === parseInt(selectedDeviceType)
+                              ).map((brand) => (
+                                <SelectItem key={brand.id} value={brand.id.toString()}>
+                                  {brand.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setIsAddBrandDialogOpen(true)}
+                            disabled={!selectedDeviceType}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
                         </div>
-                      ) : (
-                        <Select 
-                          value={selectedModelSeriesId?.toString() || ''}
-                          onValueChange={(value) => {
-                            if (modelSeriesQuery.data) {
-                              const modelSeries = modelSeriesQuery.data.find(ms => ms.id.toString() === value);
-                              if (modelSeries) {
-                                setSelectedModelSeriesId(modelSeries.id);
-                                setSelectedModelSeriesName(modelSeries.name);
-                              }
-                            }
-                          }}
-                        >
-                          <SelectTrigger id="modelSeries" className="flex-grow">
-                            <SelectValue placeholder="Modellreihe auswählen" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {modelSeriesQuery.data && modelSeriesQuery.data.map((series) => (
-                              <div key={series.id} className="flex items-center justify-between px-2">
-                                <SelectItem value={series.id.toString()}>{series.name}</SelectItem>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-6 px-2 text-destructive hover:text-destructive/80"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Bestätigung abfragen
-                                    if (window.confirm(`Möchten Sie die Modellreihe "${series.name}" wirklich löschen?`)) {
-                                      // Modellreihe löschen
-                                      deleteModelSeriesMutation.mutate(series.id);
-                                      // Wenn die aktuell ausgewählte Modellreihe gelöscht wurde, Auswahl zurücksetzen
-                                      if (selectedModelSeriesId === series.id) {
-                                        setSelectedModelSeriesId(null);
-                                        setSelectedModelSeriesName('');
-                                        setModels('');
-                                      }
-                                    }
-                                  }}
-                                  disabled={deleteModelSeriesMutation.isPending}
-                                >
-                                  <span className="text-red-500">✕</span>
-                                </Button>
-                              </div>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                      
-                      {/* Eingabefeld für neue Modellreihe */}
-                      <div className="relative flex-grow">
-                        <Input
-                          placeholder="Neue Modellreihe"
-                          value={newModelSeries}
-                          onChange={(e) => setNewModelSeries(e.target.value)}
-                        />
-                      </div>
-                      
-                      {/* Button zum Hinzufügen neuer Modellreihe */}
-                      {newModelSeries && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={handleAddNewModelSeries}
-                          className="whitespace-nowrap flex items-center gap-1"
-                          disabled={createModelSeriesMutation.isPending}
-                        >
-                          {createModelSeriesMutation.isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Plus className="h-3 w-3" />
-                          )}
-                          Hinzufügen
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Modelle-Eingabefeld */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="models">
-                    {selectedModelSeriesName 
-                      ? `Modelle für ${selectedBrandName} ${selectedModelSeriesName}` 
-                      : 'Modelle'} (ein Modell pro Zeile)
-                  </Label>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSaveModels} 
-                      size="sm"
-                      disabled={
-                        !selectedDeviceTypeId || 
-                        !selectedBrandId || 
-                        !selectedModelSeriesId || 
-                        updateAllModelsForModelSeriesMutation.isPending ||
-                        modelsQuery.isLoading
-                      }
-                      className="flex items-center gap-1"
-                    >
-                      {updateAllModelsForModelSeriesMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Save className="h-3 w-3" />
-                      )}
-                      Modelle speichern
-                    </Button>
-                  </div>
-                </div>
-                {modelsQuery.isLoading && selectedModelSeriesId ? (
-                  <div className="flex justify-center items-center py-8 bg-muted/20 rounded-md">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <Textarea
-                    id="models"
-                    placeholder={selectedDeviceTypeId && selectedBrandId && selectedModelSeriesId
-                      ? `Geben Sie hier Modelle für ${selectedBrandName} ${selectedModelSeriesName} ein (ein Modell pro Zeile)`
-                      : "Bitte wählen Sie zuerst Gerätetyp, Marke und Modellreihe aus"
-                    }
-                    value={models}
-                    onChange={(e) => setModels(e.target.value)}
-                    disabled={!selectedDeviceTypeId || !selectedBrandId || !selectedModelSeriesId}
-                    className="min-h-[200px] font-mono text-sm"
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Aktuell gespeichert: {modelsQuery.data?.length || 0} Modelle 
-                  {selectedModelSeriesName && ` für ${selectedModelSeriesName}`}
-                </p>
+                </div>
               </div>
-            </>
-          )}
+
+              <FormField
+                control={form.control}
+                name="models"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Modelle (ein Modell pro Zeile)</FormLabel>
+                      <span className="text-xs text-muted-foreground">
+                        {isLoadingModels ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          `${models.length || 0} Modelle`
+                        )}
+                      </span>
+                    </div>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        placeholder="z.B.\niPhone 13\niPhone 13 Pro\niPhone 13 Pro Max"
+                        rows={10}
+                        disabled={!selectedDeviceType || !selectedBrand}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button 
+                type="button"
+                onClick={form.handleSubmit(handleUpdateModels)}
+                disabled={updateModelsMutation.isPending || !selectedDeviceType || !selectedBrand}
+                className="w-full md:w-auto"
+              >
+                {updateModelsMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Modelle werden aktualisiert...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Modelle aktualisieren
+                  </>
+                )}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
+
+      {/* Dialog zum Hinzufügen einer neuen Marke */}
+      <Dialog open={isAddBrandDialogOpen} onOpenChange={setIsAddBrandDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neue Marke hinzufügen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie eine neue Marke für Ihre Geräte hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...brandForm}>
+            <form onSubmit={brandForm.handleSubmit(handleBrandFormSubmit)} className="space-y-4">
+              <FormField
+                control={brandForm.control}
+                name="deviceTypeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gerätetyp</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Gerätetyp auswählen" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {deviceTypes?.map((deviceType) => (
+                          <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
+                            {deviceType.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={brandForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <input 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="z.B. Apple, Samsung, Xiaomi" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddBrandDialogOpen(false)}
+                >
+                  Abbrechen
+                </Button>
+                <Button type="submit" disabled={addBrandMutation.isPending}>
+                  {addBrandMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Speichern...
+                    </>
+                  ) : (
+                    'Speichern'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
