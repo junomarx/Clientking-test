@@ -1088,9 +1088,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               onChange={(e) => {
                                 field.onChange(e);
                                 // Bei Eingabe das Dropdown öffnen
-                                setIsDeviceTypeDropdownOpen(e.target.value.length > 0);
+                                setIsDeviceTypeDropdownOpen(true);
                                 // Bei jeder Eingabe den Index zurücksetzen
                                 setSelectedDeviceTypeIndex(-1);
+                              }}
+                              onFocus={() => {
+                                // Beim Fokus immer das Dropdown öffnen
+                                setIsDeviceTypeDropdownOpen(true);
                               }}
                               onBlur={(e) => {
                                 // Wenn ein Element ausgewählt ist und Tab gedrückt wurde
@@ -1220,9 +1224,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 if (watchDeviceType) {
                                   // Nur gespeicherte Marken anzeigen, keine Standardmarken mehr
                                   setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
-                                  setIsBrandDropdownOpen(e.target.value.length > 0);
+                                  setIsBrandDropdownOpen(true); // Immer öffnen
                                   // Bei jeder Eingabe den Index zurücksetzen
                                   setSelectedBrandIndex(-1);
+                                }
+                              }}
+                              onFocus={() => {
+                                if (watchDeviceType) {
+                                  // Beim Fokus immer das Dropdown öffnen und Marken laden
+                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
+                                  setIsBrandDropdownOpen(true);
                                 }
                               }}
                               onBlur={(e) => {
@@ -1290,7 +1301,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                             />
                             
                             {/* Dropdown für die gespeicherten Marken */}
-                            {availableBrands.length > 0 && watchDeviceType && field.value && isBrandDropdownOpen && (
+                            {availableBrands.length > 0 && watchDeviceType && isBrandDropdownOpen && (
                               <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-y-auto">
                                 <div className="sticky top-0 bg-background border-b p-2">
                                   <span className="text-sm font-medium">Gespeicherte Marken</span>
@@ -1390,14 +1401,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               placeholder="z.B. iPhone 13 Pro"
                               onChange={(e) => {
                                 field.onChange(e.target.value);
-                                setIsModelDropdownOpen(e.target.value.length > 0);
+                                setIsModelDropdownOpen(true); // Immer öffnen
                                 // Bei jeder Eingabe den Index zurücksetzen
                                 setSelectedModelIndex(-1);
                                 // Keine automatische Speicherung mehr während der Eingabe
                               }}
                               onFocus={() => {
                                 if (savedModels.length > 0) {
-                                  setIsModelDropdownOpen(field.value?.length > 0);
+                                  setIsModelDropdownOpen(true); // Immer öffnen
                                 }
                               }}
                               onBlur={(e) => {
