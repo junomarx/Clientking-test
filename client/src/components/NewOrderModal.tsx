@@ -47,6 +47,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Standard Vorschläge für Gerätetypen - werden nur verwendet, wenn keine gespeicherten Werte vorhanden sind
 const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop', 'Spielekonsole'];
 
+// Standard-Marken für gängige Gerätetypen als Fallback, wenn keine gespeicherten Werte vorhanden sind
+const defaultBrands: Record<string, string[]> = {
+  'smartphone': ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Google', 'Nokia', 'Motorola', 'Sony', 'LG', 'Oppo'],
+  'tablet': ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Microsoft', 'Amazon', 'Acer', 'Asus', 'Google'],
+  'laptop': ['Apple', 'HP', 'Dell', 'Lenovo', 'Asus', 'Acer', 'Microsoft', 'Samsung', 'Huawei', 'MSI', 'Toshiba', 'Sony'],
+  'watch': ['Apple', 'Samsung', 'Garmin', 'Fitbit', 'Huawei', 'Fossil', 'Xiaomi', 'TicWatch', 'Withings']
+};
+
 // Form schema
 const orderFormSchema = z.object({
   // Customer info
@@ -302,7 +310,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     if (watchDeviceType) {
       // Lade verfügbare Marken
       const brands = getBrandsForDeviceType(watchDeviceType);
-      setAvailableBrands(brands);
+      
+      // Wenn keine gespeicherten Marken verfügbar sind, verwende die Standardmarken als Fallback
+      if (brands.length === 0 && defaultBrands[watchDeviceType.toLowerCase()]) {
+        console.log(`Keine Marken für ${watchDeviceType} gefunden, verwende Standardmarken:`, 
+                   defaultBrands[watchDeviceType.toLowerCase()]);
+        setAvailableBrands(defaultBrands[watchDeviceType.toLowerCase()] || []);
+      } else {
+        setAvailableBrands(brands);
+      }
+      
       form.setValue('brand', '');
       
       // Lade verfügbare Fehlerbeschreibungen
@@ -1202,7 +1219,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 field.onChange(e);
                                 // Bei Eingabe das Dropdown öffnen
                                 if (watchDeviceType) {
-                                  setAvailableBrands(getBrandsForDeviceType(watchDeviceType));
+                                  // Lade verfügbare Marken
+                                  const brands = getBrandsForDeviceType(watchDeviceType);
+                                  
+                                  // Fallback zu Standardmarken, wenn keine gespeicherten verfügbar sind
+                                  if (brands.length === 0 && defaultBrands[watchDeviceType.toLowerCase()]) {
+                                    setAvailableBrands(defaultBrands[watchDeviceType.toLowerCase()] || []);
+                                  } else {
+                                    setAvailableBrands(brands);
+                                  }
                                   setIsBrandDropdownOpen(e.target.value.length > 0);
                                   // Bei jeder Eingabe den Index zurücksetzen
                                   setSelectedBrandIndex(-1);
