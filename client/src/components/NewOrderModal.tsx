@@ -8,8 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/lib/types';
 import { useDeviceTypes } from '@/hooks/useDeviceTypes';
 import { useBrands } from '@/hooks/useBrands';
-import { useModelSeries } from '@/hooks/useModelSeries';
 import { useModels } from '@/hooks/useModels';
+import { useModelSeries, type CreateModelSeriesDTO } from '@/hooks/useModelSeries';
 import { 
   getIssuesForDeviceType, saveIssue, deleteIssue, 
   DEFAULT_ISSUES
@@ -103,9 +103,85 @@ interface DeviceType {
 }
 
 // Hilfsfunktion zum intelligenten Speichern von Modellen mit den API-Hooks
-// Diese Funktion sollte innerhalb der Komponente verwendet werden,
-// um Zugang zu den Mutations zu haben
-// Die Funktion wird später in der Komponente neu implementiert
+// Diese Funktion muss innerhalb der NewOrderModal-Komponente definiert werden,
+// damit sie Zugriff auf die entsprechenden Mutations hat
+function saveModelIntelligent(
+  deviceType: string, 
+  brand: string, 
+  modelSeries: string | undefined | null,
+  model: string,
+  deviceTypeId: number | null,
+  brandId: number | null,
+  createDeviceTypeMutation: any,
+  createBrandMutation: any,
+  createModelSeriesMutation: any,
+  createModelsMutation: any
+): void {
+  // Diese Funktion verwendet die API-Mutations, um Modellhierarchien zu speichern
+  // 1. Überprüfen, ob der Gerätetyp existiert, sonst erstellen
+  if (!deviceTypeId && deviceType) {
+    createDeviceTypeMutation.mutate(deviceType, {
+      onSuccess: (newDeviceType: any) => {
+        // 2. Überprüfen, ob die Marke existiert, sonst erstellen
+        if (brand) {
+          createBrandMutation.mutate({
+            name: brand,
+            deviceTypeId: newDeviceType.id
+          }, {
+            onSuccess: (newBrand: any) => {
+              // 3. Überprüfen, ob eine Modellreihe angegeben wurde
+              if (modelSeries) {
+                createModelSeriesMutation.mutate({
+                  name: modelSeries,
+                  brandId: newBrand.id
+                }, {
+                  onSuccess: (newModelSeries: any) => {
+                    // 4. Modell zur neuen Modellreihe hinzufügen
+                    createModelsMutation.mutate({
+                      modelSeriesId: newModelSeries.id,
+                      names: [model]
+                    });
+                  }
+                });
+              }
+            }
+          });
+        }
+      }
+    });
+  } else if (brandId && model) {
+    // Gerätetyp existiert, aber wir müssen prüfen, ob eine Modellreihe angegeben wurde
+    if (modelSeries) {
+      // Erstellle die Modellreihe
+      createModelSeriesMutation.mutate({
+        name: modelSeries,
+        brandId: brandId
+      }, {
+        onSuccess: (newModelSeries: any) => {
+          // Füge das Modell zur neuen Modellreihe hinzu
+          createModelsMutation.mutate({
+            modelSeriesId: newModelSeries.id,
+            names: [model]
+          });
+        }
+      });
+    }
+  }
+}
+
+// Hilfsfunktion zum Speichern einer Marke
+function saveBrand(
+  brandName: string, 
+  deviceTypeId: number | null, 
+  createBrandMutation: any
+): void {
+  if (deviceTypeId && brandName) {
+    createBrandMutation.mutate({
+      name: brandName,
+      deviceTypeId: deviceTypeId
+    });
+  }
+}
 
 export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps) {
   const queryClient = useQueryClient();
