@@ -147,8 +147,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, sendEmail, sendSms }: { id: number, status: string, sendEmail?: boolean, sendSms?: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, sendSms });
+    mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
       return { data: await response.json(), emailSent: sendEmail === true, status };
     },
     onSuccess: (result) => {
@@ -261,8 +261,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
         status: newStatus, 
-        sendEmail: sendEmail,
-        sendSms: sendSms
+        sendEmail: sendEmail
       });
     }
     // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
@@ -303,7 +302,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     setSelectedRepairId(id);
     setNewStatus(currentStatus);
     setSendEmail(false); // Reset E-Mail-Option
-    setSendSms(false); // Reset SMS-Option
+    // SMS-Funktionalität wurde entfernt
     
     // Finde die Reparatur-Details
     const repair = filteredRepairs.find(r => r.id === id);
