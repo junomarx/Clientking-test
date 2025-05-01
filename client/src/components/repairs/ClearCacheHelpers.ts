@@ -5,13 +5,13 @@ const SAVED_MODELS_KEY = 'repair-shop-models';
 const SAVED_BRANDS_KEY = 'repair-shop-brands';
 const SAVED_DEVICE_TYPES_KEY = 'repair-shop-device-types';
 
-// Funktion zum Löschen aller gespeicherten Marken
+// Funktion zum Löschen aller gespeicherten Herstellern
 export function clearAllBrands(): void {
   try {
     localStorage.removeItem(SAVED_BRANDS_KEY);
-    console.log('Alle gespeicherten Marken wurden gelöscht.');
+    console.log('Alle gespeicherten Herstellern wurden gelöscht.');
   } catch (err) {
-    console.error('Fehler beim Löschen der Marken aus dem localStorage:', err);
+    console.error('Fehler beim Löschen der Herstellern aus dem localStorage:', err);
   }
 }
 
@@ -52,7 +52,7 @@ export function showAllStoredData(): void {
     const models = localStorage.getItem(SAVED_MODELS_KEY);
     const deviceTypes = localStorage.getItem(SAVED_DEVICE_TYPES_KEY);
     
-    console.log('Gespeicherte Marken:', brands ? JSON.parse(brands) : 'Keine');
+    console.log('Gespeicherte Herstellern:', brands ? JSON.parse(brands) : 'Keine');
     console.log('Gespeicherte Modelle:', models ? JSON.parse(models) : 'Keine');
     console.log('Gespeicherte Gerätetypen:', deviceTypes ? JSON.parse(deviceTypes) : 'Keine');
   } catch (err) {
@@ -66,7 +66,7 @@ if (typeof window !== 'undefined') {
     clearAllBrands();
     clearAllModels();
     clearAllDeviceTypes();
-    console.log('Cache für Gerätearten und Marken wurde gelöscht');
+    console.log('Cache für Gerätearten und Herstellern wurde gelöscht');
   };
   
   (window as any).showRepairShopCache = function() {

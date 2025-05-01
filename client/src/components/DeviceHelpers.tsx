@@ -57,7 +57,7 @@ export function DeleteModelButton({ model }: { model: string }) {
   );
 }
 
-// Standardwerte für häufig verwendete Marken
+// Standardwerte für häufig verwendete Herstellern
 export const defaultBrands: { [key: string]: string[] } = {
   smartphone: ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Google', 'Sony', 'LG', 'Motorola', 'Nokia'],
   tablet: ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Microsoft', 'Amazon', 'Asus', 'Acer', 'LG'],

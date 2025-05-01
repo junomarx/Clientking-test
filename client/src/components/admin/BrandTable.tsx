@@ -78,7 +78,7 @@ export function BrandTable() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   
-  // Formular für das Hinzufügen einer neuen Marke
+  // Formular für das Hinzufügen einer neuen Hersteller
   const addForm = useForm<BrandFormValues>({
     resolver: zodResolver(brandFormSchema),
     defaultValues: {
@@ -87,7 +87,7 @@ export function BrandTable() {
     },
   });
   
-  // Formular für das Bearbeiten einer Marke
+  // Formular für das Bearbeiten einer Hersteller
   const editForm = useForm<BrandFormValues>({
     resolver: zodResolver(brandFormSchema),
     defaultValues: {
@@ -96,7 +96,7 @@ export function BrandTable() {
     },
   });
   
-  // Query zum Abrufen aller Marken
+  // Query zum Abrufen aller Herstellern
   const { data: brands, isLoading: isBrandsLoading, error: brandsError } = useQuery<Brand[]>({
     queryKey: ['/api/admin/brands'],
     queryFn: async () => {
@@ -114,7 +114,7 @@ export function BrandTable() {
     },
   });
   
-  // Mutation zum Hinzufügen einer neuen Marke
+  // Mutation zum Hinzufügen einer neuen Hersteller
   const addBrandMutation = useMutation({
     mutationFn: async (data: BrandFormValues) => {
       const res = await apiRequest('POST', '/api/admin/brands', data);
@@ -125,20 +125,20 @@ export function BrandTable() {
       addForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
       toast({
-        title: 'Marke hinzugefügt',
-        description: 'Die Marke wurde erfolgreich hinzugefügt.',
+        title: 'Hersteller hinzugefügt',
+        description: 'Die Hersteller wurde erfolgreich hinzugefügt.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Hinzufügen der Marke: ${error.message}`,
+        description: `Fehler beim Hinzufügen der Hersteller: ${error.message}`,
         variant: 'destructive',
       });
     },
   });
   
-  // Mutation zum Aktualisieren einer Marke
+  // Mutation zum Aktualisieren einer Hersteller
   const updateBrandMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: BrandFormValues }) => {
       const res = await apiRequest('PATCH', `/api/admin/brands/${id}`, data);
@@ -149,20 +149,20 @@ export function BrandTable() {
       editForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
       toast({
-        title: 'Marke aktualisiert',
-        description: 'Die Marke wurde erfolgreich aktualisiert.',
+        title: 'Hersteller aktualisiert',
+        description: 'Die Hersteller wurde erfolgreich aktualisiert.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Aktualisieren der Marke: ${error.message}`,
+        description: `Fehler beim Aktualisieren der Hersteller: ${error.message}`,
         variant: 'destructive',
       });
     },
   });
   
-  // Mutation zum Löschen einer Marke
+  // Mutation zum Löschen einer Hersteller
   const deleteBrandMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest('DELETE', `/api/admin/brands/${id}`);
@@ -170,14 +170,14 @@ export function BrandTable() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/brands'] });
       toast({
-        title: 'Marke gelöscht',
-        description: 'Die Marke wurde erfolgreich gelöscht.',
+        title: 'Hersteller gelöscht',
+        description: 'Die Hersteller wurde erfolgreich gelöscht.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Löschen der Marke: ${error.message}`,
+        description: `Fehler beim Löschen der Hersteller: ${error.message}`,
         variant: 'destructive',
       });
     },
@@ -193,7 +193,7 @@ export function BrandTable() {
   };
   
   const handleDelete = (brand: Brand) => {
-    if (confirm(`Sind Sie sicher, dass Sie die Marke "${brand.name}" löschen möchten?`)) {
+    if (confirm(`Sind Sie sicher, dass Sie die Hersteller "${brand.name}" löschen möchten?`)) {
       deleteBrandMutation.mutate(brand.id);
     }
   };
@@ -226,7 +226,7 @@ export function BrandTable() {
   if (brandsError) {
     return (
       <Alert variant="destructive" className="mb-4">
-        <AlertTitle>Fehler beim Laden der Marken</AlertTitle>
+        <AlertTitle>Fehler beim Laden der Herstellern</AlertTitle>
         <AlertDescription>{(brandsError as Error).message}</AlertDescription>
       </Alert>
     );
@@ -237,8 +237,8 @@ export function BrandTable() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Marken verwalten</CardTitle>
-            <CardDescription>Hier können Sie Marken hinzufügen, bearbeiten und löschen.</CardDescription>
+            <CardTitle>Herstellern verwalten</CardTitle>
+            <CardDescription>Hier können Sie Herstellern hinzufügen, bearbeiten und löschen.</CardDescription>
           </div>
           <Button
             className="ml-auto"
@@ -248,12 +248,12 @@ export function BrandTable() {
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Marke hinzufügen
+            Hersteller hinzufügen
           </Button>
         </CardHeader>
         <CardContent>
           <Table>
-            <TableCaption>Liste aller Marken</TableCaption>
+            <TableCaption>Liste aller Herstellern</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -293,7 +293,7 @@ export function BrandTable() {
               {brands?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    Keine Marken gefunden
+                    Keine Herstellern gefunden
                   </TableCell>
                 </TableRow>
               )}
@@ -302,13 +302,13 @@ export function BrandTable() {
         </CardContent>
       </Card>
       
-      {/* Dialog zum Hinzufügen einer neuen Marke */}
+      {/* Dialog zum Hinzufügen einer neuen Hersteller */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neue Marke hinzufügen</DialogTitle>
+            <DialogTitle>Neue Hersteller hinzufügen</DialogTitle>
             <DialogDescription>
-              Fügen Sie eine neue Marke zum System hinzu.
+              Fügen Sie eine neue Hersteller zum System hinzu.
             </DialogDescription>
           </DialogHeader>
           <Form {...addForm}>
@@ -377,11 +377,11 @@ export function BrandTable() {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Bearbeiten einer Marke */}
+      {/* Dialog zum Bearbeiten einer Hersteller */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Marke bearbeiten</DialogTitle>
+            <DialogTitle>Hersteller bearbeiten</DialogTitle>
             <DialogDescription>
               Aktualisieren Sie die Informationen für {selectedBrand?.name}.
             </DialogDescription>

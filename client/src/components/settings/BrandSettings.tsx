@@ -73,7 +73,7 @@ interface Brand {
 // Schema zur Validierung des Formulars
 const brandSchema = z.object({
   deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
-  name: z.string().min(1, 'Markenname darf nicht leer sein')
+  name: z.string().min(1, 'Herstellernname darf nicht leer sein')
 });
 
 type BrandFormValues = z.infer<typeof brandSchema>;
@@ -100,7 +100,7 @@ export function BrandSettings() {
     }
   });
 
-  // Marken abrufen
+  // Herstellern abrufen
   const { data: brands, isLoading: isLoadingBrands } = useQuery<Brand[]>({
     queryKey: ['/api/brands', selectedDeviceType],
     queryFn: async () => {
@@ -112,7 +112,7 @@ export function BrandSettings() {
     }
   });
 
-  // Formular für das Hinzufügen einer neuen Marke
+  // Formular für das Hinzufügen einer neuen Hersteller
   const addForm = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -121,7 +121,7 @@ export function BrandSettings() {
     }
   });
 
-  // Formular für das Bearbeiten einer Marke
+  // Formular für das Bearbeiten einer Hersteller
   const editForm = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -130,10 +130,10 @@ export function BrandSettings() {
     }
   });
 
-  // Mutation zum Hinzufügen einer neuen Marke
+  // Mutation zum Hinzufügen einer neuen Hersteller
   const addBrandMutation = useMutation({
     mutationFn: async (data: BrandFormValues | { deviceTypeId: string, brands: string[] }) => {
-      // Wenn mehrere Marken übergeben werden (Array)
+      // Wenn mehrere Herstellern übergeben werden (Array)
       if ('brands' in data) {
         const deviceTypeId = parseInt(data.deviceTypeId);
         const promises = data.brands.map(brandName => 
@@ -145,7 +145,7 @@ export function BrandSettings() {
         await Promise.all(promises);
         return { success: true, count: data.brands.length };
       } else {
-        // Einzelne Marke (ursprüngliche Funktionalität)
+        // Einzelne Hersteller (ursprüngliche Funktionalität)
         const res = await apiRequest('POST', '/api/brands', {
           ...data,
           deviceTypeId: parseInt(data.deviceTypeId)
@@ -158,29 +158,29 @@ export function BrandSettings() {
       addForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       
-      // Unterschiedliche Nachricht basierend auf der Anzahl der hinzugefügten Marken
+      // Unterschiedliche Nachricht basierend auf der Anzahl der hinzugefügten Herstellern
       if (result && typeof result === 'object' && 'count' in result) {
         toast({
-          title: 'Marken hinzugefügt',
-          description: `${result.count} Marken wurden erfolgreich hinzugefügt.`,
+          title: 'Herstellern hinzugefügt',
+          description: `${result.count} Herstellern wurden erfolgreich hinzugefügt.`,
         });
       } else {
         toast({
-          title: 'Marke hinzugefügt',
-          description: 'Die Marke wurde erfolgreich hinzugefügt.',
+          title: 'Hersteller hinzugefügt',
+          description: 'Die Hersteller wurde erfolgreich hinzugefügt.',
         });
       }
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Konnte Marke(n) nicht hinzufügen: ${error.message}`,
+        description: `Konnte Hersteller(n) nicht hinzufügen: ${error.message}`,
         variant: 'destructive'
       });
     }
   });
 
-  // Mutation zum Aktualisieren einer Marke
+  // Mutation zum Aktualisieren einer Hersteller
   const updateBrandMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: BrandFormValues }) => {
       const res = await apiRequest('PATCH', `/api/brands/${id}`, {
@@ -194,20 +194,20 @@ export function BrandSettings() {
       editForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       toast({
-        title: 'Marke aktualisiert',
-        description: 'Die Marke wurde erfolgreich aktualisiert.',
+        title: 'Hersteller aktualisiert',
+        description: 'Die Hersteller wurde erfolgreich aktualisiert.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Konnte Marke nicht aktualisieren: ${error.message}`,
+        description: `Konnte Hersteller nicht aktualisieren: ${error.message}`,
         variant: 'destructive'
       });
     }
   });
 
-  // Mutation zum Löschen einer Marke
+  // Mutation zum Löschen einer Hersteller
   const deleteBrandMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest('DELETE', `/api/brands/${id}`);
@@ -216,14 +216,14 @@ export function BrandSettings() {
       setIsDeleteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       toast({
-        title: 'Marke gelöscht',
-        description: 'Die Marke wurde erfolgreich gelöscht.',
+        title: 'Hersteller gelöscht',
+        description: 'Die Hersteller wurde erfolgreich gelöscht.',
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Konnte Marke nicht löschen: ${error.message}`,
+        description: `Konnte Hersteller nicht löschen: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -236,23 +236,23 @@ export function BrandSettings() {
       .map(line => line.trim())
       .filter(line => line.length > 0);
     
-    // Wenn es mehrere Zeilen gibt, diese als separate Marken hinzufügen
+    // Wenn es mehrere Zeilen gibt, diese als separate Herstellern hinzufügen
     if (brandLines.length > 1) {
       addBrandMutation.mutate({
         deviceTypeId: data.deviceTypeId,
         brands: brandLines
       });
     } else if (brandLines.length === 1) {
-      // Wenn es nur eine Zeile gibt, diese als einzelne Marke hinzufügen
+      // Wenn es nur eine Zeile gibt, diese als einzelne Hersteller hinzufügen
       addBrandMutation.mutate({
         deviceTypeId: data.deviceTypeId,
         name: brandLines[0]
       });
     } else {
-      // Wenn keine gültigen Marken eingegeben wurden
+      // Wenn keine gültigen Herstellern eingegeben wurden
       toast({
         title: 'Fehler',
-        description: 'Bitte geben Sie mindestens eine Marke ein.',
+        description: 'Bitte geben Sie mindestens eine Hersteller ein.',
         variant: 'destructive'
       });
     }
@@ -306,11 +306,11 @@ export function BrandSettings() {
       <div>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Marken verwalten</h3>
+            <h3 className="text-lg font-semibold">Herstellern verwalten</h3>
             <p className="text-sm text-muted-foreground">
               {isAdmin 
-                ? "Als Administrator können Sie Marken hinzufügen, die von allen Benutzern verwendet werden können."
-                : "Die Marken werden zentral verwaltet. Nur Administratoren können Änderungen vornehmen."
+                ? "Als Administrator können Sie Herstellern hinzufügen, die von allen Benutzern verwendet werden können."
+                : "Die Herstellern werden zentral verwaltet. Nur Administratoren können Änderungen vornehmen."
               }
             </p>
           </div>
@@ -383,8 +383,8 @@ export function BrandSettings() {
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
                   {selectedDeviceType 
-                    ? 'Keine Marken für diesen Gerätetyp gefunden' 
-                    : 'Keine Marken gefunden'}
+                    ? 'Keine Herstellern für diesen Gerätetyp gefunden' 
+                    : 'Keine Herstellern gefunden'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -427,13 +427,13 @@ export function BrandSettings() {
         </Table>
       </div>
 
-      {/* Dialog zum Hinzufügen einer neuen Marke */}
+      {/* Dialog zum Hinzufügen einer neuen Hersteller */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neue Marke hinzufügen</DialogTitle>
+            <DialogTitle>Neue Hersteller hinzufügen</DialogTitle>
             <DialogDescription>
-              Fügen Sie eine neue Marke für Ihre Reparaturen hinzu.
+              Fügen Sie eine neue Hersteller für Ihre Reparaturen hinzu.
             </DialogDescription>
           </DialogHeader>
           <Form {...addForm}>
@@ -470,7 +470,7 @@ export function BrandSettings() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Marken (eine Marke pro Zeile)</FormLabel>
+                    <FormLabel>Herstellern (eine Hersteller pro Zeile)</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="z.B. Apple
@@ -483,7 +483,7 @@ Huawei"
                     </FormControl>
                     <FormMessage />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Geben Sie jede Marke in einer neuen Zeile ein.
+                      Geben Sie jede Hersteller in einer neuen Zeile ein.
                     </p>
                   </FormItem>
                 )}
@@ -512,11 +512,11 @@ Huawei"
         </DialogContent>
       </Dialog>
 
-      {/* Dialog zum Bearbeiten einer Marke */}
+      {/* Dialog zum Bearbeiten einer Hersteller */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Marke bearbeiten</DialogTitle>
+            <DialogTitle>Hersteller bearbeiten</DialogTitle>
             <DialogDescription>
               Aktualisieren Sie die Informationen für {selectedBrand?.name}.
             </DialogDescription>
@@ -587,13 +587,13 @@ Huawei"
         </DialogContent>
       </Dialog>
 
-      {/* Bestätigungsdialog zum Löschen einer Marke */}
+      {/* Bestätigungsdialog zum Löschen einer Hersteller */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Marke löschen</AlertDialogTitle>
+            <AlertDialogTitle>Hersteller löschen</AlertDialogTitle>
             <AlertDialogDescription>
-              Sind Sie sicher, dass Sie die Marke "{selectedBrand?.name}" löschen möchten?
+              Sind Sie sicher, dass Sie die Hersteller "{selectedBrand?.name}" löschen möchten?
               Diese Aktion kann nicht rückgängig gemacht werden und entfernt auch alle zugehörigen Modellreihen und Modelle.
             </AlertDialogDescription>
           </AlertDialogHeader>

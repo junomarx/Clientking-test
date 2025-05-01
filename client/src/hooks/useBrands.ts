@@ -65,7 +65,7 @@ export function useBrands() {
       onError: (error: Error) => {
         toast({
           title: 'Fehler',
-          description: `Fehler beim Erstellen der Marke: ${error.message}`,
+          description: `Fehler beim Erstellen des Herstellers: ${error.message}`,
           variant: 'destructive',
         });
       }
@@ -90,7 +90,7 @@ export function useBrands() {
       onError: (error: Error) => {
         toast({
           title: 'Fehler',
-          description: `Fehler beim Löschen der Marke: ${error.message}`,
+          description: `Fehler beim Löschen des Herstellers: ${error.message}`,
           variant: 'destructive',
         });
       }
