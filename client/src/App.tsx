@@ -9,6 +9,7 @@ import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
+import LandingPage from "@/pages/landing/LandingPage";
 import { ProtectedRoute, AdminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -21,7 +22,8 @@ import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheH
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/">
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/app">
         <Home />
       </ProtectedRoute>
       <AdminProtectedRoute path="/admin">
