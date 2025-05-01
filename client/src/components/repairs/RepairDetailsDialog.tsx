@@ -271,8 +271,13 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             onClick={() => {
               // Status ändern Dialog öffnen
               if (onStatusChange && repair) {
-                onStatusChange(repair.id, repair.status);
+                // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung den Status-Dialog öffnen
+                console.log('Schließe Details-Dialog und öffne Status-Dialog für ID:', repair.id);
                 handleClose();
+                // Etwas Verzögerung für die Animation
+                setTimeout(() => {
+                  onStatusChange(repair.id, repair.status);
+                }, 300);
               }
             }}
             className="flex items-center gap-1"
