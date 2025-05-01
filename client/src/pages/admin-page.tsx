@@ -571,7 +571,7 @@ function SystemDiagnosticTab() {
   return (
     <div className="grid gap-4">
       <Tabs defaultValue="database" className="space-y-4">
-        <TabsList>
+        <TabsList className="space-x-0 flex overflow-x-auto">
           <TabsTrigger value="database">
             <Database className="mr-2 h-4 w-4" />
             Datenbank
@@ -1454,17 +1454,17 @@ export default function AdminPage() {
       </div>
       
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="flex flex-wrap w-full overflow-x-auto">
-          <TabsTrigger className="flex-shrink-0" value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger className="flex-shrink-0" value="users">Benutzer</TabsTrigger>
-          <TabsTrigger className="flex-shrink-0" value="devices">
+        <TabsList className="space-x-0 flex overflow-x-auto">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="users">Benutzer</TabsTrigger>
+          <TabsTrigger value="devices">
             <div className="flex items-center gap-1">
               <Smartphone className="h-4 w-4" />
               Geräte
             </div>
           </TabsTrigger>
-          <TabsTrigger className="flex-shrink-0" value="system">Systemdiagnose</TabsTrigger>
-          <TabsTrigger className="flex-shrink-0" value="backup">Backup & Restore</TabsTrigger>
+          <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
+          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
