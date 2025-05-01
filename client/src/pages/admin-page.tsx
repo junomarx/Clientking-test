@@ -44,6 +44,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
+import ToastTestDialog from "@/components/ToastTestDialog";
 
 type UserResponse = Omit<User, "password">;
 
