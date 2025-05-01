@@ -18,6 +18,7 @@ import {
   type InsertEmailTemplate,
   type InsertDeviceIssue,
   customers,
+  users,
   repairs,
   deviceIssues,
   feedbacks,
@@ -2033,9 +2034,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registriere die Admin-Routen
   registerAdminRoutes(app);
   
+  // Hilfsfunktion, um zu prüfen ob ein Benutzer Professional oder Enterprise hat
+  async function isProfessionalOrHigher(userId: number): Promise<boolean> {
+    try {
+      // Benutzer direkt über Storage abrufen statt aus der Datenbank
+      const user = await storage.getUser(userId);
+      if (!user) return false;
+      
+      const pricingPlan = user.pricingPlan;
+      return pricingPlan === 'professional' || pricingPlan === 'enterprise';
+    } catch (error) {
+      console.error("Error checking pricing plan:", error);
+      return false;
+    }
+  }
+  
   // KOSTENVORANSCHLAG API (COST ESTIMATES)
   // Alle Kostenvoranschläge abrufen
   app.get("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;

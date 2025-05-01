@@ -152,11 +152,22 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             className={`px-4 py-4 font-semibold ${
               activeTab === 'cost-estimates' 
                 ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
+                : isBasicPlan 
+                  ? 'text-gray-400 hover:text-gray-400 border-b-2 border-transparent cursor-not-allowed' 
+                  : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
             } transition-all flex items-center`}
             onClick={() => handleTabChange('cost-estimates')}
+            disabled={isBasicPlan}
           >
-            <FileText className="mr-2 h-4 w-4" /> Kostenvoranschläge
+            <FileText className="mr-2 h-4 w-4" />
+            {isBasicPlan ? (
+              <span className="flex items-center">
+                Kostenvoranschläge
+                <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
+              </span>
+            ) : (
+              "Kostenvoranschläge"
+            )}
           </button>
         </div>
       </div>

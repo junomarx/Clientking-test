@@ -513,16 +513,48 @@ export class DatabaseStorage implements IStorage {
 
   // Prüft, ob ein Benutzer mit einem Basic-Paket im aktuellen Monat
   // noch weitere Reparaturen anlegen darf
-  async canCreateNewRepair(userId: number): Promise<{ canCreate: boolean; currentCount: number; limit: number }> {
+  async canCreateNewRepair(userId: number): Promise<{ canCreate: boolean; currentCount: number; limit: number; pricingPlan: string; displayName: string; currentMonth: string; currentYear: number }> {
     // Benutzer abrufen, um Preispaket zu prüfen
     const user = await this.getUser(userId);
+    
+    // Aktuelles Datum für die Rückgabe
+    const currentDate = new Date();
+    const monthName = currentDate.toLocaleString('de-DE', { month: 'long' });
+    const year = currentDate.getFullYear();
+    
     if (!user) {
-      return { canCreate: false, currentCount: 0, limit: 0 };
+      return { 
+        canCreate: false, 
+        currentCount: 0, 
+        limit: 0, 
+        pricingPlan: 'basic',
+        displayName: 'Basic',
+        currentMonth: monthName,
+        currentYear: year
+      };
     }
     
+    // Basic, Professional oder Enterprise Plan
+    const pricingPlan = user.pricingPlan || 'basic';
+    
+    // Display-Namen für die Preispakete
+    const displayNames = {
+      'basic': 'Basic',
+      'professional': 'Professional',
+      'enterprise': 'Enterprise'
+    };
+    
     // Wenn kein Basic-Paket, keine Einschränkung
-    if (user.pricingPlan !== 'basic') {
-      return { canCreate: true, currentCount: 0, limit: 999 };
+    if (pricingPlan !== 'basic') {
+      return { 
+        canCreate: true, 
+        currentCount: 0, 
+        limit: 999,
+        pricingPlan,
+        displayName: displayNames[pricingPlan as keyof typeof displayNames],
+        currentMonth: monthName,
+        currentYear: year
+      };
     }
     
     // Für Basic-Paket: Prüfe Anzahl der Reparaturen im aktuellen Monat
@@ -532,7 +564,11 @@ export class DatabaseStorage implements IStorage {
     return { 
       canCreate: repairCount < repairLimit, 
       currentCount: repairCount,
-      limit: repairLimit
+      limit: repairLimit,
+      pricingPlan,
+      displayName: displayNames[pricingPlan as keyof typeof displayNames],
+      currentMonth: monthName,
+      currentYear: year
     };
   }
   
