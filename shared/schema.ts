@@ -52,6 +52,10 @@ export const repairs = pgTable("repairs", {
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
   
+  // Für die monatliche Limitierung der Reparaturen im Basic-Paket
+  // Format: YYYYMM (z.B. 202505 für Mai 2025)
+  creationMonth: text("creation_month"),
+  
   // Unterschrift bei Abgabe des Geräts
   dropoffSignature: text("dropoff_signature"),      // Digitale Unterschrift als Base64-kodiertes Bild (Abgabe)
   dropoffSignedAt: timestamp("dropoff_signed_at"),  // Datum/Uhrzeit der Unterschrift bei Abgabe
