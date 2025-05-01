@@ -182,6 +182,47 @@ export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 
 // SMS-Vorlagen wurden auf Kundenwunsch entfernt
 
+// E-Mail-Verlauf für Reparaturen
+export const emailHistory = pgTable("email_history", {
+  id: serial("id").primaryKey(),
+  repairId: integer("repair_id").notNull().references(() => repairs.id),
+  emailTemplateId: integer("email_template_id").references(() => emailTemplates.id),
+  subject: text("subject").notNull(),
+  recipient: text("recipient").notNull(),
+  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  status: text("status").notNull(), // "success" oder "failed"
+  userId: integer("user_id").references(() => users.id),
+});
+
+export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
+  id: true,
+  sentAt: true,
+});
+
+export type EmailHistory = typeof emailHistory.$inferSelect;
+export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
+
+// Beziehungen definieren - emailHistory zu repairs und emailTemplates
+export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
+  repair: one(repairs, {
+    fields: [emailHistory.repairId],
+    references: [repairs.id],
+  }),
+  emailTemplate: one(emailTemplates, {
+    fields: [emailHistory.emailTemplateId],
+    references: [emailTemplates.id],
+  }),
+  user: one(users, {
+    fields: [emailHistory.userId],
+    references: [users.id],
+  }),
+}));
+
+// Beziehungen für repairs zu emailHistory
+export const repairsRelations = relations(repairs, ({ many }) => ({
+  emailHistory: many(emailHistory),
+}));
+
 // Benutzerspezifische Gerätearten
 export const userDeviceTypes = pgTable("user_device_types", {
   id: serial("id").primaryKey(),

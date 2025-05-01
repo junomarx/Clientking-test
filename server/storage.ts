@@ -5,6 +5,7 @@ import {
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
+  emailHistory, type EmailHistory, type InsertEmailHistory,
   userDeviceTypes, type UserDeviceType, type InsertUserDeviceType,
   userBrands, type UserBrand, type InsertUserBrand,
   userModelSeries, type UserModelSeries, type InsertUserModelSeries,
@@ -1848,6 +1849,33 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error converting cost estimate to repair:", error);
       return undefined;
+    }
+  }
+
+  // E-Mail-Verlauf Methoden
+  async getEmailHistoryForRepair(repairId: number): Promise<EmailHistory[]> {
+    try {
+      return await db
+        .select()
+        .from(emailHistory)
+        .where(eq(emailHistory.repairId, repairId))
+        .orderBy(desc(emailHistory.sentAt));
+    } catch (error) {
+      console.error("Error getting email history for repair:", error);
+      return [];
+    }
+  }
+
+  async createEmailHistoryEntry(entry: InsertEmailHistory): Promise<EmailHistory> {
+    try {
+      const [historyEntry] = await db
+        .insert(emailHistory)
+        .values(entry)
+        .returning();
+      return historyEntry;
+    } catch (error) {
+      console.error("Error creating email history entry:", error);
+      throw error;
     }
   }
 }
