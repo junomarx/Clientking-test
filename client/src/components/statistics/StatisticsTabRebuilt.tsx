@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen, Truck, CheckCircle } from 'lucide-react';
+import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen, Truck, CheckCircle, AlertCircle, Lock } from 'lucide-react';
 import { SimpleDatePicker } from './SimpleDatePicker';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Repair } from '@shared/schema';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Hilfsfunktion zum Prüfen, ob der Benutzer detaillierte Statistiken sehen darf
+const checkCanViewDetailedStats = async (): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/can-view-detailed-stats');
+    if (!response.ok) return false;
+    const data = await response.json();
+    return data.canViewDetailedStats;
+  } catch (error) {
+    console.error('Fehler bei der Prüfung der Statistik-Berechtigungen:', error);
+    return false;
+  }
+};
 
 // Basis-Statistiken
 interface Stats {
@@ -55,6 +70,30 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>(undefined);
   const [customDatePickerOpen, setCustomDatePickerOpen] = useState(false);
   const [customDateRangeActive, setCustomDateRangeActive] = useState(false);
+  
+  // Berechtigung für detaillierte Statistiken
+  const [canViewDetailedStats, setCanViewDetailedStats] = useState<boolean | null>(null);
+  const [isCheckingPermission, setIsCheckingPermission] = useState(true);
+  
+  // Prüfung der Berechtigung beim Laden der Komponente
+  useEffect(() => {
+    setIsCheckingPermission(true);
+    checkCanViewDetailedStats()
+      .then(canView => {
+        setCanViewDetailedStats(canView);
+        // Wenn keine Berechtigung für detaillierte Statistiken, dann auf Basic-Tab wechseln
+        if (!canView && activeTab !== 'general') {
+          setActiveTab('general');
+        }
+      })
+      .catch(() => {
+        setCanViewDetailedStats(false);
+        setActiveTab('general');
+      })
+      .finally(() => {
+        setIsCheckingPermission(false);
+      });
+  }, []);
   
   // Funktion zum Navigieren zur Reparaturseite mit Statusfilter
   const navigateToRepairsWithFilter = (status: string) => {
