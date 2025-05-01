@@ -190,6 +190,7 @@ export class EmailService {
         
         // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
         const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        console.log(`Extrahierte Reparatur-ID aus Variablen: ${variables.repairId} -> ${repairId}`);
         
         // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
         if (repairId) {
@@ -218,6 +219,7 @@ export class EmailService {
         
         // Bei Fehler trotzdem einen History-Eintrag erstellen
         const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        console.log(`Extrahierte Reparatur-ID bei Fehler: ${variables.repairId} -> ${repairId}`);
         if (repairId) {
           try {
             const historyEntry: InsertEmailHistory = {
@@ -255,6 +257,7 @@ export class EmailService {
             
             // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
             const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+            console.log(`Extrahierte Reparatur-ID bei Fallback: ${variables.repairId} -> ${repairId}`);
             
             // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
             if (repairId) {

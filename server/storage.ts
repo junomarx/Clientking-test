@@ -1856,12 +1856,15 @@ export class DatabaseStorage implements IStorage {
   async getEmailHistoryForRepair(repairId: number): Promise<EmailHistory[]> {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
-      // Verwende die einfachere Form ohne Parameter-Bindung
-      const query = `SELECT * FROM "email_history" WHERE "repairId" = ${repairId} ORDER BY "sentAt" DESC`;
-      console.log('SQL-Abfrage:', query);
-      const result = await db.execute(query);
-      console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
-      return result.rows as EmailHistory[];
+      
+      // Verwende Drizzle ORM für die Datenbankabfrage
+      const result = await db.select()
+        .from(emailHistory)
+        .where(eq(emailHistory.repairId, repairId))
+        .orderBy(desc(emailHistory.sentAt));
+      
+      console.log(`Gefundener E-Mail-Verlauf:`, result);
+      return result;
     } catch (error) {
       console.error("Error getting email history for repair:", error);
       return [];
@@ -1871,24 +1874,22 @@ export class DatabaseStorage implements IStorage {
   async createEmailHistoryEntry(entry: InsertEmailHistory): Promise<EmailHistory> {
     try {
       console.log('Erstelle E-Mail-Verlaufseintrag in der Datenbank:', entry);
-      // Verwende die einfachere Form ohne Parameter-Bindung
-      const query = `
-        INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId") 
-        VALUES (
-          ${entry.repairId},
-          ${entry.emailTemplateId || 'NULL'},
-          '${entry.subject.replace(/'/g, "''")}',
-          '${entry.recipient.replace(/'/g, "''")}',
-          '${entry.status.replace(/'/g, "''")}',
-          ${entry.userId || 'NULL'}
-        ) 
-        RETURNING *
-      `;
-      console.log('SQL-Insert-Abfrage:', query);
-      const result = await db.execute(query);
+      console.log('RepairId Typ:', typeof entry.repairId, 'Wert:', entry.repairId);
       
-      console.log('Erstellter E-Mail-Verlaufseintrag:', result.rows[0]);
-      return result.rows[0] as EmailHistory;
+      // Verwende Drizzle ORM für die Datenbankoperation
+      const [result] = await db.insert(emailHistory)
+        .values({
+          repairId: Number(entry.repairId), // Stelle sicher, dass es eine Zahl ist
+          emailTemplateId: entry.emailTemplateId ? Number(entry.emailTemplateId) : null,
+          subject: entry.subject,
+          recipient: entry.recipient,
+          status: entry.status,
+          userId: entry.userId ? Number(entry.userId) : null
+        })
+        .returning();
+      
+      console.log('Erstellter E-Mail-Verlaufseintrag:', result);
+      return result;
     } catch (error) {
       console.error("Error creating email history entry:", error);
       throw error;
