@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
 import { Customer, EmailHistory } from '@shared/schema';
 import { Repair } from '@/lib/types';
@@ -35,7 +36,8 @@ import {
   Pencil,
   MessageCircle,
   Check,
-  X
+  X,
+  Printer
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -51,6 +53,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
+  const { showPrintOptions } = usePrintManager();
   
   // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
@@ -359,6 +362,24 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           >
             <Pencil className="h-4 w-4" />
             Bearbeiten
+          </Button>
+
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              // Druckoptionen anzeigen
+              if (repair) {
+                handleClose();
+                // Verzögerung für die Animation
+                setTimeout(() => {
+                  showPrintOptions(repair.id);
+                }, 300);
+              }
+            }}
+            className="flex items-center gap-1"
+          >
+            <Printer className="h-4 w-4" />
+            Drucken
           </Button>
           
           <Button 
