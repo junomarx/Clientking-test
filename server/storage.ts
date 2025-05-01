@@ -392,6 +392,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(repairs.createdAt));
   }
   
+  // Zählt die Anzahl der Reparaturen im aktuellen Monat für einen Benutzer
+  async getRepairsCountForCurrentMonth(userId: number): Promise<number> {
+    const today = new Date();
+    const currentMonth = today.getFullYear() * 100 + (today.getMonth() + 1); // Format: YYYYMM
+    const currentMonthStr = currentMonth.toString();
+    
+    const result = await db
+      .select({ count: count() })
+      .from(repairs)
+      .where(
+        and(
+          eq(repairs.userId, userId),
+          eq(repairs.creationMonth, currentMonthStr)
+        )
+      );
+      
+    return result[0]?.count || 0;
+  }
+  
   async getRepair(id: number, currentUserId?: number): Promise<Repair | undefined> {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
@@ -492,8 +511,45 @@ export class DatabaseStorage implements IStorage {
     return prefix + formattedNumber;
   }
 
+  // Prüft, ob ein Benutzer mit einem Basic-Paket im aktuellen Monat
+  // noch weitere Reparaturen anlegen darf
+  async canCreateNewRepair(userId: number): Promise<{ canCreate: boolean; currentCount: number; limit: number }> {
+    // Benutzer abrufen, um Preispaket zu prüfen
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { canCreate: false, currentCount: 0, limit: 0 };
+    }
+    
+    // Wenn kein Basic-Paket, keine Einschränkung
+    if (user.pricingPlan !== 'basic') {
+      return { canCreate: true, currentCount: 0, limit: 999 };
+    }
+    
+    // Für Basic-Paket: Prüfe Anzahl der Reparaturen im aktuellen Monat
+    const repairCount = await this.getRepairsCountForCurrentMonth(userId);
+    const repairLimit = 50; // Basic-Paket: 50 Reparaturen pro Monat
+    
+    return { 
+      canCreate: repairCount < repairLimit, 
+      currentCount: repairCount,
+      limit: repairLimit
+    };
+  }
+  
   async createRepair(insertRepair: InsertRepair, currentUserId?: number): Promise<Repair> {
     const now = new Date();
+    
+    // Prüfe, ob der Benutzer neue Reparaturen erstellen darf
+    if (currentUserId) {
+      const canCreate = await this.canCreateNewRepair(currentUserId);
+      if (!canCreate.canCreate) {
+        throw new Error(`Monatliches Limit erreicht: ${canCreate.currentCount}/${canCreate.limit} Reparaturen im Basic-Paket`);
+      }
+    }
+    
+    // Format des aktuellen Monats erstellen (YYYYMM)
+    const currentMonth = now.getFullYear() * 100 + (now.getMonth() + 1);
+    const currentMonthStr = currentMonth.toString();
     
     // Generiere einen eindeutigen Auftragscode
     const orderCode = await this.generateUniqueOrderCode(
@@ -508,6 +564,7 @@ export class DatabaseStorage implements IStorage {
       status: insertRepair.status || 'eingegangen',
       createdAt: now,
       updatedAt: now,
+      creationMonth: currentMonthStr, // Setze den Erstellungsmonat für die Limitprüfung
       // Setze die Benutzer-ID, wenn vorhanden
       userId: currentUserId
     };
