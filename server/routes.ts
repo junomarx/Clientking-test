@@ -585,6 +585,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API-Endpunkt, um zu prüfen, ob der User ein Professional oder Enterprise Paket hat
+  app.get("/api/can-use-cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      
+      // Ergebnis zurückgeben
+      res.json({ canUseCostEstimates: isProfessional });
+    } catch (error) {
+      console.error("Error checking pricing plan:", error);
+      res.status(500).json({ message: "Fehler bei der Überprüfung des Preispakets" });
+    }
+  });
+  
   // Abrufen des monatlichen Reparaturkontingents (für Basic-Paket)
   app.get("/api/repair-quota", isAuthenticated, async (req: Request, res: Response) => {
     try {
@@ -2078,6 +2095,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Einen bestimmten Kostenvoranschlag abrufen
   app.get("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const id = parseInt(req.params.id);
       
@@ -2100,6 +2128,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Kostenvoranschläge für einen bestimmten Kunden abrufen
   app.get("/api/customers/:id/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const customerId = parseInt(req.params.id);
       
@@ -2117,6 +2156,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Einen neuen Kostenvoranschlag erstellen
   app.post("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       console.log("Received cost estimate data:", req.body);
       
@@ -2170,6 +2220,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Einen bestehenden Kostenvoranschlag aktualisieren
   app.patch("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const id = parseInt(req.params.id);
       
@@ -2217,6 +2278,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Den Status eines Kostenvoranschlags aktualisieren
   app.patch("/api/cost-estimates/:id/status", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
@@ -2251,6 +2323,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Einen Kostenvoranschlag löschen
   app.delete("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const id = parseInt(req.params.id);
       
@@ -2273,6 +2356,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Einen Kostenvoranschlag in einen Reparaturauftrag umwandeln
   app.post("/api/cost-estimates/:id/convert-to-repair", isAuthenticated, async (req: Request, res: Response) => {
+    // Benutzer-ID aus der Authentifizierung abrufen
+    const userId = (req.user as any).id;
+    
+    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+    const isProfessional = await isProfessionalOrHigher(userId);
+    if (!isProfessional) {
+      return res.status(403).json({ 
+        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+        errorCode: "FEATURE_NOT_AVAILABLE"
+      });
+    }
     try {
       const id = parseInt(req.params.id);
       
