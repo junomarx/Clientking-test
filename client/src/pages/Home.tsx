@@ -68,12 +68,20 @@ export default function Home() {
       }
     };
 
+    // Event-Listener für das Öffnen des Einstellungsdialogs
+    const handleOpenSettingsDialog = () => {
+      console.log("Event für Öffnen des Einstellungsdialogs empfangen");
+      setIsSettingsOpen(true);
+    };
+
     // Event-Listener registrieren
     window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    window.addEventListener('open-settings-dialog', handleOpenSettingsDialog);
     
     // Event-Listener beim Unmount entfernen
     return () => {
       window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+      window.removeEventListener('open-settings-dialog', handleOpenSettingsDialog);
     };
   }, []);
 

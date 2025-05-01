@@ -57,6 +57,8 @@ function PricingPlanDisplay() {
     refetchInterval: 30000,
   });
   
+  console.log("PricingPlanDisplay - Quota Data:", quotaData);
+  
   // Farbkodierung je nach Paket
   const getPlanColor = (plan: string) => {
     switch (plan) {

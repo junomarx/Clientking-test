@@ -97,12 +97,15 @@ export function Header({ variant = "landing" }: HeaderProps) {
                   <DropdownMenuLabel>Benutzermenü</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  <Link href="/app?tab=settings">
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Einstellungen</span>
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem onClick={() => {
+                    // Einstellungsdialog öffnen indem wir ein benutzerdefiniertes Event auslösen
+                    const event = new CustomEvent('open-settings-dialog');
+                    console.log("Öffne Einstellungsdialog über Event");
+                    window.dispatchEvent(event);
+                  }}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Einstellungen</span>
+                  </DropdownMenuItem>
                   
                   {user.isAdmin && (
                     <Link href="/admin">
@@ -160,12 +163,20 @@ export function Header({ variant = "landing" }: HeaderProps) {
                   </div>
                 </div>
                 
-                <Link href="/app?tab=settings">
-                  <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
-                    <Settings className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>Einstellungen</span>
-                  </div>
-                </Link>
+                <div 
+                  className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                  onClick={() => {
+                    // Einstellungsdialog öffnen indem wir ein benutzerdefiniertes Event auslösen
+                    const event = new CustomEvent('open-settings-dialog');
+                    console.log("Öffne Einstellungsdialog über Event (mobil)");
+                    window.dispatchEvent(event);
+                    // Menü schließen
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Settings className="h-4 w-4 mr-2 text-gray-500" />
+                  <span>Einstellungen</span>
+                </div>
                 
                 {user.isAdmin && (
                   <Link href="/admin">
