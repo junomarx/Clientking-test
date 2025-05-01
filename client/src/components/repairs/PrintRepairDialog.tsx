@@ -488,7 +488,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   <h3 className="font-semibold mb-1">Reparaturdetails</h3>
                   <div className="grid grid-cols-1 gap-2 text-sm">
                     <div className="highlight-box">
-                      <p><span className="font-medium">Problem:</span> {repair?.issue}</p>
+                      <p>
+                        <span className="font-medium">Problem:</span> 
+                        <span className="whitespace-pre-wrap">{repair?.issue ? repair.issue.split(',').join('\n') : ''}</span>
+                      </p>
                     </div>
                     
                     {repair?.estimatedCost && (
