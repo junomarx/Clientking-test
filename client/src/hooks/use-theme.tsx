@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { BusinessSettings } from "@shared/schema";
 import { useAuth } from "./use-auth";
 
+// Standardisiertes Theme für alle Benutzer
+const STANDARD_THEME = "blue";
+
 type ColorTheme = "blue" | "green" | "purple" | "red" | "orange";
 
 interface ThemeContextType {
@@ -11,7 +14,7 @@ interface ThemeContextType {
 }
 
 const initialTheme: ThemeContextType = {
-  colorTheme: "blue",
+  colorTheme: STANDARD_THEME,
 };
 
 const ThemeContext = createContext<ThemeContextType>(initialTheme);
@@ -28,26 +31,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (settings) {
-      // Validiere das colorTheme
-      let validColorTheme: ColorTheme = "blue";
-      if (["blue", "green", "purple", "red", "orange"].includes(settings.colorTheme)) {
-        validColorTheme = settings.colorTheme as ColorTheme;
-      }
+      // Wir verwenden jetzt immer das Standard-Theme, unabhängig von den Benutzereinstellungen
+      const standardTheme: ColorTheme = STANDARD_THEME;
 
-      // Setze die Farbvariablen entsprechend der ausgewählten Farbpalette
+      // Setze die Farbvariablen auf das Standard-Theme
       const root = document.documentElement;
-      
-      // Setze zuerst alle Farben zurück auf die Standardwerte (Blue Theme)
-      setRootColors(root, "blue");
-      
-      // Setze dann die ausgewählte Farbpalette
-      if (validColorTheme !== "blue") {
-        setRootColors(root, validColorTheme);
-      }
+      setRootColors(root, standardTheme);
 
       // Aktualisiere den Kontext
       setTheme({
-        colorTheme: validColorTheme,
+        colorTheme: standardTheme,
         companyName: settings.businessName || "Handyshop Verwaltung"
       });
     }
