@@ -738,16 +738,6 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               </TabsContent>
               
               <TabsContent value="design" className="mt-4 space-y-6">
-                <div className="p-4 border rounded-md bg-blue-50 mb-4">
-                  <div className="flex items-center gap-2 text-blue-700 font-medium">
-                    <Palette className="h-4 w-4" />
-                    Design-Vereinheitlichung
-                  </div>
-                  <p className="mt-2 text-sm text-blue-700">
-                    Für ein einheitliches Erscheinungsbild wurde die Designanpassung vereinheitlicht. 
-                    Alle Benutzer verwenden nun ein standardisiertes Farbschema für die Benutzeroberfläche.
-                  </p>
-                </div>
                 
                 <FormField
                   control={form.control}
