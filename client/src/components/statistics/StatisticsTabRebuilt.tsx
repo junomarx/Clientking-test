@@ -332,6 +332,18 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
         </div>
       )}
       
+      {/* Hinweis für Basic-Nutzer */}
+      {canViewDetailedStats === false && (
+        <Alert className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Eingeschränkte Ansicht</AlertTitle>
+          <AlertDescription>
+            Detaillierte Statistiken sind nur im Professional- und Enterprise-Paket verfügbar.
+            Für erweiterte Analysen und Auswertungen upgraden Sie bitte Ihr Paket.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Tab-Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="w-full sm:w-auto grid grid-cols-3 h-auto">
@@ -339,14 +351,52 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
             <Database className="h-4 w-4 mr-2" />
             Übersicht
           </TabsTrigger>
-          <TabsTrigger value="device">
-            <ChartBar className="h-4 w-4 mr-2" />
-            Geräte
-          </TabsTrigger>
-          <TabsTrigger value="revenue">
-            <Coins className="h-4 w-4 mr-2" />
-            Umsatz
-          </TabsTrigger>
+          
+          <TooltipProvider>
+            <Tooltip open={canViewDetailedStats === false ? undefined : false}>
+              <TooltipTrigger asChild>
+                <div>
+                  <TabsTrigger 
+                    value="device" 
+                    disabled={canViewDetailedStats === false || isCheckingPermission}
+                    className="relative"
+                  >
+                    {canViewDetailedStats === false && (
+                      <Lock className="h-3 w-3 absolute top-1 right-1 text-amber-500" />
+                    )}
+                    <ChartBar className="h-4 w-4 mr-2" />
+                    Geräte
+                  </TabsTrigger>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Nur im Professional- und Enterprise-Paket verfügbar</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip open={canViewDetailedStats === false ? undefined : false}>
+              <TooltipTrigger asChild>
+                <div>
+                  <TabsTrigger 
+                    value="revenue" 
+                    disabled={canViewDetailedStats === false || isCheckingPermission}
+                    className="relative"
+                  >
+                    {canViewDetailedStats === false && (
+                      <Lock className="h-3 w-3 absolute top-1 right-1 text-amber-500" />
+                    )}
+                    <Coins className="h-4 w-4 mr-2" />
+                    Umsatz
+                  </TabsTrigger>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Nur im Professional- und Enterprise-Paket verfügbar</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TabsList>
         
         {/* Übersichts-Tab */}
@@ -478,37 +528,46 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
         
         {/* Geräte-Tab */}
         <TabsContent value="device">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Gerätetypen */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Nach Gerätetyp</CardTitle>
-                <CardDescription>Verteilung der Reparaturen nach Gerätetyp</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {detailedStats && Object.entries(detailedStats.byDeviceType)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([type, count], index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="text-sm">{type}</div>
-                        <div className="flex items-center">
-                          <div className="w-32 bg-muted h-2 rounded-full overflow-hidden mr-2">
-                            <div 
-                              className="bg-primary h-full" 
-                              style={{
-                                width: `${Math.round((count / (stats?.totalOrders || 1)) * 100)}%`
-                              }}
-                            />
+          {canViewDetailedStats === false ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Premium-Funktion</h3>
+              <p className="text-muted-foreground">
+                Die detaillierte Geräte-Statistik ist nur im Professional- und Enterprise-Paket verfügbar.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Gerätetypen */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Nach Gerätetyp</CardTitle>
+                  <CardDescription>Verteilung der Reparaturen nach Gerätetyp</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {detailedStats && Object.entries(detailedStats.byDeviceType)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([type, count], index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <div className="text-sm">{type}</div>
+                          <div className="flex items-center">
+                            <div className="w-32 bg-muted h-2 rounded-full overflow-hidden mr-2">
+                              <div 
+                                className="bg-primary h-full" 
+                                style={{
+                                  width: `${Math.round((count / (stats?.totalOrders || 1)) * 100)}%`
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{count}</span>
                           </div>
-                          <span className="text-sm font-medium">{count}</span>
                         </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              </CardContent>
-            </Card>
+                      ))
+                    }
+                  </div>
+                </CardContent>
+              </Card>
             
             {/* Marken */}
             <Card>
@@ -573,11 +632,20 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
               </CardContent>
             </Card>
           </div>
+          )}
         </TabsContent>
         
         {/* Umsatz-Tab */}
         <TabsContent value="revenue">
-          {detailedStats?.revenue ? (
+          {canViewDetailedStats === false ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Premium-Funktion</h3>
+              <p className="text-muted-foreground">
+                Die detaillierte Umsatz-Statistik ist nur im Professional- und Enterprise-Paket verfügbar.
+              </p>
+            </div>
+          ) : detailedStats?.revenue ? (
             <div className="grid gap-4 md:grid-cols-2">
               {/* Umsatz nach Status */}
               <Card>
