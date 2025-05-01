@@ -9,6 +9,7 @@ import { de } from 'date-fns/locale';
 import { getStatusBadge } from '@/lib/utils';
 import { SignatureDialog } from './SignatureDialog';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
+import { useAuth } from '@/hooks/use-auth';
 
 import {
   Dialog,
@@ -56,6 +57,10 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
+  
+  // Auth-Hook für Benutzerinformationen (Preispaket)
+  const { user } = useAuth();
+  const isProfessionalOrHigher = user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise';
   
   // Zwei getrennte Zustände für die Signatur-Dialoge
   const [showDropoffSignatureDialog, setShowDropoffSignatureDialog] = useState(false);
@@ -336,15 +341,24 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 )}
                 
                 <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDropoffSignatureDialog(true)}
-                    className="flex items-center gap-1"
-                  >
-                    <Pen className="h-4 w-4" />
-                    {repair.dropoffSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
-                  </Button>
+                  {isProfessionalOrHigher ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDropoffSignatureDialog(true)}
+                      className="flex items-center gap-1"
+                    >
+                      <Pen className="h-4 w-4" />
+                      {repair.dropoffSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
+                    </Button>
+                  ) : (
+                    <div className="text-xs text-amber-500">
+                      <span className="flex items-center gap-1">
+                        <Pen className="h-4 w-4" />
+                        Abgabe-Unterschriften nur in Professional verfügbar
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               

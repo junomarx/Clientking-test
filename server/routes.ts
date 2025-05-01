@@ -1923,6 +1923,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Benutzer abrufen, um Preispaket zu prüfen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Für Basic-Benutzer: nur Abholungs-Unterschrift erlauben, keine Abgabe-Unterschrift
+      if (user.pricingPlan === 'basic' && signatureType === 'dropoff') {
+        return res.status(403).json({ 
+          message: "Im Basic-Paket können nur Abholungs-Unterschriften erstellt werden. Upgrade auf Professional, um beide Unterschriftstypen zu nutzen."
+        });
+      }
+      
       // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
       const repair = await storage.getRepair(repairId, userId);
       
@@ -1948,6 +1961,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      
+      // Benutzer abrufen, um Preispaket zu prüfen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Für Basic-Benutzer: Abgabe-Unterschrift nicht erlauben
+      if (user.pricingPlan === 'basic') {
+        return res.status(403).json({ 
+          message: "Im Basic-Paket können nur Abholungs-Unterschriften erstellt werden. Upgrade auf Professional, um beide Unterschriftstypen zu nutzen."
+        });
+      }
       
       // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
       const repair = await storage.getRepair(repairId, userId);
