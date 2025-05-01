@@ -51,10 +51,18 @@ export const repairs = pgTable("repairs", {
   userId: integer("user_id").references(() => users.id),
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
-  // Speichert die Unterschrift des Kunden als Base64-kodiertes Bild
-  customerSignature: text("customer_signature"),
-  // Zeitpunkt der Unterschrift
-  signedAt: timestamp("signed_at"),
+  
+  // Unterschrift bei Abgabe des Geräts
+  dropoffSignature: text("dropoff_signature"),      // Digitale Unterschrift als Base64-kodiertes Bild (Abgabe)
+  dropoffSignedAt: timestamp("dropoff_signed_at"),  // Datum/Uhrzeit der Unterschrift bei Abgabe
+  
+  // Unterschrift bei Abholung des Geräts
+  pickupSignature: text("pickup_signature"),        // Digitale Unterschrift als Base64-kodiertes Bild (Abholung)
+  pickupSignedAt: timestamp("pickup_signed_at"),    // Datum/Uhrzeit der Unterschrift bei Abholung
+  
+  // Alte Felder, für Abwärtskompatibilität beibehalten - nur in Drizzle definiert
+  // customerSignature: text("customer_signature"),
+  // signedAt: timestamp("signed_at"),
 });
 
 export const insertRepairSchema = createInsertSchema(repairs).omit({

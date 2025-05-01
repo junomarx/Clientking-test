@@ -490,12 +490,32 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         </DialogFooter>
       </DialogContent>
       
-      {/* Unterschrift-Dialog */}
+      {/* Unterschrift-Dialoge für beide Typen */}
+      {/* Dialog für Abgabe-Unterschrift */}
+      <SignatureDialog
+        open={showDropoffSignatureDialog}
+        onClose={() => setShowDropoffSignatureDialog(false)}
+        repairId={repairId}
+        repair={repair}
+        signatureType="dropoff"
+      />
+      
+      {/* Dialog für Abholungs-Unterschrift */}
+      <SignatureDialog
+        open={showPickupSignatureDialog}
+        onClose={() => setShowPickupSignatureDialog(false)}
+        repairId={repairId}
+        repair={repair}
+        signatureType="pickup"
+      />
+      
+      {/* Für Rückwärtskompatibilität */}
       <SignatureDialog
         open={showSignatureDialog}
         onClose={() => setShowSignatureDialog(false)}
         repairId={repairId}
         repair={repair}
+        signatureType="dropoff" 
       />
     </Dialog>
   );
