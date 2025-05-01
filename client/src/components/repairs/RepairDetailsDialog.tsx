@@ -227,7 +227,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 <AlertCircle className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
                   <div className="text-sm text-muted-foreground">Fehlerbeschreibung</div>
-                  <div>{repair.issue}</div>
+                  <div className="whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</div>
                 </div>
               </div>
               
