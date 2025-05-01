@@ -132,6 +132,19 @@ export function SignatureDialog({
           </DialogDescription>
         </DialogHeader>
         
+        {/* Rotation Hinweis für Mobilgeräte im Hochformat */}
+        {isMobile && isPortrait && (
+          <div className="mb-4 mt-2 bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-3">
+            <div className="flex-shrink-0 animate-pulse">
+              <Smartphone className="h-8 w-8 text-amber-500 rotate-90" />
+            </div>
+            <div>
+              <p className="font-medium text-amber-800">Bitte drehen Sie Ihr Gerät</p>
+              <p className="text-sm text-amber-700">Für eine bessere Unterschriftserfahrung empfehlen wir, Ihr Gerät in den Querformat-Modus zu drehen.</p>
+            </div>
+          </div>
+        )}
+        
         <div className="pt-4">
           {signatureMutation.isPending ? (
             <div className="flex items-center justify-center p-8">
@@ -141,8 +154,8 @@ export function SignatureDialog({
             <CustomSignaturePad 
               onSave={handleSaveSignature}
               onCancel={onClose}
-              width={340}
-              height={200}
+              width={isMobile && !isPortrait ? 480 : 340}
+              height={isMobile && !isPortrait ? 200 : 180}
               initialValue={initialSignature || undefined}
             />
           )}
