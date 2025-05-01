@@ -186,20 +186,20 @@ export function DeviceManagementTab() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="deviceTypes" onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="flex space-x-0 overflow-x-auto">
-              <TabsTrigger value="deviceTypes" className="flex items-center gap-2">
+            <TabsList className="flex flex-col sm:flex-row w-full">
+              <TabsTrigger value="deviceTypes" className="flex items-center gap-2 justify-start w-full">
                 <Smartphone className="h-4 w-4" />
                 Gerätetypen
               </TabsTrigger>
-              <TabsTrigger value="brands" className="flex items-center gap-2">
+              <TabsTrigger value="brands" className="flex items-center gap-2 justify-start w-full">
                 <Tag className="h-4 w-4" />
                 Marken
               </TabsTrigger>
-              <TabsTrigger value="models" className="flex items-center gap-2">
+              <TabsTrigger value="models" className="flex items-center gap-2 justify-start w-full">
                 <Layers className="h-4 w-4" />
                 Modelle
               </TabsTrigger>
-              <TabsTrigger value="issues" className="flex items-center gap-2">
+              <TabsTrigger value="issues" className="flex items-center gap-2 justify-start w-full">
                 <AlertCircle className="h-4 w-4" />
                 Fehlerbeschreibungen
               </TabsTrigger>

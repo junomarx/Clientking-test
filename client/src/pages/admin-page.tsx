@@ -571,16 +571,16 @@ function SystemDiagnosticTab() {
   return (
     <div className="grid gap-4">
       <Tabs defaultValue="database" className="space-y-4">
-        <TabsList className="space-x-0 flex overflow-x-auto">
-          <TabsTrigger value="database">
+        <TabsList className="flex flex-col sm:flex-row w-full">
+          <TabsTrigger className="justify-start w-full" value="database">
             <Database className="mr-2 h-4 w-4" />
             Datenbank
           </TabsTrigger>
-          <TabsTrigger value="email">
+          <TabsTrigger className="justify-start w-full" value="email">
             <Mail className="mr-2 h-4 w-4" />
             E-Mail-System
           </TabsTrigger>
-          <TabsTrigger value="performance">
+          <TabsTrigger className="justify-start w-full" value="performance">
             <HardDrive className="mr-2 h-4 w-4" />
             Systemressourcen
           </TabsTrigger>
@@ -1454,17 +1454,17 @@ export default function AdminPage() {
       </div>
       
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="space-x-0 flex overflow-x-auto">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="users">Benutzer</TabsTrigger>
-          <TabsTrigger value="devices">
+        <TabsList className="flex flex-col sm:flex-row w-full">
+          <TabsTrigger className="justify-start w-full" value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger className="justify-start w-full" value="users">Benutzer</TabsTrigger>
+          <TabsTrigger className="justify-start w-full" value="devices">
             <div className="flex items-center gap-1">
               <Smartphone className="h-4 w-4" />
               Geräte
             </div>
           </TabsTrigger>
-          <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
-          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
+          <TabsTrigger className="justify-start w-full" value="system">Systemdiagnose</TabsTrigger>
+          <TabsTrigger className="justify-start w-full" value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
