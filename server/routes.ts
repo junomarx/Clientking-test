@@ -602,6 +602,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API-Endpunkt, um zu prüfen, ob der User Etiketten drucken darf (nur Professional/Enterprise)
+  app.get("/api/can-print-labels", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      
+      // Ergebnis zurückgeben
+      res.json({ canPrintLabels: isProfessional });
+    } catch (error) {
+      console.error("Error checking label printing permission:", error);
+      res.status(500).json({ message: "Fehler bei der Überprüfung der Druckberechtigungen" });
+    }
+  });
+  
   // Abrufen des monatlichen Reparaturkontingents (für Basic-Paket)
   app.get("/api/repair-quota", isAuthenticated, async (req: Request, res: Response) => {
     try {
