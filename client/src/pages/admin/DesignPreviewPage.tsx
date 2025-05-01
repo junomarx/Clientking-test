@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, ArrowDownWideNarrow, Settings, Check, PhoneCall, AlertCircle, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { Search, Filter, ArrowDownWideNarrow, Settings, Check, PhoneCall, AlertCircle, ChevronLeft, ChevronRight, Menu, Pencil, Printer, Trash2, Mail, Star, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -21,76 +22,135 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Repair } from '@shared/schema';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Repair as SchemaRepair, Customer } from '@shared/schema';
+import { Repair } from '@/lib/types';
+import { getStatusBadge } from '@/lib/utils';
 
 // Leeres Array für den Fall, dass keine Daten vorhanden sind
 const fallbackData: any[] = [];
 
 export default function DesignPreviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('datum');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
   
   // Echte Daten aus der API abrufen
-  const { data: repairs = fallbackData, isLoading } = useQuery<Repair[]>({
+  const { data: repairsData = fallbackData, isLoading } = useQuery<SchemaRepair[]>({
     queryKey: ['/api/repairs'],
   });
   
+  // Kunden abrufen
+  const { data: customers = [] } = useQuery<Customer[]>({
+    queryKey: ['/api/customers'],
+  });
+  
+  // Konvertieren und Aufbereiten der Reparaturdaten für die Anzeige
+  const repairs = useMemo(() => {
+    return repairsData.map(repair => {
+      const customer = customers.find(c => c.id === repair.customerId);
+      return {
+        id: repair.id,
+        orderCode: repair.orderCode,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unbekannt',
+        customerPhone: customer?.phone || '',
+        deviceType: repair.deviceType,
+        brand: repair.brand || '',
+        model: repair.model || '',
+        problem: repair.problem || '',
+        status: repair.status,
+        createdAt: repair.createdAt,
+        updatedAt: repair.updatedAt,
+        price: repair.price,
+        notes: repair.notes || '',
+        customerId: repair.customerId
+      } as Repair;
+    });
+  }, [repairsData, customers]);
+  
+  // Gefilterte Reparaturen basierend auf Status und Suchbegriff
+  const filteredRepairs = useMemo(() => {
+    return repairs.filter(repair => {
+      const matchesSearch = searchTerm === '' ||
+        repair.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.deviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        repair.model.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || repair.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [repairs, searchTerm, statusFilter]);
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {/* Seitenleiste - fixiert am linken Rand in dunkler Farbe */}
       <div 
-        className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out`}
+        className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out z-30`}
         style={{ paddingLeft: collapsed ? '0.75rem' : '1.5rem', paddingRight: collapsed ? '0.75rem' : '1.5rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
       >
         <div className="mb-8 flex items-center justify-center md:justify-start">
           {collapsed ? (
             <div className="flex justify-center w-full">
               <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
-                LP
+                HS
               </div>
             </div>
           ) : (
-            <h2 className="text-xl font-bold">YOURLOGO</h2>
+            <h2 className="text-xl font-bold">HandyShop</h2>
           )}
         </div>
         
         <nav className="space-y-4">
-          <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-blue-400 font-medium">
+          <div className="flex items-center p-2 rounded-md bg-gray-800 text-blue-400 font-medium">
             <Menu className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="ml-3">Dashboard</span>}
           </div>
-          <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-            </svg>
-            {!collapsed && <span className="ml-3">Übersicht</span>}
-          </div>
+          
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             {!collapsed && <span className="ml-3">Reparaturen</span>}
           </div>
+          
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
             </svg>
             {!collapsed && <span className="ml-3">Kunden</span>}
           </div>
+          
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
             </svg>
             {!collapsed && <span className="ml-3">Statistik</span>}
           </div>
+          
+          <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+            </svg>
+            {!collapsed && <span className="ml-3">E-Mails</span>}
+          </div>
+          
+          <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+            {!collapsed && <span className="ml-3">Einstellungen</span>}
+          </div>
         </nav>
       </div>
       
       {/* Toggle Button für die Seitenleiste */}
       <div 
-        className={`fixed z-10 bg-gray-900 text-white rounded-full flex items-center justify-center w-6 h-6 cursor-pointer transition-all duration-300 ease-in-out ${collapsed ? 'left-14' : 'left-60'}`}
+        className={`fixed z-40 bg-gray-900 text-white rounded-full flex items-center justify-center w-6 h-6 cursor-pointer transition-all duration-300 ease-in-out ${collapsed ? 'left-14' : 'left-60'}`}
         style={{ top: '1.5rem' }} 
         onClick={() => setCollapsed(!collapsed)}
       >
@@ -98,230 +158,339 @@ export default function DesignPreviewPage() {
       </div>
 
       {/* Hauptbereich - über gesamte Breite minus Seitenleiste */}
-      <div className={`${collapsed ? 'ml-16' : 'ml-64'} flex-1 bg-white text-gray-800 w-full transition-all duration-300 ease-in-out`}>
+      <div className={`${collapsed ? 'ml-16' : 'ml-64'} flex-1 w-full transition-all duration-300 ease-in-out overflow-auto`}>
         {/* Header - über volle Breite */}
-        <div className="p-6 flex justify-between items-center border-b shadow-sm bg-white">
+        <div className="p-4 md:p-6 flex justify-between items-center border-b shadow-sm bg-white sticky top-0 z-20">
           <div>
-            <h1 className="text-xl font-semibold">Hallo, Bugi</h1>
-            <p className="text-sm text-gray-500">Haben einen schönen Tag</p>
+            <h1 className="text-xl font-semibold">Handy Reparatur Dashboard</h1>
+            <p className="text-sm text-gray-500">Willkommen zurück</p>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <Button variant="outline" size="sm" className="hidden md:flex items-center">
+              <Plus className="h-4 w-4 mr-2" /> Neue Reparatur
+            </Button>
+            <Button variant="ghost" size="icon" className="text-gray-500">
               <Settings className="h-5 w-5" />
             </Button>
             <div className="flex items-center">
-              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-gray-600">BG</span>
+              <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-800 font-medium">BG</span>
               </div>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </div>
           </div>
         </div>
         
-        {/* Content - volle Breite mit Padding */}
-        <div className="bg-gray-50 min-h-screen">
-          {/* Farbiger Abschnitt unter Header */}
-          <div className="bg-gray-100 border-b p-6">
-            <div className="container mx-auto">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Reparaturen und Kunden</h2>
-              <p className="text-gray-600">Verwalten Sie Ihre Reparaturaufträge und Kundendaten effizient</p>
-            </div>
-          </div>
-          
-          {/* Hauptinhalt */}
-          <div className="p-6 container mx-auto">
-          
-            {/* Search and Filter */}
-            <div className="mb-6 flex items-center justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <Input 
-                  className="pl-10 pr-4 py-2" 
-                  placeholder="Suche nach Auftragsnummer, Kunde oder Gerät"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex space-x-2">
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[200px] flex items-center">
-                    <ArrowDownWideNarrow className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Sortieren nach" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="datum">Datum</SelectItem>
-                    <SelectItem value="kunde">Kundenname</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* Content */}
+        <div className="bg-gray-50 min-h-[calc(100vh-73px)]">
+          {/* Hauptinhalt mit Tabs */}
+          <div className="p-4 md:p-6">
+            <Tabs defaultValue="all" className="w-full">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <TabsList className="bg-white border">
+                  <TabsTrigger value="all" onClick={() => setStatusFilter('all')}>Alle</TabsTrigger>
+                  <TabsTrigger value="new" onClick={() => setStatusFilter('new')}>Neu</TabsTrigger>
+                  <TabsTrigger value="in_repair" onClick={() => setStatusFilter('in_repair')}>In Arbeit</TabsTrigger>
+                  <TabsTrigger value="completed" onClick={() => setStatusFilter('completed')}>Abgeschlossen</TabsTrigger>
+                </TabsList>
                 
-                <Button variant="outline" className="flex items-center">
-                  <Filter className="mr-2 h-4 w-4" /> Filter
-                </Button>
+                <div className="flex w-full sm:w-auto space-x-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <Input 
+                      className="pl-9 h-9" 
+                      placeholder="Suche..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  
+                  <Button variant="outline" size="icon" className="h-9 w-9">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
-            
-            {/* Repair List */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Reparaturliste</CardTitle>
-                <p className="text-sm text-gray-500">
-                  {repairs.length} Reparaturen insgesamt
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Auftragsnr.</TableHead>
-                      <TableHead>Kunde</TableHead>
-                      <TableHead>Gerät</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Telefon</TableHead>
-                      <TableHead className="text-right">Preis</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center">Daten werden geladen...</TableCell>
-                      </TableRow>
-                    ) : repairs.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center">Keine Reparaturen vorhanden</TableCell>
-                      </TableRow>
-                    ) : (
-                      repairs.slice(0, 5).map((repair) => (
-                        <TableRow key={repair.id}>
-                          <TableCell className="font-medium">{repair.orderCode}</TableCell>
-                          <TableCell>{repair.customerName}</TableCell>
-                          <TableCell>{repair.deviceType} {repair.brand} {repair.model}</TableCell>
-                          <TableCell>
-                            <span 
-                              className={`px-2 py-1 rounded-full text-xs ${repair.status === 'completed' 
-                                ? 'bg-green-100 text-green-800'
-                                : repair.status === 'in_repair' 
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-yellow-100 text-yellow-800'}`}
-                            >
-                              {repair.status === 'completed' 
-                                ? 'Abgeschlossen' 
-                                : repair.status === 'in_repair' 
-                                  ? 'In Arbeit' 
-                                  : 'Neu'}
-                            </span>
-                          </TableCell>
-                          <TableCell>{repair.customerPhone || '-'}</TableCell>
-                          <TableCell className="text-right">{repair.price ? `${repair.price}€` : '-'}</TableCell>
+
+              <TabsContent value="all" className="m-0">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Auftragsnr.</TableHead>
+                          <TableHead>Kunde</TableHead>
+                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden lg:table-cell">Erstellt</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {isLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10">Daten werden geladen...</TableCell>
+                          </TableRow>
+                        ) : filteredRepairs.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10">Keine Reparaturen vorhanden</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRepairs.map((repair) => (
+                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelectedRepair(repair)}>
+                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
+                              <TableCell>{repair.customerName}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {repair.deviceType} {repair.brand} {repair.model}
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(repair.status)}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
+                                {new Date(repair.createdAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Printer className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Mail className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="new" className="m-0">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Auftragsnr.</TableHead>
+                          <TableHead>Kunde</TableHead>
+                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden lg:table-cell">Erstellt</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRepairs.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10">Keine neuen Reparaturen vorhanden</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRepairs.map((repair) => (
+                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
+                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
+                              <TableCell>{repair.customerName}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {repair.deviceType} {repair.brand} {repair.model}
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(repair.status)}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
+                                {new Date(repair.createdAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Printer className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="in_repair" className="m-0">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Auftragsnr.</TableHead>
+                          <TableHead>Kunde</TableHead>
+                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden lg:table-cell">Aktualisiert</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRepairs.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10">Keine Reparaturen in Arbeit</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRepairs.map((repair) => (
+                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
+                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
+                              <TableCell>{repair.customerName}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {repair.deviceType} {repair.brand} {repair.model}
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(repair.status)}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
+                                {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <PhoneCall className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="completed" className="m-0">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Auftragsnr.</TableHead>
+                          <TableHead>Kunde</TableHead>
+                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="hidden lg:table-cell">Abgeschlossen</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredRepairs.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-10">Keine abgeschlossenen Reparaturen</TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRepairs.map((repair) => (
+                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
+                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
+                              <TableCell>{repair.customerName}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {repair.deviceType} {repair.brand} {repair.model}
+                              </TableCell>
+                              <TableCell>
+                                {getStatusBadge(repair.status)}
+                              </TableCell>
+                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
+                                {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-1">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Printer className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Star className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Mail className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
             
-            {/* Metrics and Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {/* Dashboard Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Ziele</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label>Effizienz der Abwicklung</Label>
-                      <div>85%</div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: '85%' }}></div>
-                    </div>
+                <CardContent className="p-4 flex items-center">
+                  <div className="p-2 rounded-md bg-blue-100 text-blue-700 mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                      <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
+                    </svg>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label>Kundenzufriedenheit</Label>
-                      <div>92%</div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: '92%' }}></div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <Label>Umsatz diesen Monat</Label>
-                      <div>14.356€</div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-purple-500 rounded-full" style={{ width: '78%' }}></div>
-                    </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Neue Aufträge</p>
+                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'new').length}</h3>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardHeader>
-                  <CardTitle>Notizen</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-4 p-3 bg-blue-50 rounded-md">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">Neue Ersatzteile bestellen</h4>
-                      <p className="text-sm text-gray-500">Samsung Galaxy Displays und iPhone Akkus</p>
-                    </div>
+                <CardContent className="p-4 flex items-center">
+                  <div className="p-2 rounded-md bg-yellow-100 text-yellow-700 mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
                   </div>
-                  
-                  <div className="flex items-center space-x-4 p-3 rounded-md">
-                    <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">Team Meeting</h4>
-                      <p className="text-sm text-gray-500">Morgen um 10:00 Uhr</p>
-                    </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">In Arbeit</p>
+                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'in_repair').length}</h3>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardHeader>
-                  <CardTitle>Aktivitäten</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 text-green-800 rounded-full p-1">
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <div className="text-sm">iPhone 13 Display repariert</div>
-                      <div className="text-xs text-gray-500 ml-auto">vor 2h</div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 text-blue-800 rounded-full p-1">
-                        <PhoneCall className="h-4 w-4" />
-                      </div>
-                      <div className="text-sm">Kunde angerufen</div>
-                      <div className="text-xs text-gray-500 ml-auto">vor 4h</div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-yellow-100 text-yellow-800 rounded-full p-1">
-                        <AlertCircle className="h-4 w-4" />
-                      </div>
-                      <div className="text-sm">Neue Anfrage erhalten</div>
-                      <div className="text-xs text-gray-500 ml-auto">vor 5h</div>
-                    </div>
+                <CardContent className="p-4 flex items-center">
+                  <div className="p-2 rounded-md bg-green-100 text-green-700 mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Abgeschlossen</p>
+                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'completed').length}</h3>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-4 flex items-center">
+                  <div className="p-2 rounded-md bg-purple-100 text-purple-700 mr-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Umsatz (Monat)</p>
+                    <h3 className="text-xl font-bold">
+                      {repairs
+                        .filter(r => r.status === 'completed' && r.price)
+                        .reduce((sum, repair) => sum + (repair.price || 0), 0)
+                        .toFixed(2)}
+                      €
+                    </h3>
                   </div>
                 </CardContent>
               </Card>
