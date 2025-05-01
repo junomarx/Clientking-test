@@ -142,10 +142,41 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setIsModelChanged(false);
       setMatchingCustomers([]);
       
-      // Formular zurücksetzen
-      form.reset();
+      // Prüfen, ob Kundendaten im localStorage vorhanden sind
+      const savedCustomerData = localStorage.getItem('selectedCustomerData');
+      if (savedCustomerData) {
+        try {
+          const customerData = JSON.parse(savedCustomerData);
+          console.log('Gespeicherte Kundendaten gefunden:', customerData);
+          
+          // Formular mit Kundendaten aus localStorage vorausfüllen
+          form.setValue('firstName', customerData.firstName || '');
+          form.setValue('lastName', customerData.lastName || '');
+          form.setValue('phone', customerData.phone || '');
+          form.setValue('email', customerData.email || '');
+          form.setValue('address', customerData.address || '');
+          form.setValue('zipCode', customerData.zipCode || '');
+          form.setValue('city', customerData.city || '');
+          
+          // Automatisch in den Geräte-Tab springen, indem wir den Fokus auf das Gerätetyp-Feld setzen
+          setTimeout(() => {
+            const deviceTypeInput = document.getElementById('deviceType');
+            if (deviceTypeInput) {
+              deviceTypeInput.focus();
+            }
+          }, 300);
+          
+          // Kundendaten aus dem localStorage entfernen, damit sie nicht für den nächsten Auftrag verwendet werden
+          localStorage.removeItem('selectedCustomerData');
+        } catch (error) {
+          console.error('Fehler beim Parsen der gespeicherten Kundendaten:', error);
+        }
+      } else {
+        // Falls keine gespeicherten Daten, Formular zurücksetzen
+        form.reset();
+      }
     }
-  }, [open, customerId]);
+  }, [open, customerId, form]);
   
   // States für die Dropdown-Menüs für Geräteauswahl
   const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);

@@ -730,48 +730,50 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       </div>
 
       {/* ChangeStatusDialog für die Statusänderung */}
-      <ChangeStatusDialog
-        open={showStatusDialog}
-        onClose={() => setShowStatusDialog(false)}
-        repairId={selectedRepairId}
-        currentStatus={newStatus || 'eingegangen'}
-        onUpdateStatus={(id, status) => {
-          console.log(`ChangeStatusDialog: Status-Update für ID=${id}, newStatus=${status}`);
-          
-          // Je nach Status entscheiden, ob E-Mail oder SMS gesendet werden soll
-          if (status === 'fertig') {
-            updateStatusMutation.mutate({ 
-              id: id, 
-              status: status, 
-              sendEmail: true,
-              sendSms: true
-            });
-          } else if (status === 'abgeholt') {
-            updateStatusMutation.mutate({ 
-              id: id, 
-              status: status
-            }, {
-              onSuccess: () => {
-                // Nach dem Abholen-Status immer eine Bewertungsanfrage senden
-                setTimeout(() => {
-                  handleSendReviewRequest(id);
-                }, 500);
-              }
-            });
-          } else if (status === 'ersatzteil_eingetroffen') {
-            updateStatusMutation.mutate({ 
-              id: id, 
-              status: status,
-              sendEmail: true
-            });
-          } else {
-            updateStatusMutation.mutate({ 
-              id: id, 
-              status: status
-            });
-          }
-        }}
-      />
+      {selectedRepairId && (
+        <ChangeStatusDialog
+          open={showStatusDialog}
+          onClose={() => setShowStatusDialog(false)}
+          repairId={selectedRepairId}
+          currentStatus={newStatus || 'eingegangen'}
+          onUpdateStatus={(id, status) => {
+            console.log(`ChangeStatusDialog: Status-Update für ID=${id}, newStatus=${status}`);
+            
+            // Je nach Status entscheiden, ob E-Mail oder SMS gesendet werden soll
+            if (status === 'fertig') {
+              updateStatusMutation.mutate({ 
+                id: id, 
+                status: status, 
+                sendEmail: true,
+                sendSms: true
+              });
+            } else if (status === 'abgeholt') {
+              updateStatusMutation.mutate({ 
+                id: id, 
+                status: status
+              }, {
+                onSuccess: () => {
+                  // Nach dem Abholen-Status immer eine Bewertungsanfrage senden
+                  setTimeout(() => {
+                    handleSendReviewRequest(id);
+                  }, 500);
+                }
+              });
+            } else if (status === 'ersatzteil_eingetroffen') {
+              updateStatusMutation.mutate({ 
+                id: id, 
+                status: status,
+                sendEmail: true
+              });
+            } else {
+              updateStatusMutation.mutate({ 
+                id: id, 
+                status: status
+              });
+            }
+          }}
+        />
+      )}
 
       {/* Edit Repair Dialog */}
       {repairs && selectedRepairId && (
