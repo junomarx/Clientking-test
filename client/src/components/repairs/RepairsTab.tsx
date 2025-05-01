@@ -467,7 +467,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                     <td className="py-3 px-4">{repair.orderCode || `#${repair.id}`}</td>
                     <td className="py-3 px-4">{repair.customerName}</td>
                     <td className="py-3 px-4">{repair.model}</td>
-                    <td className="py-3 px-4">{repair.issue}</td>
+                    <td className="py-3 px-4 whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</td>
                     <td className="py-3 px-4">
                       {getStatusBadge(repair.status)}
                     </td>
@@ -622,7 +622,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                   </div>
                   <div className="flex justify-between">
                     <div className="text-sm text-gray-500">Problem:</div>
-                    <div className="text-right">{repair.issue}</div>
+                    <div className="text-right whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</div>
                   </div>
                   <div className="flex justify-between">
                     <div className="text-sm text-gray-500">Preis:</div>
