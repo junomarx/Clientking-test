@@ -63,3 +63,17 @@ export interface RepairStatistics {
   readyForPickup: number;
   outsourced: number;
 }
+
+// Pricing Plan Enum
+export type PricingPlan = 'basic' | 'professional' | 'enterprise';
+
+// Repair Quota Interface
+export interface RepairQuota {
+  canCreate: boolean;
+  currentCount: number;
+  limit: number;
+  pricingPlan: PricingPlan;
+  displayName: string;
+  currentMonth: string;
+  currentYear: number;
+}

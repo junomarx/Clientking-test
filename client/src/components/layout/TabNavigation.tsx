@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { BarChart, FileText, Menu, X } from 'lucide-react';
+import { AlertCircle, BarChart, FileText, Menu, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { PricingPlan } from '@/lib/types';
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
 
@@ -11,9 +13,35 @@ interface TabNavigationProps {
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  
+  // Repair Quota API-Anfrage (enthält Preisplan-Informationen)
+  const { data: quotaData } = useQuery({
+    queryKey: ["/api/repair-quota"],
+    queryFn: async () => {
+      const response = await fetch("/api/repair-quota");
+      if (!response.ok) {
+        throw new Error("Fehler beim Laden der Reparaturquote");
+      }
+      return response.json();
+    },
+    enabled: !!user
+  });
+  
+  // Prüfen, ob der Benutzer einen Basic-Plan hat
+  const isBasicPlan = quotaData?.pricingPlan === "basic";
+  
+  // Prüfen ob der Benutzer Professional oder höher hat
+  const isProfessionalOrHigher = quotaData?.pricingPlan === "professional" || quotaData?.pricingPlan === "enterprise";
   
   // Funktion zum Ändern des Tabs (schließt auch das mobile Menü)
   const handleTabChange = (tab: Tab) => {
+    // Wenn Kostenvoranschläge ausgewählt wurden und Benutzer Basic-Plan hat, Warnung anzeigen
+    if (tab === "cost-estimates" && isBasicPlan) {
+      alert("Kostenvoranschläge sind nur für Professional und Enterprise Abonnenten verfügbar.");
+      return;
+    }
+    
     onTabChange(tab);
     setMobileMenuOpen(false);
   };
@@ -60,10 +88,19 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             <BarChart className="mr-2 inline h-4 w-4" /> Statistiken
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'cost-estimates' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'cost-estimates' ? 'bg-primary/10 text-primary font-medium' : isBasicPlan ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600'}`}
             onClick={() => handleTabChange('cost-estimates')}
+            disabled={isBasicPlan}
           >
-            <FileText className="mr-2 inline h-4 w-4" /> Kostenvoranschläge
+            <FileText className="mr-2 inline h-4 w-4" /> 
+            {isBasicPlan ? (
+              <span className="flex items-center">
+                Kostenvoranschläge
+                <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
+              </span>
+            ) : (
+              "Kostenvoranschläge"
+            )}
           </button>
         </div>
       )}
