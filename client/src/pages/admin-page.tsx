@@ -1454,17 +1454,17 @@ export default function AdminPage() {
       </div>
       
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="users">Benutzer</TabsTrigger>
-          <TabsTrigger value="devices">
+        <TabsList className="flex flex-wrap w-full overflow-x-auto">
+          <TabsTrigger className="flex-shrink-0" value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger className="flex-shrink-0" value="users">Benutzer</TabsTrigger>
+          <TabsTrigger className="flex-shrink-0" value="devices">
             <div className="flex items-center gap-1">
               <Smartphone className="h-4 w-4" />
               Geräte
             </div>
           </TabsTrigger>
-          <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
-          <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
+          <TabsTrigger className="flex-shrink-0" value="system">Systemdiagnose</TabsTrigger>
+          <TabsTrigger className="flex-shrink-0" value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
