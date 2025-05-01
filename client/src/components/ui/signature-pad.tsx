@@ -12,7 +12,7 @@ interface SignaturePadProps {
   readOnly?: boolean;
 }
 
-export function SignaturePad({
+export function SignaturePadComponent({
   onSave,
   onCancel,
   width = 400,
@@ -67,12 +67,13 @@ export function SignaturePad({
             width: width,
             height: height,
             className: 'signature-canvas',
-            style: { width: '100%', height: '100%' }
+            style: { width: '100%', height: '100%' },
+            // readOnly wird als data-Attribut hinzugefügt, da die Komponente readOnly nicht direkt unterstützt
+            ...(readOnly ? { 'data-readonly': 'true' } : {})
           }}
           onEnd={checkIfEmpty}
           backgroundColor="white"
           clearOnResize={false}
-          readOnly={readOnly}
         />
       </div>
       

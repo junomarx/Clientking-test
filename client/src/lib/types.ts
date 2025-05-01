@@ -34,6 +34,8 @@ export interface Repair {
   createdAt: string;
   updatedAt: string;
   reviewRequestSent?: boolean;
+  customerSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild
+  signedAt?: string | null; // Datum/Uhrzeit der Unterschrift
 }
 
 // Extended repair with customer name for display

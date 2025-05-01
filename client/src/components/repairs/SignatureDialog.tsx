@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { SignaturePad } from '@/components/ui/signature-pad';
+import { SignaturePadComponent } from '@/components/ui/signature-pad';
 import { useMutation } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';

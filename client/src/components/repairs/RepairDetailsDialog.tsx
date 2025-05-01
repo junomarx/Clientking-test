@@ -7,6 +7,7 @@ import { Repair } from '@/lib/types';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { getStatusBadge } from '@/lib/utils';
+import { SignatureDialog } from './SignatureDialog';
 
 import {
   Dialog,
