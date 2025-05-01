@@ -364,6 +364,25 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     setSelectedRepairId(null);
   };
 
+  // Event-Listener für direktes Öffnen des Reparaturdetails-Dialogs
+  useEffect(() => {
+    const handleOpenDetailsDialog = (event: CustomEvent) => {
+      const { repairId } = event.detail;
+      if (repairId) {
+        console.log('RepairsTab: Öffne Dialog für Reparatur-ID:', repairId);
+        openDetailsDialog(repairId);
+      }
+    };
+
+    // Event-Listener registrieren
+    window.addEventListener('open-repair-details-dialog', handleOpenDetailsDialog as EventListener);
+    
+    // Event-Listener beim Unmount entfernen
+    return () => {
+      window.removeEventListener('open-repair-details-dialog', handleOpenDetailsDialog as EventListener);
+    };
+  }, []);
+
   return (
     <div>
       <div className="flex justify-between items-center p-6">

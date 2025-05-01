@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { TabNavigation } from '@/components/layout/TabNavigation';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
@@ -47,6 +47,32 @@ export default function Home() {
     setIsNewOrderModalOpen(true);
   };
   
+  // Event-Listener für das Öffnen der Reparaturdetails
+  useEffect(() => {
+    const handleOpenRepairDetails = (event: CustomEvent) => {
+      const { repairId } = event.detail;
+      if (repairId) {
+        setActiveTab('repairs');
+        // Kurze Verzögerung, damit der Tab-Wechsel abgeschlossen ist
+        setTimeout(() => {
+          // Event-Objekt erstellen und auslösen, um den Dialog zu öffnen
+          const openDetailsEvent = new CustomEvent('open-repair-details-dialog', { 
+            detail: { repairId }
+          });
+          window.dispatchEvent(openDetailsEvent);
+        }, 200);
+      }
+    };
+
+    // Event-Listener registrieren
+    window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    
+    // Event-Listener beim Unmount entfernen
+    return () => {
+      window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    };
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
