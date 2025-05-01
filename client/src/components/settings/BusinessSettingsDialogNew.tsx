@@ -71,7 +71,7 @@ const businessSettingsSchema = z.object({
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),
-  colorTheme: z.enum(["blue", "green", "purple", "red", "orange"]),
+  // colorTheme wurde entfernt - ein Standard-Theme wird jetzt für alle verwendet
   receiptWidth: z.enum(["58mm", "80mm"]),
   // SMTP-Einstellungen
   smtpSenderName: z.string().optional(),
@@ -86,6 +86,8 @@ const businessSettingsSchema = z.object({
 // Erweiterte Formulardaten die nicht im Schema sind
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
   logoImage?: string;
+  // Das colorTheme-Feld ist für die Typisierung weiterhin vorhanden, wird aber nicht mehr verwendet
+  colorTheme?: string;
 }
 
 interface BusinessSettingsDialogProps {
@@ -138,7 +140,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
       email: "",
       website: "",
       logoImage: "",
-      colorTheme: "blue",
+      // colorTheme wird nicht mehr verwendet - Standard-Theme für alle
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -736,53 +738,16 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               </TabsContent>
               
               <TabsContent value="design" className="mt-4 space-y-6">
-                <FormField
-                  control={form.control}
-                  name="colorTheme"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel className="flex items-center gap-1 sm:gap-2">
-                        <Palette className="h-3 w-3 sm:h-4 sm:w-4" /> Farbpalette
-                      </FormLabel>
-                      <FormDescription className="text-xs sm:text-sm">
-                        Wählen Sie eine Farbpalette für die Anwendung.
-                      </FormDescription>
-                      <FormControl>
-                        <Select 
-                          defaultValue={field.value} 
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-full sm:w-[200px]">
-                            <SelectValue placeholder="Farbpalette wählen" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="blue" className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-blue-600 shadow-sm inline-block mr-2"></div>
-                              Blau
-                            </SelectItem>
-                            <SelectItem value="green" className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-green-600 shadow-sm inline-block mr-2"></div>
-                              Grün
-                            </SelectItem>
-                            <SelectItem value="purple" className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-purple-600 shadow-sm inline-block mr-2"></div>
-                              Lila
-                            </SelectItem>
-                            <SelectItem value="red" className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-red-600 shadow-sm inline-block mr-2"></div>
-                              Rot
-                            </SelectItem>
-                            <SelectItem value="orange" className="flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-full bg-orange-600 shadow-sm inline-block mr-2"></div>
-                              Orange
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="p-4 border rounded-md bg-blue-50 mb-4">
+                  <div className="flex items-center gap-2 text-blue-700 font-medium">
+                    <Palette className="h-4 w-4" />
+                    Design-Vereinheitlichung
+                  </div>
+                  <p className="mt-2 text-sm text-blue-700">
+                    Für ein einheitliches Erscheinungsbild wurde die Designanpassung vereinheitlicht. 
+                    Alle Benutzer verwenden nun ein standardisiertes Farbschema für die Benutzeroberfläche.
+                  </p>
+                </div>
                 
                 <FormField
                   control={form.control}
