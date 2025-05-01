@@ -584,6 +584,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Abrufen des monatlichen Reparaturkontingents (für Basic-Paket)
+  app.get("/api/repair-quota", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const result = await storage.canCreateNewRepair(userId);
+      
+      // Erweitere das Ergebnis um zusätzliche Informationen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      const today = new Date();
+      const currentMonth = today.toLocaleString('de-DE', { month: 'long' });
+      const currentYear = today.getFullYear();
+      
+      res.json({
+        ...result,
+        pricingPlan: user.pricingPlan,
+        displayName: user.pricingPlan === 'basic' ? 'Basic' : 
+                    user.pricingPlan === 'professional' ? 'Professional' : 'Enterprise',
+        currentMonth,
+        currentYear
+      });
+    } catch (error) {
+      console.error("Error fetching repair quota:", error);
+      res.status(500).json({ message: "Failed to fetch repair quota" });
+    }
+  });
+  
   // STATISTICS API
   app.get("/api/stats", isAuthenticated, async (req: Request, res: Response) => {
     try {

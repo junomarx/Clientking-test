@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +21,11 @@ import {
   MessageSquare,
   UserCog,
   LogOut,
-  Lock
+  Lock,
+  Package
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Progress } from "@/components/ui/progress";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
 // ModelManagementTab nicht mehr verwendet
@@ -32,6 +35,113 @@ import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 interface SettingsDialogNewProps {
   open: boolean;
   onClose: () => void;
+}
+
+// Typ-Definition für die API-Antwort des Reparaturkontingents
+interface RepairQuota {
+  canCreate: boolean;
+  currentCount: number;
+  limit: number;
+  pricingPlan: string;
+  displayName: string;
+  currentMonth: string;
+  currentYear: number;
+}
+
+// Komponente zur Anzeige des Preispakets und Reparaturkontingents
+function PricingPlanDisplay() {
+  // Abrufen des Reparaturkontingents über die API
+  const { data: quotaData, isLoading, error } = useQuery<RepairQuota>({
+    queryKey: ["/api/repair-quota"],
+    // Alle 30 Sekunden aktualisieren, wenn der Dialog geöffnet ist
+    refetchInterval: 30000,
+  });
+  
+  // Farbkodierung je nach Paket
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case "basic": return "text-gray-500";
+      case "professional": return "text-green-500";
+      case "enterprise": return "text-blue-500";
+      default: return "text-gray-500";
+    }
+  };
+  
+  // Prozentsatz der verbrauchten Kontingent berechnen
+  const usagePercentage = quotaData 
+    ? Math.min(100, Math.round((quotaData.currentCount / quotaData.limit) * 100)) 
+    : 0;
+  
+  if (isLoading) {
+    return (
+      <div className="border rounded-md p-4 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    );
+  }
+  
+  if (error || !quotaData) {
+    return (
+      <div className="border rounded-md p-4 text-red-500">
+        Kontingentinformationen konnten nicht geladen werden.
+      </div>
+    );
+  }
+  
+  // Bei Professional und Enterprise kein Limit anzeigen
+  if (quotaData.pricingPlan !== "basic") {
+    return (
+      <div className="border rounded-md p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            <h4 className="font-medium">Preispaket</h4>
+          </div>
+          <span className={`font-medium ${getPlanColor(quotaData.pricingPlan)}`}>
+            {quotaData.displayName}
+          </span>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Unbegrenzte Reparaturaufträge pro Monat
+        </div>
+      </div>
+    );
+  }
+  
+  // Für Basic-Paket mit Limitierung
+  return (
+    <div className="border rounded-md p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Package className="h-5 w-5" />
+          <h4 className="font-medium">Preispaket</h4>
+        </div>
+        <span className={`font-medium ${getPlanColor(quotaData.pricingPlan)}`}>
+          {quotaData.displayName}
+        </span>
+      </div>
+      
+      <div className="mb-4">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Verbleibende Reparaturaufträge</span>
+          <span>
+            {quotaData.limit - quotaData.currentCount} von {quotaData.limit}
+          </span>
+        </div>
+        <Progress value={usagePercentage} className="h-2" />
+      </div>
+      
+      <div className="text-xs text-muted-foreground">
+        {quotaData.currentMonth} {quotaData.currentYear}
+        {quotaData.currentCount >= quotaData.limit && (
+          <div className="mt-1 text-red-500 font-medium">
+            Monatliches Limit erreicht. Upgrade auf Professional für unbegrenzte Aufträge.
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
@@ -157,6 +267,16 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
             {/* Tab: Benutzer */}
             <TabsContent value="user" className="max-h-[65vh] overflow-y-auto">
               <div className="space-y-4">
+                {/* Preispaket & Kontingent */}
+                <div className="p-4 border rounded-lg">
+                  <h3 className="text-lg font-medium mb-2">Preispaket & Kontingent</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Ihr aktuelles Preispaket und verbleibende Reparaturaufträge in diesem Monat.
+                  </p>
+                  <PricingPlanDisplay />
+                </div>
+                
+                {/* Benutzereinstellungen */}
                 <div className="p-4 border rounded-lg">
                   <h3 className="text-lg font-medium mb-2">Benutzereinstellungen</h3>
                   <p className="text-muted-foreground mb-4">
