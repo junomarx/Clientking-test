@@ -1839,6 +1839,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .from(repairs)
           .where(eq(repairs.id, repairId));
         console.log(`Überprüfung des Flags: reviewRequestSent = ${updatedRepair.reviewRequestSent}`);
+        
+        // Manuellen E-Mail-Verlaufseintrag erstellen
+        console.log(`Erstelle manuellen E-Mail-Verlaufseintrag für Reparatur ${repairId}`);
+        try {
+          // Direktes SQL für den E-Mail-Verlaufseintrag
+          const emailHistoryQuery = `
+            INSERT INTO "email_history" ("repair_id", "email_template_id", "subject", "recipient", "status", "user_id") 
+            VALUES (
+              ${repairId},
+              ${reviewTemplate.id},
+              '${reviewTemplate.subject.replace(/'/g, "''")}',
+              '${customer.email.replace(/'/g, "''")}',
+              'success',
+              ${userId}
+            )
+          `;
+          console.log('Manuelles SQL für E-Mail-Verlaufseintrag:', emailHistoryQuery);
+          await db.execute(emailHistoryQuery);
+          console.log(`E-Mail-Verlaufseintrag für Reparatur ${repairId} erstellt`);
+        } catch (historyError) {
+          console.error('Fehler beim Erstellen des manuellen E-Mail-Verlaufseintrags:', historyError);
+        }
       } catch (updateError) {
         console.error("Fehler beim Aktualisieren des reviewRequestSent-Flags:", updateError);
       }

@@ -1906,14 +1906,12 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
       
-      // Verwende Drizzle ORM für die Datenbankabfrage
-      const result = await db.select()
-        .from(emailHistory)
-        .where(eq(emailHistory.repairId, repairId))
-        .orderBy(desc(emailHistory.sentAt));
+      // Direktes SQL für die Abfrage verwenden (wegen Spaltennamen "repair_id" vs "repairId")
+      const query = `SELECT * FROM "email_history" WHERE "repair_id" = ${repairId} ORDER BY "sent_at" DESC`;
+      const result = await db.execute(query);
       
-      console.log(`Gefundener E-Mail-Verlauf:`, result);
-      return result;
+      console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
+      return result.rows as EmailHistory[];
     } catch (error) {
       console.error("Error getting email history for repair:", error);
       return [];
