@@ -702,24 +702,36 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                     </div>
                   </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="reviewLink"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel className="flex items-center gap-1 sm:gap-2">
-                          <Globe className="h-3 w-3 sm:h-4 sm:w-4" /> Bewertungslink
-                        </FormLabel>
-                        <FormDescription className="text-xs sm:text-sm">
-                          Link zu Ihrer Google-Bewertungsseite oder ähnlichem. Wird für Kundenbewertungsanfragen verwendet.
-                        </FormDescription>
-                        <FormControl>
-                          <Input {...field} placeholder="https://g.page/r/..." />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {isProfessionalOrHigher ? (
+                    <FormField
+                      control={form.control}
+                      name="reviewLink"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className="flex items-center gap-1 sm:gap-2">
+                            <Globe className="h-3 w-3 sm:h-4 sm:w-4" /> Bewertungslink
+                          </FormLabel>
+                          <FormDescription className="text-xs sm:text-sm">
+                            Link zu Ihrer Google-Bewertungsseite oder ähnlichem. Wird für Kundenbewertungsanfragen verwendet.
+                          </FormDescription>
+                          <FormControl>
+                            <Input {...field} placeholder="https://g.page/r/..." />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : (
+                    <div className="sm:col-span-2 p-3 border rounded-md bg-amber-50 text-amber-600 text-sm">
+                      <span className="flex items-center gap-1">
+                        <AlertCircle className="h-4 w-4" />
+                        Bewertungslink nur in Professional verfügbar
+                      </span>
+                      <p className="mt-1 text-xs text-amber-600">
+                        Upgrade auf Professional, um Bewertungsanfragen an Kunden zu senden
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
               
