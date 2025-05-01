@@ -1086,10 +1086,10 @@ export default function AdminPage() {
             {/* Geräte mit Unterkategorien */}
             <div className="space-y-1">
               <div 
-                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab.startsWith("device") ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" || activeTab.startsWith("device") ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                 onClick={() => {
                   if (sidebarCollapsed) {
-                    setDeviceMenuOpen(!deviceMenuOpen);
+                    setActiveTab("devices");
                   } else {
                     setDeviceMenuOpen(!deviceMenuOpen);
                   }
@@ -1105,37 +1105,31 @@ export default function AdminPage() {
               </div>
               
               {/* Unterkategorien für Geräte */}
-              {(deviceMenuOpen || sidebarCollapsed) && (
-                <div className={sidebarCollapsed ? "" : "ml-7 space-y-1 pl-2 border-l border-gray-700"}>
+              {(deviceMenuOpen && !sidebarCollapsed) && (
+                <div className="ml-7 space-y-1 pl-2 border-l border-gray-700">
+                  <div 
+                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                    onClick={() => setActiveTab("devices")}
+                  >
+                    <span className="text-sm">Übersicht</span>
+                  </div>
                   <div 
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceTypes" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                     onClick={() => setActiveTab("deviceTypes")}
                   >
-                    {sidebarCollapsed ? (
-                      <Layers className="h-5 w-5 mx-auto" />
-                    ) : (
-                      <span className="text-sm">Geräteverwaltung</span>
-                    )}
+                    <span className="text-sm">Geräteverwaltung</span>
                   </div>
                   <div 
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                     onClick={() => setActiveTab("deviceIssues")}
                   >
-                    {sidebarCollapsed ? (
-                      <AlertCircle className="h-5 w-5 mx-auto" />
-                    ) : (
-                      <span className="text-sm">Problemkatalog</span>
-                    )}
+                    <span className="text-sm">Problemkatalog</span>
                   </div>
                   <div 
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceImport" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                     onClick={() => setActiveTab("deviceImport")}
                   >
-                    {sidebarCollapsed ? (
-                      <Download className="h-5 w-5 mx-auto" />
-                    ) : (
-                      <span className="text-sm">Importieren</span>
-                    )}
+                    <span className="text-sm">Importieren</span>
                   </div>
                 </div>
               )}
@@ -1279,6 +1273,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-md shadow-sm p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
+            {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceIssues" && <DeviceIssuesTab />}
             {activeTab === "deviceImport" && (
