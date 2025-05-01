@@ -1175,8 +1175,24 @@ export class DatabaseStorage implements IStorage {
               userId
             };
             
-            console.log('Erstelle E-Mail-Verlaufseintrag:', historyEntry);
-            await this.createEmailHistoryEntry(historyEntry);
+            console.log('Erstelle E-Mail-Verlaufseintrag in der Datenbank:', historyEntry);
+            
+            // Direktes SQL für den E-Mail-Verlaufseintrag verwenden, um Spaltennamenprobleme zu vermeiden
+            const emailHistoryQuery = `
+              INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId", "sentAt") 
+              VALUES (
+                ${repairId},
+                ${templateId},
+                '${template.subject.replace(/'/g, "''")}',
+                '${to.replace(/'/g, "''")}',
+                'success',
+                ${userId || 'NULL'},
+                NOW()
+              )
+            `;
+            
+            console.log('Manuelles SQL für E-Mail-Verlaufseintrag:', emailHistoryQuery);
+            await db.execute(emailHistoryQuery);
             console.log(`E-Mail-Verlaufseintrag für Reparatur ${repairId} erstellt`);
           } catch (historyError) {
             console.error('Fehler beim Erstellen des E-Mail-Verlaufseintrags:', historyError);
