@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
+import AdminDesignPreview from "@/pages/admin/DesignPreviewPage";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -30,14 +31,9 @@ function Router() {
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>
-      <Route path="/admin/design-preview" component={() => {
-        const DesignPreviewPage = React.lazy(() => import("@/pages/admin/DesignPreviewPage"));
-        return (
-          <Suspense fallback={<div>Laden...</div>}>
-            <DesignPreviewPage />
-          </Suspense>
-        );
-      }} />
+      <AdminProtectedRoute path="/admin/design-preview">
+        <AdminDesignPreview />
+      </AdminProtectedRoute>
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
