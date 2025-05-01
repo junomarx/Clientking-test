@@ -67,16 +67,46 @@ export default function CostEstimatesTab() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   
+  // Abfrage, ob der Benutzer die Funktion für Kostenvoranschläge nutzen darf
+  const { data: costEstimatesPermission } = useQuery({
+    queryKey: ["/api/can-use-cost-estimates"],
+    queryFn: async () => {
+      const response = await fetch("/api/can-use-cost-estimates");
+      if (!response.ok) {
+        // Wenn der Zugriff fehlschlägt, nehmen wir an, dass die Funktion nicht verfügbar ist
+        return { canUseCostEstimates: false };
+      }
+      return response.json();
+    },
+  });
+  
+  // Prüfen, ob der Benutzer Kostenvoranschläge verwenden darf
+  const canUseCostEstimates = costEstimatesPermission?.canUseCostEstimates === true;
+
   // Query für alle Kostenvoranschläge
   const { data: costEstimates, isLoading, isError, refetch } = useQuery({
     queryKey: ['/api/cost-estimates'],
     queryFn: async () => {
+      // Prüfen, ob der Benutzer Kostenvoranschläge verwenden darf
+      if (!canUseCostEstimates) {
+        throw new Error('FEATURE_NOT_AVAILABLE');
+      }
+      
       const response = await fetch('/api/cost-estimates');
       if (!response.ok) {
+        // Bei Fehlern mit Status 403 und spezifischem Error-Code abfangen
+        if (response.status === 403) {
+          const errorData = await response.json();
+          if (errorData?.errorCode === "FEATURE_NOT_AVAILABLE") {
+            throw new Error('FEATURE_NOT_AVAILABLE');
+          }
+        }
         throw new Error('Fehler beim Laden der Kostenvoranschläge');
       }
       return response.json();
-    }
+    },
+    // Die Abfrage nur ausführen, wenn der Benutzer die Funktion nutzen darf
+    enabled: canUseCostEstimates
   });
 
   // Mutation zum Löschen eines Kostenvoranschlags
@@ -220,7 +250,54 @@ export default function CostEstimatesTab() {
     );
   }
 
+  // Prüfen, ob der Fehler wegen fehlendem Professional-Plan auftritt
+  const isFeatureNotAvailableError = isError && canUseCostEstimates === false;
+
   if (isError) {
+    // Spezifische Meldung für Basic-Benutzer
+    if (isFeatureNotAvailableError) {
+      return (
+        <div className="p-6 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+          <h3 className="font-semibold text-lg mb-2">Funktionalität eingeschränkt</h3>
+          <p className="mb-4">Kostenvoranschläge sind nur für Benutzer mit Professional- oder Enterprise-Paket verfügbar.</p>
+          <p className="mb-6">Bitte kontaktieren Sie den Administrator, um Ihr Paket zu upgraden.</p>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-4 border border-amber-200 rounded-md bg-white">
+              <h4 className="font-medium text-amber-800 mb-2">Professional-Paket</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Unbegrenzte Reparaturaufträge
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Kostenvoranschläge erstellen
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Kunden-Feedback Funktionen
+                </li>
+              </ul>
+            </div>
+            
+            <div className="p-4 border border-amber-200 rounded-md bg-white">
+              <h4 className="font-medium text-amber-800 mb-2">Enterprise-Paket</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Alle Professional-Funktionen
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Erweiterte Statistiken
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span> Mehrere Standorte verwalten
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Standard-Fehlermeldung für andere Fehler
     return (
       <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-200">
         <h3 className="font-semibold mb-2">Fehler beim Laden der Daten</h3>

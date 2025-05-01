@@ -28,16 +28,36 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
     enabled: !!user
   });
   
+  // API-Anfrage, um zu prüfen, ob der Benutzer Kostenvoranschläge verwenden darf
+  const { data: costEstimatesPermission } = useQuery({
+    queryKey: ["/api/can-use-cost-estimates"],
+    queryFn: async () => {
+      const response = await fetch("/api/can-use-cost-estimates");
+      if (!response.ok) {
+        // Wenn der Zugriff fehlschlägt, nehmen wir an, dass die Funktion nicht verfügbar ist
+        return { canUseCostEstimates: false };
+      }
+      return response.json();
+    },
+    enabled: !!user
+  });
+  
   // Prüfen, ob der Benutzer einen Basic-Plan hat
   const isBasicPlan = quotaData?.pricingPlan === "basic";
   
   // Prüfen ob der Benutzer Professional oder höher hat
-  const isProfessionalOrHigher = quotaData?.pricingPlan === "professional" || quotaData?.pricingPlan === "enterprise";
+  // Wir verwenden sowohl die direkte Abfrage als auch die Daten aus dem Repair-Quota-Endpunkt
+  const isProfessionalOrHigher = 
+    (costEstimatesPermission?.canUseCostEstimates === true) || 
+    (quotaData?.pricingPlan === "professional" || quotaData?.pricingPlan === "enterprise");
+    
+  // Kostenvoranschläge sind nur für Professional und höher verfügbar
+  const canUseCostEstimates = isProfessionalOrHigher;
   
   // Funktion zum Ändern des Tabs (schließt auch das mobile Menü)
   const handleTabChange = (tab: Tab) => {
-    // Wenn Kostenvoranschläge ausgewählt wurden und Benutzer Basic-Plan hat, Warnung anzeigen
-    if (tab === "cost-estimates" && isBasicPlan) {
+    // Wenn Kostenvoranschläge ausgewählt wurden und Benutzer keine Berechtigung hat, Warnung anzeigen
+    if (tab === "cost-estimates" && !canUseCostEstimates) {
       alert("Kostenvoranschläge sind nur für Professional und Enterprise Abonnenten verfügbar.");
       return;
     }
@@ -88,12 +108,12 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             <BarChart className="mr-2 inline h-4 w-4" /> Statistiken
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'cost-estimates' ? 'bg-primary/10 text-primary font-medium' : isBasicPlan ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600'}`}
+            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'cost-estimates' ? 'bg-primary/10 text-primary font-medium' : !canUseCostEstimates ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600'}`}
             onClick={() => handleTabChange('cost-estimates')}
-            disabled={isBasicPlan}
+            disabled={!canUseCostEstimates}
           >
             <FileText className="mr-2 inline h-4 w-4" /> 
-            {isBasicPlan ? (
+            {!canUseCostEstimates ? (
               <span className="flex items-center">
                 Kostenvoranschläge
                 <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
@@ -152,15 +172,15 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             className={`px-4 py-4 font-semibold ${
               activeTab === 'cost-estimates' 
                 ? 'text-primary border-b-2 border-primary' 
-                : isBasicPlan 
+                : !canUseCostEstimates
                   ? 'text-gray-400 hover:text-gray-400 border-b-2 border-transparent cursor-not-allowed' 
                   : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
             } transition-all flex items-center`}
             onClick={() => handleTabChange('cost-estimates')}
-            disabled={isBasicPlan}
+            disabled={!canUseCostEstimates}
           >
             <FileText className="mr-2 h-4 w-4" />
-            {isBasicPlan ? (
+            {!canUseCostEstimates ? (
               <span className="flex items-center">
                 Kostenvoranschläge
                 <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
