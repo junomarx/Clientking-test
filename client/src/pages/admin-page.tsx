@@ -1284,6 +1284,13 @@ export default function AdminPage() {
               >
                 <Save className="h-4 w-4 mr-2" /> Backup & Restore
               </Button>
+
+              <Button 
+                className={`p-3 h-auto justify-start bg-secondary/30 text-primary`}
+                onClick={() => window.location.href = "/admin/design-preview"}
+              >
+                <Eye className="h-4 w-4 mr-2" /> Design-Preview
+              </Button>
               
 
             </div>
