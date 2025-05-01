@@ -982,6 +982,7 @@ function AdminDashboard() {
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isToastTestOpen, setIsToastTestOpen] = useState(false);
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -1077,6 +1078,19 @@ export default function AdminPage() {
         {activeTab === "devices" && <DeviceManagementTab />}
         {activeTab === "system" && <SystemDiagnosticTab />}
         {activeTab === "backup" && <BackupRestoreTab />}
+      </div>
+      
+      {/* Toast-Test Dialog */}
+      <ToastTestDialog
+        open={isToastTestOpen}
+        onOpenChange={setIsToastTestOpen}
+      />
+      
+      {/* Toast-Test Button - für Bugi's Admin-Bereich */}
+      <div className="fixed top-16 right-4 z-10">
+        <Button onClick={() => setIsToastTestOpen(true)} variant="secondary" size="sm" className="shadow-md">
+          Toast-Test
+        </Button>
       </div>
     </div>
   );
