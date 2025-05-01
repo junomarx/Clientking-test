@@ -2,39 +2,13 @@ import React from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Smartphone, Shield, Clock, Users, ChevronRight, Star } from 'lucide-react';
+import { Header } from '@/components/layout/Header';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Navigation */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Smartphone className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Handyshop Verwaltung
-            </span>
-          </div>
-          <nav className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-600 hover:text-primary transition-colors">
-              Features
-            </a>
-            <a href="#pricing" className="text-gray-600 hover:text-primary transition-colors">
-              Preise
-            </a>
-            <a href="#about" className="text-gray-600 hover:text-primary transition-colors">
-              Über uns
-            </a>
-          </nav>
-          <div>
-            <Link href="/auth">
-              <Button className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90">
-                Login
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header variant="landing" />
 
       {/* Hero Section */}
       <section className="py-20 px-4">

@@ -1,92 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
-import { LogOut, User, Settings, Shield } from 'lucide-react';
-import { SettingsDialogNew as SettingsDialog } from '@/components/settings';
-import { useTheme } from '@/hooks/use-theme';
-import { Link } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import { Smartphone, Menu, X } from "lucide-react";
+import { useState } from "react";
 
-export function Header() {
-  const { user, logoutMutation } = useAuth();
-  const { companyName } = useTheme();
-  const [showSettings, setShowSettings] = useState(false);
-  const [appTitle, setAppTitle] = useState("Handyshop Verwaltungssystem");
-  
-  // Aktualisiere den angezeigten Titel, wenn sich der Firmenname ändert
-  useEffect(() => {
-    if (companyName) {
-      setAppTitle(companyName);
-    }
-  }, [companyName]);
-  
-  const handleLogout = () => {
-    logoutMutation.mutate();
+type HeaderProps = {
+  variant?: "landing" | "auth" | "app";
+};
+
+const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <Link href={href}>
+    <span className="text-gray-600 hover:text-primary font-medium cursor-pointer">
+      {children}
+    </span>
+  </Link>
+);
+
+export function Header({ variant = "landing" }: HeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
   };
-  
+
   return (
-    <div className="bg-primary px-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
-      <div className="flex justify-center sm:justify-start items-center py-4 sm:py-6 w-full">
-        <h1 className="text-white text-xl md:text-2xl font-semibold flex items-center gap-2">
-          <span className="text-2xl">📱</span> 
-          <span data-app-title>{appTitle}</span>
-        </h1>
-      </div>
-      
-      {user && (
-        <div className="flex justify-center sm:justify-end items-center gap-3 pb-4 sm:pb-0 w-full">
-          <div className="flex items-center gap-2 text-white">
-            <User size={18} />
-            <span className="hidden md:inline">{user.username}</span>
+    <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
+      <div className="container mx-auto flex justify-between items-center">
+        {/* Logo and App name */}
+        <Link href="/">
+          <div className="flex items-center cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-blue-500 flex items-center justify-center mr-3">
+              <Smartphone className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-xl text-gray-900">Handyshop</h1>
+              <p className="text-xs text-gray-500">Verwaltung</p>
+            </div>
           </div>
-          
-          {/* Admin Link für Benutzer mit Admin-Rechten */}
-          {user.isAdmin && (
-            <Link to="/admin">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-              >
-                <Shield size={16} className="mr-1" />
-                <span className="hidden sm:inline">Admin</span>
-              </Button>
-            </Link>
+        </Link>
+
+        {/* Mobile menu button */}
+        <button onClick={toggleMenu} className="md:hidden">
+          {menuOpen ? (
+            <X className="h-6 w-6 text-gray-500" />
+          ) : (
+            <Menu className="h-6 w-6 text-gray-500" />
           )}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-            onClick={() => setShowSettings(true)}
-          >
-            <Settings size={16} className="mr-1" />
-            <span className="hidden sm:inline">Einstellungen</span>
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-white/10 hover:bg-white/20 text-white border-white/20"
-            onClick={handleLogout}
-            disabled={logoutMutation.isPending}
-          >
-            {logoutMutation.isPending ? (
-              "Abmelden..."
-            ) : (
+        </button>
+
+        {/* Nav for desktop */}
+        <nav className="hidden md:flex items-center space-x-6">
+          {variant === "landing" && (
+            <>
+              <NavLink href="/">Home</NavLink>
+              <NavLink href="/#features">Features</NavLink>
+              <NavLink href="/#pricing">Preise</NavLink>
+              <Link href="/auth">
+                <Button className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90">
+                  Login
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {variant === "auth" && (
+            <>
+              <NavLink href="/">Home</NavLink>
+              <NavLink href="/#features">Features</NavLink>
+              <NavLink href="/#pricing">Preise</NavLink>
+            </>
+          )}
+        </nav>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-md p-4 z-50">
+          <nav className="flex flex-col space-y-4">
+            {variant === "landing" && (
               <>
-                <LogOut size={16} className="mr-1" />
-                <span className="hidden sm:inline">Abmelden</span>
+                <NavLink href="/">Home</NavLink>
+                <NavLink href="/#features">Features</NavLink>
+                <NavLink href="/#pricing">Preise</NavLink>
+                <Link href="/auth">
+                  <Button className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90">
+                    Login
+                  </Button>
+                </Link>
               </>
             )}
-          </Button>
-          
-          {/* Settings Dialog */}
-          <SettingsDialog 
-            open={showSettings} 
-            onClose={() => setShowSettings(false)} 
-          />
+
+            {variant === "auth" && (
+              <>
+                <NavLink href="/">Home</NavLink>
+                <NavLink href="/#features">Features</NavLink>
+                <NavLink href="/#pricing">Preise</NavLink>
+              </>
+            )}
+          </nav>
         </div>
       )}
-    </div>
+    </header>
   );
 }

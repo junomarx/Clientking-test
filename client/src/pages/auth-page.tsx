@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link } from "wouter";
 import { Loader2 } from "lucide-react";
+import { Header } from "@/components/layout/Header";
 
 // Login schema
 const loginSchema = z.object({
