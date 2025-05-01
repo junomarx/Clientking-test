@@ -103,6 +103,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // States für die Formularfelder und UI
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
@@ -119,6 +121,33 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [isModelChanged, setIsModelChanged] = useState(false);
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
+  
+  // Dropdown-Menüs States
+  const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
+  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
+  const [brandDropdown, setBrandDropdown] = useState<string[]>([]);
+  const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
+  const [modelDropdown, setModelDropdown] = useState<string[]>([]);
+  const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
+  
+  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
+  const isAdmin = user?.id === 3;
+  
+  // Hooks für API-Anfragen
+  const deviceTypes = useDeviceTypes();
+  const brands = useBrands();
+  const modelSeries = useModelSeries();
+  const models = useModels();
+  
+  // Query-Hooks aufrufen
+  const deviceTypesQuery = deviceTypes.getAllDeviceTypes();
+  const createDeviceTypeMutation = deviceTypes.createDeviceType();
+  const brandMutation = brands.createBrand();
+  const modelSeriesMutation = modelSeries.createModelSeries();
+  const modelsMutation = models.createModels();
+  
+  // API Device Types
+  const apiDeviceTypes = deviceTypesQuery.data;
   
   // Formular erstellen
   const form = useForm<OrderFormValues>({
@@ -143,8 +172,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       notes: '',
     },
   });
-
-  // Formular zurücksetzen, wenn das Modal geöffnet wird
+  
+  // Formular zurücksetzen und ggf. mit Kundendaten füllen, wenn das Modal geöffnet wird
   useEffect(() => {
     if (open) {
       // Alle Zustandsvariablen zurücksetzen
@@ -165,6 +194,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setShowIssueDropdown(false);
       setIsModelChanged(false);
       setMatchingCustomers([]);
+      
+      // Formular zurücksetzen
+      form.reset();
       
       // Prüfen, ob Kundendaten im localStorage vorhanden sind
       const savedCustomerData = localStorage.getItem('selectedCustomerData');
@@ -195,39 +227,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         } catch (error) {
           console.error('Fehler beim Parsen der gespeicherten Kundendaten:', error);
         }
-      } else {
-        // Falls keine gespeicherten Daten, Formular zurücksetzen
-        form.reset();
       }
     }
   }, [open, customerId]);
-  
-  // States für die Dropdown-Menüs für Geräteauswahl
-  const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
-  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
-  const [brandDropdown, setBrandDropdown] = useState<string[]>([]);
-  const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
-  const [modelDropdown, setModelDropdown] = useState<string[]>([]);
-  const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
-  
-  // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
-  const isAdmin = user?.id === 3;
-  
-  // Hooks für API-Anfragen
-  const deviceTypes = useDeviceTypes();
-  const brands = useBrands();
-  const modelSeries = useModelSeries();
-  const models = useModels();
-  
-  // Query-Hooks aufrufen
-  const deviceTypesQuery = deviceTypes.getAllDeviceTypes();
-  const createDeviceTypeMutation = deviceTypes.createDeviceType();
-  const brandMutation = brands.createBrand();
-  const modelSeriesMutation = modelSeries.createModelSeries();
-  const modelsMutation = models.createModels();
-  
-  // API Device Types
-  const apiDeviceTypes = deviceTypesQuery.data;
   
   // Wichtige Form-Values, die beobachtet werden
   const watchDeviceType = form.watch('deviceType');
