@@ -517,6 +517,25 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 
                 {/* Entfernt: Status wird nicht mehr angezeigt */}
                 
+                {/* Kundenunterschrift anzeigen, wenn vorhanden */}
+                {repair?.dropoffSignature && (
+                  <div className="print-section mb-3 border-t">
+                    <h3 className="font-semibold mb-2 mt-2">Unterschrift bei Geräteabgabe</h3>
+                    <div className="border" style={{padding: '2mm'}}>
+                      <img 
+                        src={repair.dropoffSignature} 
+                        alt="Unterschrift bei Abgabe" 
+                        style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
+                      />
+                    </div>
+                    {repair.dropoffSignedAt && (
+                      <div className="text-center text-xs mt-2">
+                        Unterschrieben am {format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy HH:mm', { locale: de })} Uhr
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {/* Dankeschön und extra Platz am Ende */}
                 <div className="text-center mt-8">
                   <p className="text-sm">Vielen Dank für Ihren Auftrag!</p>
