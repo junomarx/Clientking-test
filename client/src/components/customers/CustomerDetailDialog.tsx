@@ -459,7 +459,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                       </div>
                     </div>
                     
-                    <p className="mt-2 text-sm">{repair.issue}</p>
+                    <p className="mt-2 text-sm whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</p>
                     
                     <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
                       <div className="flex justify-between">

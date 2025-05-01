@@ -95,7 +95,7 @@ export const RecentRepairs: React.FC<RecentRepairsProps> = ({
                   <td className="px-4 py-3 font-medium">{repair.orderCode}</td>
                   <td className="px-4 py-3">{repair.customerName}</td>
                   <td className="px-4 py-3">{repair.brand} {repair.model}</td>
-                  <td className="px-4 py-3">{repair.issue}</td>
+                  <td className="px-4 py-3 whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</td>
                   <td className="px-4 py-3">
                     <Badge variant={getStatusBadgeVariant(repair.status)}>
                       {getStatusLabel(repair.status)}
