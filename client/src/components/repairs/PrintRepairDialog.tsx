@@ -533,7 +533,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                         Unterschrieben am {format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy HH:mm', { locale: de })} Uhr
                       </div>
                     )}
-                    <div className="text-xs mt-3">
+                    <div className="text-xs mt-3 text-center">
                       <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich mit den Reparaturbedingungen einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.</p>
                     </div>
                   </div>
