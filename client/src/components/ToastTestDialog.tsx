@@ -26,30 +26,34 @@ export default function ToastTestDialog({ open, onOpenChange }: Props) {
   };
 
   const showSuccessToast = () => {
-    toast.success({
+    toast({
       title: "Erfolgreich!",
-      description: "Der Vorgang wurde erfolgreich abgeschlossen"
+      description: "Der Vorgang wurde erfolgreich abgeschlossen",
+      variant: "success"
     });
   };
 
   const showInfoToast = () => {
-    toast.info({
+    toast({
       title: "Information",
-      description: "Hier ist eine wichtige Information für Sie"
+      description: "Hier ist eine wichtige Information für Sie",
+      variant: "info"
     });
   };
 
   const showWarningToast = () => {
-    toast.warning({
+    toast({
       title: "Warnung",
-      description: "Bitte beachten Sie diese wichtige Warnung"
+      description: "Bitte beachten Sie diese wichtige Warnung",
+      variant: "warning"
     });
   };
 
   const showErrorToast = () => {
-    toast.error({
+    toast({
       title: "Fehler",
-      description: "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+      description: "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      variant: "destructive"
     });
   };
 
