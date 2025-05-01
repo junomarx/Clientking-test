@@ -1856,9 +1856,9 @@ export class DatabaseStorage implements IStorage {
   async getEmailHistoryForRepair(repairId: number): Promise<EmailHistory[]> {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
-      // Direktes SQL verwenden, um das Mapping-Problem zu umgehen
+      // Direkte Abfrage mit korrekt benannten Spalten
       const result = await db.execute(
-        `SELECT * FROM "email_history" WHERE "repair_id" = $1 ORDER BY "sent_at" DESC`,
+        `SELECT * FROM "email_history" WHERE "repairId" = $1 ORDER BY "sentAt" DESC`,
         [repairId]
       );
       console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
@@ -1872,9 +1872,9 @@ export class DatabaseStorage implements IStorage {
   async createEmailHistoryEntry(entry: InsertEmailHistory): Promise<EmailHistory> {
     try {
       console.log('Erstelle E-Mail-Verlaufseintrag in der Datenbank:', entry);
-      // Direktes SQL verwenden, um das Mapping-Problem zu umgehen
+      // Direktes SQL verwenden mit den korrekten Spaltennamen
       const result = await db.execute(
-        `INSERT INTO "email_history" ("repair_id", "email_template_id", "subject", "recipient", "status", "user_id") 
+        `INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId") 
          VALUES ($1, $2, $3, $4, $5, $6) 
          RETURNING *`,
         [entry.repairId, entry.emailTemplateId, entry.subject, entry.recipient, entry.status, entry.userId]
