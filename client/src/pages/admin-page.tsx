@@ -1010,6 +1010,7 @@ function AdminDashboard() {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isToastTestOpen, setIsToastTestOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -1038,83 +1039,190 @@ export default function AdminPage() {
   }
   
   return (
-    <div className="container mx-auto py-4 px-4">
-      <div className="flex flex-col mb-6">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold">Administrationsbereich</h1>
-          <p className="text-muted-foreground text-sm">
-            Verwalten Sie Benutzer und System-Einstellungen
-          </p>
+    <div className="flex h-screen">
+      {/* Desktop-Ansicht mit neuer Sidebar */}
+      <div className="hidden md:block">
+        {/* Seitenleiste für Desktop-Ansicht */}
+        <div 
+          className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out overflow-y-auto`}
+          style={{ paddingLeft: sidebarCollapsed ? '0.75rem' : '1.5rem', paddingRight: sidebarCollapsed ? '0.75rem' : '1.5rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
+        >
+          <div className="mb-8 flex items-center justify-center md:justify-start">
+            {sidebarCollapsed ? (
+              <div className="flex justify-center w-full">
+                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
+                  HS
+                </div>
+              </div>
+            ) : (
+              <h2 className="text-xl font-bold">Handyshop</h2>
+            )}
+          </div>
+          
+          <nav className="space-y-4">
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "dashboard" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("dashboard")}
+            >
+              <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
+            </div>
+            
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "users" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("users")}
+            >
+              <Users className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Benutzer</span>}
+            </div>
+            
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("devices")}
+            >
+              <Smartphone className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Geräte</span>}
+            </div>
+            
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "system" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("system")}
+            >
+              <Cog className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Systemdiagnose</span>}
+            </div>
+            
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "backup" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("backup")}
+            >
+              <Save className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Backup & Restore</span>}
+            </div>
+            
+            <Link href="/admin/design-preview">
+              <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer">
+                <Palette className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Design Vorschau</span>}
+              </div>
+            </Link>
+            
+            <Link href="/">
+              <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
+                <ChevronLeft className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Zurück zum Shop</span>}
+              </div>
+            </Link>
+          </nav>
         </div>
         
-        <Button 
-          onClick={() => setLocation("/")}
-          className="bg-green-600 hover:bg-green-700 text-white gap-2 w-full mb-4"
-          size="sm"
+        {/* Toggle Button für die Seitenleiste */}
+        <div 
+          className={`fixed z-10 bg-gray-900 text-white rounded-full flex items-center justify-center w-6 h-6 cursor-pointer transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'left-14' : 'left-60'}`}
+          style={{ top: '1.5rem' }} 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         >
-          <ChevronLeft className="h-4 w-4" />
-          Zurück zum Handyshop
-        </Button>
-
-        <div className="grid grid-cols-1 gap-4">
-          <Button 
-            variant={activeTab === "dashboard" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "dashboard" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("dashboard")}
-          >
-            <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
-          </Button>
+          {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </div>
+        
+        {/* Hauptinhalt - Desktop */}
+        <div className={`${sidebarCollapsed ? 'ml-16' : 'ml-64'} flex-1 bg-white text-gray-800 w-full transition-all duration-300 ease-in-out h-screen overflow-y-auto p-4`}>
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold">Administrationsbereich</h1>
+            <p className="text-muted-foreground text-sm">
+              Verwalten Sie Benutzer und System-Einstellungen
+            </p>
+          </div>
           
-          <Button 
-            variant={activeTab === "users" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "users" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("users")}
-          >
-            <Users className="h-4 w-4 mr-2" /> Benutzer
-          </Button>
-          
-          <Button 
-            variant={activeTab === "devices" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "devices" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("devices")}
-          >
-            <Smartphone className="h-4 w-4 mr-2" /> Geräte
-          </Button>
-          
-          <Button 
-            variant={activeTab === "system" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "system" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("system")}
-          >
-            <Cog className="h-4 w-4 mr-2" /> Systemdiagnose
-          </Button>
-          
-          <Button 
-            variant={activeTab === "backup" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "backup" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("backup")}
-          >
-            <Save className="h-4 w-4 mr-2" /> Backup & Restore
-          </Button>
-          
-          <Link href="/admin/design-preview">
-            <Button 
-              variant="outline"
-              className="p-3 h-auto justify-start bg-secondary/10 w-full"
-            >
-              <Palette className="h-4 w-4 mr-2" /> Design Vorschau
-            </Button>
-          </Link>
+          <div className="bg-white rounded-md p-4 mb-6">
+            {activeTab === "dashboard" && <AdminDashboard />}
+            {activeTab === "users" && <UserTable />}
+            {activeTab === "devices" && <DeviceManagementTab />}
+            {activeTab === "system" && <SystemDiagnosticTab />}
+            {activeTab === "backup" && <BackupRestoreTab />}
+          </div>
         </div>
       </div>
       
-      <div className="bg-white rounded-md shadow-sm p-4 mb-6">
-        {activeTab === "dashboard" && <AdminDashboard />}
-        {activeTab === "users" && <UserTable />}
-        {activeTab === "devices" && <DeviceManagementTab />}
-        {activeTab === "system" && <SystemDiagnosticTab />}
-        {activeTab === "backup" && <BackupRestoreTab />}
-      </div>
+      {/* Mobile-Ansicht (unverändert) */}
+      <div className="md:hidden w-full">
+        <div className="container mx-auto py-4 px-4">
+          <div className="flex flex-col mb-6">
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold">Administrationsbereich</h1>
+              <p className="text-muted-foreground text-sm">
+                Verwalten Sie Benutzer und System-Einstellungen
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => setLocation("/")}
+              className="bg-green-600 hover:bg-green-700 text-white gap-2 w-full mb-4"
+              size="sm"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Zurück zum Handyshop
+            </Button>
+
+            <div className="grid grid-cols-1 gap-4">
+              <Button 
+                variant={activeTab === "dashboard" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "dashboard" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("dashboard")}
+              >
+                <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+              </Button>
+              
+              <Button 
+                variant={activeTab === "users" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "users" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("users")}
+              >
+                <Users className="h-4 w-4 mr-2" /> Benutzer
+              </Button>
+              
+              <Button 
+                variant={activeTab === "devices" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "devices" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("devices")}
+              >
+                <Smartphone className="h-4 w-4 mr-2" /> Geräte
+              </Button>
+              
+              <Button 
+                variant={activeTab === "system" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "system" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("system")}
+              >
+                <Cog className="h-4 w-4 mr-2" /> Systemdiagnose
+              </Button>
+              
+              <Button 
+                variant={activeTab === "backup" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "backup" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("backup")}
+              >
+                <Save className="h-4 w-4 mr-2" /> Backup & Restore
+              </Button>
+              
+              <Link href="/admin/design-preview">
+                <Button 
+                  variant="outline"
+                  className="p-3 h-auto justify-start bg-secondary/10 w-full"
+                >
+                  <Palette className="h-4 w-4 mr-2" /> Design Vorschau
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-md shadow-sm p-4 mb-6">
+            {activeTab === "dashboard" && <AdminDashboard />}
+            {activeTab === "users" && <UserTable />}
+            {activeTab === "devices" && <DeviceManagementTab />}
+            {activeTab === "system" && <SystemDiagnosticTab />}
+            {activeTab === "backup" && <BackupRestoreTab />}
+          </div>
       
       {/* Toast-Test Dialog */}
       <ToastTestDialog
@@ -1127,6 +1235,8 @@ export default function AdminPage() {
         <Button onClick={() => setIsToastTestOpen(true)} variant="secondary" size="sm" className="shadow-md">
           Toast-Test
         </Button>
+      </div>
+        </div>
       </div>
     </div>
   );
