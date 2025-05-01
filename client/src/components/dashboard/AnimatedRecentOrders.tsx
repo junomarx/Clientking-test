@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info } from 'lucide-react';
+import { Printer, Info, Trash2 } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
 import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
@@ -54,7 +54,8 @@ export function AnimatedRecentOrders({
         <h3 className="font-semibold text-lg">Neueste Aufträge</h3>
       </div>
       
-      <div className="overflow-x-auto">
+      {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="min-w-full">
           <thead>
             <tr className="bg-primary text-white">
@@ -129,7 +130,7 @@ export function AnimatedRecentOrders({
                           className="text-gray-600 hover:text-gray-800 p-1"
                           title="Druckoptionen anzeigen"
                           onClick={(e) => {
-                            e.stopPropagation(); // Verhindert, dass der Klick auf die Tröffnet
+                            e.stopPropagation(); // Verhindert, dass der Klick auf die TR öffnet
                             onPrintClick(repair.id);
                           }}
                           whileHover={{ 
@@ -143,7 +144,7 @@ export function AnimatedRecentOrders({
                           className="text-blue-600 hover:text-blue-800 p-1"
                           title="Details anzeigen"
                           onClick={(e) => {
-                            e.stopPropagation(); // Verhindert, dass der Klick auf die Tröffnet
+                            e.stopPropagation(); // Verhindert, dass der Klick auf die TR öffnet
                             openDetailsDialog(repair.id);
                           }}
                           whileHover={{ 
@@ -161,6 +162,72 @@ export function AnimatedRecentOrders({
             </AnimatePresence>
           </tbody>
         </table>
+      </div>
+      
+      {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
+      <div className="md:hidden space-y-4 px-4 py-2">
+        {isLoading ? (
+          <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Lädt Daten...</div>
+        ) : repairs.length === 0 ? (
+          <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Keine Reparaturen vorhanden</div>
+        ) : (
+          repairs.map((repair, index) => (
+            <motion.div 
+              key={repair.id} 
+              className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden cursor-pointer" 
+              onClick={() => openDetailsDialog(repair.id)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.3,
+                delay: index * 0.08
+              }}
+            >
+              <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+                <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
+                <div>{getStatusBadge(repair.status)}</div>
+              </div>
+              <div className="p-4 space-y-2">
+                <div className="flex justify-between">
+                  <div className="text-sm text-gray-500">Kunde:</div>
+                  <div className="font-medium">{repair.customerName}</div>
+                </div>
+                <div className="flex justify-between">
+                  <div className="text-sm text-gray-500">Gerät:</div>
+                  <div>{repair.model}</div>
+                </div>
+                <div className="flex justify-between">
+                  <div className="text-sm text-gray-500">Datum:</div>
+                  <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
+                </div>
+              </div>
+              <div className="flex justify-center gap-8 p-3 bg-gray-50 border-t border-gray-100">
+                <motion.button 
+                  className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPrintClick(repair.id);
+                  }}
+                >
+                  <Printer className="h-5 w-5" />
+                </motion.button>
+                <motion.button 
+                  className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={(e) => {
+                    e.stopPropagation(); 
+                    openDetailsDialog(repair.id);
+                  }}
+                >
+                  <Info className="h-5 w-5" />
+                </motion.button>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
       
       {/* Repair Details Dialog */}
