@@ -433,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const variables: Record<string, string> = {
           "kundenname": `${customer.firstName} ${customer.lastName}`,
           "geraet": repair.model,
-          "marke": repair.brand,
+          "hersteller": repair.brand,
           "auftragsnummer": repair.orderCode || `#${repair.id}`,
           "fehler": repair.issue,
           "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben",
@@ -1891,7 +1891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const variables: Record<string, string> = {
         "kundenname": `${customer.firstName} ${customer.lastName}`,
         "geraet": repair.model,
-        "marke": repair.brand,
+        "hersteller": repair.brand,
         "auftragsnummer": repair.orderCode || `#${repair.id}`,
         "fehler": repair.issue,
         "geschaeftsname": businessSettings?.businessName || "Handyshop",

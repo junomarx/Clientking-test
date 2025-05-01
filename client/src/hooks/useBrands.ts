@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-// Typen für die Marken
+// Typen für die Hersteller
 export interface Brand {
   id: number;
   name: string;
@@ -18,12 +18,12 @@ export interface CreateBrandDTO {
   userId?: number;
 }
 
-// Hook für Marken-Operationen
+// Hook für Hersteller-Operationen
 export function useBrands() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Lade alle Marken
+  // Lade alle Hersteller
   const getAllBrands = () => {
     return useQuery<Brand[]>({
       queryKey: ['/api/brands'],
@@ -32,7 +32,7 @@ export function useBrands() {
     });
   };
 
-  // Lade Marken für einen bestimmten Gerätetyp
+  // Lade Hersteller für einen bestimmten Gerätetyp
   const getBrandsByDeviceTypeId = (deviceTypeId: number | null) => {
     return useQuery<Brand[]>({
       queryKey: ['/api/brands', { deviceTypeId }],
@@ -46,7 +46,7 @@ export function useBrands() {
     });
   };
 
-  // Erstelle eine neue Marke
+  // Erstelle einen neuen Hersteller
   const createBrand = () => {
     return useMutation({
       mutationFn: async (data: CreateBrandDTO) => {
@@ -54,12 +54,12 @@ export function useBrands() {
         return await res.json();
       },
       onSuccess: () => {
-        // Invalidiere alle Abfragen, die Marken betreffen
+        // Invalidiere alle Abfragen, die Hersteller betreffen
         queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
         
         toast({
-          title: 'Marke erstellt',
-          description: 'Die Marke wurde erfolgreich erstellt',
+          title: 'Hersteller erstellt',
+          description: 'Der Hersteller wurde erfolgreich erstellt',
         });
       },
       onError: (error: Error) => {
@@ -72,19 +72,19 @@ export function useBrands() {
     });
   };
 
-  // Lösche eine Marke
+  // Lösche einen Hersteller
   const deleteBrand = () => {
     return useMutation({
       mutationFn: async (id: number) => {
         await apiRequest('DELETE', `/api/brands/${id}`);
       },
       onSuccess: () => {
-        // Invalidiere alle Abfragen, die Marken betreffen
+        // Invalidiere alle Abfragen, die Hersteller betreffen
         queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
         
         toast({
-          title: 'Marke gelöscht',
-          description: 'Die Marke wurde erfolgreich gelöscht',
+          title: 'Hersteller gelöscht',
+          description: 'Der Hersteller wurde erfolgreich gelöscht',
         });
       },
       onError: (error: Error) => {
