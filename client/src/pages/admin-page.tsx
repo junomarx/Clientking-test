@@ -52,6 +52,7 @@ import { type User } from "@shared/schema";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
 import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
+import { BrandSettings } from "@/components/settings/BrandSettings";
 import ToastTestDialog from "@/components/ToastTestDialog";
 
 type UserResponse = Omit<User, "password">;
@@ -1117,7 +1118,13 @@ export default function AdminPage() {
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceTypes" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                     onClick={() => setActiveTab("deviceTypes")}
                   >
-                    <span className="text-sm">Geräteverwaltung</span>
+                    <span className="text-sm">Gerätetypen</span>
+                  </div>
+                  <div 
+                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceBrands" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                    onClick={() => setActiveTab("deviceBrands")}
+                  >
+                    <span className="text-sm">Marken</span>
                   </div>
                   <div 
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
@@ -1183,7 +1190,9 @@ export default function AdminPage() {
           <div className="bg-white rounded-md p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
+            {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
+            {activeTab === "deviceBrands" && <BrandSettings />}
             {activeTab === "deviceIssues" && <DeviceIssuesTab />}
             {activeTab === "deviceImport" && (
               <div className="p-4">
@@ -1275,6 +1284,7 @@ export default function AdminPage() {
             {activeTab === "users" && <UserTable />}
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
+            {activeTab === "deviceBrands" && <BrandSettings />}
             {activeTab === "deviceIssues" && <DeviceIssuesTab />}
             {activeTab === "deviceImport" && (
               <div className="p-4">
