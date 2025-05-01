@@ -1,6 +1,7 @@
 import { db } from './db';
-import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings } from '@shared/schema';
+import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
 import { eq, desc, isNull, or } from 'drizzle-orm';
+import { storage } from './storage';
 import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
@@ -206,9 +207,53 @@ export class BrevoEmailService {
         
         const info = await userSmtpTransporter.sendMail(mailOptions);
         console.log('E-Mail erfolgreich über benutzerspezifischen SMTP-Server gesendet:', info.messageId);
+        
+        // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
+        const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        
+        // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
+        if (repairId) {
+          try {
+            const historyEntry: InsertEmailHistory = {
+              repairId,
+              emailTemplateId: templateId,
+              subject,
+              recipient: to,
+              status: 'success',
+              userId
+            };
+            
+            await storage.createEmailHistoryEntry(historyEntry);
+            console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des E-Mail-History-Eintrags:', historyError);
+            // Wir geben trotzdem true zurück, da die E-Mail erfolgreich gesendet wurde
+          }
+        }
+        
         return true;
       } catch (smtpError) {
         console.error('Fehler beim Senden der E-Mail über benutzerspezifischen SMTP-Server:', smtpError);
+        
+        // Bei Fehler trotzdem einen History-Eintrag erstellen
+        const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        if (repairId) {
+          try {
+            const historyEntry: InsertEmailHistory = {
+              repairId,
+              emailTemplateId: templateId,
+              subject,
+              recipient: to,
+              status: 'failed',
+              userId
+            };
+            
+            await storage.createEmailHistoryEntry(historyEntry);
+            console.log(`E-Mail-History-Eintrag für fehlgeschlagene E-Mail an Reparatur ${repairId} erstellt`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des E-Mail-History-Eintrags für fehlgeschlagene E-Mail:', historyError);
+          }
+        }
         
         // Bei Fehlern mit dem benutzerspezifischen Server verwenden wir den globalen SMTP-Server als Fallback
         if (this.smtpTransporter) {
@@ -225,6 +270,30 @@ export class BrevoEmailService {
             
             const info = await this.smtpTransporter.sendMail(mailOptions);
             console.log('E-Mail erfolgreich über globalen SMTP-Server gesendet:', info.messageId);
+            
+            // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
+            const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+            
+            // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
+            if (repairId) {
+              try {
+                const historyEntry: InsertEmailHistory = {
+                  repairId,
+                  emailTemplateId: templateId,
+                  subject,
+                  recipient: to,
+                  status: 'success',
+                  userId
+                };
+                
+                await storage.createEmailHistoryEntry(historyEntry);
+                console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt (Fallback-Versand)`);
+              } catch (historyError) {
+                console.error('Fehler beim Erstellen des E-Mail-History-Eintrags (Fallback):', historyError);
+                // Wir geben trotzdem true zurück, da die E-Mail erfolgreich gesendet wurde
+              }
+            }
+            
             return true;
           } catch (globalSmtpError) {
             console.error('Fehler beim Senden der E-Mail über globalen SMTP-Server:', globalSmtpError);
