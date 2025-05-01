@@ -34,8 +34,13 @@ export interface Repair {
   createdAt: string;
   updatedAt: string;
   reviewRequestSent?: boolean;
-  customerSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild
-  signedAt?: string | null; // Datum/Uhrzeit der Unterschrift
+  // Unterschrift bei Abgabe des Geräts
+  dropoffSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild (Abgabe)
+  dropoffSignedAt?: string | null; // Datum/Uhrzeit der Unterschrift bei Abgabe
+  
+  // Unterschrift bei Abholung des Geräts
+  pickupSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild (Abholung)
+  pickupSignedAt?: string | null; // Datum/Uhrzeit der Unterschrift bei Abholung
 }
 
 // Extended repair with customer name for display
