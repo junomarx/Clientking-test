@@ -1124,7 +1124,7 @@ export default function AdminPage() {
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceBrands" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                     onClick={() => setActiveTab("deviceBrands")}
                   >
-                    <span className="text-sm">Marken</span>
+                    <span className="text-sm">Hersteller</span>
                   </div>
                   <div 
                     className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
@@ -1199,7 +1199,7 @@ export default function AdminPage() {
                 <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Hier können Sie Gerätedaten (Typen, Marken, Modelle) importieren.
+                    Hier können Sie Gerätedaten (Typen, Hersteller, Modelle) importieren.
                   </p>
                   <input type="file" accept=".json" className="w-full" />
                   <Button className="w-full">
@@ -1291,7 +1291,7 @@ export default function AdminPage() {
                 <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    Hier können Sie Gerätedaten (Typen, Marken, Modelle) importieren.
+                    Hier können Sie Gerätedaten (Typen, Hersteller, Modelle) importieren.
                   </p>
                   <input type="file" accept=".json" className="w-full" />
                   <Button className="w-full">
