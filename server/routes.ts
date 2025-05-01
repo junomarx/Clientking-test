@@ -1796,6 +1796,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
         "website": businessSettings?.website || "",
         "bewertungslink": reviewLink, // Explizit setzen
+        // Wichtig für E-Mail-Verlaufseinträge
+        "repairId": repairId.toString(),
         // Wichtig: userId für die Datenisolierung hinzufügen
         "userId": userId.toString()
       };
