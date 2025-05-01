@@ -185,21 +185,21 @@ export function DeviceManagementTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="deviceTypes" onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="flex flex-col sm:flex-row w-full">
-              <TabsTrigger value="deviceTypes" className="flex items-center gap-2 justify-start w-full">
+          <Tabs defaultValue="deviceTypes" onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="flex flex-col sm:flex-row w-full mb-6">
+              <TabsTrigger value="deviceTypes" className="flex items-center gap-2 justify-start w-full py-3">
                 <Smartphone className="h-4 w-4" />
                 Gerätetypen
               </TabsTrigger>
-              <TabsTrigger value="brands" className="flex items-center gap-2 justify-start w-full">
+              <TabsTrigger value="brands" className="flex items-center gap-2 justify-start w-full py-3">
                 <Tag className="h-4 w-4" />
                 Marken
               </TabsTrigger>
-              <TabsTrigger value="models" className="flex items-center gap-2 justify-start w-full">
+              <TabsTrigger value="models" className="flex items-center gap-2 justify-start w-full py-3">
                 <Layers className="h-4 w-4" />
                 Modelle
               </TabsTrigger>
-              <TabsTrigger value="issues" className="flex items-center gap-2 justify-start w-full">
+              <TabsTrigger value="issues" className="flex items-center gap-2 justify-start w-full py-3">
                 <AlertCircle className="h-4 w-4" />
                 Fehlerbeschreibungen
               </TabsTrigger>

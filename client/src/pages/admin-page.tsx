@@ -570,17 +570,17 @@ function SystemDiagnosticTab() {
   
   return (
     <div className="grid gap-4">
-      <Tabs defaultValue="database" className="space-y-4">
-        <TabsList className="flex flex-col sm:flex-row w-full">
-          <TabsTrigger className="justify-start w-full" value="database">
+      <Tabs defaultValue="database" className="space-y-6">
+        <TabsList className="flex flex-col sm:flex-row w-full mb-6">
+          <TabsTrigger className="justify-start w-full py-3" value="database">
             <Database className="mr-2 h-4 w-4" />
             Datenbank
           </TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="email">
+          <TabsTrigger className="justify-start w-full py-3" value="email">
             <Mail className="mr-2 h-4 w-4" />
             E-Mail-System
           </TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="performance">
+          <TabsTrigger className="justify-start w-full py-3" value="performance">
             <HardDrive className="mr-2 h-4 w-4" />
             Systemressourcen
           </TabsTrigger>
@@ -1453,18 +1453,18 @@ export default function AdminPage() {
         </Button>
       </div>
       
-      <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="flex flex-col sm:flex-row w-full">
-          <TabsTrigger className="justify-start w-full" value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="users">Benutzer</TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="devices">
+      <Tabs defaultValue="dashboard" className="space-y-6">
+        <TabsList className="flex flex-col sm:flex-row w-full mb-6">
+          <TabsTrigger className="justify-start w-full py-3" value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger className="justify-start w-full py-3" value="users">Benutzer</TabsTrigger>
+          <TabsTrigger className="justify-start w-full py-3" value="devices">
             <div className="flex items-center gap-1">
               <Smartphone className="h-4 w-4" />
               Geräte
             </div>
           </TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="system">Systemdiagnose</TabsTrigger>
-          <TabsTrigger className="justify-start w-full" value="backup">Backup & Restore</TabsTrigger>
+          <TabsTrigger className="justify-start w-full py-3" value="system">Systemdiagnose</TabsTrigger>
+          <TabsTrigger className="justify-start w-full py-3" value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="space-y-4">
           <AdminDashboard />
