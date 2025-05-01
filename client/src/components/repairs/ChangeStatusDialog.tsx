@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import type { SubmitHandler } from 'react-hook-form';
 
 import {
   Dialog,
@@ -105,7 +106,7 @@ export function ChangeStatusDialog({
   };
   
   // Form submission handler
-  function onSubmit(data: StatusFormValues) {
+  const onSubmit: SubmitHandler<StatusFormValues> = (data) => {
     if (!repairId) {
       toast({
         title: 'Fehler',
