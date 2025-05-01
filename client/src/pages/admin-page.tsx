@@ -33,6 +33,7 @@ import {
   FileUp,
   Trash,
   Shield,
+  Eye,
   UserIcon,
   Smartphone,
   Users,
@@ -1159,6 +1160,15 @@ export default function AdminPage() {
             </div>
             
 
+            
+            {/* Design Preview Menüpunkt */}
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "designPreview" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => window.location.href = "/admin/design-preview"}
+            >
+              <Eye className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Design-Preview</span>}
+            </div>
             
             <Link href="/">
               <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
