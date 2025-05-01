@@ -12,7 +12,7 @@ interface SignaturePadProps {
   readOnly?: boolean;
 }
 
-export function SignaturePadComponent({
+export function CustomSignaturePad({
   onSave,
   onCancel,
   width = 400,

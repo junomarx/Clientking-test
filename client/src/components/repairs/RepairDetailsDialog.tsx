@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { getStatusBadge } from '@/lib/utils';
 import { SignatureDialog } from './SignatureDialog';
+import { CustomSignaturePad } from '@/components/ui/signature-pad';
 
 import {
   Dialog,
@@ -38,7 +39,8 @@ import {
   MessageCircle,
   Check,
   X,
-  Printer
+  Printer,
+  Pen
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -54,6 +56,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { showPrintOptions } = usePrintManager();
   
   // Dialog schließen mit Verzögerung für Animationen
@@ -295,6 +298,47 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             </div>
           </div>
           
+          {/* Kundenunterschrift */}
+          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <Pen className="h-5 w-5" />
+              Kundenunterschrift
+            </h3>
+            
+            {repair.customerSignature ? (
+              <div className="space-y-3">
+                <div className="border rounded bg-white p-2">
+                  <img 
+                    src={repair.customerSignature} 
+                    alt="Unterschrift des Kunden" 
+                    className="max-h-32 mx-auto"
+                  />
+                </div>
+                {repair.signedAt && (
+                  <div className="text-sm text-muted-foreground text-center">
+                    Unterschrieben am {formatDateTime(repair.signedAt)}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-muted-foreground italic text-center py-3">
+                Keine Unterschrift vorhanden
+              </div>
+            )}
+            
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSignatureDialog(true)}
+                className="flex items-center gap-1"
+              >
+                <Pen className="h-4 w-4" />
+                {repair.customerSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
+              </Button>
+            </div>
+          </div>
+          
           {/* E-Mail-Verlauf */}
           <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
@@ -391,6 +435,14 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </Button>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Unterschrift-Dialog */}
+      <SignatureDialog
+        open={showSignatureDialog}
+        onClose={() => setShowSignatureDialog(false)}
+        repairId={repairId}
+        repair={repair}
+      />
     </Dialog>
   );
 }

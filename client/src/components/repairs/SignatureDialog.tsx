@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { SignaturePadComponent } from '@/components/ui/signature-pad';
+import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useMutation } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -87,7 +87,7 @@ export function SignatureDialog({ open, onClose, repairId, repair }: SignatureDi
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <SignaturePad 
+            <CustomSignaturePad 
               onSave={handleSaveSignature}
               onCancel={onClose}
               width={340}
