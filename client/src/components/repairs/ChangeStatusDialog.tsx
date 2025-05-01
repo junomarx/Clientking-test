@@ -23,14 +23,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, MessageSquare } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Form schema
 const statusSchema = z.object({
   status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
+  sendEmail: z.boolean().optional(),
+  sendSms: z.boolean().optional()
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
@@ -40,7 +43,7 @@ interface ChangeStatusDialogProps {
   onClose: () => void;
   repairId: number | null;
   currentStatus: string;
-  onUpdateStatus: (id: number, status: string) => void;
+  onUpdateStatus: (id: number, status: string, sendEmail?: boolean, sendSms?: boolean) => void;
 }
 
 export function ChangeStatusDialog({ 
@@ -57,8 +60,14 @@ export function ChangeStatusDialog({
     resolver: zodResolver(statusSchema),
     defaultValues: {
       status: (currentStatus || 'eingegangen') as any,
+      sendEmail: false,
+      sendSms: false
     },
   });
+  
+  // Zeige Optionen je nach gewähltem Status
+  const showNotificationOptions = form.watch('status') === 'fertig' || 
+                                 form.watch('status') === 'ersatzteil_eingetroffen';
   
   // Übersetzungen für StatusBadge-Labels
   const statusLabels: Record<string, string> = {
@@ -81,7 +90,7 @@ export function ChangeStatusDialog({
       return;
     }
     
-    onUpdateStatus(repairId, data.status);
+    onUpdateStatus(repairId, data.status, data.sendEmail, data.sendSms);
   }
   
   return (
@@ -121,6 +130,56 @@ export function ChangeStatusDialog({
                 </FormItem>
               )}
             />
+            
+            {showNotificationOptions && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="sendEmail"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="flex items-center gap-1">
+                          <Mail className="h-4 w-4" /> E-Mail senden
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Benachrichtigen Sie den Kunden per E-Mail über die Statusänderung
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="sendSms"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" /> SMS senden
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Benachrichtigen Sie den Kunden per SMS über die Statusänderung
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>

@@ -736,41 +736,32 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onClose={() => setShowStatusDialog(false)}
           repairId={selectedRepairId}
           currentStatus={newStatus || 'eingegangen'}
-          onUpdateStatus={(id, status) => {
-            console.log(`ChangeStatusDialog: Status-Update für ID=${id}, newStatus=${status}`);
+          onUpdateStatus={(id, status, sendEmail, sendSms) => {
+            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}, sendSms=${sendSms}`);
             
-            // Je nach Status entscheiden, ob E-Mail oder SMS gesendet werden soll
-            if (status === 'fertig') {
-              updateStatusMutation.mutate({ 
-                id: id, 
-                status: status, 
-                sendEmail: true,
-                sendSms: true
-              });
-            } else if (status === 'abgeholt') {
-              updateStatusMutation.mutate({ 
-                id: id, 
-                status: status
+            if (status === 'abgeholt') {
+              updateStatusMutation.mutate({
+                id: id,
+                status: status,
+                sendEmail: sendEmail,
+                sendSms: sendSms
               }, {
                 onSuccess: () => {
-                  // Nach dem Abholen-Status immer eine Bewertungsanfrage senden
                   setTimeout(() => {
                     handleSendReviewRequest(id);
                   }, 500);
                 }
               });
-            } else if (status === 'ersatzteil_eingetroffen') {
-              updateStatusMutation.mutate({ 
-                id: id, 
-                status: status,
-                sendEmail: true
-              });
             } else {
-              updateStatusMutation.mutate({ 
-                id: id, 
-                status: status
+              updateStatusMutation.mutate({
+                id: id,
+                status: status,
+                sendEmail: sendEmail,
+                sendSms: sendSms
               });
             }
+            
+            setShowStatusDialog(false);
           }}
         />
       )}
