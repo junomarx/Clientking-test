@@ -438,8 +438,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben",
           "geschaeftsname": businessSettings?.businessName || "Handyshop",
           "abholzeit": "ab sofort", // kann später angepasst werden
-          // Wichtig: userId für die Datenisolierung hinzufügen
-          "userId": userId.toString()
+          // Wichtig: userId und repairId für die Datenisolierung und E-Mail-Verlauf hinzufügen
+          "userId": userId.toString(),
+          "repairId": repair.id.toString()
         };
         
         // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
