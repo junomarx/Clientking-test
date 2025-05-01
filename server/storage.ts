@@ -51,6 +51,7 @@ export interface IStorage {
   createRepair(repair: InsertRepair): Promise<Repair>;
   updateRepair(id: number, repair: Partial<InsertRepair>): Promise<Repair | undefined>;
   updateRepairStatus(id: number, status: string): Promise<Repair | undefined>;
+  updateRepairSignature(id: number, signature: string): Promise<Repair | undefined>;
   deleteRepair(id: number): Promise<boolean>;
   
   // Business settings methods
@@ -534,6 +535,22 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.userId, currentUserId)
         )
       )
+      .returning();
+    
+    return updatedRepair;
+  }
+  
+  async updateRepairSignature(id: number, signature: string): Promise<Repair | undefined> {
+    const now = new Date();
+    
+    const [updatedRepair] = await db
+      .update(repairs)
+      .set({
+        customerSignature: signature,
+        signedAt: now,
+        updatedAt: now
+      })
+      .where(eq(repairs.id, id))
       .returning();
     
     return updatedRepair;
