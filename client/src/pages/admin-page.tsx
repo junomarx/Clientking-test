@@ -1441,58 +1441,37 @@ export default function AdminPage() {
   }
   
   return (
-    <div className="container mx-auto py-6 space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8">
-        <div className="mb-4 sm:mb-0">
-          <h1 className="text-3xl font-bold tracking-tight">Administrationsbereich</h1>
-          <p className="text-muted-foreground">
+    <div className="container mx-auto py-6 px-4">
+      <div className="flex flex-col mb-6">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold">Administrationsbereich</h1>
+          <p className="text-muted-foreground text-sm">
             Verwalten Sie Benutzer und System-Einstellungen
           </p>
         </div>
+        
         <Button 
           onClick={() => setLocation("/")}
-          className="bg-green-600 hover:bg-green-700 text-white gap-2 self-start sm:self-auto"
+          className="bg-green-600 hover:bg-green-700 text-white gap-2 w-full mb-4"
+          size="sm"
         >
           <ChevronLeft className="h-4 w-4" />
           Zurück zum Handyshop
         </Button>
+
+        <div className="grid grid-cols-1 gap-4">
+          <div className="bg-primary text-white rounded-md p-3">Dashboard</div>
+          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Benutzer</div>
+          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3 flex items-center gap-2">
+            <Smartphone className="h-4 w-4" /> Geräte
+          </div>
+          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Systemdiagnose</div>
+          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Backup & Restore</div>
+        </div>
       </div>
       
-      <div className="bg-background rounded-md shadow-sm p-4 mb-6">
-        <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="flex w-full flex-col space-y-2 sm:flex-row sm:space-y-0">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="users">Benutzer</TabsTrigger>
-            <TabsTrigger value="devices">
-              <div className="flex items-center gap-1">
-                <Smartphone className="h-4 w-4" />
-                Geräte
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
-            <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="space-y-4 mt-6">
-            <AdminDashboard />
-          </TabsContent>
-
-          <TabsContent value="users" className="mt-6">
-            <UserTable />
-          </TabsContent>
-
-          <TabsContent value="devices" className="mt-6">
-            <DeviceManagementTab />
-          </TabsContent>
-
-          <TabsContent value="system" className="mt-6">
-            <SystemDiagnosticTab />
-          </TabsContent>
-
-          <TabsContent value="backup" className="mt-6">
-            <BackupRestoreTab />
-          </TabsContent>
-        </Tabs>
+      <div className="bg-white rounded-md shadow-sm p-4 mb-6">
+        <AdminDashboard />
       </div>
     </div>
   );
