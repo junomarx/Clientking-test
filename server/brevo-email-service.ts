@@ -223,6 +223,7 @@ export class BrevoEmailService {
               userId
             };
             
+            console.log('Erstelle E-Mail-Verlaufseintrag:', historyEntry);
             await storage.createEmailHistoryEntry(historyEntry);
             console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt`);
           } catch (historyError) {
@@ -248,6 +249,7 @@ export class BrevoEmailService {
               userId
             };
             
+            console.log('Erstelle E-Mail-Verlaufseintrag für fehlgeschlagene E-Mail:', historyEntry);
             await storage.createEmailHistoryEntry(historyEntry);
             console.log(`E-Mail-History-Eintrag für fehlgeschlagene E-Mail an Reparatur ${repairId} erstellt`);
           } catch (historyError) {
@@ -286,6 +288,7 @@ export class BrevoEmailService {
                   userId
                 };
                 
+                console.log('Erstelle E-Mail-Verlaufseintrag (Fallback):', historyEntry);
                 await storage.createEmailHistoryEntry(historyEntry);
                 console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt (Fallback-Versand)`);
               } catch (historyError) {
