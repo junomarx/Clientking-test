@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, ArrowDownWideNarrow, Settings, Check, PhoneCall, AlertCircle, ChevronLeft, ChevronRight, Menu, Pencil, Printer, Trash2, Mail, Star, Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Filter, Settings, ChevronLeft, ChevronRight, Menu, Pencil, Printer, Mail, Star, Plus, PhoneCall, Clock, BarChart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,77 +12,37 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Repair as SchemaRepair, Customer } from '@shared/schema';
-import { Repair } from '@/lib/types';
-import { getStatusBadge } from '@/lib/utils';
 
-// Leeres Array für den Fall, dass keine Daten vorhanden sind
-const fallbackData: any[] = [];
+// Mock-Daten für die Vorschau
+const MOCK_REPAIRS = [
+  { id: 1, orderCode: 'AS1234', customerName: 'Max Mustermann', deviceType: 'Smartphone', brand: 'Apple', model: 'iPhone 13', status: 'eingegangen', createdAt: '2025-04-28' },
+  { id: 2, orderCode: 'SS5678', customerName: 'Maria Schmidt', deviceType: 'Smartphone', brand: 'Samsung', model: 'Galaxy S22', status: 'in_reparatur', createdAt: '2025-04-29' },
+  { id: 3, orderCode: 'XL9012', customerName: 'Thomas Weber', deviceType: 'Laptop', brand: 'Lenovo', model: 'ThinkPad X1', status: 'fertig', createdAt: '2025-04-30' },
+  { id: 4, orderCode: 'HL3456', customerName: 'Anna Meier', deviceType: 'Smartphone', brand: 'Huawei', model: 'P40 Pro', status: 'abgeholt', createdAt: '2025-05-01' },
+  { id: 5, orderCode: 'AS7890', customerName: 'Julia Fischer', deviceType: 'Tablet', brand: 'Apple', model: 'iPad Pro', status: 'eingegangen', createdAt: '2025-05-01' },
+];
+
+// Hilfsfunktion für Status-Badges
+function getStatusBadge(status: string) {
+  switch (status) {
+    case 'eingegangen':
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Neu</Badge>;
+    case 'in_reparatur':
+      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">In Arbeit</Badge>;
+    case 'fertig':
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Fertig</Badge>;
+    case 'abgeholt':
+      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Abgeholt</Badge>;
+    default:
+      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">{status}</Badge>;
+  }
+}
 
 export default function DesignPreviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [collapsed, setCollapsed] = useState(false);
-  const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null);
-  
-  // Echte Daten aus der API abrufen
-  const { data: repairsData = fallbackData, isLoading } = useQuery<SchemaRepair[]>({
-    queryKey: ['/api/repairs'],
-  });
-  
-  // Kunden abrufen
-  const { data: customers = [] } = useQuery<Customer[]>({
-    queryKey: ['/api/customers'],
-  });
-  
-  // Konvertieren und Aufbereiten der Reparaturdaten für die Anzeige
-  const repairs = useMemo(() => {
-    return repairsData.map(repair => {
-      const customer = customers.find(c => c.id === repair.customerId);
-      return {
-        id: repair.id,
-        orderCode: repair.orderCode,
-        customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unbekannt',
-        customerPhone: customer?.phone || '',
-        deviceType: repair.deviceType,
-        brand: repair.brand || '',
-        model: repair.model || '',
-        problem: repair.problem || '',
-        status: repair.status,
-        createdAt: repair.createdAt,
-        updatedAt: repair.updatedAt,
-        price: repair.price,
-        notes: repair.notes || '',
-        customerId: repair.customerId
-      } as Repair;
-    });
-  }, [repairsData, customers]);
-  
-  // Gefilterte Reparaturen basierend auf Status und Suchbegriff
-  const filteredRepairs = useMemo(() => {
-    return repairs.filter(repair => {
-      const matchesSearch = searchTerm === '' ||
-        repair.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        repair.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        repair.deviceType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        repair.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        repair.model.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'all' || repair.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [repairs, searchTerm, statusFilter]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -125,24 +84,17 @@ export default function DesignPreviewPage() {
           </div>
           
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
-            </svg>
+            <BarChart className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="ml-3">Statistik</span>}
           </div>
           
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-            </svg>
+            <Mail className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="ml-3">E-Mails</span>}
           </div>
           
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-            </svg>
+            <Settings className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="ml-3">Einstellungen</span>}
           </div>
         </nav>
@@ -226,203 +178,34 @@ export default function DesignPreviewPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {isLoading ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10">Daten werden geladen...</TableCell>
+                        {MOCK_REPAIRS.map((repair) => (
+                          <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
+                            <TableCell className="font-medium">{repair.orderCode}</TableCell>
+                            <TableCell>{repair.customerName}</TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {repair.deviceType} {repair.brand} {repair.model}
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(repair.status)}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
+                              {repair.createdAt}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-1">
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Mail className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
                           </TableRow>
-                        ) : filteredRepairs.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10">Keine Reparaturen vorhanden</TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredRepairs.map((repair) => (
-                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50" onClick={() => setSelectedRepair(repair)}>
-                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
-                              <TableCell>{repair.customerName}</TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {repair.deviceType} {repair.brand} {repair.model}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(repair.status)}
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
-                                {new Date(repair.createdAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Printer className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Mail className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="new" className="m-0">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Auftragsnr.</TableHead>
-                          <TableHead>Kunde</TableHead>
-                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden lg:table-cell">Erstellt</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRepairs.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10">Keine neuen Reparaturen vorhanden</TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredRepairs.map((repair) => (
-                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
-                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
-                              <TableCell>{repair.customerName}</TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {repair.deviceType} {repair.brand} {repair.model}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(repair.status)}
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
-                                {new Date(repair.createdAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Printer className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="in_repair" className="m-0">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Auftragsnr.</TableHead>
-                          <TableHead>Kunde</TableHead>
-                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden lg:table-cell">Aktualisiert</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRepairs.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10">Keine Reparaturen in Arbeit</TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredRepairs.map((repair) => (
-                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
-                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
-                              <TableCell>{repair.customerName}</TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {repair.deviceType} {repair.brand} {repair.model}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(repair.status)}
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
-                                {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <PhoneCall className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="completed" className="m-0">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Auftragsnr.</TableHead>
-                          <TableHead>Kunde</TableHead>
-                          <TableHead className="hidden md:table-cell">Gerät</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="hidden lg:table-cell">Abgeschlossen</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRepairs.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-10">Keine abgeschlossenen Reparaturen</TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredRepairs.map((repair) => (
-                            <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
-                              <TableCell className="font-medium">{repair.orderCode}</TableCell>
-                              <TableCell>{repair.customerName}</TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {repair.deviceType} {repair.brand} {repair.model}
-                              </TableCell>
-                              <TableCell>
-                                {getStatusBadge(repair.status)}
-                              </TableCell>
-                              <TableCell className="hidden lg:table-cell text-gray-500 text-sm">
-                                {new Date(repair.updatedAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Printer className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Star className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Mail className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
+                        ))}
                       </TableBody>
                     </Table>
                   </CardContent>
@@ -442,7 +225,7 @@ export default function DesignPreviewPage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Neue Aufträge</p>
-                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'new').length}</h3>
+                    <h3 className="text-xl font-bold">2</h3>
                   </div>
                 </CardContent>
               </Card>
@@ -450,13 +233,11 @@ export default function DesignPreviewPage() {
               <Card>
                 <CardContent className="p-4 flex items-center">
                   <div className="p-2 rounded-md bg-yellow-100 text-yellow-700 mr-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
+                    <Clock className="h-5 w-5" />
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">In Arbeit</p>
-                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'in_repair').length}</h3>
+                    <h3 className="text-xl font-bold">1</h3>
                   </div>
                 </CardContent>
               </Card>
@@ -470,7 +251,7 @@ export default function DesignPreviewPage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-sm">Abgeschlossen</p>
-                    <h3 className="text-xl font-bold">{repairs.filter(r => r.status === 'completed').length}</h3>
+                    <h3 className="text-xl font-bold">2</h3>
                   </div>
                 </CardContent>
               </Card>
@@ -485,11 +266,7 @@ export default function DesignPreviewPage() {
                   <div>
                     <p className="text-gray-500 text-sm">Umsatz (Monat)</p>
                     <h3 className="text-xl font-bold">
-                      {repairs
-                        .filter(r => r.status === 'completed' && r.price)
-                        .reduce((sum, repair) => sum + (repair.price || 0), 0)
-                        .toFixed(2)}
-                      €
+                      1.450,00 €
                     </h3>
                   </div>
                 </CardContent>
