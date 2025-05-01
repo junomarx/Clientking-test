@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { EditRepairDialog } from './EditRepairDialog';
 import { RepairDetailsDialog } from './RepairDetailsDialog';
+import { ChangeStatusDialog } from './ChangeStatusDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { 
@@ -248,7 +249,12 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   }, [repairs, customers, searchTerm, statusFilter, filterByToday]);
 
   const handleUpdateStatus = () => {
-    if (!selectedRepairId || !newStatus) return;
+    if (!selectedRepairId || !newStatus) {
+      console.log('Keine Reparatur oder Status ausgewählt');
+      return;
+    }
+    
+    console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}, sendSms=${sendSms}`);
     
     // Status auf "fertig" aktualisieren mit optionalen E-Mail- und SMS-Benachrichtigungen
     if (newStatus === 'fertig') {
@@ -723,127 +729,49 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         </div>
       </div>
 
-      {/* Status Update Dialog */}
-      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Status aktualisieren</DialogTitle>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <Select
-              value={newStatus}
-              onValueChange={(value) => {
-                setNewStatus(value);
-                if (value === 'fertig') {
-                  setSendEmail(true); // Auto-select email option when status is set to "fertig"
-                  setSendSms(true); // Auto-select SMS option when status is set to "fertig"
-                } else if (value === 'abgeholt') {
-                  setSendEmail(true); // Auto-select review request option when status is set to "abgeholt"
-                  setSendSms(false);
-                } else if (value === 'ersatzteil_eingetroffen') {
-                  setSendEmail(true); // Auto-select email option when status is set to "ersatzteil_eingetroffen"
-                  setSendSms(false);
-                } else {
-                  setSendEmail(false);
-                  setSendSms(false);
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Status wählen" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="eingegangen">Eingegangen</SelectItem>
-                <SelectItem value="in_reparatur">In Reparatur</SelectItem>
-                <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
-                <SelectItem value="ausser_haus">Außer Haus</SelectItem>
-                <SelectItem value="fertig">Fertig / Abholbereit</SelectItem>
-                <SelectItem value="abgeholt">Abgeholt</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {/* Benachrichtigungsoptionen für "fertig" Status */}
-            {newStatus === 'fertig' && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendEmail"
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                    checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
-                  />
-                  <label htmlFor="sendEmail">
-                    Benachrichtigungs-E-Mail an Kunden senden
-                  </label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendSms"
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                    checked={sendSms}
-                    onChange={(e) => setSendSms(e.target.checked)}
-                  />
-                  <label htmlFor="sendSms">
-                    SMS-Benachrichtigung an Kunden senden
-                  </label>
-                </div>
-              </div>
-            )}
-            
-            {/* Benachrichtigungsoptionen für "ersatzteil_eingetroffen" Status */}
-            {newStatus === 'ersatzteil_eingetroffen' && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendSparepartEmail"
-                    className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
-                    checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
-                  />
-                  <label htmlFor="sendSparepartEmail" className="flex items-center gap-1">
-                    <Mail className="h-4 w-4 text-teal-500" /> 
-                    E-Mail über Ersatzteillieferung senden
-                  </label>
-                </div>
-              </div>
-            )}
-            
-            {/* Bewertungsanfrage-Option für "abgeholt" Status */}
-            {newStatus === 'abgeholt' && (
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendReviewRequest"
-                    className="rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
-                    checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
-                  />
-                  <label htmlFor="sendReviewRequest" className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-500" /> 
-                    Bewertungsanfrage an Kunden senden
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={handleUpdateStatus}
-              disabled={updateStatusMutation.isPending}
-            >
-              {updateStatusMutation.isPending ? 'Aktualisiere...' : 'Speichern'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ChangeStatusDialog für die Statusänderung */}
+      <ChangeStatusDialog
+        open={showStatusDialog}
+        onClose={() => setShowStatusDialog(false)}
+        repairId={selectedRepairId}
+        currentStatus={newStatus || 'eingegangen'}
+        onUpdateStatus={(id, status) => {
+          console.log(`ChangeStatusDialog: Status-Update für ID=${id}, newStatus=${status}`);
+          
+          // Je nach Status entscheiden, ob E-Mail oder SMS gesendet werden soll
+          if (status === 'fertig') {
+            updateStatusMutation.mutate({ 
+              id: id, 
+              status: status, 
+              sendEmail: true,
+              sendSms: true
+            });
+          } else if (status === 'abgeholt') {
+            updateStatusMutation.mutate({ 
+              id: id, 
+              status: status
+            }, {
+              onSuccess: () => {
+                // Nach dem Abholen-Status immer eine Bewertungsanfrage senden
+                setTimeout(() => {
+                  handleSendReviewRequest(id);
+                }, 500);
+              }
+            });
+          } else if (status === 'ersatzteil_eingetroffen') {
+            updateStatusMutation.mutate({ 
+              id: id, 
+              status: status,
+              sendEmail: true
+            });
+          } else {
+            updateStatusMutation.mutate({ 
+              id: id, 
+              status: status
+            });
+          }
+        }}
+      />
 
       {/* Edit Repair Dialog */}
       {repairs && selectedRepairId && (
