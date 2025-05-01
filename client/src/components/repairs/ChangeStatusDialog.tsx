@@ -2,8 +2,6 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 import {
@@ -23,7 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Loader2, Mail, MessageSquare } from 'lucide-react';
+import { Mail, Star } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -32,8 +30,7 @@ const statusSchema = z.object({
   status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
-  sendEmail: z.boolean().optional(),
-  sendSms: z.boolean().optional()
+  sendEmail: z.boolean().optional()
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
@@ -43,7 +40,7 @@ interface ChangeStatusDialogProps {
   onClose: () => void;
   repairId: number | null;
   currentStatus: string;
-  onUpdateStatus: (id: number, status: string, sendEmail?: boolean, sendSms?: boolean) => void;
+  onUpdateStatus: (id: number, status: string, sendEmail?: boolean) => void;
 }
 
 export function ChangeStatusDialog({ 
@@ -60,14 +57,42 @@ export function ChangeStatusDialog({
     resolver: zodResolver(statusSchema),
     defaultValues: {
       status: (currentStatus || 'eingegangen') as any,
-      sendEmail: false,
-      sendSms: false
+      sendEmail: false
     },
   });
   
-  // Zeige Optionen je nach gewähltem Status
-  const showNotificationOptions = form.watch('status') === 'fertig' || 
-                                 form.watch('status') === 'ersatzteil_eingetroffen';
+  // Zeige E-Mail-Option je nach gewähltem Status
+  const currentSelectedStatus = form.watch('status');
+  const showEmailOption = currentSelectedStatus === 'fertig' || 
+                          currentSelectedStatus === 'ersatzteil_eingetroffen' ||
+                          currentSelectedStatus === 'abgeholt';
+  
+  // Label für E-Mail-Checkbox je nach Status
+  const getEmailLabel = () => {
+    if (currentSelectedStatus === 'abgeholt') {
+      return (
+        <>
+          <FormLabel className="flex items-center gap-1">
+            <Star className="h-4 w-4" /> Bewertung anfragen
+          </FormLabel>
+          <p className="text-sm text-muted-foreground">
+            Senden Sie eine Bewertungsanfrage per E-Mail an den Kunden
+          </p>
+        </>
+      );
+    }
+    
+    return (
+      <>
+        <FormLabel className="flex items-center gap-1">
+          <Mail className="h-4 w-4" /> E-Mail senden
+        </FormLabel>
+        <p className="text-sm text-muted-foreground">
+          Benachrichtigen Sie den Kunden per E-Mail über die Statusänderung
+        </p>
+      </>
+    );
+  };
   
   // Übersetzungen für StatusBadge-Labels
   const statusLabels: Record<string, string> = {
@@ -90,7 +115,7 @@ export function ChangeStatusDialog({
       return;
     }
     
-    onUpdateStatus(repairId, data.status, data.sendEmail, data.sendSms);
+    onUpdateStatus(repairId, data.status, data.sendEmail);
   }
   
   return (
@@ -131,7 +156,7 @@ export function ChangeStatusDialog({
               )}
             />
             
-            {showNotificationOptions && (
+            {showEmailOption && (
               <div className="space-y-4">
                 <FormField
                   control={form.control}
@@ -145,35 +170,7 @@ export function ChangeStatusDialog({
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel className="flex items-center gap-1">
-                          <Mail className="h-4 w-4" /> E-Mail senden
-                        </FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Benachrichtigen Sie den Kunden per E-Mail über die Statusänderung
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="sendSms"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="flex items-center gap-1">
-                          <MessageSquare className="h-4 w-4" /> SMS senden
-                        </FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Benachrichtigen Sie den Kunden per SMS über die Statusänderung
-                        </p>
+                        {getEmailLabel()}
                       </div>
                     </FormItem>
                   )}

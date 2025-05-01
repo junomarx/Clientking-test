@@ -736,28 +736,28 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onClose={() => setShowStatusDialog(false)}
           repairId={selectedRepairId}
           currentStatus={newStatus || 'eingegangen'}
-          onUpdateStatus={(id, status, sendEmail, sendSms) => {
-            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}, sendSms=${sendSms}`);
+          onUpdateStatus={(id, status, sendEmail) => {
+            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}`);
             
             if (status === 'abgeholt') {
               updateStatusMutation.mutate({
                 id: id,
-                status: status,
-                sendEmail: sendEmail,
-                sendSms: sendSms
+                status: status
               }, {
                 onSuccess: () => {
-                  setTimeout(() => {
-                    handleSendReviewRequest(id);
-                  }, 500);
+                  // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
+                  if (sendEmail) {
+                    setTimeout(() => {
+                      handleSendReviewRequest(id);
+                    }, 500);
+                  }
                 }
               });
             } else {
               updateStatusMutation.mutate({
                 id: id,
                 status: status,
-                sendEmail: sendEmail,
-                sendSms: sendSms
+                sendEmail: sendEmail
               });
             }
             
