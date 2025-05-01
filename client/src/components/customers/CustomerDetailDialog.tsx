@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   const [showDeleteCustomerDialog, setShowDeleteCustomerDialog] = useState(false);
   const [showDeleteRepairDialog, setShowDeleteRepairDialog] = useState(false);
   const [repairToDelete, setRepairToDelete] = useState<number | null>(null);
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   
   // Load customer details
@@ -399,8 +401,13 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                   <div key={repair.id} 
                     className="border rounded-lg p-4 shadow-sm hover:shadow-md cursor-pointer transition-all"
                     onClick={() => {
-                      setEditRepairId(repair.id);
-                      setShowEditDialog(true);
+                      // Navigate to repairs page with orderCode filter
+                      if (repair.orderCode) {
+                        onClose(); // Close customer dialog first
+                        setTimeout(() => {
+                          navigate('/?tab=repairs&search=' + repair.orderCode);
+                        }, 100); // Small delay to allow dialog to close
+                      }
                     }}
                   >
                     <div className="flex justify-between items-start">
