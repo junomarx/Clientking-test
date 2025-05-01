@@ -119,7 +119,7 @@ function UserTable() {
   });
   
   const editUserMutation = useMutation({
-    mutationFn: async (userData: { id: number; username: string; email: string; isAdmin: boolean }) => {
+    mutationFn: async (userData: { id: number; username: string; email: string; isAdmin: boolean; pricingPlan?: string }) => {
       const response = await apiRequest("PATCH", `/api/admin/users/${userData.id}`, userData);
       if (!response.ok) {
         throw new Error(`Failed to update user: ${response.statusText}`);
@@ -177,6 +177,7 @@ function UserTable() {
     setEditName(user.username);
     setEditEmail(user.email);
     setEditRole(user.isAdmin ? "admin" : "user");
+    setEditPricingPlan((user.pricingPlan as "basic" | "professional" | "enterprise") || "basic");
     setIsEditDialogOpen(true);
   };
   
@@ -193,6 +194,7 @@ function UserTable() {
       username: editName,
       email: editEmail,
       isAdmin: editRole === "admin",
+      pricingPlan: editPricingPlan
     });
   };
   
@@ -214,6 +216,7 @@ function UserTable() {
               <TableHead className="hidden md:table-cell">E-Mail</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Rolle</TableHead>
+              <TableHead className="hidden md:table-cell">Preispaket</TableHead>
               <TableHead>Aktionen</TableHead>
             </TableRow>
           </TableHeader>
@@ -243,6 +246,11 @@ function UserTable() {
                 <TableCell>
                   <Badge variant={user.isAdmin ? "default" : "outline"}>
                     {user.isAdmin ? "Admin" : "Benutzer"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant={user.pricingPlan === "enterprise" ? "default" : user.pricingPlan === "professional" ? "success" : "outline"}>
+                    {user.pricingPlan === "enterprise" ? "Enterprise" : user.pricingPlan === "professional" ? "Professional" : "Basic"}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -326,6 +334,22 @@ function UserTable() {
                   <Label htmlFor="admin-role" className="text-sm font-normal">Administrator</Label>
                 </div>
               </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="pricing-plan">Preispaket</Label>
+              <Select
+                value={editPricingPlan}
+                onValueChange={(value) => setEditPricingPlan(value as "basic" | "professional" | "enterprise")}
+              >
+                <SelectTrigger id="pricing-plan">
+                  <SelectValue placeholder="Preispaket auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic</SelectItem>
+                  <SelectItem value="professional">Professional</SelectItem>
+                  <SelectItem value="enterprise">Enterprise</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
