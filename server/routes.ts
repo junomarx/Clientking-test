@@ -513,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für Ihre Reparatur eingetroffen ist.</p>
                     
                     <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                      <p style="margin: 5px 0;"><strong>Gerät:</strong> {{marke}} {{geraet}}</p>
+                      <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
                       <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
                       <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
                     </div>

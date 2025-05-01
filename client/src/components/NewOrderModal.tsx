@@ -55,7 +55,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 // Standard Vorschläge für Gerätetypen - werden nur verwendet, wenn keine gespeicherten Werte vorhanden sind
 const defaultDeviceTypes = ['Smartphone', 'Tablet', 'Watch', 'Laptop', 'Spielekonsole'];
 
-// Standard-Marken für gängige Gerätetypen als Fallback, wenn keine gespeicherten Werte vorhanden sind
+// Standard-Herstellern für gängige Gerätetypen als Fallback, wenn keine gespeicherten Werte vorhanden sind
 const defaultBrands: Record<string, string[]> = {
   'smartphone': ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Google', 'Nokia', 'Motorola', 'Sony', 'LG', 'Oppo'],
   'tablet': ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Microsoft', 'Amazon', 'Acer', 'Asus', 'Google'],
@@ -76,7 +76,7 @@ const orderFormSchema = z.object({
   
   // Device info
   deviceType: z.string().min(1, { message: 'Bitte Geräteart eingeben' }),
-  brand: z.string().min(1, { message: 'Bitte Marke auswählen' }),
+  brand: z.string().min(1, { message: 'Bitte Hersteller auswählen' }),
   modelSeries: z.string().optional().or(z.literal('')),
   model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
   serialNumber: z.string().optional(),
@@ -252,7 +252,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   }, [watchDeviceType, deviceTypesQuery.data]);
   
-  // Abfrage für Marken basierend auf DeviceType
+  // Abfrage für Herstellern basierend auf DeviceType
   const brandsQuery = brands.getBrandsByDeviceTypeId(selectedDeviceTypeId);
   
   // Fehlerbeschreibungen von der Datenbank laden
@@ -266,10 +266,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     },
   });
 
-  // Update Marken und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
+  // Update Herstellern und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
-      // Zurücksetzen der Marke
+      // Zurücksetzen der Hersteller
       form.setValue('brand', '');
     }
   }, [watchDeviceType, form]);
@@ -318,7 +318,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     staleTime: 30000, // 30 Sekunden Caching
   });
   
-  // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Marke ändert
+  // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Hersteller ändert
   useEffect(() => {
     if (modelSeriesData) {
       // Extrahiere die Namen der Modellreihen
@@ -342,7 +342,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       form.setValue('modelSeries', '');
     }
     
-    // Modell zurücksetzen, wenn sich Geräteart oder Marke ändert
+    // Modell zurücksetzen, wenn sich Geräteart oder Hersteller ändert
     form.setValue('model', '');
     setSelectedModelSeriesId(null);
   }, [watchDeviceType, watchBrand, modelSeriesData, form]);
@@ -490,7 +490,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         notes: formData.notes
       };
       
-      // Hier speichern wir das Modell, den Gerätetyp und die Marke, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
+      // Hier speichern wir das Modell, den Gerätetyp und die Hersteller, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       // und nur wenn der Benutzer Admin ist (Bugi, ID 3)
       if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
         // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
@@ -499,7 +499,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           createDeviceTypeMutation.mutate({ name: repairData.deviceType });
         }
         
-        // Marke und Modell jetzt in der Datenbank speichern
+        // Hersteller und Modell jetzt in der Datenbank speichern
         const success = saveModelDb(
           repairData.deviceType, 
           repairData.brand, 
@@ -654,7 +654,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           createDeviceTypeMutation.mutate({ name: repairData.deviceType });
         }
         
-        // Marke und Modell jetzt in der Datenbank speichern
+        // Hersteller und Modell jetzt in der Datenbank speichern
         const success = saveModelDb(
           repairData.deviceType, 
           repairData.brand, 
@@ -1058,7 +1058,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                     name="brand"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Marke</FormLabel>
+                        <FormLabel>Hersteller</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Input 
@@ -1071,18 +1071,18 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 form.setValue('modelSeries', '');
                                 form.setValue('model', '');
                                 
-                                // Filter die Marken
+                                // Filter die Herstellern
                                 if (e.target.value && availableBrands.length > 0) {
                                   const filteredBrands = availableBrands
                                     .filter(name => name.toLowerCase().includes(e.target.value.toLowerCase()));
                                   setBrandDropdown(filteredBrands);
                                   setSelectedBrandIndex(-1);
                                 } else if (!e.target.value && availableBrands.length > 0) {
-                                  // Alle Marken anzeigen wenn Feld leer
+                                  // Alle Herstellern anzeigen wenn Feld leer
                                   setBrandDropdown(availableBrands);
                                   setSelectedBrandIndex(-1);
                                 } else if (watchDeviceType && defaultBrands[watchDeviceType.toLowerCase()]) {
-                                  // Fallback zu Standard-Marken
+                                  // Fallback zu Standard-Herstellern
                                   const defaultBrandList = defaultBrands[watchDeviceType.toLowerCase()];
                                   setBrandDropdown(defaultBrandList);
                                 } else {
@@ -1090,11 +1090,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 }
                               }}
                               onFocus={() => {
-                                // Zeige alle verfügbaren Marken an, wenn Fokus aufs Feld gesetzt wird
+                                // Zeige alle verfügbaren Herstellern an, wenn Fokus aufs Feld gesetzt wird
                                 if (availableBrands.length > 0) {
                                   setBrandDropdown(availableBrands);
                                 } else if (watchDeviceType && defaultBrands[watchDeviceType.toLowerCase()]) {
-                                  // Fallback zu Standard-Marken
+                                  // Fallback zu Standard-Herstellern
                                   setBrandDropdown(defaultBrands[watchDeviceType.toLowerCase()]);
                                 }
                               }}
@@ -1145,7 +1145,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 }
                               }}
                             />
-                            {/* Dropdown für Marken */}
+                            {/* Dropdown für Herstellern */}
                             {brandDropdown.length > 0 && (
                               <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
                                 <div className="py-1 max-h-60 overflow-auto">
