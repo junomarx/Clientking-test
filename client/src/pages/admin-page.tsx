@@ -1087,7 +1087,7 @@ export default function AdminPage() {
       />
       
       {/* Toast-Test Button - für Bugi's Admin-Bereich */}
-      <div className="fixed top-16 right-4 z-10">
+      <div className="fixed bottom-16 right-4 z-10">
         <Button onClick={() => setIsToastTestOpen(true)} variant="secondary" size="sm" className="shadow-md">
           Toast-Test
         </Button>
