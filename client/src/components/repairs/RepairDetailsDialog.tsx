@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Customer } from '@shared/schema';
+import { Customer, EmailHistory } from '@shared/schema';
 import { Repair } from '@/lib/types';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -32,7 +32,10 @@ import {
   FileText,
   User,
   Clipboard,
-  Pencil
+  Pencil,
+  MessageCircle,
+  Check,
+  X
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -47,6 +50,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   console.log('RepairDetailsDialog geöffnet:', open, 'repairId:', repairId);
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
   
   // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
@@ -68,6 +72,17 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const { data: customers } = useQuery<Customer[]>({
     queryKey: ['/api/customers'],
     enabled: open && repair?.customerId !== undefined,
+  });
+  
+  // E-Mail-Verlauf abrufen
+  const { data: emailHistoryData } = useQuery<EmailHistory[]>({
+    queryKey: ['/api/repairs', repairId, 'email-history'],
+    queryFn: async () => {
+      if (!repairId) return [];
+      const response = await apiRequest('GET', `/api/repairs/${repairId}/email-history`);
+      return response.json();
+    },
+    enabled: open && repairId !== null,
   });
   
   // Reparatur und zugehörigen Kunden finden, wenn IDs vorhanden sind

@@ -1848,6 +1848,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // SMS-Endpunkt wurde auf Kundenwunsch entfernt
 
+  // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
+  app.get("/api/repairs/:id/email-history", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // E-Mail-Verlauf für diese Reparatur abrufen
+      const emailHistory = await storage.getEmailHistoryForRepair(repairId);
+      
+      res.json(emailHistory);
+    } catch (error) {
+      console.error("Error retrieving email history for repair:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des E-Mail-Verlaufs" });
+    }
+  });
+
   // Registriere die Admin-Routen
   registerAdminRoutes(app);
   
