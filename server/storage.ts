@@ -5,7 +5,6 @@ import {
   businessSettings, type BusinessSettings, type InsertBusinessSettings,
   feedbacks, type Feedback, type InsertFeedback,
   emailTemplates, type EmailTemplate, type InsertEmailTemplate,
-  smsTemplates, type SmsTemplate, type InsertSmsTemplate,
   userDeviceTypes, type UserDeviceType, type InsertUserDeviceType,
   userBrands, type UserBrand, type InsertUserBrand,
   userModelSeries, type UserModelSeries, type InsertUserModelSeries,
@@ -19,7 +18,6 @@ import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { emailService } from "./email-service";
-import { smsService } from "./sms-service";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -98,15 +96,7 @@ export interface IStorage {
   // Email sending method (with template)
   sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean>;
   
-  // SMS template methods
-  getAllSmsTemplates(userId?: number): Promise<SmsTemplate[]>;
-  getSmsTemplate(id: number, userId?: number): Promise<SmsTemplate | undefined>;
-  createSmsTemplate(template: InsertSmsTemplate, userId?: number): Promise<SmsTemplate>;
-  updateSmsTemplate(id: number, template: Partial<InsertSmsTemplate>, userId?: number): Promise<SmsTemplate | undefined>;
-  deleteSmsTemplate(id: number, userId?: number): Promise<boolean>;
-  
-  // SMS sending method
-  sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
+  // SMS-Funktionalität wurde auf Kundenwunsch entfernt
   
   // User device types methods
   getUserDeviceTypes(userId: number): Promise<UserDeviceType[]>;
@@ -1154,146 +1144,7 @@ export class DatabaseStorage implements IStorage {
     return await emailService.sendEmailWithTemplate(templateId, to, variables);
   }
   
-  // SMS template methods
-  async getAllSmsTemplates(userId?: number): Promise<SmsTemplate[]> {
-    try {
-      // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser ID
-      if (userId) {
-        return await db
-          .select()
-          .from(smsTemplates)
-          .where(eq(smsTemplates.userId, userId))
-          .orderBy(desc(smsTemplates.createdAt));
-      }
-      
-      // Ansonsten gebe alle SMS-Vorlagen zurück
-      return await db
-        .select()
-        .from(smsTemplates)
-        .orderBy(desc(smsTemplates.createdAt));
-    } catch (error) {
-      console.error("Error retrieving SMS templates:", error);
-      return [];
-    }
-  }
-  
-  async getSmsTemplate(id: number, userId?: number): Promise<SmsTemplate | undefined> {
-    try {
-      // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser ID
-      if (userId) {
-        const [template] = await db
-          .select()
-          .from(smsTemplates)
-          .where(
-            and(
-              eq(smsTemplates.id, id),
-              eq(smsTemplates.userId, userId)
-            )
-          );
-        return template;
-      }
-      
-      // Ansonsten hole die Vorlage nur anhand der ID
-      const [template] = await db
-        .select()
-        .from(smsTemplates)
-        .where(eq(smsTemplates.id, id));
-      return template;
-    } catch (error) {
-      console.error("Error retrieving SMS template:", error);
-      return undefined;
-    }
-  }
-  
-  async createSmsTemplate(template: InsertSmsTemplate, userId?: number): Promise<SmsTemplate> {
-    try {
-      const [newTemplate] = await db.insert(smsTemplates).values({
-        ...template,
-        userId: userId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-      return newTemplate;
-    } catch (error) {
-      console.error("Error creating SMS template:", error);
-      throw new Error("Fehler beim Erstellen der SMS-Vorlage");
-    }
-  }
-  
-  async updateSmsTemplate(id: number, template: Partial<InsertSmsTemplate>, userId?: number): Promise<SmsTemplate | undefined> {
-    try {
-      // Wenn eine Benutzer-ID angegeben ist, aktualisiere nur, wenn die Vorlage dem Benutzer gehört
-      if (userId) {
-        const [updatedTemplate] = await db
-          .update(smsTemplates)
-          .set({
-            ...template,
-            updatedAt: new Date()
-          })
-          .where(
-            and(
-              eq(smsTemplates.id, id),
-              eq(smsTemplates.userId, userId)
-            )
-          )
-          .returning();
-        return updatedTemplate;
-      }
-      
-      // Ansonsten aktualisiere ohne Benutzerfilter
-      const [updatedTemplate] = await db
-        .update(smsTemplates)
-        .set({
-          ...template,
-          updatedAt: new Date()
-        })
-        .where(eq(smsTemplates.id, id))
-        .returning();
-      return updatedTemplate;
-    } catch (error) {
-      console.error("Error updating SMS template:", error);
-      return undefined;
-    }
-  }
-  
-  async deleteSmsTemplate(id: number, userId?: number): Promise<boolean> {
-    try {
-      // Wenn eine Benutzer-ID angegeben ist, lösche nur, wenn die Vorlage dem Benutzer gehört
-      if (userId) {
-        await db.delete(smsTemplates).where(
-          and(
-            eq(smsTemplates.id, id),
-            eq(smsTemplates.userId, userId)
-          )
-        );
-      } else {
-        // Ansonsten lösche ohne Benutzerfilter
-        await db.delete(smsTemplates).where(eq(smsTemplates.id, id));
-      }
-      return true;
-    } catch (error) {
-      console.error("Error deleting SMS template:", error);
-      return false;
-    }
-  }
-  
-  // SMS sending method
-  async sendSmsWithTemplate(templateId: number, phoneNumber: string, variables: Record<string, string>, userId?: number): Promise<boolean> {
-    try {
-      // Hole die SMS-Vorlage
-      const template = await this.getSmsTemplate(templateId, userId);
-      if (!template) {
-        console.error("SMS template not found");
-        return false;
-      }
-      
-      // Sende die SMS mit der Vorlage
-      return await smsService.sendSmsWithTemplate(template, phoneNumber, variables);
-    } catch (error) {
-      console.error("Error sending SMS with template:", error);
-      return false;
-    }
-  }
+  // SMS-Funktionalität wurde auf Kundenwunsch entfernt
   
   // User device types methods
   async getUserDeviceTypes(userId: number): Promise<UserDeviceType[]> {
