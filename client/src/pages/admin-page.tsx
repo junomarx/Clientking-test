@@ -39,7 +39,10 @@ import {
   Save,
   Cog,
   LayoutDashboard,
-  Menu
+  Menu,
+  Layers,
+  AlertCircle,
+  Download
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -47,6 +50,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
+import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
+import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import ToastTestDialog from "@/components/ToastTestDialog";
 
 type UserResponse = Omit<User, "password">;
@@ -1081,10 +1086,10 @@ export default function AdminPage() {
             {/* Geräte mit Unterkategorien */}
             <div className="space-y-1">
               <div 
-                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" || deviceMenuOpen ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab.startsWith("device") ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                 onClick={() => {
                   if (sidebarCollapsed) {
-                    setActiveTab("devices");
+                    setDeviceMenuOpen(!deviceMenuOpen);
                   } else {
                     setDeviceMenuOpen(!deviceMenuOpen);
                   }
@@ -1100,25 +1105,37 @@ export default function AdminPage() {
               </div>
               
               {/* Unterkategorien für Geräte */}
-              {!sidebarCollapsed && deviceMenuOpen && (
-                <div className="ml-7 space-y-1 pl-2 border-l border-gray-700">
+              {(deviceMenuOpen || sidebarCollapsed) && (
+                <div className={sidebarCollapsed ? "" : "ml-7 space-y-1 pl-2 border-l border-gray-700"}>
                   <div 
-                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
-                    onClick={() => setActiveTab("devices")}
+                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceTypes" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                    onClick={() => setActiveTab("deviceTypes")}
                   >
-                    <span className="text-sm">Geräteverwaltung</span>
+                    {sidebarCollapsed ? (
+                      <Layers className="h-5 w-5 mx-auto" />
+                    ) : (
+                      <span className="text-sm">Geräteverwaltung</span>
+                    )}
                   </div>
                   <div 
-                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
-                    onClick={() => setActiveTab("devices")}
+                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                    onClick={() => setActiveTab("deviceIssues")}
                   >
-                    <span className="text-sm">Problemkatalog</span>
+                    {sidebarCollapsed ? (
+                      <AlertCircle className="h-5 w-5 mx-auto" />
+                    ) : (
+                      <span className="text-sm">Problemkatalog</span>
+                    )}
                   </div>
                   <div 
-                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
-                    onClick={() => setActiveTab("devices")}
+                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceImport" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                    onClick={() => setActiveTab("deviceImport")}
                   >
-                    <span className="text-sm">Importieren</span>
+                    {sidebarCollapsed ? (
+                      <Download className="h-5 w-5 mx-auto" />
+                    ) : (
+                      <span className="text-sm">Importieren</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -1172,7 +1189,22 @@ export default function AdminPage() {
           <div className="bg-white rounded-md p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
-            {activeTab === "devices" && <DeviceManagementTab />}
+            {activeTab === "deviceTypes" && <DeviceTypeSettings />}
+            {activeTab === "deviceIssues" && <DeviceIssuesTab />}
+            {activeTab === "deviceImport" && (
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Hier können Sie Gerätedaten (Typen, Marken, Modelle) importieren.
+                  </p>
+                  <input type="file" accept=".json" className="w-full" />
+                  <Button className="w-full">
+                    <Download className="h-4 w-4 mr-2" /> Importieren
+                  </Button>
+                </div>
+              </div>
+            )}
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
           </div>
@@ -1247,7 +1279,22 @@ export default function AdminPage() {
           <div className="bg-white rounded-md shadow-sm p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
-            {activeTab === "devices" && <DeviceManagementTab />}
+            {activeTab === "deviceTypes" && <DeviceTypeSettings />}
+            {activeTab === "deviceIssues" && <DeviceIssuesTab />}
+            {activeTab === "deviceImport" && (
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Hier können Sie Gerätedaten (Typen, Marken, Modelle) importieren.
+                  </p>
+                  <input type="file" accept=".json" className="w-full" />
+                  <Button className="w-full">
+                    <Download className="h-4 w-4 mr-2" /> Importieren
+                  </Button>
+                </div>
+              </div>
+            )}
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
           </div>
