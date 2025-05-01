@@ -1441,7 +1441,7 @@ export default function AdminPage() {
   }
   
   return (
-    <div className="container mx-auto py-6 space-y-6 max-w-4xl">
+    <div className="container mx-auto py-6 space-y-6 max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8">
         <div className="mb-4 sm:mb-0">
           <h1 className="text-3xl font-bold tracking-tight">Administrationsbereich</h1>
@@ -1458,81 +1458,41 @@ export default function AdminPage() {
         </Button>
       </div>
       
-      <div className="flex">
-        {/* Seitenleiste für Navigation */}
-        <div className="hidden sm:block w-64 bg-white rounded-md shadow-sm p-4 mr-4">
-          <nav className="space-y-2">
-            <Button 
-              variant={activeTab === "dashboard" ? "default" : "ghost"} 
-              className="w-full justify-start" 
-              onClick={() => setActiveTab("dashboard")}
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Dashboard
-            </Button>
-            
-            <Button 
-              variant={activeTab === "users" ? "default" : "ghost"} 
-              className="w-full justify-start" 
-              onClick={() => setActiveTab("users")}
-            >
-              <Users className="mr-2 h-4 w-4" />
-              Benutzer
-            </Button>
-            
-            <Button 
-              variant={activeTab === "devices" ? "default" : "ghost"} 
-              className="w-full justify-start" 
-              onClick={() => setActiveTab("devices")}
-            >
-              <Smartphone className="mr-2 h-4 w-4" />
-              Geräte
-            </Button>
-            
-            <Button 
-              variant={activeTab === "system" ? "default" : "ghost"} 
-              className="w-full justify-start" 
-              onClick={() => setActiveTab("system")}
-            >
-              <Cog className="mr-2 h-4 w-4" />
-              Systemdiagnose
-            </Button>
-            
-            <Button 
-              variant={activeTab === "backup" ? "default" : "ghost"} 
-              className="w-full justify-start" 
-              onClick={() => setActiveTab("backup")}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Backup & Restore
-            </Button>
-          </nav>
-        </div>
-        
-        {/* Mobile Navigation */}
-        <div className="block sm:hidden w-full mb-4">
-          <Select value={activeTab} onValueChange={setActiveTab}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Navigation" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="dashboard">Dashboard</SelectItem>
-              <SelectItem value="users">Benutzer</SelectItem>
-              <SelectItem value="devices">Geräte</SelectItem>
-              <SelectItem value="system">Systemdiagnose</SelectItem>
-              <SelectItem value="backup">Backup & Restore</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Hauptinhalt */}
-        <div className="flex-1">
-          {activeTab === "dashboard" && <AdminDashboard />}
-          {activeTab === "users" && <UserTable />}
-          {activeTab === "devices" && <DeviceManagementTab />}
-          {activeTab === "system" && <SystemDiagnosticTab />}
-          {activeTab === "backup" && <BackupRestoreTab />}
-        </div>
+      <div className="bg-background rounded-md shadow-sm p-4 mb-6">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="flex w-full flex-col space-y-2 sm:flex-row sm:space-y-0">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="users">Benutzer</TabsTrigger>
+            <TabsTrigger value="devices">
+              <div className="flex items-center gap-1">
+                <Smartphone className="h-4 w-4" />
+                Geräte
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="system">Systemdiagnose</TabsTrigger>
+            <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-4 mt-6">
+            <AdminDashboard />
+          </TabsContent>
+
+          <TabsContent value="users" className="mt-6">
+            <UserTable />
+          </TabsContent>
+
+          <TabsContent value="devices" className="mt-6">
+            <DeviceManagementTab />
+          </TabsContent>
+
+          <TabsContent value="system" className="mt-6">
+            <SystemDiagnosticTab />
+          </TabsContent>
+
+          <TabsContent value="backup" className="mt-6">
+            <BackupRestoreTab />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
