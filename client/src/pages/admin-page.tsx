@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   ChevronLeft, 
+  ChevronRight,
   Check, 
   X, 
   MoreVertical, 
@@ -38,7 +39,8 @@ import {
   Save,
   Cog,
   LayoutDashboard,
-  Palette
+  Palette,
+  Menu
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -410,7 +412,7 @@ function SystemDiagnosticTab() {
         email: { status: string; issues: string[] | null };
         performance: { memoryUsage: number; cpuUsage: number };
       };
-    },
+    }
   });
   
   const runDiagnosticsMutation = useMutation({
@@ -628,7 +630,7 @@ function ActivityLogTab() {
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium">{log.username}</p>
                         <p className="text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 inline mr-1" />
+                          <span className="mr-1">⏰</span>
                           {new Date(log.timestamp).toLocaleString()}
                         </p>
                       </div>
