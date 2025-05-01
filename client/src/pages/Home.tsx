@@ -8,6 +8,7 @@ import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/S
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
+import { SettingsDialogNew } from '@/components/settings/SettingsDialogNew';
 
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
@@ -16,6 +17,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [searchParam, setSearchParam] = useState<string>('');
   const [location] = useLocation();
@@ -30,6 +32,10 @@ export default function Home() {
     if (tabParam) {
       if (['dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates'].includes(tabParam as Tab)) {
         setActiveTab(tabParam as Tab);
+      }
+      // Settings-Dialog öffnen, wenn der Tab "settings" ist
+      else if (tabParam === 'settings') {
+        setIsSettingsOpen(true);
       }
     }
     
@@ -109,7 +115,15 @@ export default function Home() {
         customerId={selectedCustomerId}
       />
       
-
+      {/* Einstellungs-Dialog */}
+      <SettingsDialogNew
+        open={isSettingsOpen}
+        onClose={() => {
+          setIsSettingsOpen(false);
+          // Wenn wir über die URL zu den Einstellungen gekommen sind, entferne 'tab=settings' aus der URL
+          window.history.pushState({}, '', '/app');
+        }}
+      />
     </div>
   );
 }
