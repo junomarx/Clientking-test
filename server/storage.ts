@@ -540,16 +540,23 @@ export class DatabaseStorage implements IStorage {
     return updatedRepair;
   }
   
-  async updateRepairSignature(id: number, signature: string): Promise<Repair | undefined> {
+  async updateRepairSignature(id: number, signature: string, type: 'dropoff' | 'pickup' = 'dropoff'): Promise<Repair | undefined> {
     const now = new Date();
+    
+    // Je nach Typ (Abgabe oder Abholung) unterschiedliche Spalten aktualisieren
+    const updateData = type === 'dropoff' ? {
+      dropoffSignature: signature,
+      dropoffSignedAt: now,
+      updatedAt: now
+    } : {
+      pickupSignature: signature,
+      pickupSignedAt: now,
+      updatedAt: now
+    };
     
     const [updatedRepair] = await db
       .update(repairs)
-      .set({
-        customerSignature: signature,
-        signedAt: now,
-        updatedAt: now
-      })
+      .set(updateData)
       .where(eq(repairs.id, id))
       .returning();
     

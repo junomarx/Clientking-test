@@ -1877,6 +1877,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
   // API-Endpunkt zum Speichern einer digitalen Unterschrift für eine Reparatur
+  // API-Endpunkt zum Speichern einer digitalen Unterschrift für eine Reparatur
+  // Zwei Arten von Unterschriften werden unterstützt: Abgabe (dropoff) und Abholung (pickup)
+  app.patch("/api/repairs/:id/signature/:type", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const signatureType = req.params.type as 'dropoff' | 'pickup';
+      const { signature } = req.body;
+      
+      // Prüfen, ob der Signatur-Typ gültig ist
+      if (signatureType !== 'dropoff' && signatureType !== 'pickup') {
+        return res.status(400).json({ message: "Ungültiger Signatur-Typ. Erlaubt sind 'dropoff' oder 'pickup'" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Unterschrift und Zeitstempel speichern
+      const updatedRepair = await storage.updateRepairSignature(repairId, signature, signatureType);
+      
+      res.json(updatedRepair);
+    } catch (error) {
+      console.error("Error saving signature:", error);
+      res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
+    }
+  });
+  
+  // Alten Endpunkt für Rückwärtskompatibilität beibehalten (verwendet standardmäßig 'dropoff')
   app.patch("/api/repairs/:id/signature", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairId = parseInt(req.params.id);
@@ -1892,8 +1926,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      // Unterschrift und Zeitstempel speichern
-      const updatedRepair = await storage.updateRepairSignature(repairId, signature);
+      // Unterschrift und Zeitstempel speichern (Standard: Abgabe-Unterschrift)
+      const updatedRepair = await storage.updateRepairSignature(repairId, signature, 'dropoff');
       
       res.json(updatedRepair);
     } catch (error) {

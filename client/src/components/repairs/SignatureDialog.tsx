@@ -19,18 +19,41 @@ interface SignatureDialogProps {
   onClose: () => void;
   repairId: number | null;
   repair?: Repair | null;
+  // Signatur-Typ: 'dropoff' für die Abgabe des Geräts, 'pickup' für die Abholung
+  signatureType?: 'dropoff' | 'pickup';
 }
 
-export function SignatureDialog({ open, onClose, repairId, repair }: SignatureDialogProps) {
+export function SignatureDialog({ 
+  open, 
+  onClose, 
+  repairId, 
+  repair, 
+  signatureType = 'dropoff' 
+}: SignatureDialogProps) {
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  
+  // Titel und Beschreibung je nach Signatur-Typ
+  const isDropoff = signatureType === 'dropoff';
+  const dialogTitle = isDropoff 
+    ? `Unterschrift bei Abgabe für Auftrag ${repair?.orderCode || `#${repairId}`}` 
+    : `Unterschrift bei Abholung für Auftrag ${repair?.orderCode || `#${repairId}`}`;
+  const dialogDescription = isDropoff
+    ? 'Bitte unterschreiben Sie hier zur Bestätigung der Geräteabgabe zur Reparatur.'
+    : 'Bitte unterschreiben Sie hier zur Bestätigung der Geräteabholung nach der Reparatur.';
+  
+  // Anfangswert für die Signatur je nach Typ
+  const initialSignature = isDropoff 
+    ? repair?.dropoffSignature 
+    : repair?.pickupSignature;
   
   // Mutation zum Speichern der Unterschrift
   const signatureMutation = useMutation({
     mutationFn: async (signature: string) => {
       if (!repairId) throw new Error('Keine Reparatur-ID angegeben');
       
-      const response = await apiRequest('PATCH', `/api/repairs/${repairId}/signature`, {
+      // API-Endpunkt mit Signatur-Typ
+      const response = await apiRequest('PATCH', `/api/repairs/${repairId}/signature/${signatureType}`, {
         signature,
       });
       
@@ -46,9 +69,12 @@ export function SignatureDialog({ open, onClose, repairId, repair }: SignatureDi
       queryClient.invalidateQueries({queryKey: ['/api/repairs']});
       queryClient.invalidateQueries({queryKey: ['/api/repairs', repairId]});
       
+      // Erfolgsbenachrichtigung mit passender Nachricht
       toast({
         title: 'Unterschrift gespeichert',
-        description: 'Die digitale Unterschrift wurde erfolgreich gespeichert.',
+        description: isDropoff 
+          ? 'Die digitale Abgabe-Unterschrift wurde erfolgreich gespeichert.' 
+          : 'Die digitale Abholungs-Unterschrift wurde erfolgreich gespeichert.',
         variant: 'success',
       });
       
@@ -75,9 +101,9 @@ export function SignatureDialog({ open, onClose, repairId, repair }: SignatureDi
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Unterschrift für Auftrag {repair?.orderCode || `#${repairId}`}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Bitte unterschreiben Sie hier, um den Reparaturauftrag zu bestätigen.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         
@@ -92,7 +118,7 @@ export function SignatureDialog({ open, onClose, repairId, repair }: SignatureDi
               onCancel={onClose}
               width={340}
               height={200}
-              initialValue={repair?.customerSignature || undefined}
+              initialValue={initialSignature || undefined}
             />
           )}
         </div>
