@@ -11,7 +11,7 @@ if (clearCacheOnStartup) {
   clearAllBrands();
   clearAllModels();
   clearAllDeviceTypes();
-  console.log('Cache für Gerätearten und Marken wurde beim Start gelöscht');
+  console.log('Cache für Gerätearten und Hersteller wurde beim Start gelöscht');
 }
 
 createRoot(document.getElementById("root")!).render(<App />);

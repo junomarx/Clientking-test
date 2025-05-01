@@ -15,7 +15,7 @@ export const isPortraitMode = (): boolean => {
   return !isLandscapeMode();
 };
 
-// Standardwerte für die unterstützten Gerätetypen und Marken
+// Standardwerte für die unterstützten Gerätetypen und Herstellern
 export const defaultBrands: { [key: string]: string[] } = {
   smartphone: ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Google', 'Sony', 'LG', 'Motorola', 'Nokia'],
   tablet: ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Microsoft', 'Amazon', 'Asus', 'Acer', 'LG'],
@@ -44,7 +44,7 @@ export const deleteModelLegacy = (deviceType: string, brand: string, model: stri
 /**
  * Speichert ein Modell in der Datenbank mit intelligenter Hierarchie-Verwaltung
  * 
- * Diese Funktion prüft, ob der Gerätetyp, die Marke und ggf. die Modellserie bereits existieren.
+ * Diese Funktion prüft, ob der Gerätetyp, die Hersteller und ggf. die Modellserie bereits existieren.
  * Falls nicht, werden diese erstellt, bevor das Modell gespeichert wird.
  */
 export function saveModelIntelligent(
@@ -77,9 +77,9 @@ export function saveModelIntelligent(
     });
   };
   
-  // Hilfsfunktion zum Erstellen eines Modells direkt für eine Marke
+  // Hilfsfunktion zum Erstellen eines Modells direkt für eine Hersteller
   const createModelForBrand = (brandId: number) => {
-    console.log(`Erstelle Modell '${model}' direkt für Marke ID ${brandId}`);
+    console.log(`Erstelle Modell '${model}' direkt für Hersteller ID ${brandId}`);
     createModelMutation.mutate({
       brandId: brandId,
       names: [model]
@@ -90,7 +90,7 @@ export function saveModelIntelligent(
   if (!deviceTypeId && deviceType) {
     createDeviceTypeMutation.mutate({ name: deviceType }, {
       onSuccess: (newDeviceType: any) => {
-        // 2. Überprüfen, ob die Marke existiert, sonst erstellen
+        // 2. Überprüfen, ob die Hersteller existiert, sonst erstellen
         if (brand) {
           createBrandMutation.mutate({
             name: brand,
@@ -107,7 +107,7 @@ export function saveModelIntelligent(
                   onSuccess: createModelForSeries
                 });
               } else {
-                // Wenn keine Modellreihe, direkt zur Marke hinzufügen
+                // Wenn keine Modellreihe, direkt zur Hersteller hinzufügen
                 createModelForBrand(newBrand.id);
               }
             }
@@ -116,7 +116,7 @@ export function saveModelIntelligent(
       }
     });
   } else if (deviceTypeId && !brandId && brand) {
-    // Wenn der Gerätetyp existiert, aber die Marke nicht
+    // Wenn der Gerätetyp existiert, aber die Hersteller nicht
     createBrandMutation.mutate({
       name: brand,
       deviceTypeId: deviceTypeId
@@ -131,13 +131,13 @@ export function saveModelIntelligent(
             onSuccess: createModelForSeries
           });
         } else {
-          // Wenn keine Modellreihe, direkt zur Marke hinzufügen
+          // Wenn keine Modellreihe, direkt zur Hersteller hinzufügen
           createModelForBrand(newBrand.id);
         }
       }
     });
   } else if (deviceTypeId && brandId) {
-    // Wenn sowohl Gerätetyp als auch Marke existieren
+    // Wenn sowohl Gerätetyp als auch Hersteller existieren
     if (modelSeries && modelSeries.trim() !== '') {
       // Prüfen, ob die Modellreihe bereits existiert
       createModelSeriesMutation.mutate({
@@ -147,7 +147,7 @@ export function saveModelIntelligent(
         onSuccess: createModelForSeries
       });
     } else {
-      // Wenn keine Modellreihe, direkt zur Marke hinzufügen
+      // Wenn keine Modellreihe, direkt zur Hersteller hinzufügen
       createModelForBrand(brandId);
     }
   }

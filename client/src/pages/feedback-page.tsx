@@ -262,7 +262,7 @@ export default function FeedbackPage() {
                     <p>{translateDeviceType(feedbackData.repair.deviceType)}</p>
                   </div>
                   <div>
-                    <span className="font-medium">Marke/Modell:</span>
+                    <span className="font-medium">Hersteller/Modell:</span>
                     <p>{feedbackData.repair.brand} {feedbackData.repair.model}</p>
                   </div>
                   <div className="col-span-2">

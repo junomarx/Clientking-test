@@ -108,10 +108,10 @@ function TitleUpdater() {
 // Component to clear cache on app start
 function CacheClearer() {
   useEffect(() => {
-    // Löscht alle gespeicherten Marken und Modelle beim Start der App
+    // Löscht alle gespeicherten Hersteller und Modelle beim Start der App
     clearAllBrands();
     clearAllModels();
-    console.log('Cache für Gerätearten und Marken wurde beim Start gelöscht');
+    console.log('Cache für Gerätearten und Hersteller wurde beim Start gelöscht');
   }, []);
   
   return null;

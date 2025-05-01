@@ -26,9 +26,9 @@ export const saveModelDb = (
   }
   
   if (!brandId) {
-    console.log("Marke existiert nicht in der Datenbank - wird erstellt");
+    console.log("Hersteller existiert nicht in der Datenbank - wird erstellt");
     if (deviceTypeId) {
-      // Marke erstellen
+      // Hersteller erstellen
       createBrandMut.mutate({ 
         name: brand,
         deviceTypeId: deviceTypeId

@@ -72,16 +72,16 @@ interface Model {
 // Schema für das Formular
 const modelFormSchema = z.object({
   deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
-  brandId: z.string().min(1, 'Marke muss ausgewählt sein'),
+  brandId: z.string().min(1, 'Hersteller muss ausgewählt sein'),
   models: z.string().min(1, 'Bitte geben Sie mindestens ein Modell ein')
 });
 
 type ModelFormValues = z.infer<typeof modelFormSchema>;
 
-// Schema für neue Marke
+// Schema für neue Hersteller
 const newBrandSchema = z.object({
   deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
-  name: z.string().min(1, 'Markenname darf nicht leer sein')
+  name: z.string().min(1, 'Herstellernname darf nicht leer sein')
 });
 
 type NewBrandFormValues = z.infer<typeof newBrandSchema>;
@@ -108,7 +108,7 @@ export function ModelManagementTab() {
     }
   });
 
-  // Formular für neue Marke
+  // Formular für neue Hersteller
   const brandForm = useForm<NewBrandFormValues>({
     resolver: zodResolver(newBrandSchema),
     defaultValues: {
@@ -126,7 +126,7 @@ export function ModelManagementTab() {
     }
   });
 
-  // Marken abrufen
+  // Herstellern abrufen
   const { data: brands, isLoading: isLoadingBrands } = useQuery<Brand[]>({
     queryKey: ['/api/brands', selectedDeviceType],
     queryFn: async () => {
@@ -153,7 +153,7 @@ export function ModelManagementTab() {
     enabled: !!selectedDeviceType && !!selectedBrand
   });
 
-  // Wenn Gerätetyp oder Marke geändert wird, hole Modelle und aktualisiere Textfeld
+  // Wenn Gerätetyp oder Hersteller geändert wird, hole Modelle und aktualisiere Textfeld
   useEffect(() => {
     if (selectedDeviceType && selectedBrand && existingModels) {
       setModels(existingModels);
@@ -173,7 +173,7 @@ export function ModelManagementTab() {
     
     if (deviceTypeId) {
       setSelectedDeviceType(deviceTypeId);
-      // Zurücksetzen der Marke
+      // Zurücksetzen der Hersteller
       form.setValue('brandId', '');
       setSelectedBrand(null);
     } else {
@@ -181,7 +181,7 @@ export function ModelManagementTab() {
     }
   }, [form.watch('deviceTypeId')]);
 
-  // Wenn sich die Marke im Formular ändert
+  // Wenn sich die Hersteller im Formular ändert
   useEffect(() => {
     const brandId = form.watch('brandId');
     
@@ -192,7 +192,7 @@ export function ModelManagementTab() {
     }
   }, [form.watch('brandId')]);
 
-  // Für das Hinzufügen einer neuen Marke
+  // Für das Hinzufügen einer neuen Hersteller
   const addBrandMutation = useMutation({
     mutationFn: async (data: NewBrandFormValues) => {
       const res = await apiRequest('POST', '/api/brands', {
@@ -206,19 +206,19 @@ export function ModelManagementTab() {
       brandForm.reset();
       queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
       
-      // Automatisch die neue Marke auswählen
+      // Automatisch die neue Hersteller auswählen
       form.setValue('brandId', newBrand.id.toString());
       setSelectedBrand(newBrand.id.toString());
       
       toast({
-        title: 'Marke hinzugefügt',
-        description: `Die Marke ${newBrand.name} wurde erfolgreich hinzugefügt.`
+        title: 'Hersteller hinzugefügt',
+        description: `Die Hersteller ${newBrand.name} wurde erfolgreich hinzugefügt.`
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Hinzufügen der Marke: ${error.message}`,
+        description: `Fehler beim Hinzufügen der Hersteller: ${error.message}`,
         variant: 'destructive'
       });
     }
@@ -268,7 +268,7 @@ export function ModelManagementTab() {
     if (!data.deviceTypeId || !data.brandId || !data.models) {
       toast({
         title: 'Fehler',
-        description: 'Bitte wählen Sie Gerätetyp und Marke aus und geben Sie mindestens ein Modell ein.',
+        description: 'Bitte wählen Sie Gerätetyp und Hersteller aus und geben Sie mindestens ein Modell ein.',
         variant: 'destructive'
       });
       return;
@@ -324,7 +324,7 @@ export function ModelManagementTab() {
               ? "Als Administrator können Sie Modelle hinzufügen und bearbeiten, die von allen Benutzern verwendet werden können."
               : "Die Modelle werden zentral verwaltet. Als normaler Benutzer können Sie Modelle nur ansehen, aber nicht bearbeiten."
             }
-            Wählen Sie Gerätetyp und Marke aus, um die verfügbaren Modelle zu sehen.
+            Wählen Sie Gerätetyp und Hersteller aus, um die verfügbaren Modelle zu sehen.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -366,7 +366,7 @@ export function ModelManagementTab() {
                     name="brandId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Marke</FormLabel>
+                        <FormLabel>Hersteller</FormLabel>
                         <div className="flex gap-2">
                           <Select
                             onValueChange={field.onChange}
@@ -376,7 +376,7 @@ export function ModelManagementTab() {
                           >
                             <FormControl>
                               <SelectTrigger className="flex-1">
-                                <SelectValue placeholder={selectedDeviceType ? "Marke auswählen" : "Erst Gerätetyp wählen"} />
+                                <SelectValue placeholder={selectedDeviceType ? "Hersteller auswählen" : "Erst Gerätetyp wählen"} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -481,13 +481,13 @@ export function ModelManagementTab() {
         </CardContent>
       </Card>
 
-      {/* Dialog zum Hinzufügen einer neuen Marke */}
+      {/* Dialog zum Hinzufügen einer neuen Hersteller */}
       <Dialog open={isAddBrandDialogOpen} onOpenChange={setIsAddBrandDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neue Marke hinzufügen</DialogTitle>
+            <DialogTitle>Neue Hersteller hinzufügen</DialogTitle>
             <DialogDescription>
-              Fügen Sie eine neue Marke für Ihre Geräte hinzu.
+              Fügen Sie eine neue Hersteller für Ihre Geräte hinzu.
             </DialogDescription>
           </DialogHeader>
           <Form {...brandForm}>

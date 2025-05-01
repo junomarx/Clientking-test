@@ -179,12 +179,12 @@ interface StoredModelSeries {
   [key: string]: string[]; // Format: "deviceType:brand" => ["Modellreihe 1", "Modellreihe 2", ...]
 }
 
-// Typ für gespeicherte Marken
+// Typ für gespeicherte Herstellern
 interface StoredBrands {
-  [key: string]: string[]; // Format: "deviceType" => ["Marke 1", "Marke 2", ...]
+  [key: string]: string[]; // Format: "deviceType" => ["Hersteller 1", "Hersteller 2", ...]
 }
 
-// Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Marke/Modellreihe-Kombination
+// Funktion zum Speichern eines Modells für eine bestimmte Gerätetyp/Hersteller/Modellreihe-Kombination
 export const saveModel = (deviceType: string, brand: string, modelSeries: string, model: string): void => {
   if (!deviceType || !brand || !model) return;
   
@@ -218,7 +218,7 @@ export const saveModelLegacy = (deviceType: string, brand: string, model: string
   saveModel(deviceType, brand, 'default', model);
 };
 
-// Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp, Marke und Modellreihe
+// Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp, Hersteller und Modellreihe
 export const getModelsForDeviceAndBrandAndSeries = (deviceType: string, brand: string, modelSeries: string): string[] => {
   if (!deviceType || !brand) return [];
   
@@ -236,8 +236,8 @@ export const getModelsForDeviceAndBrandAndSeries = (deviceType: string, brand: s
   }
 };
 
-// Legacy-Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp und Marke
-// Diese Funktion sammelt alle Modelle aus allen Modellreihen einer Marke
+// Legacy-Funktion zum Abrufen von gespeicherten Modellen für einen bestimmten Gerätetyp und Hersteller
+// Diese Funktion sammelt alle Modelle aus allen Modellreihen einer Hersteller
 export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
   if (!deviceType || !brand) return [];
   
@@ -250,7 +250,7 @@ export const getModelsForDeviceAndBrand = (deviceType: string, brand: string): s
     const storedModels: StoredModels = JSON.parse(storedData);
     let allModels: string[] = [];
     
-    // Sammle alle Modelle aller Modellreihen für diesen Gerätetyp und diese Marke
+    // Sammle alle Modelle aller Modellreihen für diesen Gerätetyp und diese Hersteller
     Object.keys(storedModels).forEach(key => {
       if (key.startsWith(baseKey)) {
         allModels = [...allModels, ...storedModels[key]];
@@ -359,7 +359,7 @@ export const saveModelSeries = (deviceType: string, brand: string, modelSeries: 
   }
 };
 
-// Funktion zum Abrufen von gespeicherten Modellreihen für einen bestimmten Gerätetyp und Marke
+// Funktion zum Abrufen von gespeicherten Modellreihen für einen bestimmten Gerätetyp und Hersteller
 export const getModelSeriesForDeviceAndBrand = (deviceType: string, brand: string): string[] => {
   if (!deviceType || !brand) return [];
   
@@ -406,7 +406,7 @@ export const deleteModelSeries = (deviceType: string, brand: string, modelSeries
   }
 };
 
-// Funktion zum Löschen aller Modellreihen für eine bestimmte Geräte-Marke-Kombination
+// Funktion zum Löschen aller Modellreihen für eine bestimmte Geräte-Hersteller-Kombination
 export const deleteAllModelSeriesForDeviceAndBrand = (deviceType: string, brand: string): void => {
   if (!deviceType || !brand) return;
   
@@ -419,7 +419,7 @@ export const deleteAllModelSeriesForDeviceAndBrand = (deviceType: string, brand:
     const storedModelSeries: StoredModelSeries = JSON.parse(storedData);
     
     if (storedModelSeries[key]) {
-      // Entferne den kompletten Eintrag für diese Geräte-Marke-Kombination
+      // Entferne den kompletten Eintrag für diese Geräte-Hersteller-Kombination
       delete storedModelSeries[key];
       
       // Speichere die aktualisierte Liste
@@ -427,7 +427,7 @@ export const deleteAllModelSeriesForDeviceAndBrand = (deviceType: string, brand:
       console.log(`Alle Modellreihen für ${deviceType} - ${brand} wurden gelöscht.`);
     }
   } catch (err) {
-    console.error('Fehler beim Löschen aller Modellreihen für eine Geräte-Marke-Kombination:', err);
+    console.error('Fehler beim Löschen aller Modellreihen für eine Geräte-Hersteller-Kombination:', err);
   }
 };
 
@@ -451,7 +451,7 @@ export const clearAllModels = (): void => {
   }
 };
 
-// Funktionen für die Marken-Verwaltung
+// Funktionen für die Herstellern-Verwaltung
 export const saveBrand = (deviceType: string, brand: string): void => {
   if (!deviceType || !brand) return;
   
@@ -464,7 +464,7 @@ export const saveBrand = (deviceType: string, brand: string): void => {
     try {
       storedBrands = JSON.parse(storedData);
     } catch (err) {
-      console.error('Fehler beim Parsen der gespeicherten Marken:', err);
+      console.error('Fehler beim Parsen der gespeicherten Herstellern:', err);
     }
   }
   
@@ -473,14 +473,14 @@ export const saveBrand = (deviceType: string, brand: string): void => {
     storedBrands[key] = [];
   }
   
-  // Füge Marke hinzu, wenn sie noch nicht existiert
+  // Füge Hersteller hinzu, wenn sie noch nicht existiert
   if (!storedBrands[key].includes(brand)) {
     storedBrands[key].push(brand);
     localStorage.setItem(getSavedBrandsKey(), JSON.stringify(storedBrands));
   }
 };
 
-// Funktion zum Abrufen von gespeicherten Marken für einen bestimmten Gerätetyp
+// Funktion zum Abrufen von gespeicherten Herstellern für einen bestimmten Gerätetyp
 export const getBrandsForDeviceType = (deviceType: string): string[] => {
   if (!deviceType) return [];
   
@@ -493,12 +493,12 @@ export const getBrandsForDeviceType = (deviceType: string): string[] => {
     const storedBrands: StoredBrands = JSON.parse(storedData);
     return storedBrands[key] || [];
   } catch (err) {
-    console.error('Fehler beim Abrufen der gespeicherten Marken:', err);
+    console.error('Fehler beim Abrufen der gespeicherten Herstellern:', err);
     return [];
   }
 };
 
-// Funktion zum Löschen einer einzelnen Marke
+// Funktion zum Löschen einer einzelnen Hersteller
 export const deleteBrand = (deviceType: string, brand: string): void => {
   if (!deviceType) return;
   
@@ -511,7 +511,7 @@ export const deleteBrand = (deviceType: string, brand: string): void => {
     const storedBrands: StoredBrands = JSON.parse(storedData);
     
     if (storedBrands[key]) {
-      // Filtere die zu löschende Marke heraus
+      // Filtere die zu löschende Hersteller heraus
       storedBrands[key] = storedBrands[key].filter(b => b !== brand);
       
       // Wenn die Liste für diesen Key leer ist, entferne den Key
@@ -523,17 +523,17 @@ export const deleteBrand = (deviceType: string, brand: string): void => {
       localStorage.setItem(getSavedBrandsKey(), JSON.stringify(storedBrands));
     }
   } catch (err) {
-    console.error('Fehler beim Löschen der Marke:', err);
+    console.error('Fehler beim Löschen der Hersteller:', err);
   }
 };
 
-// Funktion zum Zurücksetzen aller gespeicherten Marken
+// Funktion zum Zurücksetzen aller gespeicherten Herstellern
 export const clearAllBrands = (): void => {
   try {
     localStorage.removeItem(getSavedBrandsKey());
-    console.log('Alle gespeicherten Marken wurden gelöscht.');
+    console.log('Alle gespeicherten Herstellern wurden gelöscht.');
   } catch (err) {
-    console.error('Fehler beim Zurücksetzen aller Marken:', err);
+    console.error('Fehler beim Zurücksetzen aller Herstellern:', err);
   }
 };
 
@@ -732,7 +732,7 @@ export const getIssuesForDeviceType = (deviceType: string): string[] => {
       // Trenne Löschmarker von regulären Fehlerbeschreibungen
       customIssues = storedItems.filter(item => !item.startsWith('__DELETE__'));
       
-      // Extrahiere die zu löschenden Fehlerbeschreibungen aus den Markern
+      // Extrahiere die zu löschenden Fehlerbeschreibungen aus den Herstellerrn
       deletedIssues = storedItems
         .filter(item => item.startsWith('__DELETE__'))
         .map(item => item.replace('__DELETE__', ''));
@@ -782,11 +782,11 @@ export const deleteIssue = (deviceType: string, issue: string): void => {
   // 1. Lösche die vorhandene Fehlerbeschreibung, falls vorhanden
   storedIssues[key] = storedIssues[key].filter(i => i !== issue);
   
-  // 2. Füge einen Marker ein, der anzeigt, dass diese Fehlerbeschreibung gelöscht werden soll
-  // Wir verwenden ein spezielles Präfix für den Marker
-  const deleteMarker = `__DELETE__${issue}`;
-  if (!storedIssues[key].includes(deleteMarker)) {
-    storedIssues[key].push(deleteMarker);
+  // 2. Füge einen Herstellerr ein, der anzeigt, dass diese Fehlerbeschreibung gelöscht werden soll
+  // Wir verwenden ein spezielles Präfix für den Herstellerr
+  const deleteHerstellerr = `__DELETE__${issue}`;
+  if (!storedIssues[key].includes(deleteHerstellerr)) {
+    storedIssues[key].push(deleteHerstellerr);
   }
       
   // Speichere die aktualisierte Liste
