@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, ArrowDownWideNarrow, Settings, Check, PhoneCall, AlertCircle } from 'lucide-react';
+import { Search, Filter, ArrowDownWideNarrow, Settings, Check, PhoneCall, AlertCircle, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ const fallbackData: any[] = [];
 export default function DesignPreviewPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('datum');
+  const [collapsed, setCollapsed] = useState(false);
   
   // Echte Daten aus der API abrufen
   const { data: repairs = fallbackData, isLoading } = useQuery<Repair[]>({
@@ -38,48 +39,66 @@ export default function DesignPreviewPage() {
   return (
     <div className="flex h-screen">
       {/* Seitenleiste - fixiert am linken Rand in dunkler Farbe */}
-      <div className="w-64 bg-gray-900 text-white fixed h-full p-6">
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">YOURLOGO</h2>
+      <div 
+        className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out`}
+        style={{ paddingLeft: collapsed ? '0.75rem' : '1.5rem', paddingRight: collapsed ? '0.75rem' : '1.5rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
+      >
+        <div className="mb-8 flex items-center justify-center md:justify-start">
+          {collapsed ? (
+            <div className="flex justify-center w-full">
+              <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
+                LP
+              </div>
+            </div>
+          ) : (
+            <h2 className="text-xl font-bold">YOURLOGO</h2>
+          )}
         </div>
         
         <nav className="space-y-4">
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-blue-400 font-medium">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2zM3 16a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
-            </svg>
-            Dashboard
+            <Menu className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="ml-3">Dashboard</span>}
           </div>
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
               <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
             </svg>
-            Übersicht
+            {!collapsed && <span className="ml-3">Übersicht</span>}
           </div>
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            Reparaturen
+            {!collapsed && <span className="ml-3">Reparaturen</span>}
           </div>
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
             </svg>
-            Kunden
+            {!collapsed && <span className="ml-3">Kunden</span>}
           </div>
           <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
             </svg>
-            Statistik
+            {!collapsed && <span className="ml-3">Statistik</span>}
           </div>
         </nav>
       </div>
       
+      {/* Toggle Button für die Seitenleiste */}
+      <div 
+        className={`fixed z-10 bg-gray-900 text-white rounded-full flex items-center justify-center w-6 h-6 cursor-pointer transition-all duration-300 ease-in-out ${collapsed ? 'left-14' : 'left-60'}`}
+        style={{ top: '1.5rem' }} 
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </div>
+
       {/* Hauptbereich - über gesamte Breite minus Seitenleiste */}
-      <div className="ml-64 flex-1 bg-white text-gray-800 w-full">
+      <div className={`${collapsed ? 'ml-16' : 'ml-64'} flex-1 bg-white text-gray-800 w-full transition-all duration-300 ease-in-out`}>
         {/* Header - über volle Breite */}
         <div className="p-6 flex justify-between items-center border-b shadow-sm bg-white">
           <div>
