@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,8 @@ import {
   Users,
   Save,
   Cog,
-  LayoutDashboard
+  LayoutDashboard,
+  Palette
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -1095,6 +1096,15 @@ export default function AdminPage() {
           >
             <Save className="h-4 w-4 mr-2" /> Backup & Restore
           </Button>
+          
+          <Link href="/admin/design-preview">
+            <Button 
+              variant="outline"
+              className="p-3 h-auto justify-start bg-secondary/10 w-full"
+            >
+              <Palette className="h-4 w-4 mr-2" /> Design Vorschau
+            </Button>
+          </Link>
         </div>
       </div>
       

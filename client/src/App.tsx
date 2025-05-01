@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -29,6 +30,14 @@ function Router() {
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>
+      <Route path="/admin/design-preview" component={() => {
+        const DesignPreviewPage = React.lazy(() => import("@/pages/admin/DesignPreviewPage"));
+        return (
+          <Suspense fallback={<div>Laden...</div>}>
+            <DesignPreviewPage />
+          </Suspense>
+        );
+      }} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
