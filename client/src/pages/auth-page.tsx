@@ -63,7 +63,7 @@ export default function AuthPage() {
   
   // Redirect wenn bereits eingeloggt
   if (user) {
-    return <Redirect to="/" />;
+    return <Redirect to="/app" />;
   }
   
   function onLoginSubmit(data: LoginFormValues) {

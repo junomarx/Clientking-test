@@ -68,7 +68,7 @@ export function AdminProtectedRoute({ path, children }: ProtectedRouteProps) {
             </AlertDescription>
           </Alert>
           <div className="mt-4">
-            <a href="/" className="text-primary hover:underline">
+            <a href="/app" className="text-primary hover:underline">
               Zurück zur Startseite
             </a>
           </div>
