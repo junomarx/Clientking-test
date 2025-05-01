@@ -252,7 +252,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
               </div>
               
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Marke</div>
+                <div className="text-sm text-muted-foreground mb-1">Hersteller</div>
                 <div className="border border-input rounded-md py-2 px-3 text-sm">{estimate.brand}</div>
               </div>
               
@@ -281,7 +281,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
               <table className="w-full border-collapse mb-2">
                 <tbody>
                   <tr>
-                    <td className="pb-1 pr-12 text-sm text-gray-700" style={{ minWidth: '120px' }}>Marke</td>
+                    <td className="pb-1 pr-12 text-sm text-gray-700" style={{ minWidth: '120px' }}>Hersteller</td>
                     <td className="pb-1 pr-12 text-sm text-gray-700" style={{ minWidth: '200px' }}>Modell</td>
                     <td className="pb-1 text-sm text-gray-700">Seriennummer</td>
                   </tr>

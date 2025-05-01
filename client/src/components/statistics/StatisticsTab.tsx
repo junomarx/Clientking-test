@@ -288,7 +288,7 @@ export function StatisticsTab() {
       }))
     : [];
 
-  // Daten für Marken-Diagramm vorbereiten
+  // Daten für Herstellern-Diagramm vorbereiten
   const brandData = detailedStats?.byBrand
     ? Object.entries(detailedStats.byBrand).map(([key, value]) => ({
         name: key,
@@ -410,7 +410,7 @@ export function StatisticsTab() {
     if (!repairs || repairs.length === 0) return;
 
     // CSV-Daten vorbereiten
-    const header = "Auftragsnummer,Gerät,Marke,Typ,Problem,Status,Erstellungsdatum\n";
+    const header = "Auftragsnummer,Gerät,Hersteller,Typ,Problem,Status,Erstellungsdatum\n";
     const csvData = repairs.map(repair => {
       return [
         repair.orderCode,
@@ -1090,11 +1090,11 @@ export function StatisticsTab() {
               </CardContent>
             </Card>
 
-            {/* Marken-Chart */}
+            {/* Herstellern-Chart */}
             <Card>
               <CardHeader>
                 <CardTitle>Top Hersteller</CardTitle>
-                <CardDescription>Die häufigsten Marken</CardDescription>
+                <CardDescription>Die häufigsten Herstellern</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]" ref={brandChartRef}>
@@ -1161,7 +1161,7 @@ export function StatisticsTab() {
                   <thead className="text-xs uppercase bg-gray-50">
                     <tr>
                       <th className="px-6 py-3">Auftragsnr.</th>
-                      <th className="px-6 py-3">Marke</th>
+                      <th className="px-6 py-3">Hersteller</th>
                       <th className="px-6 py-3">Modell</th>
                       <th className="px-6 py-3">Problem</th>
                       <th className="px-6 py-3">Status</th>

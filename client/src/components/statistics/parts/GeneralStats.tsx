@@ -77,7 +77,7 @@ export const GeneralStats: React.FC<GeneralStatsProps> = ({
     }))
   : [];
 
-  // Daten für Marken-Diagramm vorbereiten
+  // Daten für Herstellern-Diagramm vorbereiten
   const brandData = detailedStats?.byBrand
     ? Object.entries(detailedStats.byBrand).map(([key, value]) => ({
         name: key,
@@ -184,11 +184,11 @@ export const GeneralStats: React.FC<GeneralStatsProps> = ({
           </CardContent>
         </Card>
 
-        {/* Marken-Diagramm */}
+        {/* Herstellern-Diagramm */}
         <Card>
           <CardHeader>
             <CardTitle>Hersteller</CardTitle>
-            <CardDescription>Verteilung nach Marken</CardDescription>
+            <CardDescription>Verteilung nach Herstellern</CardDescription>
           </CardHeader>
           <CardContent className="pl-0">
             <div className="h-[300px]" ref={brandChartRef}>

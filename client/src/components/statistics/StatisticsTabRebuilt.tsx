@@ -216,7 +216,7 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
     if (!repairs || repairs.length === 0) return;
 
     // CSV-Daten vorbereiten
-    const header = "Auftragsnummer,Gerät,Marke,Typ,Problem,Status,Erstellungsdatum\n";
+    const header = "Auftragsnummer,Gerät,Hersteller,Typ,Problem,Status,Erstellungsdatum\n";
     const csvData = repairs.map(repair => {
       return [
         repair.orderCode,
@@ -569,11 +569,11 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
                 </CardContent>
               </Card>
             
-            {/* Marken */}
+            {/* Herstellern */}
             <Card>
               <CardHeader>
-                <CardTitle>Nach Marke</CardTitle>
-                <CardDescription>Verteilung der Reparaturen nach Marke</CardDescription>
+                <CardTitle>Nach Hersteller</CardTitle>
+                <CardDescription>Verteilung der Reparaturen nach Hersteller</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

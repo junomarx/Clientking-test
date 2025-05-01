@@ -48,7 +48,7 @@ const formSchema = z.object({
   }),
   title: z.string().default("Kostenvoranschlag"),
   deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
-  brand: z.string().min(1, "Marke ist erforderlich"),
+  brand: z.string().min(1, "Hersteller ist erforderlich"),
   model: z.string().min(1, "Modell ist erforderlich"),
   serialNumber: z.string().optional(),
   issue: z.string().optional(),
@@ -411,7 +411,7 @@ export default function EditCostEstimateForm({ estimateId, onSuccess }: EditCost
                 name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Marke</FormLabel>
+                    <FormLabel>Hersteller</FormLabel>
                     <FormControl>
                       <Input placeholder="z.B. Apple, Samsung" {...field} />
                     </FormControl>

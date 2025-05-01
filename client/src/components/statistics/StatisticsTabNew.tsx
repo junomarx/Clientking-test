@@ -367,7 +367,7 @@ export function StatisticsTab() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Häufige Marken</CardTitle>
+                <CardTitle>Häufige Herstellern</CardTitle>
                 <CardDescription>Verteilung nach Herstellern</CardDescription>
               </CardHeader>
               <CardContent>

@@ -44,7 +44,7 @@ export function StatisticsTab() {
     if (!repairs || repairs.length === 0) return;
 
     // CSV-Daten vorbereiten
-    const header = "Auftragsnummer,Gerät,Marke,Typ,Problem,Status,Erstellungsdatum\n";
+    const header = "Auftragsnummer,Gerät,Hersteller,Typ,Problem,Status,Erstellungsdatum\n";
     const csvData = repairs.map(repair => {
       return [
         repair.orderCode,

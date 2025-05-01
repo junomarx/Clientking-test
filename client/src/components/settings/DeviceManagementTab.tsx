@@ -142,7 +142,7 @@ export function DeviceManagementTab() {
       <div className="bg-white rounded-md shadow-sm p-4 mb-6">
         <h3 className="text-xl font-semibold mb-2">Globale Geräteverwaltung</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Zentrale Verwaltung für alle Gerätetypen, Marken und Modellreihen
+          Zentrale Verwaltung für alle Gerätetypen, Herstellern und Modellreihen
         </p>
         
         {canManageDevices && (
@@ -201,7 +201,7 @@ export function DeviceManagementTab() {
             className={`p-3 h-auto justify-start ${activeTab === "brands" ? "bg-primary text-white" : "bg-secondary/10"}`}
             onClick={() => setActiveTab("brands")}
           >
-            <Tag className="h-4 w-4 mr-2" /> Marken
+            <Tag className="h-4 w-4 mr-2" /> Herstellern
           </Button>
           
           <Button

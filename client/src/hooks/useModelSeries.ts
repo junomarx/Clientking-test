@@ -32,7 +32,7 @@ export function useModelSeries() {
     });
   };
 
-  // Lade Modellreihen für eine bestimmte Marke
+  // Lade Modellreihen für eine bestimmte Hersteller
   const getModelSeriesByBrandId = (brandId: number | null) => {
     return useQuery<ModelSeries[]>({
       queryKey: ['/api/model-series', { brandId }],
@@ -46,7 +46,7 @@ export function useModelSeries() {
     });
   };
 
-  // Lade Modellreihen für eine bestimmte Gerätetyp-Marken-Kombination
+  // Lade Modellreihen für eine bestimmte Gerätetyp-Herstellern-Kombination
   const getModelSeriesByDeviceTypeAndBrand = (deviceTypeId: number | null, brandId: number | null) => {
     return useQuery<ModelSeries[]>({
       queryKey: ['/api/device-types', deviceTypeId, 'brands', brandId, 'model-series'],
@@ -75,7 +75,7 @@ export function useModelSeries() {
         }
         
         if (!data.brandId || isNaN(Number(data.brandId))) {
-          throw new Error('Bitte wählen Sie eine gültige Marke aus');
+          throw new Error('Bitte wählen Sie eine gültige Hersteller aus');
         }
         
         // userId wird vom Server automatisch ergänzt
@@ -138,7 +138,7 @@ export function useModelSeries() {
     });
   };
 
-  // Lösche alle Modellreihen für eine bestimmte Marke
+  // Lösche alle Modellreihen für eine bestimmte Hersteller
   const deleteAllModelSeriesForBrand = () => {
     return useMutation({
       mutationFn: async (brandId: number) => {
@@ -151,7 +151,7 @@ export function useModelSeries() {
         
         toast({
           title: 'Modellreihen gelöscht',
-          description: 'Alle Modellreihen für diese Marke wurden erfolgreich gelöscht',
+          description: 'Alle Modellreihen für diese Hersteller wurden erfolgreich gelöscht',
         });
       },
       onError: (error: Error) => {
