@@ -1,17 +1,4 @@
 import React, { useState, useRef } from 'react';
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent
-} from '@/components/ui/tabs';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
@@ -25,36 +12,35 @@ import { useAuth } from '@/hooks/use-auth';
 
 export function DeviceManagementTab() {
   const [activeTab, setActiveTab] = useState("deviceTypes");
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   
-  // Nur Admin (Bugi) kann exportieren/importieren
-  const canManageDevices = user?.isAdmin && user?.username === 'bugi';
+  const canManageDevices = user?.isAdmin || false;
   
   // Funktion zum Exportieren der Gerätedaten
   const handleExportDeviceData = async () => {
     try {
       setIsExporting(true);
       
-      // API-Anfrage an den Export-Endpunkt
-      const response = await fetch('/api/admin/device-management/export', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include'
-      });
+      // API-Anfrage zum Exportieren der Daten
+      const response = await apiRequest('GET', '/api/admin/device-management/export');
+      if (!response.ok) {
+        throw new Error('Fehler beim Exportieren der Daten');
+      }
       
-      // CSV-Datei aus der Antwort herunterladen
-      const blob = await response.blob();
+      // Daten als JSON herunterladen
+      const data = await response.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
+      
+      // Download-Link erstellen und klicken
       const a = document.createElement('a');
       a.href = url;
-      a.download = `device-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `device-data-export-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -93,28 +79,45 @@ export function DeviceManagementTab() {
       
       // Datei einlesen
       const reader = new FileReader();
-      
       reader.onload = async (e) => {
-        const jsonData = e.target?.result as string;
-        
-        // API-Anfrage an den Import-Endpunkt
-        const response = await apiRequest('POST', '/api/admin/device-management/import', { jsonData });
-        const result = await response.json();
-        
-        // Alle relevanten Abfragen invalidieren, um die UI zu aktualisieren
-        await queryClient.invalidateQueries({ queryKey: ['/api/device-types'] });
-        await queryClient.invalidateQueries({ queryKey: ['/api/brands'] });
-        await queryClient.invalidateQueries({ queryKey: ['/api/model-series'] });
-        await queryClient.invalidateQueries({ queryKey: ['/api/models'] });
-        
-        toast({
-          title: "Import erfolgreich",
-          description: `Die Gerätedaten wurden erfolgreich importiert. Hinzugefügt: ${result.stats.deviceTypes} Gerätetypen, ${result.stats.brands} Marken, ${result.stats.modelSeries} Modellreihen, ${result.stats.models} Modelle.`
-        });
-      };
-      
-      reader.onerror = () => {
-        throw new Error('Datei konnte nicht gelesen werden');
+        try {
+          const content = e.target?.result as string;
+          const data = JSON.parse(content);
+          
+          // Daten importieren
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('/api/admin/device-management/import', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Fehler beim Importieren der Daten');
+          }
+          
+          // Cache invalidieren
+          queryClient.invalidateQueries({ queryKey: ["/api/device-types"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/brands"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/models"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/device-issues"] });
+          
+          toast({
+            title: "Import erfolgreich",
+            description: "Die Gerätedaten wurden erfolgreich importiert."
+          });
+        } catch (error) {
+          console.error("Fehler beim Verarbeiten der Import-Datei:", error);
+          toast({
+            title: "Import fehlgeschlagen",
+            description: error instanceof Error ? error.message : "Die Gerätedaten konnten nicht importiert werden.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsImporting(false);
+        }
       };
       
       reader.readAsText(file);
@@ -125,104 +128,106 @@ export function DeviceManagementTab() {
         description: "Die Gerätedaten konnten nicht importiert werden.",
         variant: "destructive"
       });
-    } finally {
       setIsImporting(false);
+      
       // Zurücksetzen des Datei-Inputs
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
-
+  
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Globale Geräteverwaltung</CardTitle>
-              <CardDescription>
-                Zentrale Verwaltung für alle Gerätetypen, Marken und Modellreihen
-              </CardDescription>
-            </div>
-            {canManageDevices && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleExportDeviceData}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  disabled={isExporting}
-                >
-                  {isExporting ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Daten exportieren
-                </Button>
-                <Button
-                  onClick={handleImportClick}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  disabled={isImporting}
-                >
-                  {isImporting ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                  Daten importieren
-                </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImportDeviceData}
-                  accept=".json"
-                  className="hidden"
-                />
-              </div>
-            )}
+      <div className="bg-white rounded-md shadow-sm p-4 mb-6">
+        <h3 className="text-xl font-semibold mb-2">Globale Geräteverwaltung</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Zentrale Verwaltung für alle Gerätetypen, Marken und Modellreihen
+        </p>
+        
+        {canManageDevices && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1 w-full sm:w-auto" 
+              onClick={handleExportDeviceData}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Daten exportieren
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1 w-full sm:w-auto" 
+              onClick={handleImportClick}
+              disabled={isImporting}
+            >
+              {isImporting ? (
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              Daten importieren
+            </Button>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".json"
+              onChange={handleImportDeviceData}
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="deviceTypes" onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="flex w-full flex-col space-y-2 sm:flex-row sm:space-y-0">
-              <TabsTrigger value="deviceTypes" className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4" />
-                Gerätetypen
-              </TabsTrigger>
-              <TabsTrigger value="brands" className="flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                Marken
-              </TabsTrigger>
-              <TabsTrigger value="models" className="flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                Modelle
-              </TabsTrigger>
-              <TabsTrigger value="issues" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Fehlerbeschreibungen
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="deviceTypes">
-              <DeviceTypeSettings />
-            </TabsContent>
-            
-            <TabsContent value="brands">
-              <BrandSettings />
-            </TabsContent>
-            
-            <TabsContent value="models">
-              <ModelManagementTab />
-            </TabsContent>
-            
-            <TabsContent value="issues">
-              <DeviceIssuesTab />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+          <Button
+            variant={activeTab === "deviceTypes" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "deviceTypes" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("deviceTypes")}
+          >
+            <Smartphone className="h-4 w-4 mr-2" /> Gerätetypen
+          </Button>
+          
+          <Button
+            variant={activeTab === "brands" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "brands" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("brands")}
+          >
+            <Tag className="h-4 w-4 mr-2" /> Marken
+          </Button>
+          
+          <Button
+            variant={activeTab === "models" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "models" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("models")}
+          >
+            <Layers className="h-4 w-4 mr-2" /> Modelle
+          </Button>
+          
+          <Button
+            variant={activeTab === "issues" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "issues" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("issues")}
+          >
+            <AlertCircle className="h-4 w-4 mr-2" /> Fehlerbeschreibungen
+          </Button>
+        </div>
+        
+        <div className="bg-white rounded-md shadow-sm border p-4">
+          {activeTab === "deviceTypes" && <DeviceTypeSettings />}
+          {activeTab === "brands" && <BrandSettings />}
+          {activeTab === "models" && <ModelManagementTab />}
+          {activeTab === "issues" && <DeviceIssuesTab />}
+        </div>
+      </div>
     </div>
   );
 }
