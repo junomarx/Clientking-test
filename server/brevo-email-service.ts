@@ -2,37 +2,17 @@ import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
 import { eq, desc, isNull, or } from 'drizzle-orm';
 import { storage } from './storage';
-import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 /**
- * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
- * Verwendet Brevo (ehemals Sendinblue) als E-Mail-Provider über SMTP
+ * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails über SMTP
  */
-export class BrevoEmailService {
-  private apiInstance: TransactionalEmailsApi | null = null;
+export class EmailService {
   private smtpTransporter: nodemailer.Transporter | null = null;
-  // Wir verwenden jetzt die Benutzer-SMTP-Einstellungen statt Brevo
 
   constructor() {
-    const apiKey = process.env.BREVO_API_KEY;
-    
-    // Initialisiere API-Client (als Fallback oder für zukünftige Verwendung)
-    if (apiKey) {
-      try {
-        this.apiInstance = new TransactionalEmailsApi();
-        // Bei Brevo wird der API-Key als Header-Parameter übergeben
-        // Das wird bei jedem API-Aufruf direkt gemacht
-      } catch (error) {
-        console.error('Fehler beim Initialisieren der Brevo API:', error);
-        this.apiInstance = null;
-      }
-    } else {
-      console.warn('Brevo-API-Schlüssel fehlt - E-Mail-Versand wird simuliert');
-    }
-
-    // Initialisiere SMTP Transporter mit den Benutzer-SMTP-Einstellungen
+    // Initialisiere den globalen SMTP-Transporter mit den Umgebungsvariablen
     try {
       const smtpHost = process.env.SMTP_HOST;
       const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
@@ -41,9 +21,9 @@ export class BrevoEmailService {
       
       // Prüfe, ob alle erforderlichen SMTP-Einstellungen vorhanden sind
       if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-        console.warn('Eine oder mehrere SMTP-Einstellungen fehlen, verwende Brevo als Fallback');
+        console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen');
       } else {
-        // Verwende die Benutzer-SMTP-Einstellungen
+        // Verwende die globalen SMTP-Einstellungen als Fallback
         this.smtpTransporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
@@ -54,10 +34,10 @@ export class BrevoEmailService {
           }
         });
         
-        console.log(`SMTP-Transporter für ${smtpHost} wurde initialisiert`);
+        console.log(`Globaler SMTP-Transporter für ${smtpHost} wurde initialisiert`);
       }
     } catch (error) {
-      console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
+      console.error('Fehler beim Initialisieren des globalen SMTP-Transporters:', error);
       this.smtpTransporter = null;
     }
   }
@@ -315,4 +295,4 @@ export class BrevoEmailService {
 }
 
 // Erstelle eine Singleton-Instanz des E-Mail-Services
-export const brevoEmailService = new BrevoEmailService();
+export const emailService = new EmailService();

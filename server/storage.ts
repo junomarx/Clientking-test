@@ -1856,11 +1856,10 @@ export class DatabaseStorage implements IStorage {
   async getEmailHistoryForRepair(repairId: number): Promise<EmailHistory[]> {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
-      // Direkte Abfrage mit korrekt benannten Spalten
-      const result = await db.execute(
-        `SELECT * FROM "email_history" WHERE "repairId" = $1 ORDER BY "sentAt" DESC`,
-        [repairId]
-      );
+      // Verwende die einfachere Form ohne Parameter-Bindung
+      const query = `SELECT * FROM "email_history" WHERE "repairId" = ${repairId} ORDER BY "sentAt" DESC`;
+      console.log('SQL-Abfrage:', query);
+      const result = await db.execute(query);
       console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
       return result.rows as EmailHistory[];
     } catch (error) {
@@ -1872,13 +1871,21 @@ export class DatabaseStorage implements IStorage {
   async createEmailHistoryEntry(entry: InsertEmailHistory): Promise<EmailHistory> {
     try {
       console.log('Erstelle E-Mail-Verlaufseintrag in der Datenbank:', entry);
-      // Direktes SQL verwenden mit den korrekten Spaltennamen
-      const result = await db.execute(
-        `INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId") 
-         VALUES ($1, $2, $3, $4, $5, $6) 
-         RETURNING *`,
-        [entry.repairId, entry.emailTemplateId, entry.subject, entry.recipient, entry.status, entry.userId]
-      );
+      // Verwende die einfachere Form ohne Parameter-Bindung
+      const query = `
+        INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId") 
+        VALUES (
+          ${entry.repairId},
+          ${entry.emailTemplateId || 'NULL'},
+          '${entry.subject.replace(/'/g, "''")}',
+          '${entry.recipient.replace(/'/g, "''")}',
+          '${entry.status.replace(/'/g, "''")}',
+          ${entry.userId || 'NULL'}
+        ) 
+        RETURNING *
+      `;
+      console.log('SQL-Insert-Abfrage:', query);
+      const result = await db.execute(query);
       
       console.log('Erstellter E-Mail-Verlaufseintrag:', result.rows[0]);
       return result.rows[0] as EmailHistory;

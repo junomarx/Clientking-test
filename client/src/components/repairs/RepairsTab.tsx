@@ -50,7 +50,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
-  const [sendSms, setSendSms] = useState(false);
+  // SMS-Funktionalität wurde entfernt
   const [selectedRepairDetails, setSelectedRepairDetails] = useState<Repair | null>(null);
   const { toast } = useToast();
   
@@ -254,7 +254,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       return;
     }
     
-    console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}, sendSms=${sendSms}`);
+    console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
     // Status auf "fertig" aktualisieren mit optionalen E-Mail- und SMS-Benachrichtigungen
     if (newStatus === 'fertig') {
