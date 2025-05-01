@@ -1460,18 +1460,54 @@ export default function AdminPage() {
         </Button>
 
         <div className="grid grid-cols-1 gap-4">
-          <div className="bg-primary text-white rounded-md p-3">Dashboard</div>
-          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Benutzer</div>
-          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3 flex items-center gap-2">
-            <Smartphone className="h-4 w-4" /> Geräte
-          </div>
-          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Systemdiagnose</div>
-          <div className="bg-secondary/20 hover:bg-secondary/30 rounded-md p-3">Backup & Restore</div>
+          <Button 
+            variant={activeTab === "dashboard" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "dashboard" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("dashboard")}
+          >
+            <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+          </Button>
+          
+          <Button 
+            variant={activeTab === "users" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "users" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("users")}
+          >
+            <Users className="h-4 w-4 mr-2" /> Benutzer
+          </Button>
+          
+          <Button 
+            variant={activeTab === "devices" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "devices" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("devices")}
+          >
+            <Smartphone className="h-4 w-4 mr-2" /> Geräte
+          </Button>
+          
+          <Button 
+            variant={activeTab === "system" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "system" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("system")}
+          >
+            <Cog className="h-4 w-4 mr-2" /> Systemdiagnose
+          </Button>
+          
+          <Button 
+            variant={activeTab === "backup" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "backup" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("backup")}
+          >
+            <Save className="h-4 w-4 mr-2" /> Backup & Restore
+          </Button>
         </div>
       </div>
       
       <div className="bg-white rounded-md shadow-sm p-4 mb-6">
-        <AdminDashboard />
+        {activeTab === "dashboard" && <AdminDashboard />}
+        {activeTab === "users" && <UserTable />}
+        {activeTab === "devices" && <DeviceManagementTab />}
+        {activeTab === "system" && <SystemDiagnosticTab />}
+        {activeTab === "backup" && <BackupRestoreTab />}
       </div>
     </div>
   );
