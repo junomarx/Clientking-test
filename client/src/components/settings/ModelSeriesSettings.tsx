@@ -81,7 +81,7 @@ interface ModelSeries {
 // Schema zur Validierung des Formulars
 const modelSeriesSchema = z.object({
   deviceTypeId: z.string().min(1, 'Gerätetyp muss ausgewählt sein'),
-  brandId: z.string().min(1, 'Marke muss ausgewählt sein'),
+  brandId: z.string().min(1, 'Hersteller muss ausgewählt sein'),
   name: z.string().min(1, 'Name darf nicht leer sein')
 });
 
@@ -106,7 +106,7 @@ export function ModelSeriesSettings() {
     }
   });
 
-  // Marken abrufen
+  // Herstellern abrufen
   const { data: brands, isLoading: isLoadingBrands } = useQuery<Brand[]>({
     queryKey: ['/api/brands', selectedDeviceType],
     queryFn: async () => {
@@ -152,7 +152,7 @@ export function ModelSeriesSettings() {
     }
   });
 
-  // Wenn der Gerätetyp im Formular geändert wird, setze die Marken zurück
+  // Wenn der Gerätetyp im Formular geändert wird, setze die Herstellern zurück
   useEffect(() => {
     const deviceTypeId = addForm.watch('deviceTypeId');
     
@@ -171,7 +171,7 @@ export function ModelSeriesSettings() {
     }
   });
 
-  // Wenn der Gerätetyp im Bearbeitungsformular geändert wird, setze die Marken zurück
+  // Wenn der Gerätetyp im Bearbeitungsformular geändert wird, setze die Herstellern zurück
   useEffect(() => {
     const deviceTypeId = editForm.watch('deviceTypeId');
     
@@ -300,7 +300,7 @@ export function ModelSeriesSettings() {
     return brand ? brand.name : 'Unbekannt';
   };
 
-  // Filtere Marken nach ausgewähltem Gerätetyp für das Formular
+  // Filtere Herstellern nach ausgewähltem Gerätetyp für das Formular
   const filteredBrands = (selectedDeviceTypeId: string) => {
     return brands?.filter(brand => brand.deviceTypeId === parseInt(selectedDeviceTypeId)) || [];
   };
@@ -369,7 +369,7 @@ export function ModelSeriesSettings() {
           </div>
           
           <div>
-            <label className="text-sm font-medium mb-2 block">Marken-Filter</label>
+            <label className="text-sm font-medium mb-2 block">Herstellern-Filter</label>
             <div className="flex items-center gap-2">
               <Select
                 value={selectedBrand || 'all'}
@@ -377,10 +377,10 @@ export function ModelSeriesSettings() {
                 disabled={!selectedDeviceType}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={selectedDeviceType ? "Nach Marke filtern" : "Erst Gerätetyp wählen"} />
+                  <SelectValue placeholder={selectedDeviceType ? "Nach Hersteller filtern" : "Erst Gerätetyp wählen"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Marken</SelectItem>
+                  <SelectItem value="all">Alle Herstellern</SelectItem>
                   {brands?.filter(brand => 
                     !selectedDeviceType || brand.deviceTypeId === parseInt(selectedDeviceType)
                   ).map((brand) => (
@@ -404,7 +404,7 @@ export function ModelSeriesSettings() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Gerätetyp</TableHead>
-              <TableHead>Marke</TableHead>
+              <TableHead>Hersteller</TableHead>
               <TableHead>Erstellt am</TableHead>
               <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
@@ -420,7 +420,7 @@ export function ModelSeriesSettings() {
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                   {selectedBrand 
-                    ? 'Keine Modellreihen für diese Marke gefunden' 
+                    ? 'Keine Modellreihen für diese Hersteller gefunden' 
                     : selectedDeviceType
                     ? 'Keine Modellreihen für diesen Gerätetyp gefunden'
                     : 'Keine Modellreihen gefunden'}
@@ -501,7 +501,7 @@ export function ModelSeriesSettings() {
                 name="brandId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Marke</FormLabel>
+                    <FormLabel>Hersteller</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -511,7 +511,7 @@ export function ModelSeriesSettings() {
                         <SelectTrigger>
                           <SelectValue placeholder={
                             addForm.watch('deviceTypeId') 
-                              ? "Marke auswählen" 
+                              ? "Hersteller auswählen" 
                               : "Erst Gerätetyp wählen"
                           } />
                         </SelectTrigger>
@@ -608,7 +608,7 @@ export function ModelSeriesSettings() {
                 name="brandId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Marke</FormLabel>
+                    <FormLabel>Hersteller</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -616,7 +616,7 @@ export function ModelSeriesSettings() {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Marke auswählen" />
+                          <SelectValue placeholder="Hersteller auswählen" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

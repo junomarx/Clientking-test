@@ -1145,7 +1145,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                 }
                               }}
                             />
-                            {/* Dropdown für Herstellern */}
+                            {/* Dropdown für Hersteller */}
                             {brandDropdown.length > 0 && (
                               <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
                                 <div className="py-1 max-h-60 overflow-auto">
