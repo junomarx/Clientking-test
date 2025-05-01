@@ -1,5 +1,20 @@
 // Hilfsfunktionen für die Geräteoperationen
 
+// Erkennung von mobilen Geräten und Bildschirmausrichtung
+export const isMobileDevice = (): boolean => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         (window.innerWidth <= 768);
+};
+
+export const isLandscapeMode = (): boolean => {
+  return window.matchMedia("(orientation: landscape)").matches || 
+         window.innerWidth > window.innerHeight;
+};
+
+export const isPortraitMode = (): boolean => {
+  return !isLandscapeMode();
+};
+
 // Standardwerte für die unterstützten Gerätetypen und Marken
 export const defaultBrands: { [key: string]: string[] } = {
   smartphone: ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Google', 'Sony', 'LG', 'Motorola', 'Nokia'],

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,8 @@ import { useMutation } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { RotateCcw, Smartphone, Loader2 } from 'lucide-react';
+import { isMobileDevice, isPortraitMode } from '@/lib/deviceHelpers';
 
 interface SignatureDialogProps {
   open: boolean;
@@ -32,6 +33,30 @@ export function SignatureDialog({
 }: SignatureDialogProps) {
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [isPortrait, setIsPortrait] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  
+  // Überprüfung der Geräteausrichtung beim Öffnen des Dialogs
+  useEffect(() => {
+    if (!open) return;
+    
+    const checkOrientation = () => {
+      setIsMobile(isMobileDevice());
+      setIsPortrait(isPortraitMode());
+    };
+    
+    // Beim Öffnen des Dialogs die Ausrichtung prüfen
+    checkOrientation();
+    
+    // Event-Listener für Orientierungsänderungen
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, [open]);
   
   // Titel und Beschreibung je nach Signatur-Typ
   const isDropoff = signatureType === 'dropoff';
