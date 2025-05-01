@@ -39,7 +39,6 @@ import {
   Save,
   Cog,
   LayoutDashboard,
-  Palette,
   Menu
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
@@ -1013,6 +1012,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isToastTestOpen, setIsToastTestOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -1078,12 +1078,50 @@ export default function AdminPage() {
               {!sidebarCollapsed && <span className="ml-3">Benutzer</span>}
             </div>
             
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("devices")}
-            >
-              <Smartphone className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Geräte</span>}
+            {/* Geräte mit Unterkategorien */}
+            <div className="space-y-1">
+              <div 
+                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" || deviceMenuOpen ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => {
+                  if (sidebarCollapsed) {
+                    setActiveTab("devices");
+                  } else {
+                    setDeviceMenuOpen(!deviceMenuOpen);
+                  }
+                }}
+              >
+                <div className="flex items-center">
+                  <Smartphone className="h-5 w-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span className="ml-3">Geräte</span>}
+                </div>
+                {!sidebarCollapsed && (
+                  <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${deviceMenuOpen ? 'rotate-90' : ''}`} />
+                )}
+              </div>
+              
+              {/* Unterkategorien für Geräte */}
+              {!sidebarCollapsed && deviceMenuOpen && (
+                <div className="ml-7 space-y-1 pl-2 border-l border-gray-700">
+                  <div 
+                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
+                    onClick={() => setActiveTab("devices")}
+                  >
+                    <span className="text-sm">Geräteverwaltung</span>
+                  </div>
+                  <div 
+                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
+                    onClick={() => setActiveTab("devices")}
+                  >
+                    <span className="text-sm">Problemkatalog</span>
+                  </div>
+                  <div 
+                    className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer"
+                    onClick={() => setActiveTab("devices")}
+                  >
+                    <span className="text-sm">Importieren</span>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div 
@@ -1102,12 +1140,7 @@ export default function AdminPage() {
               {!sidebarCollapsed && <span className="ml-3">Backup & Restore</span>}
             </div>
             
-            <Link href="/admin/design-preview">
-              <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-gray-300 cursor-pointer">
-                <Palette className="h-5 w-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span className="ml-3">Design Vorschau</span>}
-              </div>
-            </Link>
+
             
             <Link href="/">
               <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
@@ -1207,14 +1240,7 @@ export default function AdminPage() {
                 <Save className="h-4 w-4 mr-2" /> Backup & Restore
               </Button>
               
-              <Link href="/admin/design-preview">
-                <Button 
-                  variant="outline"
-                  className="p-3 h-auto justify-start bg-secondary/10 w-full"
-                >
-                  <Palette className="h-4 w-4 mr-2" /> Design Vorschau
-                </Button>
-              </Link>
+
             </div>
           </div>
           
