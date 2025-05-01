@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
+import { addPricingPlanColumn } from "./add-pricing-plan-column";
 
 const app = express();
 app.use(express.json());
@@ -39,8 +40,9 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Führe die Migration für die zweite Unterschrift aus
+    // Führe die Migrationen aus
     await addSecondSignatureColumns();
+    await addPricingPlanColumn();
     
     const server = await registerRoutes(app);
 

@@ -80,6 +80,15 @@ export type Repair = typeof repairs.$inferSelect;
 export type InsertRepair = z.infer<typeof insertRepairSchema>;
 
 // Define the user schema as it's required by the template
+// Preispakete als enum für bessere Typsicherheit
+export const pricingPlans = [
+  "basic",
+  "professional", 
+  "enterprise"
+] as const;
+
+export type PricingPlan = typeof pricingPlans[number];
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -87,6 +96,7 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
   isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
+  pricingPlan: text("pricing_plan").default("basic").notNull(), // Preispaket: basic, professional, enterprise
   companyName: text("company_name"),                       // Firmenname
   companyAddress: text("company_address"),                 // Firmenadresse
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.

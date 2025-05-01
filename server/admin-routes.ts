@@ -846,7 +846,7 @@ export function registerAdminRoutes(app: Express) {
   app.patch("/api/admin/users/:id", isAdmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { password, isAdmin, ...updateData } = req.body;
+      const { password, isAdmin, pricingPlan, ...updateData } = req.body;
       
       const user = await storage.getUser(id);
       
@@ -859,10 +859,16 @@ export function registerAdminRoutes(app: Express) {
         return res.status(403).json({ message: "Nur der Hauptadministrator darf Administratorrechte ändern" });
       }
       
+      // Validiere das Preispaket, falls angegeben
+      if (pricingPlan !== undefined && !['basic', 'professional', 'enterprise'].includes(pricingPlan)) {
+        return res.status(400).json({ message: "Ungültiges Preispaket. Erlaubte Werte sind: basic, professional, enterprise" });
+      }
+      
       // Aktualisiere Benutzer
       const updatedUser = await storage.updateUser(id, {
         ...updateData,
         ...(isAdmin !== undefined && { isAdmin }),
+        ...(pricingPlan !== undefined && { pricingPlan }),
       });
       
       if (!updatedUser) {

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   ChevronLeft, 
   Check, 
@@ -72,6 +73,7 @@ function UserTable() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState<"user" | "admin">("user");
+  const [editPricingPlan, setEditPricingPlan] = useState<"basic" | "professional" | "enterprise">("basic");
   const { toast } = useToast();
   
   const { data: users, isLoading, error } = useQuery({
