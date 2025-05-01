@@ -401,12 +401,17 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                   <div key={repair.id} 
                     className="border rounded-lg p-4 shadow-sm hover:shadow-md cursor-pointer transition-all"
                     onClick={() => {
-                      // Navigate to repairs page with orderCode filter
-                      if (repair.orderCode) {
-                        onClose(); // Close customer dialog first
+                      // Öffne direkt den Reparaturdetails-Dialog, statt zur Reparaturseite zu navigieren
+                      if (repair.id) {
+                        onClose(); // Schließe Kundendialog zuerst
+                        // Öffne den Dialog für diese Reparatur
                         setTimeout(() => {
-                          navigate('/?tab=repairs&search=' + repair.orderCode);
-                        }, 100); // Small delay to allow dialog to close
+                          // Event-Objekt erstellen und auslösen, um den Reparaturdetails-Dialog zu öffnen
+                          const event = new CustomEvent('open-repair-details', { 
+                            detail: { repairId: repair.id }
+                          });
+                          window.dispatchEvent(event);
+                        }, 100); // Kleine Verzögerung, damit der Dialog schließen kann
                       }
                     }}
                   >

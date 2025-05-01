@@ -62,10 +62,7 @@ export default function Home() {
           )}
           
           {activeTab === 'repairs' && (
-            <RepairsTab 
-              onNewOrder={handleNewOrder} 
-              initialSearchTerm={searchParam}
-            />
+            <RepairsTab onNewOrder={handleNewOrder} />
           )}
           
           {activeTab === 'customers' && (

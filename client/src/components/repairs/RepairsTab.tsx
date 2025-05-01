@@ -36,19 +36,11 @@ import { usePrintManager } from './PrintOptionsManager';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
-  initialSearchTerm?: string;
 }
 
-export function RepairsTab({ onNewOrder, initialSearchTerm }: RepairsTabProps) {
+export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [location] = useLocation();
-  const [searchTerm, setSearchTerm] = useState(initialSearchTerm || '');
-  
-  // Aktualisieren des Suchbegriffs, wenn initialSearchTerm sich ändert
-  useEffect(() => {
-    if (initialSearchTerm) {
-      setSearchTerm(initialSearchTerm);
-    }
-  }, [initialSearchTerm]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
