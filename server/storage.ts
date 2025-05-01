@@ -1906,8 +1906,8 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
       
-      // Direktes SQL für die Abfrage verwenden (wegen Spaltennamen "repair_id" vs "repairId")
-      const query = `SELECT * FROM "email_history" WHERE "repair_id" = ${repairId} ORDER BY "sent_at" DESC`;
+      // Direktes SQL für die Abfrage verwenden mit korrekten Spaltennamen (camelCase)
+      const query = `SELECT * FROM "email_history" WHERE "repairId" = ${repairId} ORDER BY "sentAt" DESC`;
       const result = await db.execute(query);
       
       console.log(`Gefundener E-Mail-Verlauf:`, result.rows);

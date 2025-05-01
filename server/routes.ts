@@ -1845,7 +1845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Direktes SQL für den E-Mail-Verlaufseintrag
           const emailHistoryQuery = `
-            INSERT INTO "email_history" ("repair_id", "email_template_id", "subject", "recipient", "status", "user_id") 
+            INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId") 
             VALUES (
               ${repairId},
               ${reviewTemplate.id},
