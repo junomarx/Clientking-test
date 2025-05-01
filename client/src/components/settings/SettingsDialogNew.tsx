@@ -146,7 +146,7 @@ function PricingPlanDisplay() {
 
 export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
   const { user, logoutMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState("business");
+  const [activeTab, setActiveTab] = useState("user");
   const [activeEmailTab, setActiveEmailTab] = useState("templates");
   const [showBusinessSettings, setShowBusinessSettings] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
@@ -187,7 +187,7 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="business" value={activeTab} onValueChange={setActiveTab} className="mt-2">
+          <Tabs defaultValue="user" value={activeTab} onValueChange={setActiveTab} className="mt-2">
             <TabsList className="grid grid-cols-4 mb-4">
               <TabsTrigger value="business" className="flex items-center justify-center text-xs sm:text-sm">
                 <Building2 className="h-4 w-4 mr-1 sm:mr-2" /> <span>Firma</span>
