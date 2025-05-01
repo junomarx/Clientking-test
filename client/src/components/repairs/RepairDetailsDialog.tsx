@@ -98,6 +98,13 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     }
   }, [repairs, customers, repairId]);
   
+  // E-Mail-Verlauf setzen, wenn Daten verfügbar sind
+  useEffect(() => {
+    if (emailHistoryData) {
+      setEmailHistory(emailHistoryData);
+    }
+  }, [emailHistoryData]);
+  
   // Statustexte konvertieren
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -114,6 +121,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Formatiere das Datum im deutschen Format
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
+  };
+  
+  // Formatiere das Datum und die Uhrzeit für E-Mail-Verlauf
+  const formatDateTime = (dateString: string) => {
+    return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
   };
   
   if (!repair) {
@@ -277,6 +289,39 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 </div>
               )}
             </div>
+          </div>
+          
+          {/* E-Mail-Verlauf */}
+          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+              <MessageCircle className="h-5 w-5" />
+              E-Mail-Verlauf
+            </h3>
+            
+            {emailHistory && emailHistory.length > 0 ? (
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {emailHistory.map((entry) => (
+                  <div key={entry.id} className="flex items-start space-x-2 p-2 rounded-md bg-white/70 shadow-sm border">
+                    {entry.status === 'success' ? (
+                      <Check className="h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 mt-1 text-red-500 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{entry.subject}</div>
+                      <div className="text-xs text-muted-foreground">An: {entry.recipient}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Gesendet: {formatDateTime(entry.sentAt.toString())}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-muted-foreground italic text-center py-3">
+                Keine E-Mail-Kommunikation gefunden
+              </div>
+            )}
           </div>
         </div>
 
