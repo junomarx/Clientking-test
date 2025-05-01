@@ -1,7 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Smartphone, Menu, X } from "lucide-react";
+import { Smartphone, Menu, X, Settings, User, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type HeaderProps = {
   variant?: "landing" | "auth" | "app";
@@ -17,9 +26,14 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
 
 export function Header({ variant = "landing" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logoutMutation } = useAuth();
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
+  };
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (
@@ -69,6 +83,46 @@ export function Header({ variant = "landing" }: HeaderProps) {
               <NavLink href="/#pricing">Preise</NavLink>
             </>
           )}
+          
+          {variant === "app" && user && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{user.username}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Benutzermenü</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  
+                  <Link href="/app?tab=settings">
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Einstellungen</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  
+                  {user.isAdmin && (
+                    <Link href="/admin">
+                      <DropdownMenuItem>
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin-Bereich</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Abmelden</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </nav>
       </div>
 
@@ -94,6 +148,41 @@ export function Header({ variant = "landing" }: HeaderProps) {
                 <NavLink href="/">Home</NavLink>
                 <NavLink href="/#features">Features</NavLink>
                 <NavLink href="/#pricing">Preise</NavLink>
+              </>
+            )}
+            
+            {variant === "app" && user && (
+              <>
+                <div className="py-2 px-3 mb-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-2 text-gray-500" />
+                    <span className="font-medium">{user.username}</span>
+                  </div>
+                </div>
+                
+                <Link href="/app?tab=settings">
+                  <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                    <Settings className="h-4 w-4 mr-2 text-gray-500" />
+                    <span>Einstellungen</span>
+                  </div>
+                </Link>
+                
+                {user.isAdmin && (
+                  <Link href="/admin">
+                    <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                      <Shield className="h-4 w-4 mr-2 text-gray-500" />
+                      <span>Admin-Bereich</span>
+                    </div>
+                  </Link>
+                )}
+                
+                <div 
+                  className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer text-red-500"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Abmelden</span>
+                </div>
               </>
             )}
           </nav>

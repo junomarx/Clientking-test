@@ -74,7 +74,7 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <Header />
+        <Header variant="app" />
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
         
         <div className="tab-content">
