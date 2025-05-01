@@ -120,6 +120,30 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
+  // Formular erstellen
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(orderFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      email: '',
+      address: '',
+      zipCode: '',
+      city: '',
+      deviceType: '',
+      brand: '',
+      modelSeries: '',
+      model: '',
+      serialNumber: '',
+      issue: '',
+      estimatedCost: '',
+      depositAmount: '',
+      status: 'eingegangen',
+      notes: '',
+    },
+  });
+
   // Formular zurücksetzen, wenn das Modal geöffnet wird
   useEffect(() => {
     if (open) {
@@ -176,7 +200,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         form.reset();
       }
     }
-  }, [open, customerId, form]);
+  }, [open, customerId]);
   
   // States für die Dropdown-Menüs für Geräteauswahl
   const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
@@ -204,30 +228,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // API Device Types
   const apiDeviceTypes = deviceTypesQuery.data;
-  
-  // Formular erstellen
-  const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderFormSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: '',
-      address: '',
-      zipCode: '',
-      city: '',
-      deviceType: '',
-      brand: '',
-      modelSeries: '',
-      model: '',
-      serialNumber: '',
-      issue: '',
-      estimatedCost: '',
-      depositAmount: '',
-      status: 'eingegangen',
-      notes: '',
-    },
-  });
   
   // Wichtige Form-Values, die beobachtet werden
   const watchDeviceType = form.watch('deviceType');
