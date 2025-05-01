@@ -1142,7 +1142,56 @@ export class DatabaseStorage implements IStorage {
   
   // Email sending method with template processing
   async sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean> {
-    return await emailService.sendEmailWithTemplate(templateId, to, variables);
+    try {
+      console.log('Storage sendEmailWithTemplate aufgerufen mit templateId:', templateId);
+      
+      // E-Mail-Vorlage abrufen
+      const template = await this.getEmailTemplate(templateId);
+      if (!template) {
+        console.error(`E-Mail-Vorlage mit ID ${templateId} nicht gefunden`);
+        return false;
+      }
+      
+      // E-Mail über den E-Mail-Service senden
+      const emailSent = await emailService.sendEmailWithTemplate(templateId, to, variables);
+      
+      // Wenn die E-Mail erfolgreich gesendet wurde und eine Reparatur-ID in den Variablen ist
+      if (emailSent && variables.repairId) {
+        console.log(`E-Mail erfolgreich gesendet. Erstelle Verlaufseintrag für Reparatur ${variables.repairId}`);
+        
+        // Reparatur-ID und Benutzer-ID aus den Variablen extrahieren
+        const repairId = parseInt(variables.repairId);
+        const userId = variables.userId ? parseInt(variables.userId) : undefined;
+        
+        if (!isNaN(repairId)) {
+          // E-Mail-Verlaufseintrag erstellen
+          try {
+            const historyEntry: InsertEmailHistory = {
+              repairId,
+              emailTemplateId: templateId,
+              subject: template.subject,
+              recipient: to,
+              status: 'success',
+              userId
+            };
+            
+            console.log('Erstelle E-Mail-Verlaufseintrag:', historyEntry);
+            await this.createEmailHistoryEntry(historyEntry);
+            console.log(`E-Mail-Verlaufseintrag für Reparatur ${repairId} erstellt`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des E-Mail-Verlaufseintrags:', historyError);
+            // Trotzdem true zurückgeben, da die E-Mail erfolgreich gesendet wurde
+          }
+        } else {
+          console.error(`Ungültige Reparatur-ID in Variablen: ${variables.repairId}`);
+        }
+      }
+      
+      return emailSent;
+    } catch (error) {
+      console.error('Fehler in storage.sendEmailWithTemplate:', error);
+      return false;
+    }
   }
   
   // SMS-Funktionalität wurde auf Kundenwunsch entfernt
