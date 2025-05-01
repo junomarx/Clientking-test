@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import type { SubmitHandler } from 'react-hook-form';
 
 import {
@@ -22,7 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Mail, Star } from 'lucide-react';
+import { AlertCircle, Mail, Star } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -52,6 +53,10 @@ export function ChangeStatusDialog({
   onUpdateStatus
 }: ChangeStatusDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Ist der Benutzer auf Professional oder höher?
+  const isProfessionalOrHigher = user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise';
   
   // Form definition
   const form = useForm<StatusFormValues>({
@@ -71,6 +76,19 @@ export function ChangeStatusDialog({
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
     if (currentSelectedStatus === 'abgeholt') {
+      if (!isProfessionalOrHigher) {
+        return (
+          <>
+            <div className="flex items-center gap-1 text-amber-500">
+              <AlertCircle className="h-4 w-4" /> Bewertungsanfragen nur in Professional verfügbar
+            </div>
+            <p className="text-xs text-amber-500">
+              Upgrade auf Professional, um Bewertungsanfragen an Kunden zu senden
+            </p>
+          </>
+        );
+      }
+      
       return (
         <>
           <FormLabel className="flex items-center gap-1">
@@ -159,23 +177,30 @@ export function ChangeStatusDialog({
             
             {showEmailOption && (
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="sendEmail"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        {getEmailLabel()}
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                {currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher ? (
+                  <div className="rounded-md border p-4">
+                    {getEmailLabel()}
+                  </div>
+                ) : (
+                  <FormField
+                    control={form.control}
+                    name="sendEmail"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          {getEmailLabel()}
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             )}
             

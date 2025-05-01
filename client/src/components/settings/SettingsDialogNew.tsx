@@ -57,6 +57,9 @@ function PricingPlanDisplay() {
     refetchInterval: 30000,
   });
   
+  // Ist der Benutzer auf Professional oder höher?
+  const isProfessionalOrHigher = quotaData?.pricingPlan === 'professional' || quotaData?.pricingPlan === 'enterprise';
+  
   console.log("PricingPlanDisplay - Quota Data:", quotaData);
   
   // Farbkodierung je nach Paket

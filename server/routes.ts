@@ -1783,6 +1783,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Benutzer abrufen, um Preispaket zu prüfen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Für Basic-Benutzer: Bewertungsanfragen nicht erlauben
+      if (user.pricingPlan === 'basic') {
+        return res.status(403).json({ 
+          message: "Im Basic-Paket können keine Bewertungsanfragen gesendet werden. Upgrade auf Professional, um diese Funktion zu nutzen."
+        });
+      }
+      
       // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
       const repair = await storage.getRepair(repairId, userId);
       
