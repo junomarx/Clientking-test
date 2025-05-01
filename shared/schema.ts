@@ -51,6 +51,10 @@ export const repairs = pgTable("repairs", {
   userId: integer("user_id").references(() => users.id),
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
+  // Speichert die Unterschrift des Kunden als Base64-kodiertes Bild
+  customerSignature: text("customer_signature"),
+  // Zeitpunkt der Unterschrift
+  signedAt: timestamp("signed_at"),
 });
 
 export const insertRepairSchema = createInsertSchema(repairs).omit({

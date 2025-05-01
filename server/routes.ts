@@ -1876,6 +1876,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SMS-Endpunkt wurde auf Kundenwunsch entfernt
 
   // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
+  // API-Endpunkt zum Speichern einer digitalen Unterschrift für eine Reparatur
+  app.patch("/api/repairs/:id/signature", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const { signature } = req.body;
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
+      const repair = await storage.getRepair(repairId, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Unterschrift und Zeitstempel speichern
+      const updatedRepair = await storage.updateRepairSignature(repairId, signature);
+      
+      res.json(updatedRepair);
+    } catch (error) {
+      console.error("Error saving signature:", error);
+      res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
+    }
+  });
+
+  // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
   app.get("/api/repairs/:id/email-history", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const repairId = parseInt(req.params.id);
