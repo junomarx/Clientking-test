@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { TabNavigation } from '@/components/layout/TabNavigation';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
@@ -9,6 +9,7 @@ import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import ToastTestDialog from '@/components/ToastTestDialog';
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
 
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
@@ -18,6 +19,27 @@ export default function Home() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isToastTestOpen, setIsToastTestOpen] = useState(false);
+  const [searchParam, setSearchParam] = useState<string>('');
+  const [location] = useLocation();
+  
+  // URL Parameter auswerten für Tab und Suchbegriff
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    const searchValue = params.get('search');
+    
+    // Tab aus URL setzen, wenn vorhanden
+    if (tabParam) {
+      if (['dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates'].includes(tabParam as Tab)) {
+        setActiveTab(tabParam as Tab);
+      }
+    }
+    
+    // Suchbegriff aus URL setzen
+    if (searchValue) {
+      setSearchParam(searchValue);
+    }
+  }, [location]);
   
   const handleNewOrder = () => {
     // Wir benötigen keine Parameter mehr, da wir die Kundendaten im localStorage speichern
@@ -40,7 +62,10 @@ export default function Home() {
           )}
           
           {activeTab === 'repairs' && (
-            <RepairsTab onNewOrder={handleNewOrder} />
+            <RepairsTab 
+              onNewOrder={handleNewOrder} 
+              initialSearchTerm={searchParam}
+            />
           )}
           
           {activeTab === 'customers' && (
