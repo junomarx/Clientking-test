@@ -56,6 +56,12 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
+  
+  // Zwei getrennte Zustände für die Signatur-Dialoge
+  const [showDropoffSignatureDialog, setShowDropoffSignatureDialog] = useState(false);
+  const [showPickupSignatureDialog, setShowPickupSignatureDialog] = useState(false);
+  
+  // Für Rückwärtskompatibilität
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { showPrintOptions } = usePrintManager();
   
@@ -298,44 +304,92 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             </div>
           </div>
           
-          {/* Kundenunterschrift */}
+          {/* Unterschriften */}
           <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
-            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-              <Pen className="h-5 w-5" />
-              Kundenunterschrift
-            </h3>
-            
-            {repair.customerSignature ? (
-              <div className="space-y-3">
-                <div className="border rounded bg-white p-2">
-                  <img 
-                    src={repair.customerSignature} 
-                    alt="Unterschrift des Kunden" 
-                    className="max-h-32 mx-auto"
-                  />
-                </div>
-                {repair.signedAt && (
-                  <div className="text-sm text-muted-foreground text-center">
-                    Unterschrieben am {formatDateTime(repair.signedAt)}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Abgabe-Unterschrift */}
+              <div>
+                <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+                  <Pen className="h-5 w-5" />
+                  Unterschrift bei Abgabe
+                </h3>
+                
+                {repair.dropoffSignature ? (
+                  <div className="space-y-3">
+                    <div className="border rounded bg-white p-2">
+                      <img 
+                        src={repair.dropoffSignature} 
+                        alt="Unterschrift bei Abgabe" 
+                        className="max-h-32 mx-auto"
+                      />
+                    </div>
+                    {repair.dropoffSignedAt && (
+                      <div className="text-sm text-muted-foreground text-center">
+                        Unterschrieben am {formatDateTime(repair.dropoffSignedAt)}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground italic text-center py-3">
+                    Keine Abgabe-Unterschrift vorhanden
                   </div>
                 )}
+                
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDropoffSignatureDialog(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Pen className="h-4 w-4" />
+                    {repair.dropoffSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <div className="text-muted-foreground italic text-center py-3">
-                Keine Unterschrift vorhanden
+              
+              {/* Abholungs-Unterschrift */}
+              <div>
+                <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+                  <Pen className="h-5 w-5" />
+                  Unterschrift bei Abholung
+                </h3>
+                
+                {repair.pickupSignature ? (
+                  <div className="space-y-3">
+                    <div className="border rounded bg-white p-2">
+                      <img 
+                        src={repair.pickupSignature} 
+                        alt="Unterschrift bei Abholung" 
+                        className="max-h-32 mx-auto"
+                      />
+                    </div>
+                    {repair.pickupSignedAt && (
+                      <div className="text-sm text-muted-foreground text-center">
+                        Unterschrieben am {formatDateTime(repair.pickupSignedAt)}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground italic text-center py-3">
+                    Keine Abholungs-Unterschrift vorhanden
+                  </div>
+                )}
+                
+                <div className="mt-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPickupSignatureDialog(true)}
+                    className="flex items-center gap-1"
+                    disabled={repair.status !== 'fertig' && repair.status !== 'abgeholt'}
+                    title={repair.status !== 'fertig' && repair.status !== 'abgeholt' ? 'Abholungs-Unterschrift ist nur möglich, wenn der Status "Fertig" oder "Abgeholt" ist' : undefined}
+                  >
+                    <Pen className="h-4 w-4" />
+                    {repair.pickupSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
+                  </Button>
+                </div>
               </div>
-            )}
-            
-            <div className="mt-4 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSignatureDialog(true)}
-                className="flex items-center gap-1"
-              >
-                <Pen className="h-4 w-4" />
-                {repair.customerSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
-              </Button>
             </div>
           </div>
           

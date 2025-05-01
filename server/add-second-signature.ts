@@ -2,55 +2,87 @@ import { pool } from './db';
 
 async function addSecondSignatureColumns() {
   try {
+    console.log('Starte Migration: Hinzufügen von Spalten für zweite Unterschrift...');
+    
     // Verbindung zur Datenbank herstellen
     const client = await pool.connect();
     
     try {
-      // Prüfen, ob die Spalte bereits existiert
-      const checkColumnQuery = `
+      // Überprüfen, ob die 'customerSignature'-Spalte existiert
+      const checkCustomerSignatureQuery = `
         SELECT column_name 
         FROM information_schema.columns 
-        WHERE table_name = 'repairs' 
-        AND column_name = 'pickup_signature'
+        WHERE table_name = 'repairs' AND column_name = 'customer_signature';
       `;
       
-      const columnCheck = await client.query(checkColumnQuery);
+      const customerSignatureResult = await client.query(checkCustomerSignatureQuery);
+      const hasCustomerSignature = customerSignatureResult.rows.length > 0;
       
-      if (columnCheck.rows.length === 0) {
-        console.log('Füge pickup_signature und pickup_signed_at Spalten hinzu...');
+      // Wenn die alte Spalte existiert, sie umbenennen und die neuen Spalten hinzufügen
+      if (hasCustomerSignature) {
+        console.log('Die Spalte "customer_signature" existiert und wird umbenannt in "dropoff_signature"');
         
-        // Spalten für die zweite Unterschrift hinzufügen
-        const alterTableQuery = `
-          ALTER TABLE repairs 
-          ADD COLUMN pickup_signature TEXT,
-          ADD COLUMN pickup_signed_at TIMESTAMP;
-          
-          -- Umbenennen der bestehenden Spalten für Klarheit
-          ALTER TABLE repairs 
-          RENAME COLUMN customer_signature TO dropoff_signature;
-          
-          ALTER TABLE repairs 
-          RENAME COLUMN signed_at TO dropoff_signed_at;
-        `;
+        await client.query(`
+          -- Umbenennen der alten Spalte in dropoff_signature 
+          ALTER TABLE repairs RENAME COLUMN customer_signature TO dropoff_signature;
+        `);
         
-        await client.query(alterTableQuery);
-        console.log('Spalten wurden erfolgreich hinzugefügt!');
+        await client.query(`
+          -- Umbenennen der alten Spalte signed_at in dropoff_signed_at
+          ALTER TABLE repairs RENAME COLUMN signed_at TO dropoff_signed_at;
+        `);
       } else {
-        console.log('Die Spalten existieren bereits. Keine Änderungen vorgenommen.');
+        // Wenn die Spalten nicht existieren, neue Spalten für Abgabe-Unterschrift hinzufügen
+        console.log('Füge neue Spalten für Abgabe-Unterschrift hinzu...');
+        
+        await client.query(`
+          -- Hinzufügen der Spalte für Abgabe-Unterschrift
+          ALTER TABLE repairs ADD COLUMN IF NOT EXISTS dropoff_signature TEXT;
+        `);
+        
+        await client.query(`
+          -- Hinzufügen der Spalte für Abgabe-Unterschrift Zeitstempel
+          ALTER TABLE repairs ADD COLUMN IF NOT EXISTS dropoff_signed_at TIMESTAMPTZ;
+        `);
       }
+      
+      // Überprüfen, ob die 'pickup_signature'-Spalte existiert
+      const checkPickupSignatureQuery = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'repairs' AND column_name = 'pickup_signature';
+      `;
+      
+      const pickupSignatureResult = await client.query(checkPickupSignatureQuery);
+      const hasPickupSignature = pickupSignatureResult.rows.length > 0;
+      
+      // Spalten für Abholungs-Unterschrift hinzufügen, wenn sie noch nicht existieren
+      if (!hasPickupSignature) {
+        console.log('Füge neue Spalten für Abholungs-Unterschrift hinzu...');
+        
+        await client.query(`
+          -- Hinzufügen der Spalte für Abholungs-Unterschrift
+          ALTER TABLE repairs ADD COLUMN pickup_signature TEXT;
+        `);
+        
+        await client.query(`
+          -- Hinzufügen der Spalte für Abholungs-Unterschrift Zeitstempel
+          ALTER TABLE repairs ADD COLUMN pickup_signed_at TIMESTAMPTZ;
+        `);
+      } else {
+        console.log('Die Spalten für Abholungs-Unterschrift existieren bereits.');
+      }
+      
+      console.log('Migration für zweite Unterschrift erfolgreich abgeschlossen.');
     } finally {
-      // Client zur Pool zurückgeben
+      // Verbindung trennen
       client.release();
     }
-    
-    console.log('Datenbankaktualisierung abgeschlossen.');
   } catch (error) {
-    console.error('Fehler beim Hinzufügen der Spalten:', error);
+    console.error('Fehler beim Hinzufügen der Spalten für die zweite Unterschrift:', error);
     throw error;
   }
 }
 
-// Führe die Funktion aus
-addSecondSignatureColumns()
-  .then(() => console.log('Script erfolgreich ausgeführt'))
-  .catch((err) => console.error('Script fehlgeschlagen:', err));
+// Exportieren wir die Funktion, damit sie aus index.ts aufgerufen werden kann
+export default addSecondSignatureColumns;
