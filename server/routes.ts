@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, sendEmail, sendSms } = req.body;
+      const { status, sendEmail } = req.body;
       
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Repair not found" });
       }
       
-      // Kunde und Business-Daten laden (für E-Mail und SMS)
+      // Kunde und Business-Daten laden (für E-Mail)
       const customer = await storage.getCustomer(repair.customerId, userId);
       const businessSettings = await storage.getBusinessSettings(userId);
       
@@ -551,32 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendSms=true, dann SMS senden
-        if ((status === "fertig" || status === "abholbereit") && sendSms === true && customer.phone) {
-          console.log("SMS-Benachrichtigung wird vorbereitet...");
-          
-          try {
-            // Suche nach einer SMS-Vorlage mit name "abholbereit"
-            const smsTemplates = await storage.getAllSmsTemplates(userId);
-            const pickupSmsTemplate = smsTemplates.find(t => 
-              t.name.toLowerCase().includes("fertig") || 
-              t.name.toLowerCase().includes("abholbereit") || 
-              t.name.toLowerCase().includes("abholung"));
-            
-            if (pickupSmsTemplate) {
-              console.log(`SMS-Vorlage gefunden: ${pickupSmsTemplate.name}`);
-              
-              // SMS senden
-              const smsSent = await storage.sendSmsWithTemplate(pickupSmsTemplate.id, customer.phone, variables, userId);
-              console.log("SMS gesendet:", smsSent);
-            } else {
-              console.log("Keine passende SMS-Vorlage für 'Abholbereit' gefunden");
-            }
-          } catch (smsError) {
-            console.error("Fehler beim Senden der SMS:", smsError);
-            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
-          }
-        }
+        // SMS-Funktionalität wurde auf Kundenwunsch entfernt
       } else {
         console.log("Kunde nicht gefunden, keine Benachrichtigung möglich");
       }
