@@ -195,6 +195,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             }
             .issue {
               font-size: 9px;
+              white-space: pre-wrap;
+              text-align: left;
             }
           </style>
         </head>
@@ -213,7 +215,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               
               <div class="repair-info">
                 <div class="model">${model}</div>
-                <div class="issue">${repairIssue}</div>
+                <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
               </div>
             </div>
           </div>
@@ -278,7 +280,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     {/* Reparaturinformationen */}
                     <div className="text-center w-full">
                       <p className="text-xs font-bold">{repair?.model}</p>
-                      <p className="text-xs">{repair?.issue}</p>
+                      <p className="text-xs whitespace-pre-wrap">{repair?.issue ? repair.issue.split(',').join('\n') : ''}</p>
                     </div>
                   </div>
                 </div>

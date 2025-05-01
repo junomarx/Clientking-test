@@ -124,7 +124,7 @@ export const RecentRepairs: React.FC<RecentRepairsProps> = ({
               
               <div className="mt-2">
                 <div className="text-sm">{repair.brand} {repair.model}</div>
-                <div className="text-xs mt-1 text-muted-foreground">{repair.issue}</div>
+                <div className="text-xs mt-1 text-muted-foreground whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</div>
               </div>
               
               <div className="mt-2 text-xs text-muted-foreground">
