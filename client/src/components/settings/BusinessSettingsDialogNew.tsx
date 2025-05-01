@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +53,8 @@ import {
   MapPin,
   MailPlus,
   BellRing,
-  Globe
+  Globe,
+  AlertCircle
 } from "lucide-react";
 // DeviceTypeSettings wird nicht mehr verwendet
 
@@ -101,6 +102,17 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   const [logoError, setLogoError] = useState<string | null>(null);
   // Verwende den initialActiveTab als Anfangswert
   const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design">(initialActiveTab);
+  
+  // Abrufen des Preispakets, um zu prüfen, ob der Benutzer im Basic-Paket ist
+  const { data: quotaData } = useQuery<{
+    pricingPlan: string;
+    displayName: string;
+  }>({
+    queryKey: ["/api/repair-quota"],
+  });
+  
+  // Ist der Benutzer auf Professional oder höher?
+  const isProfessionalOrHigher = quotaData?.pricingPlan === 'professional' || quotaData?.pricingPlan === 'enterprise';
   
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
