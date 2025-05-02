@@ -13,7 +13,7 @@ import { Loader2, Printer, QrCode } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
-import QRCode from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface PrintRepairDialogProps {
   open: boolean;
@@ -86,8 +86,49 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     },
     enabled: open,
   });
+  
+  // Lade QR-Code-Einstellungen
+  const { data: qrCodeSettings, isLoading: isLoadingQrCode } = useQuery({
+    queryKey: ['/api/business-settings/qr-code'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/business-settings/qr-code', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'X-User-ID': localStorage.getItem('userId') || '',
+          }
+        });
+        if (!response.ok) return null;
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der QR-Code-Einstellungen:", err);
+        return null;
+      }
+    },
+    enabled: open,
+  });
 
-  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
+  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings || isLoadingQrCode;
+  
+  // QR-Code URL für den Reparaturstatus oder andere Typen generieren
+  const getQrCodeUrl = () => {
+    if (!qrCodeSettings?.qrCodeEnabled || !repair) return null;
+    
+    switch (qrCodeSettings.qrCodeType) {
+      case 'repair_status':
+        // URL für die Statusabfrage generieren
+        return `${window.location.origin}/status/${repair.orderCode}`;
+      case 'review':
+        // Bewertungslink zurückgeben
+        return businessSettings?.reviewLink || '';
+      case 'website':
+      case 'custom':
+        // Benutzerdefinierte URL zurückgeben
+        return qrCodeSettings.qrCodeContent || '';
+      default:
+        return null;
+    }
+  };
 
   // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
@@ -537,6 +578,27 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     <div className="text-xs mt-3 text-center">
                       <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich mit den Reparaturbedingungen einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.</p>
                     </div>
+                  </div>
+                )}
+                
+                {/* QR-Code anzeigen, wenn aktiviert */}
+                {qrCodeSettings?.qrCodeEnabled && (
+                  <div className="print-section mb-3 mt-8 text-center">
+                    <h3 className="font-semibold mb-1">Scannen Sie den QR-Code</h3>
+                    <div style={{ margin: '0 auto', width: '80px', height: '80px' }}>
+                      <QRCodeSVG
+                        value={getQrCodeUrl() || 'https://phonerepair.service'}
+                        size={80}
+                        level="M"
+                        includeMargin={true}
+                      />
+                    </div>
+                    <p className="text-xs mt-2">
+                      {qrCodeSettings.qrCodeType === 'repair_status' && 'Scannen Sie den QR-Code, um den Status Ihrer Reparatur zu überprüfen'}
+                      {qrCodeSettings.qrCodeType === 'review' && 'Scannen Sie den QR-Code, um uns zu bewerten'}
+                      {qrCodeSettings.qrCodeType === 'website' && 'Scannen Sie den QR-Code, um unsere Webseite zu besuchen'}
+                      {qrCodeSettings.qrCodeType === 'custom' && 'Scannen Sie den QR-Code'}
+                    </p>
                   </div>
                 )}
                 
