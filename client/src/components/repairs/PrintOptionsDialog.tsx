@@ -188,7 +188,7 @@ export function PrintOptionsDialog({
             <h3 className="font-semibold mb-1">Scannen Sie den QR-Code</h3>
             <div style={{ margin: '0 auto', width: '80px', height: '80px' }}>
               <QRCodeSVG
-                value={`${qrCodeSettings.qrCodeBaseUrl || window.location.origin}/status/${repair?.id}?code=${repair?.accessCode}`}
+                value={`${qrCodeSettings.qrCodeBaseUrl || window.location.origin}/status/${repair?.id}`}
                 size={80}
                 level="M"
               />

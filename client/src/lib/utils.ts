@@ -6,7 +6,15 @@ import { de } from 'date-fns/locale';
 
 // Funktion, um zu prüfen, ob ein Benutzer Professional oder höher ist oder Admin
 export function isProfessionalOrHigher(user: any): boolean {
-  return user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise' || user?.role === 'admin';
+  // Debug-Informationen
+  console.log('User-Daten in isProfessionalOrHigher:', user);
+  console.log('pricingPlan:', user?.pricingPlan);
+  console.log('isAdmin:', user?.isAdmin);
+  
+  // Prüfe, ob der Benutzer ein Professional oder Enterprise Paket hat oder ein Admin ist
+  return user?.pricingPlan === 'professional' || 
+         user?.pricingPlan === 'enterprise' || 
+         user?.isAdmin === true;
 }
 
 export function cn(...inputs: ClassValue[]) {

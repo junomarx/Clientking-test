@@ -145,8 +145,14 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
   // Prüfe, ob der Benutzer Etiketten drucken kann
   useEffect(() => {
     if (currentUser) {
-      // Nur erlauben, wenn der Benutzer Professional oder höher ist
-      setCanPrintLabels(isProfessionalOrHigher(currentUser));
+      console.log('Benutzer in PrintRepairDialog:', currentUser);
+      console.log('isAdmin:', currentUser.isAdmin);
+      console.log('pricingPlan:', currentUser.pricingPlan);
+      
+      // Nur erlauben, wenn der Benutzer Professional oder höher ist oder Admin
+      const canPrint = isProfessionalOrHigher(currentUser);
+      console.log('Kann Etiketten drucken:', canPrint);
+      setCanPrintLabels(canPrint);
     }
   }, [currentUser]);
 
