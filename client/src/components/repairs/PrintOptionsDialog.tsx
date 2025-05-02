@@ -270,6 +270,12 @@ export function PrintOptionsDialog({
   
   // Generiere A4-Inhalt (nur Vorschau)
   const renderA4Content = () => {
+    // Tiefere Untersuchung der Daten vor der Übergabe
+    console.log('Reparatur-Daten in renderA4Content:', repair);
+    console.log('Reparatur-Daten als JSON:', JSON.stringify(repair, null, 2));
+    console.log('Kunden-Daten in renderA4Content:', customer);
+    console.log('Kunden-Daten als JSON:', JSON.stringify(customer, null, 2));
+    
     // Verwenden der Funktion aus importierter a4-print-template.ts
     const a4Content = generateA4PrintContent({
       repair,
@@ -280,10 +286,10 @@ export function PrintOptionsDialog({
     
     // Debug-Log, um zu sehen, welche Daten an die Template-Funktion übergeben werden
     console.log('A4 Druckdaten:', {
-      repair,
-      customer,
-      businessSettings,
-      qrCodeSettings
+      repair: repair ? `Repair ID ${repair.id} vorhanden` : 'Keine Repair-Daten',
+      customer: customer ? `Customer ID ${customer.id} vorhanden` : 'Keine Customer-Daten',
+      businessSettings: businessSettings ? `Business Settings ID ${businessSettings.id} vorhanden` : 'Keine Business-Settings',
+      qrCodeSettings: qrCodeSettings ? 'QR-Code-Einstellungen vorhanden' : 'Keine QR-Code-Einstellungen'
     });
     
     // Gibt es ein Problem mit der HTML-Generierung?

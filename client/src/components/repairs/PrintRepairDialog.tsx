@@ -168,6 +168,23 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
   
   // PrintOptionsDialog anzeigen, wenn die Daten geladen sind und showPrintOptions true ist
   if (open && !isLoading && showPrintOptions) {
+    // Debug-Logs, um zu überprüfen, welche Daten übergeben werden
+    console.log('RepairDialog übergibt folgende Daten an PrintOptionsDialog:', {
+      repair: repair ? `Repair ID ${repair.id} geladen` : 'Keine Repair-Daten',
+      customer: customer ? `Customer ID ${customer.id} geladen` : 'Keine Customer-Daten',
+      businessSettings: businessSettings ? `BusinessSettings ID ${businessSettings.id} geladen` : 'Keine BusinessSettings',
+      qrCodeSettings: qrCodeSettings ? 'QrCodeSettings geladen' : 'Keine QrCodeSettings',
+      currentUser: currentUser ? `User ${currentUser.username} (${currentUser.id}) geladen` : 'Kein User geladen',
+    });
+    
+    // Detailliertere Logs zu Repair und Customer
+    if (repair) {
+      console.log('Repair Daten Details:', JSON.stringify(repair, null, 2));
+    }
+    if (customer) {
+      console.log('Customer Daten Details:', JSON.stringify(customer, null, 2));
+    }
+    
     return (
       <PrintOptionsDialog
         open={showPrintOptions}
