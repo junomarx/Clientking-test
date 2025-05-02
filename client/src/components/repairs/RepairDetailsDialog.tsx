@@ -428,7 +428,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
               <div className="space-y-4 max-h-60 overflow-y-auto">
                 {emailHistory.map((entry) => {
                   // Lade E-Mail-Vorlagenname aus der E-Mail-Vorlage-ID
-                  const template = templates?.find(t => t.id === entry.emailTemplateId);
+                  const template = templates?.find((t: any) => t.id === entry.emailTemplateId);
                   
                   return (
                     <div key={entry.id} className="border bg-white rounded-lg overflow-hidden">
