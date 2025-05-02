@@ -7,6 +7,14 @@ Diese Anleitung zeigt, wie die Anwendung auf einer eigenen Domain gehostet werde
 1. **Frontend**: React-Anwendung mit Vite erstellt
 2. **Backend**: Node.js Express-Server, der die API bereitstellt
 
+## Vorbereitung: Deployment-Paket direkt von Replit herunterladen
+
+Die einfachste Möglichkeit, alle Dateien zu bekommen, ist:
+
+1. Im Replit-Interface oben links auf das Dreipunkt-Menü klicken
+2. "Download as zip" wählen, um das gesamte Projekt herunterzuladen
+3. Die heruntergeladene ZIP-Datei auf Ihrem Computer entpacken
+
 ## Schnellstart: Deployment-Paket manuell erstellen
 
 Um ein Deployment-Paket manuell vorzubereiten, folgen Sie diesen Schritten:
@@ -78,10 +86,16 @@ SMTP_PASSWORD=your-smtp-password
 BREVO_API_KEY=your-brevo-api-key
 ```
 
-4. Starten Sie den Server:
+4. Starten Sie den Server mit dem bereitgestellten Startskript:
 
 ```bash
-node dist/index.js
+node server.js
+```
+
+Oder direkt mit:
+
+```bash
+NODE_ENV=production node server/index.js
 ```
 
 5. Verwenden Sie einen Reverse-Proxy wie Nginx oder Apache, um Anfragen von Ihrer Domain an den Server weiterzuleiten.

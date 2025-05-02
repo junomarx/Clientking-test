@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// API-Basis-URL - kann durch die VITE_API_URL Umgebungsvariable überschrieben werden
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,12 +15,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Füge API_BASE_URL hinzu, wenn der URL nicht mit http:// oder https:// beginnt
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+
   // Auth-Token und Benutzer-ID aus dem lokalen Speicher holen
   const authToken = localStorage.getItem('auth_token');
   const userId = localStorage.getItem('userId');
   const username = localStorage.getItem('username');
   
-  console.log(`API request ${method} ${url} for user ${username || 'unknown'} (ID: ${userId || 'unknown'}) with auth token:`, authToken ? 'exists' : 'none');
+  console.log(`API request ${method} ${fullUrl} for user ${username || 'unknown'} (ID: ${userId || 'unknown'}) with auth token:`, authToken ? 'exists' : 'none');
   
   const headers: Record<string, string> = {};
   if (data) {
@@ -35,7 +41,7 @@ export async function apiRequest(
   console.log('Request headers:', headers);
   
   try {
-    const res = await fetch(url, {
+    const res = await fetch(fullUrl, {
       method,
       headers: headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -43,7 +49,7 @@ export async function apiRequest(
     });
 
     if (!res.ok) {
-      console.error(`API error ${res.status} ${res.statusText} for ${method} ${url}`);
+      console.error(`API error ${res.status} ${res.statusText} for ${method} ${fullUrl}`);
       const text = await res.text();
       console.error('Error response body:', text);
       throw new Error(`${res.status}: ${text || res.statusText}`);
@@ -51,7 +57,7 @@ export async function apiRequest(
     
     return res;
   } catch (error) {
-    console.error(`API request error for ${method} ${url}:`, error);
+    console.error(`API request error for ${method} ${fullUrl}:`, error);
     throw error;
   }
 }
@@ -67,7 +73,11 @@ export const getQueryFn: <T>(options: {
     const userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
     
-    console.log(`Query ${queryKey[0]} for user ${username || 'unknown'} (ID: ${userId || 'unknown'})`);
+    // Füge API_BASE_URL hinzu, wenn der URL nicht mit http:// oder https:// beginnt
+    const path = queryKey[0] as string;
+    const fullUrl = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+    
+    console.log(`Query ${fullUrl} for user ${username || 'unknown'} (ID: ${userId || 'unknown'})`);
     
     const headers: Record<string, string> = {};
     
@@ -80,7 +90,7 @@ export const getQueryFn: <T>(options: {
       headers["X-User-ID"] = userId;
     }
     
-    const res = await fetch(queryKey[0] as string, {
+    const res = await fetch(fullUrl, {
       credentials: "include",
       headers: headers
     });
