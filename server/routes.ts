@@ -2700,6 +2700,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API-Routen für QR-Code-Einstellungen
+  // API-Endpunkt für DIN A4-Druckeinstellungen
+  app.get("/api/business-settings/a4-print", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Hole nur die relevanten Druckeinstellungen aus der Datenbank
+      const result = await db
+        .select({
+          printA4Enabled: businessSettings.printA4Enabled
+        })
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId))
+        .limit(1);
+      
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      res.json(result[0]);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der DIN A4-Druckeinstellungen:", error);
+      res.status(500).json({ message: "Serverfehler" });
+    }
+  });
+  
+  // API-Endpunkt zum Aktualisieren der DIN A4-Druckeinstellungen
+  app.put("/api/business-settings/a4-print", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const userId = (req.user as any).id;
+      const { printA4Enabled } = req.body;
+      
+      // Aktualisiere die DIN A4-Druckeinstellungen in der Datenbank
+      await db
+        .update(businessSettings)
+        .set({
+          printA4Enabled: printA4Enabled
+        })
+        .where(eq(businessSettings.userId, userId));
+      
+      res.json({ success: true, printA4Enabled });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der DIN A4-Druckeinstellungen:", error);
+      res.status(500).json({ message: "Serverfehler" });
+    }
+  });
+  
   app.get("/api/business-settings/qr-code", isAuthenticated, async (req: Request, res: Response) => {
     try {
       if (!req.user) {

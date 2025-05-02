@@ -40,8 +40,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Import für das neue Migrations-Skript
+// Importe für die Migrations-Skripte
 import { addDocumentPrintSettings } from "./add-document-print-settings";
+import { addA4PrintOption } from "./add-a4-print-option";
 
 (async () => {
   try {
@@ -50,6 +51,7 @@ import { addDocumentPrintSettings } from "./add-document-print-settings";
     await addPricingPlanColumn();
     await addCompanySloganVatColumns();
     await addDocumentPrintSettings();
+    await addA4PrintOption();
     
     const server = await registerRoutes(app);
 
