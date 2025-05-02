@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { isProfessionalOrHigher } from '@/lib/utils';
 
 import {
   Form,
@@ -137,6 +138,26 @@ export function QrCodeSettingsTab() {
 
   if (isLoading) {
     return <div className="p-4 text-center">Einstellungen werden geladen...</div>;
+  }
+
+  // Prüfen, ob der Benutzer das Professional- oder Enterprise-Paket hat
+  const isProfessional = isProfessionalOrHigher(user);
+
+  // Wenn der Benutzer nicht Professional oder höher ist, zeige einen Hinweis an
+  if (!isProfessional) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">QR-Code-Einstellungen</h3>
+        
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <h4 className="font-medium text-amber-800">Funktion nicht verfügbar</h4>
+          <p className="mt-2 text-sm text-amber-700">
+            QR-Codes sind nur im Professional- und Enterprise-Paket verfügbar. 
+            Bitte upgraden Sie Ihr Paket, um diese Funktion nutzen zu können.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

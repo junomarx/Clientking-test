@@ -4,6 +4,11 @@ import React from "react"
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
+// Funktion, um zu prüfen, ob ein Benutzer Professional oder höher ist
+export function isProfessionalOrHigher(user: any): boolean {
+  return user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise';
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

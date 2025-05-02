@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
+import { isProfessionalOrHigher } from '@/lib/utils';
 
 interface PrintRepairDialogProps {
   open: boolean;
@@ -110,8 +111,29 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings || isLoadingQrCode;
   
+  // Hole Benutzerdaten für Preispaket-Überprüfung
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/user', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 Minuten
+  });
+  
+  // Prüfen, ob der Benutzer Pro oder höher ist
+  const canUseQrCodes = currentUser?.pricingPlan === 'professional' || currentUser?.pricingPlan === 'enterprise';
+  
   // QR-Code URL für den Reparaturstatus oder andere Typen generieren
   const getQrCodeUrl = () => {
+    // Wenn Benutzer nicht Pro oder höher ist, keinen QR-Code anzeigen
+    if (!canUseQrCodes) return null;
+    
     if (!qrCodeSettings?.qrCodeEnabled || !repair) return null;
     
     switch (qrCodeSettings.qrCodeType) {
