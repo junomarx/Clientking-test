@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
 import { Customer, EmailHistory } from '@shared/schema';
+import { Repair } from '@/lib/types';
 
 // Erweiterte EmailHistory mit optionalem templateName
 interface EmailHistoryWithTemplate extends EmailHistory {
   templateName?: string;
 }
-import { Repair } from '@/lib/types';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { getStatusBadge } from '@/lib/utils';
@@ -61,7 +61,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   console.log('RepairDetailsDialog geöffnet:', open, 'repairId:', repairId);
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [emailHistory, setEmailHistory] = useState<EmailHistory[]>([]);
+  const [emailHistory, setEmailHistory] = useState<EmailHistoryWithTemplate[]>([]);
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
   const { user } = useAuth();
@@ -98,7 +98,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   });
   
   // E-Mail-Verlauf abrufen
-  const { data: emailHistoryData } = useQuery<EmailHistory[]>({
+  const { data: emailHistoryData } = useQuery<EmailHistoryWithTemplate[]>({
     queryKey: ['/api/repairs', repairId, 'email-history'],
     queryFn: async () => {
       if (!repairId) return [];
@@ -431,7 +431,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     <div className="flex-1">
                       <div className="font-medium text-sm">
                         {/* Zeigt den Namen der Vorlage an, wenn verfügbar, sonst den Betreff */}
-                        {(entry as any).templateName || entry.subject}
+                        {entry.templateName || entry.subject}
                       </div>
                       <div className="text-xs text-muted-foreground">An: {entry.recipient}</div>
                       <div className="text-xs text-muted-foreground mt-1">
