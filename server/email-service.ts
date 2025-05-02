@@ -1,35 +1,18 @@
 import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
-import { TransactionalEmailsApi, SendSmtpEmail } from '@getbrevo/brevo';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
- * Jeder Benutzer kann seinen eigenen Mail-Server konfigurieren, mit Brevo als Fallback
+ * Jeder Benutzer kann seinen eigenen Mail-Server konfigurieren
  */
 export class EmailService {
-  private apiInstance: TransactionalEmailsApi | null = null;
   private globalSmtpTransporter: nodemailer.Transporter | null = null;
   private userTransporters: Map<number, nodemailer.Transporter> = new Map();
 
   constructor() {
-    const apiKey = process.env.BREVO_API_KEY;
-    
-    // Initialisiere API-Client (als Fallback)
-    if (apiKey) {
-      try {
-        this.apiInstance = new TransactionalEmailsApi();
-        // Bei Brevo wird der API-Key als Header-Parameter übergeben
-        // Das wird bei jedem API-Aufruf direkt gemacht
-      } catch (error) {
-        console.error('Fehler beim Initialisieren der Brevo API:', error);
-        this.apiInstance = null;
-      }
-    } else {
-      console.warn('Brevo-API-Schlüssel fehlt - Brevo-Fallback nicht verfügbar');
-    }
 
     // Initialisiere globalen SMTP-Transporter als Fallback
     try {
