@@ -348,7 +348,6 @@ export function SettingsPageContent() {
             <TabsList className="bg-white border mb-6">
               <TabsTrigger value="business">Geschäft</TabsTrigger>
               <TabsTrigger value="emails">E-Mail</TabsTrigger>
-              <TabsTrigger value="appearance">Erscheinungsbild</TabsTrigger>
               <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription">Abonnement</TabsTrigger>
             </TabsList>
@@ -659,18 +658,18 @@ export function SettingsPageContent() {
             </Card>
           </TabsContent>
 
-          {/* Erscheinungsbild Tab */}
-          <TabsContent value="appearance" className="mt-4">
-            <Card>
+
+
+          {/* Ausdrucke Tab */}
+          <TabsContent value="prints" className="mt-4">
+            <Card className="mb-6">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Erscheinungsbild</CardTitle>
-                <CardDescription>
-                  Passen Sie das Aussehen Ihrer Anwendung an.
-                </CardDescription>
+                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
+                <CardDescription>Laden Sie Ihr Firmenlogo hoch für Ihre Ausdrucke.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Form {...form}>
-                  <form className="space-y-8">
+                  <form className="space-y-4">
                     <div>
                       <h3 className="text-md font-medium mb-3">Logo</h3>
                       <div className="mb-4 flex items-center space-x-4">
@@ -693,10 +692,7 @@ export function SettingsPageContent() {
                 </Form>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Ausdrucke Tab */}
-          <TabsContent value="prints" className="mt-4">
+            
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold">Druckeinstellungen</CardTitle>
