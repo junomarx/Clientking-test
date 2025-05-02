@@ -6,7 +6,7 @@ import { Customer, EmailHistory } from '@shared/schema';
 import { Repair } from '@/lib/types';
 
 // Erweiterte EmailHistory mit optionalem templateName
-interface EmailHistoryWithTemplate extends EmailHistory {
+export interface EmailHistoryWithTemplate extends EmailHistory {
   templateName?: string;
 }
 import { format } from 'date-fns';

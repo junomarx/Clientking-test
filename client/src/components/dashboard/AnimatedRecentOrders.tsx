@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Printer, Info, Trash2 } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
+import { DashboardRepairDetailsDialog } from '@/components/dashboard/DashboardRepairDetailsDialog';
 import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
 interface RepairWithCustomer {
@@ -230,21 +231,17 @@ export function AnimatedRecentOrders({
         )}
       </div>
       
-      {/* Repair Details Dialog */}
-      <RepairDetailsDialog
+      {/* Dashboard-spezifischer Repair Details Dialog */}
+      <DashboardRepairDetailsDialog
         open={showDetailsDialog}
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
-        onStatusChange={onStatusChange}
-        onEdit={onEdit ? (id) => {
-          // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung die Edit-Funktion aufrufen
-          console.log('Schließe Details-Dialog und öffne Edit-Form für ID:', id);
-          setShowDetailsDialog(false);
-          // Etwas längere Verzögerung für die Animation
-          setTimeout(() => {
-            onEdit(id);
-          }, 300);
-        } : undefined}
+        repair={repairs?.find(r => r.id === selectedRepairId)}
+        customers={undefined} /* Customers werden im Dialog via API abgefragt */
+        onPrint={(id) => {
+          console.log('Druckoptionen für Auftrag anzeigen:', id);
+          onPrintClick(id);
+        }}
       />
     </motion.div>
   );

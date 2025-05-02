@@ -1,9 +1,32 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import React from "react"
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+// Status-Übersetzungen
+export const statusLabels: Record<string, string> = {
+  "eingegangen": "Eingegangen",
+  "in_reparatur": "In Reparatur",
+  "ersatzteil_eingetroffen": "Ersatzteil eingetroffen",
+  "ausser_haus": "Außer Haus",
+  "fertig": "Fertig",
+  "abgeholt": "Abgeholt"
+};
+
+// Hilfsfunktion für Datum-/Zeitformatierung
+export function formatDateTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
+  } catch (error) {
+    console.error("Fehler beim Formatieren des Datums:", error);
+    return dateString;
+  }
 }
 
 export function getStatusBadge(status: string): React.ReactNode {
