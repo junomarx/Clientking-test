@@ -249,17 +249,53 @@ export default function SettingsPage() {
   // Aktualisieren der Formularwerte, wenn Einstellungen geladen werden
   React.useEffect(() => {
     if (settings) {
-      // Konvertieren aller potenziellen null-Werte in String-Typen
-      const formattedSettings: any = {};
-      Object.entries(settings).forEach(([key, value]) => {
-        formattedSettings[key] = value === null ? "" : value;
-      });
+      // Extrahieren Sie nur die benötigten Felder für das Formular
+      const {
+        businessName = "",
+        ownerFirstName = "",
+        ownerLastName = "",
+        taxId = "",
+        streetAddress = "",
+        city = "",
+        zipCode = "",
+        country = "Österreich",
+        phone = "",
+        email = "",
+        website = "",
+        logoImage = "",
+        smtpHost = "",
+        smtpPort = "",
+        smtpUser = "",
+        smtpPassword = "",
+        smtpSenderName = "",
+        reviewLink = ""
+      } = settings;
       
-      // Weitere Anpassungen
-      formattedSettings.logoImage = formattedSettings.logoImage || "";
-      formattedSettings.receiptWidth = (formattedSettings.receiptWidth === "58mm" || formattedSettings.receiptWidth === "80mm") 
-        ? formattedSettings.receiptWidth as "58mm" | "80mm" 
+      const receiptWidth = (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
+        ? settings.receiptWidth as "58mm" | "80mm" 
         : "80mm" as const;
+        
+      const formattedSettings = {
+        businessName,
+        ownerFirstName,
+        ownerLastName,
+        taxId,
+        streetAddress,
+        city,
+        zipCode,
+        country,
+        phone, 
+        email,
+        website,
+        logoImage,
+        receiptWidth,
+        smtpHost,
+        smtpPort,
+        smtpUser,
+        smtpPassword,
+        smtpSenderName,
+        reviewLink
+      };
       
       form.reset(formattedSettings);
     }
