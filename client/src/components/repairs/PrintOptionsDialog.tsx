@@ -14,6 +14,7 @@ import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
 import { isProfessionalOrHigher } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { generateA4PrintContent } from '@/lib/a4-print-template';
 
 interface PrintOptionsDialogProps {
   open: boolean;
@@ -257,6 +258,14 @@ export function PrintOptionsDialog({
   
   // Generiere A4-Inhalt (nur Vorschau)
   const renderA4Content = () => {
+    // Verwenden der Funktion aus importierter a4-print-template.ts
+    const a4Content = generateA4PrintContent({
+      repair,
+      customer,
+      businessSettings,
+      qrCodeSettings
+    });
+    
     return (
       <div className="bg-white p-6 rounded-md shadow-sm border-2 border-blue-500">
         <div className="flex justify-between border-b pb-4 mb-4">
@@ -351,10 +360,8 @@ export function PrintOptionsDialog({
       return;
     }
     
-    const printContents = printRef.current?.innerHTML || '';
-    
     // Erstelle ein neues Fenster für den Druck
-    const printWindow = window.open('', '_blank', 'width=600,height=600');
+    const printWindow = window.open('', '_blank', 'width=800,height=800');
     
     if (!printWindow) {
       alert('Bitte erlauben Sie Popup-Fenster für diese Seite, um drucken zu können.');
@@ -366,7 +373,13 @@ export function PrintOptionsDialog({
     
     // CSS-Stile für verschiedene Druckoptionen
     let pageCSS = '';
+    let printContents = '';
+    
+    // Bestimme den Inhalt und das CSS basierend auf der ausgewählten Druckoption
     if (selectedPrintOption === 'thermal') {
+      // Wir verwenden hier den Thermobon-Inhalt
+      printContents = printRef.current?.innerHTML || '';
+      
       pageCSS = `
         @page {
           size: ${settings?.receiptWidth || '80mm'} auto; 
@@ -391,6 +404,16 @@ export function PrintOptionsDialog({
         }
       `;
     } else if (selectedPrintOption === 'a4') {
+      // Wir verwenden die A4-Vorlage aus der a4-print-template.ts
+      printContents = `<div style="padding: 0; margin: 0;">${
+        generateA4PrintContent({
+          repair,
+          customer,
+          businessSettings,
+          qrCodeSettings
+        })
+      }</div>`;
+      
       pageCSS = `
         @page {
           size: A4 portrait;
@@ -413,6 +436,9 @@ export function PrintOptionsDialog({
         }
       `;
     } else if (selectedPrintOption === 'label') {
+      // Etiketten-Inhalt
+      printContents = renderLabelContent()?.props?.children || '';
+
       // Formatierung für Etiketten
       pageCSS = `
         @page {
