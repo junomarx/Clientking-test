@@ -30,6 +30,7 @@ import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
 import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
 // ModelManagementTab nicht mehr verwendet
 import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
+import BusinessSettingsModernized from "@/components/settings/BusinessSettingsModernized";
 import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
 
 interface SettingsDialogNewProps {
@@ -328,11 +329,11 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
         </DialogContent>
       </Dialog>
       
-      {/* Der neue BusinessSettingsDialog */}
-      <BusinessSettingsDialogNew 
+      {/* Der modernisierte BusinessSettingsDialog */}
+      <BusinessSettingsModernized 
         open={showBusinessSettings} 
         onClose={closeBusinessSettings}
-        initialActiveTab={initialTab}
+        initialTab={initialTab}
       />
       
       {/* Passwort-Ändern-Dialog */}

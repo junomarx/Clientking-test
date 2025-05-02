@@ -85,10 +85,17 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   // Aktualisieren der Formularwerte, wenn Einstellungen geladen werden
   useEffect(() => {
     if (settings) {
-      form.reset({
+      // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird
+      const formattedSettings = {
         ...settings,
         logoImage: settings.logoImage || "",
-      });
+        // Validiere receiptWidth und setze auf "80mm" wenn ungültig
+        receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
+          ? settings.receiptWidth 
+          : "80mm"
+      };
+      
+      form.reset(formattedSettings);
     }
   }, [settings, form]);
 
