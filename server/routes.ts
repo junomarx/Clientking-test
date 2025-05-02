@@ -2740,7 +2740,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { qrCodeEnabled, qrCodeType, qrCodeContent } = req.body;
       
-      // Einstellungen aktualisieren
+      // Aktuelle Einstellungen aus der Datenbank abrufen
+      const [currentSettings] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!currentSettings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      // Einstellungen aktualisieren - nur mit den relevanten Feldern
       const [updatedSettings] = await db
         .update(businessSettings)
         .set({
@@ -2749,7 +2759,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           qrCodeContent,
           updatedAt: new Date()
         })
-        .where(eq(businessSettings.userId, userId))
+        .where(eq(businessSettings.id, currentSettings.id))
         .returning();
       
       if (!updatedSettings) {
@@ -2763,7 +2773,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error updating QR code settings:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren der QR-Code-Einstellungen" });
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der QR-Code-Einstellungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -2816,14 +2829,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { customFooterText } = req.body;
       
-      // Einstellungen aktualisieren
+      // Aktuelle Einstellungen aus der Datenbank abrufen
+      const [currentSettings] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!currentSettings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      // Einstellungen aktualisieren - nur mit den relevanten Feldern
       const [updatedSettings] = await db
         .update(businessSettings)
         .set({
           customFooterText,
           updatedAt: new Date()
         })
-        .where(eq(businessSettings.userId, userId))
+        .where(eq(businessSettings.id, currentSettings.id))
         .returning();
       
       if (!updatedSettings) {
@@ -2833,7 +2856,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ customFooterText: updatedSettings.customFooterText });
     } catch (error) {
       console.error("Error updating footer settings:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren der Fußzeilen-Einstellungen" });
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Fußzeilen-Einstellungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
