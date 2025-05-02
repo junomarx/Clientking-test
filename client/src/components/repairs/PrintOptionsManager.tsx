@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { PrintOptionsDialog } from './PrintOptionsDialog';
 import { PrintRepairDialog } from './PrintRepairDialog';
-import { PrintLabelDialog } from './PrintLabelDialog';
 
 // Kontext für globale Druckoptionen
 type PrintManagerContextType = {
@@ -21,54 +19,36 @@ export function usePrintManager() {
 // Provider Komponente
 export function PrintManagerProvider({ children }: { children: ReactNode }) {
   const [showPrintOptions, setShowPrintOptions] = useState(false);
-  const [showReceiptPrintDialog, setShowReceiptPrintDialog] = useState(false);
-  const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
   const [repairId, setRepairId] = useState<number | null>(null);
   
   // Druckoptionen anzeigen
   const handleShowPrintOptions = (id: number) => {
     console.log("Zeige Druckoptionen für Reparatur:", id);
+    console.log("Setze repairId in PrintOptionsManager:", id);
     setRepairId(id);
     setShowPrintOptions(true);
+    
+    // Prüfung nach State-Update (wird asynchron sein)
+    setTimeout(() => {
+      console.log("RepairId nach State-Update:", repairId);
+    }, 10);
   };
   
-  // Handler für Druckoptionen
-  const handlePrintReceipt = () => {
-    setShowPrintOptions(false);
-    setShowReceiptPrintDialog(true);
-  };
-  
-  const handlePrintLabel = () => {
-    setShowPrintOptions(false);
-    setShowLabelPrintDialog(true);
-  };
+  // Wir verwenden keine separaten Handler mehr, da PrintRepairDialog
+  // jetzt direkt die Druckoptionen verwaltet
 
   return (
     <PrintManagerContext.Provider value={{ showPrintOptions: handleShowPrintOptions }}>
       {children}
       
-      {/* Druckoptionen Dialog - separater Dialog */}
-      <PrintOptionsDialog 
+      {/* Druckoptionen Dialog - separater Dialog - Wir verwenden stattdessen den PrintRepairDialog */}
+      <PrintRepairDialog
         open={showPrintOptions}
         onClose={() => setShowPrintOptions(false)}
-        onPrintReceipt={handlePrintReceipt}
-        onPrintLabel={handlePrintLabel}
         repairId={repairId}
       />
       
-      {/* Bon Druck Dialog */}
-      <PrintRepairDialog
-        open={showReceiptPrintDialog}
-        onClose={() => setShowReceiptPrintDialog(false)}
-        repairId={repairId}
-      />
-      
-      {/* Etikett Druck Dialog */}
-      <PrintLabelDialog
-        open={showLabelPrintDialog}
-        onClose={() => setShowLabelPrintDialog(false)}
-        repairId={repairId}
-      />
+      {/* Wir haben die separaten Druck-Dialoge entfernt, da PrintRepairDialog jetzt alle Optionen abdeckt */}
     </PrintManagerContext.Provider>
   );
 }
