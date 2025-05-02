@@ -12,6 +12,7 @@ import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
+import * as qrcode from 'qrcode-generator';
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -94,6 +95,10 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       return;
     }
     
+    // Loggen zur Fehlerbehebung
+    console.log("PrintLabelDialog - handlePrint ausgeführt");
+    console.log("Repair ID:", repair?.id);
+    
     // Erstelle ein neues Fenster für den Druck
     const printWindow = window.open('', '_blank', 'width=600,height=600');
     
@@ -113,18 +118,22 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     
     // Erstelle direkt die URL für den QR-Code, die auf die Reparaturdetails verlinkt
     const repairDetailsUrl = `${window.location.origin}/repairs/${repairId}`;
+    console.log("QR-Code URL:", repairDetailsUrl);
     
-    // Fülle das Druckfenster mit Inhalten
-    // Importiere qrcode.react in das Druckfenster
+    // QR-Code mit qrcode-generator generieren (reines JavaScript ohne React/DOM-Abhängigkeiten)
+    const qr = qrcode(0, 'M');
+    qr.addData(repairDetailsUrl);
+    qr.make();
+    const qrCodeSvg = qr.createSvgTag(4); // Größenfaktor 4 für bessere Sichtbarkeit
+    console.log("QR-Code SVG generiert");
+    
+    // Fülle das Druckfenster mit Inhalten - keine React-Abhängigkeit mehr
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
           <meta charset="UTF-8">
-          <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-          <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-          <script src="https://unpkg.com/qrcode.react@3.1.0/lib/umd/qrcode.react.min.js"></script>
           <style>
             @page {
               size: 32mm 57mm;
@@ -214,7 +223,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             <div class="print-area">
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
-              <div class="qr-code" id="qrcode-container"></div>
+              <div class="qr-code">
+                ${qrCodeSvg}
+              </div>
               
               <div class="customer-info">
                 <div class="first-name">${firstName}</div>
@@ -229,26 +240,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             </div>
           </div>
           <script>
-            // QR-Code mit der Bibliothek erzeugen
-            const QRCode = QRCodeReact.QRCodeSVG;
-            const qrCodeContainer = document.getElementById('qrcode-container');
-            
-            // QR-Code mit React rendern
-            ReactDOM.render(
-              React.createElement(QRCode, {
-                value: "${repairDetailsUrl}",
-                size: 76,
-                level: "M"
-              }),
-              qrCodeContainer
-            );
-            
             // Drucken nach vollständigem Laden
             window.onload = function() {
+              console.log('Druckvorgang wird gestartet...');
               setTimeout(function() {
                 window.print();
                 window.close(); // Fenster direkt schließen, ohne auf onafterprint zu warten
-              }, 800); // Etwas länger warten, da wir jetzt mehr Ressourcen laden
+              }, 500);
             };
           </script>
         </body>
