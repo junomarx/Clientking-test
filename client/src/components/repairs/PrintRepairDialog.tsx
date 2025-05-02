@@ -222,7 +222,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
             @media print {
               @page {
                 ${useA4Format 
-                  ? 'size: A4; margin: 15mm;' /* DIN A4 Format mit Rändern */
+                  ? 'size: A4 portrait; margin: 20mm;' /* DIN A4 Format mit Rändern */
                   : `size: ${settings?.receiptWidth || '80mm'} auto; margin: 0mm;` /* Bonformat */
                 }
               }
