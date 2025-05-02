@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ interface PrintRepairDialogProps {
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  const [useA4Format, setUseA4Format] = useState(false);
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -127,7 +128,35 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
   });
   
   // Prüfen, ob der Benutzer Pro oder höher ist
-  const canUseQrCodes = currentUser?.pricingPlan === 'professional' || currentUser?.pricingPlan === 'enterprise';
+  const canUseQrCodes = isProfessionalOrHigher(currentUser);
+  
+  // Laden der A4-Druckeinstellungen für DIN A4-Druck
+  const { data: a4PrintSettings, isLoading: isLoadingA4Print } = useQuery({
+    queryKey: ["/api/business-settings/a4-print"],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/business-settings/a4-print', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) return { printA4Enabled: false };
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der A4-Druckeinstellungen:", err);
+        return { printA4Enabled: false };
+      }
+    },
+    enabled: open,
+  });
+  
+  // Wenn Einstellungen geladen wurden, aktualisiere die A4-Format Option
+  useEffect(() => {
+    if (a4PrintSettings && currentUser) {
+      // Nur aktivieren, wenn der Benutzer Professional oder höher ist
+      setUseA4Format(a4PrintSettings.printA4Enabled && isProfessionalOrHigher(currentUser));
+    }
+  }, [a4PrintSettings, currentUser]);
   
   // QR-Code URL für den Reparaturstatus oder andere Typen generieren
   const getQrCodeUrl = () => {
@@ -191,18 +220,17 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           <style>
             @media print {
               @page {
-                size: ${settings?.receiptWidth || '80mm'} auto; /* Bonbreite aus Einstellungen */
-                margin: 0mm;
+                ${useA4Format 
+                  ? 'size: A4; margin: 15mm;' /* DIN A4 Format mit Rändern */
+                  : `size: ${settings?.receiptWidth || '80mm'} auto; margin: 0mm;` /* Bonformat */
+                }
               }
               
               body {
-                font-family: 'Courier New', monospace; /* Bessere Schrift für Thermodruck */
-                padding: 0;
-                margin: 0;
-                color: black;
-                font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; /* Angepasste Schriftgröße je nach Bonbreite */
-                width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
-              }
+                ${useA4Format
+                  ? 'font-family: Arial, Helvetica, sans-serif; padding: 0; margin: 0; color: black; font-size: 11pt;' /* DIN A4 Format */
+                  : `font-family: 'Courier New', monospace; padding: 0; margin: 0; color: black; font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; width: ${settings?.receiptWidth || '80mm'};` /* Bonformat */
+                }
               
               .print-container {
                 width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
@@ -467,6 +495,22 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
         <DialogHeader>
           <DialogTitle>Reparaturauftrag drucken</DialogTitle>
         </DialogHeader>
+        
+        {/* DIN A4-Druck-Option, nur anzeigen wenn A4-Druck aktiviert ist und Benutzer Pro+ */}
+        {isProfessionalOrHigher(currentUser) && a4PrintSettings?.printA4Enabled && (
+          <div className="mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="flex-1">
+                <h3 className="text-sm font-medium">DIN A4-Format verwenden</h3>
+                <p className="text-sm text-muted-foreground">Statt Thermobon-Format</p>
+              </div>
+              <Switch 
+                checked={useA4Format}
+                onCheckedChange={setUseA4Format}
+              />
+            </div>
+          </div>
+        )}
         
         {isLoading ? (
           <div className="flex items-center justify-center p-8">

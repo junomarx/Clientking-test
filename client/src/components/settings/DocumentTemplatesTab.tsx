@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isProfessionalOrHigher } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -57,9 +58,16 @@ const templateSchema = z.object({
 
 type TemplateFormValues = z.infer<typeof templateSchema>;
 
+// Zustandsvariablen für die A4-Druckoption
+interface A4PrintSettings {
+  printA4Enabled: boolean;
+}
+
 export function DocumentTemplatesTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<DocumentTemplate | null>(null);
+  const [printA4Enabled, setPrintA4Enabled] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -202,8 +210,87 @@ export function DocumentTemplatesTab() {
     return type ? type.name : typeId;
   }
 
+  // Laden der A4-Druckeinstellungen
+  const { data: a4PrintSettings, isLoading: isLoadingA4Print } = useQuery({
+    queryKey: ["/api/business-settings/a4-print"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/business-settings/a4-print");
+      if (!res.ok) throw new Error("Fehler beim Laden der DIN A4-Druckeinstellungen");
+      return res.json();
+    },
+    enabled: !!user
+  });
+  
+  // Aktualisiere den Zustand, wenn Daten geladen sind
+  useEffect(() => {
+    if (a4PrintSettings) {
+      setPrintA4Enabled(a4PrintSettings.printA4Enabled);
+    }
+  }, [a4PrintSettings]);
+
+  // Mutation für den A4-Druckmodus
+  const updateA4PrintMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const res = await apiRequest("PUT", "/api/business-settings/a4-print", { printA4Enabled: enabled });
+      if (!res.ok) throw new Error("Fehler beim Aktualisieren der DIN A4-Druckeinstellungen");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings/a4-print"] });
+      toast({
+        title: "DIN A4-Druckeinstellungen aktualisiert",
+        description: printA4Enabled 
+          ? "DIN A4-Ausdrucke wurden aktiviert."
+          : "DIN A4-Ausdrucke wurden deaktiviert.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim Aktualisieren der DIN A4-Druckeinstellungen: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Prüfen, ob der Benutzer Professional oder höher ist
+  useEffect(() => {
+    if (user) {
+      setIsPro(isProfessionalOrHigher(user));
+    }
+  }, [user]);
+  
+  // Handler für den DIN A4-Druckmodus Switch
+  const handleA4PrintToggle = (checked: boolean) => {
+    setPrintA4Enabled(checked);
+    updateA4PrintMutation.mutate(checked);
+  };
+  
   return (
     <div className="space-y-4">
+      {/* DIN A4-Druckeinstellungen */}
+      <div className="p-4 border rounded-md mb-6">
+        <h3 className="text-lg font-medium mb-4">DIN A4-Druckfunktion</h3>
+        
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-medium">DIN A4-Ausdrucke aktivieren</h4>
+            <p className="text-sm text-muted-foreground">Ermöglicht das Drucken von Reparaturaufträgen im DIN A4-Format</p>
+          </div>
+          <Switch
+            checked={printA4Enabled}
+            onCheckedChange={handleA4PrintToggle}
+            disabled={isLoadingA4Print || updateA4PrintMutation.isPending || !isPro}
+          />
+        </div>
+        
+        {!isPro && (
+          <div className="mt-2 p-2 bg-yellow-50 text-yellow-800 rounded text-sm">
+            Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar.
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Benutzerdefinierte Dokumentenvorlagen</h3>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
