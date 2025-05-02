@@ -97,12 +97,13 @@ export function Header({ variant = "landing" }: HeaderProps) {
                   <DropdownMenuLabel>Benutzermenü</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  <Link href="/settings">
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Einstellungen</span>
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem onClick={() => {
+                    const event = new CustomEvent('open-settings-dialog');
+                    window.dispatchEvent(event);
+                  }}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Einstellungen</span>
+                  </DropdownMenuItem>
                   
                   {user.isAdmin && (
                     <Link href="/admin">
