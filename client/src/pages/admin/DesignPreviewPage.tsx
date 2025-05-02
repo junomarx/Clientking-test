@@ -510,6 +510,11 @@ export default function DesignPreviewPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [collapsed, setCollapsed] = useState(false);
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
+  
+  // Funktion zum Zurückkehren zur Admin-Seite
+  const navigateToAdmin = () => {
+    window.location.href = '/admin';
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -604,6 +609,9 @@ export default function DesignPreviewPage() {
           </div>
           
           <div className="flex items-center space-x-2 md:space-x-4">
+            <Button variant="outline" size="sm" className="flex items-center" onClick={navigateToAdmin}>
+              <ChevronLeft className="h-4 w-4 mr-2" /> Zurück zum Admin
+            </Button>
             <Button variant="outline" size="sm" className="hidden md:flex items-center">
               <Plus className="h-4 w-4 mr-2" /> Neue Reparatur
             </Button>
