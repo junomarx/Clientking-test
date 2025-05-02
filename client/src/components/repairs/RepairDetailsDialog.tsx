@@ -103,6 +103,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     enabled: open && repairId !== null,
   });
   
+  // E-Mail-Vorlagen abrufen
+  const { data: templates } = useQuery<any[]>({
+    queryKey: ['/api/email-templates'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/email-templates`);
+      return response.json();
+    },
+    enabled: open,
+  });
+  
   // Reparatur und zugehörigen Kunden finden, wenn IDs vorhanden sind
   useEffect(() => {
     if (repairs && repairId) {
@@ -416,41 +426,35 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             
             {emailHistory && emailHistory.length > 0 ? (
               <div className="space-y-4 max-h-60 overflow-y-auto">
-                {emailHistory.map((entry) => (
-                  <div key={entry.id} className="border bg-white rounded-lg overflow-hidden">
-                    <div className="flex justify-between items-center p-4 pb-3">
-                      <div>
-                        <div className="font-semibold">{entry.subject}</div>
-                        <div className="text-sm text-muted-foreground">An: {entry.recipient}</div>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDateTime(entry.sentAt.toString())}
+                {emailHistory.map((entry) => {
+                  // Lade E-Mail-Vorlagenname aus der E-Mail-Vorlage-ID
+                  const template = templates?.find(t => t.id === entry.emailTemplateId);
+                  
+                  return (
+                    <div key={entry.id} className="border bg-white rounded-lg overflow-hidden">
+                      <div className="flex justify-between items-center p-4 pb-2">
+                        <div>
+                          <div className="font-semibold">{entry.subject}</div>
+                          <div className="text-sm text-muted-foreground">An: {entry.recipient}</div>
+                          {template && (
+                            <div className="text-xs mt-1 text-blue-600">
+                              Vorlage: {template.name}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {formatDateTime(entry.sentAt.toString())}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-muted-foreground italic text-center py-3">
                 Keine E-Mail-Kommunikation gefunden
               </div>
             )}
-            
-            <div className="mt-4 flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={() => {
-                  // Hier könnte ein E-Mail-Dialog geöffnet werden
-                  console.log('E-Mail senden');
-                  // TODO: E-Mail-Dialog implementieren
-                }}
-              >
-                <Mail className="h-4 w-4" />
-                E-Mail senden
-              </Button>
-            </div>
           </div>
         </div>
 
