@@ -149,7 +149,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
       const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
-      return { data: await response.json(), emailSent: sendEmail === true, status };
+      // Überprüfe den Header 'X-Email-Sent', um zu sehen, ob eine E-Mail tatsächlich gesendet wurde
+      const emailWasSent = response.headers.get('X-Email-Sent') === 'true';
+      return { data: await response.json(), emailSent: emailWasSent, status };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
@@ -170,6 +172,9 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         } else if (result.status === "fertig") {
           emailMessage = "Die Abholbenachrichtigung wurde an den Kunden gesendet.";
           title = "Abhol-Benachrichtigung gesendet";
+        } else if (result.status === "abgeholt") {
+          emailMessage = "Eine Bewertungsanfrage wurde an den Kunden gesendet.";
+          title = "Bewertungsanfrage gesendet";
         } else {
           emailMessage = "Eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
         }
