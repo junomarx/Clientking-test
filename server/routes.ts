@@ -408,15 +408,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const { status, sendEmail } = req.body;
       
-      // Konvertiere sendEmail in einen echten boolean-Wert, egal ob es als String oder Boolean übertragen wurde
-      const shouldSendEmail = sendEmail === true || sendEmail === "true";
-      
-      console.log(`Status-Update erhalten: ID=${id}, status=${status}, sendEmail=${sendEmail}, shouldSendEmail=${shouldSendEmail}`);
-      // Für Debug-Zwecke den Typ des sendEmail-Parameters anzeigen
-      console.log(`Typ von sendEmail: ${typeof sendEmail}`);
-      console.log(`Body-Objekt: ${JSON.stringify(req.body)}`);
-      
-      
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
         return res.status(400).json({ message: "Invalid status value" });
@@ -454,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if ((status === "fertig" || status === "abholbereit") && shouldSendEmail && customer.email) {
+        if ((status === "fertig" || status === "abholbereit") && sendEmail === true && customer.email) {
           console.log("E-Mail-Benachrichtigung wird vorbereitet...");
           
           try {
@@ -480,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Wenn Status auf "ersatzteil_eingetroffen" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if (status === "ersatzteil_eingetroffen" && shouldSendEmail && customer.email) {
+        if (status === "ersatzteil_eingetroffen" && sendEmail === true && customer.email) {
           console.log("E-Mail-Benachrichtigung für Ersatzteillieferung wird vorbereitet...");
           
           try {
@@ -556,37 +547,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } catch (emailError) {
             console.error("Fehler beim Senden der E-Mail:", emailError);
-            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
-          }
-        }
-        
-        // Wenn Status auf "abgeholt" gesetzt wird und shouldSendEmail, dann Bewertungs-E-Mail senden
-        if (status === "abgeholt" && shouldSendEmail && customer.email) {
-          console.log("Bewertungsanfrage-E-Mail wird vorbereitet...");
-          
-          try {
-            // Suche nach einer E-Mail-Vorlage mit name "bewertung" oder "feedback"
-            const templates = await storage.getAllEmailTemplates(userId);
-            const reviewTemplate = templates.find(t => t.name.toLowerCase().includes("bewertung") || 
-                                                 t.name.toLowerCase().includes("feedback") ||
-                                                 t.name.toLowerCase().includes("rezension"));
-            
-            if (reviewTemplate) {
-              console.log(`E-Mail-Vorlage für Bewertung gefunden: ${reviewTemplate.name}`);
-              
-              // E-Mail senden
-              const emailSent = await storage.sendEmailWithTemplate(reviewTemplate.id, customer.email, variables);
-              console.log("Bewertungs-E-Mail gesendet:", emailSent);
-              
-              // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
-              if (emailSent) {
-                res.setHeader('X-Email-Sent', 'true');
-              }
-            } else {
-              console.log("Keine passende E-Mail-Vorlage für Bewertungsanfrage gefunden");
-            }
-          } catch (emailError) {
-            console.error("Fehler beim Senden der Bewertungs-E-Mail:", emailError);
             // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
           }
         }

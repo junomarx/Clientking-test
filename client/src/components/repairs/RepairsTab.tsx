@@ -149,9 +149,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
       const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
-      // Überprüfe den Header 'X-Email-Sent', um zu sehen, ob eine E-Mail tatsächlich gesendet wurde
-      const emailWasSent = response.headers.get('X-Email-Sent') === 'true';
-      return { data: await response.json(), emailSent: emailWasSent, status };
+      return { data: await response.json(), emailSent: sendEmail === true, status };
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
@@ -172,9 +170,6 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         } else if (result.status === "fertig") {
           emailMessage = "Die Abholbenachrichtigung wurde an den Kunden gesendet.";
           title = "Abhol-Benachrichtigung gesendet";
-        } else if (result.status === "abgeholt") {
-          emailMessage = "Eine Bewertungsanfrage wurde an den Kunden gesendet.";
-          title = "Bewertungsanfrage gesendet";
         } else {
           emailMessage = "Eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
         }
@@ -269,12 +264,20 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         sendEmail: sendEmail
       });
     }
-    // Status auf "abgeholt" aktualisieren, sendEmail-Parameter mitgeben
+    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
     else if (newStatus === 'abgeholt') {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
-        status: newStatus,
-        sendEmail: sendEmail
+        status: newStatus
+      }, {
+        onSuccess: () => {
+          // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
+          if (sendEmail) {
+            setTimeout(() => {
+              handleSendReviewRequest(selectedRepairId);
+            }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
+          }
+        }
       });
     }
     // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung
@@ -735,13 +738,27 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onUpdateStatus={(id, status, sendEmail) => {
             console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}`);
             
-            // Einfach für alle Status dieselbe Mutation verwenden
-            console.log(`Sende E-Mail für Status ${status}: ${sendEmail}`);
-            updateStatusMutation.mutate({
+            if (status === 'abgeholt') {
+              updateStatusMutation.mutate({
+                id: id,
+                status: status
+              }, {
+                onSuccess: () => {
+                  // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
+                  if (sendEmail) {
+                    setTimeout(() => {
+                      handleSendReviewRequest(id);
+                    }, 500);
+                  }
+                }
+              });
+            } else {
+              updateStatusMutation.mutate({
                 id: id,
                 status: status,
                 sendEmail: sendEmail
-            });
+              });
+            }
             
             setShowStatusDialog(false);
           }}
