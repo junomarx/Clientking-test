@@ -164,7 +164,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {/* Kundendaten */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <User className="h-5 w-5" />
               Kundendaten
@@ -216,7 +216,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </div>
           
           {/* Gerätedaten */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <Smartphone className="h-5 w-5" />
               Gerätedaten
@@ -260,7 +260,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </div>
           
           {/* Weitere Informationen */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <Clipboard className="h-5 w-5" />
               Auftragsinformationen
@@ -310,7 +310,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </div>
           
           {/* Unterschriften */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Abgabe-Unterschrift */}
               <div>
@@ -408,7 +408,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           </div>
           
           {/* E-Mail-Verlauf */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <MessageCircle className="h-5 w-5" />
               E-Mail-Verlauf
