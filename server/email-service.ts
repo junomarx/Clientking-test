@@ -1,20 +1,18 @@
 import { db } from './db';
-import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
+import { eq, desc, isNull, or } from 'drizzle-orm';
+import { storage } from './storage';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 /**
- * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails
- * Jeder Benutzer kann seinen eigenen Mail-Server konfigurieren
+ * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails über SMTP
  */
 export class EmailService {
-  private globalSmtpTransporter: nodemailer.Transporter | null = null;
-  private userTransporters: Map<number, nodemailer.Transporter> = new Map();
+  private smtpTransporter: nodemailer.Transporter | null = null;
 
   constructor() {
-
-    // Initialisiere globalen SMTP-Transporter als Fallback
+    // Initialisiere den globalen SMTP-Transporter mit den Umgebungsvariablen
     try {
       const smtpHost = process.env.SMTP_HOST;
       const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
@@ -23,20 +21,16 @@ export class EmailService {
       
       // Prüfe, ob alle erforderlichen SMTP-Einstellungen vorhanden sind
       if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
-        console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen, nur Benutzer-SMTP oder Brevo als Fallback verfügbar');
+        console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen');
       } else {
         // Verwende die globalen SMTP-Einstellungen als Fallback
-        this.globalSmtpTransporter = nodemailer.createTransport({
+        this.smtpTransporter = nodemailer.createTransport({
           host: smtpHost,
           port: smtpPort,
           secure: smtpPort === 465, // true für 465, false für andere Ports
           auth: {
             user: smtpUser,
             pass: smtpPassword
-          },
-          tls: {
-            // Deaktiviere die Zertifikatsprüfung im Entwicklungsmodus
-            rejectUnauthorized: process.env.NODE_ENV !== 'development'
           }
         });
         
@@ -44,93 +38,36 @@ export class EmailService {
       }
     } catch (error) {
       console.error('Fehler beim Initialisieren des globalen SMTP-Transporters:', error);
-      this.globalSmtpTransporter = null;
+      this.smtpTransporter = null;
     }
-  }
-  
-  /**
-   * Erstellt einen SMTP-Transporter für den angegebenen Benutzer
-   * @param userId Die ID des Benutzers
-   * @returns Ein Promise mit dem SMTP-Transporter oder null, wenn die Erstellung fehlschlägt
-   */
-  private async createUserSmtpTransporter(userId: number): Promise<nodemailer.Transporter | null> {
-    try {
-      // Lade die SMTP-Einstellungen des Benutzers aus der Datenbank
-      const [settings] = await db.select().from(businessSettings)
-        .where(eq(businessSettings.userId, userId));
-      
-      if (!settings) {
-        console.warn(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
-        return null;
-      }
-      
-      // Prüfe, ob die erforderlichen SMTP-Einstellungen vorhanden sind
-      if (!settings.smtpHost || !settings.smtpUser || !settings.smtpPassword || !settings.smtpPort) {
-        console.warn(`Unvollständige SMTP-Einstellungen für Benutzer ${userId}`);
-        return null;
-      }
-      
-      // Erstelle einen SMTP-Transporter mit den Benutzereinstellungen
-      const smtpPort = parseInt(settings.smtpPort);
-      
-      // Erweiterte Konfigurationsoptionen basierend auf dem Port
-      const isSecure = smtpPort === 465;
-      
-      // Erstelle einen SMTP-Transporter
-      const transporter = nodemailer.createTransport({
-        host: settings.smtpHost,
-        port: smtpPort,
-        secure: isSecure, // true für 465, false für andere Ports
-        auth: {
-          user: settings.smtpUser,
-          pass: settings.smtpPassword
-        },
-        tls: {
-          // Deaktiviere die Zertifikatsprüfung im Entwicklungsmodus
-          rejectUnauthorized: process.env.NODE_ENV !== 'development'
-        }
-      });
-      
-      console.log(`SMTP-Transporter für Benutzer ${userId} (${settings.smtpHost}:${smtpPort}, secure=${isSecure}) erstellt`);
-      
-      // Verifiziere die Verbindung im Entwicklungsmodus
-      if (process.env.NODE_ENV === 'development') {
-        try {
-          await transporter.verify();
-          console.log(`SMTP-Verbindung für Benutzer ${userId} verifiziert`);
-        } catch (verifyError) {
-          console.error(`SMTP-Verbindungsfehler für Benutzer ${userId}:`, verifyError);
-          // Versuche trotzdem, den Transporter zurückzugeben
-        }
-      }
-      
-      // Speichere den Transporter in der Map
-      this.userTransporters.set(userId, transporter);
-      
-      return transporter;
-    } catch (error) {
-      console.error(`Fehler beim Erstellen des SMTP-Transporters für Benutzer ${userId}:`, error);
-      return null;
-    }
-  }
-  
-  /**
-   * Gibt den passenden SMTP-Transporter für den angegebenen Benutzer zurück
-   * @param userId Die ID des Benutzers
-   * @returns Ein Promise mit dem SMTP-Transporter oder null, wenn kein Transporter gefunden wurde
-   */
-  private async getUserSmtpTransporter(userId: number): Promise<nodemailer.Transporter | null> {
-    // Prüfe, ob bereits ein Transporter für diesen Benutzer existiert
-    if (this.userTransporters.has(userId)) {
-      return this.userTransporters.get(userId) || null;
-    }
-    
-    // Erstelle einen neuen Transporter für diesen Benutzer
-    return await this.createUserSmtpTransporter(userId);
   }
 
   // Die grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
-  async getAllEmailTemplates(): Promise<EmailTemplate[]> {
+  async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
+    // Wenn eine userId angegeben ist, filtern wir nach Vorlagen dieses Benutzers
+    // und fügen zusätzlich Vorlagen ohne userId hinzu (Standard-Vorlagen)
+    if (userId !== undefined) {
+      const templates = await db.select().from(emailTemplates)
+        .where(
+          // Entweder die userId entspricht der übergebenen userId ODER die userId ist NULL
+          // Das stellt sicher, dass wir sowohl benutzerspezifische als auch globale Vorlagen zurückgeben
+          eq(emailTemplates.userId, userId)
+        )
+        .orderBy(desc(emailTemplates.createdAt));
+      
+      // Zusätzlich auch die globalen Vorlagen (ohne userId) abfragen
+      const globalTemplates = await db.select().from(emailTemplates)
+        .where(
+          // SQL-Ausdruck für "userId IS NULL"
+          eq(emailTemplates.userId, null as any)
+        )
+        .orderBy(desc(emailTemplates.createdAt));
+      
+      // Beide Ergebnisse kombinieren
+      return [...templates, ...globalTemplates];
+    }
+    
+    // Ohne userId Filterung geben wir alle Vorlagen zurück
     return await db.select().from(emailTemplates).orderBy(desc(emailTemplates.createdAt));
   }
 
@@ -191,64 +128,64 @@ export class EmailService {
       let subject = template.subject;
       let body = template.body;
       
-      // Füge das aktuelle Jahr als Variable hinzu
-      variables["aktuellesJahr"] = new Date().getFullYear().toString();
-      
-      // Bestimme die aktuelle Benutzer-ID aus den Variablen
+      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden)
       const userId = variables.userId ? parseInt(variables.userId) : 0;
       
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
-      const businessSettingsTable = businessSettings;
-      const settingsData = await db.select().from(businessSettingsTable)
-        .where(eq(businessSettingsTable.userId, userId));
-        
-      const bizSettings = settingsData.length > 0 ? settingsData[0] : null;
+      const [businessSetting] = await db.select().from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
       
-      if (bizSettings) {
-        // Füge alle relevanten Geschäftsdaten als Variablen hinzu
-        // Geschäftsname als Variable
-        if (!variables["geschaeftsname"] && bizSettings.businessName) {
-          variables["geschaeftsname"] = bizSettings.businessName;
-        }
-        
-        // Adresse als Variable
-        if (!variables["adresse"] && bizSettings.streetAddress) {
-          variables["adresse"] = `${bizSettings.streetAddress}, ${bizSettings.zipCode} ${bizSettings.city}`;
-        }
-        
-        // Telefonnummer als Variable
-        if (!variables["telefon"] && bizSettings.phone) {
-          variables["telefon"] = bizSettings.phone;
-        }
-        
-        // E-Mail als Variable
-        if (!variables["email"] && bizSettings.email) {
-          variables["email"] = bizSettings.email;
-        }
-        
-        // Website als Variable
-        if (!variables["website"] && bizSettings.website) {
-          variables["website"] = bizSettings.website;
-        }
-        
-        // Bewertungslink als Variable
-        if (!variables["bewertungslink"]) {
-          if (bizSettings.reviewLink) {
-            // Stelle sicher, dass der Bewertungslink vollständig ist (mit http/https)
-            let reviewLink = bizSettings.reviewLink;
-            if (reviewLink && !reviewLink.startsWith('http')) {
-              reviewLink = 'https://' + reviewLink;
-            }
-            console.log(`Verwende Bewertungslink: ${reviewLink}`);
-            variables["bewertungslink"] = reviewLink;
-          } else {
-            // Fallback
-            variables["bewertungslink"] = "https://g.page/r/CVkTCKBnO_NqEBM/review";
-            console.log("Verwende Fallback-Bewertungslink, da kein Link in den Einstellungen gefunden wurde.");
-          }
-        }
+      if (!businessSetting) {
+        console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+        return false;
       }
       
+      // Füge das aktuelle Jahr als Variable hinzu
+      variables["aktuellesJahr"] = new Date().getFullYear().toString();
+      
+      // Füge alle relevanten Geschäftsdaten als Variablen hinzu
+      // Geschäftsname als Variable
+      if (!variables["geschaeftsname"] && businessSetting.businessName) {
+        variables["geschaeftsname"] = businessSetting.businessName;
+      }
+      
+      // Adresse als Variable
+      if (!variables["adresse"] && businessSetting.streetAddress) {
+        variables["adresse"] = `${businessSetting.streetAddress}, ${businessSetting.zipCode} ${businessSetting.city}`;
+      }
+      
+      // Telefonnummer als Variable
+      if (!variables["telefon"] && businessSetting.phone) {
+        variables["telefon"] = businessSetting.phone;
+      }
+      
+      // E-Mail als Variable
+      if (!variables["email"] && businessSetting.email) {
+        variables["email"] = businessSetting.email;
+      }
+      
+      // Website als Variable
+      if (!variables["website"] && businessSetting.website) {
+        variables["website"] = businessSetting.website;
+      }
+      
+      // Bewertungslink als Variable
+      if (!variables["bewertungslink"]) {
+        if (businessSetting.reviewLink) {
+          // Stelle sicher, dass der Bewertungslink vollständig ist (mit http/https)
+          let reviewLink = businessSetting.reviewLink;
+          if (reviewLink && !reviewLink.startsWith('http')) {
+            reviewLink = 'https://' + reviewLink;
+          }
+          console.log(`Verwende Bewertungslink: ${reviewLink}`);
+          variables["bewertungslink"] = reviewLink;
+        } else {
+          // Fallback
+          variables["bewertungslink"] = "https://g.page/r/CVkTCKBnO_NqEBM/review";
+          console.log("Verwende Fallback-Bewertungslink, da kein Link in den Einstellungen gefunden wurde.");
+        }
+      }
+
       // Debug-Ausgabe der Variablen vor der Ersetzung
       console.log("Variablen für die E-Mail:", JSON.stringify(variables, null, 2));
       
@@ -279,206 +216,148 @@ export class EmailService {
         }
       });
       
-      if (!bizSettings) {
-        console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+      const senderEmail = businessSetting.email || 'no-reply@example.com';
+      const senderName = businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop Verwaltung';
+      
+      // Zusätzliche Debug-Informationen
+      console.log(`E-Mail-Versand für Benutzer ${userId}: ${businessSetting.businessName}`);
+      console.log(`SMTP-Einstellungen: ${businessSetting.smtpHost}:${businessSetting.smtpPort}`);
+      console.log(`Absender: "${senderName}" <${businessSetting.smtpUser}>`);
+      console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}`);
+      
+      // Benutzer-spezifischen SMTP-Transporter erstellen
+      if (!businessSetting.smtpHost || !businessSetting.smtpPort || !businessSetting.smtpUser || !businessSetting.smtpPassword) {
+        console.error(`Fehlende SMTP-Einstellungen für Benutzer ${userId}`);
         return false;
       }
       
-      // Verwende die SMTP-Einstellungen des Benutzers, falls vorhanden
-      const senderEmail = bizSettings.email || 'no-reply@example.com';
-      const senderName = bizSettings.smtpSenderName || bizSettings.businessName || 'Handyshop Verwaltung';
+      // SMTP-Transporter für diesen Benutzer erstellen
+      const smtpConfig: SMTPTransport.Options = {
+        host: businessSetting.smtpHost,
+        port: parseInt(businessSetting.smtpPort.toString()), // Stellen Sie sicher, dass es eine Zahl ist
+        secure: parseInt(businessSetting.smtpPort.toString()) === 465, // true für 465, false für andere Ports
+        auth: {
+          user: businessSetting.smtpUser,
+          pass: businessSetting.smtpPassword
+        }
+      };
+      const userSmtpTransporter = nodemailer.createTransport(smtpConfig);
       
-      // Entwicklungsmodus-Information, aber senden trotzdem
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`E-Mail wird gesendet an: ${to}, Betreff: ${subject}, von: ${senderName} <${senderEmail}>`);
-      }
-
-      // 1. Versuch: Benutze den benutzerspezifischen SMTP-Transporter, falls vorhanden
-      const userSmtpTransporter = await this.getUserSmtpTransporter(userId);
-      if (userSmtpTransporter) {
-        try {
-          console.log(`Sende E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}...`);
-          
-          // Bei der Absender-E-Mail MUSS der SMTP-Login verwendet werden
-          // Dies ist ein häufiger Fehler bei SMTP-Konfigurationen
-          const fromEmail = bizSettings.smtpUser;
-          
-          // Sicherstellen, dass die From-Adresse eine gültige E-Mail-Struktur hat
-          if (!fromEmail || !fromEmail.includes('@')) {
-            console.error(`Ungültige Absender-E-Mail für Benutzer ${userId}: "${fromEmail}"`);
-            throw new Error('Ungültige Absender-E-Mail-Adresse');
-          }
-          
-          // Debug-Ausgabe für die Verbindung
-          console.log(`SMTP-Verbindungsdaten: Host=${bizSettings.smtpHost}, Port=${bizSettings.smtpPort}, User=${fromEmail}`);
-          
-          // Erweiterte Mail-Optionen
-          const mailOptions = {
-            from: `"${senderName}" <${fromEmail}>`,
-            to: to,
-            subject: subject,
-            html: body,
-            text: body.replace(/<[^>]*>/g, ''), // Strip HTML für Plaintext
-            // Weitere Optionen für robustere E-Mail-Zustellung
-            headers: {
-              // Wichtige Header für bessere Zustellbarkeit und weniger Spam-Einstufung
-              'X-Priority': '3', // Normale Priorität (hohe Priorität kann Spam-Verdacht erhöhen)
-              'Importance': 'normal',
-              'X-MSMail-Priority': 'Normal',
-              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)',
-              // Header für bessere Zustellbarkeit
-              'Precedence': 'bulk',
-              'Auto-Submitted': 'auto-generated',
-              'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
-              // Anti-Spam Header (beugen Spam-Verdacht vor)
-              'X-Auto-Response-Suppress': 'OOF, DR, RN, NRN, AutoReply',
-              'X-Report-Abuse': `Bitte melden Sie Missbrauch an ${fromEmail}`
-            },
-            // In Entwicklungsumgebungen zurückverfolgen
-            dsn: {
-              id: true,
-              return: 'headers',
-              notify: ['failure', 'delay'],
-              recipient: fromEmail
-            },
-            // Eine Antwort-Adresse hinzufügen
-            replyTo: fromEmail
-          };
-          
+      try {
+        console.log('Sende E-Mail über benutzerspezifischen SMTP-Server...');
+        
+        const mailOptions = {
+          from: `"${senderName}" <${businessSetting.smtpUser}>`, // Benutzer-SMTP als Absender
+          to: to,
+          subject: subject,
+          html: body,
+          text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+        };
+        
+        const info = await userSmtpTransporter.sendMail(mailOptions);
+        console.log('E-Mail erfolgreich über benutzerspezifischen SMTP-Server gesendet:', info.messageId);
+        
+        // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
+        const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        console.log(`Extrahierte Reparatur-ID aus Variablen: ${variables.repairId} -> ${repairId}`);
+        
+        // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
+        if (repairId) {
           try {
-            console.log('Versuche E-Mail zu senden mit Optionen:', JSON.stringify({
-              ...mailOptions,
-              html: '[HTML entfernt für Log]',
-              text: '[Text entfernt für Log]'
-            }, null, 2));
+            const historyEntry: InsertEmailHistory = {
+              repairId,
+              emailTemplateId: templateId,
+              subject,
+              recipient: to,
+              status: 'success',
+              userId
+            };
             
-            const info = await userSmtpTransporter.sendMail(mailOptions);
-            console.log(`E-Mail erfolgreich über benutzerdefinierten SMTP-Server für Benutzer ${userId} gesendet:`, info.messageId);
+            console.log('Erstelle E-Mail-Verlaufseintrag:', historyEntry);
+            await storage.createEmailHistoryEntry(historyEntry);
+            console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des E-Mail-History-Eintrags:', historyError);
+            // Wir geben trotzdem true zurück, da die E-Mail erfolgreich gesendet wurde
+          }
+        }
+        
+        return true;
+      } catch (smtpError) {
+        console.error('Fehler beim Senden der E-Mail über benutzerspezifischen SMTP-Server:', smtpError);
+        
+        // Bei Fehler trotzdem einen History-Eintrag erstellen
+        const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+        console.log(`Extrahierte Reparatur-ID bei Fehler: ${variables.repairId} -> ${repairId}`);
+        if (repairId) {
+          try {
+            const historyEntry: InsertEmailHistory = {
+              repairId,
+              emailTemplateId: templateId,
+              subject,
+              recipient: to,
+              status: 'failed',
+              userId
+            };
             
-            // Ausgabe zusätzlicher Debug-Informationen
-            if (process.env.NODE_ENV === 'development') {
-              console.log('SMTP-Antwort:', info.response);
-              if (info.envelope) {
-                console.log('Envelope:', info.envelope);
+            console.log('Erstelle E-Mail-Verlaufseintrag für fehlgeschlagene E-Mail:', historyEntry);
+            await storage.createEmailHistoryEntry(historyEntry);
+            console.log(`E-Mail-History-Eintrag für fehlgeschlagene E-Mail an Reparatur ${repairId} erstellt`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des E-Mail-History-Eintrags für fehlgeschlagene E-Mail:', historyError);
+          }
+        }
+        
+        // Bei Fehlern mit dem benutzerspezifischen Server verwenden wir den globalen SMTP-Server als Fallback
+        if (this.smtpTransporter) {
+          try {
+            console.log('Versuche Fallback über globalen SMTP-Server...');
+            
+            const mailOptions = {
+              from: `"${senderName}" <${process.env.SMTP_USER}>`, // Globalen SMTP-Login als Absender
+              to: to,
+              subject: subject,
+              html: body,
+              text: body.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+            };
+            
+            const info = await this.smtpTransporter.sendMail(mailOptions);
+            console.log('E-Mail erfolgreich über globalen SMTP-Server gesendet:', info.messageId);
+            
+            // Reparatur-ID aus den Variablen extrahieren, wenn vorhanden
+            const repairId = variables.repairId ? parseInt(variables.repairId) : undefined;
+            console.log(`Extrahierte Reparatur-ID bei Fallback: ${variables.repairId} -> ${repairId}`);
+            
+            // E-Mail-History-Eintrag erstellen, wenn eine Reparatur-ID vorhanden ist
+            if (repairId) {
+              try {
+                const historyEntry: InsertEmailHistory = {
+                  repairId,
+                  emailTemplateId: templateId,
+                  subject,
+                  recipient: to,
+                  status: 'success',
+                  userId
+                };
+                
+                console.log('Erstelle E-Mail-Verlaufseintrag (Fallback):', historyEntry);
+                await storage.createEmailHistoryEntry(historyEntry);
+                console.log(`E-Mail-History-Eintrag für Reparatur ${repairId} erstellt (Fallback-Versand)`);
+              } catch (historyError) {
+                console.error('Fehler beim Erstellen des E-Mail-History-Eintrags (Fallback):', historyError);
+                // Wir geben trotzdem true zurück, da die E-Mail erfolgreich gesendet wurde
               }
-              console.log('Nachrichtenpfad:', info.messageId);
-              console.log('Zustellungsbericht:', 'Preview URL: ' + nodemailer.getTestMessageUrl(info));
             }
             
             return true;
-          } catch (sendError: any) {
-            // Detaillierte Fehleranalyse
-            console.error(`Fehler beim Senden der E-Mail über benutzerdefinierten SMTP-Server für Benutzer ${userId}:`, sendError?.message);
-            console.error('Fehlercode:', sendError?.code);
-            console.error('Fehlerkommando:', sendError?.command);
-            console.error('SMTP-Antwort:', sendError?.response);
-            
-            // Neu erstellen des Transporters, falls der Fehler auf eine unterbrochene Verbindung hinweist
-            if (sendError?.code === 'ECONNECTION' || sendError?.code === 'ETIMEDOUT' || sendError?.code === 'ESOCKET') {
-              console.log('Verbindungsproblem erkannt, erstelle Transporter neu...');
-              this.userTransporters.delete(userId);
-              // Fallback zum nächsten Versuch
-            }
-            
-            throw sendError; // Weiterleiten für Fallback
-          }
-        } catch (userSmtpError) {
-          console.error(`E-Mail-Versand über benutzerdefinierten SMTP fehlgeschlagen, versuche Fallback...`);
-          // Fallback zum nächsten Versuch
-        }
-      }
-
-      // 2. Versuch: Benutze den globalen SMTP-Transporter, falls vorhanden
-      if (this.globalSmtpTransporter) {
-        try {
-          console.log('Sende E-Mail über globalen SMTP-Server...');
-          
-          const fromEmail = process.env.SMTP_USER || '';
-          
-          const mailOptions = {
-            from: `"${senderName}" <${fromEmail}>`, // Der SMTP-Login muss als Absender verwendet werden
-            to: to,
-            subject: subject,
-            html: body,
-            text: body.replace(/<[^>]*>/g, ''), // Strip HTML für Plaintext
-            // Weitere Optionen für robustere E-Mail-Zustellung
-            headers: {
-              // Wichtige Header für bessere Zustellbarkeit und weniger Spam-Einstufung
-              'X-Priority': '3', // Normale Priorität (hohe Priorität kann Spam-Verdacht erhöhen)
-              'Importance': 'normal',
-              'X-MSMail-Priority': 'Normal',
-              'X-Mailer': 'Handyshop Verwaltung (NodeJS/Nodemailer)',
-              // Header für bessere Zustellbarkeit
-              'Precedence': 'bulk',
-              'Auto-Submitted': 'auto-generated',
-              'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
-              // Anti-Spam Header (beugen Spam-Verdacht vor)
-              'X-Auto-Response-Suppress': 'OOF, DR, RN, NRN, AutoReply',
-              'X-Report-Abuse': `Bitte melden Sie Missbrauch an ${fromEmail}`
-            },
-            // Eine Antwort-Adresse hinzufügen
-            replyTo: fromEmail
-          };
-          
-          const info = await this.globalSmtpTransporter.sendMail(mailOptions);
-          console.log('E-Mail erfolgreich über globalen SMTP-Server gesendet:', info.messageId);
-          return true;
-        } catch (smtpError) {
-          console.error('Fehler beim Senden der E-Mail über globalen SMTP-Server:', smtpError);
-          
-          // Wenn SMTP fehlschlägt, versuchen wir immer die API als Fallback
-          if (this.apiInstance) {
-            console.log('Versuche Fallback über API...');
-          } else {
-            // Ohne API-Instanz melden wir einen Fehler
-            console.error('SMTP fehlt und keine API-Konfiguration verfügbar');
+          } catch (globalSmtpError) {
+            console.error('Fehler beim Senden der E-Mail über globalen SMTP-Server:', globalSmtpError);
             return false;
           }
-        }
-      }
-
-      // 3. Versuch (Fallback): Wenn SMTP fehlschlägt oder nicht konfiguriert ist, versuche die API
-      if (this.apiInstance) {
-        try {
-          console.log('Sende E-Mail über Brevo API...');
-          // Sende die E-Mail über Brevo API
-          const sendSmtpEmail = new SendSmtpEmail();
-          
-          // Absender-Informationen
-          sendSmtpEmail.sender = {
-            name: senderName,
-            email: senderEmail
-          };
-          
-          // Empfänger (kann auch mehrere enthalten)
-          sendSmtpEmail.to = [{ email: to }];
-          
-          // Betreff und Inhalt
-          sendSmtpEmail.subject = subject;
-          sendSmtpEmail.htmlContent = body;  // HTML-Inhalt
-          sendSmtpEmail.textContent = body.replace(/<[^>]*>/g, '');  // Plaintext-Inhalt
-          
-          // API-Key aus der Umgebungsvariable holen
-          const apiKey = process.env.BREVO_API_KEY || '';
-          
-          // Die Brevo-API erfordert den API-Key im Header
-          const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail, {
-            headers: { 'api-key': apiKey }
-          });
-          
-          console.log('E-Mail erfolgreich über API gesendet, Antwort:', response);
-          return true;
-        } catch (apiError) {
-          console.error('Fehler beim Senden der E-Mail über Brevo API:', apiError);
-          
-          // Bei API-Fehlern geben wir immer einen Fehler zurück
-          console.error('Fehler beim E-Mail-Versand über alle verfügbaren Methoden');
+        } else {
+          console.error('Kein globaler SMTP-Server als Fallback verfügbar');
           return false;
         }
-      } else {
-        // Wenn weder SMTP noch API konfiguriert sind, geben wir einen Fehler zurück
-        console.error('Keine gültige E-Mail-Konfiguration vorhanden');
-        return false;
       }
     } catch (error) {
       console.error("Error sending email with template:", error);

@@ -1,6 +1,6 @@
 // Dieses Modul dient als kompatibilitätsschicht und leitet alle Anfragen an den E-Mail-Service weiter
 
-import { emailService } from './email-service-new';
+import { emailService } from './email-service';
 import type { EmailTemplate, InsertEmailTemplate } from '@shared/schema';
 
 // Re-export der grundlegenden CRUD-Funktionen für E-Mail-Vorlagen

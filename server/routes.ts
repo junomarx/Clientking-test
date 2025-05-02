@@ -32,7 +32,7 @@ import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
-import { emailService } from "./brevo-email-service";
+import { emailService } from "./email-service";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
