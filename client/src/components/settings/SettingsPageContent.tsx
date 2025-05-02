@@ -544,6 +544,7 @@ export function SettingsPageContent() {
                             <Input {...field} placeholder="z.B. Google Maps Bewertungslink" />
                           </FormControl>
                           <FormMessage />
+                          <p className="text-xs text-muted-foreground mt-1">Dieser Link wird verwendet, um Kunden nach Auftragsabschluss um eine Bewertung zu bitten.</p>
                         </FormItem>
                       )}
                     />
