@@ -22,8 +22,18 @@ export const generateA4PrintContent = ({
   businessSettings,
   qrCodeSettings
 }: A4TemplateProps): string => {
+  // Ausführliche Prüfung und Logging der übergebenen Daten
+  console.log('generateA4PrintContent wurde aufgerufen mit:', {
+    repair: repair ? `Repair ID ${repair.id} vorhanden` : 'Keine Repair-Daten',
+    customer: customer ? `Customer ID ${customer.id} vorhanden` : 'Keine Customer-Daten',
+    businessSettings: businessSettings ? `Business Settings ID ${businessSettings.id} vorhanden` : 'Keine Business-Settings',
+    qrCodeSettings: qrCodeSettings ? 'QR-Code-Einstellungen vorhanden' : 'Keine QR-Code-Einstellungen'
+  });
+  
+  // Sicherheitscheck für die wichtigsten Daten
   if (!repair || !customer) {
-    return '<div>Keine Daten verfügbar</div>';
+    console.error('Fehlende Daten für A4-Druck:', { repair, customer });
+    return '<div>Keine Daten verfügbar. Repair oder Customer fehlt.</div>';
   }
 
   // Formatiere Datumsangaben
