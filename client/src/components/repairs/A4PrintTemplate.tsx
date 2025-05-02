@@ -108,12 +108,7 @@ export const A4PrintTemplate: React.FC<A4TemplateProps> = ({
               {repair.serialNumber}
             </div>
           )}
-          {repair?.imei && (
-            <div className="a4-info-item">
-              <span className="a4-info-label">IMEI:</span>
-              {repair.imei}
-            </div>
-          )}
+          {/* IMEI field would go here if needed */}
         </div>
       </div>
       
@@ -193,7 +188,7 @@ export const A4PrintTemplate: React.FC<A4TemplateProps> = ({
         <div className="a4-qr-code">
           <div className="a4-qr-code-image">
             <QRCodeSVG
-              value={`${qrCodeSettings.qrCodeBaseUrl || window.location.origin}/status/${repair?.id}?code=${repair?.accessCode}`}
+              value={`${qrCodeSettings.qrCodeBaseUrl || window.location.origin}/status/${repair?.id}`}
               size={94}
               level="M"
             />
