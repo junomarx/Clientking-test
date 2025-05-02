@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import AdminDesignPreview from "@/pages/admin/DesignPreviewPage";
+import AdminDesignPreviewSettings from "@/pages/admin/DesignPreviewSettingsPage";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -33,6 +34,9 @@ function Router() {
       </AdminProtectedRoute>
       <AdminProtectedRoute path="/admin/design-preview">
         <AdminDesignPreview />
+      </AdminProtectedRoute>
+      <AdminProtectedRoute path="/admin/design-preview-settings">
+        <AdminDesignPreviewSettings />
       </AdminProtectedRoute>
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
