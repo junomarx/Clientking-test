@@ -61,6 +61,9 @@ function getStatusBadge(status: string) {
   }
 }
 
+// Reparaturdetails-Dialog importieren
+import { RepairDetailsPreviewDialog } from './RepairDetailsPreviewDialog';
+
 // Komponenten für die verschiedenen Seiten
 function DashboardContent() {
   return (
@@ -169,6 +172,23 @@ function DashboardContent() {
 }
 
 function RepairsContent() {
+  // Zustand für ausgewählte Reparatur und Dialog
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [showRepairDetails, setShowRepairDetails] = useState(false);
+  
+  // Öffne den Reparaturdetails-Dialog
+  const openRepairDetailsDialog = (repair: any) => {
+    setSelectedRepair(repair);
+    setShowRepairDetails(true);
+  };
+  
+  // Schließe den Reparaturdetails-Dialog
+  const closeRepairDetailsDialog = () => {
+    setShowRepairDetails(false);
+    // Daten nach einer Verzögerung zurücksetzen, um Blitzen zu vermeiden
+    setTimeout(() => setSelectedRepair(null), 300);
+  };
+  
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -210,7 +230,11 @@ function RepairsContent() {
                   </TableHeader>
                   <TableBody>
                     {MOCK_REPAIRS.map((repair) => (
-                      <TableRow key={repair.id} className="cursor-pointer hover:bg-gray-50">
+                      <TableRow 
+                        key={repair.id} 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => openRepairDetailsDialog(repair)}
+                      >
                         <TableCell className="font-medium">{repair.orderCode}</TableCell>
                         <TableCell>{repair.customerName}</TableCell>
                         <TableCell className="hidden md:table-cell">
@@ -223,7 +247,7 @@ function RepairsContent() {
                           {repair.createdAt}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end space-x-1">
+                          <div className="flex justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -244,6 +268,15 @@ function RepairsContent() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Reparaturdetails-Dialog */}
+      {selectedRepair && (
+        <RepairDetailsPreviewDialog
+          open={showRepairDetails}
+          onClose={closeRepairDetailsDialog}
+          repair={selectedRepair}
+        />
+      )}
     </div>
   );
 }
@@ -511,6 +544,23 @@ export default function DesignPreviewPage() {
   const [collapsed, setCollapsed] = useState(false);
   const [activePage, setActivePage] = useState<ActivePage>('dashboard');
   
+  // Zustand für Reparaturdetails-Dialog
+  const [selectedRepair, setSelectedRepair] = useState<any>(null);
+  const [showRepairDetails, setShowRepairDetails] = useState(false);
+  
+  // Dialog öffnen mit ausgewählter Reparatur
+  const openRepairDetailsDialog = (repair: any) => {
+    setSelectedRepair(repair);
+    setShowRepairDetails(true);
+  };
+  
+  // Dialog schließen
+  const closeRepairDetailsDialog = () => {
+    setShowRepairDetails(false);
+    // Daten nach einer Verzögerung zurücksetzen, um Blitzen zu vermeiden
+    setTimeout(() => setSelectedRepair(null), 300);
+  };
+  
   // Funktion zum Zurückkehren zur Admin-Seite
   const navigateToAdmin = () => {
     window.location.href = '/admin';
@@ -518,6 +568,15 @@ export default function DesignPreviewPage() {
 
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* Reparaturdetails-Dialog */}
+      {selectedRepair && (
+        <RepairDetailsPreviewDialog
+          open={showRepairDetails}
+          onClose={closeRepairDetailsDialog}
+          repair={selectedRepair}
+        />
+      )}
+      
       {/* Seitenleiste - fixiert am linken Rand in dunkler Farbe */}
       <div 
         className={`${collapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out z-30`}
