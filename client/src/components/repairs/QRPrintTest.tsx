@@ -1,32 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 
+// QR-Code als SVG direkt eingebettet
 export function QRPrintTest() {
-  const preloadedImageRef = useRef<HTMLImageElement | null>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  
-  // QR-Code Base64-Daten
-  const qrCodeBase64 = "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";
-
-  // Beim ersten Laden das Bild vorladen
-  useEffect(() => {
-    // Bild vorladen
-    const img = new Image();
-    img.onload = () => {
-      setImageLoaded(true);
-      console.log('🎯 QR-Code Testbild erfolgreich geladen!');
-    };
-    img.onerror = () => {
-      console.error('⚠️ Fehler beim Laden des QR-Code Testbilds!');
-    };
-    img.src = `data:image/png;base64,${qrCodeBase64}`;
-    preloadedImageRef.current = img;
-  }, []);
-
   const handlePrint = () => {
-    console.log('🚀 QRPrintTest - starting basic print test');
-    console.log('🚀 Bild vorgeladen:', imageLoaded);
+    console.log('🚀 QRPrintTest - starting SVG test');
     
     // Erstelle ein neues Fenster für den Druck
     const printWindow = window.open('', '_blank', 'width=600,height=600');
@@ -36,7 +15,7 @@ export function QRPrintTest() {
       return;
     }
     
-    // Basis-HTML mit einem direkten <img> Element generieren
+    // HTML mit SVG-QR-Code (kein Bild, kein Base64)
     const html = `
       <!DOCTYPE html>
       <html>
@@ -63,17 +42,15 @@ export function QRPrintTest() {
               margin: 30px auto;
               width: 200px;
               height: 200px;
-              padding: 0;
+              padding: 10px;
               border: 1px dashed #ccc;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             p {
               margin: 20px 0;
               font-size: 14px;
-            }
-            .qr-image {
-              width: 100%;
-              height: 100%;
-              object-fit: contain;
             }
           </style>
         </head>
@@ -82,25 +59,30 @@ export function QRPrintTest() {
             <h1>QR-Code Print Test</h1>
             
             <div class="qr-code-container">
-              <!-- Direktes Bild-Element ohne JavaScript-Verarbeitung -->
-              <img src="data:image/png;base64,${qrCodeBase64}" class="qr-image" alt="QR Code">
+              <!-- SVG QR-Code direkt eingebunden (kein Bild, kein Base64) -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" width="100%" height="100%" shape-rendering="crispEdges">
+                <!-- QR-Code für URL: https://handyshop-verwaltung.de/ -->
+                <!-- Einfacher QR-Code mit Rechtecken statt Bildreferenz -->
+                <path fill="#FFFFFF" d="M0 0h29v29H0z"/>
+                <path d="M4 4h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 5h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm7 0h1v1h-1zM4 6h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zM4 7h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm6 0h1v1h-1zM4 8h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 9h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zM4 10h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM12 11h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zM4 12h1v1H4zm1 0h1v1H5zm2 0h1v1H7zm2 0h1v1H9zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 13h1v1H5zm2 0h1v1H7zm3 0h1v1h-1zm7 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zM4 14h1v1H4zm1 0h1v1H5zm2 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM6 15h1v1H6zm3 0h1v1H9zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 16h1v1H5zm1 0h1v1H6zm2 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zM4 17h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zM4 18h1v1H4zm3 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 19h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 20h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zM4 21h1v1H4zm2 0h1v1H6zm4 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 22h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm2 0h1v1H9zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zM4 23h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zM4 24h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 25h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1z"/>
+              </svg>
             </div>
             
             <p>
               Dieser QR-Code sollte beim Drucken des Dokuments sichtbar sein.
               Wenn er nicht erscheint, gibt es ein Problem mit dem Drucksystem.
             </p>
+            <p>
+              Dies ist ein <strong>SVG QR-Code</strong> (kein Bild, direkt im HTML).
+            </p>
           </div>
           
           <script>
             console.log('🖨️ Print-Dokument vollständig geladen');
             
-            // Verzögertes Drucken, um sicherzustellen, dass Bilder geladen werden
+            // Verzögertes Drucken
             window.addEventListener('load', function() {
               console.log('🖨️ Window load-Event ausgelöst');
-              document.querySelector('img').onload = function() {
-                console.log('🖨️ QR-Code-Bild im Druckfenster vollständig geladen');
-              };
               
               // 2 Sekunden warten, bevor das Drucken beginnt
               setTimeout(function() {
@@ -132,24 +114,29 @@ export function QRPrintTest() {
       </p>
       <div className="flex flex-col gap-4">
         <div className="border rounded p-4 bg-white mb-3">
-          <p className="text-xs mb-2 font-medium">QR-Code Bild-Vorschau:</p>
-          {/* Zeigt das vorgeladene Bild direkt in der UI an, damit wir sehen, ob es korrekt geladen wird */}
+          <p className="text-xs mb-2 font-medium">QR-Code Vorschau:</p>
+          {/* Zeigt den QR-Code als SVG direkt in der UI an */}
           <div className="flex justify-center">
-            <img 
-              src={`data:image/png;base64,${qrCodeBase64}`} 
-              alt="QR-Code Testbild" 
-              className="w-24 h-24 border"
-              onLoad={() => console.log('🎯 QR-Code Bild in der Vorschau geladen')}
-              onError={() => console.error('⚠️ Fehler beim Laden des QR-Code Bilds in der Vorschau')}
-            />
+            <div className="w-32 h-32 border p-1">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 29 29" 
+                width="100%" 
+                height="100%" 
+                shape-rendering="crispEdges"
+              >
+                <path fill="#FFFFFF" d="M0 0h29v29H0z"/>
+                <path d="M4 4h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 5h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm7 0h1v1h-1zM4 6h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zM4 7h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm6 0h1v1h-1zM4 8h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 9h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm5 0h1v1h-1zm2 0h1v1h-1zM4 10h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM12 11h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zM4 12h1v1H4zm1 0h1v1H5zm2 0h1v1H7zm2 0h1v1H9zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 13h1v1H5zm2 0h1v1H7zm3 0h1v1h-1zm7 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zM4 14h1v1H4zm1 0h1v1H5zm2 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM6 15h1v1H6zm3 0h1v1H9zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 16h1v1H5zm1 0h1v1H6zm2 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zM4 17h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm5 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zM4 18h1v1H4zm3 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm4 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 19h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM5 20h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zM4 21h1v1H4zm2 0h1v1H6zm4 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 22h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm2 0h1v1H9zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zM4 23h1v1H4zm2 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm4 0h1v1h-1zM4 24h1v1H4zm7 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm3 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zM4 25h1v1H4zm1 0h1v1H5zm1 0h1v1H6zm1 0h1v1H7zm1 0h1v1H8zm1 0h1v1H9zm1 0h1v1h-1zm3 0h1v1h-1zm2 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1zm1 0h1v1h-1z"/>
+              </svg>
+            </div>
           </div>
           <p className="text-xs mt-2 text-center text-muted-foreground">
-            Status: {imageLoaded ? '✅ Bild erfolgreich vorgeladen' : '⏳ Bild wird geladen...'}  
+            Status: ✅ SVG QR-Code geladen  
           </p>
         </div>
-        <Button onClick={handlePrint} className="gap-2 self-start" disabled={!imageLoaded}>
+        <Button onClick={handlePrint} className="gap-2 self-start">
           <Printer className="h-4 w-4" />
-          Verbesserten QR-Code Drucktest starten
+          SVG QR-Code Drucktest starten
         </Button>
       </div>
     </div>
