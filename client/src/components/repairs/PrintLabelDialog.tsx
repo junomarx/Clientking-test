@@ -89,15 +89,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
-    if (!printRef.current) {
-      console.error('Druckelement nicht gefunden');
-      return;
-    }
-    
-    // Loggen zur Fehlerbehebung
-    console.log("PrintLabelDialog - handlePrint ausgeführt");
-    console.log("Repair ID:", repair?.id);
-    
+    // Direkte Debug-Meldungen
+    console.log("⭐ PrintLabelDialog - handlePrint ausgeführt");
+    console.log("⭐ Repair ID:", repair?.id);
+    console.log("⭐ RepairDetails:", JSON.stringify(repair));
+    console.log("⭐ CustomerDetails:", JSON.stringify(customer));
+
     // Erstelle ein neues Fenster für den Druck
     const printWindow = window.open('', '_blank', 'width=600,height=600');
     
@@ -115,17 +112,11 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
     
-    // Erstelle direkt die URL für den QR-Code, die auf die Reparaturdetails verlinkt
-    const repairDetailsUrl = `${window.location.origin}/repairs/${repairId}`;
-    console.log("QR-Code URL:", repairDetailsUrl);
+    // Statisches QR-Code-Bild
+    const qrCodeBase64 = "iVBORw0KGgoAAAANSUhEUgAAAJYAAACWCAYAAAA8AXHiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGwUlEQVR4nO3d23IbNwwFUPv/f9qZ9CVJ7KHFu0DuYt+a8UMaUxQIgiCpXC6Xy+VyuVwul8vlcrkyy59//vn3W/O3+R0/+3y6Xl5ubLQ5W9fn5+d/L4KL//P7+/vrdvTzeN3A9fV9/vy2cC2uh+v1evlVV1A3BM+x8MHv+3DxHq7X63WvQFoBlX7uf99euz77+Ph4/R3X6/XfzqEFKmUBjrfL0N7eMwLrhlEDa/SZvV49sBIVqm/0+upy3T72xlANXK0ekIrMR2B1oK7VpWVPufDcdQsX7nOsXr1QqfcdCpSqTOVgkYRFPufYCfbG3iRYtrFWr9Z9Wt1j1KWmg1UDFQarWFj9iALLtpujKlJrOA+FCoOlEq66kDywXISptZiuC1VasDDW8jrOe94oWOqRvwpVUz9WDVQxsBQm11VF2pR1aiiQdkY4UKxQs/GVKVQeWJ6V3nKHWpNHCxYP22rF40uAatZ4q2tUBuvxvxkFmsHaVLBGYaj9/Ht6/xRYBKpbwWoVdHtgpQQrY9JcZMQvs2+sWuSMtVCxZZJdYM1AMg2XSbAiYJuaoq8ASxi++XVswsUGyz6Q3dPltW4vAsrOARsBW9WNGwXLNh5KCVZahFWbb3kdByvbZ8+BlZ3lbwGrhXi3B9bVw3aNkbwdmNlCPv4fWFWmCHuWxkbBGlWj9HrGYLGJcnp4Z8ESlSi9ngWsUcXBi41UsnWNVTfj1cpDoWKCbv/vhsDywPKScxKs3ipRalK9CqwZtDY7NyLGUk2UXkPcYsFS2TcJlld5ZhisFYfD08H6+vo6FazE3nt2TjgAlhdgK/5XnhJTGHDRTbRTYHljL1OxjHGWaGUHy7Sz1yBYXuGeZO/JwLKPH3odBct7Plc9Gygz3dMJg4XVxQoVc+6xO0V/8ZX4xF3jbKGfpWJFzr3pYNG5aqOxmDcgbpvVbOtMhj+LYmVaQh45zcZYR0KlHqZnOZnWAIt1i7uPOyvdXkawTFu+5f2kYsn9WBmDTvuQ76hRu3UmHZWcYK244IheL+HCUFkDayZYKmGaDzNGlSocrBUXrwKrddHsGMvOrTKwS7FG1SotWKVSscBS7RL7+RNrw1Rt3XHW3RRYqcFKAZZdLXbEWLvhQtddHazdcWFqsNKDlQYsu6LNghW1g8OC9XlgmV29JVgKqDKC1Vtl9E43GQzpTGNZrVRFg9UbAewEa1ZhPGnbQ6EsA9Kq9YwoZXm7LgKsFWaxhbS3yvRqrbKH9QzBajmpsFewlX0Ap4A1Uh0MrCRgzRrprdtYJuv2GCs9WL0HTGGDrSu7qT3/5mBZSOvVjmD14q2ItcseWLTymYLlfV4bqExgzVTI6GpzT7BGAyUqD+1FgtU7/dQGi4pv51geXDXbP3/vzW+OBqtXSXaAlRqqqkTCdRRYs2Gqdxg9oWqdpCEVrHeHKbBYKlH3/UaCxZ7+NBIu0kBH1Vx9ALcpWLWtpbB9/Xm1HVP5wKJCvuP9T6lY1g1UFWiWIl0JlrWqLAeLNLRq+4z1gZFajV+rB7uoXtH1J09jqGZnXs1uf4kqFMB6qPdO+FDZfKwKlplg0aHvDrBqcFXh+lGwUAiRYM2+dz4Yq1a3oVCtjvyjYOHAk8JlO8VUGyFieFE7ZbYJ18/Csrfzoi2s3lkoUbB6A24yJMzEMzthuhusp64a+RJLHaxVB3Bb0aJgLVGsAla69Vo82eKbgHXK2NcuMjSMZqYtFcvGU7YZWL2x09vAIjNHm5VL4ytiLfswxsZm9lkEKyxcKpq3mfWsOr5apVj//FfTDaoNlplQr9qJRIJY1TdmvZ8krBGwFAJMx1vDG6oNmDVYpZpVqKxgrd7DT8ClMuunBouGbVmhSg9WzUnkTIylBBVbYVi1GZJ6D/+qHlCdAM+sABYq9flWUbAihlbKA9RKHgFWeE+o0tNZQV8FrFRgqTTOLYo2sF2f3dMGKwUYOQJjNBH3gGLP/Ju5QDZYqHZoSQ/WLDCvVnGzZ27SaxFgmbB5sXlb74wzJ1gz4R8NV6vG8CuAFV7J4uT+9e3x/7dOX6NHzXsBrVczvbB5oZ19/lSwVG2hVmWZCQxnbZgGKydYKy9aJStUWI0FlgfE7+/vzwvWDFTlOsTRpscBC8WuOCDNBovdlxUhZVRiUXUECUkPFuPRvdSWdTxYRLVS2QvWC/poyNAKt/ywIvQv/pXaelqwWFsqBipxZ9VqsUCR9KFbC9uO9swKFS7e6RM0FbB6g1TaWIw5jMYMLGPdCr8vrArMHBF4v5nQsmC5XC6Xy+VyuVwul8vl+on6D6S2vN0S6/a4AAAAAElFTkSuQmCC";
     
-    // QR-Code mit einem externen Service generieren (keine Abhängigkeit von QR-Code-Bibliotheken)
-    console.log("QR-Code URL erstellt:", repairDetailsUrl);
-    
-    // Kein Testbild mehr nötig, da wir direkt ein Base64-kodiertes Bild verwenden
-    
-    // Fülle das Druckfenster mit Inhalten - keine React-Abhängigkeit mehr
-    printWindow.document.write(`
+    // HTML-Template mit explizitem Einfügen des QR-Codes
+    const htmlTemplate = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -176,10 +167,6 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               justify-content: center;
               align-items: center;
             }
-            .qr-code svg {
-              width: 100%;
-              height: 100%;
-            }
             .customer-info {
               text-align: center;
               width: 100%;
@@ -221,8 +208,11 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">
-                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAACWCAYAAAA8AXHiAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGwUlEQVR4nO3d23IbNwwFUPv/f9qZ9CVJ7KHFu0DuYt+a8UMaUxQIgiCpXC6Xy+VyuVwul8vlcrkyy59//vn3W/O3+R0/+3y6Xl5ubLQ5W9fn5+d/L4KL//P7+/vrdvTzeN3A9fV9/vy2cC2uh+v1evlVV1A3BM+x8MHv+3DxHq7X63WvQFoBlX7uf99euz77+Ph4/R3X6/XfzqEFKmUBjrfL0N7eMwLrhlEDa/SZvV49sBIVqm/0+upy3T72xlANXK0ekIrMR2B1oK7VpWVPufDcdQsX7nOsXr1QqfcdCpSqTOVgkYRFPufYCfbG3iRYtrFWr9Z9Wt1j1KWmg1UDFQarWFj9iALLtpujKlJrOA+FCoOlEq66kDywXISptZiuC1VasDDW8jrOe94oWOqRvwpVUz9WDVQxsBQm11VF2pR1aiiQdkY4UKxQs/GVKVQeWJ6V3nKHWpNHCxYP22rF40uAatZ4q2tUBuvxvxkFmsHaVLBGYaj9/Ht6/xRYBKpbwWoVdHtgpQQrY9JcZMQvs2+sWuSMtVCxZZJdYM1AMg2XSbAiYJuaoq8ASxi++XVswsUGyz6Q3dPltW4vAsrOARsBW9WNGwXLNh5KCVZahFWbb3kdByvbZ8+BlZ3lbwGrhXi3B9bVw3aNkbwdmNlCPv4fWFWmCHuWxkbBGlWj9HrGYLGJcnp4Z8ESlSi9ngWsUcXBi41UsnWNVTfj1cpDoWKCbv/vhsDywPKScxKs3ipRalK9CqwZtDY7NyLGUk2UXkPcYsFS2TcJlld5ZhisFYfD08H6+vo6FazE3nt2TjgAlhdgK/5XnhJTGHDRTbRTYHljL1OxjHGWaGUHy7Sz1yBYXuGeZO/JwLKPH3odBct7Plc9Gygz3dMJg4XVxQoVc+6xO0V/8ZX4xF3jbKGfpWJFzr3pYNG5aqOxmDcgbpvVbOtMhj+LYmVaQh45zcZYR0KlHqZnOZnWAIt1i7uPOyvdXkawTFu+5f2kYsn9WBmDTvuQ76hRu3UmHZWcYK244IheL+HCUFkDayZYKmGaDzNGlSocrBUXrwKrddHsGMvOrTKwS7FG1SotWKVSscBS7RL7+RNrw1Rt3XHW3RRYqcFKAZZdLXbEWLvhQtddHazdcWFqsNKDlQYsu6LNghW1g8OC9XlgmV29JVgKqDKC1Vtl9E43GQzpTGNZrVRFg9UbAewEa1ZhPGnbQ6EsA9Kq9YwoZXm7LgKsFWaxhbS3yvRqrbKH9QzBajmpsFewlX0Ap4A1Uh0MrCRgzRrprdtYJuv2GCs9WL0HTGGDrSu7qT3/5mBZSOvVjmD14q2ItcseWLTymYLlfV4bqExgzVTI6GpzT7BGAyUqD+1FgtU7/dQGi4pv51geXDXbP3/vzW+OBqtXSXaAlRqqqkTCdRRYs2Gqdxg9oWqdpCEVrHeHKbBYKlH3/UaCxZ7+NBIu0kBH1Vx9ALcpWLWtpbB9/Xm1HVP5wKJCvuP9T6lY1g1UFWiWIl0JlrWqLAeLNLRq+4z1gZFajV+rB7uoXtH1J09jqGZnXs1uf4kqFMB6qPdO+FDZfKwKlplg0aHvDrBqcFXh+lGwUAiRYM2+dz4Yq1a3oVCtjvyjYOHAk8JlO8VUGyFieFE7ZbYJ18/Csrfzoi2s3lkoUbB6A24yJMzEMzthuhusp64a+RJLHaxVB3Bb0aJgLVGsAla69Vo82eKbgHXK2NcuMjSMZqYtFcvGU7YZWL2x09vAIjNHm5VL4ytiLfswxsZm9lkEKyxcKpq3mfWsOr5apVj//FfTDaoNlplQr9qJRIJY1TdmvZ8krBGwFAJMx1vDG6oNmDVYpZpVqKxgrd7DT8ClMuunBouGbVmhSg9WzUnkTIylBBVbYVi1GZJ6D/+qHlCdAM+sABYq9flWUbAihlbKA9RKHgFWeE+o0tNZQV8FrFRgqTTOLYo2sF2f3dMGKwUYOQJjNBH3gGLP/Ju5QDZYqHZoSQ/WLDCvVnGzZ27SaxFgmbB5sXlb74wzJ1gz4R8NV6vG8CuAFV7J4uT+9e3x/7dOX6NHzXsBrVczvbB5oZ19/lSwVG2hVmWZCQxnbZgGKydYKy9aJStUWI0FlgfE7+/vzwvWDFTlOsTRpscBC8WuOCDNBovdlxUhZVRiUXUECUkPFuPRvdSWdTxYRLVS2QvWC/poyNAKt/ywIvQv/pXaelqwWFsqBipxZ9VqsUCR9KFbC9uO9swKFS7e6RM0FbB6g1TaWIw5jMYMLGPdCr8vrArMHBF4v5nQsmC5XC6Xy+VyuVwul8vl+on6D6S2vN0S6/a4AAAAAElFTkSuQmCC" 
-                     alt="QR-Code für Reparatur" style="width:100%; height:100%;">
+                <!-- Absolut sicherstellen, dass das QR-Code-Bild hier ist -->
+                <img 
+                  src="data:image/png;base64,${qrCodeBase64}" 
+                  alt="QR-Code für Reparatur" 
+                  style="width:100%; height:100%;">
               </div>
               
               <div class="customer-info">
@@ -238,19 +228,30 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             </div>
           </div>
           <script>
-            // Drucken nach vollständigem Laden
+            // Drucken nach vollständigem Laden mit mehr Zeit zum Rendern
             window.onload = function() {
-              console.log('Druckvorgang wird gestartet...');
+              // Debug-Meldungen direkt im neuen Fenster
+              console.log('📄 Druckvorgang wird gestartet...');
+              // QR-Code-Debug
+              console.log('📄 QR-Code Base64 Länge:', ${qrCodeBase64.length});
+              
+              // Geben Sie dem Browser mehr Zeit zum Rendern der Bilder
               setTimeout(function() {
+                console.log('📄 Print ausführen');
                 window.print();
-                window.close(); // Fenster direkt schließen, ohne auf onafterprint zu warten
-              }, 500);
+                setTimeout(function() {
+                  console.log('📄 Fenster schließen');
+                  window.close();
+                }, 500);
+              }, 1000);
             };
           </script>
         </body>
       </html>
-    `);
-    
+    `;
+
+    // Schreibe den HTML-Inhalt ins Fenster
+    printWindow.document.write(htmlTemplate);
     printWindow.document.close();
     onClose();
   };
