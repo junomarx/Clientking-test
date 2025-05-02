@@ -91,11 +91,13 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     }
   });
   
-  // Check for status filter in URL
+  // Check for status filter and email action in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const statusParam = params.get('status');
+    const openEmailParam = params.get('openEmail');
     
+    // Verarbeite Status-Parameter
     if (statusParam) {
       if (statusParam === 'today') {
         // Special case for filtering by today's orders
@@ -107,6 +109,22 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       }
     } else {
       setFilterByToday(false);
+    }
+    
+    // Verarbeite openEmail-Parameter
+    if (openEmailParam) {
+      const repairId = parseInt(openEmailParam);
+      if (!isNaN(repairId)) {
+        // Status direkt auf Email-Senden setzen
+        setSelectedRepairId(repairId);
+        setSendEmail(true);
+        setShowStatusDialog(true);
+        
+        // Nach der Verarbeitung den Parameter aus der URL entfernen
+        const cleanUrl = window.location.pathname + 
+          (statusParam ? `?status=${statusParam}` : '');
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
     }
   }, [location]);
 

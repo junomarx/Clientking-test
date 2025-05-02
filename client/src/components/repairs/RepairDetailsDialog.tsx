@@ -414,10 +414,33 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           
           {/* E-Mail-Verlauf */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
-            <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-              <MessageCircle className="h-5 w-5" />
-              E-Mail-Verlauf
-            </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                E-Mail-Verlauf
+              </h3>
+              
+              {/* E-Mail senden Button */}
+              {repair && isProfessionalOrHigher && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Dialog schließen und zur Reparaturübersicht navigieren
+                    handleClose();
+                    // Kurze Verzögerung für Animation
+                    setTimeout(() => {
+                      // Zur Reparaturübersicht navigieren mit Status-Tab
+                      window.location.href = '/#/repairs?openEmail=' + repair.id;
+                    }, 300);
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <Mail className="h-4 w-4" />
+                  E-Mail senden
+                </Button>
+              )}
+            </div>
             
             {emailHistory && emailHistory.length > 0 ? (
               <div className="space-y-3 max-h-48 overflow-y-auto">
