@@ -132,6 +132,8 @@ export const businessSettings = pgTable("business_settings", {
   ownerFirstName: text("owner_first_name").notNull(),
   ownerLastName: text("owner_last_name").notNull(),
   taxId: text("tax_id"), // ATU Nummer
+  vatNumber: text("vat_number"), // USt-IdNr. (EU VAT Number)
+  companySlogan: text("company_slogan"), // Firmenlaut (Unternehmensslogan)
   streetAddress: text("street_address").notNull(),
   city: text("city").notNull(),
   zipCode: text("zip_code").notNull(),

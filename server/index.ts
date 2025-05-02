@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
+import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 
 const app = express();
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
     // Führe die Migrationen aus
     await addSecondSignatureColumns();
     await addPricingPlanColumn();
+    await addCompanySloganVatColumns();
     
     const server = await registerRoutes(app);
 

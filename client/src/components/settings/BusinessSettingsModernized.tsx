@@ -20,6 +20,8 @@ const businessSettingsSchema = z.object({
   ownerFirstName: z.string().min(1, "Vorname ist erforderlich"),
   ownerLastName: z.string().min(1, "Nachname ist erforderlich"),
   taxId: z.string().optional(),
+  vatNumber: z.string().optional(), // USt-IdNr.
+  companySlogan: z.string().optional(), // Firmenlaut/Unternehmensslogan
   streetAddress: z.string().min(1, "Straße und Hausnummer sind erforderlich"),
   city: z.string().min(1, "Ort ist erforderlich"),
   zipCode: z.string().min(1, "PLZ ist erforderlich"),
@@ -62,6 +64,8 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       ownerFirstName: "",
       ownerLastName: "",
       taxId: "",
+      vatNumber: "",
+      companySlogan: "",
       streetAddress: "",
       city: "",
       zipCode: "",
