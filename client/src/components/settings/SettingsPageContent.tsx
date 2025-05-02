@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmailTemplateTab } from '@/components/settings/EmailTemplateTab';
 import { DocumentTemplatesTab } from '@/components/settings/DocumentTemplatesTab';
-import { QrCodeSettingsTab } from '@/components/settings/QrCodeSettingsTab';
+// QR Code Einstellungen entfernt
 import { CustomFooterTab } from '@/components/settings/CustomFooterTab';
 import { useLocation } from 'wouter';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
@@ -774,7 +774,10 @@ export function SettingsPageContent() {
                 <TabsContent value="qrcode">
                   <Card>
                     <CardContent className="pt-6">
-                      <QrCodeSettingsTab />
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">QR-Code-Einstellungen</h3>
+                        <p className="text-muted-foreground">QR-Code-Funktionalität wurde entfernt, da sie für Etiketten neu implementiert wurde.</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
