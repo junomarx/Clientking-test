@@ -13,6 +13,7 @@ import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
 import { isProfessionalOrHigher } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface PrintOptionsDialogProps {
   open: boolean;
@@ -32,11 +33,26 @@ export function PrintOptionsDialog({
   customer,
   businessSettings,
   qrCodeSettings,
-  currentUser,
+  currentUser: userFromProps,
   canPrintLabels
 }: PrintOptionsDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  
+  // Lade aktuellen Benutzer direkt über React Query zur Sicherheit
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/user'],
+    queryFn: async () => {
+      const response = await fetch('/api/user', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      if (!response.ok) return null;
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 Minuten
+  });
   
   // Print-Optionen
   const [selectedPrintOption, setSelectedPrintOption] = useState<
@@ -44,12 +60,16 @@ export function PrintOptionsDialog({
   >(null);
 
   // Admin-Benutzer oder Professional/Enterprise-Plan können A4 und Etiketten drucken
-  const a4PrintEnabled = isProfessionalOrHigher(currentUser);
-  const labelPrintEnabled = isProfessionalOrHigher(currentUser);
+  const user = currentUser || userFromProps; // Benutze aktuelle Daten oder die übergebenen Werte
+  const a4PrintEnabled = isProfessionalOrHigher(user);
+  const labelPrintEnabled = isProfessionalOrHigher(user);
   
   // Für Debug-Zwecke
-  console.log('CurrentUser:', currentUser);
-  console.log('isProfessionalOrHigher:', isProfessionalOrHigher(currentUser));
+  console.log('User in PrintOptionsDialog:', user);
+  console.log('User JSON:', JSON.stringify(user));
+  console.log('User von Props:', userFromProps);
+  console.log('User direkt geladen:', currentUser);
+  console.log('isProfessionalOrHigher:', isProfessionalOrHigher(user));
   console.log('a4PrintEnabled:', a4PrintEnabled);
   console.log('labelPrintEnabled:', labelPrintEnabled);
   
