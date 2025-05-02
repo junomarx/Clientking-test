@@ -560,6 +560,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
+        // Wenn Status auf "abgeholt" gesetzt wird und shouldSendEmail, dann Bewertungs-E-Mail senden
+        if (status === "abgeholt" && shouldSendEmail && customer.email) {
+          console.log("Bewertungsanfrage-E-Mail wird vorbereitet...");
+          
+          try {
+            // Suche nach einer E-Mail-Vorlage mit name "bewertung" oder "feedback"
+            const templates = await storage.getAllEmailTemplates(userId);
+            const reviewTemplate = templates.find(t => t.name.toLowerCase().includes("bewertung") || 
+                                                 t.name.toLowerCase().includes("feedback") ||
+                                                 t.name.toLowerCase().includes("rezension"));
+            
+            if (reviewTemplate) {
+              console.log(`E-Mail-Vorlage für Bewertung gefunden: ${reviewTemplate.name}`);
+              
+              // E-Mail senden
+              const emailSent = await storage.sendEmailWithTemplate(reviewTemplate.id, customer.email, variables);
+              console.log("Bewertungs-E-Mail gesendet:", emailSent);
+              
+              // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
+              if (emailSent) {
+                res.setHeader('X-Email-Sent', 'true');
+              }
+            } else {
+              console.log("Keine passende E-Mail-Vorlage für Bewertungsanfrage gefunden");
+            }
+          } catch (emailError) {
+            console.error("Fehler beim Senden der Bewertungs-E-Mail:", emailError);
+            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
+          }
+        }
+        
         // SMS-Funktionalität wurde auf Kundenwunsch entfernt
       } else {
         console.log("Kunde nicht gefunden, keine Benachrichtigung möglich");

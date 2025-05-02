@@ -741,7 +741,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
             if (status === 'abgeholt') {
               updateStatusMutation.mutate({
                 id: id,
-                status: status
+                status: status,
+                sendEmail: sendEmail
               }, {
                 onSuccess: () => {
                   // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
