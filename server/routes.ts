@@ -759,8 +759,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId} (${username})`);
       
       // Versuche direkt aus der Datenbank abzurufen
+      // Wir müssen bestimmte Spalten auswählen, um Spaltennamenkonflikte zu vermeiden
       const userSettings = await db
-        .select()
+        .select({
+          id: businessSettings.id,
+          businessName: businessSettings.businessName,
+          ownerFirstName: businessSettings.ownerFirstName,
+          ownerLastName: businessSettings.ownerLastName,
+          taxId: businessSettings.taxId,
+          vatNumber: businessSettings.vatNumber,  // Neue Spalte in DB: vat_number
+          companySlogan: businessSettings.companySlogan,  // Neue Spalte in DB: company_slogan
+          streetAddress: businessSettings.streetAddress,
+          city: businessSettings.city,
+          zipCode: businessSettings.zipCode,
+          country: businessSettings.country,
+          phone: businessSettings.phone,
+          email: businessSettings.email,
+          website: businessSettings.website,
+          logoImage: businessSettings.logoImage,
+          colorTheme: businessSettings.colorTheme,
+          receiptWidth: businessSettings.receiptWidth,
+          smtpSenderName: businessSettings.smtpSenderName,
+          smtpHost: businessSettings.smtpHost,
+          smtpUser: businessSettings.smtpUser,
+          smtpPassword: businessSettings.smtpPassword,
+          smtpPort: businessSettings.smtpPort,
+          reviewLink: businessSettings.reviewLink,
+          userId: businessSettings.userId,
+          updatedAt: businessSettings.updatedAt
+        })
         .from(businessSettings)
         .where(eq(businessSettings.userId, userId))
         .limit(1);
