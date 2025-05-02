@@ -753,7 +753,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
                 }
               });
             } else {
-              updateStatusMutation.mutate({
+              console.log(`Sende E-Mail für Status ${status}: ${sendEmail}`);
+            updateStatusMutation.mutate({
                 id: id,
                 status: status,
                 sendEmail: sendEmail
