@@ -7,6 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useQuery } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer, QrCode } from 'lucide-react';
@@ -233,12 +234,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 }
               
               .print-container {
-                width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
-                max-width: ${settings?.receiptWidth || '80mm'};
-                margin: 0 auto;
-                padding: 5mm 2mm;
-                padding-bottom: 15mm; /* Mehr Platz am Ende des Bons */
-              }
+                ${useA4Format
+                  ? 'width: 100%; max-width: 100%; margin: 0 auto; padding: 5mm;' /* DIN A4 Format */
+                  : `width: ${settings?.receiptWidth || '80mm'}; max-width: ${settings?.receiptWidth || '80mm'}; margin: 0 auto; padding: 5mm 2mm; padding-bottom: 15mm;` /* Bonformat */
+                }
               
               .print-header {
                 padding-bottom: 3mm;
@@ -284,13 +283,17 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               }
               
               .grid-cols-2 {
-                display: block; /* Kein Grid für Thermodruck */
+                ${useA4Format
+                  ? 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;' /* DIN A4 Format */
+                  : 'display: block;' /* Bonformat */
+                }
               }
               
               .grid-cols-1 {
-                display: block; /* Kein Grid für Thermodruck */
-                margin-bottom: 1mm;
-              }
+                ${useA4Format
+                  ? 'display: grid; grid-template-columns: 1fr; gap: 4px;' /* DIN A4 Format */
+                  : 'display: block; margin-bottom: 1mm;' /* Bonformat */
+                }
               
               .font-medium {
                 font-weight: bold;
@@ -339,11 +342,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               }
               
               .highlight-box {
-                border: 0.3mm solid black;
-                padding: 2mm;
-                margin-top: 1mm;
-                margin-bottom: 1mm;
-                border-left-width: 1mm;
+                ${useA4Format
+                  ? 'border: 1px solid black; padding: 8px; margin: 4px 0; border-left-width: 4px;' /* DIN A4 Format */
+                  : 'border: 0.3mm solid black; padding: 2mm; margin-top: 1mm; margin-bottom: 1mm; border-left-width: 1mm;' /* Bonformat */
+                }
               }
               
               .receipt-number {
@@ -384,8 +386,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               
               /* Flex-Layout für Firmenlogo und Informationen */
               .flex {
-                display: block; /* Für Thermodruck ist block-Layout besser */
-                text-align: center;
+                ${useA4Format
+                  ? 'display: flex;' /* DIN A4 Format */
+                  : 'display: block; text-align: center;' /* Bonformat */
+                }
               }
               
               .flex-col {
@@ -402,8 +406,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               
               /* Bildstilisierung für Logo */
               img {
-                max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'}; /* Angepasst für Bonbreite */
-                max-height: 15mm; /* Begrenzte Höhe */
+                ${useA4Format
+                  ? 'max-width: 200px; max-height: 60px;' /* DIN A4 Format */
+                  : `max-width: ${settings?.receiptWidth === '58mm' ? '45mm' : '60mm'}; max-height: 15mm;` /* Bonformat */
+                }
                 margin: 0 auto;
                 display: block;
               }

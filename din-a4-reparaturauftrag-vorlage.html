@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Reparaturauftrag</title>
+  <style>
+    /* Allgemeine Formatierung für DIN A4 */
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333333;
+      font-size: 11pt;
+    }
+    
+    .document {
+      width: 210mm;
+      padding: 15mm;
+      box-sizing: border-box;
+    }
+    
+    /* Header-Bereich */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15mm;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5mm;
+    }
+    
+    .company-info {
+      flex: 2;
+    }
+    
+    .logo-container {
+      flex: 1;
+      text-align: right;
+    }
+    
+    .logo-container img {
+      max-height: 30mm;
+      max-width: 60mm;
+    }
+    
+    .company-name {
+      font-size: 18pt;
+      font-weight: bold;
+      margin-bottom: 3mm;
+    }
+    
+    .company-address {
+      font-size: 10pt;
+      line-height: 1.4;
+    }
+    
+    /* Dokumentinformationen */
+    .document-info {
+      text-align: right;
+      margin-bottom: 10mm;
+    }
+    
+    .document-title {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 5mm;
+    }
+    
+    .order-number {
+      display: inline-block;
+      border: 1px solid #333;
+      padding: 2mm 4mm;
+      font-weight: bold;
+      margin-left: 4mm;
+    }
+    
+    /* Kundeninformationen und Gerätedaten */
+    .info-section {
+      margin-bottom: 10mm;
+    }
+    
+    .section-title {
+      font-size: 12pt;
+      font-weight: bold;
+      margin-bottom: 3mm;
+      padding-bottom: 1mm;
+      border-bottom: 1px solid #333;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 5mm;
+    }
+    
+    .info-item {
+      margin-bottom: 2mm;
+    }
+    
+    .info-label {
+      font-weight: bold;
+      display: inline-block;
+      min-width: 40mm;
+    }
+    
+    /* Reparaturdetails */
+    .details-section {
+      margin-bottom: 10mm;
+    }
+    
+    .highlight-box {
+      border: 1px solid #333;
+      border-left-width: 4px;
+      padding: 3mm;
+      margin-bottom: 4mm;
+    }
+    
+    /* Unterschriftenbereich */
+    .signature-section {
+      margin-top: 15mm;
+      border-top: 1px solid #333;
+      padding-top: 5mm;
+    }
+    
+    .signature-container {
+      border: 1px solid #333;
+      height: 20mm;
+      margin-bottom: 3mm;
+      position: relative;
+    }
+    
+    .signature-image {
+      position: absolute;
+      max-height: 18mm;
+      max-width: 80%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .signature-date {
+      font-size: 9pt;
+      text-align: center;
+      margin-bottom: 3mm;
+    }
+    
+    .signature-text {
+      font-size: 9pt;
+      text-align: center;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 15mm;
+      border-top: 1px solid #333;
+      padding-top: 3mm;
+      font-size: 9pt;
+      text-align: center;
+    }
+    
+    /* QR-Code */
+    .qr-code {
+      text-align: center;
+      margin-top: 10mm;
+    }
+    
+    .qr-code-image {
+      width: 25mm;
+      height: 25mm;
+      margin: 0 auto;
+    }
+    
+    .qr-code-text {
+      font-size: 9pt;
+      margin-top: 2mm;
+    }
+  </style>
+</head>
+<body>
+  <div class="document">
+    <!-- Header mit Firmeninformationen -->
+    <div class="header">
+      <div class="company-info">
+        <div class="company-name">{{businessName}}</div>
+        <div class="company-address">
+          {{streetAddress}}<br>
+          {{zipCode}} {{city}}<br>
+          Tel: {{phone}}<br>
+          E-Mail: {{email}}<br>
+          {{website}}
+        </div>
+      </div>
+      <div class="logo-container">
+        <img src="{{logoImage}}" alt="Firmenlogo">
+      </div>
+    </div>
+    
+    <!-- Dokumentinformationen -->
+    <div class="document-info">
+      <div>Datum: {{createdAt}}</div>
+    </div>
+    
+    <!-- Reparaturauftrag Titel -->
+    <div class="document-title">
+      Reparaturauftrag <span class="order-number">{{orderCode}}</span>
+    </div>
+    
+    <!-- Kundeninformationen -->
+    <div class="info-section">
+      <div class="section-title">Kundendaten</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Name:</span> {{customer.firstName}} {{customer.lastName}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Telefon:</span> {{customer.phone}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">E-Mail:</span> {{customer.email}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Adresse:</span> {{customer.address}}, {{customer.zipCode}} {{customer.city}}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gerätedaten -->
+    <div class="info-section">
+      <div class="section-title">Gerätedaten</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Hersteller:</span> {{brand}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Modell:</span> {{model}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">Seriennummer:</span> {{serialNumber}}
+        </div>
+        <div class="info-item">
+          <span class="info-label">IMEI:</span> {{imei}}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Reparaturdetails -->
+    <div class="details-section">
+      <div class="section-title">Reparaturdetails</div>
+      
+      <div class="highlight-box">
+        <div class="info-item">
+          <span class="info-label">Problem:</span> {{issue}}
+        </div>
+      </div>
+      
+      <div class="highlight-box">
+        <div class="info-item">
+          <span class="info-label">Preis:</span> {{estimatedCost}} €
+        </div>
+      </div>
+      
+      {{#if depositAmount}}
+      <div class="highlight-box">
+        <div class="info-item" style="font-weight: bold; text-decoration: underline;">
+          WICHTIG: Gerät beim Kunden / bei Kundin!
+        </div>
+        <div class="info-item">
+          <span class="info-label">Anzahlung:</span> {{depositAmount}} €
+        </div>
+      </div>
+      {{/if}}
+      
+      {{#if notes}}
+      <div class="highlight-box">
+        <div class="info-item">
+          <span class="info-label">Notizen:</span> {{notes}}
+        </div>
+      </div>
+      {{/if}}
+    </div>
+    
+    <!-- Unterschrift bei Geräteabgabe -->
+    <div class="signature-section">
+      <div class="section-title">Unterschrift bei Geräteabgabe</div>
+      <div class="signature-container">
+        <img class="signature-image" src="{{dropoffSignature}}" alt="Unterschrift bei Abgabe">
+      </div>
+      <div class="signature-date">
+        Unterschrieben am {{dropoffSignedAt}} Uhr
+      </div>
+      <div class="signature-text">
+        Hiermit bestätige ich, {{customer.firstName}} {{customer.lastName}}, dass ich mit den Reparaturbedingungen 
+        einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.
+      </div>
+    </div>
+    
+    <!-- QR-Code -->
+    <div class="qr-code">
+      <div class="qr-code-image">
+        <!-- QR-Code wird hier eingebunden -->
+        <!-- In der tatsächlichen Anwendung wird dies durch den QRCodeSVG-Komponenten ersetzt -->
+      </div>
+      <div class="qr-code-text">
+        Scannen Sie den QR-Code, um den Status Ihrer Reparatur zu überprüfen
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <div>{{businessName}} • {{streetAddress}} • {{zipCode}} {{city}}</div>
+      <div>USt-IdNr: {{vatNumber}} • {{companySlogan}}</div>
+      <div>{{customFooter}}</div>
+    </div>
+  </div>
+</body>
+</html>
