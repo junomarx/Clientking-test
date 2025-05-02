@@ -4,9 +4,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, FileText, Tag } from 'lucide-react';
+import { Printer, FileText, Tag, Lock, AlertTriangle } from 'lucide-react';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -15,6 +16,8 @@ import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { isProfessionalOrHigher } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { generateA4PrintContent } from '@/lib/a4-print-template';
+import { Badge } from '@/components/ui/badge';
+import { QRPrintTest } from './QRPrintTest';
 
 interface PrintOptionsDialogProps {
   open: boolean;
@@ -867,6 +870,18 @@ export function PrintOptionsDialog({
             {selectedPrintOption === 'label' && renderLabelContent()}
           </div>
         )}
+        
+        {/* QR-Code Drucktest eingebunden */}
+        <div className="mt-4">
+          <details className="text-sm">
+            <summary className="cursor-pointer font-medium text-primary hover:text-primary/80 transition-colors pb-2">
+              QR-Code Drucktest anzeigen (Fehlerbehebung)
+            </summary>
+            <div className="px-2 py-3 border rounded-md">
+              <QRPrintTest />
+            </div>
+          </details>
+        </div>
         
         <div className="flex justify-end space-x-4 mt-4">
           <Button
