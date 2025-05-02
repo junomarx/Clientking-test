@@ -150,6 +150,7 @@ export const businessSettings = pgTable("business_settings", {
   qrCodeType: text("qr_code_type").default("repair_status"), // Art des QR-Codes (repair_status, review, website)
   qrCodeContent: text("qr_code_content"), // Benutzerdefinierter Inhalt für QR-Code (z.B. URL)
   customFooterText: text("custom_footer_text"), // Benutzerdefinierter Fußzeilentext für Ausdrucke
+  printA4Enabled: boolean("print_a4_enabled").default(false), // DIN A4 Druckfunktion aktivieren
   
   // E-Mail-SMTP-Einstellungen für den eigenen Mail-Server
   smtpSenderName: text("smtp_sender_name"), // Bei den Mails anzuzeigender Name
