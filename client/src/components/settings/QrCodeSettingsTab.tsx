@@ -65,12 +65,23 @@ export function QrCodeSettingsTab() {
   const form = useForm<QrCodeFormValues>({
     resolver: zodResolver(qrCodeSchema),
     defaultValues: {
-      qrCodeEnabled: qrCodeSettings?.qrCodeEnabled || false,
-      qrCodeType: qrCodeSettings?.qrCodeType || 'repair_status',
-      qrCodeContent: qrCodeSettings?.qrCodeContent || '',
-    },
-    values: qrCodeSettings,
+      qrCodeEnabled: false,
+      qrCodeType: 'repair_status',
+      qrCodeContent: '',
+    }
   });
+  
+  // Aktualisiere Formularwerte, wenn Daten geladen werden
+  React.useEffect(() => {
+    if (qrCodeSettings) {
+      console.log('Setze Formularwerte mit Daten:', qrCodeSettings);
+      form.reset({
+        qrCodeEnabled: qrCodeSettings.qrCodeEnabled || false,
+        qrCodeType: qrCodeSettings.qrCodeType || 'repair_status',
+        qrCodeContent: qrCodeSettings.qrCodeContent || '',
+      });
+    }
+  }, [qrCodeSettings, form]);
 
   // Aktueller QR-Code-Typ als reaktiver Wert
   const qrCodeType = form.watch('qrCodeType');
@@ -79,15 +90,31 @@ export function QrCodeSettingsTab() {
   // Mutation zum Speichern der QR-Code-Einstellungen
   const updateQrCodeSettingsMutation = useMutation({
     mutationFn: async (data: QrCodeFormValues) => {
+      console.log('Speichere QR-Code-Einstellungen:', data);
       const res = await apiRequest('PUT', '/api/business-settings/qr-code', data);
+      
+      // Debug-Ausgabe der Response
+      console.log('PUT Response Status:', res.status, res.statusText);
+      
       if (!res.ok) {
         // Fehlermeldung aus der Antwort extrahieren
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Fehler beim Speichern der QR-Code-Einstellungen');
+        let errorMessage = 'Fehler beim Speichern der QR-Code-Einstellungen';
+        try {
+          const errorData = await res.json();
+          console.error('Server Error:', errorData);
+          errorMessage = errorData.message || errorMessage;
+        } catch (e) {
+          console.error('Fehler beim Parsen der Fehlerantwort:', e);
+        }
+        throw new Error(errorMessage);
       }
-      return res.json();
+      
+      const responseData = await res.json();
+      console.log('Erfolgreich gespeichert:', responseData);
+      return responseData;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Mutation erfolgreich, Daten:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/business-settings/qr-code'] });
       toast({
         title: 'Einstellungen gespeichert',
@@ -95,6 +122,7 @@ export function QrCodeSettingsTab() {
       });
     },
     onError: (error) => {
+      console.error('Mutation fehlgeschlagen:', error);
       toast({
         title: 'Fehler',
         description: `Fehler beim Speichern der Einstellungen: ${error.message}`,
