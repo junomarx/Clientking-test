@@ -145,13 +145,6 @@ export const businessSettings = pgTable("business_settings", {
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
   
-  // Drucke & Dokumente - Erweiterte Einstellungen
-  qrCodeEnabled: boolean("qr_code_enabled").default(false), // QR-Code auf Ausdrucken aktivieren
-  qrCodeType: text("qr_code_type").default("repair_status"), // Art des QR-Codes (repair_status, review, website)
-  qrCodeContent: text("qr_code_content"), // Benutzerdefinierter Inhalt für QR-Code (z.B. URL)
-  customFooterText: text("custom_footer_text"), // Benutzerdefinierter Fußzeilentext für Ausdrucke
-  printA4Enabled: boolean("print_a4_enabled").default(false), // DIN A4 Druckfunktion aktivieren
-  
   // E-Mail-SMTP-Einstellungen für den eigenen Mail-Server
   smtpSenderName: text("smtp_sender_name"), // Bei den Mails anzuzeigender Name
   smtpHost: text("smtp_host"),             // SMTP Host (z.B. smtp.example.com)
@@ -465,31 +458,3 @@ export type CostEstimate = typeof costEstimates.$inferSelect;
 export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
 export type CostEstimateItem = z.infer<typeof costEstimateItemSchema>;
 export type InsertCostEstimateItems = z.infer<typeof insertCostEstimateItemsSchema>;
-
-// Document Templates für benutzerdefinierte Dokumentvorlagen
-export const documentTemplates = pgTable("document_templates", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  name: text("name").notNull(),
-  type: text("type").notNull(), // Der Vorlagentyp (repair_order, cost_estimate, receipt)
-  content: text("content").notNull(), // HTML oder ähnliches Format
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
-
-// Beziehungen definieren - documentTemplates zu users
-export const documentTemplatesRelations = relations(documentTemplates, ({ one }) => ({
-  user: one(users, {
-    fields: [documentTemplates.userId],
-    references: [users.id],
-  }),
-}));
-
-export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true
-});
-
-export type DocumentTemplate = typeof documentTemplates.$inferSelect;
-export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;

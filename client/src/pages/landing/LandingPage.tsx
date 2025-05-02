@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Smartphone, Shield, Clock, Users, ChevronRight, Star } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 
-// Keine Bilder-Imports mehr benötigt
-
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -35,7 +33,17 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
-          {/* Dashboard-Preview-Bild entfernt */}
+          <div className="mt-16 bg-white rounded-xl shadow-xl overflow-hidden max-w-5xl mx-auto">
+            <img 
+              src="/dashboard-preview.jpg" 
+              alt="Dashboard Preview" 
+              className="w-full h-auto"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview';
+              }}
+            />
+          </div>
         </div>
       </section>
 
@@ -277,7 +285,18 @@ export default function LandingPage() {
             Was uns besonders macht
           </h2>
           
-          <div className="max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <img 
+                src="/team-image.jpg" 
+                alt="Unser Team" 
+                className="rounded-xl shadow-lg w-full h-auto"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team';
+                }}
+              />
+            </div>
             <div>
               <h3 className="text-2xl font-bold mb-6">Von Handyshop-Betreibern für Handyshop-Betreiber</h3>
               <p className="text-gray-600 mb-6">

@@ -46,8 +46,8 @@ export function Header({ variant = "landing" }: HeaderProps) {
               <Smartphone className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-xl text-gray-900">phonerepair</h1>
-              <p className="text-xs text-gray-500">Handyshop Verwaltung</p>
+              <h1 className="font-bold text-xl text-gray-900">Handyshop</h1>
+              <p className="text-xs text-gray-500">Verwaltung</p>
             </div>
           </div>
         </Link>
