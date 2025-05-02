@@ -95,7 +95,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
         logoImage: settings.logoImage || "",
         // Validiere receiptWidth und setze auf "80mm" wenn ungültig
         receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
-          ? settings.receiptWidth 
+          ? settings.receiptWidth as "58mm" | "80mm"
           : "80mm"
       };
       
@@ -215,14 +215,44 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                     </div>
                   </div>
                   
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="taxId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Steuer-ID / UID-Nummer</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="vatNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>USt-IdNr. (EU VAT Number)</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="z.B. ATU12345678" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
                   <FormField
                     control={form.control}
-                    name="taxId"
+                    name="companySlogan"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Steuer-ID / UID-Nummer</FormLabel>
+                        <FormLabel>Firmenlaut (Unternehmensslogan)</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} placeholder="z.B. Ihr Partner für schnelle Reparaturen" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

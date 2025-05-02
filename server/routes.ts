@@ -776,6 +776,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ownerFirstName: "", 
           ownerLastName: "",
           taxId: userData?.companyVatNumber || "",
+          vatNumber: "", // Neue Spalte: USt-IdNr.
+          companySlogan: "", // Neue Spalte: Firmenlaut/Unternehmensslogan
           streetAddress: "",
           city: "",
           zipCode: "",
