@@ -5,7 +5,7 @@ import { Smartphone, Shield, Clock, Users, ChevronRight, Star } from 'lucide-rea
 import { Header } from '@/components/layout/Header';
 
 // Bilder importieren
-import dashboardPreviewImage from "@assets/restaurant-und-gastgewerbe-cms-dashboard-app-ui-kit-vorlage_500947-400.jpg";
+import dashboardPreviewImage from "@assets/Bildschirm­foto 2025-05-01 um 22.14.57.png";
 import teamImage from "@assets/WhatsApp Image 2025-04-30 at 12.31.13.jpeg";
 
 export default function LandingPage() {
