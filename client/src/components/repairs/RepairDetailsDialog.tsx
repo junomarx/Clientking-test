@@ -415,19 +415,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             </h3>
             
             {emailHistory && emailHistory.length > 0 ? (
-              <div className="space-y-3 max-h-48 overflow-y-auto">
+              <div className="space-y-4 max-h-60 overflow-y-auto">
                 {emailHistory.map((entry) => (
-                  <div key={entry.id} className="flex items-start space-x-2 p-2 rounded-md bg-white/70 shadow-sm border">
-                    {entry.status === 'success' ? (
-                      <Check className="h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <X className="h-4 w-4 mt-1 text-red-500 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{entry.subject}</div>
-                      <div className="text-xs text-muted-foreground">An: {entry.recipient}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Gesendet: {formatDateTime(entry.sentAt.toString())}
+                  <div key={entry.id} className="border bg-white rounded-lg overflow-hidden">
+                    <div className="flex justify-between items-center p-4 pb-3">
+                      <div>
+                        <div className="font-semibold">{entry.subject}</div>
+                        <div className="text-sm text-muted-foreground">An: {entry.recipient}</div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {formatDateTime(entry.sentAt.toString())}
                       </div>
                     </div>
                   </div>
@@ -438,6 +435,22 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 Keine E-Mail-Kommunikation gefunden
               </div>
             )}
+            
+            <div className="mt-4 flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => {
+                  // Hier könnte ein E-Mail-Dialog geöffnet werden
+                  console.log('E-Mail senden');
+                  // TODO: E-Mail-Dialog implementieren
+                }}
+              >
+                <Mail className="h-4 w-4" />
+                E-Mail senden
+              </Button>
+            </div>
           </div>
         </div>
 
