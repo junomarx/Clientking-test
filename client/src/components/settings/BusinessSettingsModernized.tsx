@@ -89,14 +89,27 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   // Aktualisieren der Formularwerte, wenn Einstellungen geladen werden
   useEffect(() => {
     if (settings) {
-      // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird
+      // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird und NULL-Werte in leere Strings umgewandelt werden
       const formattedSettings = {
         ...settings,
         logoImage: settings.logoImage || "",
         // Validiere receiptWidth und setze auf "80mm" wenn ungültig
         receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
           ? settings.receiptWidth as "58mm" | "80mm"
-          : "80mm"
+          : "80mm",
+        // Konvertiere null-Werte zu leeren Strings oder dem entsprechenden korrekten Typ
+        taxId: settings.taxId || "",
+        vatNumber: settings.vatNumber || "",
+        companySlogan: settings.companySlogan || "",
+        phone: settings.phone || "",
+        email: settings.email || "",
+        website: settings.website || "",
+        smtpHost: settings.smtpHost || "",
+        smtpUser: settings.smtpUser || "",
+        smtpPassword: settings.smtpPassword || "",
+        smtpPort: settings.smtpPort || "",
+        smtpSenderName: settings.smtpSenderName || "",
+        reviewLink: settings.reviewLink || ""
       };
       
       form.reset(formattedSettings);
