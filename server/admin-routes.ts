@@ -493,7 +493,7 @@ export function registerAdminRoutes(app: Express) {
           }
           
           // Nur neue Gerätetypen einfügen, wenn welche vorhanden sind
-          let insertedDeviceTypes = [];
+          let insertedDeviceTypes: Array<any> = [];
           if (deviceTypesToInsert.length > 0) {
             insertedDeviceTypes = await db.insert(userDeviceTypes)
               .values(deviceTypesToInsert.map((dt: any) => {

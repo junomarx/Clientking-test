@@ -23,8 +23,6 @@ export async function apiRequest(
   const userId = localStorage.getItem('userId');
   const username = localStorage.getItem('username');
   
-  console.log(`API request ${method} ${fullUrl} for user ${username || 'unknown'} (ID: ${userId || 'unknown'}) with auth token:`, authToken ? 'exists' : 'none');
-  
   const headers: Record<string, string> = {};
   if (data) {
     headers["Content-Type"] = "application/json";
@@ -38,8 +36,6 @@ export async function apiRequest(
     headers["X-User-ID"] = userId;
   }
   
-  console.log('Request headers:', headers);
-  
   try {
     const res = await fetch(fullUrl, {
       method,
@@ -49,15 +45,12 @@ export async function apiRequest(
     });
 
     if (!res.ok) {
-      console.error(`API error ${res.status} ${res.statusText} for ${method} ${fullUrl}`);
       const text = await res.text();
-      console.error('Error response body:', text);
       throw new Error(`${res.status}: ${text || res.statusText}`);
     }
     
     return res;
   } catch (error) {
-    console.error(`API request error for ${method} ${fullUrl}:`, error);
     throw error;
   }
 }
@@ -76,8 +69,6 @@ export const getQueryFn: <T>(options: {
     // Füge API_BASE_URL hinzu, wenn der URL nicht mit http:// oder https:// beginnt
     const path = queryKey[0] as string;
     const fullUrl = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
-    
-    console.log(`Query ${fullUrl} for user ${username || 'unknown'} (ID: ${userId || 'unknown'})`);
     
     const headers: Record<string, string> = {};
     
