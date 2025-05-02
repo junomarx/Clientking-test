@@ -27,6 +27,23 @@ interface PrintOptionsDialogProps {
   canPrintLabels: boolean | null;
 }
 
+// Debug-Funktion um Repair-Schema zu prüfen
+function inspectRepairObject(repair: any) {
+  if (!repair) {
+    console.error('Repair-Objekt ist null oder undefined!');
+    return;
+  }
+  
+  console.log('Repair-Objekt Properties:', Object.keys(repair));
+  console.log('Repair ID:', repair.id);
+  console.log('Repair orderCode:', repair.orderCode);
+  console.log('Repair customerId:', repair.customerId);
+  console.log('Repair issue:', repair.issue);
+  console.log('Repair model:', repair.model);
+  console.log('Repair brand:', repair.brand);
+  console.log('Repair createdAt:', repair.createdAt);
+}
+
 export function PrintOptionsDialog({
   open,
   onClose,
@@ -275,6 +292,9 @@ export function PrintOptionsDialog({
     console.log('Reparatur-Daten als JSON:', JSON.stringify(repair, null, 2));
     console.log('Kunden-Daten in renderA4Content:', customer);
     console.log('Kunden-Daten als JSON:', JSON.stringify(customer, null, 2));
+    
+    // Aufruf der Inspektionsfunktion um Repair-Eigenschaften zu prüfen
+    inspectRepairObject(repair);
     
     // Verwenden der Funktion aus importierter a4-print-template.ts
     const a4Content = generateA4PrintContent({

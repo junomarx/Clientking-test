@@ -69,14 +69,14 @@ export const generateA4PrintContent = ({
     </div>
   ` : '';
   
-  const depositBlock = repair.deposit ? `
+  const depositBlock = repair.depositAmount ? `
     <div style="margin-bottom: 4mm; padding: 2mm; background-color: #f8f8f8; border-left: 4px solid #1976d2">
       <span style="font-weight: bold; display: inline-block; min-width: 30mm">Anzahlung:</span>
-      ${repair.deposit} €
+      ${repair.depositAmount} €
     </div>
   ` : '';
   
-  const dropoffSignatureBlock = repair.signature ? `
+  const dropoffSignatureBlock = repair.dropoffSignature ? `
     <div style="margin-bottom: 10mm">
       <div style="
         font-size: 12pt; 
@@ -89,7 +89,7 @@ export const generateA4PrintContent = ({
       </div>
       <div style="text-align: center; margin-bottom: 3mm">
         <img 
-          src="${repair.signature}" 
+          src="${repair.dropoffSignature}" 
           alt="Unterschrift bei Abgabe" 
           style="max-height: 30mm; max-width: 100%"
         />

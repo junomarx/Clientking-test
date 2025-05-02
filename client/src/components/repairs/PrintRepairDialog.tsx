@@ -23,18 +23,41 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
   const [canPrintLabels, setCanPrintLabels] = useState<boolean | null>(null);
 
   // Lade Reparaturdaten
+  console.log('RepairId in PrintRepairDialog:', repairId);
+  console.log('Dialog ist geöffnet:', open);
+  console.log('Laden der Reparaturdaten wird aktiviert:', !!repairId && open);
+  
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
-      if (!repairId) return null;
+      if (!repairId) {
+        console.error('Keine Reparatur-ID vorhanden!');
+        return null;
+      }
       try {
+        console.log(`Versuche Reparatur mit ID ${repairId} zu laden...`);
+        
+        // Authentifizierung überprüfen
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        console.log('Token vorhanden:', !!token);
+        console.log('UserId vorhanden:', !!userId);
+        
         const response = await fetch(`/api/repairs/${repairId}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
+            'X-User-ID': userId || '',
           }
         });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
-        return response.json();
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden der Reparatur: ${response.status} ${response.statusText}`);
+          throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        }
+        
+        const data = await response.json();
+        console.log('Reparaturdaten erfolgreich geladen:', data);
+        return data;
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
         return null;
@@ -176,6 +199,14 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
       qrCodeSettings: qrCodeSettings ? 'QrCodeSettings geladen' : 'Keine QrCodeSettings',
       currentUser: currentUser ? `User ${currentUser.username} (${currentUser.id}) geladen` : 'Kein User geladen',
     });
+    
+    // Tiefe Inspektion aller Objekte
+    console.log('Repair-Objekt komplett:', repair);
+    console.log('Repair-Eigenschaften:', repair ? Object.keys(repair) : 'Keine Repair-Daten');
+    console.log('Customer-Objekt komplett:', customer);
+    console.log('Customer-Eigenschaften:', customer ? Object.keys(customer) : 'Keine Customer-Daten');
+    console.log('BusinessSettings-Objekt komplett:', businessSettings);
+    console.log('BusinessSettings-Eigenschaften:', businessSettings ? Object.keys(businessSettings) : 'Keine BusinessSettings-Daten');
     
     // Detailliertere Logs zu Repair und Customer
     if (repair) {
