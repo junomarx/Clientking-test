@@ -8,7 +8,7 @@ import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/S
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
-import { SettingsPageContent } from '@/components/settings/SettingsPageContent';
+import { SettingsPageContent } from '@/components/settings';
 
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
@@ -17,7 +17,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const [searchParam, setSearchParam] = useState<string>('');
   const [location] = useLocation();
@@ -30,12 +29,8 @@ export default function Home() {
     
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
-      if (['dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates'].includes(tabParam as Tab)) {
+      if (['dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates', 'settings'].includes(tabParam as Tab)) {
         setActiveTab(tabParam as Tab);
-      }
-      // Settings-Dialog öffnen, wenn der Tab "settings" ist
-      else if (tabParam === 'settings') {
-        setIsSettingsOpen(true);
       }
     }
     
@@ -68,10 +63,10 @@ export default function Home() {
       }
     };
 
-    // Event-Listener für das Öffnen des Einstellungsdialogs
+    // Event-Listener für das Öffnen des Einstellungstabs
     const handleOpenSettingsDialog = () => {
-      console.log("Event für Öffnen des Einstellungsdialogs empfangen");
-      setIsSettingsOpen(true);
+      console.log("Event für Öffnen der Einstellungen empfangen");
+      setActiveTab('settings');
     };
 
     // Event-Listener registrieren

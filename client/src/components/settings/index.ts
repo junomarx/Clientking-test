@@ -4,3 +4,4 @@ export { EmailTemplateTab } from './EmailTemplateTab';
 export { SmsTemplateTab } from './SmsTemplateTab';
 export { SettingsDialogNew } from './SettingsDialogNew';
 export { BusinessSettingsDialogNew } from './BusinessSettingsDialogNew';
+export { SettingsPageContent } from './SettingsPageContent';
