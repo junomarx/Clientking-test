@@ -3,82 +3,71 @@
  * QR-Code-Einstellungen und benutzerdefinierten Fußnoten zur business_settings-Tabelle hinzu
  */
 
-import { db, pool } from "./db";
-import { sql } from "drizzle-orm";
+import { pool } from './db';
 
 export async function addDocumentPrintSettings() {
+  console.log('Starte Migration: Hinzufügen von Einstellungen für Dokumentendruck...');
+
   try {
-    console.log("Starte Migration: Hinzufügen von erweiterten Druckeinstellungen...");
-    
-    // Überprüfe, ob die document_templates-Spalte bereits existiert
-    const checkDocumentTemplatesColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'business_settings' AND column_name = 'document_templates'
-    `);
-    
-    if (checkDocumentTemplatesColumn.rows.length === 0) {
-      console.log("Füge document_templates-Spalte hinzu...");
-      await pool.query(`ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS document_templates TEXT[]`);
+    // Überprüfen, ob die neue Spalten bereits existieren
+    const checkQrEnabled = await pool.query(
+      "SELECT column_name FROM information_schema.columns WHERE table_name='business_settings' AND column_name='qr_code_enabled'"
+    );
+
+    if (checkQrEnabled.rows.length === 0) {
+      console.log('Füge QR-Code-Einstellungen hinzu...');
+      // Hinzufügen der QR-Code-Einstellungen
+      await pool.query(
+        "ALTER TABLE business_settings ADD COLUMN qr_code_enabled BOOLEAN DEFAULT false"
+      );
+      await pool.query(
+        "ALTER TABLE business_settings ADD COLUMN qr_code_type VARCHAR(50) DEFAULT 'repair_status'"
+      );
+      await pool.query(
+        "ALTER TABLE business_settings ADD COLUMN qr_code_content TEXT"
+      );
+
+      // Hinzufügen der benutzerdefinierten Fußnote
+      await pool.query(
+        "ALTER TABLE business_settings ADD COLUMN custom_footer_text TEXT"
+      );
+
+      // Für Dokument-Vorlagen werden wir später eine separate Tabelle erstellen
+      console.log('Migration erfolgreich: QR-Code-Einstellungen und Fußnoten hinzugefügt');
+
+      // Erstellen einer neuen Tabelle für Dokumentenvorlagen
+      const checkDocumentTemplatesTable = await pool.query(
+        "SELECT table_name FROM information_schema.tables WHERE table_name='document_templates'"
+      );
+
+      if (checkDocumentTemplatesTable.rows.length === 0) {
+        console.log('Erstelle Dokumentenvorlagen-Tabelle...');
+        await pool.query(`
+          CREATE TABLE document_templates (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL,
+            type VARCHAR(50) NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+          )
+        `);
+        console.log('Dokumentenvorlagen-Tabelle erstellt');
+      } else {
+        console.log('Dokumentenvorlagen-Tabelle existiert bereits');
+      }
     } else {
-      console.log("Die document_templates-Spalte existiert bereits.");
+      console.log('QR-Code-Einstellungen sind bereits in der Datenbank vorhanden');
     }
-    
-    // Überprüfe, ob die qr_code_enabled-Spalte bereits existiert
-    const checkQrCodeEnabledColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'business_settings' AND column_name = 'qr_code_enabled'
-    `);
-    
-    if (checkQrCodeEnabledColumn.rows.length === 0) {
-      console.log("Füge qr_code_enabled-Spalte hinzu...");
-      await pool.query(`ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS qr_code_enabled BOOLEAN DEFAULT FALSE`);
-    } else {
-      console.log("Die qr_code_enabled-Spalte existiert bereits.");
-    }
-    
-    // Überprüfe, ob die qr_code_type-Spalte bereits existiert
-    const checkQrCodeTypeColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'business_settings' AND column_name = 'qr_code_type'
-    `);
-    
-    if (checkQrCodeTypeColumn.rows.length === 0) {
-      console.log("Füge qr_code_type-Spalte hinzu...");
-      await pool.query(`ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS qr_code_type TEXT DEFAULT 'repair_status'`);
-    } else {
-      console.log("Die qr_code_type-Spalte existiert bereits.");
-    }
-    
-    // Überprüfe, ob die qr_code_content-Spalte bereits existiert
-    const checkQrCodeContentColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'business_settings' AND column_name = 'qr_code_content'
-    `);
-    
-    if (checkQrCodeContentColumn.rows.length === 0) {
-      console.log("Füge qr_code_content-Spalte hinzu...");
-      await pool.query(`ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS qr_code_content TEXT`);
-    } else {
-      console.log("Die qr_code_content-Spalte existiert bereits.");
-    }
-    
-    // Überprüfe, ob die custom_footer_text-Spalte bereits existiert
-    const checkFooterTextColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'business_settings' AND column_name = 'custom_footer_text'
-    `);
-    
-    if (checkFooterTextColumn.rows.length === 0) {
-      console.log("Füge custom_footer_text-Spalte hinzu...");
-      await pool.query(`ALTER TABLE business_settings ADD COLUMN IF NOT EXISTS custom_footer_text TEXT`);
-    } else {
-      console.log("Die custom_footer_text-Spalte existiert bereits.");
-    }
-    
-    console.log("Migration für Druckeinstellungen erfolgreich abgeschlossen.");
-    return true;
-  } catch (error) {
-    console.error("Fehler bei der Migration:", error);
-    return false;
+
+    console.log('Migration abgeschlossen: Dokumentendruck-Einstellungen');
+    return { success: true, message: 'Dokumentendruck-Einstellungen hinzugefügt' };
+  } catch (error: any) {
+    console.error('Fehler bei der Migration:', error);
+    return { success: false, message: `Fehler: ${error.message}` };
   }
 }
+
+// In ES modules wird die Migration direkt vom Hauptmodul aufgerufen
+// Eine direkte Ausführung ist daher nicht notwendig.

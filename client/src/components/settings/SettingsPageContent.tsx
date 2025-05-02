@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Building, User, Palette, ChevronLeft, Package } from 'lucide-react';
+import { Save, Building, User, Palette, ChevronLeft, Package, LayoutTemplate, QrCode, FileText } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -13,6 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmailTemplateTab } from '@/components/settings/EmailTemplateTab';
+import { DocumentTemplatesTab } from '@/components/settings/DocumentTemplatesTab';
+import { QrCodeSettingsTab } from '@/components/settings/QrCodeSettingsTab';
+import { CustomFooterTab } from '@/components/settings/CustomFooterTab';
 import { useLocation } from 'wouter';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import { Progress } from '@/components/ui/progress';
@@ -661,82 +664,131 @@ export function SettingsPageContent() {
 
 
 
-          {/* Ausdrucke Tab */}
+          {/* Ausdrucke Tab mit Tabs für die verschiedenen Druckfunktionen */}
           <TabsContent value="prints" className="mt-4">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
-                <CardDescription>Laden Sie Ihr Firmenlogo hoch für Ihre Ausdrucke.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <div>
-                      <h3 className="text-md font-medium mb-3">Logo</h3>
-                      <div className="mb-4 flex items-center space-x-4">
-                        <div className="w-20 h-20 border rounded-md flex items-center justify-center overflow-hidden">
-                          {settings?.logoImage ? (
-                            <img src={settings.logoImage} alt="Logo" className="max-w-full max-h-full" />
-                          ) : (
-                            <Building className="h-10 w-10 text-gray-400" />
-                          )}
-                        </div>
-                        <div>
-                          <Button variant="outline" type="button" size="sm">
-                            Logo hochladen
-                          </Button>
-                          <p className="text-sm text-gray-500 mt-1">Empfohlenes Format: PNG oder JPEG, 500x500px</p>
-                        </div>
-                      </div>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Druckeinstellungen</CardTitle>
-                <CardDescription>Konfigurieren Sie das Format für Quittungen und Etiketten.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="receiptWidth"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quittungsbreite</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Quittungsbreite auswählen" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="58mm">58mm (kleiner Bondrucker)</SelectItem>
-                              <SelectItem value="80mm">80mm (Standard-Bondrucker)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex items-center space-x-2 my-4">
-                      <Switch id="print-logo" />
-                      <Label htmlFor="print-logo">Logo auf Quittungen drucken</Label>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 my-4">
-                      <Switch id="print-address" />
-                      <Label htmlFor="print-address">Adresse auf Quittungen drucken</Label>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+            <div className="mb-6">
+              <Tabs defaultValue="basic">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="basic" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" /> Grundeinstellungen
+                  </TabsTrigger>
+                  <TabsTrigger value="templates" className="flex items-center">
+                    <LayoutTemplate className="h-4 w-4 mr-2" /> Dokumentenvorlagen
+                  </TabsTrigger>
+                  <TabsTrigger value="qrcode" className="flex items-center">
+                    <QrCode className="h-4 w-4 mr-2" /> QR-Codes
+                  </TabsTrigger>
+                  <TabsTrigger value="footer" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" /> Fußnoten
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Grundeinstellungen für Drucke */}
+                <TabsContent value="basic">
+                  <Card className="mb-6">
+                    <CardHeader>
+                      <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
+                      <CardDescription>Laden Sie Ihr Firmenlogo hoch für Ihre Ausdrucke.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Form {...form}>
+                        <form className="space-y-4">
+                          <div>
+                            <h3 className="text-md font-medium mb-3">Logo</h3>
+                            <div className="mb-4 flex items-center space-x-4">
+                              <div className="w-20 h-20 border rounded-md flex items-center justify-center overflow-hidden">
+                                {settings?.logoImage ? (
+                                  <img src={settings.logoImage} alt="Logo" className="max-w-full max-h-full" />
+                                ) : (
+                                  <Building className="h-10 w-10 text-gray-400" />
+                                )}
+                              </div>
+                              <div>
+                                <Button variant="outline" type="button" size="sm">
+                                  Logo hochladen
+                                </Button>
+                                <p className="text-sm text-gray-500 mt-1">Empfohlenes Format: PNG oder JPEG, 500x500px</p>
+                              </div>
+                            </div>
+                          </div>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-semibold">Druckformat</CardTitle>
+                      <CardDescription>Konfigurieren Sie das Format für Quittungen und Etiketten.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <Form {...form}>
+                        <form className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="receiptWidth"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Quittungsbreite</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Quittungsbreite auswählen" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="58mm">58mm (kleiner Bondrucker)</SelectItem>
+                                    <SelectItem value="80mm">80mm (Standard-Bondrucker)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div className="flex items-center space-x-2 my-4">
+                            <Switch id="print-logo" />
+                            <Label htmlFor="print-logo">Logo auf Quittungen drucken</Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 my-4">
+                            <Switch id="print-address" />
+                            <Label htmlFor="print-address">Adresse auf Quittungen drucken</Label>
+                          </div>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Dokumentenvorlagen Tab */}
+                <TabsContent value="templates">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <DocumentTemplatesTab />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* QR-Code Einstellungen Tab */}
+                <TabsContent value="qrcode">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <QrCodeSettingsTab />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Fußnoten Tab */}
+                <TabsContent value="footer">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <CustomFooterTab />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
           </TabsContent>
 
           {/* Abonnement Tab */}
