@@ -120,7 +120,7 @@ export function DocumentTemplatesTab() {
   const updateTemplateMutation = useMutation({
     mutationFn: async (data: TemplateFormValues & { id: string }) => {
       const { id, ...templateData } = data;
-      const res = await apiRequest('PUT', `/api/document-templates/${id}`, templateData);
+      const res = await apiRequest('PATCH', `/api/document-templates/${id}`, templateData);
       if (!res.ok) throw new Error('Fehler beim Aktualisieren der Vorlage');
       return res.json();
     },
@@ -293,15 +293,15 @@ export function DocumentTemplatesTab() {
                               <p>
                                 Verwenden Sie diese Platzhalter in Ihrer Vorlage:
                                 <br />
-                                {{geschaeftsname}} - Name des Geschäfts
+                                &#123;&#123;geschaeftsname&#125;&#125; - Name des Geschäfts
                                 <br />
-                                {{reparatur_nr}} - Reparaturnummer
+                                &#123;&#123;reparatur_nr&#125;&#125; - Reparaturnummer
                                 <br />
-                                {{kunde_name}} - Name des Kunden
+                                &#123;&#123;kunde_name&#125;&#125; - Name des Kunden
                                 <br />
-                                {{geraet}} - Geräteinformationen
+                                &#123;&#123;geraet&#125;&#125; - Geräteinformationen
                                 <br />
-                                {{datum}} - Aktuelles Datum
+                                &#123;&#123;datum&#125;&#125; - Aktuelles Datum
                               </p>
                             </TooltipContent>
                           </Tooltip>

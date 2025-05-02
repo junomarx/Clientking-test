@@ -80,7 +80,11 @@ export function QrCodeSettingsTab() {
   const updateQrCodeSettingsMutation = useMutation({
     mutationFn: async (data: QrCodeFormValues) => {
       const res = await apiRequest('PUT', '/api/business-settings/qr-code', data);
-      if (!res.ok) throw new Error('Fehler beim Speichern der QR-Code-Einstellungen');
+      if (!res.ok) {
+        // Fehlermeldung aus der Antwort extrahieren
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Fehler beim Speichern der QR-Code-Einstellungen');
+      }
       return res.json();
     },
     onSuccess: () => {

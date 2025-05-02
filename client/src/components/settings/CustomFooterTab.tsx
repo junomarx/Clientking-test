@@ -54,7 +54,11 @@ export function CustomFooterTab() {
   const updateFooterSettingsMutation = useMutation({
     mutationFn: async (data: FooterFormValues) => {
       const res = await apiRequest('PUT', '/api/business-settings/footer', data);
-      if (!res.ok) throw new Error('Fehler beim Speichern der Fußzeilen-Einstellungen');
+      if (!res.ok) {
+        // Fehlermeldung aus der Antwort extrahieren
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Fehler beim Speichern der Fußzeilen-Einstellungen');
+      }
       return res.json();
     },
     onSuccess: () => {
