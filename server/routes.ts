@@ -899,6 +899,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: userId // WICHTIG: Benutzer-ID setzen
         };
         
+        // Entferne document_templates aus dem Objekt, falls vorhanden
+        if ('document_templates' in newSettingsData) {
+          delete newSettingsData.document_templates;
+        }
+        
         // Füge die neuen Einstellungen in die Datenbank ein
         const [insertedSettings] = await db
           .insert(businessSettings)
@@ -921,6 +926,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         receiptWidth: receiptWidth || currentSettings[0].receiptWidth,
         // userId wird nicht aktualisiert, bleibt die des authentifizierten Benutzers
       };
+      
+      // Entferne document_templates aus dem Objekt, falls vorhanden
+      if ('document_templates' in updateData) {
+        delete updateData.document_templates;
+      }
       
       // Führe das Update durch
       const [updatedSettings] = await db
