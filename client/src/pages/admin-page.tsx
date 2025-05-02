@@ -38,6 +38,7 @@ import {
   Smartphone,
   Users,
   Save,
+  Settings,
   Cog,
   LayoutDashboard,
   Menu,
