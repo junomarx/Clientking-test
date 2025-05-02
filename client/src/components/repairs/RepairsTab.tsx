@@ -264,20 +264,12 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         sendEmail: sendEmail
       });
     }
-    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
+    // Status auf "abgeholt" aktualisieren, sendEmail-Parameter mitgeben
     else if (newStatus === 'abgeholt') {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
-        status: newStatus
-      }, {
-        onSuccess: () => {
-          // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
-          if (sendEmail) {
-            setTimeout(() => {
-              handleSendReviewRequest(selectedRepairId);
-            }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
-          }
-        }
+        status: newStatus,
+        sendEmail: sendEmail
       });
     }
     // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung
@@ -738,29 +730,13 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onUpdateStatus={(id, status, sendEmail) => {
             console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}`);
             
-            if (status === 'abgeholt') {
-              updateStatusMutation.mutate({
-                id: id,
-                status: status,
-                sendEmail: sendEmail
-              }, {
-                onSuccess: () => {
-                  // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
-                  if (sendEmail) {
-                    setTimeout(() => {
-                      handleSendReviewRequest(id);
-                    }, 500);
-                  }
-                }
-              });
-            } else {
-              console.log(`Sende E-Mail für Status ${status}: ${sendEmail}`);
+            // Einfach für alle Status dieselbe Mutation verwenden
+            console.log(`Sende E-Mail für Status ${status}: ${sendEmail}`);
             updateStatusMutation.mutate({
                 id: id,
                 status: status,
                 sendEmail: sendEmail
-              });
-            }
+            });
             
             setShowStatusDialog(false);
           }}
