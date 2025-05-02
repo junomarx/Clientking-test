@@ -250,51 +250,31 @@ export default function SettingsPage() {
   React.useEffect(() => {
     if (settings) {
       // Extrahieren Sie nur die benötigten Felder für das Formular
-      const {
-        businessName = "",
-        ownerFirstName = "",
-        ownerLastName = "",
-        taxId = "",
-        streetAddress = "",
-        city = "",
-        zipCode = "",
-        country = "Österreich",
-        phone = "",
-        email = "",
-        website = "",
-        logoImage = "",
-        smtpHost = "",
-        smtpPort = "",
-        smtpUser = "",
-        smtpPassword = "",
-        smtpSenderName = "",
-        reviewLink = ""
-      } = settings;
-      
       const receiptWidth = (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
         ? settings.receiptWidth as "58mm" | "80mm" 
         : "80mm" as const;
         
-      const formattedSettings = {
-        businessName,
-        ownerFirstName,
-        ownerLastName,
-        taxId,
-        streetAddress,
-        city,
-        zipCode,
-        country,
-        phone, 
-        email,
-        website,
-        logoImage,
+      // Sicherstellen, dass null-Werte in undefined umgewandelt werden
+      const formattedSettings: ExtendedBusinessSettingsFormValues = {
+        businessName: settings.businessName || "",
+        ownerFirstName: settings.ownerFirstName || "",
+        ownerLastName: settings.ownerLastName || "",
+        taxId: settings.taxId ?? "",
+        streetAddress: settings.streetAddress || "",
+        city: settings.city || "",
+        zipCode: settings.zipCode || "",
+        country: settings.country || "Österreich",
+        phone: settings.phone === null ? undefined : settings.phone,
+        email: settings.email === null ? undefined : settings.email,
+        website: settings.website === null ? undefined : settings.website,
+        logoImage: settings.logoImage === null ? undefined : settings.logoImage,
         receiptWidth,
-        smtpHost,
-        smtpPort,
-        smtpUser,
-        smtpPassword,
-        smtpSenderName,
-        reviewLink
+        smtpHost: settings.smtpHost === null ? undefined : settings.smtpHost,
+        smtpPort: settings.smtpPort === null ? undefined : settings.smtpPort,
+        smtpUser: settings.smtpUser === null ? undefined : settings.smtpUser,
+        smtpPassword: settings.smtpPassword === null ? undefined : settings.smtpPassword,
+        smtpSenderName: settings.smtpSenderName === null ? undefined : settings.smtpSenderName,
+        reviewLink: settings.reviewLink === null ? undefined : settings.reviewLink
       };
       
       form.reset(formattedSettings);
@@ -605,118 +585,131 @@ export default function SettingsPage() {
           
           {/* E-Mail-Einstellungen Tab */}
           <TabsContent value="emails" className="mt-4">
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">SMTP-Einstellungen</CardTitle>
-                <CardDescription>Konfigurieren Sie Ihren E-Mail-Server für ausgehende E-Mails.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="smtpHost"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>SMTP-Host</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="z.B. smtp.example.com" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="smtpPort"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>SMTP-Port</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="z.B. 587" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="smtpUser"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>SMTP-Benutzername</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="smtpPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>SMTP-Passwort</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="password" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="smtpSenderName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Absendername</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="z.B. Handy Reparatur Service" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-            
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Bewertungslink</CardTitle>
-                <CardDescription>Link für Kunden, um Ihr Geschäft zu bewerten.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="reviewLink"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Link zur Bewertungsseite</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="https://g.page/r/..." />
-                          </FormControl>
-                          <FormMessage />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Dieser Link wird in E-Mails mit Bewertungsanfragen verwendet.
-                          </p>
-                        </FormItem>
-                      )}
-                    />
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+            <Tabs value={activeEmailTab} onValueChange={setActiveEmailTab} className="mb-6">
+              <TabsList className="bg-white border mb-6 w-full justify-start">
+                <TabsTrigger value="settings">SMTP-Einstellungen</TabsTrigger>
+                <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="settings" className="space-y-6">
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">SMTP-Einstellungen</CardTitle>
+                    <CardDescription>Konfigurieren Sie Ihren E-Mail-Server für ausgehende E-Mails.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Form {...form}>
+                      <form className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="smtpHost"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>SMTP-Host</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="z.B. smtp.example.com" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="smtpPort"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>SMTP-Port</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="z.B. 587" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="smtpUser"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>SMTP-Benutzername</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="smtpPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>SMTP-Passwort</FormLabel>
+                                <FormControl>
+                                  <Input {...field} type="password" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="smtpSenderName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Absendername</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="z.B. Handy Reparatur Service" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+                
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold">Bewertungslink</CardTitle>
+                    <CardDescription>Link für Kunden, um Ihr Geschäft zu bewerten.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Form {...form}>
+                      <form className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="reviewLink"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Link zur Bewertungsseite</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="https://g.page/r/..." />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Dieser Link wird in E-Mails mit Bewertungsanfragen verwendet.
+                              </p>
+                            </FormItem>
+                          )}
+                        />
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="templates">
+                <EmailTemplateTab />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
           
           {/* Erscheinungsbild Tab */}
