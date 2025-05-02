@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmailTemplateTab } from '@/components/settings/EmailTemplateTab';
-import { SmsTemplateTab } from '@/components/settings/SmsTemplateTab';
 import { useLocation } from 'wouter';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import { Progress } from '@/components/ui/progress';
@@ -212,7 +211,6 @@ function PricingPlanDisplay() {
 // Hauptkomponente für die Einstellungen
 export function SettingsPageContent() {
   const [activeTab, setActiveTab] = useState<string>("business");
-  const [activeEmailTab, setActiveEmailTab] = useState<string>("templates");
   const [activeUserTab, setActiveUserTab] = useState<string>("account");
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
@@ -554,8 +552,12 @@ export function SettingsPageContent() {
                 </Form>
               </CardContent>
             </Card>
-            
-            <Card>
+          </TabsContent>
+
+          {/* E-Mail Tab */}
+          <TabsContent value="emails" className="mt-4">
+            {/* SMTP Einstellungen */}
+            <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold">SMTP-Einstellungen</CardTitle>
                 <CardDescription>Konfigurieren Sie Ihren eigenen E-Mail-Server für Benachrichtigungen.</CardDescription>
@@ -644,24 +646,17 @@ export function SettingsPageContent() {
                 </Form>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* E-Mail Tab */}
-          <TabsContent value="emails" className="mt-4">
-            <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
-                <TabsTrigger value="sms">SMS-Vorlagen</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="templates">
+            {/* E-Mail-Vorlagen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">E-Mail-Vorlagen</CardTitle>
+                <CardDescription>Verwalten Sie Ihre E-Mail-Vorlagen für Benachrichtigungen.</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <EmailTemplateTab />
-              </TabsContent>
-              
-              <TabsContent value="sms">
-                <SmsTemplateTab />
-              </TabsContent>
-            </Tabs>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Erscheinungsbild Tab */}
