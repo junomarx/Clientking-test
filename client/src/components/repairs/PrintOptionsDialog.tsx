@@ -278,6 +278,18 @@ export function PrintOptionsDialog({
       qrCodeSettings
     });
     
+    // Debug-Log, um zu sehen, welche Daten an die Template-Funktion übergeben werden
+    console.log('A4 Druckdaten:', {
+      repair,
+      customer,
+      businessSettings,
+      qrCodeSettings
+    });
+    
+    // Gibt es ein Problem mit der HTML-Generierung?
+    console.log('Generiertes A4-HTML:', a4Content.substring(0, 500) + '...');
+    
+    // Direkte Anzeige des generierten HTML-Inhalts
     return (
       <div className="bg-white p-6 rounded-md shadow-sm border-2 border-blue-500">
         <div className="flex justify-between border-b pb-4 mb-4">
@@ -417,14 +429,28 @@ export function PrintOptionsDialog({
       `;
     } else if (selectedPrintOption === 'a4') {
       // Wir verwenden die A4-Vorlage aus der a4-print-template.ts
-      printContents = `<div style="padding: 0; margin: 0;">${
-        generateA4PrintContent({
-          repair,
-          customer,
-          businessSettings,
-          qrCodeSettings
-        })
-      }</div>`;
+      
+      // Debug-Log der Daten, die an die Druckfunktion übergeben werden
+      console.log('Druckdaten für den tatsächlichen A4-Druck:', {
+        repair, 
+        customer, 
+        businessSettings, 
+        qrCodeSettings
+      });
+      
+      // HTML-Content generieren
+      const generatedContent = generateA4PrintContent({
+        repair,
+        customer,
+        businessSettings,
+        qrCodeSettings
+      });
+      
+      // Debug-Log des generierten HTML-Codes
+      console.log('Generierter HTML-Code für Druck:', generatedContent.substring(0, 500) + '...');
+      
+      // Den generierten HTML-Inhalt in den print-Content einfügen
+      printContents = `<div style="padding: 0; margin: 0;">${generatedContent}</div>`;
       
       pageCSS = `
         @page {
