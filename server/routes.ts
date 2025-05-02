@@ -2750,6 +2750,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { qrCodeEnabled, qrCodeType, qrCodeContent } = req.body;
       
+      // Debugging - Console Log für Request Body
+      console.log("QR Code Update Request Body:", req.body);
+      
       // Aktuelle Einstellungen aus der Datenbank abrufen
       const [currentSettings] = await db
         .select()
@@ -2761,25 +2764,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Einstellungen aktualisieren - nur mit den relevanten Feldern
-      const [updatedSettings] = await db
+      const updateData = {
+        qrCodeEnabled: qrCodeEnabled,
+        qrCodeType: qrCodeType,
+        qrCodeContent: qrCodeContent,
+        updatedAt: new Date()
+      };
+      
+      console.log("QR Code Update Data:", updateData);
+      
+      const updateResult = await db
         .update(businessSettings)
-        .set({
-          qrCodeEnabled,
-          qrCodeType,
-          qrCodeContent,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(businessSettings.id, currentSettings.id))
         .returning();
+      
+      const updatedSettings = updateResult[0];
       
       if (!updatedSettings) {
         return res.status(404).json({ message: "Keine Einstellungen gefunden" });
       }
       
-      res.json({
+      console.log("Updated QR Code Settings:", {
         qrCodeEnabled: updatedSettings.qrCodeEnabled,
         qrCodeType: updatedSettings.qrCodeType,
-        qrCodeContent: updatedSettings.qrCodeContent,
+        qrCodeContent: updatedSettings.qrCodeContent
+      });
+      
+      return res.json({
+        qrCodeEnabled: updatedSettings.qrCodeEnabled,
+        qrCodeType: updatedSettings.qrCodeType,
+        qrCodeContent: updatedSettings.qrCodeContent
       });
     } catch (error) {
       console.error("Error updating QR code settings:", error);
