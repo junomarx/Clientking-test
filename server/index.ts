@@ -40,12 +40,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Import für das neue Migrations-Skript
+import { addDocumentPrintSettings } from "./add-document-print-settings";
+
 (async () => {
   try {
     // Führe die Migrationen aus
     await addSecondSignatureColumns();
     await addPricingPlanColumn();
     await addCompanySloganVatColumns();
+    await addDocumentPrintSettings();
     
     const server = await registerRoutes(app);
 

@@ -145,6 +145,13 @@ export const businessSettings = pgTable("business_settings", {
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
   
+  // Drucke & Dokumente - Erweiterte Einstellungen
+  documentTemplates: text("document_templates").array(), // JSON-Objekte für benutzerdefinierte Dokumentenvorlagen
+  qrCodeEnabled: boolean("qr_code_enabled").default(false), // QR-Code auf Ausdrucken aktivieren
+  qrCodeType: text("qr_code_type").default("repair_status"), // Art des QR-Codes (repair_status, review, website)
+  qrCodeContent: text("qr_code_content"), // Benutzerdefinierter Inhalt für QR-Code (z.B. URL)
+  customFooterText: text("custom_footer_text"), // Benutzerdefinierter Fußzeilentext für Ausdrucke
+  
   // E-Mail-SMTP-Einstellungen für den eigenen Mail-Server
   smtpSenderName: text("smtp_sender_name"), // Bei den Mails anzuzeigender Name
   smtpHost: text("smtp_host"),             // SMTP Host (z.B. smtp.example.com)
