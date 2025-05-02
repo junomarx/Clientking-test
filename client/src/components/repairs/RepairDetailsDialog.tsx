@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
 import { Customer, EmailHistory } from '@shared/schema';
+
+// Erweiterte EmailHistory mit optionalem templateName
+interface EmailHistoryWithTemplate extends EmailHistory {
+  templateName?: string;
+}
 import { Repair } from '@/lib/types';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -424,7 +429,10 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       <X className="h-4 w-4 mt-1 text-red-500 flex-shrink-0" />
                     )}
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{entry.subject}</div>
+                      <div className="font-medium text-sm">
+                        {/* Zeigt den Namen der Vorlage an, wenn verfügbar, sonst den Betreff */}
+                        {(entry as any).templateName || entry.subject}
+                      </div>
                       <div className="text-xs text-muted-foreground">An: {entry.recipient}</div>
                       <div className="text-xs text-muted-foreground mt-1">
                         Gesendet: {formatDateTime(entry.sentAt.toString())}

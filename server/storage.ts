@@ -2035,16 +2035,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   // E-Mail-Verlauf Methoden
-  async getEmailHistoryForRepair(repairId: number): Promise<EmailHistory[]> {
+  async getEmailHistoryForRepair(repairId: number): Promise<(EmailHistory & { templateName?: string })[]> {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
       
-      // Direktes SQL für die Abfrage verwenden mit korrekten Spaltennamen (camelCase)
-      const query = `SELECT * FROM "email_history" WHERE "repairId" = ${repairId} ORDER BY "sentAt" DESC`;
+      // JOIN-Abfrage, um auch den Namen der Vorlagen zu laden
+      const query = `
+        SELECT 
+          h.*, 
+          t.name as "templateName" 
+        FROM 
+          "email_history" h 
+        LEFT JOIN 
+          "email_templates" t ON h."emailTemplateId" = t.id 
+        WHERE 
+          h."repairId" = ${repairId} 
+        ORDER BY 
+          h."sentAt" DESC
+      `;
+      
       const result = await db.execute(query);
       
       console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
-      return result.rows as EmailHistory[];
+      return result.rows as (EmailHistory & { templateName?: string })[];
     } catch (error) {
       console.error("Error getting email history for repair:", error);
       return [];
