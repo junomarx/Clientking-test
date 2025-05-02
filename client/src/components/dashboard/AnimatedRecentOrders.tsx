@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Printer, Info, Trash2 } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
-import { DashboardRepairDetailsDialog } from '@/components/dashboard/DashboardRepairDetailsDialog';
 import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
 interface RepairWithCustomer {
