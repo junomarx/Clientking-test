@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -204,42 +204,15 @@ export default function DashboardPreviewPage() {
             
             {/* Statistik-Grafik */}
             <div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reparaturen nach Status</CardTitle>
-                  <CardDescription>Übersicht der aktuellen Aufträge</CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center p-6">
-                  <div className="relative w-full aspect-square max-w-[250px] flex items-center justify-center">
-                    {/* Diese Kreisdiagramm-Visualisierung ist ein einfaches Beispiel */}
-                    <div className="absolute inset-0 rounded-full border-8 border-blue-100"></div>
-                    <div 
-                      className="absolute border-8 border-yellow-100" 
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '100%',
-                        clip: 'rect(0px, 100px, 200px, 0px)',
-                        transform: 'rotate(0deg)'
-                      }}
-                    ></div>
-                    <div 
-                      className="absolute border-8 border-green-100" 
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        borderRadius: '100%',
-                        clip: 'rect(0px, 200px, 100px, 100px)',
-                        transform: 'rotate(0deg)'
-                      }}
-                    ></div>
-                    <div className="z-10 text-center">
-                      <div className="text-3xl font-bold">{MOCK_REPAIRS.length}</div>
-                      <div className="text-sm text-gray-500">Gesamt</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <RepairStatusChart 
+                stats={{
+                  inRepair: 1,
+                  readyForPickup: 1,
+                  outsourced: 0,
+                  completed: 3
+                }}
+                variant="modern"
+              />
             </div>
           </div>
         </div>
