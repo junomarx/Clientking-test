@@ -231,17 +231,14 @@ export function AnimatedRecentOrders({
         )}
       </div>
       
-      {/* Dashboard-spezifischer Repair Details Dialog */}
-      <DashboardRepairDetailsDialog
+      {/* Verwende den normalen RepairDetailsDialog im Dashboard-Modus */}
+      <RepairDetailsDialog
         open={showDetailsDialog}
         onClose={closeDetailsDialog}
         repairId={selectedRepairId}
-        repair={repairs?.find(r => r.id === selectedRepairId)}
-        customers={undefined} /* Customers werden im Dialog via API abgefragt */
-        onPrint={(id) => {
-          console.log('Druckoptionen für Auftrag anzeigen:', id);
-          onPrintClick(id);
-        }}
+        mode="dashboard"
+        onStatusChange={undefined} /* Im Dashboard-Modus keine Statusänderung */
+        onEdit={undefined} /* Im Dashboard-Modus keine Bearbeitung */
       />
     </motion.div>
   );

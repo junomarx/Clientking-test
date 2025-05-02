@@ -55,9 +55,10 @@ interface RepairDetailsDialogProps {
   repairId: number | null;
   onStatusChange?: (id: number, currentStatus: string) => void;
   onEdit?: (id: number) => void;
+  mode?: 'normal' | 'dashboard'; // Neuer Modus-Parameter für Dashboard-Ansicht
 }
 
-export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, onEdit }: RepairDetailsDialogProps) {
+export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, onEdit, mode = 'normal' }: RepairDetailsDialogProps) {
   console.log('RepairDetailsDialog geöffnet:', open, 'repairId:', repairId);
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -450,41 +451,48 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
         </div>
 
         <DialogFooter className="flex flex-wrap gap-2 justify-end">
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              // Status ändern Dialog öffnen
-              if (onStatusChange && repair) {
-                // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung den Status-Dialog öffnen
-                console.log('Schließe Details-Dialog und öffne Status-Dialog für ID:', repair.id);
-                handleClose();
-                // Etwas Verzögerung für die Animation
-                setTimeout(() => {
-                  onStatusChange(repair.id, repair.status);
-                }, 300);
-              }
-            }}
-            className="flex items-center gap-1"
-          >
-            <AlertCircle className="h-4 w-4" />
-            Status ändern
-          </Button>
+          {/* Status ändern - nur im normalen Modus anzeigen */}
+          {onStatusChange && mode === 'normal' && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Status ändern Dialog öffnen
+                if (onStatusChange && repair) {
+                  // Zuerst Dialog schließen, dann nach einer kleinen Verzögerung den Status-Dialog öffnen
+                  console.log('Schließe Details-Dialog und öffne Status-Dialog für ID:', repair.id);
+                  handleClose();
+                  // Etwas Verzögerung für die Animation
+                  setTimeout(() => {
+                    onStatusChange(repair.id, repair.status);
+                  }, 300);
+                }
+              }}
+              className="flex items-center gap-1"
+            >
+              <AlertCircle className="h-4 w-4" />
+              Status ändern
+            </Button>
+          )}
           
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              // Bearbeiten Dialog öffnen
-              if (onEdit && repair) {
-                onEdit(repair.id);
-                handleClose();
-              }
-            }}
-            className="flex items-center gap-1"
-          >
-            <Pencil className="h-4 w-4" />
-            Bearbeiten
-          </Button>
+          {/* Bearbeiten - nur im normalen Modus anzeigen */}
+          {onEdit && mode === 'normal' && (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Bearbeiten Dialog öffnen
+                if (onEdit && repair) {
+                  onEdit(repair.id);
+                  handleClose();
+                }
+              }}
+              className="flex items-center gap-1"
+            >
+              <Pencil className="h-4 w-4" />
+              Bearbeiten
+            </Button>
+          )}
 
+          {/* Drucken - in allen Modi anzeigen */}
           <Button 
             variant="outline" 
             onClick={() => {
