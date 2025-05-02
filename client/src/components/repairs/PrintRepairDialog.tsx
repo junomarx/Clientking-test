@@ -9,10 +9,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, QrCode } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import QRCode from 'qrcode.react';
 
 interface PrintRepairDialogProps {
   open: boolean;
