@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Building, User, Palette, ChevronLeft } from 'lucide-react';
+import { Save, Building, User, Palette, ChevronLeft, Package } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,10 @@ import { SmsTemplateTab } from '@/components/settings/SmsTemplateTab';
 import { useLocation } from 'wouter';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import { Progress } from '@/components/ui/progress';
-import { Package } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
@@ -106,55 +109,103 @@ function PricingPlanDisplay() {
   // Bei Professional und Enterprise kein Limit anzeigen
   if (quotaData.pricingPlan !== "basic") {
     return (
-      <div className="border rounded-md p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            <h4 className="font-medium">Preispaket</h4>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">Aktuelles Abonnement</CardTitle>
+          <CardDescription>Details zu Ihrem aktuellen Abonnement.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-md flex items-center justify-center text-white">
+                <Package className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-lg">{quotaData.displayName}</h4>
+                <p className="text-gray-600">Nächste Abrechnung am 01.06.2025</p>
+              </div>
+            </div>
           </div>
-          <span className={`font-medium ${getPlanColor(quotaData.pricingPlan)}`}>
-            {quotaData.displayName}
-          </span>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Unbegrenzte Reparaturaufträge pro Monat
-        </div>
-      </div>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Abonnement-Status</span>
+              <span className="font-medium text-green-600">Aktiv</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Funktionen</span>
+              <span className="font-medium">Alle verfügbar</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Reparaturaufträge</span>
+              <span className="font-medium">Unbegrenzt</span>
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex space-x-4 justify-end">
+              <Button variant="outline" size="sm">Abonnement verwalten</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
   
   // Für Basic-Paket mit Limitierung
   return (
-    <div className="border rounded-md p-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          <h4 className="font-medium">Preispaket</h4>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold">Aktuelles Abonnement</CardTitle>
+        <CardDescription>Details zu Ihrem aktuellen Abonnement.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gray-500 rounded-md flex items-center justify-center text-white">
+              <Package className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-lg">{quotaData.displayName}</h4>
+              <p className="text-gray-600">Monatliches Limit: {quotaData.limit} Reparaturen</p>
+            </div>
+          </div>
         </div>
-        <span className={`font-medium ${getPlanColor(quotaData.pricingPlan)}`}>
-          {quotaData.displayName}
-        </span>
-      </div>
-      
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Verbleibende Reparaturaufträge</span>
-          <span>
-            {quotaData.limit - quotaData.currentCount} von {quotaData.limit}
-          </span>
+        
+        <div className="space-y-3">
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Verbleibende Reparaturaufträge</span>
+              <span>
+                {quotaData.limit - quotaData.currentCount} von {quotaData.limit}
+              </span>
+            </div>
+            <Progress value={usagePercentage} className="h-2" />
+          </div>
+          
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Abrechnungszeitraum</span>
+            <span className="font-medium">{quotaData.currentMonth} {quotaData.currentYear}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600">Status</span>
+            <span className="font-medium text-green-600">Aktiv</span>
+          </div>
         </div>
-        <Progress value={usagePercentage} className="h-2" />
-      </div>
-      
-      <div className="text-xs text-muted-foreground">
-        {quotaData.currentMonth} {quotaData.currentYear}
+        
         {quotaData.currentCount >= quotaData.limit && (
-          <div className="mt-1 text-red-500 font-medium">
-            Monatliches Limit erreicht. Upgrade auf Professional für unbegrenzte Aufträge.
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
+            <strong>Monatliches Limit erreicht.</strong> Upgrade auf Professional für unbegrenzte Aufträge.
           </div>
         )}
-      </div>
-    </div>
+        
+        <div className="mt-4 pt-4 border-t">
+          <div className="flex space-x-4 justify-end">
+            <Button>Auf Professional upgraden</Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -198,15 +249,17 @@ export default function SettingsPage() {
   // Aktualisieren der Formularwerte, wenn Einstellungen geladen werden
   React.useEffect(() => {
     if (settings) {
-      // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird
-      const formattedSettings = {
-        ...settings,
-        logoImage: settings.logoImage || "",
-        // Validiere receiptWidth und setze auf "80mm" wenn ungültig
-        receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
-          ? settings.receiptWidth 
-          : "80mm"
-      };
+      // Konvertieren aller potenziellen null-Werte in String-Typen
+      const formattedSettings: any = {};
+      Object.entries(settings).forEach(([key, value]) => {
+        formattedSettings[key] = value === null ? "" : value;
+      });
+      
+      // Weitere Anpassungen
+      formattedSettings.logoImage = formattedSettings.logoImage || "";
+      formattedSettings.receiptWidth = (formattedSettings.receiptWidth === "58mm" || formattedSettings.receiptWidth === "80mm") 
+        ? formattedSettings.receiptWidth as "58mm" | "80mm" 
+        : "80mm" as const;
       
       form.reset(formattedSettings);
     }
@@ -272,321 +325,61 @@ export default function SettingsPage() {
           </Button>
           <h1 className="text-2xl font-bold">Einstellungen</h1>
         </div>
+        <Button 
+          onClick={form.handleSubmit(onSubmit)}
+          disabled={updateMutation.isPending} 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center"
+        >
+          <Save className="h-4 w-4 mr-2" /> Speichern
+        </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="business" className="flex items-center gap-1">
-            <Building className="h-4 w-4" /> Unternehmen
-          </TabsTrigger>
-          <TabsTrigger value="communication" className="flex items-center gap-1">
-            <User className="h-4 w-4" /> Kommunikation
-          </TabsTrigger>
-          <TabsTrigger value="user" className="flex items-center gap-1">
-            <Palette className="h-4 w-4" /> Benutzer
-          </TabsTrigger>
-        </TabsList>
-        
-        {/* Tab: Unternehmensinformationen */}
-        <TabsContent value="business" className="space-y-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4 p-6 border rounded-md shadow-sm">
-                <h3 className="text-lg font-medium border-b pb-2 mb-4">Unternehmensdaten</h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="businessName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Geschäftsname</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
+        <Tabs defaultValue="business" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex overflow-x-auto">
+            <TabsList className="bg-white border mb-6">
+              <TabsTrigger value="business">Geschäft</TabsTrigger>
+              <TabsTrigger value="emails">E-Mail</TabsTrigger>
+              <TabsTrigger value="appearance">Erscheinungsbild</TabsTrigger>
+              <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
+              <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+            </TabsList>
+          </div>
 
-                  <div className="flex gap-2">
-                    <FormField
-                      control={form.control}
-                      name="ownerFirstName"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Vorname</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="ownerLastName"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Nachname</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="taxId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Steuer-ID / UID-Nummer</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Adresse</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="streetAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Straße und Hausnummer</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PLZ</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem className="sm:col-span-2">
-                        <FormLabel>Ort</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Land</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Kontaktdaten</h3>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefon</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>E-Mail</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Website</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Firmenlogo</h3>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
-                    {form.watch('logoImage') ? (
-                      <img src={form.watch('logoImage')} alt="Logo" className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <Building className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <Button variant="outline" size="sm" type="button">
-                      Logo hochladen
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
-                  </div>
-                </div>
-                
-                <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Druckeinstellungen</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="receiptWidth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bon-Breite</FormLabel>
-                      <FormControl>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger className="w-full max-w-xs">
-                            <SelectValue placeholder="Wählen Sie eine Breite" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="58mm">58mm (schmaler Thermodrucker)</SelectItem>
-                            <SelectItem value="80mm">80mm (Standard-Thermodrucker)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {updateMutation.isPending ? "Wird gespeichert..." : "Einstellungen speichern"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </TabsContent>
-        
-        {/* Tab: Kommunikation */}
-        <TabsContent value="communication" className="space-y-6">
-          <div className="border rounded-md p-6 shadow-sm">
-            <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
-              <TabsList className="mb-4 grid grid-cols-2 gap-1">
-                <TabsTrigger value="templates">E-Mail Vorlagen</TabsTrigger>
-                <TabsTrigger value="smtp">SMTP-Einstellungen</TabsTrigger>
-              </TabsList>
-              
-              {/* E-Mail-Vorlagen */}
-              <TabsContent value="templates">
-                <EmailTemplateTab />
-              </TabsContent>
-              
-              {/* SMTP-Einstellungen */}
-              <TabsContent value="smtp">
+          {/* Geschäftseinstellungen Tab */}
+          <TabsContent value="business" className="mt-4">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Geschäftsinformationen</CardTitle>
+                <CardDescription>Informationen über Ihr Unternehmen, die auf Rechnungen und Angeboten angezeigt werden.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium border-b pb-2 mb-4">SMTP-Einstellungen</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Konfigurieren Sie Ihren eigenen E-Mail-Server für ausgehende E-Mails. 
-                        Wenn Sie keine eigenen SMTP-Einstellungen angeben, wird Brevo als Fallback verwendet.
-                      </p>
-                      
+                  <form className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="smtpSenderName"
+                        name="businessName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Absendername</FormLabel>
+                            <FormLabel>Geschäftsname</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="z.B. Mein Reparaturshop" />
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex gap-2">
                         <FormField
                           control={form.control}
-                          name="smtpHost"
+                          name="ownerFirstName"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>SMTP-Host</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="z.B. smtp.example.com" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="smtpPort"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>SMTP-Port</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="z.B. 587" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="smtpUser"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>SMTP-Benutzername</FormLabel>
+                            <FormItem className="flex-1">
+                              <FormLabel>Vorname</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
@@ -596,32 +389,82 @@ export default function SettingsPage() {
                         />
                         <FormField
                           control={form.control}
-                          name="smtpPassword"
+                          name="ownerLastName"
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>SMTP-Passwort</FormLabel>
+                            <FormItem className="flex-1">
+                              <FormLabel>Nachname</FormLabel>
                               <FormControl>
-                                <Input {...field} type="password" />
+                                <Input {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-                      
-                      <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Bewertungslink</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Der Link zum Abgeben von Kundenbewertungen, der in E-Mails eingefügt werden kann.
-                      </p>
-                      
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="taxId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Steuer-ID / UID-Nummer</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+            
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Adresse</CardTitle>
+                <CardDescription>Die Geschäftsadresse Ihres Unternehmens.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Straße und Hausnummer</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="reviewLink"
+                        name="zipCode"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Link für Bewertungen</FormLabel>
+                            <FormLabel>PLZ</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="z.B. https://g.page/r/..." />
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Ort</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -629,42 +472,304 @@ export default function SettingsPage() {
                       />
                     </div>
                     
-                    <div className="flex justify-end">
-                      <Button type="submit" disabled={updateMutation.isPending}>
-                        <Save className="h-4 w-4 mr-2" />
-                        {updateMutation.isPending ? "Wird gespeichert..." : "SMTP-Einstellungen speichern"}
-                      </Button>
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Land</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+            
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Kontaktdaten</CardTitle>
+                <CardDescription>Wie Kunden Sie erreichen können.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefon</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-Mail</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="email" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="website"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Website</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </form>
                 </Form>
-              </TabsContent>
-              
-              {/* SMS-Vorlagen Tab */}
-              <TabsContent value="sms">
-                <SmsTemplateTab />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </TabsContent>
-        
-        {/* Tab: Benutzer */}
-        <TabsContent value="user" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <div className="border rounded-md p-6 shadow-sm">
-                <UserSettingsTab />
-              </div>
-            </div>
+              </CardContent>
+            </Card>
             
-            <div className="space-y-6">
-              <div className="border rounded-md p-6 shadow-sm">
-                <h3 className="text-lg font-medium mb-4">Preispaket & Kontingent</h3>
-                <PricingPlanDisplay />
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
+                <CardDescription>Upload Ihres Firmenlogos für Dokumente und Rechnungen.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4">
+                  <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                    {form.watch('logoImage') ? (
+                      <img src={form.watch('logoImage')} alt="Logo" className="max-w-full max-h-full object-contain" />
+                    ) : (
+                      <Building className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <Button variant="outline" size="sm" type="button">Logo hochladen</Button>
+                    <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* E-Mail-Einstellungen Tab */}
+          <TabsContent value="emails" className="mt-4">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">SMTP-Einstellungen</CardTitle>
+                <CardDescription>Konfigurieren Sie Ihren E-Mail-Server für ausgehende E-Mails.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="smtpHost"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SMTP-Host</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="z.B. smtp.example.com" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="smtpPort"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SMTP-Port</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="z.B. 587" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="smtpUser"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SMTP-Benutzername</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="smtpPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>SMTP-Passwort</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="password" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="smtpSenderName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Absendername</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="z.B. Handy Reparatur Service" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+            
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Bewertungslink</CardTitle>
+                <CardDescription>Link für Kunden, um Ihr Geschäft zu bewerten.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="reviewLink"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Link zur Bewertungsseite</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="https://g.page/r/..." />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Dieser Link wird in E-Mails mit Bewertungsanfragen verwendet.
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Erscheinungsbild Tab */}
+          <TabsContent value="appearance" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Designoptionen</CardTitle>
+                <CardDescription>Passen Sie das Erscheinungsbild Ihrer Anwendung an.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="theme">Farbschema</Label>
+                  <Select defaultValue="blue">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wählen Sie ein Farbschema" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="blue">Blau (Standard)</SelectItem>
+                      <SelectItem value="green">Grün</SelectItem>
+                      <SelectItem value="purple">Lila</SelectItem>
+                      <SelectItem value="orange">Orange</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">Nur für Professional und Enterprise verfügbar</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Dunkelmodus</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch id="darkmode" disabled />
+                    <Label htmlFor="darkmode">Automatischer Dunkelmodus</Label>
+                  </div>
+                  <p className="text-xs text-gray-500">Nur für Professional und Enterprise verfügbar</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Ausdrucke Tab */}
+          <TabsContent value="prints" className="mt-4">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Belegdruck</CardTitle>
+                <CardDescription>Einstellungen für das Drucken von Belegen und Etiketten.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="receiptWidth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bonbreite</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Wählen Sie eine Bonbreite" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="58mm">58mm (kleine Bondrucker)</SelectItem>
+                              <SelectItem value="80mm">80mm (Standard-Bondrucker)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="space-y-2">
+                      <Label>Standardtext für Belege</Label>
+                      <Textarea placeholder="Dieser Text erscheint am Ende jeder Quittung" className="h-24" />
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Abonnement Tab */}
+          <TabsContent value="subscription" className="mt-4">
+            <PricingPlanDisplay />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
