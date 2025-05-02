@@ -36,10 +36,7 @@ DATABASE_URL=postgresql://username:password@hostname:port/database
 SMTP_HOST=your-smtp-host
 SMTP_PORT=587
 SMTP_USER=your-smtp-user
-SMTP_PASSWORD=your-smtp-password
-
-# Brevo API Key (für E-Mail-Templates)
-BREVO_API_KEY=your-brevo-api-key
+SMTP_PASSWORD=your-smtp-passwordapi-key
 
 # Session Secret (für Sicherheit)
 SESSION_SECRET=replace-with-a-long-random-string
