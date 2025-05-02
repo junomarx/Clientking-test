@@ -273,50 +273,43 @@ export function EmailTemplateTab() {
   }
 
   return (
-    <div className="space-y-6 p-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">E-Mail-Vorlagen</h2>
-          <p className="text-muted-foreground">
-            Verwalten Sie Ihre E-Mail-Vorlagen für automatisierte Kundenkommunikation.
-          </p>
-        </div>
-        <Button onClick={openCreateSheet}>
-          <Plus className="mr-2 h-4 w-4" /> Neue Vorlage
+    <div className="space-y-4">
+      <div className="flex justify-between items-center border-b pb-4">
+        <h2 className="font-semibold text-lg">E-Mail Vorlagen</h2>
+        <Button onClick={openCreateSheet} size="sm">
+          <Plus className="h-4 w-4 mr-1" /> Neue Vorlage
         </Button>
       </div>
 
       {templates?.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold">Keine Vorlagen vorhanden</h3>
-            <p className="text-center text-muted-foreground mt-2">
-              Sie haben noch keine E-Mail-Vorlagen erstellt. Klicken Sie auf "Neue Vorlage",
-              um Ihre erste Vorlage zu erstellen.
-            </p>
-            <Button onClick={openCreateSheet} className="mt-4">
-              <Plus className="mr-2 h-4 w-4" /> Neue Vorlage
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="border rounded-md p-8 text-center">
+          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold">Keine Vorlagen vorhanden</h3>
+          <p className="text-center text-muted-foreground mt-2">
+            Sie haben noch keine E-Mail-Vorlagen erstellt. Klicken Sie auf "Neue Vorlage",
+            um Ihre erste Vorlage zu erstellen.
+          </p>
+          <Button onClick={openCreateSheet} className="mt-4">
+            <Plus className="mr-2 h-4 w-4" /> Neue Vorlage
+          </Button>
+        </div>
       ) : (
-        <ScrollArea className="h-[calc(100vh-200px)]">
-          <div className="flex flex-col gap-4 w-full">
-            {templates?.map((template: EmailTemplate) => (
-              <Card key={template.id} className="overflow-hidden w-full">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="mr-4">{template.name}</CardTitle>
-                    <div className="flex space-x-1 shrink-0">
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        onClick={() => openSendDialog(template.id)}
-                        title="E-Mail mit dieser Vorlage senden"
-                      >
-                        <Mail className="h-4 w-4" />
-                      </Button>
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Betreff</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates?.map((template: EmailTemplate) => (
+                <TableRow key={template.id}>
+                  <TableCell className="font-medium">{template.name}</TableCell>
+                  <TableCell>{template.subject}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-1">
                       <Button 
                         size="icon" 
                         variant="ghost" 
@@ -328,31 +321,26 @@ export function EmailTemplateTab() {
                       <Button 
                         size="icon" 
                         variant="ghost" 
+                        onClick={() => openSendDialog(template.id)}
+                        title="E-Mail mit dieser Vorlage senden"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
                         onClick={() => handleDelete(template.id)}
                         title="Vorlage löschen"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                  <CardDescription>
-                    {template.description || 'Keine Beschreibung vorhanden'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Nur der Titel wird angezeigt, wie vom Benutzer gewünscht */}
-                  
-                  {/* Inhalt wird nicht mehr angezeigt, wie vom Benutzer gewünscht */}
-                </CardContent>
-                <CardFooter className="flex justify-end bg-muted/20 pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleString()}
-                  </p>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {/* Sheet für das Erstellen/Bearbeiten von Vorlagen */}
