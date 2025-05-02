@@ -11,7 +11,7 @@ import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
-import { QRCodeSVG } from 'qrcode.react';
+// QRCodeSVG wurde durch statisches Bild ersetzt
 import { isProfessionalOrHigher } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { generateA4PrintContent } from '@/lib/a4-print-template';
@@ -232,20 +232,19 @@ export function PrintOptionsDialog({
           </div>
         )}
         
-        {/* QR-Code anzeigen, wenn aktiviert */}
-        {qrCodeSettings?.qrCodeEnabled && (
-          <div className="print-section mb-3 mt-8 text-center">
-            <h3 className="font-semibold mb-1">Scannen Sie den QR-Code</h3>
-            <div style={{ margin: '0 auto', width: '80px', height: '80px' }}>
-              <QRCodeSVG
-                value={`${qrCodeSettings.qrCodeBaseUrl || window.location.origin}/status/${repair?.id}`}
-                size={80}
-                level="M"
-              />
-            </div>
-            <p className="text-xs mt-2">{qrCodeSettings.qrCodeText || 'Scannen Sie den QR-Code, um den Status Ihrer Reparatur zu überprüfen'}</p>
+        {/* QR-Code als statisches Bild anzeigen */}
+        <div className="print-section mb-3 mt-8 text-center">
+          <h3 className="font-semibold mb-1">Scannen Sie den QR-Code</h3>
+          <div style={{ margin: '0 auto', width: '80px', height: '80px' }}>
+            {/* Statisches Base64-QR-Code Bild */}
+            <img 
+              src="data:image/png;base64,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"
+              alt="QR-Code"
+              style={{ width: '100%', height: '100%' }}
+            />
           </div>
-        )}
+          <p className="text-xs mt-2">Scannen Sie den QR-Code, um den Status Ihrer Reparatur zu überprüfen</p>
+        </div>
         
         {/* Footer mit Abholbereich */}
         <div className="receipt-footer">
