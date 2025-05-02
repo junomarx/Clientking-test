@@ -15,6 +15,7 @@ import {
   repairStatuses,
   deviceTypes,
   insertDeviceIssueSchema,
+  insertDocumentTemplateSchema,
   type InsertEmailTemplate,
   type InsertDeviceIssue,
   customers,
@@ -25,7 +26,8 @@ import {
   userDeviceTypes,
   userBrands,
   costEstimates,
-  businessSettings
+  businessSettings,
+  documentTemplates
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -2483,6 +2485,355 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error converting cost estimate to repair:", error);
       res.status(500).json({ message: "Fehler bei der Umwandlung in einen Reparaturauftrag" });
+    }
+  });
+
+  // API-Routen für Dokumentenvorlagen
+  
+  // Alle Dokumentenvorlagen eines Benutzers abrufen
+  app.get("/api/document-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      // Hole alle Dokumentenvorlagen für den Benutzer
+      const templates = await db
+        .select()
+        .from(documentTemplates)
+        .where(eq(documentTemplates.userId, userId));
+      
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching document templates:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Dokumentenvorlagen" });
+    }
+  });
+  
+  // Eine einzelne Dokumentenvorlage abrufen
+  app.get("/api/document-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      // Hole die Dokumentenvorlage mit der angegebenen ID
+      const [template] = await db
+        .select()
+        .from(documentTemplates)
+        .where(and(
+          eq(documentTemplates.id, id),
+          eq(documentTemplates.userId, userId)
+        ));
+      
+      if (!template) {
+        return res.status(404).json({ message: "Dokumentenvorlage nicht gefunden" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching document template:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Dokumentenvorlage" });
+    }
+  });
+  
+  // Eine neue Dokumentenvorlage erstellen
+  app.post("/api/document-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      // Validiere die Anfragedaten
+      const validationResult = insertDocumentTemplateSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Ungültige Vorlagendaten", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const templateData = validationResult.data;
+      
+      // Füge die Benutzer-ID hinzu
+      templateData.userId = userId;
+      
+      // Erstelle die neue Dokumentenvorlage
+      const [newTemplate] = await db
+        .insert(documentTemplates)
+        .values(templateData)
+        .returning();
+      
+      res.status(201).json(newTemplate);
+    } catch (error) {
+      console.error("Error creating document template:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Dokumentenvorlage" });
+    }
+  });
+  
+  // Eine Dokumentenvorlage aktualisieren
+  app.patch("/api/document-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      // Prüfe, ob die Vorlage existiert und dem Benutzer gehört
+      const [existingTemplate] = await db
+        .select()
+        .from(documentTemplates)
+        .where(and(
+          eq(documentTemplates.id, id),
+          eq(documentTemplates.userId, userId)
+        ));
+      
+      if (!existingTemplate) {
+        return res.status(404).json({ message: "Dokumentenvorlage nicht gefunden" });
+      }
+      
+      // Validiere die Anfragedaten
+      const validationResult = insertDocumentTemplateSchema.partial().safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Ungültige Vorlagendaten", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const templateData = validationResult.data;
+      
+      // Aktualisiere die Dokumentenvorlage
+      const [updatedTemplate] = await db
+        .update(documentTemplates)
+        .set({
+          ...templateData,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(documentTemplates.id, id),
+          eq(documentTemplates.userId, userId)
+        ))
+        .returning();
+      
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating document template:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Dokumentenvorlage" });
+    }
+  });
+  
+  // Eine Dokumentenvorlage löschen
+  app.delete("/api/document-templates/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      // Lösche die Dokumentenvorlage
+      const [deletedTemplate] = await db
+        .delete(documentTemplates)
+        .where(and(
+          eq(documentTemplates.id, id),
+          eq(documentTemplates.userId, userId)
+        ))
+        .returning();
+      
+      if (!deletedTemplate) {
+        return res.status(404).json({ message: "Dokumentenvorlage nicht gefunden" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting document template:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Dokumentenvorlage" });
+    }
+  });
+
+  // API-Routen für QR-Code-Einstellungen
+  app.get("/api/business-settings/qr-code", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID aus der Session nehmen
+      const userId = (req.user as any).id;
+      
+      // Aktuelle Einstellungen aus der Datenbank abrufen
+      const [settings] = await db
+        .select({
+          qrCodeEnabled: businessSettings.qrCodeEnabled,
+          qrCodeType: businessSettings.qrCodeType,
+          qrCodeContent: businessSettings.qrCodeContent,
+        })
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!settings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching QR code settings:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der QR-Code-Einstellungen" });
+    }
+  });
+  
+  app.put("/api/business-settings/qr-code", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID aus der Session nehmen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      const { qrCodeEnabled, qrCodeType, qrCodeContent } = req.body;
+      
+      // Einstellungen aktualisieren
+      const [updatedSettings] = await db
+        .update(businessSettings)
+        .set({
+          qrCodeEnabled,
+          qrCodeType,
+          qrCodeContent,
+          updatedAt: new Date()
+        })
+        .where(eq(businessSettings.userId, userId))
+        .returning();
+      
+      if (!updatedSettings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      res.json({
+        qrCodeEnabled: updatedSettings.qrCodeEnabled,
+        qrCodeType: updatedSettings.qrCodeType,
+        qrCodeContent: updatedSettings.qrCodeContent,
+      });
+    } catch (error) {
+      console.error("Error updating QR code settings:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der QR-Code-Einstellungen" });
+    }
+  });
+  
+  // API-Routen für benutzerdefinierte Fußzeilen
+  app.get("/api/business-settings/footer", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID aus der Session nehmen
+      const userId = (req.user as any).id;
+      
+      // Aktuelle Einstellungen aus der Datenbank abrufen
+      const [settings] = await db
+        .select({
+          customFooterText: businessSettings.customFooterText,
+        })
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, userId));
+      
+      if (!settings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching footer settings:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Fußzeilen-Einstellungen" });
+    }
+  });
+  
+  app.put("/api/business-settings/footer", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer-ID aus der Session nehmen
+      const userId = (req.user as any).id;
+      
+      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
+      const isProfessional = await isProfessionalOrHigher(userId);
+      if (!isProfessional) {
+        return res.status(403).json({ 
+          message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
+          errorCode: "FEATURE_NOT_AVAILABLE"
+        });
+      }
+      
+      const { customFooterText } = req.body;
+      
+      // Einstellungen aktualisieren
+      const [updatedSettings] = await db
+        .update(businessSettings)
+        .set({
+          customFooterText,
+          updatedAt: new Date()
+        })
+        .where(eq(businessSettings.userId, userId))
+        .returning();
+      
+      if (!updatedSettings) {
+        return res.status(404).json({ message: "Keine Einstellungen gefunden" });
+      }
+      
+      res.json({ customFooterText: updatedSettings.customFooterText });
+    } catch (error) {
+      console.error("Error updating footer settings:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Fußzeilen-Einstellungen" });
     }
   });
 
