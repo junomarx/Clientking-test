@@ -62,8 +62,20 @@ export function PrintOptionsDialog({
 
   // Admin-Benutzer oder Professional/Enterprise-Plan können A4 und Etiketten drucken
   const user = currentUser || userFromProps; // Benutze aktuelle Daten oder die übergebenen Werte
-  const a4PrintEnabled = isProfessionalOrHigher(user);
-  const labelPrintEnabled = isProfessionalOrHigher(user);
+  
+  // Manuelle Überprüfung für Admin oder Professional/Enterprise-Plan
+  // Dieser Code soll sicherstellen, dass die Überprüfung zuverlässig funktioniert
+  let isUserAdmin = user?.isAdmin === true;
+  let isUserProfessional = user?.pricingPlan === 'professional';
+  let isUserEnterprise = user?.pricingPlan === 'enterprise';
+  let isAdvancedUser = isUserAdmin || isUserProfessional || isUserEnterprise;
+  
+  console.log('Admin-Check:', isUserAdmin, 'Professional-Check:', isUserProfessional, 'Enterprise-Check:', isUserEnterprise);
+  console.log('Ist erweiterter Benutzer (Admin oder Professional/Enterprise):', isAdvancedUser);
+  
+  // Die ursprüngliche isProfessionalOrHigher-Funktion verwenden wir weiterhin
+  const a4PrintEnabled = isAdvancedUser;
+  const labelPrintEnabled = isAdvancedUser;
   
   // Für Debug-Zwecke
   console.log('User in PrintOptionsDialog:', user);

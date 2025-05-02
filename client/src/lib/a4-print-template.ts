@@ -149,10 +149,12 @@ export const generateA4PrintContent = ({
     </div>
   ` : '';
   
-  const imeiBlock = repair.imei ? `
+  // IMEI ist optional und existiert möglicherweise nicht im Repair-Schema
+  // Daher wird dieser Block nur erstellt, wenn die IMEI existiert
+  const imeiBlock = repair.hasOwnProperty('imei') && repair['imei'] ? `
     <div style="margin-bottom: 2mm">
       <span style="font-weight: bold; display: inline-block; min-width: 30mm">IMEI:</span>
-      ${repair.imei}
+      ${repair['imei']}
     </div>
   ` : '';
   
@@ -163,8 +165,9 @@ export const generateA4PrintContent = ({
     </div>
   ` : '';
   
-  const customFooterBlock = businessSettings?.customFooter ? `
-    <div>${businessSettings.customFooter}</div>
+  // CustomFooterText statt customFooter verwenden
+  const customFooterBlock = businessSettings?.customFooterText ? `
+    <div>${businessSettings.customFooterText}</div>
   ` : '';
 
   // Erstelle das komplette HTML für die A4-Seite
