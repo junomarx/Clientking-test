@@ -44,17 +44,17 @@ interface RepairDetailsPreviewDialogProps {
 function getStatusBadge(status: string) {
   switch (status) {
     case 'eingegangen':
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Eingegangen</Badge>;
+      return <Badge className="bg-yellow-100 text-amber-700 hover:bg-yellow-100 rounded-md px-2 py-1 text-xs font-normal">Eingegangen</Badge>;
     case 'in_reparatur':
-      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">In Arbeit</Badge>;
+      return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 rounded-md px-2 py-1 text-xs font-normal">In Arbeit</Badge>;
     case 'ersatzteil_eingetroffen':
-      return <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100">Ersatzteil eingetroffen</Badge>;
+      return <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 rounded-md px-2 py-1 text-xs font-normal">Ersatzteil eingetroffen</Badge>;
     case 'fertig':
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Fertig</Badge>;
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 rounded-md px-2 py-1 text-xs font-normal">Fertig</Badge>;
     case 'abgeholt':
-      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100">Abgeholt</Badge>;
+      return <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 rounded-md px-2 py-1 text-xs font-normal">Abgeholt</Badge>;
     default:
-      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">{status}</Badge>;
+      return <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 rounded-md px-2 py-1 text-xs font-normal">{status}</Badge>;
   }
 }
 
@@ -91,7 +91,7 @@ export function RepairDetailsPreviewDialog({ open, onClose, repair }: RepairDeta
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {/* Kundendaten */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <User className="h-5 w-5" />
               Kundendaten
@@ -131,7 +131,7 @@ export function RepairDetailsPreviewDialog({ open, onClose, repair }: RepairDeta
           </div>
           
           {/* Gerätedaten */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <Smartphone className="h-5 w-5" />
               Gerätedaten
@@ -173,7 +173,7 @@ export function RepairDetailsPreviewDialog({ open, onClose, repair }: RepairDeta
           </div>
           
           {/* Weitere Informationen */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <Clipboard className="h-5 w-5" />
               Auftragsinformationen
@@ -217,7 +217,7 @@ export function RepairDetailsPreviewDialog({ open, onClose, repair }: RepairDeta
           </div>
           
           {/* Unterschriften */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Abgabe-Unterschrift */}
               <div>
@@ -272,7 +272,7 @@ export function RepairDetailsPreviewDialog({ open, onClose, repair }: RepairDeta
           </div>
           
           {/* E-Mail-Verlauf */}
-          <div className="bg-secondary/10 rounded-lg p-4 shadow-sm border md:col-span-2">
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
               <MessageCircle className="h-5 w-5" />
               E-Mail-Verlauf
