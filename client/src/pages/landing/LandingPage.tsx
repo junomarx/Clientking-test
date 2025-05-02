@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Smartphone, Shield, Clock, Users, ChevronRight, Star } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 
+// Bilder importieren
+import dashboardPreviewImage from "@assets/restaurant-und-gastgewerbe-cms-dashboard-app-ui-kit-vorlage_500947-400.jpg";
+import teamImage from "@assets/WhatsApp Image 2025-04-30 at 12.31.13.jpeg";
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
@@ -35,7 +39,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-16 bg-white rounded-xl shadow-xl overflow-hidden max-w-5xl mx-auto">
             <img 
-              src="/dashboard-preview.jpg" 
+              src={dashboardPreviewImage} 
               alt="Dashboard Preview" 
               className="w-full h-auto"
               onError={(e) => {
@@ -288,7 +292,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <img 
-                src="/team-image.jpg" 
+                src={teamImage} 
                 alt="Unser Team" 
                 className="rounded-xl shadow-lg w-full h-auto"
                 onError={(e) => {
