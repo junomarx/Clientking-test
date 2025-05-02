@@ -814,7 +814,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                               {availableBrands.map((brand, index) => (
                                 <option key={index} value={brand} />
                               ))}
-                              {/* Fallback für Standardmarken, wenn API keine Ergebnisse liefert */}
+                              {/* Fallback für Standard-Hersteller, wenn API keine Ergebnisse liefert */}
                               {(!availableBrands || availableBrands.length === 0) && watchDeviceType &&
                                 defaultBrands[watchDeviceType.toLowerCase()]?.map((brand, index) => (
                                   <option key={index} value={brand} />
