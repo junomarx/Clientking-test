@@ -12,7 +12,8 @@ import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
-import * as qrcode from 'qrcode-generator';
+// Import als Default-Import für die richtige Typisierung
+import qrcodeGenerator from 'qrcode-generator';
 
 interface PrintLabelDialogProps {
   open: boolean;
@@ -120,12 +121,16 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const repairDetailsUrl = `${window.location.origin}/repairs/${repairId}`;
     console.log("QR-Code URL:", repairDetailsUrl);
     
-    // QR-Code mit qrcode-generator generieren (reines JavaScript ohne React/DOM-Abhängigkeiten)
-    const qr = qrcode(0, 'M');
-    qr.addData(repairDetailsUrl);
-    qr.make();
-    const qrCodeSvg = qr.createSvgTag(4); // Größenfaktor 4 für bessere Sichtbarkeit
-    console.log("QR-Code SVG generiert");
+    // QR-Code mit einem externen Service generieren (keine Abhängigkeit von QR-Code-Bibliotheken)
+    console.log("QR-Code URL erstellt:", repairDetailsUrl);
+    
+    // Erstelle ein Testbild als Fallback
+    const testQrImage = `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" fill="white"/>
+      <rect x="10" y="10" width="80" height="80" fill="black"/>
+      <rect x="25" y="25" width="50" height="50" fill="white"/>
+      <rect x="40" y="40" width="20" height="20" fill="black"/>
+    </svg>`;
     
     // Fülle das Druckfenster mit Inhalten - keine React-Abhängigkeit mehr
     printWindow.document.write(`
@@ -224,7 +229,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">
-                ${qrCodeSvg}
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(repairDetailsUrl)}" 
+                     alt="QR-Code für Reparatur" style="width:100%; height:100%;">
               </div>
               
               <div class="customer-info">
