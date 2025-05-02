@@ -8,10 +8,10 @@ import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/S
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
-import { SettingsDialogNew } from '@/components/settings/SettingsDialogNew';
+import { SettingsPageContent } from '@/components/settings/SettingsPageContent';
 
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -114,6 +114,10 @@ export default function Home() {
           {activeTab === 'cost-estimates' && (
             <CostEstimatesTab />
           )}
+          
+          {activeTab === 'settings' && (
+            <SettingsPageContent />
+          )}
         </div>
       </div>
       
@@ -121,16 +125,6 @@ export default function Home() {
         open={isNewOrderModalOpen} 
         onClose={() => setIsNewOrderModalOpen(false)}
         customerId={selectedCustomerId}
-      />
-      
-      {/* Einstellungs-Dialog */}
-      <SettingsDialogNew
-        open={isSettingsOpen}
-        onClose={() => {
-          setIsSettingsOpen(false);
-          // Wenn wir über die URL zu den Einstellungen gekommen sind, entferne 'tab=settings' aus der URL
-          window.history.pushState({}, '', '/app');
-        }}
       />
     </div>
   );

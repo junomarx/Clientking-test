@@ -4,7 +4,7 @@ import { AlertCircle, BarChart, FileText, Menu, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { PricingPlan } from '@/lib/types';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
 
 interface TabNavigationProps {
   activeTab: Tab;
@@ -122,6 +122,12 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
               "Kostenvoranschläge"
             )}
           </button>
+          <button 
+            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'settings' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            onClick={() => handleTabChange('settings')}
+          >
+            <span className="mr-2">⚙️</span> Einstellungen
+          </button>
         </div>
       )}
 
@@ -188,6 +194,16 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             ) : (
               "Kostenvoranschläge"
             )}
+          </button>
+          <button 
+            className={`px-4 py-4 font-semibold ${
+              activeTab === 'settings' 
+                ? 'text-primary border-b-2 border-primary' 
+                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
+            } transition-all flex items-center`}
+            onClick={() => handleTabChange('settings')}
+          >
+            <span className="mr-2">⚙️</span> Einstellungen
           </button>
         </div>
       </div>
