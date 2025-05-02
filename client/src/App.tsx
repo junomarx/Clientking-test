@@ -10,6 +10,7 @@ import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import AdminDesignPreview from "@/pages/admin/DesignPreviewPage";
 import AdminDesignPreviewSettings from "@/pages/admin/DesignPreviewSettingsPage";
+import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -28,6 +29,9 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <ProtectedRoute path="/app">
         <Home />
+      </ProtectedRoute>
+      <ProtectedRoute path="/settings">
+        <SettingsPage />
       </ProtectedRoute>
       <AdminProtectedRoute path="/admin">
         <AdminPage />
