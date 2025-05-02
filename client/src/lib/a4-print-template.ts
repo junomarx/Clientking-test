@@ -36,135 +36,85 @@ export const generateA4PrintContent = ({
     return '<div>Keine Daten verfügbar. Repair oder Customer fehlt.</div>';
   }
 
+  // Detailliertes Logging der wichtigen Objekte
+  console.log('Repair-Objekt für A4-Druck:', JSON.stringify(repair, null, 2));
+  console.log('Customer-Objekt für A4-Druck:', JSON.stringify(customer, null, 2));
+
   // Formatiere Datumsangaben
   let createdAtDate = "";
-  if (repair.createdAt) {
-    createdAtDate = format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de });
+  try {
+    if (repair.createdAt) {
+      if (typeof repair.createdAt === 'string') {
+        createdAtDate = format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de });
+      } else {
+        createdAtDate = format(repair.createdAt, 'dd.MM.yyyy', { locale: de });
+      }
+    }
+  } catch (error) {
+    console.error('Fehler beim Formatieren des Datums:', error);
+    createdAtDate = "Datum unbekannt";
   }
   
-  let dropoffSignatureDate = "";
-  if (repair.dropoffSignedAt) {
-    dropoffSignatureDate = format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy HH:mm', { locale: de });
-  }
+  // Auftragsdetails formatieren
+  const orderNumber = repair.orderCode || `#${repair.id}`;
+  const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`;
+  const brandName = repair.brand || "";
+  const formattedIssue = repair.issue?.replace(/\n/g, '<br />') || "";
   
-  // Formatiere den Markennamen mit Großbuchstaben am Anfang
-  let brandName = "";
-  if (repair.brand) {
-    brandName = repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1);
-  }
+  // Optionale Blöcke vorbereiten - nur anzeigen, wenn Daten vorhanden sind
+  const estimatedCostBlock = repair.estimatedCost ? `
+    <div style="margin-bottom: 4mm; padding: 2mm; background-color: #f8f8f8; border-left: 4px solid #2e7d32">
+      <span style="font-weight: bold; display: inline-block; min-width: 30mm">Kostenvoranschlag:</span>
+      ${repair.estimatedCost} €
+    </div>
+  ` : '';
   
-  // Erstelle Reparaturauftragsnummer
-  const orderNumber = repair.orderCode || (repair.id ? `#${repair.id}` : "");
+  const depositBlock = repair.deposit ? `
+    <div style="margin-bottom: 4mm; padding: 2mm; background-color: #f8f8f8; border-left: 4px solid #1976d2">
+      <span style="font-weight: bold; display: inline-block; min-width: 30mm">Anzahlung:</span>
+      ${repair.deposit} €
+    </div>
+  ` : '';
   
-  // Formatiere Kundenname
-  const customerName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim();
-  
-  // Formatiere Issue/Problem
-  const formattedIssue = repair.issue ? repair.issue.split(',').join('<br />') : '';
-  
-  // Optionale Inhalte vorbereiten
-  const dropoffSignatureBlock = repair.dropoffSignature ? `
-    <div style="
-      margin-top: 15mm;
-      border-top: 1px solid #333;
-      padding-top: 5mm
-    ">
+  const dropoffSignatureBlock = repair.signature ? `
+    <div style="margin-bottom: 10mm">
       <div style="
         font-size: 12pt; 
         font-weight: bold; 
-        margin-bottom: 3mm
+        margin-bottom: 3mm; 
+        padding-bottom: 1mm; 
+        border-bottom: 1px solid #333
       ">
-        Unterschrift bei Geräteabgabe
+        Unterschrift bei Abgabe
       </div>
-      <div style="
-        border: 1px solid #333;
-        height: 20mm;
-        margin-bottom: 3mm;
-        position: relative
-      ">
-        <img
-          src="${repair.dropoffSignature}"
-          alt="Unterschrift bei Abgabe"
-          style="
-            position: absolute;
-            max-height: 18mm;
-            max-width: 80%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%)
-          "
+      <div style="text-align: center; margin-bottom: 3mm">
+        <img 
+          src="${repair.signature}" 
+          alt="Unterschrift bei Abgabe" 
+          style="max-height: 30mm; max-width: 100%"
         />
       </div>
-      ${dropoffSignatureDate ? `
-        <div style="font-size: 9pt; text-align: center; margin-bottom: 3mm">
-          Unterschrieben am ${dropoffSignatureDate} Uhr
-        </div>
-      ` : ''}
-      <div style="font-size: 9pt; text-align: center">
-        Hiermit bestätige ich, ${customerName}, dass ich mit den Reparaturbedingungen 
-        einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.
-      </div>
-    </div>
-  ` : '';
-  
-  const estimatedCostBlock = repair.estimatedCost ? `
-    <div style="
-      border: 1px solid #333;
-      border-left-width: 4px;
-      padding: 3mm;
-      margin-bottom: 4mm
-    ">
-      <div style="margin-bottom: 2mm">
-        <span style="font-weight: bold; display: inline-block; min-width: 30mm">Preis:</span>
-        ${repair.estimatedCost} €
-      </div>
-    </div>
-  ` : '';
-  
-  const depositBlock = repair.depositAmount ? `
-    <div style="
-      border: 1px solid #333;
-      border-left-width: 4px;
-      padding: 3mm;
-      margin-bottom: 4mm
-    ">
-      <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2mm">
-        WICHTIG: Gerät beim Kunden / bei Kundin!
-      </div>
-      <div style="margin-bottom: 2mm">
-        <span style="font-weight: bold; display: inline-block; min-width: 30mm">Anzahlung:</span>
-        ${repair.depositAmount} €
+      <div style="font-size: 9pt; text-align: center; margin-top: 2mm">
+        Hiermit bestätige ich, ${customerName}, den Auftrag zur Reparatur meines Gerätes und 
+        akzeptiere die allgemeinen Geschäftsbedingungen.
       </div>
     </div>
   ` : '';
   
   const notesBlock = repair.notes ? `
-    <div style="
-      border: 1px solid #333;
-      border-left-width: 4px;
-      padding: 3mm;
-      margin-bottom: 4mm
-    ">
-      <div style="margin-bottom: 2mm">
-        <span style="font-weight: bold; display: inline-block; min-width: 30mm">Notizen:</span>
+    <div style="margin-bottom: 4mm; padding: 2mm; border: 1px solid #ddd">
+      <span style="font-weight: bold; display: inline-block; min-width: 30mm">Notizen:</span>
+      <div style="white-space: pre-wrap">
         ${repair.notes}
       </div>
     </div>
   ` : '';
   
+  // Seriennummer-Block - nur anzeigen, wenn Daten vorhanden sind
   const serialNumberBlock = repair.serialNumber ? `
     <div style="margin-bottom: 2mm">
       <span style="font-weight: bold; display: inline-block; min-width: 30mm">Seriennummer:</span>
       ${repair.serialNumber}
-    </div>
-  ` : '';
-  
-  // IMEI ist optional und existiert möglicherweise nicht im Repair-Schema
-  // Daher wird dieser Block nur erstellt, wenn die IMEI existiert
-  const imeiBlock = repair.hasOwnProperty('imei') && repair['imei'] ? `
-    <div style="margin-bottom: 2mm">
-      <span style="font-weight: bold; display: inline-block; min-width: 30mm">IMEI:</span>
-      ${repair['imei']}
     </div>
   ` : '';
   
@@ -175,7 +125,7 @@ export const generateA4PrintContent = ({
     </div>
   ` : '';
   
-  // CustomFooterText statt customFooter verwenden
+  // CustomFooterText verwenden
   const customFooterBlock = businessSettings?.customFooterText ? `
     <div>${businessSettings.customFooterText}</div>
   ` : '';
@@ -297,7 +247,6 @@ export const generateA4PrintContent = ({
             ${repair.model || ""}
           </div>
           ${serialNumberBlock}
-          ${imeiBlock}
         </div>
       </div>
       
