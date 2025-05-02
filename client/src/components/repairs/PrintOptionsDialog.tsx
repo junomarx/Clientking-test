@@ -43,7 +43,15 @@ export function PrintOptionsDialog({
     'thermal' | 'a4' | 'label' | null
   >(null);
 
+  // Admin-Benutzer oder Professional/Enterprise-Plan können A4 und Etiketten drucken
   const a4PrintEnabled = isProfessionalOrHigher(currentUser);
+  const labelPrintEnabled = isProfessionalOrHigher(currentUser);
+  
+  // Für Debug-Zwecke
+  console.log('CurrentUser:', currentUser);
+  console.log('isProfessionalOrHigher:', isProfessionalOrHigher(currentUser));
+  console.log('a4PrintEnabled:', a4PrintEnabled);
+  console.log('labelPrintEnabled:', labelPrintEnabled);
   
   // Generiere Thermobon-Inhalt
   const renderThermalContent = () => {
@@ -700,15 +708,15 @@ export function PrintOptionsDialog({
             
             {/* Etikett Option */}
             <div 
-              className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-primary ${!canPrintLabels ? 'opacity-50 cursor-not-allowed' : ''} ${selectedPrintOption === 'label' ? 'border-primary bg-primary/10' : ''}`}
-              onClick={() => canPrintLabels && setSelectedPrintOption('label')}
+              className={`border rounded-lg p-4 cursor-pointer transition-all hover:border-primary ${!labelPrintEnabled ? 'opacity-50 cursor-not-allowed' : ''} ${selectedPrintOption === 'label' ? 'border-primary bg-primary/10' : ''}`}
+              onClick={() => labelPrintEnabled && setSelectedPrintOption('label')}
             >
               <div className="flex flex-col items-center text-center mb-3">
                 <Tag className="h-8 w-8 mb-2" />
                 <h3 className="font-medium text-sm">Etikett</h3>
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                {canPrintLabels 
+                {labelPrintEnabled 
                   ? 'Etikettdruck für Gerätemarkierung.' 
                   : 'Nur verfügbar für Professional/Enterprise.'}
               </p>
