@@ -30,9 +30,8 @@ function Router() {
       <ProtectedRoute path="/app">
         <Home />
       </ProtectedRoute>
-      <ProtectedRoute path="/settings">
-        <SettingsPage />
-      </ProtectedRoute>
+      {/* Die /settings Route wird nicht mehr verwendet, stattdessen wird
+          der Settings-Tab in der Home-Komponente angezeigt */}
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>

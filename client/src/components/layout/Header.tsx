@@ -161,12 +161,17 @@ export function Header({ variant = "landing" }: HeaderProps) {
                   </div>
                 </div>
                 
-                <Link href="/settings">
-                  <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer" onClick={() => setMenuOpen(false)}>
-                    <Settings className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>Einstellungen</span>
-                  </div>
-                </Link>
+                <div 
+                  className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer" 
+                  onClick={() => {
+                    const event = new CustomEvent('open-settings-dialog');
+                    window.dispatchEvent(event);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Settings className="h-4 w-4 mr-2 text-gray-500" />
+                  <span>Einstellungen</span>
+                </div>
                 
                 {user.isAdmin && (
                   <Link href="/admin">
