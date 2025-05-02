@@ -408,6 +408,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const { status, sendEmail } = req.body;
       
+      // Konvertiere sendEmail in einen echten boolean-Wert, egal ob es als String oder Boolean übertragen wurde
+      const shouldSendEmail = sendEmail === true || sendEmail === "true";
+      
+      console.log(`Status-Update erhalten: ID=${id}, status=${status}, sendEmail=${sendEmail}, shouldSendEmail=${shouldSendEmail}`);
+      // Für Debug-Zwecke den Typ des sendEmail-Parameters anzeigen
+      console.log(`Typ von sendEmail: ${typeof sendEmail}`);
+      console.log(`Body-Objekt: ${JSON.stringify(req.body)}`);
+      
+      
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {
         return res.status(400).json({ message: "Invalid status value" });
@@ -445,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if ((status === "fertig" || status === "abholbereit") && sendEmail === true && customer.email) {
+        if ((status === "fertig" || status === "abholbereit") && shouldSendEmail && customer.email) {
           console.log("E-Mail-Benachrichtigung wird vorbereitet...");
           
           try {
@@ -471,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Wenn Status auf "ersatzteil_eingetroffen" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if (status === "ersatzteil_eingetroffen" && sendEmail === true && customer.email) {
+        if (status === "ersatzteil_eingetroffen" && shouldSendEmail && customer.email) {
           console.log("E-Mail-Benachrichtigung für Ersatzteillieferung wird vorbereitet...");
           
           try {
