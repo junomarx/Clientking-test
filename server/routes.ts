@@ -75,26 +75,30 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
       const userId = parseInt(tokenParts[0]);
       
       // Benutzer aus der Datenbank abrufen
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(401).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      if (!user.isActive && !user.isAdmin) {
-        return res.status(401).json({ message: "Konto ist nicht aktiviert" });
-      }
-      
-      // Benutzer in Request setzen
-      req.user = user;
-      return next();
+      storage.getUser(userId).then(user => {
+        if (!user) {
+          return res.status(401).json({ message: "Benutzer nicht gefunden" });
+        }
+        
+        if (!user.isActive && !user.isAdmin) {
+          return res.status(401).json({ message: "Konto ist nicht aktiviert" });
+        }
+        
+        // Benutzer in Request setzen
+        req.user = user;
+        return next();
+      }).catch(err => {
+        console.error('Token authentication error:', err);
+        return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
+      });
+      return; // Früher Return, da wir asynchron arbeiten
     } catch (error) {
       console.error('Token authentication error:', error);
       return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
     }
+  } else {
+    res.status(401).json({ message: "Nicht angemeldet" });
   }
-  
-  res.status(401).json({ message: "Nicht angemeldet" });
 }
 
 // Hilfsfunktionen
@@ -2156,6 +2160,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer direkt über Storage abrufen statt aus der Datenbank
       const user = await storage.getUser(userId);
       if (!user) return false;
+      
+      // Admin-Benutzer haben immer Zugriff auf alle Funktionen
+      if (user.isAdmin) return true;
       
       const pricingPlan = user.pricingPlan;
       return pricingPlan === 'professional' || pricingPlan === 'enterprise';
