@@ -328,8 +328,12 @@ export default function SettingsPage() {
     );
   }
 
+  // Debug-Ausgabe
+  console.log('Aktiver Tab beim Rendern:', activeTab);
+  
   return (
     <div className="container py-6">
+      <p style={{ color: 'blue', fontWeight: 'bold' }}>Debug - Aktiver Tab: {activeTab}</p>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <Button
@@ -695,6 +699,8 @@ export default function SettingsPage() {
           
           {/* Design Tab */}
           <TabsContent value="design" className="mt-4">
+            <p>Aktiver Tab: {activeTab}</p>
+            <p style={{ color: 'red' }}>Design-Tab ist aktiv</p>
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold">Design-Einstellungen</CardTitle>
