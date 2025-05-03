@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -91,7 +91,7 @@ interface BusinessSettingsDialogProps {
 export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // fileInputRef wurde entfernt
   // Logo-Funktionalität wurde entfernt
 
   // Wir verwenden nur die authentifizierte Sitzung ohne localStorage
@@ -118,7 +118,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
       phone: "",
       email: "",
       website: "",
-      logoImage: "",
+      // logoImage wurde entfernt
       colorTheme: "blue",
       receiptWidth: "80mm",
       // SMTP-Einstellungen
@@ -159,7 +159,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         phone: settings.phone || "",
         email: settings.email || "",
         website: settings.website || "",
-        logoImage: settings.logoImage || "",
+        // logoImage wurde entfernt
         colorTheme: validColorTheme,
         receiptWidth: validReceiptWidth as "58mm" | "80mm",
         // SMTP-Einstellungen
@@ -171,10 +171,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
         reviewLink: settings.reviewLink || "",
       });
 
-      // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
-      if (settings.logoImage) {
-        setLogoPreview(settings.logoImage);
-      }
+      // Logo-Funktionalität wurde entfernt
     }
   }, [settings, form]);
 
@@ -182,14 +179,12 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      console.log('Sending data to server (new version):', { hasLogo: !!logoPreview });
-      
       try {
         // NEUER ANSATZ: Wir senden keine userId in den Daten mit
         // Die Authentifizierung und Datenisolierung übernimmt komplett der Server
         const requestData = {
-          ...data, // Die regulären Formulardaten
-          logoImage: logoPreview // Das Logo als Base64
+          ...data // Die regulären Formulardaten
+          // logoImage-Feld wurde entfernt
         };
         
         console.log('Request data keys:', Object.keys(requestData));
@@ -266,68 +261,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Logo Upload UI */}
-            <div className="mb-6">
-              <FormLabel>Firmenlogo</FormLabel>
-              <FormDescription>
-                Laden Sie Ihr Firmenlogo hoch (max. 1MB, PNG, JPG, SVG, GIF oder WEBP). Hochauflösende Bilder werden automatisch skaliert.
-              </FormDescription>
-              
-              <div className="mt-3 flex flex-col md:flex-row items-start md:items-center gap-4">
-                {/* Logo Vorschau */}
-                <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
-                  ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
-                  {logoPreview ? (
-                    <>
-                      <img
-                        src={logoPreview}
-                        alt="Firmenlogo"
-                        className="max-h-full max-w-full object-contain rounded-md"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleDeleteLogo}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground h-5 w-5 rounded-full flex items-center justify-center"
-                        aria-label="Logo löschen"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </>
-                  ) : (
-                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                  )}
-                </div>
-                
-                {/* Upload Button */}
-                <div className="flex flex-col gap-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                    id="logo-upload"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="h-4 w-4" /> Logo hochladen
-                  </Button>
-                  
-                  {/* Fehler Anzeige */}
-                  {logoError && (
-                    <Alert variant="destructive" className="py-2 px-3">
-                      <AlertDescription className="text-xs">
-                        {logoError}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Logo-Upload-Funktionalität wurde entfernt */}
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
