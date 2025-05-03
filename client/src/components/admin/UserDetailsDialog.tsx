@@ -48,7 +48,7 @@ interface UserDetailsDialogProps {
   onEdit?: (userId: number) => void;
 }
 
-interface UserResponse {
+type UserResponse = {
   id: number;
   username: string;
   email: string;
@@ -56,7 +56,7 @@ interface UserResponse {
   isAdmin: boolean;
   pricingPlan: 'basic' | 'professional' | 'enterprise';
   createdAt?: string;
-}
+};
 
 export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit }: UserDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState('details');

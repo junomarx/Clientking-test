@@ -55,6 +55,7 @@ import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
 import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import { BrandSettings } from "@/components/settings/BrandSettings";
+import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import ToastTestDialog from "@/components/ToastTestDialog";
 
 type UserResponse = Omit<User, "password">;
@@ -414,6 +415,27 @@ function UserTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Benutzerdetails Dialog */}
+      <UserDetailsDialog
+        open={isDetailsDialogOpen}
+        onClose={() => setIsDetailsDialogOpen(false)}
+        userId={selectedUser?.id || null}
+        onEdit={(id) => {
+          // Details Dialog schließen und Edit Dialog öffnen
+          setIsDetailsDialogOpen(false);
+          const user = users?.find(u => u.id === id);
+          if (user) {
+            handleEditUser(user);
+          }
+        }}
+        onToggleActive={(id) => {
+          const user = users?.find(u => u.id === id);
+          if (user) {
+            handleToggleActive(user);
+          }
+        }}
+      />
     </div>
   );
 }
