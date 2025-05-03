@@ -190,7 +190,9 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
   if (isLoadingUser) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogTitle>Benutzerdetails</DialogTitle>
+          <DialogDescription>Benutzerdaten werden geladen...</DialogDescription>
           <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
         </DialogContent>
       </Dialog>
@@ -203,7 +205,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
