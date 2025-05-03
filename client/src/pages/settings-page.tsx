@@ -359,7 +359,7 @@ export default function SettingsPage() {
             <TabsList className="bg-white border mb-6">
               <TabsTrigger value="business">Geschäft</TabsTrigger>
               <TabsTrigger value="emails">E-Mail</TabsTrigger>
-              <TabsTrigger value="appearance">Erscheinungsbild</TabsTrigger>
+              <TabsTrigger value="design">Design</TabsTrigger>
               <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription">Abonnement</TabsTrigger>
             </TabsList>
@@ -694,7 +694,7 @@ export default function SettingsPage() {
           </TabsContent>
           
           {/* Erscheinungsbild Tab */}
-          <TabsContent value="appearance" className="mt-4">
+          <TabsContent value="design" className="mt-4">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg font-semibold">Designoptionen</CardTitle>
