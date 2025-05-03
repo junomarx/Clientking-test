@@ -46,6 +46,8 @@ import {
   Printer,
   FileText,
   Percent,
+  Server,
+  PanelTop,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -67,19 +69,34 @@ type UserResponse = {
   createdAt?: string;
 };
 
+// Dieser Typ entspricht der Struktur in schema.ts: businessSettings
 type BusinessSettings = {
   id: number;
   businessName: string;
-  businessAddress: string;
-  businessPhone: string;
-  businessEmail: string;
-  businessWebsite: string;
-  businessLogo: string | null;
-  vatNumber: string;
-  companySlogan: string;
-  taxRate: number;
-  repairLabelPrinterEnabled: boolean;
+  ownerFirstName: string;
+  ownerLastName: string;
+  taxId?: string;
+  vatNumber?: string;
+  companySlogan?: string;
+  streetAddress: string;
+  city: string;
+  zipCode: string;
+  country: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logoImage?: string;
+  colorTheme?: string;
+  receiptWidth?: string;
+  smtpSenderName?: string;
+  smtpHost?: string;
+  smtpUser?: string;
+  smtpPassword?: string;
+  smtpPort?: string;
+  reviewLink?: string;
+  repairLabelPrinterEnabled?: boolean;
   userId: number;
+  updatedAt?: string;
 };
 
 export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit }: UserDetailsDialogProps) {
