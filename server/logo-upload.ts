@@ -60,7 +60,7 @@ export function registerLogoRoutes(app: Express) {
       }
 
       // Erfolgreiche Antwort mit Logo-URL
-      const logoUrl = `/static/uploads/firmenlogo.png`;
+      const logoUrl = `/uploads/firmenlogo.png`;
       console.log(`Logo hochgeladen nach: ${logoUrl}`);
       return res.status(200).json({
         success: true,
@@ -87,7 +87,7 @@ export function registerLogoRoutes(app: Express) {
       
       // Prüfen, ob das Logo existiert
       if (fs.existsSync(logoPath)) {
-        const logoUrl = `/static/uploads/firmenlogo.png`;
+        const logoUrl = `/uploads/firmenlogo.png`;
         return res.status(200).json({
           success: true,
           message: 'Logo gefunden',

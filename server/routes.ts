@@ -35,6 +35,8 @@ import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
 
+// Wir haben die Logo-Upload-Funktionalität bereits importiert
+
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)

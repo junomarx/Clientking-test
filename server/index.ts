@@ -17,8 +17,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Statische Dateien für Uploads bereitstellen
-app.use('/static/uploads', express.static(path.join(__dirname, '../static/uploads')));
-console.log(`Statische Dateien werden bereitgestellt von: ${path.join(__dirname, '../static/uploads')} unter /static/uploads`);
+app.use('/uploads', express.static(path.join(__dirname, '../static/uploads')));
+console.log(`Statische Dateien werden bereitgestellt von: ${path.join(__dirname, '../static/uploads')} unter /uploads`);
 
 app.use((req, res, next) => {
   const start = Date.now();
