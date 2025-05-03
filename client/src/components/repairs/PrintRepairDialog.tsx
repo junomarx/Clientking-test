@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,27 @@ interface PrintRepairDialogProps {
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  
+  // Logo-Status
+  const [logoExists, setLogoExists] = useState(false);
+  
+  // Überprüfe, ob das Logo existiert
+  useEffect(() => {
+    if (open && repairId) {
+      // Überprüfe, ob das Logo existiert
+      fetch('/api/business-settings/logo')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            setLogoExists(true);
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Prüfen des Logos:', err);
+          setLogoExists(false);
+        });
+    }
+  }, [open, repairId]);
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -229,6 +250,12 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
       </head>
       <body>
         <!-- Logo & Firma -->
+        ${logoExists ? `
+        <div class="logo">
+          <img src="/static/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessSettings?.businessName || 'Handyshop Verwaltung'}" style="max-height: 60px; max-width: 160px; margin: 0 auto;">
+        </div>
+        ` : ''}
+        
         <div class="company">
           <strong>${businessSettings?.businessName || 'Handyshop Verwaltung'}</strong><br>
           ${businessSettings?.streetAddress || ''}<br>
@@ -347,7 +374,16 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 {/* Logo und Unternehmensdaten */}
                 <div className="print-header mb-4">
                   <div className="flex flex-col items-center justify-center">
-                    {/* Logo-Funktionalität wurde entfernt */}
+                    {/* Logo anzeigen, wenn vorhanden */}
+                    {logoExists && (
+                      <div className="mb-2">
+                        <img 
+                          src={`/static/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
+                          alt={businessSettings?.businessName || "Handyshop Verwaltung"} 
+                          className="max-h-16 max-w-40"
+                        />
+                      </div>
+                    )}
                     
                     <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
                     <p className="text-xs">

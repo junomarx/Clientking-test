@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,27 @@ interface PrintLabelDialogProps {
 export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  
+  // Logo-Status
+  const [logoExists, setLogoExists] = useState(false);
+  
+  // Überprüfe, ob das Logo existiert
+  useEffect(() => {
+    if (open && repairId) {
+      // Überprüfe, ob das Logo existiert
+      fetch('/api/business-settings/logo')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            setLogoExists(true);
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Prüfen des Logos:', err);
+          setLogoExists(false);
+        });
+    }
+  }, [open, repairId]);
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -111,6 +132,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const customerPhone = customer?.phone || '';
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
+    // Logo-Informationen
+    const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
