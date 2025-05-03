@@ -27,13 +27,19 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = parseInt(customUserId.toString());
       storage.getUser(userId).then(user => {
-        if (user && user.isAdmin) {
-          console.log(`Admin-Bereich: Admin-Benutzer mit ID ${userId} gefunden: ${user.username}`);
-          req.user = user;
-          return next();
+        if (user) {
+          console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
+          if (user.isAdmin) {
+            console.log(`Admin-Bereich: Admin-Benutzer mit ID ${userId} gefunden: ${user.username}`);
+            req.user = user;
+            return next();
+          } else {
+            console.log(`Admin-Bereich: Benutzer ist kein Administrator`);
+            return res.status(403).json({ message: "Keine Administratorrechte" });
+          }
         } else {
-          console.log(`Admin-Bereich: Benutzer ist kein Administrator`);
-          return res.status(403).json({ message: "Keine Administratorrechte" });
+          console.log(`Benutzer mit ID ${userId} nicht gefunden`);
+          return res.status(404).json({ message: "Benutzer nicht gefunden" });
         }
       }).catch(err => {
         console.error('Admin-Bereich: Fehler beim Verarbeiten der X-User-ID:', err);
