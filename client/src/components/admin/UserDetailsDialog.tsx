@@ -110,15 +110,35 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
     queryKey: [`/api/admin/users/${userId}/business-settings`],
     queryFn: async () => {
       if (!userId) return null;
-      const response = await apiRequest("GET", `/api/admin/users/${userId}/business-settings`);
-      if (!response.ok) {
-        if (response.status === 404) {
-          // Es ist okay, wenn keine Business-Settings gefunden wurden
-          return null;
+      try {
+        console.log(`Lade Unternehmensdetails für Benutzer ${userId}`);
+        const response = await apiRequest("GET", `/api/admin/users/${userId}/business-settings`);
+        
+        // Log der Antwort
+        console.log(`Antwort-Status:`, response.status, response.statusText);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // Es ist okay, wenn keine Business-Settings gefunden wurden
+            console.log(`Keine Unternehmensdetails für Benutzer ${userId} gefunden (404)`);
+            return null;
+          }
+          if (response.status === 401) {
+            console.log(`Nicht angemeldet (401) beim Laden der Unternehmensdetails für ${userId}`);
+            // Bei Authentifizierungsproblemen senden wir zumindest die Benutzer-ID zurück
+            return { userId } as any;
+          }
+          throw new Error(`Fehler beim Laden der Unternehmensdetails: ${response.statusText}`);
         }
-        throw new Error(`Fehler beim Laden der Unternehmensdetails: ${response.statusText}`);
+        
+        const data = await response.json();
+        console.log(`Unternehmensdetails geladen:`, data);
+        return data;
+      } catch (error) {
+        console.error(`Fehler beim Laden der Unternehmensdetails für Benutzer ${userId}:`, error);
+        // Bei allgemeinen Fehlern senden wir zumindest die Benutzer-ID zurück
+        return { userId } as any;
       }
-      return await response.json();
     },
     enabled: !!userId && open,
   });

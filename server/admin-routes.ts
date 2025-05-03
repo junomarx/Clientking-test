@@ -879,11 +879,22 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/admin/users/:id/business-settings", isAdmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Abrufen der Business-Settings für Benutzer ${id} angefordert`);
+
+      // Der aktuelle angemeldete Benutzer
+      if (req.user) {
+        console.log(`Angemeldet als: ${(req.user as any).username} (ID: ${(req.user as any).id})`);
+      } else {
+        console.log(`Kein Benutzer in req.user gefunden`);
+      }
+
       const user = await storage.getUser(id);
       
       if (!user) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
+      
+      console.log(`Benutzer gefunden: ${user.username} (ID: ${user.id})`);
       
       // Direkt aus der Datenbank abrufen, da storage.getBusinessSettings manchmal
       // nicht die korrekten Einstellungen eines anderen Benutzers zurückgibt
