@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { LogoUpload } from '@/components/settings/LogoUpload';
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
@@ -716,6 +717,14 @@ export default function SettingsPage() {
                   <p className="text-xs text-gray-500">Nur für Professional und Enterprise verfügbar</p>
                 </div>
                 
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-base font-medium mb-2">Firmenlogo</h3>
+                    <p className="text-sm text-gray-500 mb-3">Laden Sie Ihr Firmenlogo hoch. Dieses wird auf Dokumenten und Ausdrucken angezeigt.</p>
+                    <LogoUpload />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Dunkelmodus</Label>
                   <div className="flex items-center space-x-2">
