@@ -5,7 +5,6 @@ import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

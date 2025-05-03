@@ -5,7 +5,12 @@ import { Express, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { db } from './db';
+
+// ESM-kompatible __dirname Lösung
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Konfiguration des Speicherorts für hochgeladene Logos
 const storage = multer.diskStorage({
