@@ -226,6 +226,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
+              ${logoExists ? `
+              <div style="margin-bottom: 2mm; max-height: 8mm; overflow: hidden;">
+                <img src="/static/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessName}" style="max-height: 8mm; max-width: 26mm;">
+              </div>
+              ` : ''}
+
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">${qrCode}</div>
@@ -279,6 +285,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
                   {/* Vorschau im gleichen Format wie das Drucklayout (Hochformat) */}
                   <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
+                    {/* Logo, wenn vorhanden */}
+                    {logoExists && (
+                      <div className="flex justify-center mb-1" style={{ maxHeight: '8mm', overflow: 'hidden' }}>
+                        <img 
+                          src={`/static/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
+                          alt={businessSettings?.businessName || "Handyshop Verwaltung"} 
+                          style={{ maxHeight: '8mm', maxWidth: '26mm' }}
+                        />
+                      </div>
+                    )}
+                    
                     {/* Auftragsnummer */}
                     <div className="text-center">
                       <p className="text-xl font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
