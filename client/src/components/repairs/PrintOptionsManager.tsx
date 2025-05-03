@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { PrintOptionsDialog } from './PrintOptionsDialog';
 import { PrintRepairDialog } from './PrintRepairDialog';
 import { PrintLabelDialog } from './PrintLabelDialog';
+import { PrintA4RepairDocument } from './PrintA4RepairDocument';
 
 // Kontext für globale Druckoptionen
 type PrintManagerContextType = {
@@ -23,6 +24,7 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [showReceiptPrintDialog, setShowReceiptPrintDialog] = useState(false);
   const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
+  const [showA4PrintDialog, setShowA4PrintDialog] = useState(false);
   const [repairId, setRepairId] = useState<number | null>(null);
   
   // Druckoptionen anzeigen
@@ -43,6 +45,11 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
     setShowLabelPrintDialog(true);
   };
 
+  const handlePrintA4Document = () => {
+    setShowPrintOptions(false);
+    setShowA4PrintDialog(true);
+  };
+
   return (
     <PrintManagerContext.Provider value={{ showPrintOptions: handleShowPrintOptions }}>
       {children}
@@ -53,6 +60,7 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
         onClose={() => setShowPrintOptions(false)}
         onPrintReceipt={handlePrintReceipt}
         onPrintLabel={handlePrintLabel}
+        onPrintA4Document={handlePrintA4Document}
         repairId={repairId}
       />
       
@@ -67,6 +75,13 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
       <PrintLabelDialog
         open={showLabelPrintDialog}
         onClose={() => setShowLabelPrintDialog(false)}
+        repairId={repairId}
+      />
+
+      {/* A4 Dokument Druck Dialog */}
+      <PrintA4RepairDocument
+        open={showA4PrintDialog}
+        onClose={() => setShowA4PrintDialog(false)}
         repairId={repairId}
       />
     </PrintManagerContext.Provider>

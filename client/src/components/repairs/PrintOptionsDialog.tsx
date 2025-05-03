@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, Tag, AlertCircle } from 'lucide-react';
+import { Printer, Tag, AlertCircle, FileText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // API for checking permissions
@@ -28,6 +28,7 @@ interface PrintOptionsDialogProps {
   onClose: () => void;
   onPrintReceipt: () => void;
   onPrintLabel: () => void;
+  onPrintA4Document: () => void;
   repairId: number | null;
 }
 
@@ -36,6 +37,7 @@ export function PrintOptionsDialog({
   onClose,
   onPrintReceipt,
   onPrintLabel,
+  onPrintA4Document,
   repairId
 }: PrintOptionsDialogProps) {
   // State für die Berechtigung zum Drucken von Etiketten
@@ -105,6 +107,16 @@ export function PrintOptionsDialog({
                 )}
               </Tooltip>
             </TooltipProvider>
+
+            {/* A4 Dokument Button - nimmt die volle Breite ein */}
+            <Button 
+              onClick={onPrintA4Document}
+              className="h-24 flex flex-col items-center justify-center gap-2 text-lg col-span-2 mt-4"
+              variant="outline"
+            >
+              <FileText className="h-8 w-8" />
+              <span>A4 Dokument drucken</span>
+            </Button>
           </div>
         </div>
         
