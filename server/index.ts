@@ -5,9 +5,20 @@ import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// ESM-kompatible __dirname Lösung
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Statische Dateien für Uploads bereitstellen
+app.use('/static/uploads', express.static(path.join(__dirname, '../static/uploads')));
+console.log(`Statische Dateien werden bereitgestellt von: ${path.join(__dirname, '../static/uploads')} unter /static/uploads`);
 
 app.use((req, res, next) => {
   const start = Date.now();

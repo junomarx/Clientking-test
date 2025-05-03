@@ -61,6 +61,7 @@ export function registerLogoRoutes(app: Express) {
 
       // Erfolgreiche Antwort mit Logo-URL
       const logoUrl = `/static/uploads/firmenlogo.png`;
+      console.log(`Logo hochgeladen nach: ${logoUrl}`);
       return res.status(200).json({
         success: true,
         message: 'Logo erfolgreich hochgeladen',
