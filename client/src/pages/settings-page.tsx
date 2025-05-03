@@ -48,7 +48,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  logoImage?: string;
+  // logoImage wurde entfernt
 }
 
 // Typ-Definition für die API-Antwort des Reparaturkontingents
@@ -233,7 +233,7 @@ export default function SettingsPage() {
       phone: "",
       email: "",
       website: "",
-      logoImage: "",
+      // logoImage wurde entfernt
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -267,7 +267,7 @@ export default function SettingsPage() {
         phone: settings.phone === null ? undefined : settings.phone,
         email: settings.email === null ? undefined : settings.email,
         website: settings.website === null ? undefined : settings.website,
-        logoImage: settings.logoImage === null ? undefined : settings.logoImage,
+        // logoImage wurde entfernt
         receiptWidth,
         smtpHost: settings.smtpHost === null ? undefined : settings.smtpHost,
         smtpPort: settings.smtpPort === null ? undefined : settings.smtpPort,
@@ -560,27 +560,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
             
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
-                <CardDescription>Upload Ihres Firmenlogos für Dokumente und Rechnungen.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4">
-                  <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
-                    {form.watch('logoImage') ? (
-                      <img src={form.watch('logoImage')} alt="Logo" className="max-w-full max-h-full object-contain" />
-                    ) : (
-                      <Building className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <Button variant="outline" size="sm" type="button">Logo hochladen</Button>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Firmenlogo-Funktionalität wurde entfernt */}
           </TabsContent>
           
           {/* E-Mail-Einstellungen Tab */}

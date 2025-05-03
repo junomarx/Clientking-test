@@ -24,7 +24,7 @@ interface FeedbackData {
   };
   business: {
     name: string;
-    logoImage?: string;
+    // logoImage wurde entfernt
   };
 }
 
@@ -217,16 +217,8 @@ export default function FeedbackPage() {
       <Card className="w-full max-w-lg shadow-lg">
         <CardHeader className="border-b bg-card">
           <div className="flex items-center justify-between">
-            {feedbackData.business.logoImage && (
-              <div className="flex-shrink-0">
-                <img 
-                  src={feedbackData.business.logoImage} 
-                  alt="Logo" 
-                  className="max-h-12 max-w-[120px] object-contain"
-                />
-              </div>
-            )}
-            <div className={feedbackData.business.logoImage ? "ml-4" : ""}>
+            {/* Logo-Funktionalität wurde entfernt */}
+            <div>
               <CardTitle className="text-xl">{feedbackData.business.name}</CardTitle>
               <CardDescription>Kundenfeedback</CardDescription>
             </div>
