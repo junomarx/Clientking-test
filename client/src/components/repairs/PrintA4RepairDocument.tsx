@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
@@ -17,6 +17,27 @@ interface PrintA4RepairDocumentProps {
 export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4RepairDocumentProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  
+  // Logo-Status
+  const [logoExists, setLogoExists] = useState(false);
+  
+  // Überprüfe, ob das Logo existiert
+  useEffect(() => {
+    if (open && repairId) {
+      // Überprüfe, ob das Logo existiert
+      fetch('/api/business-settings/logo')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            setLogoExists(true);
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Prüfen des Logos:', err);
+          setLogoExists(false);
+        });
+    }
+  }, [open, repairId]);
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -106,6 +127,10 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     const zipAndCity = `${settings?.zipCode || ''} ${settings?.city || ''}`;
     const phone = settings?.phone || '';
     const email = settings?.email || '';
+    
+    // Logo-URL mit Cache-Busting für Druckdokument
+    const logoUrl = '/static/uploads/firmenlogo.png';
+    const logoUrlWithCache = `${logoUrl}?t=${new Date().getTime()}`;
     
     // Fülle das Druckfenster mit Inhalten 
     printWindow.document.write(`
@@ -274,6 +299,9 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
       </head>
       <body>
           <div class="header">
+              <div class="company-logo">
+                  ${logoExists ? `<img src="${logoUrlWithCache}" alt="${businessName}" style="max-height: 80px; max-width: 200px;">` : ''}
+              </div>
               <div class="company-info">
                   <p class="company-name">${businessName}</p>
                   <p>${streetAddress}<br>
