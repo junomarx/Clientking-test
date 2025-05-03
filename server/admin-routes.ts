@@ -869,6 +869,29 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
+  // Unternehmensdetails eines Benutzers abrufen
+  app.get("/api/admin/users/:id/business-settings", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      const businessSettings = await storage.getBusinessSettings(id);
+      
+      if (!businessSettings) {
+        return res.status(404).json({ message: "Unternehmensdetails nicht gefunden" });
+      }
+      
+      res.json(businessSettings);
+    } catch (error) {
+      console.error("Error retrieving business settings:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Unternehmensdetails" });
+    }
+  });
+  
   // Benutzer aktivieren/deaktivieren
   app.patch("/api/admin/users/:id/activate", isAdmin, async (req: Request, res: Response) => {
     try {

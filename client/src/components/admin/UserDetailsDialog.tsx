@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -356,11 +357,11 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                     </div>
                   </>
                 ) : (
-                  <Alert>
-                    <AlertDescription>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
+                    <p className="text-sm">
                       Keine Unternehmensdetails für diesen Benutzer gefunden.
-                    </AlertDescription>
-                  </Alert>
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
