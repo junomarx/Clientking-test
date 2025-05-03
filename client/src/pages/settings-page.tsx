@@ -358,10 +358,10 @@ export default function SettingsPage() {
           <div className="flex overflow-x-auto">
             <TabsList className="bg-white border mb-6">
               <TabsTrigger value="business">Geschäft</TabsTrigger>
-              <TabsTrigger value="emails">E-Mail</TabsTrigger>
-              <TabsTrigger value="design">Design</TabsTrigger>
+              <TabsTrigger value="email">E-Mail</TabsTrigger>
               <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+              <TabsTrigger value="design">Design</TabsTrigger>
             </TabsList>
           </div>
 
@@ -565,7 +565,7 @@ export default function SettingsPage() {
           </TabsContent>
           
           {/* E-Mail-Einstellungen Tab */}
-          <TabsContent value="emails" className="mt-4">
+          <TabsContent value="email" className="mt-4">
             <Tabs value={activeEmailTab} onValueChange={setActiveEmailTab} className="mb-6">
               <TabsList className="bg-white border mb-6 w-full justify-start">
                 <TabsTrigger value="settings">SMTP-Einstellungen</TabsTrigger>
@@ -693,45 +693,22 @@ export default function SettingsPage() {
             </Tabs>
           </TabsContent>
           
-          {/* Erscheinungsbild Tab */}
+          {/* Design Tab */}
           <TabsContent value="design" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Designoptionen</CardTitle>
-                <CardDescription>Passen Sie das Erscheinungsbild Ihrer Anwendung an.</CardDescription>
+                <CardTitle className="text-lg font-semibold">Design-Einstellungen</CardTitle>
+                <CardDescription>Laden Sie Ihr Firmenlogo hoch oder ändern Sie es.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="theme">Farbschema</Label>
-                  <Select defaultValue="blue">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wählen Sie ein Farbschema" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blue">Blau (Standard)</SelectItem>
-                      <SelectItem value="green">Grün</SelectItem>
-                      <SelectItem value="purple">Lila</SelectItem>
-                      <SelectItem value="orange">Orange</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500">Nur für Professional und Enterprise verfügbar</p>
-                </div>
-                
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-base font-medium mb-2">Firmenlogo</h3>
-                    <p className="text-sm text-gray-500 mb-3">Laden Sie Ihr Firmenlogo hoch. Dieses wird auf Dokumenten und Ausdrucken angezeigt.</p>
+                    <p className="text-sm text-gray-500 mb-3">
+                      Dieses Logo wird auf Rechnungen und Dokumenten angezeigt.
+                    </p>
                     <LogoUpload />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Dunkelmodus</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch id="darkmode" disabled />
-                    <Label htmlFor="darkmode">Automatischer Dunkelmodus</Label>
-                  </div>
-                  <p className="text-xs text-gray-500">Nur für Professional und Enterprise verfügbar</p>
                 </div>
               </CardContent>
             </Card>
