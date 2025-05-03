@@ -321,10 +321,7 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
                       <div class="info-label">Preis</div>
                       <div class="info-value">${formatPrice()}</div>
                   </div>
-                  <div class="info-item">
-                      <div class="info-label">Status</div>
-                      <div class="info-value">${repair?.status || ''}</div>
-                  </div>
+
               </div>
           </div>
 
