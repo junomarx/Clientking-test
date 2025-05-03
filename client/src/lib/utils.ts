@@ -29,6 +29,16 @@ export function formatDateTime(dateString: string): string {
   }
 }
 
+// Hilfsfunktion für Datum-Formatierung (ohne Uhrzeit)
+export function formatDate(date: Date): string {
+  try {
+    return format(date, 'dd.MM.yyyy', { locale: de });
+  } catch (error) {
+    console.error("Fehler beim Formatieren des Datums:", error);
+    return date.toISOString().split('T')[0];
+  }
+}
+
 export function getStatusBadge(status: string): React.ReactNode {
   const badgeStyle = "px-2 py-1 rounded-md text-xs font-normal";
   

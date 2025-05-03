@@ -79,6 +79,7 @@ type AdminDashboardStats = {
 function UserTable() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -236,7 +237,14 @@ function UserTable() {
           </TableHeader>
           <TableBody>
             {users && users.map((user) => (
-              <TableRow key={user.id}>
+              <TableRow 
+                key={user.id} 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => {
+                  setSelectedUser(user);
+                  setIsDetailsDialogOpen(true);
+                }}
+              >
                 <TableCell className="font-medium flex items-center gap-2">
                   <Avatar className="h-6 w-6">
                     <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
