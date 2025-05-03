@@ -212,7 +212,7 @@ function PricingPlanDisplay() {
 
 // Hauptseite für Einstellungen
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<string>("design");
+  const [activeTab, setActiveTab] = useState<string>("prints");
   const [activeEmailTab, setActiveEmailTab] = useState<string>("templates");
   const [activeUserTab, setActiveUserTab] = useState<string>("account");
   const [, setLocation] = useLocation();
@@ -328,12 +328,10 @@ export default function SettingsPage() {
     );
   }
 
-  // Debug-Ausgabe
-  console.log('Aktiver Tab beim Rendern:', activeTab);
+  // Debug-Ausgabe entfernt
   
   return (
     <div className="container py-6">
-      <p style={{ color: 'blue', fontWeight: 'bold' }}>Debug - Aktiver Tab: {activeTab}</p>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-2">
           <Button
@@ -358,14 +356,13 @@ export default function SettingsPage() {
       </div>
 
       <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
-        <Tabs defaultValue="design" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="prints" className="w-full" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex overflow-x-auto">
             <TabsList className="bg-white border mb-6">
               <TabsTrigger value="business">Geschäft</TabsTrigger>
               <TabsTrigger value="email">E-Mail</TabsTrigger>
               <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription">Abonnement</TabsTrigger>
-              <TabsTrigger value="design">Design</TabsTrigger>
             </TabsList>
           </div>
 
