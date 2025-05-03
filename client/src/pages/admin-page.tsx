@@ -224,15 +224,16 @@ function UserTable() {
   
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      {/* Desktop-Ansicht - Tabelle (nur auf md und größer sichtbar) */}
+      <div className="rounded-md border hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Benutzer</TableHead>
-              <TableHead className="hidden md:table-cell">E-Mail</TableHead>
+              <TableHead>E-Mail</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Rolle</TableHead>
-              <TableHead className="hidden md:table-cell">Preispaket</TableHead>
+              <TableHead>Preispaket</TableHead>
               <TableHead>Aktionen</TableHead>
             </TableRow>
           </TableHeader>
@@ -250,10 +251,9 @@ function UserTable() {
                   <Avatar className="h-6 w-6">
                     <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline">{user.username}</span>
-                  <span className="md:hidden">{user.username.substring(0, 6)}{user.username.length > 6 ? '...' : ''}</span>
+                  <span>{user.username}</span>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{user.email}</TableCell>
+                <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Switch 
@@ -271,7 +271,7 @@ function UserTable() {
                     {user.isAdmin ? "Admin" : "Benutzer"}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
+                <TableCell>
                   <Badge variant={user.pricingPlan === "enterprise" ? "default" : user.pricingPlan === "professional" ? "success" : "outline"}>
                     {user.pricingPlan === "enterprise" ? "Enterprise" : user.pricingPlan === "professional" ? "Professional" : "Basic"}
                   </Badge>
@@ -303,6 +303,109 @@ function UserTable() {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile-Ansicht - Kartendesign (nur auf kleinen Bildschirmen sichtbar) */}
+      <div className="space-y-4 md:hidden">
+        {users && users.map((user) => (
+          <div 
+            key={user.id} 
+            className="bg-card rounded-lg border shadow-sm overflow-hidden cursor-pointer"
+            onClick={() => {
+              setSelectedUser(user);
+              setIsDetailsDialogOpen(true);
+            }}
+          >
+            <div className="p-4 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium">{user.username}</span>
+                </div>
+                <Badge variant={user.isActive ? "success" : "destructive"}>
+                  {user.isActive ? "Aktiv" : "Inaktiv"}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="p-4 space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">E-Mail:</p>
+                  <p className="text-sm truncate">{user.email}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">Rolle:</p>
+                  <Badge variant={user.isAdmin ? "default" : "outline"} className="mt-1">
+                    {user.isAdmin ? "Admin" : "Benutzer"}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="pt-2">
+                <p className="text-sm text-muted-foreground">Preispaket:</p>
+                <Badge 
+                  variant={user.pricingPlan === "enterprise" ? "default" : user.pricingPlan === "professional" ? "success" : "outline"}
+                  className="mt-1"
+                >
+                  {user.pricingPlan === "enterprise" ? "Enterprise" : 
+                   user.pricingPlan === "professional" ? "Professional" : "Basic"}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between border-t p-3 bg-muted/10">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status ändern:</span>
+                <Switch 
+                  checked={user.isActive} 
+                  onCheckedChange={(e) => {
+                    e.stopPropagation();
+                    handleToggleActive(user);
+                  }}
+                  disabled={toggleActiveMutation.isPending}
+                />
+              </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className="sr-only">Aktionen</span>
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditUser(user);
+                    }}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Bearbeiten
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteUser(user);
+                    }}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Löschen
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        ))}
       </div>
       
       {/* Benutzer bearbeiten Dialog */}
