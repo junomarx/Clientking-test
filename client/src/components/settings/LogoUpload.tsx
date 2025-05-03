@@ -9,7 +9,7 @@ interface LogoUploadProps {
 }
 
 export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -128,7 +128,8 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
       const data = await response.json();
 
       if (data.success) {
-        setLogoUrl(null);
+        // Fix für TypeScript-Fehler: undefined statt null
+        setLogoUrl(undefined);
         toast({
           title: 'Logo gelöscht',
           description: 'Ihr Logo wurde erfolgreich gelöscht.',
@@ -151,7 +152,7 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
   };
 
   // Hinzufügen eines zufälligen Query-Parameters, um Caching zu verhindern
-  const logoUrlWithCache = logoUrl ? `${logoUrl}?t=${new Date().getTime()}` : null;
+  const logoUrlWithCache = logoUrl ? `${logoUrl}?t=${new Date().getTime()}` : undefined;
 
   return (
     <div className="space-y-4">

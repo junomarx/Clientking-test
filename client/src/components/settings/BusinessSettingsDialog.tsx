@@ -51,6 +51,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
+import { LogoUpload } from "@/components/settings/LogoUpload";
 
 const businessSettingsSchema = z.object({
   businessName: z.string().min(2, "Firmenname wird benötigt"),
@@ -261,7 +262,11 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Logo-Upload-Funktionalität wurde entfernt */}
+            {/* Logo-Upload-Funktionalität */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Firmenlogo</h3>
+              <LogoUpload />
+            </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
