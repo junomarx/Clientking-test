@@ -127,57 +127,35 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
     }
   }, [settings, form]);
   
-  // Funktion zum Hochladen des Logos
+  // Funktion zum Hochladen des Logos - vereinfachte Version
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleLogoUpload wurde aufgerufen');
     setLogoError(null);
     const file = event.target.files?.[0];
     
-    if (!file) {
-      console.log('Keine Datei ausgewählt');
-      return;
-    }
-    
-    console.log('Datei ausgewählt:', file.name, file.type, file.size);
+    if (!file) return;
     
     // Überprüfe die Dateigröße
     if (file.size > MAX_LOGO_SIZE) {
-      const errorMsg = `Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`;
-      console.log(errorMsg);
-      setLogoError(errorMsg);
+      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
       return;
     }
     
     // Überprüfe den Dateityp
     const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
-      const errorMsg = 'Nur JPG, PNG und SVG-Dateien sind erlaubt.';
-      console.log(errorMsg);
-      setLogoError(errorMsg);
+      setLogoError('Nur JPG, PNG und SVG-Dateien sind erlaubt.');
       return;
     }
     
     // Lese die Datei als Data-URL
     const reader = new FileReader();
     reader.onload = (e) => {
-      console.log('FileReader onload Event');
       const dataUrl = e.target?.result as string;
       if (dataUrl) {
-        console.log('DataURL wurde erfolgreich erstellt');
         setLogoPreview(dataUrl);
         form.setValue('logoImage', dataUrl);
-        console.log('LogoPreview und Formularwert wurden gesetzt');
-      } else {
-        console.log('DataURL konnte nicht erstellt werden');
       }
     };
-    
-    reader.onerror = (error) => {
-      console.error('FileReader Fehler:', error);
-      setLogoError('Fehler beim Lesen der Datei.');
-    };
-    
-    console.log('Lese Datei als DataURL...');
     reader.readAsDataURL(file);
   };
   
@@ -474,28 +452,36 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                       )}
                     </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="logoImage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Logo hochladen</FormLabel>
-                          <div className="grid gap-2">
-                            <input
-                              type="file"
-                              id="logo-upload"
-                              accept="image/jpeg,image/png,image/svg+xml"
-                              onChange={handleLogoUpload}
-                              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 focus:outline-none"
-                            />
-                            <p className="text-xs text-gray-500">PNG, JPG oder SVG, max. 2MB</p>
-                            {logoError && (
-                              <p className="text-xs text-red-500">{logoError}</p>
-                            )}
-                          </div>
-                        </FormItem>
-                      )}
-                    />
+                    <div className="mt-4">
+                      <label htmlFor="logo-upload" className="block mb-2 text-sm font-medium">Logo hochladen</label>
+                      <div className="flex flex-col space-y-2">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            // Erstelle ein unsichtbares Datei-Input-Element
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/jpeg,image/png,image/svg+xml';
+                            input.onchange = (event) => {
+                              const target = event.target as HTMLInputElement;
+                              if (target.files && target.files.length > 0) {
+                                handleLogoUpload({ target } as any);
+                              }
+                            };
+                            // Löse das Klick-Event aus, um den Dateiauswahldialog zu öffnen
+                            input.click();
+                          }}
+                          className="inline-flex items-center px-4 py-2 bg-blue-50 border border-transparent rounded-md font-semibold text-xs text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Logo auswählen
+                        </button>
+                        <p className="text-xs text-gray-500">PNG, JPG oder SVG, max. 2MB</p>
+                        {logoError && (
+                          <p className="text-xs text-red-500">{logoError}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
