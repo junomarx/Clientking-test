@@ -694,23 +694,6 @@ export default function SettingsPage() {
             </Tabs>
           </TabsContent>
           
-          {/* Design Tab */}
-          <TabsContent value="design" className="mt-4">
-            <p>Aktiver Tab: {activeTab}</p>
-            <p style={{ color: 'red' }}>Design-Tab ist aktiv</p>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Design-Einstellungen</CardTitle>
-                <CardDescription>Laden Sie Ihr Firmenlogo hoch oder ändern Sie es.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-base font-medium mb-2">Firmenlogo</h3>
-                    <p className="text-sm text-gray-500 mb-3">
-                      Dieses Logo wird auf Rechnungen und Dokumenten angezeigt.
-                    </p>
-                    <LogoUpload />
                   </div>
                 </div>
               </CardContent>
