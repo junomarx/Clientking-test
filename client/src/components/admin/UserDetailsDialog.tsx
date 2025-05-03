@@ -307,10 +307,10 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       </div>
                       
                       <div>
-                        <Label className="text-muted-foreground">Unternehmens-E-Mail</Label>
+                        <Label className="text-muted-foreground">E-Mail</Label>
                         <div className="flex items-center gap-2 mt-1">
                           <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span>{businessSettings.businessEmail}</span>
+                          <span>{businessSettings.email || '-'}</span>
                         </div>
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                         <Label className="text-muted-foreground">Telefon</Label>
                         <div className="flex items-center gap-2 mt-1">
                           <Phone className="h-4 w-4 text-muted-foreground" />
-                          <span>{businessSettings.businessPhone}</span>
+                          <span>{businessSettings.phone || '-'}</span>
                         </div>
                       </div>
                       
@@ -328,8 +328,16 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                         <Label className="text-muted-foreground">Website</Label>
                         <div className="flex items-center gap-2 mt-1">
                           <Globe className="h-4 w-4 text-muted-foreground" />
-                          <span>{businessSettings.businessWebsite}</span>
+                          <span>{businessSettings.website || '-'}</span>
                         </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Label className="text-muted-foreground">Inhaber</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{businessSettings.ownerFirstName} {businessSettings.ownerLastName}</span>
                       </div>
                     </div>
                     
@@ -337,24 +345,28 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       <Label className="text-muted-foreground">Adresse</Label>
                       <div className="flex items-start gap-2 mt-1">
                         <Building className="h-4 w-4 text-muted-foreground mt-1" />
-                        <span className="whitespace-pre-line">{businessSettings.businessAddress}</span>
+                        <span className="whitespace-pre-line">
+                          {businessSettings.streetAddress}<br />
+                          {businessSettings.zipCode} {businessSettings.city}<br />
+                          {businessSettings.country}
+                        </span>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
-                        <Label className="text-muted-foreground">USt-IdNr.</Label>
+                        <Label className="text-muted-foreground">Steuer-ID</Label>
                         <div className="flex items-center gap-2 mt-1">
                           <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          <span>{businessSettings.vatNumber || '-'}</span>
+                          <span>{businessSettings.taxId || '-'}</span>
                         </div>
                       </div>
                       
                       <div>
-                        <Label className="text-muted-foreground">Steuersatz</Label>
+                        <Label className="text-muted-foreground">USt-IdNr.</Label>
                         <div className="flex items-center gap-2 mt-1">
-                          <Percent className="h-4 w-4 text-muted-foreground" />
-                          <span>{businessSettings.taxRate}%</span>
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.vatNumber || '-'}</span>
                         </div>
                       </div>
                     </div>
@@ -364,6 +376,28 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       <div className="flex items-center gap-2 mt-1">
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         <span>{businessSettings.companySlogan || '-'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Label className="text-muted-foreground">SMTP-Konfiguration</Label>
+                      <div className="grid grid-cols-2 gap-4 mt-1">
+                        <div className="flex items-center gap-2">
+                          <Server className="h-4 w-4 text-muted-foreground" />
+                          <span>Host: {businessSettings.smtpHost || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <PanelTop className="h-4 w-4 text-muted-foreground" />
+                          <span>Port: {businessSettings.smtpPort || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>User: {businessSettings.smtpUser || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>Absender: {businessSettings.smtpSenderName || '-'}</span>
+                        </div>
                       </div>
                     </div>
                     
