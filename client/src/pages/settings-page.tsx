@@ -763,6 +763,17 @@ export default function SettingsPage() {
                 </Form>
               </CardContent>
             </Card>
+            
+            {/* Firmenlogo-Karte */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
+                <CardDescription>Laden Sie Ihr Firmenlogo hoch. Dieses erscheint auf Quittungen und Dokumenten.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <LogoUpload />
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {/* Abonnement Tab */}
