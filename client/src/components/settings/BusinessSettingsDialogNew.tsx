@@ -85,7 +85,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Formulardaten die nicht im Schema sind
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  logoImage?: string;
+  // logoImage wurde entfernt
   // Das colorTheme-Feld ist für die Typisierung weiterhin vorhanden, wird aber nicht mehr verwendet
   colorTheme?: string;
 }
@@ -99,9 +99,7 @@ interface BusinessSettingsDialogProps {
 export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "unternehmen" }: BusinessSettingsDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoError, setLogoError] = useState<string | null>(null);
+  // Logo-Funktionalität und Variablen wurden entfernt
   // Verwende den initialActiveTab als Anfangswert
   const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design">(initialActiveTab);
   
@@ -139,7 +137,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
       phone: "",
       email: "",
       website: "",
-      logoImage: "",
+      // logoImage wurde entfernt
       // colorTheme wird nicht mehr verwendet - Standard-Theme für alle
       receiptWidth: "80mm",
       // SMTP-Einstellungen
@@ -182,7 +180,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
         phone: settings.phone || "",
         email: settings.email || "",
         website: settings.website || "",
-        logoImage: settings.logoImage || "",
+        // logoImage wurde entfernt
         colorTheme: validColorTheme,
         receiptWidth: validReceiptWidth as "58mm" | "80mm",
         // SMTP-Einstellungen
@@ -194,93 +192,11 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
         reviewLink: settings.reviewLink || "",
       });
 
-      // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
-      if (settings.logoImage) {
-        setLogoPreview(settings.logoImage);
-      }
+      // Die Logo-Funktionalität wurde entfernt
     }
   }, [settings, form]);
 
-  // Funktion zum Validieren des hochgeladenen Bildes
-  const validateImage = (file: File): Promise<{ isValid: boolean; base64: string | null; error: string | null }> => {
-    return new Promise((resolve) => {
-      // Überprüfen der Dateigröße
-      if (file.size > MAX_LOGO_SIZE) {
-        resolve({
-          isValid: false,
-          base64: null,
-          error: `Die Datei ist zu groß. Maximale Größe ist ${MAX_LOGO_SIZE / 1024}KB.`
-        });
-        return;
-      }
-
-      // Überprüfen des Dateityps
-      if (!['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'].includes(file.type)) {
-        resolve({
-          isValid: false,
-          base64: null,
-          error: 'Nur JPEG, PNG, SVG, GIF und WEBP Dateien sind erlaubt.'
-        });
-        return;
-      }
-
-      // Bild in Base64 konvertieren
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          resolve({
-            isValid: true,
-            base64: e.target?.result as string,
-            error: null
-          });
-        };
-        img.onerror = () => {
-          resolve({
-            isValid: false,
-            base64: null,
-            error: 'Das Bild konnte nicht geladen werden.'
-          });
-        };
-        
-        if (e.target?.result) {
-          img.src = e.target.result as string;
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // Event-Handler für das Hochladen des Logos
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    const result = await validateImage(file);
-
-    if (result.isValid && result.base64) {
-      setLogoPreview(result.base64);
-      form.setValue('logoImage', result.base64);
-      setLogoError(null);
-    } else {
-      setLogoError(result.error || 'Unbekannter Fehler beim Hochladen des Logos.');
-      // Input zurücksetzen
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  // Funktion zum Löschen des Logos
-  const handleDeleteLogo = () => {
-    setLogoPreview(null);
-    form.setValue('logoImage', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // Logo-Funktionen wurden entfernt
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
@@ -290,7 +206,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
         // In dieser neuen Implementierung senden wir keine userId mehr mit
         const requestData = {
           ...data, // Die regulären Formulardaten
-          logoImage: logoPreview // Das Logo als Base64
+          // logoImage wurde entfernt
         };
         
         console.log('NEUE IMPLEMENTATION - Request data keys:', Object.keys(requestData));
