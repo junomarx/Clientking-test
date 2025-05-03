@@ -780,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: businessSettings.phone,
           email: businessSettings.email,
           website: businessSettings.website,
-          logoImage: businessSettings.logoImage,
+          // logoImage wurde entfernt
           colorTheme: businessSettings.colorTheme,
           receiptWidth: businessSettings.receiptWidth,
           smtpSenderName: businessSettings.smtpSenderName,
@@ -852,7 +852,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`NEUE IMPLEMENTATION: Updating business settings for user ${userId} (${username})`);
       
       // Daten aus dem Request-Body extrahieren
-      const { logoImage, colorTheme, receiptWidth, ...otherData } = req.body;
+      const { colorTheme, receiptWidth, ...otherData } = req.body;
+      // logoImage wurde entfernt
       
       // Versuche die aktuellen Einstellungen zu finden
       // Wir müssen bestimmte Spalten auswählen, um Spaltennamenkonflikte zu vermeiden
@@ -872,7 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: businessSettings.phone,
           email: businessSettings.email,
           website: businessSettings.website,
-          logoImage: businessSettings.logoImage,
+          // logoImage wurde entfernt
           colorTheme: businessSettings.colorTheme,
           receiptWidth: businessSettings.receiptWidth,
           smtpSenderName: businessSettings.smtpSenderName,
@@ -895,7 +896,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Erstelle vollständige Einstellungen mit allen Eingaben
         const newSettingsData = {
           ...otherData,
-          logoImage: logoImage || "",
+          // logoImage wurde entfernt
           colorTheme: colorTheme || "blue",
           receiptWidth: receiptWidth || "80mm",
           userId: userId // WICHTIG: Benutzer-ID setzen
@@ -918,7 +919,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Bereite die aktualisierten Daten vor
       const updateData = {
         ...otherData,
-        logoImage: logoImage !== undefined ? logoImage : currentSettings[0].logoImage,
+        // logoImage wurde entfernt
         colorTheme: colorTheme || currentSettings[0].colorTheme,
         receiptWidth: receiptWidth || currentSettings[0].receiptWidth,
         // userId wird nicht aktualisiert, bleibt die des authentifizierten Benutzers
@@ -1688,7 +1689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         business: {
           name: businessSettings?.businessName || "Handyshop Verwaltung",
-          logoImage: businessSettings?.logoImage
+          // logoImage wurde entfernt
         }
       });
     } catch (error) {
@@ -1955,7 +1956,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "auftragsnummer": repair.orderCode || `#${repair.id}`,
         "fehler": repair.issue,
         "geschaeftsname": businessSettings?.businessName || "Handyshop",
-        "logo": businessSettings?.logoImage || "",
+        // "logo" wurde entfernt,
         "telefon": businessSettings?.phone || "",
         "email": businessSettings?.email || "",
         "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
