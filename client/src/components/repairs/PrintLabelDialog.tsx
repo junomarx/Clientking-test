@@ -228,7 +228,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             <div class="print-area">
               ${logoExists ? `
               <div style="margin-bottom: 2mm; max-height: 8mm; overflow: hidden;">
-                <img src="/static/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessName}" style="max-height: 8mm; max-width: 26mm;">
+                <img src="/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessName}" style="max-height: 8mm; max-width: 26mm;">
               </div>
               ` : ''}
 
