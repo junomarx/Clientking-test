@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Save, Building, User, Palette, Upload, X, Camera } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, Building, User, Palette, Upload, X } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -57,7 +57,6 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   const { toast } = useToast();
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Max. Logo-Größe in Bytes (2MB)
   const MAX_LOGO_SIZE = 2 * 1024 * 1024;
@@ -163,9 +162,6 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   const handleRemoveLogo = () => {
     setLogoPreview(null);
     form.setValue('logoImage', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   // Mutation für das Update der Unternehmenseinstellungen
@@ -452,35 +448,41 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                       )}
                     </div>
                     
-                    <div className="mt-4">
-                      <label htmlFor="logo-upload" className="block mb-2 text-sm font-medium">Logo hochladen</label>
-                      <div className="flex flex-col space-y-2">
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            // Erstelle ein unsichtbares Datei-Input-Element
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/jpeg,image/png,image/svg+xml';
-                            input.onchange = (event) => {
-                              const target = event.target as HTMLInputElement;
-                              if (target.files && target.files.length > 0) {
-                                handleLogoUpload({ target } as any);
-                              }
-                            };
-                            // Löse das Klick-Event aus, um den Dateiauswahldialog zu öffnen
-                            input.click();
-                          }}
-                          className="inline-flex items-center px-4 py-2 bg-blue-50 border border-transparent rounded-md font-semibold text-xs text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Logo auswählen
-                        </button>
-                        <p className="text-xs text-gray-500">PNG, JPG oder SVG, max. 2MB</p>
-                        {logoError && (
-                          <p className="text-xs text-red-500">{logoError}</p>
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-medium">Logo hochladen</h4>
+                      
+                      <FormField
+                        control={form.control}
+                        name="logoImage"
+                        render={() => (
+                          <FormItem>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const input = document.createElement('input');
+                                  input.type = 'file';
+                                  input.accept = 'image/jpeg,image/png,image/svg+xml';
+                                  input.onchange = (e) => {
+                                    handleLogoUpload(e as any);
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                <Upload className="mr-2 h-4 w-4" />
+                                Logo auswählen
+                              </Button>
+                            </div>
+                            
+                            <div className="text-xs text-muted-foreground">
+                              <p>Unterstützte Formate: JPG, PNG, SVG. Max. 2MB</p>
+                              {logoError && <p className="text-red-500 mt-1">{logoError}</p>}
+                            </div>
+                          </FormItem>
                         )}
-                      </div>
+                      />                      
                     </div>
                   </div>
                 </div>
