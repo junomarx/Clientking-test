@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Building, User, Palette, Upload, X } from 'lucide-react';
+import { Save, Building, User, Palette, Upload, X, Camera } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -480,25 +480,60 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                         ref={fileInputRef}
                         accept="image/jpeg,image/png,image/svg+xml"
                         onChange={handleLogoUpload}
+                        capture="environment"
                         className="hidden"
                       />
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        type="button"
-                        onClick={() => {
-                          console.log('Logo Upload Button geklickt');
-                          if (fileInputRef.current) {
-                            console.log('fileInputRef ist vorhanden');
-                            fileInputRef.current.click();
-                          } else {
-                            console.log('fileInputRef ist nicht definiert');
-                          }
-                        }}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Logo hochladen
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          type="button"
+                          onClick={() => {
+                            console.log('Logo Upload Button geklickt');
+                            if (fileInputRef.current) {
+                              try {
+                                // Lösche das capture-Attribut zuerst, damit ein normaler Dateiauswahldialog erscheint
+                                fileInputRef.current.removeAttribute('capture');
+                                console.log('Capture-Attribut entfernt');
+                                fileInputRef.current.click();
+                              } catch (error) {
+                                console.error('Fehler beim Öffnen des Dateiauswahldialogs:', error);
+                                setLogoError('Fehler beim Öffnen des Dateiauswahldialogs. Bitte versuchen Sie es später erneut.');
+                              }
+                            } else {
+                              console.log('fileInputRef ist nicht definiert');
+                            }
+                          }}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Logo hochladen
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          type="button"
+                          onClick={() => {
+                            console.log('Kamera Button geklickt');
+                            if (fileInputRef.current) {
+                              try {
+                                // Setze das capture-Attribut, um die Kamera zu aktivieren
+                                fileInputRef.current.setAttribute('capture', 'environment');
+                                console.log('Capture-Attribut gesetzt');
+                                fileInputRef.current.click();
+                              } catch (error) {
+                                console.error('Fehler beim Öffnen der Kamera:', error);
+                                setLogoError('Fehler beim Öffnen der Kamera. Bitte versuchen Sie es später erneut.');
+                              }
+                            } else {
+                              console.log('fileInputRef ist nicht definiert');
+                            }
+                          }}
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          Kamera
+                        </Button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
                       {logoError && (
                         <p className="text-xs text-red-500 mt-1">{logoError}</p>
