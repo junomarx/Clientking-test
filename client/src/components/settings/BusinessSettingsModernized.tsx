@@ -41,9 +41,8 @@ const businessSettingsSchema = z.object({
 });
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
-interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  logoImage?: string;
-}
+// Interface nutzt jetzt genau die Werte aus dem Schema-Typ ohne Erweiterungen
+type ExtendedBusinessSettingsFormValues = z.infer<typeof businessSettingsSchema>;
 
 interface BusinessSettingsModernizedProps {
   open: boolean;
@@ -74,7 +73,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       phone: "",
       email: "",
       website: "",
-      logoImage: "",
+      // logoImage: "", // entfernt
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -93,7 +92,6 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird und NULL-Werte in leere Strings umgewandelt werden
       const formattedSettings = {
         ...settings,
-        logoImage: settings.logoImage || "",
         // Validiere receiptWidth und setze auf "80mm" wenn ungültig
         receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
           ? settings.receiptWidth as "58mm" | "80mm"
@@ -378,29 +376,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                     />
                   </div>
                   
-                  <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Firmenlogo</h3>
-                  
-                  <div className="flex flex-col space-y-4">
-                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
-                      {form.watch('logoImage') ? (
-                        <>
-                          <img 
-                            src={form.watch('logoImage')} 
-                            alt="Logo" 
-                            className="max-w-full max-h-full object-contain" 
-                          />
-                        </>
-                      ) : (
-                        <Building className="h-8 w-8 text-gray-400" />
-                      )}
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Logo-Upload wird gerade neu implementiert. Bitte versuchen Sie es später noch einmal.
-                      </p>
-                    </div>
-                  </div>
+                  {/* Firmenlogo-Bereich wurde entfernt */}
                 </div>
               </TabsContent>
               
