@@ -46,8 +46,8 @@ import {
   Printer,
   FileText,
   Percent,
-  Server,
-  PanelTop,
+  MonitorSmartphone,
+  Terminal,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -314,6 +314,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                   <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
                 ) : businessSettings ? (
                   <>
+                    {/* Erste Zeile: Unternehmensname und E-Mail */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Unternehmensname</Label>
@@ -332,6 +333,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       </div>
                     </div>
                     
+                    {/* Zweite Zeile: Telefon und Website */}
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
                         <Label className="text-muted-foreground">Telefon</Label>
@@ -350,26 +352,35 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       </div>
                     </div>
                     
+                    {/* Dritte Zeile: Inhaber */}
                     <div className="mt-4">
                       <Label className="text-muted-foreground">Inhaber</Label>
                       <div className="flex items-center gap-2 mt-1">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span>{businessSettings.ownerFirstName} {businessSettings.ownerLastName}</span>
+                        <span>
+                          {businessSettings.ownerFirstName && businessSettings.ownerLastName 
+                            ? `${businessSettings.ownerFirstName} ${businessSettings.ownerLastName}` 
+                            : '-'}
+                        </span>
                       </div>
                     </div>
                     
+                    {/* Vierte Zeile: Adresse */}
                     <div className="mt-4">
                       <Label className="text-muted-foreground">Adresse</Label>
                       <div className="flex items-start gap-2 mt-1">
                         <Building className="h-4 w-4 text-muted-foreground mt-1" />
                         <span className="whitespace-pre-line">
-                          {businessSettings.streetAddress}<br />
-                          {businessSettings.zipCode} {businessSettings.city}<br />
-                          {businessSettings.country}
+                          {businessSettings.streetAddress ? businessSettings.streetAddress : '-'}
+                          {businessSettings.streetAddress && (businessSettings.zipCode || businessSettings.city) && <br />}
+                          {businessSettings.zipCode || businessSettings.city ? `${businessSettings.zipCode || ''} ${businessSettings.city || ''}` : ''}
+                          {(businessSettings.zipCode || businessSettings.city) && businessSettings.country && <br />}
+                          {businessSettings.country || ''}
                         </span>
                       </div>
                     </div>
                     
+                    {/* Fünfte Zeile: Steuernummern */}
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div>
                         <Label className="text-muted-foreground">Steuer-ID</Label>
@@ -388,6 +399,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       </div>
                     </div>
                     
+                    {/* Sechste Zeile: Firmenslogan */}
                     <div className="mt-4">
                       <Label className="text-muted-foreground">Firmenslogan</Label>
                       <div className="flex items-center gap-2 mt-1">
@@ -396,15 +408,16 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                       </div>
                     </div>
                     
+                    {/* Siebte Zeile: SMTP-Konfiguration */}
                     <div className="mt-4">
                       <Label className="text-muted-foreground">SMTP-Konfiguration</Label>
                       <div className="grid grid-cols-2 gap-4 mt-1">
                         <div className="flex items-center gap-2">
-                          <Server className="h-4 w-4 text-muted-foreground" />
+                          <MonitorSmartphone className="h-4 w-4 text-muted-foreground" />
                           <span>Host: {businessSettings.smtpHost || '-'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <PanelTop className="h-4 w-4 text-muted-foreground" />
+                          <Terminal className="h-4 w-4 text-muted-foreground" />
                           <span>Port: {businessSettings.smtpPort || '-'}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -412,12 +425,13 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                           <span>User: {businessSettings.smtpUser || '-'}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
+                          <Mail className="h-4 w-4 text-muted-foreground" />
                           <span>Absender: {businessSettings.smtpSenderName || '-'}</span>
                         </div>
                       </div>
                     </div>
                     
+                    {/* Achte Zeile: Etikettendrucker */}
                     <div className="flex items-center justify-between mt-4">
                       <div className="space-y-0.5">
                         <Label>Etikettendrucker aktiviert</Label>
@@ -426,6 +440,17 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                         {businessSettings.repairLabelPrinterEnabled ? "Aktiviert" : "Deaktiviert"}
                       </Badge>
                     </div>
+                    
+                    {/* Neunte Zeile: Bewertungslink */}
+                    {businessSettings.reviewLink && (
+                      <div className="mt-4">
+                        <Label className="text-muted-foreground">Bewertungslink</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.reviewLink}</span>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800">
