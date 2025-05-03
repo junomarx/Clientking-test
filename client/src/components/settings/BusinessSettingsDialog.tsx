@@ -40,9 +40,6 @@ import { useToast } from "@/hooks/use-toast";
 import { BusinessSettings } from "@shared/schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  Upload, 
-  X, 
-  Image as ImageIcon, 
   Palette, 
   Printer, 
   Building2, 
@@ -83,7 +80,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Form-Werte, die nicht direkt im Schema sind
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  logoImage?: string;
+  // logoImage wurde entfernt
 }
 
 interface BusinessSettingsDialogProps {
@@ -95,11 +92,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoError, setLogoError] = useState<string | null>(null);
-
-  // Max. Logo-Größe in Bytes (1MB)
-  const MAX_LOGO_SIZE = 1024 * 1024;
+  // Logo-Funktionalität wurde entfernt
 
   // Wir verwenden nur die authentifizierte Sitzung ohne localStorage
   console.log(`BusinessSettingsDialog geöffnet`);
@@ -185,88 +178,7 @@ export function BusinessSettingsDialog({ open, onClose }: BusinessSettingsDialog
     }
   }, [settings, form]);
 
-  // Funktion zum Validieren des hochgeladenen Bildes
-  const validateImage = (file: File): Promise<{ isValid: boolean; base64: string | null; error: string | null }> => {
-    return new Promise((resolve) => {
-      // Überprüfen der Dateigröße
-      if (file.size > MAX_LOGO_SIZE) {
-        resolve({
-          isValid: false,
-          base64: null,
-          error: `Die Datei ist zu groß. Maximale Größe ist ${MAX_LOGO_SIZE / 1024}KB.`
-        });
-        return;
-      }
-
-      // Überprüfen des Dateityps
-      if (!['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'].includes(file.type)) {
-        resolve({
-          isValid: false,
-          base64: null,
-          error: 'Nur JPEG, PNG, SVG, GIF und WEBP Dateien sind erlaubt.'
-        });
-        return;
-      }
-
-      // Bild in Base64 konvertieren
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          // Keine Auflösungsbegrenzung mehr, stattdessen skalieren wir das Bild bei Bedarf
-          // Das Originalformat wird ohne Modifikation im Base64-Format gespeichert
-          resolve({
-            isValid: true,
-            base64: e.target?.result as string,
-            error: null
-          });
-        };
-        img.onerror = () => {
-          resolve({
-            isValid: false,
-            base64: null,
-            error: 'Das Bild konnte nicht geladen werden.'
-          });
-        };
-        
-        if (e.target?.result) {
-          img.src = e.target.result as string;
-        }
-      };
-      
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // Event-Handler für das Hochladen des Logos
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    const result = await validateImage(file);
-
-    if (result.isValid && result.base64) {
-      setLogoPreview(result.base64);
-      form.setValue('logoImage', result.base64);
-      setLogoError(null);
-    } else {
-      setLogoError(result.error || 'Unbekannter Fehler beim Hochladen des Logos.');
-      // Input zurücksetzen
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  // Funktion zum Löschen des Logos
-  const handleDeleteLogo = () => {
-    setLogoPreview(null);
-    form.setValue('logoImage', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // Logo-Funktionalität wurde vollständig entfernt
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
