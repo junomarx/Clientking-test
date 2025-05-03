@@ -23,9 +23,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { LogoUpload } from '@/components/ui/logo-upload';
 
-// Test-Nachricht zur Überprüfung des Imports
-console.log('LogoUpload wurde importiert:', LogoUpload);
-
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
   businessName: z.string().min(1, "Unternehmensname ist erforderlich"),

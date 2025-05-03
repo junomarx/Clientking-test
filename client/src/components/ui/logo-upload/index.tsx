@@ -12,6 +12,8 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  console.log("LogoUpload wird gerendert");
 
   // Laden des bestehenden Logos beim ersten Rendern
   useEffect(() => {
@@ -155,7 +157,11 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
 
   return (
     <div className="space-y-4">
+      {/* Test-Text zur Überprüfung der Sichtbarkeit */}
+      <p className="text-green-600 font-bold mb-3">Die LogoUpload-Komponente ist aktiv!</p>
+      
       <div className="flex flex-col items-center p-4 border rounded-md">
+        {/* Verstecktes Datei-Input-Feld */}
         <input
           type="file"
           ref={fileInputRef}
@@ -164,6 +170,7 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
           className="hidden"
         />
 
+        {/* Logo-Anzeige oder Platzhalter */}
         {logoUrl ? (
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
@@ -190,10 +197,12 @@ export function LogoUpload({ onUploadSuccess }: LogoUploadProps) {
           </div>
         )}
 
+        {/* Immer sichtbarer Upload-Button */}
         <Button
           onClick={handleUploadClick}
           className="mt-4"
           disabled={isUploading}
+          variant="default"
         >
           {isUploading ? (
             <span className="flex items-center">
