@@ -117,8 +117,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
 
-  // Max. Logo-Größe in Bytes (1MB)
-  const MAX_LOGO_SIZE = 1024 * 1024;
+  // Logo-Konstanten wurden entfernt
 
   console.log("NEUE IMPLEMENTATION - BusinessSettingsDialog geöffnet");
   console.log("NEUE IMPLEMENTATION - Settings im Hook:", settings ? settings.id : 'keine');
@@ -200,7 +199,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      console.log('NEUE IMPLEMENTATION - Sende Daten an Server:', { hasLogo: !!logoPreview });
+      console.log('NEUE IMPLEMENTATION - Sende Daten an Server');
       
       try {
         // In dieser neuen Implementierung senden wir keine userId mehr mit
@@ -302,68 +301,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               </TabsList>
               
               <TabsContent value="unternehmen" className="mt-4">
-                {/* Logo Upload UI */}
-                <div className="mb-6">
-                  <FormLabel>Firmenlogo</FormLabel>
-                  <FormDescription className="text-xs sm:text-sm">
-                    Laden Sie Ihr Firmenlogo hoch (max. 1MB, PNG, JPG, SVG, GIF oder WEBP). Hochauflösende Bilder werden automatisch skaliert.
-                  </FormDescription>
-                  
-                  <div className="mt-3 flex flex-col md:flex-row items-start md:items-center gap-4">
-                    {/* Logo Vorschau */}
-                    <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
-                      ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
-                      {logoPreview ? (
-                        <>
-                          <img
-                            src={logoPreview}
-                            alt="Firmenlogo"
-                            className="max-h-full max-w-full object-contain rounded-md"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleDeleteLogo}
-                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground h-5 w-5 rounded-full flex items-center justify-center"
-                            aria-label="Logo löschen"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </>
-                      ) : (
-                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    
-                    {/* Upload Button */}
-                    <div className="flex flex-col gap-3">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                        id="logo-upload"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4" /> Logo hochladen
-                      </Button>
-                      
-                      {/* Fehler Anzeige */}
-                      {logoError && (
-                        <Alert variant="destructive" className="py-2 px-3">
-                          <AlertDescription className="text-xs">
-                            {logoError}
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                {/* Logo-Upload-Funktionalität wurde entfernt */}
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField

@@ -415,16 +415,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 {/* Logo und Unternehmensdaten */}
                 <div className="print-header mb-4">
                   <div className="flex flex-col items-center justify-center">
-                    {/* Logo anzeigen, wenn vorhanden */}
-                    {businessSettings?.logoImage && (
-                      <div className="mb-2">
-                        <img 
-                          src={businessSettings.logoImage} 
-                          alt={businessSettings.businessName || "Firmenlogo"}
-                          className="max-h-16 max-w-[200px] object-contain"
-                        />
-                      </div>
-                    )}
+                    {/* Logo-Funktionalität wurde entfernt */}
                     
                     <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
                     <p className="text-xs">

@@ -194,16 +194,7 @@ export default function ViewCostEstimateDetails({ estimateId }: ViewCostEstimate
         <div className="flex justify-between items-start">
           {/* Linke Spalte: Logo und Kundeninformationen */}
           <div className="space-y-4">
-            {/* Logo zuerst */}
-            {businessSettings?.logoImage && (
-              <div className="mb-6">
-                <img 
-                  src={businessSettings.logoImage} 
-                  alt="Unternehmenslogo" 
-                  className="max-h-20 max-w-[200px] object-contain"
-                />
-              </div>
-            )}
+            {/* Logo-Funktionalität wurde entfernt */}
           </div>
           
           {/* Unternehmensdaten - Rechts */}
