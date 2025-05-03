@@ -274,33 +274,31 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           </div>
         </div>
 
-        <!-- Unterschrift Abgabe -->
+        <!-- Unterschrift Abgabe - nur wenn vorhanden -->
+        ${repair?.dropoffSignature ? `
         <div class="signature-box">
           <div class="signature-title">Reparaturauftrag erteilt</div>
-          ${repair?.dropoffSignature ? 
-            `<img src="${repair.dropoffSignature}" alt="Unterschrift bei Abgabe" class="signature-img" />` : 
-            `<div class="signature-line"></div>`
-          }
+          <img src="${repair.dropoffSignature}" alt="Unterschrift bei Abgabe" class="signature-img" />
           ${customer?.firstName || ''} ${customer?.lastName || ''}<br>
           ${repair?.dropoffSignedAt ? 
             format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy', { locale: de }) : 
             (repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : '')
           }
         </div>
+        ` : ''}
 
-        <!-- Unterschrift Abholung -->
+        <!-- Unterschrift Abholung - nur wenn vorhanden -->
+        ${repair?.pickupSignature ? `
         <div class="signature-box">
           <div class="signature-title">Gerät abgeholt</div>
-          ${repair?.pickupSignature ? 
-            `<img src="${repair.pickupSignature}" alt="Unterschrift bei Abholung" class="signature-img" />` : 
-            `<div class="signature-line"></div>`
-          }
+          <img src="${repair.pickupSignature}" alt="Unterschrift bei Abholung" class="signature-img" />
           ${customer?.firstName || ''} ${customer?.lastName || ''}<br>
           ${repair?.pickupSignedAt ? 
             format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : 
             ''
           }
         </div>
+        ` : ''}
 
         <div class="no-print">
           <button style="background-color: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; margin: 20px auto; display: block;" onClick="window.print(); window.close();">
