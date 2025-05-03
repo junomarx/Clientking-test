@@ -66,6 +66,7 @@
     "jspdf": "^3.0.1",
     "lucide-react": "^0.453.0",
     "memorystore": "^1.6.7",
+    "multer": "^1.4.5-lts.2",
     "next-themes": "^0.4.6",
     "nodemailer": "^6.10.1",
     "passport": "^0.7.0",
