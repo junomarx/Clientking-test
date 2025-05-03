@@ -90,8 +90,11 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     const formatPrice = (): string => {
       if (!repair) return '-';
       
-      if (repair.price) {
-        return `${repair.price.toFixed(2).replace('.', ',')} €`;
+      if (repair.estimatedCost) {
+        // Wir gehen davon aus, dass estimatedCost ein String ist (wie in unserem Typ definiert)
+        // Wir entfernen das Euro-Zeichen, falls vorhanden, für eine konsistente Formatierung
+        const costValue = repair.estimatedCost.replace('€', '').trim();
+        return `${costValue} €`;
       }
       
       return 'nach Aufwand';
