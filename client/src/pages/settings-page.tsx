@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { LogoUpload } from '@/components/settings/LogoUpload';
+import { LogoUpload } from '@/components/ui/logo-upload';
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
