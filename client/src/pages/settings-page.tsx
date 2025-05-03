@@ -48,7 +48,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  // logoImage wurde entfernt
+  // Alle logoImage-Felder wurden entfernt
 }
 
 // Typ-Definition für die API-Antwort des Reparaturkontingents
@@ -233,7 +233,7 @@ export default function SettingsPage() {
       phone: "",
       email: "",
       website: "",
-      // logoImage wurde entfernt
+
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -267,7 +267,7 @@ export default function SettingsPage() {
         phone: settings.phone === null ? undefined : settings.phone,
         email: settings.email === null ? undefined : settings.email,
         website: settings.website === null ? undefined : settings.website,
-        // logoImage wurde entfernt
+
         receiptWidth,
         smtpHost: settings.smtpHost === null ? undefined : settings.smtpHost,
         smtpPort: settings.smtpPort === null ? undefined : settings.smtpPort,
