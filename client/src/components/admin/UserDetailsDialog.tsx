@@ -37,6 +37,14 @@ import {
   PackageOpen,
   ThumbsUp,
   Clock,
+  Building,
+  Phone,
+  Globe,
+  ImageIcon,
+  CreditCard,
+  Printer,
+  FileText,
+  Percent,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -58,6 +66,21 @@ type UserResponse = {
   createdAt?: string;
 };
 
+type BusinessSettings = {
+  id: number;
+  businessName: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  businessWebsite: string;
+  businessLogo: string | null;
+  vatNumber: string;
+  companySlogan: string;
+  taxRate: number;
+  repairLabelPrinterEnabled: boolean;
+  userId: number;
+};
+
 export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit }: UserDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState('details');
   const { toast } = useToast();
@@ -68,13 +91,31 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
   };
 
   // Benutzerdaten abrufen
-  const { data: user, isLoading, error } = useQuery<UserResponse>({
+  const { data: user, isLoading: isLoadingUser, error: userError } = useQuery<UserResponse>({
     queryKey: [`/api/admin/users/${userId}`],
     queryFn: async () => {
       if (!userId) return null;
       const response = await apiRequest("GET", `/api/admin/users/${userId}`);
       if (!response.ok) {
         throw new Error(`Fehler beim Laden des Benutzers: ${response.statusText}`);
+      }
+      return await response.json();
+    },
+    enabled: !!userId && open,
+  });
+  
+  // Unternehmensdetails des Benutzers abrufen
+  const { data: businessSettings, isLoading: isLoadingBusiness, error: businessError } = useQuery<BusinessSettings>({
+    queryKey: [`/api/admin/users/${userId}/business-settings`],
+    queryFn: async () => {
+      if (!userId) return null;
+      const response = await apiRequest("GET", `/api/admin/users/${userId}/business-settings`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Es ist okay, wenn keine Business-Settings gefunden wurden
+          return null;
+        }
+        throw new Error(`Fehler beim Laden der Unternehmensdetails: ${response.statusText}`);
       }
       return await response.json();
     },
@@ -108,7 +149,7 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
     },
   });
 
-  if (isLoading) {
+  if (isLoadingUser) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-[600px]">
@@ -138,8 +179,9 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
         </DialogHeader>
         
         <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="company">Unternehmen</TabsTrigger>
             <TabsTrigger value="settings">Einstellungen</TabsTrigger>
           </TabsList>
           
@@ -219,6 +261,107 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="company" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Unternehmensdetails</CardTitle>
+                <CardDescription>Geschäftsdaten des Benutzers</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoadingBusiness ? (
+                  <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
+                ) : businessSettings ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground">Unternehmensname</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Building className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.businessName}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-muted-foreground">Unternehmens-E-Mail</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.businessEmail}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <Label className="text-muted-foreground">Telefon</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.businessPhone}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-muted-foreground">Website</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.businessWebsite}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Label className="text-muted-foreground">Adresse</Label>
+                      <div className="flex items-start gap-2 mt-1">
+                        <Building className="h-4 w-4 text-muted-foreground mt-1" />
+                        <span className="whitespace-pre-line">{businessSettings.businessAddress}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <Label className="text-muted-foreground">USt-IdNr.</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <CreditCard className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.vatNumber || '-'}</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-muted-foreground">Steuersatz</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Percent className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessSettings.taxRate}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <Label className="text-muted-foreground">Firmenslogan</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span>{businessSettings.companySlogan || '-'}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="space-y-0.5">
+                        <Label>Etikettendrucker aktiviert</Label>
+                      </div>
+                      <Badge variant={businessSettings.repairLabelPrinterEnabled ? "success" : "outline"}>
+                        {businessSettings.repairLabelPrinterEnabled ? "Aktiviert" : "Deaktiviert"}
+                      </Badge>
+                    </div>
+                  </>
+                ) : (
+                  <Alert>
+                    <AlertDescription>
+                      Keine Unternehmensdetails für diesen Benutzer gefunden.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
