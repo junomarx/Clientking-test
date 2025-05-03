@@ -95,14 +95,18 @@ function UserTable() {
       }
       return await response.json() as UserResponse[];
     },
-    onError: (error: Error) => {
+  });
+  
+  // Fehlerbehandlung mit useEffect
+  useEffect(() => {
+    if (error) {
       toast({
         title: "Fehler beim Laden der Benutzer",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
-    },
-  });
+    }
+  }, [error, toast]);
   
   const toggleActiveMutation = useMutation({
     mutationFn: async (user: UserResponse) => {
@@ -1162,22 +1166,7 @@ export default function AdminPage() {
             
 
             
-            {/* Design Preview Menüpunkte */}
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "designPreview" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => window.location.href = "/admin/design-preview"}
-            >
-              <Eye className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Design-Preview</span>}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "designPreviewSettings" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer ml-4`}
-              onClick={() => window.location.href = "/admin/design-preview-settings"}
-            >
-              <Settings className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Design-Preview-Settings</span>}
-            </div>
+            {/* Design Preview Menüpunkte wurden entfernt */}
             
             <Link href="/">
               <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
@@ -1294,19 +1283,7 @@ export default function AdminPage() {
                 <Save className="h-4 w-4 mr-2" /> Backup & Restore
               </Button>
 
-              <Button 
-                className={`p-3 h-auto justify-start bg-secondary/30 text-primary`}
-                onClick={() => window.location.href = "/admin/design-preview"}
-              >
-                <Eye className="h-4 w-4 mr-2" /> Design-Preview
-              </Button>
-
-              <Button 
-                className={`p-3 h-auto justify-start bg-secondary/30 text-primary`}
-                onClick={() => window.location.href = "/admin/design-preview-settings"}
-              >
-                <Settings className="h-4 w-4 mr-2" /> Design-Preview-Settings
-              </Button>
+              {/* Design-Preview Buttons wurden entfernt */}
               
 
             </div>
