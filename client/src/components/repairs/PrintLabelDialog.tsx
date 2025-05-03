@@ -289,7 +289,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     {logoExists && (
                       <div className="flex justify-center mb-1" style={{ maxHeight: '8mm', overflow: 'hidden' }}>
                         <img 
-                          src={`/static/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
+                          src={`/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
                           alt={businessSettings?.businessName || "Handyshop Verwaltung"} 
                           style={{ maxHeight: '8mm', maxWidth: '26mm' }}
                         />

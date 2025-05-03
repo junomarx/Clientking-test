@@ -129,7 +129,7 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     const email = settings?.email || '';
     
     // Logo-URL mit Cache-Busting für Druckdokument
-    const logoUrl = '/static/uploads/firmenlogo.png';
+    const logoUrl = '/uploads/firmenlogo.png';
     const logoUrlWithCache = `${logoUrl}?t=${new Date().getTime()}`;
     
     // Fülle das Druckfenster mit Inhalten 

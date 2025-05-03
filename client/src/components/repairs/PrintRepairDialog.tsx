@@ -252,7 +252,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
         <!-- Logo & Firma -->
         ${logoExists ? `
         <div class="logo">
-          <img src="/static/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessSettings?.businessName || 'Handyshop Verwaltung'}" style="max-height: 60px; max-width: 160px; margin: 0 auto;">
+          <img src="/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessSettings?.businessName || 'Handyshop Verwaltung'}" style="max-height: 60px; max-width: 160px; margin: 0 auto; display: block;">
         </div>
         ` : ''}
         
@@ -378,7 +378,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     {logoExists && (
                       <div className="mb-2">
                         <img 
-                          src={`/static/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
+                          src={`/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
                           alt={businessSettings?.businessName || "Handyshop Verwaltung"} 
                           className="max-h-16 max-w-40"
                         />
