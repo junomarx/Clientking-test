@@ -129,33 +129,55 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   
   // Funktion zum Hochladen des Logos
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('handleLogoUpload wurde aufgerufen');
     setLogoError(null);
     const file = event.target.files?.[0];
     
-    if (!file) return;
+    if (!file) {
+      console.log('Keine Datei ausgewählt');
+      return;
+    }
+    
+    console.log('Datei ausgewählt:', file.name, file.type, file.size);
     
     // Überprüfe die Dateigröße
     if (file.size > MAX_LOGO_SIZE) {
-      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
+      const errorMsg = `Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`;
+      console.log(errorMsg);
+      setLogoError(errorMsg);
       return;
     }
     
     // Überprüfe den Dateityp
     const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
-      setLogoError('Nur JPG, PNG und SVG-Dateien sind erlaubt.');
+      const errorMsg = 'Nur JPG, PNG und SVG-Dateien sind erlaubt.';
+      console.log(errorMsg);
+      setLogoError(errorMsg);
       return;
     }
     
     // Lese die Datei als Data-URL
     const reader = new FileReader();
     reader.onload = (e) => {
+      console.log('FileReader onload Event');
       const dataUrl = e.target?.result as string;
       if (dataUrl) {
+        console.log('DataURL wurde erfolgreich erstellt');
         setLogoPreview(dataUrl);
         form.setValue('logoImage', dataUrl);
+        console.log('LogoPreview und Formularwert wurden gesetzt');
+      } else {
+        console.log('DataURL konnte nicht erstellt werden');
       }
     };
+    
+    reader.onerror = (error) => {
+      console.error('FileReader Fehler:', error);
+      setLogoError('Fehler beim Lesen der Datei.');
+    };
+    
+    console.log('Lese Datei als DataURL...');
     reader.readAsDataURL(file);
   };
   
@@ -464,7 +486,15 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                         variant="outline" 
                         size="sm" 
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                          console.log('Logo Upload Button geklickt');
+                          if (fileInputRef.current) {
+                            console.log('fileInputRef ist vorhanden');
+                            fileInputRef.current.click();
+                          } else {
+                            console.log('fileInputRef ist nicht definiert');
+                          }
+                        }}
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         Logo hochladen
