@@ -212,7 +212,7 @@ function PricingPlanDisplay() {
 
 // Hauptseite für Einstellungen
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<string>("business");
+  const [activeTab, setActiveTab] = useState<string>("design");
   const [activeEmailTab, setActiveEmailTab] = useState<string>("templates");
   const [activeUserTab, setActiveUserTab] = useState<string>("account");
   const [, setLocation] = useLocation();
@@ -354,7 +354,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
-        <Tabs defaultValue="business" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs defaultValue="design" className="w-full" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex overflow-x-auto">
             <TabsList className="bg-white border mb-6">
               <TabsTrigger value="business">Geschäft</TabsTrigger>
