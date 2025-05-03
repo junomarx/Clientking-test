@@ -55,11 +55,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [logoError, setLogoError] = useState<string | null>(null);
-  
-  // Max. Logo-Größe in Bytes (2MB)
-  const MAX_LOGO_SIZE = 2 * 1024 * 1024;
+  // Vereinfachte Implementierung ohne Logo-Funktionalität
 
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -118,51 +114,10 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       };
       
       form.reset(formattedSettings);
-      
-      // Setze das Logo-Vorschaubild, wenn vorhanden
-      if (settings.logoImage) {
-        setLogoPreview(settings.logoImage);
-      }
     }
   }, [settings, form]);
   
-  // Funktion zum Hochladen des Logos - vereinfachte Version
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLogoError(null);
-    const file = event.target.files?.[0];
-    
-    if (!file) return;
-    
-    // Überprüfe die Dateigröße
-    if (file.size > MAX_LOGO_SIZE) {
-      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
-      return;
-    }
-    
-    // Überprüfe den Dateityp
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
-    if (!allowedTypes.includes(file.type)) {
-      setLogoError('Nur JPG, PNG und SVG-Dateien sind erlaubt.');
-      return;
-    }
-    
-    // Lese die Datei als Data-URL
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setLogoPreview(dataUrl);
-        form.setValue('logoImage', dataUrl);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  // Funktion zum Entfernen des hochgeladenen Logos
-  const handleRemoveLogo = () => {
-    setLogoPreview(null);
-    form.setValue('logoImage', '');
-  };
+  // Logo-Funktionalität wurde entfernt
 
   // Mutation für das Update der Unternehmenseinstellungen
   const updateMutation = useMutation({
@@ -426,63 +381,24 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                   <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Firmenlogo</h3>
                   
                   <div className="flex flex-col space-y-4">
-                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center relative">
-                      {logoPreview || form.watch('logoImage') ? (
+                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                      {form.watch('logoImage') ? (
                         <>
                           <img 
-                            src={logoPreview || form.watch('logoImage')} 
+                            src={form.watch('logoImage')} 
                             alt="Logo" 
                             className="max-w-full max-h-full object-contain" 
                           />
-                          <button 
-                            type="button"
-                            onClick={handleRemoveLogo}
-                            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm hover:bg-red-50"
-                            aria-label="Logo entfernen"
-                          >
-                            <X className="h-4 w-4 text-red-500" />
-                          </button>
                         </>
                       ) : (
                         <Building className="h-8 w-8 text-gray-400" />
                       )}
                     </div>
                     
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium">Logo hochladen</h4>
-                      
-                      <FormField
-                        control={form.control}
-                        name="logoImage"
-                        render={() => (
-                          <FormItem>
-                            <div className="flex gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/jpeg,image/png,image/svg+xml';
-                                  input.onchange = (e) => {
-                                    handleLogoUpload(e as any);
-                                  };
-                                  input.click();
-                                }}
-                              >
-                                <Upload className="mr-2 h-4 w-4" />
-                                Logo auswählen
-                              </Button>
-                            </div>
-                            
-                            <div className="text-xs text-muted-foreground">
-                              <p>Unterstützte Formate: JPG, PNG, SVG. Max. 2MB</p>
-                              {logoError && <p className="text-red-500 mt-1">{logoError}</p>}
-                            </div>
-                          </FormItem>
-                        )}
-                      />                      
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Logo-Upload wird gerade neu implementiert. Bitte versuchen Sie es später noch einmal.
+                      </p>
                     </div>
                   </div>
                 </div>
