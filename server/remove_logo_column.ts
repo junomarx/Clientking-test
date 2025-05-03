@@ -38,13 +38,11 @@ export async function removeLogoColumn() {
   }
 }
 
-// Direktes Ausführen des Skripts, wenn es direkt aufgerufen wird
-if (require.main === module) {
-  removeLogoColumn().then(() => {
-    console.log("Skript abgeschlossen.");
-    process.exit(0);
-  }).catch((error) => {
-    console.error("Skript ist mit einem Fehler fehlgeschlagen:", error);
-    process.exit(1);
-  });
-}
+// Direktes Ausführen des Skripts
+removeLogoColumn().then(() => {
+  console.log("Skript abgeschlossen.");
+  process.exit(0);
+}).catch((error) => {
+  console.error("Skript ist mit einem Fehler fehlgeschlagen:", error);
+  process.exit(1);
+});
