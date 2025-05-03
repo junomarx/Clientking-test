@@ -4,7 +4,7 @@ import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from "./db";
-import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels } from "@shared/schema";
+import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels, businessSettings } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 // CSV-Bibliotheken werden nicht mehr benötigt, da wir JSON verwenden
 
@@ -879,13 +879,22 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      const businessSettings = await storage.getBusinessSettings(id);
+      // Direkt aus der Datenbank abrufen, da storage.getBusinessSettings manchmal
+      // nicht die korrekten Einstellungen eines anderen Benutzers zurückgibt
+      const [settings] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.userId, id));
+        
+      console.log(`Business Settings für Benutzer ${id} gefunden:`, settings ? `ID ${settings.id}` : 'keine');
       
-      if (!businessSettings) {
-        return res.status(404).json({ message: "Unternehmensdetails nicht gefunden" });
+      if (!settings) {
+        // Statt 404 zurückzugeben, senden wir ein leeres Objekt mit userId
+        // Dies ermöglicht der Frontend-Komponente, einen sinnvollen Fallback anzuzeigen
+        return res.json({ userId: id });
       }
       
-      res.json(businessSettings);
+      res.json(settings);
     } catch (error) {
       console.error("Error retrieving business settings:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Unternehmensdetails" });
