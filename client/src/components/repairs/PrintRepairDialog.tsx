@@ -112,10 +112,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     // Fülle das Druckfenster mit Inhalten und starte direkt den Druckvorgang
     printWindow.document.write(`
       <!DOCTYPE html>
-      <html>
+      <html lang="de">
         <head>
-          <title>Reparaturauftrag ${repair?.orderCode || `#${repair?.id}`}</title>
           <meta charset="UTF-8">
+          <title>Reparaturauftrag ${repair?.orderCode || `#${repair?.id}`}</title>
           <script>
             window.onload = function() {
               setTimeout(function() {
