@@ -10,6 +10,7 @@ import { createServer } from 'http';
 import { setupAuth } from './auth';
 import { registerLogoRoutes } from './logo-upload';
 import { registerAdminRoutes } from './admin-routes';
+import { registerRoutes } from './routes';
 import { setupVite } from './vite';
 
 // ESM-kompatible __dirname Lösung
