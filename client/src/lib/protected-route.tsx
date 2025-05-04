@@ -79,3 +79,49 @@ export function AdminProtectedRoute({ path, children }: ProtectedRouteProps) {
 
   return <Route path={path}>{children}</Route>;
 }
+
+export function SuperadminProtectedRoute({ path, children }: ProtectedRouteProps) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Route path={path}>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Route>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Route path={path}>
+        <Redirect to="/auth" />
+      </Route>
+    );
+  }
+
+  // Zusätzliche Prüfung, ob der Benutzer Superadmin-Rechte hat
+  if (!user.isSuperadmin) {
+    return (
+      <Route path={path}>
+        <div className="container mx-auto py-10">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Zugriff verweigert</AlertTitle>
+            <AlertDescription>
+              Sie benötigen Superadmin-Rechte, um auf diese Seite zuzugreifen.
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <a href="/app" className="text-primary hover:underline">
+              Zurück zur Startseite
+            </a>
+          </div>
+        </div>
+      </Route>
+    );
+  }
+
+  return <Route path={path}>{children}</Route>;
+}
