@@ -55,8 +55,8 @@ export interface IStorage {
   deleteRepair(id: number): Promise<boolean>;
   
   // Business settings methods
-  getBusinessSettings(): Promise<BusinessSettings | undefined>;
-  updateBusinessSettings(settings: Partial<InsertBusinessSettings>): Promise<BusinessSettings>;
+  getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined>;
+  updateBusinessSettings(settings: Partial<InsertBusinessSettings>, userId?: number): Promise<BusinessSettings>;
   
   // Stats methods
   getStats(): Promise<{
@@ -1116,21 +1116,58 @@ export class DatabaseStorage implements IStorage {
     console.log('getBusinessSettings called with userId:', userId);
     
     try {
-      // Wenn eine Benutzer-ID angegeben ist, filtere nach dieser
-      if (userId) {
-        console.log(`Suche nach Geschäftseinstellungen für Benutzer ID ${userId}`);
-        const [settings] = await db.select()
-          .from(businessSettings)
-          .where(eq(businessSettings.userId, userId));
-        
-        console.log(`Gefundene Einstellungen:`, settings ? `ID ${settings.id} für User ${settings.userId}` : 'keine');
-        return settings;
+      // Wenn keine Benutzer-ID angegeben ist, gib undefined zurück
+      if (!userId) {
+        console.log('Keine Benutzer-ID angegeben, kann keine Geschäftseinstellungen abrufen');
+        return undefined;
+      }
+
+      // Benutzer abrufen, um festzustellen, ob er Admin-Rechte besitzt und welche Shop-ID er hat
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.log(`Benutzer mit ID ${userId} nicht gefunden`);
+        return undefined;
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren
+      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID
+      
+      // Bedingungen für Datenbankabfrage definieren
+      let conditions: SQL<unknown>;
+      
+      if (user.username === 'bugi' && user.isAdmin) {
+        // Für bugi (Admin) suche erstmal nach den eigenen Einstellungen
+        console.log(`Suche nach Geschäftseinstellungen für Admin-Benutzer ${user.username} (ID ${userId})`);
+        conditions = eq(businessSettings.userId, userId);
+      } else {
+        // Für normale Benutzer nach den eigenen Einstellungen und der Shop-ID filtern
+        console.log(`Suche nach Geschäftseinstellungen für normalen Benutzer ${user.username} (ID ${userId}, Shop ${shopId})`);
+        conditions = and(
+          eq(businessSettings.userId, userId),
+          eq(businessSettings.shopId, shopId)
+        ) as SQL<unknown>;
       }
       
-      // Ansonsten gebe die erste Einstellung zurück (für Kompatibilität)
-      console.log('Keine Benutzer-ID angegeben, gebe erste Einstellung zurück');
-      const [settings] = await db.select().from(businessSettings);
-      console.log(`Erste verfügbare Einstellungen:`, settings ? `ID ${settings.id} für User ${settings.userId}` : 'keine');
+      // Einstellungen mit den festgelegten Bedingungen abrufen
+      const [settings] = await db.select()
+        .from(businessSettings)
+        .where(conditions);
+      
+      // Wenn Admin keine eigenen Einstellungen hat, probiere andere Einstellungen aus demselben Shop
+      if (!settings && user.username === 'bugi' && user.isAdmin) {
+        console.log(`Keine eigenen Einstellungen für Admin gefunden, suche nach allen Shop-Einstellungen`);
+        const [adminShopSettings] = await db.select()
+          .from(businessSettings)
+          .where(eq(businessSettings.shopId, shopId));
+          
+        if (adminShopSettings) {
+          console.log(`Shop-Einstellungen gefunden: ID ${adminShopSettings.id} für Shop ${adminShopSettings.shopId}`);
+          return adminShopSettings;
+        }
+      }
+      
+      console.log(`Gefundene Einstellungen:`, settings ? 
+        `ID ${settings.id} für User ${settings.userId} (Shop ${settings.shopId})` : 'keine');
       return settings;
     } catch (error) {
       console.error('Fehler in getBusinessSettings:', error);
@@ -1149,28 +1186,53 @@ export class DatabaseStorage implements IStorage {
         throw new Error('User ID ist erforderlich, um Geschäftseinstellungen zu aktualisieren');
       }
       
-      // Stellen wir sicher, dass die userId in den Daten genau der angegebenen userId entspricht
+      // Benutzer abrufen, um festzustellen, ob er Admin-Rechte besitzt und welche Shop-ID er hat
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.error(`⭐⭐⭐ KRITISCHER FEHLER - Benutzer mit ID ${userId} nicht gefunden!`);
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+      
+      // Shop-ID aus dem Benutzer extrahieren
+      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID
+      
+      // Stellen wir sicher, dass die userId und shopId in den Daten korrekt gesetzt sind
       settingsData = { 
         ...settingsData, 
-        userId // Erzwingen, dass die richtige userId verwendet wird
+        userId, // Erzwingen, dass die richtige userId verwendet wird
+        shopId  // Setze die shopId basierend auf dem Benutzer
       };
       
-      console.log('⭐ Using forced userId in settingsData:', userId);
+      console.log('⭐ Using forced userId:', userId, 'and shopId:', shopId, 'in settingsData');
+      
+      // Bedingungen für die Suche nach bestehenden Einstellungen aufbauen
+      let conditions: SQL<unknown>;
+      
+      if (user.username === 'bugi' && user.isAdmin) {
+        // Für Bugi (Admin) nach Einstellungen mit der passenden Benutzer-ID suchen
+        console.log('⭐ Admin-Benutzer erkannt, suche nach seinen eigenen Einstellungen');
+        conditions = eq(businessSettings.userId, userId);
+      } else {
+        // Für normale Benutzer nach den Einstellungen mit passender Benutzer-ID und Shop-ID filtern
+        console.log('⭐ Normaler Benutzer erkannt, suche nach Einstellungen mit Shop-Isolation');
+        conditions = and(
+          eq(businessSettings.userId, userId),
+          eq(businessSettings.shopId, shopId)
+        ) as SQL<unknown>;
+      }
       
       // Einstellungen für diesen Benutzer suchen
-      const userSettings = await db
+      const [existingSettings] = await db
         .select()
         .from(businessSettings)
-        .where(eq(businessSettings.userId, userId));
-      
-      const existingSettings = userSettings.length > 0 ? userSettings[0] : null;
+        .where(conditions);
       
       console.log('⭐ Existing settings found:', existingSettings ? 
-        `ID: ${existingSettings.id} für User: ${existingSettings.userId}` : 
+        `ID: ${existingSettings.id} für User: ${existingSettings.userId} (Shop ${existingSettings.shopId})` : 
         'keine');
       
       if (existingSettings) {
-        console.log(`⭐ Updating settings with ID ${existingSettings.id} for user ${userId}`);
+        console.log(`⭐ Updating settings with ID ${existingSettings.id} for user ${userId} (Shop ${shopId})`);
         
         // Bereite die Daten für das Update vor
         const dataToUpdate = {
@@ -1180,11 +1242,16 @@ export class DatabaseStorage implements IStorage {
         
         console.log('⭐ Ready to save with keys:', Object.keys(dataToUpdate));
         
-        // Führe ein direktes Update mit der Einstellungs-ID und der Benutzer-ID durch
+        // Führe ein direktes Update mit der Einstellungs-ID durch
+        // Die WHERE-Bedingung ist wichtig: Nur die Einstellungen aktualisieren, die
+        // dem Benutzer gehören (und bei normalen Benutzern auch zur Shop-ID passen)
         const [updatedSettings] = await db
           .update(businessSettings)
           .set(dataToUpdate)
-          .where(eq(businessSettings.id, existingSettings.id))
+          .where(and(
+            eq(businessSettings.id, existingSettings.id),
+            conditions // Verwende dieselben Bedingungen wie bei der Suche
+          ) as SQL<unknown>)
           .returning();
         
         if (!updatedSettings) {
@@ -1192,11 +1259,11 @@ export class DatabaseStorage implements IStorage {
           throw new Error('Einstellungen konnten nicht aktualisiert werden');
         }
         
-        console.log('⭐ Settings updated successfully:', updatedSettings.id, 'for user', updatedSettings.userId);
+        console.log('⭐ Settings updated successfully:', updatedSettings.id, 'for user', updatedSettings.userId, 'in shop', updatedSettings.shopId);
         return updatedSettings;
       } else {
         // Create new settings for this user
-        console.log('Creating new business settings for user', userId);
+        console.log('Creating new business settings for user', userId, 'in shop', shopId);
         
         // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
         const requiredFields = {
@@ -1213,23 +1280,29 @@ export class DatabaseStorage implements IStorage {
           ...requiredFields,
           ...settingsData,
           updatedAt: new Date(),
-          userId // Speichere die Benutzer-ID
+          userId,   // Speichere die Benutzer-ID
+          shopId    // Speichere die Shop-ID
         };
         
-        // Sicherstellen, dass die Benutzer-ID nicht null oder undefined ist
+        // Sicherstellen, dass die Benutzer-ID und Shop-ID nicht null oder undefined sind
         if (!dataToInsert.userId) {
           console.warn('User ID is undefined in insert data, forcing to user ID:', userId);
           dataToInsert.userId = userId;
         }
         
-        console.log('Insert data:', Object.keys(dataToInsert));
+        if (!dataToInsert.shopId) {
+          console.warn('Shop ID is undefined in insert data, forcing to shop ID:', shopId);
+          dataToInsert.shopId = shopId;
+        }
+        
+        console.log('Insert data with keys:', Object.keys(dataToInsert));
         
         const [newSettings] = await db
           .insert(businessSettings)
           .values(dataToInsert as InsertBusinessSettings)
           .returning();
         
-        console.log('New settings created with ID:', newSettings.id);
+        console.log('New settings created with ID:', newSettings.id, 'for user', newSettings.userId, 'in shop', newSettings.shopId);
         return newSettings;
       }
     } catch (error) {
