@@ -1236,9 +1236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // WORKAROUND: Wir erstellen immer Modellreihen für Bugi (ID 3)
-      const bugisUserId = 3;
-      console.log(`[Modellreihe] Erstelle neue Modellreihe für globale Verwendung (Bugi ${bugisUserId})`);
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`POST /api/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       console.log(`[Modellreihe] Eingangsdaten:`, req.body);
       
       // Manuelle, einfache Validierung
@@ -1263,14 +1263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const modelSeriesData = {
         name: req.body.name.trim(),
         brandId: brandId,
-        userId: bugisUserId  // userId von Bugi verwenden
+        userId: userId  // Aktuelle Benutzer-ID verwenden
       };
       
       console.log(`[Modellreihe] Validierte Daten:`, modelSeriesData);
       
       try {
         // In der Storage-Funktion wird die userId nochmals explizit übergeben
-        const modelSeries = await storage.createUserModelSeries(modelSeriesData, bugisUserId);
+        const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
         console.log(`[Modellreihe] Erfolgreich erstellt mit ID ${modelSeries.id}`);
         return res.status(201).json(modelSeries);
       } catch (storageError: any) {
@@ -1296,16 +1296,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modellreihen bearbeiten" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`PATCH /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const modelSeriesData = insertUserModelSeriesSchema.partial().parse(req.body);
-      
-      // WORKAROUND: Wir aktualisieren immer Bugis Modellreihen
-      const bugisUserId = 3;
-      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, bugisUserId);
+      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, userId);
       
       if (!updatedModelSeries) {
         return res.status(404).json({ message: "Modellreihe nicht gefunden" });
@@ -1328,14 +1324,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modellreihen löschen" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`DELETE /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      // WORKAROUND: Wir löschen immer Bugis Modellreihen
-      const bugisUserId = 3;
-      const success = await storage.deleteUserModelSeries(id, bugisUserId);
+      const success = await storage.deleteUserModelSeries(id, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modellreihe konnte nicht gelöscht werden" });
@@ -1355,14 +1348,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modellreihen löschen" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`DELETE /api/brands/${brandId}/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      // WORKAROUND: Wir löschen immer Bugis Modellreihen
-      const bugisUserId = 3;
-      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, bugisUserId);
+      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modellreihen konnten nicht gelöscht werden" });
@@ -1380,8 +1370,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // (optional nach Modellreihe, Gerätetyp oder Marke gefiltert)
   app.get("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // WORKAROUND: Wir holen immer Bugis Modelle (ID 3)
-      const bugisUserId = 3;
+      const userId = (req.user as any).id;
+      
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/models: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const modelSeriesId = req.query.modelSeriesId ? parseInt(req.query.modelSeriesId as string) : undefined;
       const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
@@ -1391,16 +1384,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (deviceTypeId && brandId) {
         // Standardmodellreihe finden oder erstellen
-        let defaultModelSeries = await findOrCreateDefaultModelSeries(brandId, bugisUserId);
+        let defaultModelSeries = await findOrCreateDefaultModelSeries(brandId, userId);
         
         // Modelle für diese Modellreihe abrufen
-        models = await storage.getUserModelsByModelSeriesId(defaultModelSeries.id, bugisUserId);
+        models = await storage.getUserModelsByModelSeriesId(defaultModelSeries.id, userId);
       } else if (modelSeriesId) {
         // Nach Modellreihe filtern (bestehende Logik)
-        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, bugisUserId);
+        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, userId);
       } else {
         // Alle Modelle holen (bestehende Logik)
-        models = await storage.getUserModels(bugisUserId);
+        models = await storage.getUserModels(userId);
       }
       
       res.json(models);
@@ -1416,15 +1409,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
-      const bugisUserId = 3;
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`POST /api/models: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const modelData = insertUserModelSchema.parse({
         ...req.body,
-        userId: bugisUserId  // Wir überschreiben immer mit Bugis User-ID
+        userId: userId  // Aktuelle Benutzer-ID verwenden
       });
       
-      const model = await storage.createUserModel(modelData, bugisUserId);
+      const model = await storage.createUserModel(modelData, userId);
       
       res.status(201).json(model);
     } catch (error) {
@@ -1443,16 +1437,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modelle bearbeiten" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`PATCH /api/models/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const modelData = insertUserModelSchema.partial().parse(req.body);
-      
-      // WORKAROUND: Wir aktualisieren immer Bugis Modelle
-      const bugisUserId = 3;
-      const updatedModel = await storage.updateUserModel(id, modelData, bugisUserId);
+      const updatedModel = await storage.updateUserModel(id, modelData, userId);
       
       if (!updatedModel) {
         return res.status(404).json({ message: "Modell nicht gefunden" });
@@ -1501,8 +1491,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // WORKAROUND: Wir erstellen immer Modelle für Bugi (ID 3)
-      const bugisUserId = 3;
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`POST /api/models/batch: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       // Request Validierung
       const { deviceTypeId, brandId, models } = req.body;
@@ -1514,10 +1505,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Standardmodellreihe finden oder erstellen
-      let defaultModelSeries = await findOrCreateDefaultModelSeries(parseInt(brandId), bugisUserId);
+      let defaultModelSeries = await findOrCreateDefaultModelSeries(parseInt(brandId), userId);
       
       // Zuerst alle vorhandenen Modelle für diese Modellreihe löschen
-      await storage.deleteAllUserModelsForModelSeries(defaultModelSeries.id, bugisUserId);
+      await storage.deleteAllUserModelsForModelSeries(defaultModelSeries.id, userId);
       
       // Dann die neuen Modelle erstellen
       const createdModels = [];
@@ -1528,10 +1519,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const modelData = {
           name: modelName.trim(),
           modelSeriesId: defaultModelSeries.id,
-          userId: bugisUserId
+          userId: userId
         };
         
-        const model = await storage.createUserModel(modelData, bugisUserId);
+        const model = await storage.createUserModel(modelData, userId);
         createdModels.push(model);
       }
       
@@ -1552,14 +1543,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modelle löschen" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`DELETE /api/model-series/${modelSeriesId}/models: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      // WORKAROUND: Wir löschen immer Bugis Modelle
-      const bugisUserId = 3;
-      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, bugisUserId);
+      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modelle konnten nicht gelöscht werden" });
