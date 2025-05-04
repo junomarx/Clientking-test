@@ -18,7 +18,6 @@ import {
   Building2, 
   Mail, 
   Settings, 
-  MessageSquare,
   UserCog,
   LogOut,
   Lock,
@@ -27,7 +26,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
-import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
+// SMS-Funktionalität entfernt
 // ModelManagementTab nicht mehr verwendet
 import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
 import BusinessSettingsModernized from "@/components/settings/BusinessSettingsModernized";
@@ -228,26 +227,10 @@ export function SettingsDialogNew({ open, onClose }: SettingsDialogNewProps) {
             
             {/* Tab: Kommunikation */}
             <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
-              <Tabs defaultValue="templates" value={activeEmailTab} onValueChange={setActiveEmailTab}>
-                <TabsList className="mb-4 grid grid-cols-2 gap-1">
-                  <TabsTrigger value="templates" className="flex items-center justify-center text-xs sm:text-sm">
-                    <Mail className="h-4 w-4 mr-1 sm:mr-2" /> <span>E-Mail</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="sms" className="flex items-center justify-center text-xs sm:text-sm">
-                    <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" /> <span>SMS</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                {/* E-Mail-Vorlagen */}
-                <TabsContent value="templates">
-                  <EmailTemplateTab />
-                </TabsContent>
-                
-                {/* SMS-Vorlagen */}
-                <TabsContent value="sms">
-                  <SmsTemplateTab />
-                </TabsContent>
-              </Tabs>
+              <div>
+                <h3 className="text-lg font-medium mb-4">E-Mail-Vorlagen</h3>
+                <EmailTemplateTab />
+              </div>
             </TabsContent>
 
             {/* Tab: Darstellung */}
