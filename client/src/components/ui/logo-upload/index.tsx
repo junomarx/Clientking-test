@@ -56,16 +56,27 @@ export function LogoUpload() {
         method: 'POST',
         body: formData,
       });
-      const data = await response.json();
-
-      if (data.success) {
-        setLogoUrl(data.logoUrl);
-        toast({ title: 'Erfolgreich', description: 'Logo wurde hochgeladen.' });
+      
+      // Prüfe zuerst den Content-Type der Antwort
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        
+        if (data.success) {
+          setLogoUrl(data.logoUrl);
+          toast({ title: 'Erfolgreich', description: 'Logo wurde hochgeladen.' });
+        } else {
+          throw new Error(data.message || 'Unbekannter Fehler');
+        }
       } else {
-        throw new Error(data.message || 'Unbekannter Fehler');
+        // Wenn keine JSON-Antwort, versuche den Text zu lesen
+        const text = await response.text();
+        console.error('Keine JSON-Antwort vom Server:', text);
+        throw new Error('Server hat keine gültige JSON-Antwort gesendet');
       }
-    } catch (error) {
-      toast({ title: 'Fehler beim Hochladen', description: error.message, variant: 'destructive' });
+    } catch (error: any) {
+      console.error('Fehler beim Logo-Upload:', error);
+      toast({ title: 'Fehler beim Hochladen', description: error.message || 'Unbekannter Fehler', variant: 'destructive' });
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -75,14 +86,27 @@ export function LogoUpload() {
   const handleDeleteLogo = async () => {
     try {
       const response = await fetch('/api/business-settings/logo', { method: 'DELETE' });
-      const data = await response.json();
+      
+      // Prüfe den Content-Type
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
 
-      if (data.success) {
-        setLogoUrl(null);
-        toast({ title: 'Logo gelöscht', description: 'Das Logo wurde entfernt.' });
+        if (data.success) {
+          setLogoUrl(null);
+          toast({ title: 'Logo gelöscht', description: 'Das Logo wurde entfernt.' });
+        } else {
+          throw new Error(data.message || 'Unbekannter Fehler');
+        }
+      } else {
+        // Wenn keine JSON-Antwort, versuche den Text zu lesen
+        const text = await response.text();
+        console.error('Keine JSON-Antwort vom Server (Löschen):', text);
+        throw new Error('Server hat keine gültige JSON-Antwort gesendet');
       }
-    } catch (error) {
-      toast({ title: 'Fehler beim Löschen', description: error.message, variant: 'destructive' });
+    } catch (error: any) {
+      console.error('Fehler beim Logo-Löschen:', error);
+      toast({ title: 'Fehler beim Löschen', description: error.message || 'Unbekannter Fehler', variant: 'destructive' });
     }
   };
 
