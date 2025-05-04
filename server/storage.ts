@@ -192,7 +192,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    // Für Bugi (Admin) alle Benutzer zurückgeben
+    const adminUser = await this.getUserByUsername('bugi');
+    if (adminUser?.isAdmin) {
+      return await db.select().from(users).orderBy(desc(users.createdAt));
+    }
+    // Für andere Benutzer nur die Benutzer des gleichen Shops zurückgeben
+    return await db.select().from(users).where(eq(users.shopId, adminUser?.shopId || 1)).orderBy(desc(users.createdAt));
   }
   
   async updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>): Promise<User | undefined> {
@@ -472,10 +478,26 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return [];
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kunden sehen
+      return await db
+        .select()
+        .from(customers)
+        .orderBy(desc(customers.createdAt));
+    }
+    
+    // Normaler Benutzer sieht nur Kunden aus seinem Shop
+    const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
       .from(customers)
-      .where(eq(customers.userId, currentUserId))
+      .where(eq(customers.shopId, shopIdValue))
       .orderBy(desc(customers.createdAt));
   }
   
@@ -483,13 +505,30 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kunden sehen
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.id, id));
+      return customer;
+    }
+    
+    // Normaler Benutzer sieht nur Kunden aus seinem Shop
+    const shopIdValue = currentUser.shopId || 1;
     const [customer] = await db
       .select()
       .from(customers)
       .where(
         and(
           eq(customers.id, id),
-          eq(customers.userId, currentUserId)
+          eq(customers.shopId, shopIdValue)
         )
       );
     return customer;
@@ -497,10 +536,30 @@ export class DatabaseStorage implements IStorage {
   
   async findCustomersByName(firstName: string, lastName: string, currentUserId?: number): Promise<Customer[]> {
     // Suche Kunden, deren Vor- und Nachname die gesuchten Begriffe enthalten (case-insensitive)
-    // und die zum aktuellen Benutzer gehören (falls currentUserId angegeben ist)
+    // und die zum gleichen Shop gehören
     if (!currentUserId) {
       return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return [];
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kunden suchen
+      return await db
+        .select()
+        .from(customers)
+        .where(
+          and(
+            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
+            sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})` 
+          )
+        );
+    }
+    
+    // Normaler Benutzer sieht nur Kunden aus seinem Shop
     return await db
       .select()
       .from(customers)
@@ -508,17 +567,28 @@ export class DatabaseStorage implements IStorage {
         and(
           sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
           sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`,
-          eq(customers.userId, currentUserId)
+          eq(customers.shopId, currentUser.shopId)
         )
       );
   }
   
   async createCustomer(insertCustomer: InsertCustomer, currentUserId?: number): Promise<Customer> {
+    // Wenn eine Benutzer-ID vorhanden ist, hole den Benutzer, um die shop_id zu setzen
+    let shopId = 1; // Standardwert
+    if (currentUserId) {
+      const currentUser = await this.getUser(currentUserId);
+      if (currentUser) {
+        shopId = currentUser.shopId;
+      }
+    }
+
     const [customer] = await db.insert(customers).values({
       ...insertCustomer,
       createdAt: new Date(),
       // Wenn ein Benutzerkontext vorhanden ist, setze den userId-Wert
-      userId: currentUserId
+      userId: currentUserId,
+      // Shop-ID setzen
+      shopId: shopId
     }).returning();
     return customer;
   }
@@ -771,6 +841,15 @@ export class DatabaseStorage implements IStorage {
       insertRepair.deviceType
     );
     
+    // Wenn eine Benutzer-ID vorhanden ist, hole den Benutzer, um die shop_id zu setzen
+    let shopId = 1; // Standardwert
+    if (currentUserId) {
+      const currentUser = await this.getUser(currentUserId);
+      if (currentUser) {
+        shopId = currentUser.shopId;
+      }
+    }
+    
     // Make sure status is set
     const repairData = {
       ...insertRepair,
@@ -780,7 +859,9 @@ export class DatabaseStorage implements IStorage {
       updatedAt: now,
       creationMonth: currentMonthStr, // Setze den Erstellungsmonat für die Limitprüfung
       // Setze die Benutzer-ID, wenn vorhanden
-      userId: currentUserId
+      userId: currentUserId,
+      // Shop-ID setzen
+      shopId: shopId
     };
     
     const [repair] = await db.insert(repairs)

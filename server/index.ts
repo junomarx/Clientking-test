@@ -5,6 +5,7 @@ import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
+import { addShopIdColumn } from "./add-shop-id-column";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
     await addSecondSignatureColumns();
     await addPricingPlanColumn();
     await addCompanySloganVatColumns();
+    await addShopIdColumn();
     
     const server = await registerRoutes(app);
 

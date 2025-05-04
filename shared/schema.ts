@@ -184,6 +184,7 @@ export const feedbacks = pgTable("feedbacks", {
   comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   feedbackToken: text("feedback_token").notNull().unique(), // Einmaliger Token für Feedback-Link
+  shopId: integer("shop_id").default(1), // Shop, zu dem das Feedback gehört (für Multi-Tenant-Isolation)
 });
 
 export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
@@ -345,6 +346,7 @@ export const userModelSeries = pgTable("user_model_series", {
   name: text("name").notNull(),
   brandId: integer("brand_id").notNull().references(() => userBrands.id), // Jede Modellreihe gehört zu einer Marke
   userId: integer("user_id").notNull().references(() => users.id), // Jede Modellreihe gehört zu einem Benutzer
+  shopId: integer("shop_id").default(1), // Shop, zu dem die Modellreihe gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -377,6 +379,7 @@ export const userModels = pgTable("user_models", {
   name: text("name").notNull(),
   modelSeriesId: integer("model_series_id").notNull().references(() => userModelSeries.id), // Jedes Modell gehört zu einer Modellreihe
   userId: integer("user_id").notNull().references(() => users.id), // Jedes Modell gehört zu einem Benutzer
+  shopId: integer("shop_id").default(1), // Shop, zu dem das Modell gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -428,6 +431,7 @@ export const costEstimates = pgTable("cost_estimates", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   userId: integer("user_id").references(() => users.id), // Jeder Kostenvoranschlag gehört zu einem Benutzer
+  shopId: integer("shop_id").default(1), // Shop, zu dem der Kostenvoranschlag gehört (für Multi-Tenant-Isolation)
 });
 
 // Zod-Schema für einen Kostenvoranschlag-Posten
