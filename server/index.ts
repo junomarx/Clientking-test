@@ -7,8 +7,10 @@ import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
+app.use(express.json({ limit: '10mb' }));
+// Erhöhe die maximale Größe für URL-codierte Anfragen auf 10 MB
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
