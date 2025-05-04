@@ -1,241 +1,216 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell,
-  Legend 
-} from 'recharts';
-import { Building, Users, Wrench, AlertCircle } from 'lucide-react';
+  Users, 
+  UserCheck, 
+  UserX, 
+  Package, 
+  Wrench, 
+  ShoppingBag, 
+  CreditCard,
+  Building, 
+  BarChart4 
+} from 'lucide-react';
 
 interface SuperadminStats {
   users: {
-    totalUsers: number;
-    activeUsers: number;
-    inactiveUsers: number;
-    admins: number;
-    totalShops: number;
-  };
-  repairs: {
-    totalRepairs: number;
-    received: number;
-    inRepair: number;
-    readyForPickup: number;
-    completed: number;
+    totalUsers: string;
+    activeUsers: string;
+    inactiveUsers: string;
   };
   packages: {
-    packageName: string;
-    userCount: number;
-  }[];
-  issues: {
-    totalIssues: number;
+    totalPackages: string;
+  };
+  shops: {
+    totalShops: string;
+  };
+  repairs: {
+    totalRepairs: string;
+  };
+  orders: {
+    totalOrders: string;
+  };
+  revenue: {
+    totalRevenue: string;
   };
 }
 
 export default function SuperadminDashboardTab() {
-  const { toast } = useToast();
-
+  // Superadmin-Statistiken abrufen
   const { data: stats, isLoading, error } = useQuery<SuperadminStats>({ 
     queryKey: ["/api/superadmin/stats"],
-    queryFn: async () => {
-      const res = await fetch("/api/superadmin/stats");
-      if (!res.ok) throw new Error("Fehler beim Laden der Statistiken");
-      return res.json();
-    },
   });
 
-  if (error) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Statistiken",
-      description: (error as Error).message,
-    });
+  // Statistik-Karten mit verschiedenen Farben und Icons
+  const statCards = [
+    {
+      title: "Benutzer gesamt",
+      value: stats?.users.totalUsers || "0",
+      description: "Registrierte Benutzer",
+      icon: <Users className="h-5 w-5" />,
+      colorClass: "bg-blue-50 text-blue-700"
+    },
+    {
+      title: "Aktive Benutzer",
+      value: stats?.users.activeUsers || "0",
+      description: "Derzeit aktive Konten",
+      icon: <UserCheck className="h-5 w-5" />,
+      colorClass: "bg-green-50 text-green-700"
+    },
+    {
+      title: "Inaktive Benutzer",
+      value: stats?.users.inactiveUsers || "0",
+      description: "Deaktivierte Konten",
+      icon: <UserX className="h-5 w-5" />,
+      colorClass: "bg-red-50 text-red-700"
+    },
+    {
+      title: "Pakete",
+      value: stats?.packages.totalPackages || "0",
+      description: "Verfügbare Pakete",
+      icon: <Package className="h-5 w-5" />,
+      colorClass: "bg-purple-50 text-purple-700"
+    },
+    {
+      title: "Shops",
+      value: stats?.shops.totalShops || "0",
+      description: "Aktive Shops",
+      icon: <Building className="h-5 w-5" />,
+      colorClass: "bg-indigo-50 text-indigo-700"
+    },
+    {
+      title: "Reparaturen",
+      value: stats?.repairs.totalRepairs || "0",
+      description: "Reparaturen gesamt",
+      icon: <Wrench className="h-5 w-5" />,
+      colorClass: "bg-amber-50 text-amber-700"
+    },
+    {
+      title: "Bestellungen",
+      value: stats?.orders.totalOrders || "0",
+      description: "Bestellungen gesamt",
+      icon: <ShoppingBag className="h-5 w-5" />,
+      colorClass: "bg-emerald-50 text-emerald-700"
+    },
+    {
+      title: "Umsatz",
+      value: stats?.revenue.totalRevenue || "0 €",
+      description: "Gesamtumsatz",
+      icon: <CreditCard className="h-5 w-5" />,
+      colorClass: "bg-cyan-50 text-cyan-700"
+    }
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(8)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                <Skeleton className="h-4 w-24" />
+              </CardTitle>
+              <Skeleton className="h-4 w-4 rounded-full" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                <Skeleton className="h-8 w-16" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <Skeleton className="h-3 w-32" />
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
-  const packageUsageData = stats?.packages || [];
-  const userStatusData = stats ? [
-    { name: 'Aktiv', value: stats.users.activeUsers },
-    { name: 'Inaktiv', value: stats.users.inactiveUsers },
-  ] : [];
-  const repairStatusData = stats ? [
-    { name: 'Eingegangen', value: stats.repairs.received },
-    { name: 'In Reparatur', value: stats.repairs.inRepair },
-    { name: 'Fertig', value: stats.repairs.readyForPickup },
-    { name: 'Abgeholt', value: stats.repairs.completed },
-  ] : [];
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  if (error) {
+    return (
+      <div className="py-6">
+        <Card className="bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-700">Fehler beim Laden der Statistiken</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-600">
+              Die Superadmin-Statistiken konnten nicht geladen werden. Bitte versuchen Sie es später erneut.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Superadmin Dashboard</h1>
-      <p className="text-muted-foreground">Hier können Sie die globalen Statistiken aller Shops und Benutzer einsehen.</p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">
+          Übersicht über alle Systemdaten und Statistiken
+        </p>
+      </div>
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              <div className={`p-2 rounded-full ${card.colorClass}`}>
+                {card.icon}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{card.value}</div>
+              <p className="text-xs text-muted-foreground">{card.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {isLoading ? (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-36" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : stats ? (
-        <div className="space-y-6">
-          {/* Übersichtskarten */}
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            <StatsCard 
-              title="Benutzer" 
-              value={stats.users.totalUsers} 
-              description="Gesamtanzahl der Benutzer"
-              icon={<Users className="h-5 w-5" />}
-            />
-            <StatsCard 
-              title="Shops" 
-              value={stats.users.totalShops} 
-              description="Aktive Shops"
-              icon={<Building className="h-5 w-5" />}
-            />
-            <StatsCard 
-              title="Reparaturen" 
-              value={stats.repairs.totalRepairs} 
-              description="Gesamtanzahl der Reparaturen"
-              icon={<Wrench className="h-5 w-5" />}
-            />
-            <StatsCard 
-              title="Fehlerkatalog" 
-              value={stats.issues?.totalIssues || 0}
-              description="Gespeicherte Fehlerbeschreibungen"
-              icon={<AlertCircle className="h-5 w-5" />}
-            />
-          </div>
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        {/* Hier könnten später Diagramme eingefügt werden */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart4 className="h-5 w-5" />
+              Benutzerstatistiken
+            </CardTitle>
+            <CardDescription>
+              Benutzeraktivität im Überblick
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-52 flex items-center justify-center border rounded-md bg-muted/10">
+              <p className="text-muted-foreground text-sm">
+                Benutzerstatistiken werden hier in zukünftigen Updates angezeigt
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Diagramme */}
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-            {/* Paket-Nutzung */}
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Paket-Nutzung</CardTitle>
-                <CardDescription>Verteilung der Benutzer nach Paketen</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={packageUsageData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="packageName" />
-                    <YAxis allowDecimals={false} />
-                    <RechartsTooltip />
-                    <Bar dataKey="userCount" fill="#8884d8" name="Benutzer">
-                      {packageUsageData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Benutzerstatus */}
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Benutzer-Status</CardTitle>
-                <CardDescription>Aktive vs. inaktive Benutzer</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={userStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {userStatusData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Reparaturstatus */}
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Reparatur-Status</CardTitle>
-                <CardDescription>Verteilung der Reparaturen nach Status</CardDescription>
-              </CardHeader>
-              <CardContent className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={repairStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {repairStatusData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        <p>Keine Daten verfügbar</p>
-      )}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart4 className="h-5 w-5" />
+              Reparaturstatistiken
+            </CardTitle>
+            <CardDescription>
+              Reparaturaufkommen im Überblick
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-52 flex items-center justify-center border rounded-md bg-muted/10">
+              <p className="text-muted-foreground text-sm">
+                Reparaturstatistiken werden hier in zukünftigen Updates angezeigt
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
-}
-
-function StatsCard({
-  title,
-  value,
-  description,
-  icon,
-}: {
-  title: string;
-  value: number | string;
-  description: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{description}</p>
-      </CardContent>
-    </Card>
   );
 }
