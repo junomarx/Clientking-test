@@ -213,9 +213,16 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               }
               
               .signature-line {
-                margin-top: ${settings?.receiptWidth === '58mm' ? '20px' : '25px'};
+                margin-top: 5px;
                 border-top: 1px solid #000;
                 width: 100%;
+              }
+              
+              .signature-placeholder {
+                height: ${settings?.receiptWidth === '58mm' ? '20px' : '25px'};
+                display: flex;
+                align-items: center;
+                justify-content: center;
               }
               
               .terms-box {
@@ -584,13 +591,14 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 {repair?.dropoffSignature && (
                   <div className="signature-box">
                     <div className="signature-title">Reparaturauftrag erteilt</div>
-                    <div className="signature-line">
+                    <div className="signature-placeholder">
                       <img 
                         src={repair.dropoffSignature} 
                         alt="Unterschrift bei Abgabe" 
                         style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
                       />
                     </div>
+                    <div className="signature-line"></div>
                     {customer?.firstName} {customer?.lastName}<br />
                     {repair.dropoffSignedAt && format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy', { locale: de })}
                   </div>
@@ -600,13 +608,14 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 {repair?.pickupSignature && (
                   <div className="signature-box">
                     <div className="signature-title">Gerät abgeholt</div>
-                    <div className="signature-line">
+                    <div className="signature-placeholder">
                       <img 
                         src={repair.pickupSignature} 
                         alt="Unterschrift bei Abholung" 
                         style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
                       />
                     </div>
+                    <div className="signature-line"></div>
                     {customer?.firstName} {customer?.lastName}<br />
                     {repair.pickupSignedAt && format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de })}
                   </div>
