@@ -1,10 +1,10 @@
-import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-// Import hasAccess nicht direkt aus @/lib/permissions, da es eine unterschiedliche Signatur hat
-// Stattdessen benutze wir eine lokale Implementierung hasAccessClient
-import { useUpgradeDialog } from "./UpgradeRequiredDialog";
+import { hasAccessClient, Feature } from "@/lib/permissions";
+import { useState } from "react";
+import { UpgradeRequiredDialog } from "./UpgradeRequiredDialog";
+import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
 
-// UserResponse Typ von useAuth abhängig, ohne Passwort
 type UserResponse = Omit<import("@shared/schema").User, "password">;
 
 interface RequireFeatureProps {
@@ -25,20 +25,44 @@ export function RequireFeature({
   fallback 
 }: RequireFeatureProps) {
   const { user } = useAuth();
-  const { showUpgradeDialog, UpgradeDialog } = useUpgradeDialog();
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
-  // Prüfen, ob der Benutzer Zugriff auf die Funktion hat
-  // Änderung der Typendefinition, um mit UserResponse-Typ zu funktionieren
-  const hasFeatureAccess = hasAccessClient(user, feature);
+  // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
+  const hasAccess = user ? hasAccessClient(user.pricingPlan as any, feature as Feature) : false;
   
-  // Wenn kein Zugriff, zeige Fallback oder null
-  if (!hasFeatureAccess) {
-    if (fallback) return <>{fallback}</>;
-    return null;
+  if (hasAccess) {
+    // Wenn der Benutzer Zugriff hat, zeige den normalen Inhalt
+    return <>{children}</>;
   }
   
-  // Wenn Zugriff, render die Kinder
-  return <>{children}</>;
+  // Wenn ein Fallback bereitgestellt wurde, zeige diesen an
+  if (fallback) {
+    return <>{fallback}</>;
+  }
+  
+  // Ansonsten zeige einen Platzhalter mit Upgrade-Möglichkeit
+  return (
+    <>
+      <div 
+        className="p-4 border rounded-md bg-muted/30 flex flex-col items-center justify-center gap-3 cursor-pointer"
+        onClick={() => setShowUpgradeDialog(true)}
+      >
+        <Lock className="h-8 w-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground text-center">
+          Diese Funktion ist nur im {requiredPlan === "professional" ? "Professional" : "Enterprise"}-Paket verfügbar.
+        </p>
+        <Button size="sm" variant="outline">
+          Mehr erfahren
+        </Button>
+      </div>
+      
+      <UpgradeRequiredDialog 
+        open={showUpgradeDialog} 
+        onClose={() => setShowUpgradeDialog(false)} 
+        requiredPlan={requiredPlan} 
+      />
+    </>
+  );
 }
 
 /**
@@ -47,30 +71,13 @@ export function RequireFeature({
 export function withFeatureAccess<P extends object>(
   Component: React.ComponentType<P>,
   feature: string,
-  requiredPlan: "professional" | "enterprise",
-  options: { showUpgradeDialog?: boolean } = { showUpgradeDialog: true }
+  requiredPlan: "professional" | "enterprise"
 ) {
   return function WrappedComponent(props: P) {
-    const { user } = useAuth();
-    const { showUpgradeDialog, UpgradeDialog } = useUpgradeDialog();
-    
-    // Prüfen, ob der Benutzer Zugriff auf die Funktion hat
-    // Änderung der Typendefinition, um mit UserResponse-Typ zu funktionieren
-    const hasFeatureAccess = hasAccessClient(user, feature);
-    
-    // Wenn kein Zugriff und der Dialog angezeigt werden soll, zeige Dialog
-    React.useEffect(() => {
-      if (!hasFeatureAccess && options.showUpgradeDialog) {
-        showUpgradeDialog(feature, requiredPlan);
-      }
-    }, [hasFeatureAccess]);
-    
-    // Immer Dialog rendern, damit er angezeigt werden kann
     return (
-      <>
-        {hasFeatureAccess && <Component {...props} />}
-        <UpgradeDialog />
-      </>
+      <RequireFeature feature={feature} requiredPlan={requiredPlan}>
+        <Component {...props} />
+      </RequireFeature>
     );
   };
 }
@@ -81,83 +88,33 @@ export function withFeatureAccess<P extends object>(
  */
 export function useFeatureAccess(feature: string, requiredPlan: "professional" | "enterprise") {
   const { user } = useAuth();
-  const { showUpgradeDialog, hideUpgradeDialog, UpgradeDialog } = useUpgradeDialog();
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
-  // Prüfen, ob der Benutzer Zugriff auf die Funktion hat
-  // Änderung der Typendefinition, um mit UserResponse-Typ zu funktionieren
-  const hasFeatureAccess = hasAccessClient(user, feature);
+  // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
+  const hasAccess = user ? hasAccessClient(user.pricingPlan as any, feature as Feature) : false;
   
-  // Funktion zur Prüfung des Zugriffs und Anzeige des Dialogs bei Bedarf
-  const checkAccess = React.useCallback(() => {
-    if (!hasFeatureAccess) {
-      showUpgradeDialog(feature, requiredPlan);
-      return false;
-    }
-    return true;
-  }, [hasFeatureAccess, feature, requiredPlan, showUpgradeDialog]);
+  // Dialog-Komponente für Upgrade-Hinweis
+  const UpgradeDialog = () => (
+    <UpgradeRequiredDialog 
+      open={showUpgradeDialog} 
+      onClose={() => setShowUpgradeDialog(false)} 
+      requiredPlan={requiredPlan} 
+    />
+  );
   
-  return { hasAccess: hasFeatureAccess, checkAccess, UpgradeDialog };
+  return {
+    hasAccess,
+    checkAccess: () => setShowUpgradeDialog(true),
+    UpgradeDialog
+  };
 }
 
 /**
  * Clientseitige Version der hasAccess Funktion, die mit dem UserResponse Typ kompatibel ist
  */
-function hasAccessClient(user: UserResponse | null, feature: string): boolean {
-  // Wenn kein Benutzer übergeben wurde
+function checkUserAccess(user: UserResponse | null, feature: string): boolean {
   if (!user) return false;
   
-  // Admin-Benutzer hat immer Zugriff auf alle Funktionen
-  if (user.isAdmin || user.username === 'bugi') return true;
-
-  const pricingPlan = user.pricingPlan as string;
-  
-  // Funktionen nach Tarifmodell definieren
-  const permissions: Record<string, string[]> = {
-    basic: [
-      // Grundlegende Funktionen für alle Tarife
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands"
-    ],
-    professional: [
-      // Enthält alle basic-Funktionen
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands",
-      // Professional-spezifische Funktionen
-      "costEstimates", 
-      "emailTemplates", 
-      "printThermal",
-      "downloadRepairReport"
-    ],
-    enterprise: [
-      // Enthält alle professional-Funktionen
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands",
-      "costEstimates", 
-      "emailTemplates", 
-      "printThermal",
-      "downloadRepairReport",
-      // Enterprise-spezifische Funktionen
-      "statistics", 
-      "backup",
-      "multiUser",
-      "advancedReporting",
-      "customEmailTemplates",
-      "feedbackSystem"
-    ]
-  };
-
-  // Prüfen, ob die angeforderte Funktion im Tarifmodell des Benutzers enthalten ist
-  return permissions[pricingPlan]?.includes(feature) ?? false;
+  // Konvertiere pricingPlan in den korrekten Typ für die hasAccessClient Funktion
+  return hasAccessClient(user.pricingPlan as any, feature as Feature);
 }

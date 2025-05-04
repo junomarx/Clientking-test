@@ -1,113 +1,67 @@
-import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-// Import der Display-Namen Funktionen
-import { getPricingPlanDisplayName, getFeatureDisplayName } from "@/lib/permissions";
-import { LockIcon, PackageOpenIcon, ChevronRightIcon } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { CheckCircle2, Lock } from "lucide-react";
 
 interface UpgradeRequiredDialogProps {
   open: boolean;
   onClose: () => void;
-  feature: string;
   requiredPlan: "professional" | "enterprise";
 }
 
-/**
- * Zeigt einen Dialog an, wenn ein Benutzer versucht, auf eine Funktion zuzugreifen, 
- * die in seinem Tarif nicht enthalten ist.
- */
-export function UpgradeRequiredDialog({
-  open,
-  onClose,
-  feature,
-  requiredPlan
-}: UpgradeRequiredDialogProps) {
-  const { user } = useAuth();
-  const currentPlan = user?.pricingPlan || "basic";
-  const featureDisplayName = getFeatureDisplayName(feature);
+export function UpgradeRequiredDialog({ open, onClose, requiredPlan }: UpgradeRequiredDialogProps) {
+  // Ermittle die Features, die in dem jeweiligen Plan enthalten sind
+  const professionalFeatures = [
+    "Kostenvoranschläge erstellen und verwalten",
+    "E-Mail-Vorlagen erstellen und bearbeiten", 
+    "Thermodruckerfunktionen (58mm/80mm Bon-Format)",
+    "Detaillierte PDF-Reparaturberichte",
+    "Unbegrenzte Anzahl an Reparaturaufträgen"
+  ];
+  
+  const enterpriseFeatures = [
+    ...professionalFeatures,
+    "Detaillierte Statistiken und Analysefunktionen",
+    "Datensicherung und -wiederherstellung",
+    "Prioritäts-Support",
+    "Mehrere Standorte verwalten"
+  ];
+  
+  const displayedFeatures = requiredPlan === "professional" ? professionalFeatures : enterpriseFeatures;
+  const planName = requiredPlan === "professional" ? "Professional" : "Enterprise";
   
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen) onClose();
-    }}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <LockIcon className="w-5 h-5 text-amber-500" /> 
-            <span>Upgrade erforderlich</span>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Lock className="h-5 w-5 text-amber-500" />
+            Upgrade auf {planName}-Paket erforderlich
           </DialogTitle>
-          <DialogDescription>
-            Diese Funktion ist nur im {getPricingPlanDisplayName(requiredPlan)}-Tarif oder höher verfügbar.
-          </DialogDescription>
         </DialogHeader>
         
-        <div className="p-4 border rounded-lg bg-muted/30 mb-4">
-          <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-            <PackageOpenIcon className="w-5 h-5 text-primary" />
-            <span>Funktion: {featureDisplayName}</span>
-          </h3>
-          <p className="text-sm text-muted-foreground mb-2">
-            Ihr aktueller Tarif: <span className="font-medium">{getPricingPlanDisplayName(currentPlan)}</span>
+        <div className="py-4">
+          <p className="text-muted-foreground mb-4">
+            Diese Funktion ist nur im <strong>{planName}-Paket</strong> oder höher verfügbar.
+            Folgende Features sind in diesem Paket enthalten:
           </p>
-          <p className="text-sm text-muted-foreground">
-            Benötigter Tarif: <span className="font-medium">{getPricingPlanDisplayName(requiredPlan)}</span>
-          </p>
+          
+          <ul className="space-y-2">
+            {displayedFeatures.map((feature, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </div>
         
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>Schließen</Button>
-          <Button onClick={onClose} className="gap-1">
-            Zum {getPricingPlanDisplayName(requiredPlan)}-Tarif upgraden
-            <ChevronRightIcon className="w-4 h-4" />
+          <Button>
+            Jetzt upgraden
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
-}
-
-/**
- * Hook zum einfachen Anzeigen des Upgrade-Dialogs
- */
-export function useUpgradeDialog() {
-  const [dialogState, setDialogState] = React.useState<{
-    open: boolean;
-    feature: string;
-    requiredPlan: "professional" | "enterprise";
-  }>({
-    open: false,
-    feature: "",
-    requiredPlan: "professional"
-  });
-  
-  const showUpgradeDialog = (feature: string, requiredPlan: "professional" | "enterprise") => {
-    setDialogState({
-      open: true,
-      feature,
-      requiredPlan
-    });
-  };
-  
-  const hideUpgradeDialog = () => {
-    setDialogState(prev => ({ ...prev, open: false }));
-  };
-  
-  const UpgradeDialog = () => (
-    <UpgradeRequiredDialog
-      open={dialogState.open}
-      onClose={hideUpgradeDialog}
-      feature={dialogState.feature}
-      requiredPlan={dialogState.requiredPlan}
-    />
-  );
-  
-  return { showUpgradeDialog, hideUpgradeDialog, UpgradeDialog };
 }
