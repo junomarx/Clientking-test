@@ -754,13 +754,21 @@ export class DatabaseStorage implements IStorage {
     const currentMonth = today.getFullYear() * 100 + (today.getMonth() + 1); // Format: YYYYMM
     const currentMonthStr = currentMonth.toString();
     
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(userId);
+    if (!currentUser) return 0;
+    
+    // Shop-ID des Benutzers ermitteln
+    const shopIdValue = currentUser.shopId || 1;
+    
     const result = await db
       .select({ count: count() })
       .from(repairs)
       .where(
         and(
           eq(repairs.userId, userId),
-          eq(repairs.creationMonth, currentMonthStr)
+          eq(repairs.creationMonth, currentMonthStr),
+          eq(repairs.shopId, shopIdValue) // Shop-Isolation hinzugefügt (DSGVO-konform)
         )
       );
       
@@ -1021,7 +1029,7 @@ export class DatabaseStorage implements IStorage {
     return updatedRepair;
   }
   
-  async updateRepairSignature(id: number, signature: string, type: 'dropoff' | 'pickup' = 'dropoff'): Promise<Repair | undefined> {
+  async updateRepairSignature(id: number, signature: string, type: 'dropoff' | 'pickup' = 'dropoff', currentUserId?: number): Promise<Repair | undefined> {
     const now = new Date();
     
     // Je nach Typ (Abgabe oder Abholung) unterschiedliche Spalten aktualisieren
@@ -1035,6 +1043,29 @@ export class DatabaseStorage implements IStorage {
       updatedAt: now
     };
     
+    // Wenn eine Benutzer-ID angegeben ist, Shop-Isolation anwenden (DSGVO-konform)
+    if (currentUserId) {
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (currentUser) {
+        const shopIdValue = currentUser.shopId || 1;
+        const [updatedRepair] = await db
+          .update(repairs)
+          .set(updateData)
+          .where(
+            and(
+              eq(repairs.id, id),
+              eq(repairs.shopId, shopIdValue)
+            )
+          )
+          .returning();
+        
+        return updatedRepair;
+      }
+    }
+    
+    // Fallback für den Fall, dass keine Benutzer-ID angegeben wird
+    // (nur für Kompatibilität mit bestehenden Aufrufen)
     const [updatedRepair] = await db
       .update(repairs)
       .set(updateData)

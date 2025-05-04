@@ -2070,8 +2070,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      // Unterschrift und Zeitstempel speichern
-      const updatedRepair = await storage.updateRepairSignature(repairId, signature, signatureType);
+      // Unterschrift und Zeitstempel speichern (mit Shop-Isolation durch User-ID)
+      const updatedRepair = await storage.updateRepairSignature(repairId, signature, signatureType, userId);
       
       res.json(updatedRepair);
     } catch (error) {
