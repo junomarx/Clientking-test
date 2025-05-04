@@ -8,6 +8,7 @@ import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
 import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
 import { addPackageTables } from "./add-package-tables";
+import { addSuperadminColumn } from "./add-superadmin";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
     await addShopIdColumn();
     await addFeatureOverridesColumn();
     await addPackageTables(); // Neue Migration für das Paketsystem
+    await addSuperadminColumn(); // Migration für Superadmin-Rolle
     
     const server = await registerRoutes(app);
 

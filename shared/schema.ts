@@ -140,12 +140,13 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
   isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
+  isSuperadmin: boolean("is_superadmin").default(false).notNull(), // Superadmin-Rechte (kann alle Shops verwalten)
   // Für Abwärtskompatibilität während der Migration
   pricingPlan: text("pricing_plan").default("basic"),      // Wird ersetzt durch packageId
   featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen (wird auslaufen)
   // Neu: Fremdschlüssel-Referenz zu einem Paket
   packageId: integer("package_id").references(() => packages.id),
-  shopId: integer("shop_id").default(1),                   // Shop-ID für Mandantentrennung
+  shopId: integer("shop_id"),                            // Shop-ID für Mandantentrennung (NULL für Superadmin)
   companyName: text("company_name"),                       // Firmenname
   companyAddress: text("company_address"),                 // Firmenadresse
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.
