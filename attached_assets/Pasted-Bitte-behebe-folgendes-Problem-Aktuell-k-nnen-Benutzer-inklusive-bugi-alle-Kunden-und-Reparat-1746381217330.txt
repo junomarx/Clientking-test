@@ -1,0 +1,39 @@
+Bitte behebe folgendes Problem: Aktuell können Benutzer – inklusive "bugi" – alle Kunden und Reparaturaufträge einsehen. Das ist nicht korrekt und widerspricht dem Prinzip der Mandantentrennung (Shop-Isolierung). Jeder Benutzer (inklusive Admins) soll ausschließlich Zugriff auf Daten seines eigenen Shops (shopId) haben.
+
+🔐 Ziel: Jeder Benutzer darf nur **Kunden** und **Reparaturen** mit seiner eigenen `shopId` sehen, bearbeiten oder löschen – unabhängig davon, ob er Admin ist oder nicht. Eine zentrale Übersicht über andere Shops ist **nicht gewünscht und nicht DSGVO-konform**.
+
+🔧 Vorgehensweise:
+
+1. **Öffne `server/storage.ts`**  
+   und überprüfe/ändere alle Methoden, die mit `customers` und `repairs` arbeiten:
+   - `getAllCustomers(user)`
+   - `getCustomer(id, user)`
+   - `findCustomersByName(name, user)`
+   - `createCustomer(data, user)`
+   - `updateCustomer(id, data, user)`
+   - `deleteCustomer(id, user)`
+   - `getAllRepairs(user)`
+   - `getRepair(id, user)`
+   - `getRepairsByCustomerId(customerId, user)`
+   - `createRepair(data, user)`
+   - `updateRepair(id, data, user)`
+   - `deleteRepair(id, user)`
+   - `getStats(user)`  
+   usw.
+
+2. **In jeder Methode sicherstellen:**
+   - Es wird **immer nach `shopId` gefiltert**:
+     ```ts
+     const baseFilter = eq(table.shopId, user.shopId);
+     ```
+   - Adminrechte dürfen **nicht** zu globalem Zugriff führen – keine Ausnahmen für `bugi`.
+
+3. **Stelle sicher, dass `user.shopId` korrekt in `req.user` enthalten ist**, und in `routes.ts` bzw. `admin-routes.ts` an alle Speicherfunktionen übergeben wird.
+
+4. **Lösche oder deaktiviere evtl. vorhandene `if (isAdmin)`-Blöcke**, die `bugi` vollständigen Zugriff geben. Das ist **nicht erwünscht**.
+
+5. **Frontend prüfen** (optional): Wenn Kunden- oder Auftragslisten dort geladen werden, muss sichergestellt sein, dass keine API-Antworten Daten anderer Shops enthalten.
+
+🛡 Ergebnis: Jeder Benutzer – auch Admins – sieht **ausschließlich** Daten seines eigenen Shops (`shopId`). Es gibt **keinen Zugriff** auf Daten anderer Shops.
+
+Bitte implementiere diese Einschränkungen jetzt vollständig in der Codebasis.
