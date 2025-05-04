@@ -57,6 +57,7 @@ import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";
+import { PlanFeaturesManager } from "@/components/admin/PlanFeaturesManager";
 import ToastTestDialog from "@/components/ToastTestDialog";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
 
@@ -1252,6 +1253,14 @@ export default function AdminPage() {
             >
               <Users className="h-5 w-5 flex-shrink-0" />
               {!sidebarCollapsed && <span className="ml-3">Benutzer</span>}
+            </div>
+            
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "planFeatures" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("planFeatures")}
+            >
+              <Layers className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Tarif-Features</span>}
             </div>
             
             {/* Geräte mit Unterkategorien */}
