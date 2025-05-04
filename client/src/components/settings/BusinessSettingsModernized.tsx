@@ -482,7 +482,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                   <h3 className="text-lg font-medium border-b pb-2 mb-4">SMTP-Einstellungen</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Konfigurieren Sie Ihren eigenen E-Mail-Server für ausgehende E-Mails. 
-                    Wenn Sie keine eigenen SMTP-Einstellungen angeben, wird Brevo als Fallback verwendet.
+                    Sie müssen Ihre SMTP-Einstellungen angeben, um E-Mails versenden zu können.
                   </p>
                   
                   <FormField

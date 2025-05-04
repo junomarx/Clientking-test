@@ -632,7 +632,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                           <h3 className="text-md font-medium mb-3">SMTP-Einstellungen</h3>
                           <FormDescription>
                             Tragen Sie hier Ihre SMTP-Servereinstellungen ein, damit Sie E-Mails mit Ihrem eigenen Mail-Server versenden können.
-                            Falls keine SMTP-Einstellungen angegeben werden, wird automatisch der Brevo-Dienst verwendet.
+                            Sie müssen Ihre SMTP-Einstellungen angeben, um E-Mails versenden zu können.
                           </FormDescription>
                           
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
