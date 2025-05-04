@@ -210,10 +210,19 @@ function PricingPlanDisplay() {
 
 // Hauptkomponente für die Einstellungen
 export function SettingsPageContent() {
+  // Refs und State für das Logo-Upload
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  
+  // Reguläre States
   const [activeTab, setActiveTab] = useState<string>("business");
   const [activeUserTab, setActiveUserTab] = useState<string>("account");
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
+  
+  // Maximale Dateigröße für Logo in Bytes (2MB)
+  const MAX_LOGO_SIZE = 2 * 1024 * 1024;
 
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -243,9 +252,52 @@ export function SettingsPageContent() {
     },
   });
 
+  // Funktion für das Logo-Upload
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
+    const file = event.target.files?.[0];
+    
+    // Keine Datei ausgewählt
+    if (!file) return;
+    
+    // Überprüfe die Dateigröße (max 2MB)
+    if (file.size > MAX_LOGO_SIZE) {
+      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
+      return;
+    }
+    
+    // Überprüfe den Dateityp
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      setLogoError('Nur JPG, PNG und SVG-Dateien sind erlaubt.');
+      return;
+    }
+    
+    // Lese die Datei als Data-URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      console.log('File loaded successfully');
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setLogoPreview(dataUrl);
+        form.setValue('logoImage', dataUrl);
+        console.log('Logo preview set and form value updated');
+      }
+    };
+    reader.onerror = () => {
+      setLogoError('Fehler beim Lesen der Datei.');
+    };
+    reader.readAsDataURL(file);
+  };
+  
   // Aktualisieren der Formularwerte, wenn Einstellungen geladen werden
   React.useEffect(() => {
     if (settings) {
+      // Wenn ein gespeichertes Logo-Bild existiert, initialisiere die Vorschau
+      if (settings.logoImage) {
+        setLogoPreview(settings.logoImage);
+      }
+      
       // Extrahieren Sie nur die benötigten Felder für das Formular
       const receiptWidth = (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
         ? settings.receiptWidth as "58mm" | "80mm" 
@@ -675,16 +727,32 @@ export function SettingsPageContent() {
                       <h3 className="text-md font-medium mb-3">Logo</h3>
                       <div className="mb-4 flex items-center space-x-4">
                         <div className="w-20 h-20 border rounded-md flex items-center justify-center overflow-hidden">
-                          {settings?.logoImage ? (
-                            <img src={settings.logoImage} alt="Logo" className="max-w-full max-h-full" />
+                          {(logoPreview || (settings?.logoImage && settings.logoImage.length > 0)) ? (
+                            <img src={logoPreview || settings?.logoImage || ''} alt="Logo" className="max-w-full max-h-full" />
                           ) : (
                             <Building className="h-10 w-10 text-gray-400" />
                           )}
                         </div>
                         <div>
-                          <Button variant="outline" type="button" size="sm">
+                          <input
+                            type="file"
+                            id="logo-upload"
+                            ref={fileInputRef}
+                            accept="image/jpeg,image/png,image/svg+xml"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                          />
+                          <Button 
+                            variant="outline" 
+                            type="button" 
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
                             Logo hochladen
                           </Button>
+                          {logoError && (
+                            <p className="text-xs text-red-500 mt-1">{logoError}</p>
+                          )}
                           <p className="text-sm text-gray-500 mt-1">Empfohlenes Format: PNG oder JPEG, 500x500px</p>
                         </div>
                       </div>
