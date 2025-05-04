@@ -35,7 +35,7 @@ export function FeatureOverridesTestPanel() {
   const [selectedFeature, setSelectedFeature] = useState<string>("");
   
   // Alle Benutzer laden
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<any[]>({
     queryKey: ["/api/admin/users"],
   });
 
