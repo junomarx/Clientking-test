@@ -329,7 +329,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                       {repair.issue ? 
                         (() => {
                           const issues = repair.issue.split(',');
-                          return issues.map((issue, index) => (
+                          return issues.map((issue: string, index: number) => (
                             <div key={index}>{issue.trim()}</div>
                           ));
                         })() : 'Keine Angabe'}
@@ -338,7 +338,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   <div className="mb-4">
                     <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Kosten</div>
                     <div className="text-sm font-bold">
-                      {repair.price !== undefined ? `${repair.price.toFixed(2).replace('.', ',')} €` : 'Auf Anfrage'}
+                      {repair.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : 'Auf Anfrage'}
                     </div>
                   </div>
                 </div>

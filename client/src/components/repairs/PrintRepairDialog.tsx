@@ -129,16 +129,32 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // PDF in neuem Tab öffnen und ggf. ausdrucken
-      window.open(pdf.output('bloburl'), '_blank');
+      // PDF in neuem Tab öffnen und Druckdialog automatisch starten
+      const pdfBlob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(blobUrl, '_blank');
       
-      // Dialog schließen nach erfolgreicher PDF-Erstellung
-      onClose();
-      
-      toast({
-        title: "PDF bereit",
-        description: "Das PDF wurde erstellt und kann nun ausgedruckt werden.",
-      });
+      if (printWindow) {
+        // Füge Skript hinzu, um den Druckdialog zu starten
+        printWindow.addEventListener('load', function() {
+          setTimeout(() => {
+            printWindow.print();
+          }, 1000);
+        });
+        
+        // Dialog schließen nach erfolgreicher PDF-Erstellung
+        onClose();
+        
+        toast({
+          title: "PDF bereit zum Drucken",
+          description: "Das PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
+        });
+      } else {
+        toast({
+          title: "PDF bereit",
+          description: "Das PDF wurde erstellt. Bitte aktiviere Pop-ups, falls kein neues Fenster geöffnet wurde.",
+        });
+      }
     } catch (err) {
       console.error('Fehler beim Erstellen des PDFs:', err);
       toast({
@@ -213,10 +229,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     ) : 'Keine Angaben'}
                   </div>
 
-                  {repair?.price !== undefined && (
+                  {repair?.estimatedCost && (
                     <div>
                       <div className="preis-label">Preis</div>
-                      <div className="field">{repair.price.toFixed(2).replace('.', ',')} €</div>
+                      <div className="field">{repair.estimatedCost.replace('.', ',')} €</div>
                     </div>
                   )}
                 </div>
