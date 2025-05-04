@@ -1,80 +1,42 @@
-import { useState, useEffect } from "react";
-import { Link } from "wouter";
-import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutDashboard,
-  Users,
-  Smartphone,
-  ChevronDown,
-  MoreVertical,
-  Edit,
-  Pencil,
-  Trash2,
-  Save,
-  User2,
-  FileText,
-  FileCheck,
-  Truck,
-  BarChart3,
-  Calendar,
-  Download,
-  Upload,
-  AlertTriangle,
-  ShieldAlert,
-  Cog,
-  Layers,
-  History,
-  Palette,
-} from "lucide-react";
-
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Loader2, Users, Layers, Smartphone, Cog, Save, ChevronDown, ChevronRight, ChevronLeft, MoreVertical, Pencil, Trash2, LayoutDashboard, Download } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Loader2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/use-auth";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
 import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
@@ -393,41 +355,27 @@ function UserTable() {
                   {user.pricingPlan === "enterprise" ? "Enterprise" : user.pricingPlan === "professional" ? "Professional" : "Basic"}
                 </Badge>
               </div>
-            </div>
-            
-            <div className="flex items-center justify-between border-t p-3 bg-muted/10">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Status ändern:</span>
-                <Switch 
-                  checked={user.isActive} 
-                  onCheckedChange={(e) => {
-                    e.stopPropagation();
-                    handleToggleActive(user);
-                  }}
-                  disabled={toggleActiveMutation.isPending}
-                  className="data-[state=checked]:bg-green-500"
-                />
-              </div>
               
-              <div className="flex items-center gap-1">
+              <div className="flex justify-end gap-2 pt-2">
                 <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
+                  variant="outline" 
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEditUser(user);
                   }}
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
                 </Button>
                 <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0 text-destructive"
-                  onClick={(e) => handleDeleteUser(user, e)}
+                  variant="destructive" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteUser(user, e);
+                  }}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3 mr-1" /> Löschen
                 </Button>
               </div>
             </div>
@@ -435,67 +383,33 @@ function UserTable() {
         ))}
       </div>
 
-      {/* Benutzerinformationen-Dialog */}
-      <UserDetailsDialog 
-        selectedUser={selectedUser} 
-        isOpen={isDetailsDialogOpen} 
-        onClose={() => setIsDetailsDialogOpen(false)} 
-        onEdit={handleEditUser}
-        onDelete={handleDeleteUser}
-      />
-      
       {/* Bearbeiten-Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Benutzer bearbeiten</DialogTitle>
             <DialogDescription>
-              Hier können Sie die Benutzerinformationen ändern.
+              Bearbeiten Sie die Informationen des Benutzers.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-username">Benutzername</Label>
+              <Label htmlFor="edit-name">Benutzername</Label>
               <Input 
-                id="edit-username" 
+                id="edit-name" 
                 value={editName} 
                 onChange={(e) => setEditName(e.target.value)} 
-                placeholder="Benutzername"
               />
             </div>
-            
             <div className="space-y-2">
               <Label htmlFor="edit-email">E-Mail</Label>
               <Input 
                 id="edit-email" 
+                type="email" 
                 value={editEmail} 
                 onChange={(e) => setEditEmail(e.target.value)} 
-                placeholder="E-Mail"
-                type="email"
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label>Preispaket</Label>
-              <Select 
-                value={editPricingPlan} 
-                onValueChange={(value) => setEditPricingPlan(value as "basic" | "professional" | "enterprise")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Preispaket auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="professional">Professional</SelectItem>
-                  <SelectItem value="enterprise">Enterprise</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Das Preispaket bestimmt, welche Features der Benutzer nutzen kann.
-              </p>
-            </div>
-            
             <div className="space-y-2">
               <Label>Rolle</Label>
               <RadioGroup value={editRole} onValueChange={(value) => setEditRole(value as "user" | "admin")}>
@@ -508,73 +422,70 @@ function UserTable() {
                   <Label htmlFor="role-admin">Administrator</Label>
                 </div>
               </RadioGroup>
-              <p className="text-xs text-red-500 font-medium mt-1">
-                Vorsicht: Administrator-Berechtigungen sollten nur "bugi" als System-Administrator haben!
-              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pricing-plan">Preispaket</Label>
+              <Select 
+                value={editPricingPlan} 
+                onValueChange={(value) => setEditPricingPlan(value as "basic" | "professional" | "enterprise")}
+              >
+                <SelectTrigger id="pricing-plan">
+                  <SelectValue placeholder="Wählen Sie ein Preispaket" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic</SelectItem>
+                  <SelectItem value="professional">Professional</SelectItem>
+                  <SelectItem value="enterprise">Enterprise</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsEditDialogOpen(false)}
-            >
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={submitEditUser}
-              disabled={editUserMutation.isPending}
-            >
-              {editUserMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Speichern
-            </Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Abbrechen</Button>
+            <Button onClick={submitEditUser} disabled={editUserMutation.isPending}>Speichern</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Löschen-Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Benutzer löschen</DialogTitle>
-            <DialogDescription>
-              Möchten Sie diesen Benutzer wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="ml-2">
-                {selectedUser && (
-                  <>Benutzer <span className="font-bold">{selectedUser.username}</span> wird gelöscht.</>
-                )}
-              </AlertDescription>
-            </Alert>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Abbrechen
-            </Button>
-            <Button 
-              variant="destructive"
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Benutzer löschen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sind Sie sicher, dass Sie diesen Benutzer löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction 
               onClick={() => selectedUser && deleteUserMutation.mutate(selectedUser.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteUserMutation.isPending}
             >
-              {deleteUserMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {deleteUserMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird gelöscht...
+                </>
+              ) : (
+                "Löschen"
               )}
-              Löschen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Details-Dialog */}
+      {selectedUser && (
+        <UserDetailsDialog 
+          user={selectedUser} 
+          open={isDetailsDialogOpen} 
+          onOpenChange={setIsDetailsDialogOpen} 
+          onEdit={() => handleEditUser(selectedUser)}
+          onDelete={() => handleDeleteUser(selectedUser)}
+        />
+      )}
     </div>
   );
 }
@@ -582,347 +493,173 @@ function UserTable() {
 function SystemDiagnosticTab() {
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Systemdiagnose</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Hier finden Sie wichtige Informationen über den Systemstatus.
-        </p>
-      </div>
-      
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="p-4 space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-            Dateiintegritätsprüfung
-          </h4>
-          <p className="text-sm text-muted-foreground">Prüft, ob alle Systemdateien vorhanden und unverändert sind.</p>
-          <Button className="w-full" variant="outline">Jetzt prüfen</Button>
-        </Card>
-        
-        <Card className="p-4 space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-red-500" />
-            Sicherheitsscanner
-          </h4>
-          <p className="text-sm text-muted-foreground">Überprüft das System auf Sicherheitsprobleme.</p>
-          <Button className="w-full" variant="outline">Jetzt scannen</Button>
-        </Card>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Systemleistung</h4>
-        <div className="space-y-2">
-          <div>
-            <div className="flex justify-between text-sm">
-              <span>CPU-Auslastung</span>
-              <span>23%</span>
-            </div>
-            <Progress value={23} className="h-2" />
-          </div>
-          <div>
-            <div className="flex justify-between text-sm">
-              <span>Speichernutzung</span>
-              <span>54%</span>
-            </div>
-            <Progress value={54} className="h-2" />
-          </div>
-          <div>
-            <div className="flex justify-between text-sm">
-              <span>Festplattennutzung</span>
-              <span>37%</span>
-            </div>
-            <Progress value={37} className="h-2" />
-          </div>
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium mb-2">Cache-Management</h4>
-        <p className="text-sm text-muted-foreground mb-2">
-          In seltenen Fällen kann es hilfreich sein, den Cache zu leeren, um Probleme zu beheben.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline">Anwendungs-Cache leeren</Button>
-          <Button variant="outline">Datenbank-Cache leeren</Button>
-        </div>
+      <h3 className="text-lg font-semibold">Systemdiagnose</h3>
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>Die Systemdiagnose wird hier angezeigt.</AlertDescription>
+        </Alert>
       </div>
     </div>
   );
 }
 
 function ActivityLogTab() {
-  const activityLogs = [
-    { id: 1, username: "bugi", action: "Benutzer aktualisiert", details: "Benutzer 'testuser' wurde aktiviert", timestamp: new Date(2025, 4, 1, 14, 23) },
-    { id: 2, username: "bugi", action: "Gerätedaten importiert", details: "157 neue Geräte hinzugefügt", timestamp: new Date(2025, 4, 1, 12, 15) },
-    { id: 3, username: "support", action: "Backup erstellt", details: "Vollständiges Systembackup", timestamp: new Date(2025, 4, 1, 10, 30) },
-    { id: 4, username: "bugi", action: "Einstellungen geändert", details: "E-Mail-Konfiguration aktualisiert", timestamp: new Date(2025, 3, 30, 16, 45) },
-    { id: 5, username: "support", action: "Benutzer erstellt", details: "Neuer Benutzer 'handyshop7' hinzugefügt", timestamp: new Date(2025, 3, 30, 15, 12) },
-  ];
-  
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h3 className="text-lg font-semibold">Aktivitätsprotokoll</h3>
-      <p className="text-sm text-muted-foreground">
-        Hier sehen Sie die letzten Aktionen im Administrationsbereich.
-      </p>
-      
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Benutzer</TableHead>
-              <TableHead>Aktion</TableHead>
-              <TableHead>Details</TableHead>
-              <TableHead>Zeitstempel</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {activityLogs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="font-medium">{log.username}</TableCell>
-                <TableCell>{log.action}</TableCell>
-                <TableCell>{log.details}</TableCell>
-                <TableCell>{log.timestamp.toLocaleString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Mobile-Ansicht */}
-      <div className="md:hidden space-y-4">
-        {activityLogs.map((log) => (
-          <div key={log.id} className="border rounded-lg overflow-hidden">
-            <div className="bg-muted/20 p-3 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{log.username}</span>
-                </div>
-                <Badge variant="outline">{log.action}</Badge>
-              </div>
-            </div>
-            
-            <div className="p-3">
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{log.username}</p>
-                  <p className="text-xs text-muted-foreground">
-                    <span className="mr-1">⏰</span>
-                    {log.timestamp.toLocaleString()}
-                  </p>
-                </div>
-                <p className="text-sm">{log.details}</p>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>Die neuesten Aktivitäten werden hier angezeigt.</AlertDescription>
+        </Alert>
       </div>
     </div>
   );
 }
 
 function BackupRestoreTab() {
-  const [backupInProgress, setBackupInProgress] = useState(false);
-  const [restoreInProgress, setRestoreInProgress] = useState(false);
-  const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const [importFile, setImportFile] = useState<File | null>(null);
   
-  const backupMutation = useMutation({
+  const exportMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/backup");
+      const response = await apiRequest("GET", "/api/admin/export");
       if (!response.ok) {
-        throw new Error(`Failed to create backup: ${response.statusText}`);
+        throw new Error("Fehler beim Exportieren der Daten");
       }
-      return await response.blob();
+      return await response.json();
     },
     onSuccess: (data) => {
-      const url = window.URL.createObjectURL(data);
-      const a = document.createElement('a');
+      // Daten als JSON-Datei herunterladen
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `handyshop-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `handyshop-backup-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      setBackupInProgress(false);
+      URL.revokeObjectURL(url);
+      
       toast({
-        title: "Backup erstellt",
-        description: "Das Backup wurde erfolgreich erstellt und heruntergeladen.",
+        title: "Export erfolgreich",
+        description: "Die Daten wurden erfolgreich exportiert."
       });
     },
     onError: (error: Error) => {
-      setBackupInProgress(false);
       toast({
-        title: "Fehler beim Erstellen des Backups",
+        title: "Export fehlgeschlagen",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
   
-  const restoreMutation = useMutation({
+  const importMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append("backupFile", file);
+      formData.append("file", file);
       
-      const response = await fetch("/api/admin/restore", {
+      const response = await fetch("/api/admin/import", {
         method: "POST",
-        body: formData,
+        body: formData
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `Failed to restore backup: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Fehler beim Importieren der Daten");
       }
       
-      return true;
+      return await response.json();
     },
     onSuccess: () => {
-      setRestoreInProgress(false);
-      setRestoreFile(null);
+      setImportFile(null);
       toast({
-        title: "Backup wiederhergestellt",
-        description: "Das Backup wurde erfolgreich wiederhergestellt.",
+        title: "Import erfolgreich",
+        description: "Die Daten wurden erfolgreich importiert."
       });
     },
     onError: (error: Error) => {
-      setRestoreInProgress(false);
       toast({
-        title: "Fehler bei der Wiederherstellung",
+        title: "Import fehlgeschlagen",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
-    },
+    }
   });
   
-  const handleBackup = () => {
-    setBackupInProgress(true);
-    backupMutation.mutate();
-  };
-  
-  const handleRestore = () => {
-    if (!restoreFile) {
-      toast({
-        title: "Keine Datei ausgewählt",
-        description: "Bitte wählen Sie eine Backup-Datei aus.",
-        variant: "destructive",
-      });
-      return;
+  const handleImport = () => {
+    if (importFile) {
+      importMutation.mutate(importFile);
     }
-    
-    setRestoreInProgress(true);
-    restoreMutation.mutate(restoreFile);
   };
   
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Backup & Restore</h3>
-        <p className="text-sm text-muted-foreground">
-          Erstellen Sie regelmäßig Backups Ihrer Daten und stellen Sie sie bei Bedarf wieder her.
-        </p>
-      </div>
+      <h3 className="text-xl font-semibold">Backup & Restore</h3>
       
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Save className="h-5 w-5 text-blue-500" />
-            <h4 className="font-medium">Backup erstellen</h4>
-          </div>
-          
-          <p className="text-sm text-muted-foreground">
-            Erstellt eine Sicherungskopie aller wichtigen Daten (Benutzer, Reparaturen, Kunden, Geräte, etc.)
+        {/* Export Section */}
+        <div className="bg-muted/30 p-6 rounded-lg border">
+          <h4 className="text-lg font-medium mb-4">Daten exportieren</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Exportieren Sie alle Daten als JSON-Datei für Backup-Zwecke.
           </p>
-          
           <Button 
-            onClick={handleBackup} 
-            disabled={backupInProgress} 
+            onClick={() => exportMutation.mutate()}
+            disabled={exportMutation.isPending}
             className="w-full"
           >
-            {backupInProgress ? (
+            {exportMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Backup wird erstellt...
+                Exportiere...
               </>
             ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Backup jetzt erstellen
-              </>
+              "Alle Daten exportieren"
             )}
           </Button>
-        </Card>
+        </div>
         
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Upload className="h-5 w-5 text-amber-500" />
-            <h4 className="font-medium">Backup wiederherstellen</h4>
-          </div>
-          
-          <p className="text-sm text-muted-foreground">
-            Stellt ein zuvor erstelltes Backup wieder her. Vorhandene Daten werden überschrieben.
+        {/* Import Section */}
+        <div className="bg-muted/30 p-6 rounded-lg border">
+          <h4 className="text-lg font-medium mb-4">Daten importieren</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Importieren Sie Daten aus einer zuvor exportierten JSON-Datei.
           </p>
-          
           <div className="space-y-4">
-            <Input 
+            <input 
               type="file" 
-              accept=".json" 
-              onChange={(e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                  setRestoreFile(e.target.files[0]);
-                }
-              }}
-              disabled={restoreInProgress}
+              accept=".json"
+              className="w-full" 
+              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
             />
-            
             <Button 
-              onClick={handleRestore} 
-              disabled={!restoreFile || restoreInProgress} 
-              variant="outline" 
+              onClick={handleImport}
+              disabled={importMutation.isPending || !importFile}
               className="w-full"
             >
-              {restoreInProgress ? (
+              {importMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Wiederherstellung läuft...
+                  Importiere...
                 </>
               ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Backup wiederherstellen
-                </>
+                "Daten importieren"
               )}
             </Button>
           </div>
-        </Card>
-      </div>
-      
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          <span className="font-semibold">Warnung:</span> Bei der Wiederherstellung eines Backups werden alle aktuellen Daten überschrieben. Dieser Vorgang kann nicht rückgängig gemacht werden.
-        </AlertDescription>
-      </Alert>
-      
-      <div>
-        <h4 className="font-medium mb-2">Backup-Zeitplan</h4>
-        <p className="text-sm text-muted-foreground mb-4">
-          In der Enterprise-Version können Sie automatische Backups einrichten.
-        </p>
-        
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Switch id="weekly-backup" />
-            <Label htmlFor="weekly-backup">Wöchentliches Backup</Label>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Switch id="daily-backup" />
-            <Label htmlFor="daily-backup">Tägliches Backup</Label>
-          </div>
         </div>
       </div>
+      
+      <Alert className="bg-amber-50 text-amber-900 border-amber-200">
+        <AlertDescription className="flex items-start gap-2">
+          <ChevronRight className="h-5 w-5 flex-shrink-0 text-amber-500" />
+          <div>
+            <p className="font-medium">Wichtiger Hinweis zum Datenimport</p>
+            <p className="text-sm mt-1">Der Import überschreibt bestehende Daten. Stellen Sie sicher, dass Sie ein Backup erstellt haben, bevor Sie einen Import durchführen.</p>
+          </div>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }
@@ -933,7 +670,7 @@ function AdminDashboard() {
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/admin/dashboard");
       if (!response.ok) {
-        throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
+        throw new Error(`Failed to fetch dashboard stats: ${response.statusText}`);
       }
       return await response.json() as AdminDashboardStats;
     },
@@ -943,132 +680,101 @@ function AdminDashboard() {
     return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
   
-  if (error || !stats) {
+  if (error) {
     return <Alert variant="destructive"><AlertDescription>Fehler beim Laden der Dashboard-Daten</AlertDescription></Alert>;
   }
   
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <Users className="h-6 w-6 text-blue-700" />
+        {/* Benutzerstatistiken */}
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          <h3 className="text-blue-700 text-sm font-medium mb-2">Benutzer</h3>
+          <p className="text-2xl font-bold text-blue-900">{stats?.users.total || 0}</p>
+          <div className="mt-2 text-xs text-blue-600 space-y-1">
+            <div className="flex justify-between">
+              <span>Aktiv:</span>
+              <span className="font-medium">{stats?.users.active || 0}</span>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Benutzer</p>
-              <h3 className="text-2xl font-bold">{stats.users.total}</h3>
-              <p className="text-xs text-muted-foreground">{stats.users.active} aktiv</p>
+            <div className="flex justify-between">
+              <span>Inaktiv:</span>
+              <span className="font-medium">{stats?.users.pending || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Administratoren:</span>
+              <span className="font-medium">{stats?.users.admin || 0}</span>
             </div>
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-green-700" />
+        {/* Reparaturstatistiken */}
+        <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+          <h3 className="text-green-700 text-sm font-medium mb-2">Reparaturen insgesamt</h3>
+          <p className="text-2xl font-bold text-green-900">{stats?.repairs.totalOrders || 0}</p>
+          <div className="mt-2 text-xs text-green-600 space-y-1">
+            <div className="flex justify-between">
+              <span>In Bearbeitung:</span>
+              <span className="font-medium">{stats?.repairs.inRepair || 0}</span>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Aufträge</p>
-              <h3 className="text-2xl font-bold">{stats.repairs.totalOrders}</h3>
-              <p className="text-xs text-muted-foreground">{stats.repairs.today} heute</p>
+            <div className="flex justify-between">
+              <span>Abholbereit:</span>
+              <span className="font-medium">{stats?.repairs.readyForPickup || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Abgeschlossen:</span>
+              <span className="font-medium">{stats?.repairs.completed || 0}</span>
             </div>
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-amber-100 p-3 rounded-full">
-              <FileCheck className="h-6 w-6 text-amber-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">In Bearbeitung</p>
-              <h3 className="text-2xl font-bold">{stats.repairs.inRepair}</h3>
-              <p className="text-xs text-muted-foreground">{stats.repairs.readyForPickup} abholbereit</p>
+        {/* Heute-Statistiken */}
+        <div className="bg-amber-50 p-4 rounded-lg border border-amber-100">
+          <h3 className="text-amber-700 text-sm font-medium mb-2">Heute</h3>
+          <p className="text-2xl font-bold text-amber-900">{stats?.repairs.today || 0}</p>
+          <div className="mt-2 text-xs text-amber-600">
+            <div className="flex justify-between">
+              <span>Neue Aufträge</span>
             </div>
           </div>
-        </Card>
+        </div>
         
-        <Card className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-100 p-3 rounded-full">
-              <Truck className="h-6 w-6 text-purple-700" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Ausgelagert</p>
-              <h3 className="text-2xl font-bold">{stats.repairs.outsourced}</h3>
-              <p className="text-xs text-muted-foreground">zur Reparatur</p>
+        {/* Externe Reparaturen */}
+        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+          <h3 className="text-purple-700 text-sm font-medium mb-2">Externe Reparaturen</h3>
+          <p className="text-2xl font-bold text-purple-900">{stats?.repairs.outsourced || 0}</p>
+          <div className="mt-2 text-xs text-purple-600">
+            <div className="flex justify-between">
+              <span>Bei externen Partnern</span>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Benutzerstatistik</h3>
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-2">
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>Aktive Benutzer</span>
-                <span>{stats.users.active} / {stats.users.total}</span>
-              </div>
-              <Progress value={(stats.users.active / stats.users.total) * 100} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>Inaktive Benutzer</span>
-                <span>{stats.users.total - stats.users.active} / {stats.users.total}</span>
-              </div>
-              <Progress value={((stats.users.total - stats.users.active) / stats.users.total) * 100} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>Administratoren</span>
-                <span>{stats.users.admin} / {stats.users.total}</span>
-              </div>
-              <Progress value={(stats.users.admin / stats.users.total) * 100} className="h-2" />
-            </div>
-          </div>
-        </Card>
+      {/* Letzter Login und Systemstatus */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="bg-muted/30 p-4 rounded-lg border">
+          <h3 className="text-lg font-medium mb-2">Letzte Logins</h3>
+          <p className="text-sm text-muted-foreground">Diese Funktion ist noch in Entwicklung.</p>
+        </div>
         
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Auftragsstatistik</h3>
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-          </div>
+        <div className="bg-muted/30 p-4 rounded-lg border">
+          <h3 className="text-lg font-medium mb-2">Systemstatus</h3>
           <div className="space-y-2">
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>In Bearbeitung</span>
-                <span>{stats.repairs.inRepair} / {stats.repairs.totalOrders}</span>
-              </div>
-              <Progress value={(stats.repairs.inRepair / stats.repairs.totalOrders) * 100} className="h-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Datenbankverbindung</span>
+              <Badge variant="success">Online</Badge>
             </div>
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>Abgeschlossen</span>
-                <span>{stats.repairs.completed} / {stats.repairs.totalOrders}</span>
-              </div>
-              <Progress value={(stats.repairs.completed / stats.repairs.totalOrders) * 100} className="h-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-sm">SMTP-Server</span>
+              <Badge variant="success">Online</Badge>
             </div>
-            <div>
-              <div className="flex justify-between text-sm">
-                <span>Abholbereit</span>
-                <span>{stats.repairs.readyForPickup} / {stats.repairs.totalOrders}</span>
-              </div>
-              <Progress value={(stats.repairs.readyForPickup / stats.repairs.totalOrders) * 100} className="h-2" />
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Speichernutzung</span>
+              <span className="text-sm font-medium">32%</span>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
-      
-      <Card className="p-6">
-        <h3 className="font-semibold mb-4">Aktuelle Ereignisse</h3>
-        <ActivityLogTab />
-      </Card>
     </div>
   );
 }
@@ -1078,156 +784,154 @@ export default function AdminPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { user, isLoading } = useAuth();
-  
-  // Umleiten, wenn Benutzer kein Admin ist
-  useEffect(() => {
-    if (!isLoading && (!user || !user.isAdmin)) {
-      setLocation("/");
-    }
-  }, [user, isLoading, setLocation]);
-  
-  // Wenn noch geladen wird oder der Benutzer kein Admin ist, nichts anzeigen
-  if (isLoading || !user || !user.isAdmin) {
-    return <div className="flex items-center justify-center min-h-screen">
-      {isLoading ? <Loader2 className="animate-spin h-8 w-8 text-blue-500" /> : null}
-    </div>;
+  const { user } = useAuth();
+
+  if (!user || !user.isAdmin) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold text-center mb-4">Zugriff verweigert</h1>
+          <p className="text-center text-muted-foreground mb-6">
+            Sie haben keine Berechtigung, auf diesen Bereich zuzugreifen.
+          </p>
+          <Button 
+            onClick={() => setLocation("/")}
+            className="w-full"
+          >
+            Zurück zum Dashboard
+          </Button>
+        </div>
+      </div>
+    );
   }
-  
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Desktop-Ansicht (nur auf md und größer sichtbar) */}
-      <div className="hidden md:flex h-screen bg-gray-100">
-        {/* Seitenleiste - Desktop */}
-        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white p-4 transition-all duration-300 ease-in-out flex flex-col`}>
-          <div className="flex items-center mb-6">
-            {sidebarCollapsed ? (
-              <div className="mx-auto bg-blue-500 text-white rounded-md w-8 h-8 flex items-center justify-center">
-                <span className="font-bold">A</span>
-              </div>
-            ) : (
-              <h2 className="text-xl font-bold">Handyshop</h2>
-            )}
-          </div>
-          
-          <nav className="space-y-4">
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "dashboard" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("dashboard")}
-            >
-              <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "users" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("users")}
-            >
-              <Users className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Benutzer</span>}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "pakete" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("pakete")}
-            >
-              <Layers className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Pakete</span>}
-            </div>
-            
-            {/* Geräte mit Unterkategorien */}
-            <div className="space-y-1">
+    <div className="bg-gray-100 min-h-screen">
+      {/* Desktop-Ansicht mit Seitenleiste (nur auf md und größer sichtbar) */}
+      <div className="hidden md:flex h-screen">
+        {/* Sidebar */}
+        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white h-screen transition-all duration-300 ease-in-out overflow-hidden`}>
+          <div className="p-4">
+            <h1 className="text-xl font-bold mb-6 truncate">Admin-Panel</h1>
+            <nav className="space-y-2">
               <div 
-                className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" || activeTab.startsWith("device") ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                onClick={() => {
-                  if (sidebarCollapsed) {
-                    setActiveTab("devices");
-                  } else {
-                    setDeviceMenuOpen(!deviceMenuOpen);
-                  }
-                }}
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "dashboard" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("dashboard")}
               >
-                <div className="flex items-center">
-                  <Smartphone className="h-5 w-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span className="ml-3">Geräte</span>}
+                <LayoutDashboard className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Dashboard</span>}
+              </div>
+              
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "users" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("users")}
+              >
+                <Users className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Benutzer</span>}
+              </div>
+              
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "pakete" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("pakete")}
+              >
+                <Layers className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Pakete</span>}
+              </div>
+              
+              {/* Geräte mit Unterkategorien */}
+              <div className="space-y-1">
+                <div 
+                  className={`flex items-center justify-between p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" || activeTab.startsWith("device") ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                  onClick={() => {
+                    if (sidebarCollapsed) {
+                      setActiveTab("devices");
+                    } else {
+                      setDeviceMenuOpen(!deviceMenuOpen);
+                    }
+                  }}
+                >
+                  <div className="flex items-center">
+                    <Smartphone className="h-5 w-5 flex-shrink-0" />
+                    {!sidebarCollapsed && <span className="ml-3">Geräte</span>}
+                  </div>
+                  {!sidebarCollapsed && (
+                    <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${deviceMenuOpen ? 'rotate-90' : ''}`} />
+                  )}
                 </div>
-                {!sidebarCollapsed && (
-                  <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${deviceMenuOpen ? 'rotate-90' : ''}`} />
+                
+                {/* Unterkategorien für Geräte */}
+                {(deviceMenuOpen && !sidebarCollapsed) && (
+                  <div className="ml-7 space-y-1 pl-2 border-l border-gray-700">
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("devices")}
+                    >
+                      <span className="text-sm">Übersicht</span>
+                    </div>
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceTypes" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("deviceTypes")}
+                    >
+                      <span className="text-sm">Gerätetypen</span>
+                    </div>
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceBrands" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("deviceBrands")}
+                    >
+                      <span className="text-sm">Hersteller</span>
+                    </div>
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("deviceIssues")}
+                    >
+                      <span className="text-sm">Problemkatalog</span>
+                    </div>
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceImport" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("deviceImport")}
+                    >
+                      <span className="text-sm">Importieren</span>
+                    </div>
+                  </div>
                 )}
               </div>
               
-              {/* Unterkategorien für Geräte */}
-              {(deviceMenuOpen && !sidebarCollapsed) && (
-                <div className="ml-7 space-y-1 pl-2 border-l border-gray-700">
-                  <div 
-                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "devices" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                    onClick={() => setActiveTab("devices")}
-                  >
-                    <span className="text-sm">Übersicht</span>
-                  </div>
-                  <div 
-                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceTypes" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                    onClick={() => setActiveTab("deviceTypes")}
-                  >
-                    <span className="text-sm">Gerätetypen</span>
-                  </div>
-                  <div 
-                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceBrands" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                    onClick={() => setActiveTab("deviceBrands")}
-                  >
-                    <span className="text-sm">Hersteller</span>
-                  </div>
-                  <div 
-                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                    onClick={() => setActiveTab("deviceIssues")}
-                  >
-                    <span className="text-sm">Problemkatalog</span>
-                  </div>
-                  <div 
-                    className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceImport" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-                    onClick={() => setActiveTab("deviceImport")}
-                  >
-                    <span className="text-sm">Importieren</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "system" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("system")}
-            >
-              <Cog className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Systemdiagnose</span>}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "backup" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("backup")}
-            >
-              <Save className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Backup & Restore</span>}
-            </div>
-            
-            <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "featureTest" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("featureTest")}
-            >
-              <Layers className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Feature-Tests</span>}
-            </div>
-            
-
-            
-            {/* Design Preview Menüpunkte wurden entfernt */}
-            
-            <Link href="/">
-              <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
-                <ChevronLeft className="h-5 w-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span className="ml-3">Zurück zum Shop</span>}
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "system" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("system")}
+              >
+                <Cog className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Systemdiagnose</span>}
               </div>
-            </Link>
-          </nav>
+              
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "backup" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("backup")}
+              >
+                <Save className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Backup & Restore</span>}
+              </div>
+              
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "featureTest" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("featureTest")}
+              >
+                <Layers className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Feature-Tests</span>}
+              </div>
+              
+
+              
+              {/* Design Preview Menüpunkte wurden entfernt */}
+              
+              <Link href="/">
+                <div className="flex items-center p-2 rounded-md hover:bg-gray-800 text-green-400 cursor-pointer mt-8">
+                  <ChevronLeft className="h-5 w-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span className="ml-3">Zurück zum Shop</span>}
+                </div>
+              </Link>
+            </nav>
+          </div>
         </div>
         
         {/* Toggle Button für die Seitenleiste */}
@@ -1251,7 +955,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-md p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
-            {activeTab === "planFeatures" && <PlanFeaturesManager />}
+            {activeTab === "pakete" && <FeatureMatrixTab />}
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
@@ -1363,7 +1067,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-md shadow-sm p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
-            {activeTab === "planFeatures" && <PlanFeaturesManager />}
+            {activeTab === "pakete" && <FeatureMatrixTab />}
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
