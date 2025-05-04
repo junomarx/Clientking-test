@@ -1047,8 +1047,8 @@ export default function SuperadminDevicesTab() {
                 </Label>
                 <Input
                   id="editModelName"
-                  value={selectedModel.name}
-                  onChange={(e) => setSelectedModel({ ...selectedModel, name: e.target.value })}
+                  value={selectedModel?.name || ''}
+                  onChange={(e) => selectedModel && setSelectedModel({ ...selectedModel, name: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -1092,7 +1092,7 @@ export default function SuperadminDevicesTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {brandsQuery.data
-                      ?.filter((brand) => brand.deviceType === selectedModel.deviceType)
+                      ?.filter((brand) => selectedModel && brand.deviceType === selectedModel.deviceType)
                       .map((brand) => (
                         <SelectItem key={brand.id} value={brand.name}>
                           {brand.name}
@@ -1108,8 +1108,8 @@ export default function SuperadminDevicesTab() {
                 <div className="flex items-center space-x-2 col-span-3">
                   <Checkbox
                     id="editModelGlobal"
-                    checked={selectedModel.isGlobal}
-                    onCheckedChange={(checked) => setSelectedModel({ ...selectedModel, isGlobal: !!checked })}
+                    checked={selectedModel?.isGlobal || false}
+                    onCheckedChange={(checked) => selectedModel && setSelectedModel({ ...selectedModel, isGlobal: !!checked })}
                   />
                   <label
                     htmlFor="editModelGlobal"
@@ -1241,8 +1241,8 @@ export default function SuperadminDevicesTab() {
                 </Label>
                 <Input
                   id="editIssueDescription"
-                  value={selectedIssue.description}
-                  onChange={(e) => setSelectedIssue({ ...selectedIssue, description: e.target.value })}
+                  value={selectedIssue?.description || ''}
+                  onChange={(e) => selectedIssue && setSelectedIssue({ ...selectedIssue, description: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -1251,8 +1251,8 @@ export default function SuperadminDevicesTab() {
                   Gerätetyp
                 </Label>
                 <Select
-                  value={selectedIssue.deviceType}
-                  onValueChange={(value) => setSelectedIssue({ ...selectedIssue, deviceType: value })}
+                  value={selectedIssue?.deviceType || ''}
+                  onValueChange={(value) => selectedIssue && setSelectedIssue({ ...selectedIssue, deviceType: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
@@ -1273,8 +1273,8 @@ export default function SuperadminDevicesTab() {
                 <div className="flex items-center space-x-2 col-span-3">
                   <Checkbox
                     id="editIssueGlobal"
-                    checked={selectedIssue.isGlobal}
-                    onCheckedChange={(checked) => setSelectedIssue({ ...selectedIssue, isGlobal: !!checked })}
+                    checked={selectedIssue?.isGlobal || false}
+                    onCheckedChange={(checked) => selectedIssue && setSelectedIssue({ ...selectedIssue, isGlobal: !!checked })}
                   />
                   <label
                     htmlFor="editIssueGlobal"
