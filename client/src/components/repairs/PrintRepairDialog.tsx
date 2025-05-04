@@ -449,7 +449,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 </div>
                 
                 {/* Reparaturauftrag Nummer */}
-                <div className="print-section mb-3">
+                <div className="print-section mb-3 text-center">
                   <div className="flex items-center justify-center">
                     <h3 className="font-semibold text-lg">Reparaturauftrag</h3>
                     <span className="receipt-number">{repair?.orderCode || `#${repair?.id}`}</span>
@@ -458,8 +458,8 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 
                 {/* Kundendaten */}
                 <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1">Kundendaten</h3>
-                  <div className="grid grid-cols-1 gap-1 text-sm">
+                  <h3 className="font-semibold mb-1 text-center">Kundendaten</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm text-center">
                     <p><span className="font-medium">Name:</span> {customer?.firstName} {customer?.lastName}</p>
                     <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
                     {customer?.email && <p><span className="font-medium">E-Mail:</span> {customer?.email}</p>}
@@ -475,8 +475,8 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 
                 {/* Gerätedaten - ohne Typ */}
                 <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1">Gerätedaten</h3>
-                  <div className="grid grid-cols-1 gap-1 text-sm">
+                  <h3 className="font-semibold mb-1 text-center">Gerätedaten</h3>
+                  <div className="grid grid-cols-1 gap-1 text-sm text-center">
                     <p><span className="font-medium">Hersteller:</span> {repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}</p>
                     <p><span className="font-medium">Modell:</span> {repair?.model}</p>
                     {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
@@ -485,8 +485,8 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 
                 {/* Reparaturdetails */}
                 <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1">Reparaturdetails</h3>
-                  <div className="grid grid-cols-1 gap-2 text-sm">
+                  <h3 className="font-semibold mb-1 text-center">Reparaturdetails</h3>
+                  <div className="grid grid-cols-1 gap-2 text-sm text-center">
                     <div className="highlight-box">
                       <p>
                         <span className="font-medium">Problem:</span> 
@@ -517,10 +517,10 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 
                 {/* Entfernt: Status wird nicht mehr angezeigt */}
                 
-                {/* Kundenunterschrift anzeigen, wenn vorhanden */}
+                {/* Abgabe-Unterschrift (Dropoff) anzeigen, wenn vorhanden */}
                 {repair?.dropoffSignature && (
                   <div className="print-section mb-3 border-t">
-                    <h3 className="font-semibold mb-2 mt-2">Unterschrift bei Geräteabgabe</h3>
+                    <h3 className="font-semibold mb-2 mt-2 text-center">Unterschrift bei Geräteabgabe</h3>
                     <div className="border" style={{padding: '2mm'}}>
                       <img 
                         src={repair.dropoffSignature} 
@@ -535,6 +535,28 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                     )}
                     <div className="text-xs mt-3 text-center">
                       <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich mit den Reparaturbedingungen einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Abholungs-Unterschrift (Pickup) anzeigen, wenn vorhanden */}
+                {repair?.pickupSignature && (
+                  <div className="print-section mb-3 border-t">
+                    <h3 className="font-semibold mb-2 mt-2 text-center">Unterschrift bei Geräteabholung</h3>
+                    <div className="border" style={{padding: '2mm'}}>
+                      <img 
+                        src={repair.pickupSignature} 
+                        alt="Unterschrift bei Abholung" 
+                        style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
+                      />
+                    </div>
+                    {repair.pickupSignedAt && (
+                      <div className="text-center text-xs mt-2">
+                        Unterschrieben am {format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy HH:mm', { locale: de })} Uhr
+                      </div>
+                    )}
+                    <div className="text-xs mt-3 text-center">
+                      <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich das reparierte Gerät in einwandfreiem Zustand erhalten habe.</p>
                     </div>
                   </div>
                 )}
