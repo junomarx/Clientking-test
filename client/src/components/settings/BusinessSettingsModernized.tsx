@@ -454,32 +454,20 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                     <div>
                       <input
                         type="file"
-                        id="logo-upload"
                         ref={fileInputRef}
                         accept="image/jpeg,image/png,image/svg+xml"
                         onChange={handleLogoUpload}
                         style={{ display: 'none' }}
                       />
+
                       <Button 
                         variant="outline" 
                         size="sm" 
                         type="button"
                         onClick={() => {
-                          // Direkter Ansatz, um das Datei-Dialogfenster zu öffnen
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/jpeg,image/png,image/svg+xml';
-                          input.onchange = (e) => {
-                            const target = e.target as HTMLInputElement;
-                            if (target && target.files && target.files.length > 0) {
-                              const file = target.files[0];
-                              // Erstelle ein künstliches Event für den Handler
-                              const fakeEvent = { target: { files: target.files } } as React.ChangeEvent<HTMLInputElement>;
-                              handleLogoUpload(fakeEvent);
-                            }
-                          };
-                          // Dateidialog öffnen
-                          input.click();
+                          if (fileInputRef.current) {
+                            fileInputRef.current.click();
+                          }
                         }}
                       >
                         <Upload className="h-4 w-4 mr-2" />
