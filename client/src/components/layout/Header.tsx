@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Smartphone, Menu, X, Settings, User, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
+import ClientKingLogo from "../../assets/ClientKing_Logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
@@ -42,7 +43,7 @@ export function Header({ variant = "landing" }: HeaderProps) {
         {/* Logo */}
         <Link href="/">
           <div className="flex items-center cursor-pointer">
-            <img src="/assets/ClientKing_Logo.png" alt="ClientKing Logo" className="h-12" />
+            <img src={ClientKingLogo} alt="ClientKing Logo" className="h-12" />
           </div>
         </Link>
 
