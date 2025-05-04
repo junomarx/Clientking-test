@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Repair } from '@/lib/types';
+import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { Printer, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
