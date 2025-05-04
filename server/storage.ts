@@ -89,14 +89,14 @@ export interface IStorage {
   getFeedbacksByRepairId(repairId: number): Promise<Feedback[]>;
   
   // Email template methods
-  getAllEmailTemplates(): Promise<EmailTemplate[]>;
-  getEmailTemplate(id: number): Promise<EmailTemplate | undefined>;
-  createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
-  updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
-  deleteEmailTemplate(id: number): Promise<boolean>;
+  getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined>;
+  createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate>;
+  updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>, userId?: number): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number, userId?: number): Promise<boolean>;
   
   // Email sending method (with template)
-  sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean>;
+  sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
   
   // SMS-Funktionalität wurde auf Kundenwunsch entfernt
   
@@ -1703,29 +1703,32 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
-    return await emailService.getEmailTemplate(id);
+  async getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined> {
+    return await emailService.getEmailTemplate(id, userId);
   }
   
-  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
-    return await emailService.createEmailTemplate(template);
+  async createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate> {
+    return await emailService.createEmailTemplate(template, userId);
   }
   
-  async updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
-    return await emailService.updateEmailTemplate(id, template);
+  async updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>, userId?: number): Promise<EmailTemplate | undefined> {
+    return await emailService.updateEmailTemplate(id, template, userId);
   }
   
-  async deleteEmailTemplate(id: number): Promise<boolean> {
-    return await emailService.deleteEmailTemplate(id);
+  async deleteEmailTemplate(id: number, userId?: number): Promise<boolean> {
+    return await emailService.deleteEmailTemplate(id, userId);
   }
   
   // Email sending method with template processing
-  async sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>): Promise<boolean> {
+  async sendEmailWithTemplate(templateId: number, to: string, variables: Record<string, string>, userId?: number): Promise<boolean> {
     try {
       console.log('Storage sendEmailWithTemplate aufgerufen mit templateId:', templateId);
       
-      // E-Mail-Vorlage abrufen
-      const template = await this.getEmailTemplate(templateId);
+      // Benutzer-ID aus den Parametern oder Variablen extrahieren, wenn vorhanden
+      const userIdForAccess = userId || (variables.userId ? parseInt(variables.userId) : undefined);
+      
+      // E-Mail-Vorlage abrufen (mit userId, falls vorhanden, um Zugriffsrechte zu prüfen)
+      const template = await this.getEmailTemplate(templateId, userIdForAccess);
       if (!template) {
         console.error(`E-Mail-Vorlage mit ID ${templateId} nicht gefunden`);
         return false;
@@ -1740,7 +1743,7 @@ export class DatabaseStorage implements IStorage {
         
         // Reparatur-ID und Benutzer-ID aus den Variablen extrahieren
         const repairId = parseInt(variables.repairId);
-        const userId = variables.userId ? parseInt(variables.userId) : undefined;
+        const userIdForHistory = variables.userId ? parseInt(variables.userId) : undefined;
         
         if (!isNaN(repairId)) {
           // E-Mail-Verlaufseintrag erstellen
