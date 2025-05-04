@@ -1914,25 +1914,41 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserDeviceType(id: number, userId: number): Promise<UserDeviceType | undefined> {
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+    
     const [deviceType] = await db
       .select()
       .from(userDeviceTypes)
       .where(
         and(
           eq(userDeviceTypes.id, id),
-          eq(userDeviceTypes.userId, userId)
+          eq(userDeviceTypes.userId, userId),
+          eq(userDeviceTypes.shopId, shopId)
         )
       );
     return deviceType;
   }
   
   async createUserDeviceType(deviceType: InsertUserDeviceType, userId: number): Promise<UserDeviceType> {
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+    
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+    
     const now = new Date();
     const [newDeviceType] = await db
       .insert(userDeviceTypes)
       .values({
         ...deviceType,
         userId,
+        shopId, // Shop-ID zwingend setzen für die Shop-Isolation
         createdAt: now,
         updatedAt: now
       })
@@ -1941,6 +1957,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateUserDeviceType(id: number, deviceType: Partial<InsertUserDeviceType>, userId: number): Promise<UserDeviceType | undefined> {
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+    
     const [updatedDeviceType] = await db
       .update(userDeviceTypes)
       .set({
@@ -1950,7 +1973,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(userDeviceTypes.id, id),
-          eq(userDeviceTypes.userId, userId)
+          eq(userDeviceTypes.userId, userId),
+          eq(userDeviceTypes.shopId, shopId)
         )
       )
       .returning();
@@ -1959,14 +1983,22 @@ export class DatabaseStorage implements IStorage {
   
   async deleteUserDeviceType(id: number, userId: number): Promise<boolean> {
     try {
-      // Prüfen, ob Marken diesen Gerätetyp verwenden
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await this.getUser(userId);
+      if (!user) return false;
+      
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId || 1;
+      
+      // Prüfen, ob Marken diesen Gerätetyp verwenden (mit Shop-Isolation)
       const relatedBrands = await db
         .select()
         .from(userBrands)
         .where(
           and(
             eq(userBrands.deviceTypeId, id),
-            eq(userBrands.userId, userId)
+            eq(userBrands.userId, userId),
+            eq(userBrands.shopId, shopId)
           )
         );
       
@@ -1975,12 +2007,14 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
+      // Gerätetyp löschen mit Shop-Isolation
       await db
         .delete(userDeviceTypes)
         .where(
           and(
             eq(userDeviceTypes.id, id),
-            eq(userDeviceTypes.userId, userId)
+            eq(userDeviceTypes.userId, userId),
+            eq(userDeviceTypes.shopId, shopId)
           )
         );
       return true;
