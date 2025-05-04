@@ -743,7 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // BUSINESS SETTINGS API - KOMPLETT NEU IMPLEMENTIERT
+  // BUSINESS SETTINGS API - KOMPLETT ÜBERARBEITET MIT SHOP-ISOLATION
   app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
     try {
       if (!req.user) {
@@ -755,43 +755,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const username = (req.user as any).username;
       console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId} (${username})`);
       
-      // Versuche direkt aus der Datenbank abzurufen
-      // Wir müssen bestimmte Spalten auswählen, um Spaltennamenkonflikte zu vermeiden
-      const userSettings = await db
-        .select({
-          id: businessSettings.id,
-          businessName: businessSettings.businessName,
-          ownerFirstName: businessSettings.ownerFirstName,
-          ownerLastName: businessSettings.ownerLastName,
-          taxId: businessSettings.taxId,
-          vatNumber: businessSettings.vatNumber,  // Neue Spalte in DB: vat_number
-          companySlogan: businessSettings.companySlogan,  // Neue Spalte in DB: company_slogan
-          streetAddress: businessSettings.streetAddress,
-          city: businessSettings.city,
-          zipCode: businessSettings.zipCode,
-          country: businessSettings.country,
-          phone: businessSettings.phone,
-          email: businessSettings.email,
-          website: businessSettings.website,
-          logoImage: businessSettings.logoImage,
-          colorTheme: businessSettings.colorTheme,
-          receiptWidth: businessSettings.receiptWidth,
-          smtpSenderName: businessSettings.smtpSenderName,
-          smtpHost: businessSettings.smtpHost,
-          smtpUser: businessSettings.smtpUser,
-          smtpPassword: businessSettings.smtpPassword,
-          smtpPort: businessSettings.smtpPort,
-          reviewLink: businessSettings.reviewLink,
-          userId: businessSettings.userId,
-          updatedAt: businessSettings.updatedAt
-        })
-        .from(businessSettings)
-        .where(eq(businessSettings.userId, userId))
-        .limit(1);
+      // Verwende die aktualisierte Storage-Methode mit Tenant-Isolation
+      const userSettings = await storage.getBusinessSettings(userId);
       
       // Wenn keine Einstellungen gefunden wurden, erstelle Standardeinstellungen
-      if (userSettings.length === 0) {
+      if (!userSettings) {
         console.log(`Keine Einstellungen für Benutzer ${userId} gefunden, erstelle Standardeinstellungen`);
+        
+        // Benutzer holen, um Shop-ID für neue Einstellungen zu bestimmen
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "Benutzer nicht gefunden" });
+        }
+        
+        const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID vorhanden
         
         // Erstelle ein Business-Settings-Objekt mit Standardwerten
         const userData = req.user as any;
@@ -811,22 +788,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           website: "",
           colorTheme: "blue",
           receiptWidth: "80mm",
-          userId: userId // WICHTIG: Benutzer-ID setzen
+          userId: userId, // WICHTIG: Benutzer-ID setzen
+          shopId: shopId  // WICHTIG: Shop-ID für Tenant-Isolation setzen
         };
         
-        // Speichere die Standardeinstellungen direkt in der Datenbank
-        const [newSettings] = await db
-          .insert(businessSettings)
-          .values(defaultSettings)
-          .returning();
+        // Speichere die Standardeinstellungen über die Storage-Methode
+        const newSettings = await storage.updateBusinessSettings(defaultSettings, userId);
           
-        console.log(`Standardeinstellungen für Benutzer ${userId} erstellt:`, newSettings.id);
+        console.log(`Standardeinstellungen für Benutzer ${userId} (Shop ${shopId}) erstellt:`, newSettings.id);
         return res.json(newSettings);
       }
       
       // Ansonsten geben wir die gespeicherten Einstellungen zurück
-      console.log(`Einstellungen für Benutzer ${userId} gefunden:`, userSettings[0].id);
-      res.json(userSettings[0]);
+      console.log(`Einstellungen für Benutzer ${userId} gefunden: ID ${userSettings.id} (Shop ${userSettings.shopId})`);
+      res.json(userSettings);
     } catch (error) {
       console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
@@ -844,87 +819,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const username = (req.user as any).username;
       console.log(`NEUE IMPLEMENTATION: Updating business settings for user ${userId} (${username})`);
       
-      // Daten aus dem Request-Body extrahieren
-      const { logoImage, colorTheme, receiptWidth, ...otherData } = req.body;
+      // Benutzer holen, um Shop-ID für die Einstellungen zu bestimmen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
       
-      // Versuche die aktuellen Einstellungen zu finden
-      // Wir müssen bestimmte Spalten auswählen, um Spaltennamenkonflikte zu vermeiden
-      const currentSettings = await db
-        .select({
-          id: businessSettings.id,
-          businessName: businessSettings.businessName,
-          ownerFirstName: businessSettings.ownerFirstName,
-          ownerLastName: businessSettings.ownerLastName,
-          taxId: businessSettings.taxId,
-          vatNumber: businessSettings.vatNumber,  // Neue Spalte in DB: vat_number
-          companySlogan: businessSettings.companySlogan,  // Neue Spalte in DB: company_slogan
-          streetAddress: businessSettings.streetAddress,
-          city: businessSettings.city,
-          zipCode: businessSettings.zipCode,
-          country: businessSettings.country,
-          phone: businessSettings.phone,
-          email: businessSettings.email,
-          website: businessSettings.website,
-          logoImage: businessSettings.logoImage,
-          colorTheme: businessSettings.colorTheme,
-          receiptWidth: businessSettings.receiptWidth,
-          smtpSenderName: businessSettings.smtpSenderName,
-          smtpHost: businessSettings.smtpHost,
-          smtpUser: businessSettings.smtpUser,
-          smtpPassword: businessSettings.smtpPassword,
-          smtpPort: businessSettings.smtpPort,
-          reviewLink: businessSettings.reviewLink,
-          userId: businessSettings.userId,
-          updatedAt: businessSettings.updatedAt
-        })
-        .from(businessSettings)
-        .where(eq(businessSettings.userId, userId))
-        .limit(1);
+      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID vorhanden
       
-      // Prüfe, ob die Einstellungen existieren
-      if (currentSettings.length === 0) {
-        console.log(`Keine bestehenden Einstellungen für Benutzer ${userId} gefunden`);
-        
-        // Erstelle vollständige Einstellungen mit allen Eingaben
-        const newSettingsData = {
-          ...otherData,
-          logoImage: logoImage || "",
-          colorTheme: colorTheme || "blue",
-          receiptWidth: receiptWidth || "80mm",
-          userId: userId // WICHTIG: Benutzer-ID setzen
+      // Aktuelle Einstellungen abrufen (mit Shop-Isolation)
+      const currentSettings = await storage.getBusinessSettings(userId);
+      
+      // Konsolidiere alle Daten aus dem Request-Body
+      const settingsData = {
+        ...req.body,
+        userId, // WICHTIG: Benutzer-ID setzen
+        shopId  // WICHTIG: Shop-ID für Tenant-Isolation setzen
+      };
+      
+      // Nicht vorhandene Pflichtfelder mit Standardwerten auffüllen, wenn keine Einstellungen existieren
+      if (!currentSettings) {
+        // Erstelle ein komplettes Settings-Objekt mit Standardwerten für fehlende Felder
+        const userData = req.user as any;
+        const defaultSettings = {
+          businessName: settingsData.businessName || userData?.companyName || `Reparaturshop ${username}`,
+          ownerFirstName: settingsData.ownerFirstName || "", 
+          ownerLastName: settingsData.ownerLastName || "",
+          taxId: settingsData.taxId || userData?.companyVatNumber || "",
+          vatNumber: settingsData.vatNumber || "", // Neue Spalte: USt-IdNr.
+          companySlogan: settingsData.companySlogan || "", // Neue Spalte: Firmenlaut
+          streetAddress: settingsData.streetAddress || "",
+          city: settingsData.city || "",
+          zipCode: settingsData.zipCode || "",
+          country: settingsData.country || "Österreich",
+          phone: settingsData.phone || "",
+          email: settingsData.email || userData?.email || "",
+          website: settingsData.website || "",
+          colorTheme: settingsData.colorTheme || "blue",
+          receiptWidth: settingsData.receiptWidth || "80mm",
+          logoImage: settingsData.logoImage || "",
+          smtpSenderName: settingsData.smtpSenderName || "",
+          smtpHost: settingsData.smtpHost || "",
+          smtpUser: settingsData.smtpUser || "",
+          smtpPassword: settingsData.smtpPassword || "",
+          smtpPort: settingsData.smtpPort || "",
+          reviewLink: settingsData.reviewLink || "",
+          userId, // WICHTIG: Benutzer-ID setzen
+          shopId  // WICHTIG: Shop-ID für Tenant-Isolation setzen
         };
         
-        // Füge die neuen Einstellungen in die Datenbank ein
-        const [insertedSettings] = await db
-          .insert(businessSettings)
-          .values(newSettingsData)
-          .returning();
+        // Verwende die aktualisierte Storage-Methode mit Tenant-Isolation
+        const newSettings = await storage.updateBusinessSettings(defaultSettings, userId);
         
-        console.log(`Neue Einstellungen für Benutzer ${userId} erstellt:`, insertedSettings.id);
-        return res.json(insertedSettings);
+        console.log(`Neue Einstellungen für Benutzer ${userId} (Shop ${shopId}) erstellt:`, newSettings.id);
+        return res.json(newSettings);
       }
       
       // Bestehende Einstellungen aktualisieren
-      const settingsId = currentSettings[0].id;
-      console.log(`Aktualisiere bestehende Einstellungen für Benutzer ${userId} (Settings-ID: ${settingsId})`);
+      console.log(`Aktualisiere bestehende Einstellungen für Benutzer ${userId} (Settings-ID: ${currentSettings.id}, Shop: ${shopId})`);
       
-      // Bereite die aktualisierten Daten vor
-      const updateData = {
-        ...otherData,
-        logoImage: logoImage !== undefined ? logoImage : currentSettings[0].logoImage,
-        colorTheme: colorTheme || currentSettings[0].colorTheme,
-        receiptWidth: receiptWidth || currentSettings[0].receiptWidth,
-        // userId wird nicht aktualisiert, bleibt die des authentifizierten Benutzers
-      };
+      // Verwende die aktualisierte Storage-Methode mit Tenant-Isolation
+      const updatedSettings = await storage.updateBusinessSettings(settingsData, userId);
       
-      // Führe das Update durch
-      const [updatedSettings] = await db
-        .update(businessSettings)
-        .set(updateData)
-        .where(eq(businessSettings.id, settingsId))
-        .returning();
-      
-      console.log(`Einstellungen für Benutzer ${userId} erfolgreich aktualisiert (Settings-ID: ${updatedSettings.id})`);
+      console.log(`Einstellungen für Benutzer ${userId} erfolgreich aktualisiert (Settings-ID: ${updatedSettings.id}, Shop: ${updatedSettings.shopId})`);
       res.json(updatedSettings);
     } catch (error) {
       console.error("Fehler beim Aktualisieren der Geschäftseinstellungen:", error);
