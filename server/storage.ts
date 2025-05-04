@@ -145,6 +145,32 @@ export interface IStorage {
   convertToRepair(id: number, currentUserId?: number): Promise<Repair | undefined>;
 }
 
+/**
+ * Hilfsfunktion zum Konvertieren von Rohergebnissen in typsichere User-Objekte
+ */
+function convertToUser(row: any): User {
+  return {
+    id: Number(row.id),
+    username: String(row.username),
+    password: String(row.password),
+    email: String(row.email),
+    isActive: Boolean(row.is_active),
+    isAdmin: Boolean(row.is_admin),
+    pricingPlan: row.pricing_plan ? String(row.pricing_plan) : null,
+    shopId: row.shop_id ? Number(row.shop_id) : null,
+    companyName: row.company_name ? String(row.company_name) : null,
+    companyAddress: row.company_address ? String(row.company_address) : null,
+    companyVatNumber: row.company_vat_number ? String(row.company_vat_number) : null,
+    companyPhone: row.company_phone ? String(row.company_phone) : null,
+    companyEmail: row.company_email ? String(row.company_email) : null,
+    resetToken: row.reset_token ? String(row.reset_token) : null,
+    resetTokenExpires: row.reset_token_expires ? new Date(row.reset_token_expires) : null,
+    createdAt: new Date(row.created_at),
+    featureOverrides: row.feature_overrides,
+    packageId: row.package_id ? Number(row.package_id) : null
+  };
+}
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
   
