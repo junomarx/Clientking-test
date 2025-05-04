@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import { hasAccessClient, Feature } from "@/lib/permissions";
+import { hasAccessClient as hasAccess, Feature } from "@/lib/permissions";
 import { useState } from "react";
 import { UpgradeRequiredDialog } from "./UpgradeRequiredDialog";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,9 @@ export function RequireFeature({
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
   // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
-  const hasAccess = user ? hasAccessClient(user.pricingPlan as any, feature as Feature) : false;
+  const hasFeatureAccess = user ? checkUserAccess(user, feature) : false;
   
-  if (hasAccess) {
+  if (hasFeatureAccess) {
     // Wenn der Benutzer Zugriff hat, zeige den normalen Inhalt
     return <>{children}</>;
   }
@@ -91,7 +91,7 @@ export function useFeatureAccess(feature: string, requiredPlan: "professional" |
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
   // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
-  const hasAccess = user ? hasAccessClient(user.pricingPlan as any, feature as Feature) : false;
+  const hasFeatureAccess = user ? checkUserAccess(user, feature) : false;
   
   // Dialog-Komponente für Upgrade-Hinweis
   const UpgradeDialog = () => (
@@ -103,18 +103,18 @@ export function useFeatureAccess(feature: string, requiredPlan: "professional" |
   );
   
   return {
-    hasAccess,
+    hasAccess: hasFeatureAccess,
     checkAccess: () => setShowUpgradeDialog(true),
     UpgradeDialog
   };
 }
 
 /**
- * Clientseitige Version der hasAccess Funktion, die mit dem UserResponse Typ kompatibel ist
+ * Hilfsfunktion zur Prüfung des Benutzer-Zugriffs
  */
 function checkUserAccess(user: UserResponse | null, feature: string): boolean {
   if (!user) return false;
   
-  // Konvertiere pricingPlan in den korrekten Typ für die hasAccessClient Funktion
-  return hasAccessClient(user.pricingPlan as any, feature as Feature);
+  // Konvertiere pricingPlan in den korrekten Typ für die hasAccess Funktion
+  return hasAccess(user.pricingPlan as any, feature as Feature);
 }
