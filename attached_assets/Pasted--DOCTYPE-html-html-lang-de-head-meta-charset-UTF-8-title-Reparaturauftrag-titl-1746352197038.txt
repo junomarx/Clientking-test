@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Reparaturauftrag</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        .logo-container {
+            width: 200px;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: #999;
+        }
+        .company-info {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+        .company-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .document-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 30px 0 10px 0;
+            color: #222;
+        }
+        .auftragsnummer {
+            text-align: center;
+            font-size: 18px;
+            margin: 0 0 40px 0;
+            color: #222;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .customer-info {
+            margin-bottom: 30px;
+        }
+        .customer-info p {
+            margin: 3px 0;
+        }
+        .customer-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .device-repair-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .info-column {
+            flex: 1;
+        }
+        .info-item {
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        .repair-terms-box {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .repair-terms-box p {
+            margin: 8px 0;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .signature-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .signature-box {
+            flex: 1;
+            text-align: center;
+        }
+        .signature-line {
+            margin-top: 40px;
+            border-top: 1px solid #999;
+            height: 1px;
+        }
+        .signature-placeholder {
+            font-size: 10px;
+            color: #999;
+            margin-top: 5px;
+        }
+        .signature-date {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            @page {
+                size: A4;
+                margin: 2cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            {{ firmenlogo }}
+        </div>
+        <div class="company-info">
+            <p class="company-name">Mac and PhoneDoc</p>
+            <p>Amerlingstraße 19<br>
+            1060 Wien<br>
+            +4314103511<br>
+            office@macandphonedoc.at</p>
+        </div>
+    </div>
+
+    <div class="customer-info">
+        <div class="section-title">Kundeninformationen</div>
+        <p class="customer-name">{{ kundenname }}</p>
+        <p>{{ kundenadresse1 }}</p>
+        <p>{{ kundenadresse2 }}</p>
+    </div>
+
+    <div class="document-title">Reparaturauftrag</div>
+    <div class="auftragsnummer">{{ auftragsnummer }}</div>
+
+    <!-- Gerätedaten & Reparaturdetails -->
+    <div class="device-repair-box">
+        <div class="info-column">
+            <div class="info-item">
+                <div class="info-label">Hersteller</div>
+                <div class="info-value">{{ hersteller }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Modell</div>
+                <div class="info-value">{{ modell }}</div>
+            </div>
+        </div>
+        <div class="info-column">
+            <div class="info-item">
+                <div class="info-label">Schaden / Fehler</div>
+                <div class="info-value">{{ problem }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Kosten</div>
+                <div class="info-value">{{ preis }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reparaturbedingungen -->
+    <div class="section repair-terms-box">
+        <div class="section-title">Reparaturbedingungen</div>
+        <p><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
+        <p><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
+        <p><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
+        <p><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
+        <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
+        <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
+    </div>
+
+    <!-- Unterschriftsbereich mit Datum -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <p><strong>Reparaturauftrag erteilt</strong></p>
+            <div class="signature-line">{{ signatur_dropoff }}</div>
+            <div class="signature-placeholder">{{ kundenname }}</div>
+            <div class="signature-date">{{ datum_dropoff }}</div>
+        </div>
+        <div class="signature-box">
+            <p><strong>Gerät abgeholt</strong></p>
+            <div class="signature-line">{{ signatur_pickup }}</div>
+            <div class="signature-placeholder">{{ kundenname }}</div>
+            <div class="signature-date">{{ datum_pickup }}</div>
+        </div>
+    </div>
+</body>
+</html>
