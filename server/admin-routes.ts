@@ -1085,24 +1085,27 @@ export function registerAdminRoutes(app: Express) {
       });
       
       // Feature-Matrixansicht erstellen
-      // Feature-Labels mit benutzerfreundlichen Beschreibungen
-      const featureLabels: Record<string, { label: string; description?: string }> = {
-        dashboard: { label: "Dashboard", description: "Zugriff auf die Übersichtsseite" },
+      // Feature-Metadaten mit benutzerfreundlichen Beschreibungen
+      const featureMeta: Record<string, { label: string; description?: string }> = {
+        dashboard: { label: "Dashboard", description: "Startseite mit Übersicht" },
         repairs: { label: "Reparaturen", description: "Verwaltung von Reparaturaufträgen" },
         customers: { label: "Kunden", description: "Kundenverwaltung" },
+        printA4: { label: "A4-Druck", description: "Drucken von A4-Dokumenten" },
+        deviceTypes: { label: "Gerätetypen", description: "Verwaltung von Gerätetypen" },
+        brands: { label: "Hersteller", description: "Verwaltung von Herstellern und Marken" },
+        costEstimates: { label: "Kostenvoranschläge", description: "Erstellen von Kostenvoranschlägen" },
         emailTemplates: { label: "E-Mail-Vorlagen", description: "Verwaltung von E-Mail-Vorlagen" },
-        userManagement: { label: "Benutzerverwaltung", description: "Anlegen und Verwalten von Benutzern" },
-        editBusinessSettings: { label: "Geschäftseinstellungen", description: "Bearbeiten von Firmeninformationen" },
-        printLabels: { label: "Etikettendruck", description: "Drucken von Etiketten für Reparaturen" },
-        deviceManagement: { label: "Geräteverwaltung", description: "Verwaltung von Gerätetypen, Herstellern und Modellen" },
+        print58mm: { label: "58mm-Druck", description: "Drucken auf 58mm-Thermodruckern" },
+        printThermal: { label: "Thermaldruck", description: "Drucken auf Thermodruckern" },
+        downloadRepairReport: { label: "Reparaturberichte", description: "Herunterladen von Reparaturberichten" },
         statistics: { label: "Statistiken", description: "Zugriff auf Statistiken und Berichte" },
-        fileUpload: { label: "Datei-Upload", description: "Hochladen von Dateien zu Reparaturen" },
-        bulkOperations: { label: "Massenoperationen", description: "Durchführen von Aktionen auf mehreren Datensätzen" },
+        backup: { label: "Backup", description: "Backup und Wiederherstellung von Daten" },
+        advancedSearch: { label: "Erweiterte Suche", description: "Erweiterte Suchfunktionen" },
+        apiAccess: { label: "API-Zugriff", description: "Zugriff auf die API für externe Integrationen" },
+        multiUser: { label: "Mehrbenutzer", description: "Unterstützung für mehrere Benutzer" },
         advancedReporting: { label: "Erweiterte Berichte", description: "Zugriff auf detaillierte Berichte und Analysen" },
-        costEstimates: { label: "Kostenvoranschläge", description: "Erstellen und Verwalten von Kostenvoranschlägen" },
-        api: { label: "API-Zugriff", description: "Zugriff auf die API für externe Integrationen" },
-        shopCustomization: { label: "Shop-Anpassung", description: "Anpassen des Erscheinungsbilds" },
-        multiLocationSupport: { label: "Multi-Standort", description: "Unterstützung für mehrere Standorte" }
+        customEmailTemplates: { label: "Benutzerdefinierte E-Mails", description: "Erstellen von benutzerdefinierten E-Mail-Vorlagen" },
+        feedbackSystem: { label: "Feedback-System", description: "Sammeln von Kundenfeedback" }
       };
       
       const featureMatrix = features.map(featureKey => {
@@ -1121,8 +1124,8 @@ export function registerAdminRoutes(app: Express) {
         
         return {
           key: featureKey,
-          label: featureLabels[featureKey]?.label ?? featureKey.charAt(0).toUpperCase() + featureKey.slice(1).replace(/([A-Z])/g, ' $1'),
-          description: featureLabels[featureKey]?.description ?? "",
+          label: featureMeta[featureKey]?.label ?? featureKey.charAt(0).toUpperCase() + featureKey.slice(1).replace(/([A-Z])/g, ' $1'),
+          description: featureMeta[featureKey]?.description ?? "",
           plans: {
             basic: basicFeature !== undefined ? true : defaultBasic,
             professional: proFeature !== undefined ? true : defaultPro,

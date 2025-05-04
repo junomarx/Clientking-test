@@ -1,0 +1,79 @@
+// ✅ Ziel: Statt Zahlen (0, 1, 2, ...) in der Tarif-Feature-Matrix echte Feature-Namen und Beschreibungen anzeigen
+// Öffne: client/src/components/admin/FeatureMatrixTab.tsx
+
+// 🔁 Schritt 1: Sicherstellen, dass Backend bereits Feature-Daten mit Label + Beschreibung liefert
+// Öffne: server/admin-routes.ts
+
+// Erstelle oder ergänze ein Mapping für Feature-Namen:
+const featureMeta = {
+  dashboard: {
+    label: "Dashboard",
+    description: "Startseite mit Übersicht",
+  },
+  repairs: {
+    label: "Reparaturen",
+    description: "Verwaltung von Reparaturaufträgen",
+  },
+  customers: {
+    label: "Kunden",
+    description: "Kundenverwaltung",
+  },
+  costEstimates: {
+    label: "Kostenvoranschläge",
+    description: "Erstellen von Kostenvoranschlägen",
+  },
+  emailTemplates: {
+    label: "E-Mail-Vorlagen",
+    description: "Verwaltung von E-Mail-Vorlagen",
+  },
+  // ➕ weitere Features hier ergänzen...
+};
+
+// Dann im Endpoint /api/admin/features die Rückgabe ändern:
+const featureMatrix = features.map((key) => ({
+  key,
+  label: featureMeta[key]?.label || key,
+  description: featureMeta[key]?.description || "",
+  plans: {
+    basic: featureList.basic.includes(key),
+    professional: featureList.professional.includes(key),
+    enterprise: featureList.enterprise.includes(key),
+  },
+}));
+
+res.json({ features: featureMatrix });
+
+
+// 🔁 Schritt 2: Frontend aktualisieren (falls noch nicht erfolgt)
+
+// In FeatureMatrixTab.tsx:
+// Statt `feature` direkt auszugeben, stelle sicher, dass du `.label` verwendest:
+
+<TableRow key={feature.key}>
+  <TableCell className="font-medium">{feature.label}</TableCell>
+  <TableCell className="text-muted-foreground">{feature.description}</TableCell>
+  <TableCell>
+    <Checkbox
+      checked={feature.plans.basic}
+      onCheckedChange={(val) => handleChange(feature.key, "basic", val)}
+    />
+  </TableCell>
+  <TableCell>
+    <Checkbox
+      checked={feature.plans.professional}
+      onCheckedChange={(val) => handleChange(feature.key, "professional", val)}
+    />
+  </TableCell>
+  <TableCell>
+    <Checkbox
+      checked={feature.plans.enterprise}
+      onCheckedChange={(val) => handleChange(feature.key, "enterprise", val)}
+    />
+  </TableCell>
+</TableRow>
+
+// 💡 Wichtig: Stelle sicher, dass du bei der Initialisierung oder beim Laden der Daten die Felder `label` und `description` korrekt empfängst.
+
+// 🔁 Schritt 3: Anwendung neu starten
+// Starte Server & Client neu, um sicherzustellen, dass die Änderungen greifen.
+
