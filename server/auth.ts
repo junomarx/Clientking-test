@@ -142,12 +142,20 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: errorMessage });
       }
       
+      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat
+      if (!user.shopId) {
+        console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
+        return res.status(403).json({ 
+          message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
+        });
+      }
+      
       req.login(user, (err) => {
         if (err) return next(err);
         // Generate a simple token (in production we would use JWT)
         const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
         
-        console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id})`);
+        console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
         
         // Return the user without the password and token
         const { password, ...userWithoutPassword } = user;
@@ -188,8 +196,16 @@ export function setupAuth(app: Express) {
       const userId = parseInt(tokenData[0]);
       const user = await storage.getUser(userId);
       
-      if (!user || !user.isActive && !user.isAdmin) {
+      if (!user || (!user.isActive && !user.isAdmin)) {
         return res.sendStatus(401);
+      }
+      
+      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat
+      if (!user.shopId) {
+        console.error(`❌ Token-Auth verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
+        return res.status(403).json({ 
+          message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
+        });
       }
       
       // Benutzer im Request speichern
