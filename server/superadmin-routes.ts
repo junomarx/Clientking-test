@@ -40,7 +40,7 @@ export function registerSuperadminRoutes(app: Express) {
       const [newType] = await db.insert(deviceTypes).values({
         name,
         isGlobal: isGlobal === false ? false : true,
-        createdAt: new Date().toISOString(),
+        // createdAt wird automatisch durch defaultNow() gesetzt
       }).returning();
       
       res.status(201).json(newType);
@@ -120,7 +120,7 @@ export function registerSuperadminRoutes(app: Express) {
         name,
         deviceType,
         isGlobal: isGlobal === false ? false : true,
-        createdAt: new Date().toISOString(),
+        // createdAt wird automatisch durch defaultNow() gesetzt
       }).returning();
       
       res.status(201).json(newBrand);
@@ -202,7 +202,7 @@ export function registerSuperadminRoutes(app: Express) {
         brand,
         deviceType,
         isGlobal: isGlobal === false ? false : true,
-        createdAt: new Date().toISOString(),
+        // createdAt wird automatisch durch defaultNow() gesetzt
       }).returning();
       
       res.status(201).json(newModel);
@@ -284,7 +284,7 @@ export function registerSuperadminRoutes(app: Express) {
         description,
         deviceType,
         isGlobal: isGlobal === false ? false : true,
-        createdAt: new Date().toISOString(),
+        // createdAt wird automatisch durch defaultNow() gesetzt
       }).returning();
       
       res.status(201).json(newIssue);
