@@ -16,6 +16,8 @@ import { Loader2, Printer, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { BonReceipt58mm } from './BonReceipt58mm';
+import { BonReceipt80mm } from './BonReceipt80mm';
 
 interface PrintRepairDialogProps {
   open: boolean;
@@ -187,114 +189,49 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         ) : (
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
-              <div ref={printRef} className="bg-white p-4 rounded-md shadow-sm" style={{width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm', fontSize: settings?.receiptWidth === '58mm' ? '9px' : '10px', padding: settings?.receiptWidth === '58mm' ? '5px' : '10px'}}>
-                {/* Logo */}
-                <div className="logo">
-                  {businessSettings?.logoImage && (
-                    <img 
-                      src={businessSettings.logoImage} 
-                      alt={businessSettings.businessName || "Firmenlogo"}
-                      className="logo-img"
-                      style={{maxWidth: '80%', height: 'auto', display: 'block', margin: '0 auto'}}
-                    />
-                  )}
-                </div>
-
-                {/* Firmeninfo */}
-                <div className="company">
-                  <strong>{businessSettings?.businessName || "Handyshop Verwaltung"}</strong><br />
-                  {businessSettings?.streetAddress}, {businessSettings?.zipCode} {businessSettings?.city}<br />
-                  {businessSettings?.phone}
-                </div>
-
-                {/* Abholschein + Auftragsnummer */}
-                <div className="top-info">
-                  <div className="headline">Abholschein</div>
-                  <div className="auftragsnummer">{repair?.orderCode || `#${repair?.id}`}</div>
-                  <div>{repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}</div>
-                </div>
-
-                {/* Kunde */}
-                <div className="section">
-                  <div className="kundenname">{customer?.firstName} {customer?.lastName}</div>
-                  <div className="field">{customer?.phone}</div>
-                  <div className="field">{customer?.email}</div>
-                </div>
-
-                {/* Gerät */}
-                <div className="section">
-                  <div className="geraetinfo">{repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''} {repair?.model}</div>
-
-                  <div className="schaden-title">Schaden/Fehler</div>
-                  <div className="field">
-                    {repair?.issue ? (
-                      repair.issue.split(',').map((issue, index) => (
-                        <div key={index}>{issue.trim()}</div>
-                      ))
-                    ) : 'Keine Angaben'}
-                  </div>
-
-                  {repair?.estimatedCost && (
-                    <div>
-                      <div className="preis-label">Preis</div>
-                      <div className="field">{repair.estimatedCost.replace('.', ',')} €</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Reparaturbedingungen */}
-                <div className="section">
-                  <div className="terms-box">
-                    <div className="terms-title">{settings?.receiptWidth === '58mm' ? 'AGB Auszug' : 'Reparaturbedingungen'}</div>
-                    {settings?.receiptWidth === '58mm' ? (
-                      /* Kürzere Version für 58mm Bon */
-                      <div>
-                        1. Für Datenverlust keine Haftung.<br />
-                        2. Gewährleistung 6 Monate.<br />
-                        3. Nicht abgeholte Geräte: Entsorgung nach 60 Tagen möglich.
-                      </div>
-                    ) : (
-                      /* Vollständige Version für breiteren Bon */
-                      <div>
-                        1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
-                        2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
-                        3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
-                        4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
-                        5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
-                        6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Unterschrift Abgabe */}
-                {repair?.dropoffSignature && (
-                  <div className="signature-box">
-                    <div className="signature-title">Reparaturauftrag erteilt</div>
-                    <img 
-                      src={repair.dropoffSignature} 
-                      alt="Unterschrift bei Abgabe" 
-                      style={{maxWidth: '80%', maxHeight: '25mm', margin: '0 auto 10px auto', display: 'block'}}
-                    />
-                    <div className="signature-line"></div>
-                    {customer?.firstName} {customer?.lastName}<br />
-                    {repair.dropoffSignedAt && format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy', { locale: de })}
-                  </div>
-                )}
-
-                {/* Unterschrift Abholung */}
-                {repair?.pickupSignature && (
-                  <div className="signature-box">
-                    <div className="signature-title">Gerät abgeholt</div>
-                    <img 
-                      src={repair.pickupSignature} 
-                      alt="Unterschrift bei Abholung" 
-                      style={{maxWidth: '80%', maxHeight: '25mm', margin: '0 auto 10px auto', display: 'block'}}
-                    />
-                    <div className="signature-line"></div>
-                    {customer?.firstName} {customer?.lastName}<br />
-                    {repair.pickupSignedAt && format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de })}
-                  </div>
+              <div ref={printRef} className="bg-white rounded-md shadow-sm">
+                {settings?.receiptWidth === '58mm' ? (
+                  <BonReceipt58mm 
+                    firmenlogo={businessSettings?.logoImage}
+                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={businessSettings?.streetAddress || ""}
+                    firmenplz={businessSettings?.zipCode || ""}
+                    firmenort={businessSettings?.city || ""}
+                    firmentelefon={businessSettings?.phone || ""}
+                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                    kundentelefon={customer?.phone}
+                    kundenemail={customer?.email}
+                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                    modell={repair?.model}
+                    problem={repair?.issue ? repair.issue : ''}
+                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    signatur_dropoff={repair?.dropoffSignature}
+                    signatur_pickup={repair?.pickupSignature}
+                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                  />
+                ) : (
+                  <BonReceipt80mm 
+                    firmenlogo={businessSettings?.logoImage}
+                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={businessSettings?.streetAddress || ""}
+                    firmenplz={businessSettings?.zipCode || ""}
+                    firmenort={businessSettings?.city || ""}
+                    firmentelefon={businessSettings?.phone || ""}
+                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                    kundentelefon={customer?.phone}
+                    kundenemail={customer?.email}
+                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                    modell={repair?.model}
+                    problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
+                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    signatur_dropoff={repair?.dropoffSignature}
+                    signatur_pickup={repair?.pickupSignature}
+                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                  />
                 )}
               </div>
             </div>

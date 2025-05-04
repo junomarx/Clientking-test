@@ -1,0 +1,105 @@
+1. Neues Bon-Layout für 58mm implementieren
+Wenn settings?.receiptWidth === '58mm', soll dieses HTML-/CSS-Layout als Basis verwendet werden. Ersetze alle {{ ... }} durch die passenden Props wie in Abschnitt 2 beschrieben.
+
+👉 Hier ist das HTML/CSS-Template für den 58mm-Bon:
+jsx
+Kopieren
+Bearbeiten
+<div style={{
+  fontFamily: "Arial, sans-serif",
+  fontSize: "11px",
+  width: "58mm",
+  margin: 0,
+  padding: "10px",
+  color: "#000"
+}}>
+  <div style={{ textAlign: "center", marginBottom: "5px" }}>
+    <img src={props.firmenlogo} alt="Logo" style={{ maxWidth: "90%", height: "auto" }} />
+  </div>
+
+  <div style={{ textAlign: "center", marginBottom: "10px" }}>
+    <strong>Mac and PhoneDoc</strong><br />
+    Amerlingstraße 19<br />
+    1060 Wien<br />
+    +43 1 410 35 11
+  </div>
+
+  <div style={{ textAlign: "center", margin: "10px 0 15px" }}>
+    <div style={{ fontWeight: "bold", fontSize: "14px", marginBottom: "2px" }}>Abholschein</div>
+    <div style={{ fontWeight: "bold", fontSize: "12px" }}>{props.auftragsnummer}</div>
+    <div>{props.datum_dropoff}</div>
+  </div>
+
+  <div style={{ marginBottom: "14px" }}>
+    <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "2px" }}>{props.kundenname}</div>
+    <div style={{ marginBottom: "3px" }}>{props.kundentelefon}</div>
+    <div style={{ marginBottom: "3px" }}>{props.kundenemail}</div>
+  </div>
+
+  <div style={{ marginBottom: "14px" }}>
+    <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "2px" }}>
+      {props.hersteller} {props.modell}
+    </div>
+
+    <div style={{ fontWeight: "bold", marginTop: "6px", marginBottom: "2px" }}>Schaden/Fehler</div>
+    <div>{props.problem}</div>
+
+    <div style={{ fontWeight: "bold", fontSize: "11px", marginTop: "8px", marginBottom: "2px" }}>Preis</div>
+    <div>{props.preis}</div>
+  </div>
+
+  <div style={{
+    border: "1px solid #000",
+    padding: "6px",
+    fontSize: "9px",
+    lineHeight: 1.3,
+    marginBottom: "14px"
+  }}>
+    <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "10px", marginBottom: "4px" }}>Reparaturbedingungen</div>
+    1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+    2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+    3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+    4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+    5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+    6. Mit Unterschrift werden Bedingungen akzeptiert.
+  </div>
+
+  <div style={{ marginTop: "16px", textAlign: "center" }}>
+    <div style={{ fontWeight: "bold", marginBottom: "4px" }}>Reparaturauftrag erteilt</div>
+    <div style={{ fontSize: "10px", color: "#666", fontStyle: "italic", marginBottom: "2px" }}>{props.signatur_dropoff}</div>
+    <div style={{ borderTop: "1px solid #000", width: "100%", margin: "2px 0 6px" }}></div>
+    {props.kundenname}<br />
+    {props.datum_dropoff}
+  </div>
+
+  <div style={{ marginTop: "16px", textAlign: "center" }}>
+    <div style={{ fontWeight: "bold", marginBottom: "4px" }}>Gerät abgeholt</div>
+    <div style={{ fontSize: "10px", color: "#666", fontStyle: "italic", marginBottom: "2px" }}>{props.signatur_pickup}</div>
+    <div style={{ borderTop: "1px solid #000", width: "100%", margin: "2px 0 6px" }}></div>
+    {props.kundenname}<br />
+    {props.datum_pickup}
+  </div>
+</div>
+2. Bedingte Logik hinzufügen
+In PrintRepairDialog.tsx, prüfe vor dem Rendern:
+
+tsx
+Kopieren
+Bearbeiten
+const isSmallBon = settings?.receiptWidth === '58mm';
+Dann:
+
+tsx
+Kopieren
+Bearbeiten
+{isSmallBon ? (
+  <Your58mmBonComponent {...props} />
+) : (
+  <Your80mmBonComponent {...props} />
+)}
+3. Druckfunktion beibehalten (html2canvas + jsPDF)
+Stelle sicher, dass:
+
+html2canvas das richtige DOM-Element für 58mm snapshot erstellt.
+jsPDF-Breite bei 58mm exakt gesetzt ist: 58 / 25.4 inch (≈ 2.28").
+Scale ggf. leicht erhöhen (html2canvas({ scale: 2 })) für bessere Druckqualität.
