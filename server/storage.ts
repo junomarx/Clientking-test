@@ -1296,8 +1296,14 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return undefined;
+    }
+    
     // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
     const [updatedRepair] = await db
       .update(repairs)
       .set({
@@ -1349,8 +1355,14 @@ export class DatabaseStorage implements IStorage {
             updatedAt: now,
           };
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return undefined;
+    }
+    
     // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
     console.log(
       `Aktualisiere Signatur (${type}) für Reparatur ${id} mit Shop-Isolation für Shop ${shopIdValue}`,
     );
@@ -1379,8 +1391,14 @@ export class DatabaseStorage implements IStorage {
 
     const now = new Date();
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return undefined;
+    }
+    
     // Jeder Benutzer kann nur den Status von Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
     const [updatedRepair] = await db
       .update(repairs)
       .set({
@@ -1404,8 +1422,14 @@ export class DatabaseStorage implements IStorage {
       const currentUser = await this.getUser(currentUserId);
       if (!currentUser) return false;
 
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, false zurückgeben statt Fallback auf Shop 1
+      if (!currentUser.shopId) {
+        console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+      
       // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop löschen (DSGVO-konform)
-      const shopIdValue = currentUser.shopId || 1;
+      const shopIdValue = currentUser.shopId;
       await db
         .delete(repairs)
         .where(and(eq(repairs.id, id), eq(repairs.shopId, shopIdValue)));
@@ -1438,8 +1462,14 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      // Shop-ID aus dem Benutzer extrahieren
-      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren (ohne Fallback auf 1)
+      const shopId = user.shopId;
 
       // DSGVO-konform: Jeder Benutzer sieht nur Einstellungen seines eigenen Shops
       console.log(
@@ -1511,9 +1541,15 @@ export class DatabaseStorage implements IStorage {
         );
         throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
       }
+      
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Error werfen statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.error(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        throw new Error(`Benutzer ${user.username} hat keine Shop-Zuordnung`);
+      }
 
-      // Shop-ID aus dem Benutzer extrahieren
-      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID
+      // Shop-ID aus dem Benutzer extrahieren (ohne Fallback auf 1)
+      const shopId = user.shopId;
 
       // Stellen wir sicher, dass die userId und shopId in den Daten korrekt gesetzt sind
       settingsData = {
@@ -1702,9 +1738,23 @@ export class DatabaseStorage implements IStorage {
         received: 0, // Neu: Anzahl der eingegangenen Reparaturen
       };
     }
+    
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Statistiken zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return {
+        totalOrders: 0,
+        inRepair: 0,
+        completed: 0,
+        today: 0,
+        readyForPickup: 0,
+        outsourced: 0,
+        received: 0,
+      };
+    }
 
     // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
 
     // Debug-Ausgabe für Shop-Isolation
     console.log(
@@ -1858,8 +1908,25 @@ export class DatabaseStorage implements IStorage {
         };
       }
 
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Statistiken zurückgeben statt Fallback auf Shop 1
+      if (!currentUser.shopId) {
+        console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return {
+          byDeviceType: {},
+          byBrand: {},
+          byIssue: {},
+          mostRecentRepairs: [],
+          revenue: {
+            total: 0,
+            byStatus: {},
+            byMonth: {},
+            byDay: {},
+          },
+        };
+      }
+
       // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
-      const shopIdValue = currentUser.shopId || 1;
+      const shopIdValue = currentUser.shopId;
 
       // Debug-Ausgabe für Shop-Isolation
       console.log(
