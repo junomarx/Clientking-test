@@ -197,7 +197,16 @@ function UserTable() {
     setIsEditDialogOpen(true);
   };
   
-  const handleDeleteUser = (user: UserResponse) => {
+  const handleDeleteUser = (user: UserResponse, event?: React.MouseEvent) => {
+    // Stop event propagation to prevent details dialog from opening
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // Make sure details dialog is closed
+    setIsDetailsDialogOpen(false);
+    
+    // Set selected user and open delete dialog
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
@@ -290,7 +299,7 @@ function UserTable() {
                         Bearbeiten
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => handleDeleteUser(user)}
+                        onClick={(e) => handleDeleteUser(user, e)}
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -360,14 +369,13 @@ function UserTable() {
             <div className="flex items-center justify-between border-t p-3 bg-muted/10">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status ändern:</span>
-                <Switch 
-                  checked={user.isActive} 
-                  onCheckedChange={(e) => {
-                    e.stopPropagation();
-                    handleToggleActive(user);
-                  }}
-                  disabled={toggleActiveMutation.isPending}
-                />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Switch 
+                    checked={user.isActive} 
+                    onCheckedChange={() => handleToggleActive(user)}
+                    disabled={toggleActiveMutation.isPending}
+                  />
+                </div>
               </div>
               
               <DropdownMenu>
