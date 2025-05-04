@@ -2109,8 +2109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      // Unterschrift und Zeitstempel speichern (Standard: Abgabe-Unterschrift)
-      const updatedRepair = await storage.updateRepairSignature(repairId, signature, 'dropoff');
+      // Unterschrift und Zeitstempel speichern mit Shop-Isolation (Standard: Abgabe-Unterschrift)
+      const updatedRepair = await storage.updateRepairSignature(repairId, signature, 'dropoff', userId);
       
       res.json(updatedRepair);
     } catch (error) {
@@ -2134,8 +2134,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      // E-Mail-Verlauf für diese Reparatur abrufen
-      const emailHistory = await storage.getEmailHistoryForRepair(repairId);
+      // E-Mail-Verlauf für diese Reparatur abrufen (mit Shop-Isolation)
+      const emailHistory = await storage.getEmailHistoryForRepair(repairId, userId);
       
       res.json(emailHistory);
     } catch (error) {

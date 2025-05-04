@@ -2622,11 +2622,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   // E-Mail-Verlauf Methoden
-  async getEmailHistoryForRepair(repairId: number): Promise<(EmailHistory & { templateName?: string })[]> {
+  async getEmailHistoryForRepair(repairId: number, currentUserId?: number): Promise<(EmailHistory & { templateName?: string })[]> {
     try {
       console.log(`Suche E-Mail-Verlauf für Reparatur ${repairId}`);
       
+      // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
+      if (!currentUserId) {
+        console.log('Keine Benutzer-ID angegeben, gebe leere Liste zurück');
+        return [];
+      }
+      
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) {
+        console.log(`Benutzer mit ID ${currentUserId} nicht gefunden, gebe leere Liste zurück`);
+        return [];
+      }
+      
+      // Shop-ID des Benutzers ermitteln für Shop-Isolation
+      const shopIdValue = currentUser.shopId || 1;
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const repair = await this.getRepair(repairId, currentUserId);
+      if (!repair) {
+        console.log(`Reparatur ${repairId} nicht gefunden oder nicht im Shop ${shopIdValue} des Benutzers ${currentUserId}`);
+        return [];
+      }
+      
       // JOIN-Abfrage, um auch den Namen der Vorlagen zu laden
+      // Jetzt mit zusätzlichem Filter für die Shop-ID (DSGVO-konform)
       const query = `
         SELECT 
           h.*, 
@@ -2636,7 +2660,8 @@ export class DatabaseStorage implements IStorage {
         LEFT JOIN 
           "email_templates" t ON h."emailTemplateId" = t.id 
         WHERE 
-          h."repairId" = ${repairId} 
+          h."repairId" = ${repairId} AND
+          h."shopId" = ${shopIdValue}
         ORDER BY 
           h."sentAt" DESC
       `;
@@ -2656,7 +2681,18 @@ export class DatabaseStorage implements IStorage {
       console.log('Erstelle E-Mail-Verlaufseintrag in der Datenbank:', entry);
       console.log('RepairId Typ:', typeof entry.repairId, 'Wert:', entry.repairId);
       
-      // Verwende Drizzle ORM für die Datenbankoperation
+      // Stelle sicher, dass ein Benutzer vorhanden ist, um Shop-ID zu setzen
+      let shopId = 1; // Standardwert, falls keine Benutzer-ID angegeben ist
+      
+      if (entry.userId) {
+        const user = await this.getUser(Number(entry.userId));
+        if (user && user.shopId) {
+          shopId = user.shopId;
+          console.log(`Benutzer mit ID ${entry.userId} gefunden, setze Shop-ID auf ${shopId}`);
+        }
+      }
+      
+      // Verwende Drizzle ORM für die Datenbankoperation mit Shop-Isolation
       const [result] = await db.insert(emailHistory)
         .values({
           repairId: Number(entry.repairId), // Stelle sicher, dass es eine Zahl ist
@@ -2664,7 +2700,8 @@ export class DatabaseStorage implements IStorage {
           subject: entry.subject,
           recipient: entry.recipient,
           status: entry.status,
-          userId: entry.userId ? Number(entry.userId) : null
+          userId: entry.userId ? Number(entry.userId) : null,
+          shopId: shopId // Wichtig für die Shop-Isolation
         })
         .returning();
       
