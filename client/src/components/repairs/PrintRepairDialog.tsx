@@ -183,7 +183,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
         ) : (
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
-              <div ref={printRef} className="bg-white p-6 rounded-md shadow-sm">
+              <div ref={printRef} className="bg-white p-6 rounded-md shadow-sm" style={{width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm'}}>
                 {/* Logo */}
                 <div className="logo">
                   {businessSettings?.logoImage && (
@@ -238,24 +238,28 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 </div>
 
                 {/* Reparaturbedingungen */}
-                <div className="terms-box">
-                  <div className="terms-title">{settings?.receiptWidth === '58mm' ? 'AGB Auszug' : 'Reparaturbedingungen'}</div>
-                  {settings?.receiptWidth === '58mm' ? (
-                    /* Kürzere Version für 58mm Bon */
-                    <div>
-                      1. Für Datenverlust keine Haftung.<br />
-                      2. Gewährleistung 6 Monate.<br />
-                      3. Nicht abgeholte Geräte: Entsorgung nach 60 Tagen möglich.
-                    </div>
-                  ) : (
-                    /* Vollständige Version für breiteren Bon */
-                    <div>
-                      1. Für etwaige Datenverluste wird keine Haftung übernommen.<br />
-                      2. Die Gewährleistung beträgt 6 Monate auf die von uns ausgeführten Arbeiten/Komponenten.<br />
-                      3. Bei Kostenvoranschlag-Ablehnung kann eine Kostenpauschale fällig werden.<br />
-                      4. Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.
-                    </div>
-                  )}
+                <div className="section">
+                  <div className="terms-box">
+                    <div className="terms-title">{settings?.receiptWidth === '58mm' ? 'AGB Auszug' : 'Reparaturbedingungen'}</div>
+                    {settings?.receiptWidth === '58mm' ? (
+                      /* Kürzere Version für 58mm Bon */
+                      <div>
+                        1. Für Datenverlust keine Haftung.<br />
+                        2. Gewährleistung 6 Monate.<br />
+                        3. Nicht abgeholte Geräte: Entsorgung nach 60 Tagen möglich.
+                      </div>
+                    ) : (
+                      /* Vollständige Version für breiteren Bon */
+                      <div>
+                        1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
+                        2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
+                        3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
+                        4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
+                        5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
+                        6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Unterschrift Abgabe */}

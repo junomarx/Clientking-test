@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Abholschein</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      width: 80mm;
+      margin: 0;
+      padding: 10px;
+      color: #000;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    .logo-img {
+      max-width: 80%;
+      height: auto;
+    }
+
+    .company,
+    .top-info {
+      text-align: center;
+    }
+
+    .company {
+      margin-bottom: 10px;
+    }
+
+    .top-info {
+      margin: 10px 0 15px;
+    }
+
+    .headline {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .auftragsnummer {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .field {
+      margin-bottom: 4px;
+    }
+
+    .kundenname,
+    .geraetinfo {
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .schaden-title {
+      font-weight: bold;
+      margin-top: 8px;
+      margin-bottom: 2px;
+    }
+
+    .preis-label {
+      font-weight: bold;
+      font-size: 11px;
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
+
+    .signature-box {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .signature-title {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .signature-line {
+      margin-top: 25px;
+      border-top: 1px solid #000;
+      width: 100%;
+    }
+
+    .terms-box {
+      border: 1px solid #000;
+      padding: 8px;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .terms-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    @media print {
+      @page {
+        size: 80mm auto;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        padding: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Logo -->
+  <div class="logo">
+    <img src="{{ firmenlogo }}" alt="Logo" class="logo-img">
+  </div>
+
+  <!-- Firmeninfo -->
+  <div class="company">
+    <strong>Mac and PhoneDoc</strong><br>
+    Amerlingstraße 19<br>
+    1060 Wien<br>
+    +43 1 410 35 11
+  </div>
+
+  <!-- Abholschein + Auftragsnummer -->
+  <div class="top-info">
+    <div class="headline">Abholschein</div>
+    <div class="auftragsnummer">{{ auftragsnummer }}</div>
+    <div>{{ datum_dropoff }}</div>
+  </div>
+
+  <!-- Kunde -->
+  <div class="section">
+    <div class="kundenname">{{ kundenname }}</div>
+    <div class="field">{{ kundentelefon }}</div>
+    <div class="field">{{ kundenemail }}</div>
+  </div>
+
+  <!-- Gerät -->
+  <div class="section">
+    <div class="geraetinfo">{{ hersteller }} {{ modell }}</div>
+
+    <div class="schaden-title">Schaden/Fehler</div>
+    <div class="field">{{ problem }}</div>
+
+    <div class="preis-label">Preis</div>
+    <div class="field">{{ preis }}</div>
+  </div>
+
+  <!-- Reparaturbedingungen -->
+  <div class="section">
+    <div class="terms-box">
+      <div class="terms-title">Reparaturbedingungen</div>
+      1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br><br>
+      2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br><br>
+      3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br><br>
+      4. Testzugriffe auf das Gerät können notwendig sein.<br><br>
+      5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br><br>
+      6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
+    </div>
+  </div>
+
+  <!-- Unterschrift Abgabe -->
+  <div class="signature-box">
+    <div class="signature-title">Reparaturauftrag erteilt</div>
+    <div class="signature-line">{{ signatur_dropoff }}</div>
+    {{ kundenname }}<br>
+    {{ datum_dropoff }}
+  </div>
+
+  <!-- Unterschrift Abholung -->
+  <div class="signature-box">
+    <div class="signature-title">Gerät abgeholt</div>
+    <div class="signature-line">{{ signatur_pickup }}</div>
+    {{ kundenname }}<br>
+    {{ datum_pickup }}
+  </div>
+
+</body>
+</html>
