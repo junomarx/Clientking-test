@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { apiRequest } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -41,26 +42,32 @@ interface SuperadminStats {
 export default function SuperadminDashboardTab() {
   const { toast } = useToast();
   
-  const { data: stats, isLoading, error } = useQuery<SuperadminStats>({ 
-    queryKey: ["/api/superadmin/stats"],
+  const { data: stats, isLoading, error } = useQuery<SuperadminStats>({
+    queryKey: ['/api/superadmin/stats'],
     queryFn: async () => {
-      const res = await fetch('/api/superadmin/stats');
-      
-      const contentType = res.headers.get('content-type') || '';
-      const text = await res.text(); // erst lesen als Text
+      try {
+        const res = await fetch('/api/superadmin/stats');
 
-      if (!res.ok) {
-        console.error('Fehlerhafte HTTP-Antwort:', res.status, text);
-        throw new Error(`Fehler ${res.status}: ${text}`);
+        const text = await res.text();
+
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+
+        const contentType = res.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+
+        return JSON.parse(text);
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Statistikdaten:', err);
+        throw err;
       }
-
-      if (!contentType.includes('application/json')) {
-        console.error('Unerwartete Server-Antwort (kein JSON):', text);
-        throw new Error('Unerwartete Antwort vom Server (nicht JSON)');
-      }
-
-      return JSON.parse(text); // erst hier sicher parsen
-    },
+    }
   });
 
   useEffect(() => {
