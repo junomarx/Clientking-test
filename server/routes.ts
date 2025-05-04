@@ -1465,14 +1465,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer Bugi (Admin) ist
-      if (userId !== 3) {
-        return res.status(403).json({ message: "Nur Administratoren können Modelle löschen" });
-      }
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`DELETE /api/models/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      // WORKAROUND: Wir löschen immer Bugis Modelle
-      const bugisUserId = 3;
-      const success = await storage.deleteUserModel(id, bugisUserId);
+      const success = await storage.deleteUserModel(id, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modell konnte nicht gelöscht werden" });
