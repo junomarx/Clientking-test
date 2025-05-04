@@ -540,7 +540,11 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                   <div className="geraetinfo">{repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''} {repair?.model}</div>
 
                   <div className="schaden-title">Schaden/Fehler</div>
-                  <div className="field">{repair?.issue}</div>
+                  <div className="field">
+                    {repair?.issue ? repair.issue.split(',').map((issue, index) => (
+                      <div key={index}>{issue.trim()}</div>
+                    )) : ''}
+                  </div>
 
                   {repair?.estimatedCost && (
                     <>
