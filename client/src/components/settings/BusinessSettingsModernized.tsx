@@ -460,23 +460,31 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                         onChange={handleLogoUpload}
                         style={{ display: 'none' }}
                       />
-                      <label htmlFor="logo-upload">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (fileInputRef.current) {
-                              fileInputRef.current.click();
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        type="button"
+                        onClick={() => {
+                          // Direkter Ansatz, um das Datei-Dialogfenster zu öffnen
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/jpeg,image/png,image/svg+xml';
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            if (target && target.files && target.files.length > 0) {
+                              const file = target.files[0];
+                              // Erstelle ein künstliches Event für den Handler
+                              const fakeEvent = { target: { files: target.files } } as React.ChangeEvent<HTMLInputElement>;
+                              handleLogoUpload(fakeEvent);
                             }
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Logo hochladen
-                        </Button>
-                      </label>
+                          };
+                          // Dateidialog öffnen
+                          input.click();
+                        }}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Logo hochladen
+                      </Button>
                       <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
                       {logoError && (
                         <p className="text-xs text-red-500 mt-1">{logoError}</p>
