@@ -8,12 +8,13 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
+import SuperadminPage from "@/pages/superadmin-page";
 // Design Preview Imports wurden entfernt
 import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
-import { ProtectedRoute, AdminProtectedRoute } from "./lib/protected-route";
+import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
@@ -34,6 +35,9 @@ function Router() {
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>
+      <SuperadminProtectedRoute path="/superadmin">
+        <SuperadminPage />
+      </SuperadminProtectedRoute>
       {/* Design Preview Routen wurden entfernt */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />

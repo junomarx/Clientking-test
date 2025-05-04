@@ -67,6 +67,11 @@ interface User {
   createdAt: string;
 }
 
+// Erweiterter Benutzertyp für Formulareingaben
+interface UserFormData extends Partial<User> {
+  password?: string;
+}
+
 // Paket-Typ
 interface Package {
   id: number;
@@ -118,7 +123,7 @@ export default function SuperadminUsersTab() {
 
   // Mutation zum Aktualisieren eines Benutzers
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, data }: { userId: number; data: Partial<User> }) => {
+    mutationFn: async ({ userId, data }: { userId: number; data: UserFormData }) => {
       const response = await apiRequest(
         "PATCH",
         `/api/superadmin/users/${userId}`,
@@ -165,7 +170,7 @@ export default function SuperadminUsersTab() {
   });
 
   // State für das Bearbeitungsformular
-  const [editForm, setEditForm] = useState<Partial<User>>({});
+  const [editForm, setEditForm] = useState<UserFormData>({});
 
   // Benutzer zur Bearbeitung auswählen
   const handleEditUser = (user: User) => {
