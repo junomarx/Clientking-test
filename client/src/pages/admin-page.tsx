@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
