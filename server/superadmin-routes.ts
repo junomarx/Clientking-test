@@ -8,7 +8,7 @@ import { isSuperadmin } from "./superadmin-middleware";
 import { storage } from "./storage";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { users, packages, packageFeatures } from "@shared/schema";
+import { users, packages, packageFeatures, repairs } from "@shared/schema";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -28,48 +28,44 @@ export function registerSuperadminRoutes(app: Express) {
   // Superadmin-Dashboard Statistiken
   app.get("/api/superadmin/stats", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // Statistiken für das Superadmin-Dashboard
-      const userStatsResult = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_users,
-          SUM(CASE WHEN is_active = true THEN 1 ELSE 0 END) as active_users,
-          SUM(CASE WHEN is_active = false THEN 1 ELSE 0 END) as inactive_users,
-          SUM(CASE WHEN is_admin = true THEN 1 ELSE 0 END) as admins,
-          COUNT(DISTINCT shop_id) as total_shops
-        FROM users
-        WHERE is_superadmin = false
-      `);
+      // Statistik-Abfragen für den Superadmin-Bereich
       
-      // Statistiken für Reparaturen global
-      const repairStatsResult = await db.execute(sql`
-        SELECT 
-          COUNT(*) as total_repairs,
-          SUM(CASE WHEN status = 'eingegangen' THEN 1 ELSE 0 END) as received,
-          SUM(CASE WHEN status = 'in_reparatur' THEN 1 ELSE 0 END) as in_repair,
-          SUM(CASE WHEN status = 'fertig' THEN 1 ELSE 0 END) as ready_for_pickup,
-          SUM(CASE WHEN status = 'abgeholt' THEN 1 ELSE 0 END) as completed
-        FROM repairs
-      `);
+      // Benutzerzahlen abrufen
+      const usersResult = await db.select({
+        totalUsers: sql<number>`COUNT(*)`,
+        activeUsers: sql<number>`SUM(CASE WHEN ${users.isActive} = true THEN 1 ELSE 0 END)`,
+        inactiveUsers: sql<number>`SUM(CASE WHEN ${users.isActive} = false THEN 1 ELSE 0 END)`,
+        admins: sql<number>`SUM(CASE WHEN ${users.isAdmin} = true THEN 1 ELSE 0 END)`,
+        totalShops: sql<number>`COUNT(DISTINCT ${users.shopId})`
+      })
+      .from(users)
+      .where(eq(users.isSuperadmin, false));
       
-      // Statistiken für Pakete
-      const packageStatsResult = await db.execute(sql`
-        SELECT
-          p.name as package_name,
-          COUNT(u.id) as user_count
-        FROM packages p
-        LEFT JOIN users u ON p.id = u.package_id
-        GROUP BY p.name
-        ORDER BY user_count DESC
-      `);
+      // Reparatur-Statistiken abrufen
+      const repairsResult = await db.select({
+        totalRepairs: sql<number>`COUNT(*)`,
+        received: sql<number>`SUM(CASE WHEN ${repairs.status} = 'eingegangen' THEN 1 ELSE 0 END)`,
+        inRepair: sql<number>`SUM(CASE WHEN ${repairs.status} = 'in_reparatur' THEN 1 ELSE 0 END)`,
+        readyForPickup: sql<number>`SUM(CASE WHEN ${repairs.status} = 'fertig' THEN 1 ELSE 0 END)`,
+        completed: sql<number>`SUM(CASE WHEN ${repairs.status} = 'abgeholt' THEN 1 ELSE 0 END)`
+      })
+      .from(repairs);
       
-      const userStats = userStatsResult.rows[0];
-      const repairStats = repairStatsResult.rows[0];
-      const packageStats = packageStatsResult.rows;
+      // Paket-Nutzungszahlen abrufen
+      const packagesWithCounts = await db
+        .select({
+          packageName: packages.name,
+          userCount: sql<number>`COUNT(${users.id})`
+        })
+        .from(packages)
+        .leftJoin(users, eq(users.packageId, packages.id))
+        .groupBy(packages.name)
+        .orderBy(sql`COUNT(${users.id}) DESC`);
       
       res.json({
-        users: userStats,
-        repairs: repairStats,
-        packages: packageStats
+        users: usersResult[0],
+        repairs: repairsResult[0],
+        packages: packagesWithCounts
       });
     } catch (error) {
       console.error("Error fetching superadmin stats:", error);
@@ -295,24 +291,31 @@ export function registerSuperadminRoutes(app: Express) {
           .delete(packageFeatures)
           .where(eq(packageFeatures.packageId, packageId));
         
-        // Neue Features hinzufügen
-        const newFeatures = [];
-        for (const feature of featuresToUpdate) {
-          // Werte für das Feature vorbereiten
-          const packageFeatureValues = {
-            packageId: packageId,
-            feature: feature.feature,
-            value: feature.value
-          };
+        // Feature-Einträge sammeln
+        const featureEntries = featuresToUpdate.map(feature => ({
+          packageId: packageId,
+          feature: feature.feature
+        }));
+        
+        // Falls keine Features zu aktualisieren sind
+        if (featureEntries.length === 0) {
+          // Features für das Paket abrufen (sollten jetzt leer sein)
+          const packageFeaturesList = await db
+            .select()
+            .from(packageFeatures)
+            .where(eq(packageFeatures.packageId, packageId));
           
-          // Feature in die Datenbank einfügen
-          const [newFeature] = await db
-            .insert(packageFeatures)
-            .values(packageFeatureValues)
-            .returning();
-          
-          newFeatures.push(newFeature);
+          return res.json({
+            ...updatedPackage[0],
+            features: packageFeaturesList
+          });
         }
+        
+        // Alle Features auf einmal einfügen
+        const newFeatures = await db
+          .insert(packageFeatures)
+          .values(featureEntries)
+          .returning();
         
         res.json({
           ...updatedPackage[0],
@@ -353,23 +356,17 @@ export function registerSuperadminRoutes(app: Express) {
       
       // Wenn Features angegeben wurden, diese hinzufügen
       if (featuresToAdd && Array.isArray(featuresToAdd) && featuresToAdd.length > 0) {
-        const newFeatures = [];
-        for (const feature of featuresToAdd) {
-          // Werte für das Feature vorbereiten
-          const packageFeatureValues = {
-            packageId: newPackage.id,
-            feature: feature.feature,
-            value: feature.value
-          };
-          
-          // Feature in die Datenbank einfügen
-          const [newFeature] = await db
-            .insert(packageFeatures)
-            .values(packageFeatureValues)
-            .returning();
-          
-          newFeatures.push(newFeature);
-        }
+        // Sammeln aller Feature-Einträge
+        const featureEntries = featuresToAdd.map(feature => ({
+          packageId: newPackage.id,
+          feature: feature.feature
+        }));
+        
+        // Alle Features auf einmal einfügen
+        const newFeatures = await db
+          .insert(packageFeatures)
+          .values(featureEntries)
+          .returning();
         
         res.status(201).json({
           ...newPackage,
