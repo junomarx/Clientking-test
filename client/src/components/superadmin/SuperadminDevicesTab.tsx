@@ -1057,12 +1057,12 @@ export default function SuperadminDevicesTab() {
                   Gerätetyp
                 </Label>
                 <Select
-                  value={selectedModel.deviceType}
+                  value={selectedModel?.deviceType || ''}
                   onValueChange={(value) => {
-                    if (value !== selectedModel.deviceType) {
+                    if (selectedModel && value !== selectedModel.deviceType) {
                       // Wenn der Gerätetyp geändert wird, setze die Marke zurück
                       setSelectedModel({ ...selectedModel, deviceType: value, brand: '' });
-                    } else {
+                    } else if (selectedModel) {
                       setSelectedModel({ ...selectedModel, deviceType: value });
                     }
                   }}
@@ -1084,8 +1084,8 @@ export default function SuperadminDevicesTab() {
                   Marke
                 </Label>
                 <Select
-                  value={selectedModel.brand}
-                  onValueChange={(value) => setSelectedModel({ ...selectedModel, brand: value })}
+                  value={selectedModel?.brand || ''}
+                  onValueChange={(value) => selectedModel && setSelectedModel({ ...selectedModel, brand: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Wählen Sie eine Marke" />
