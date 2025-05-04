@@ -321,11 +321,11 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 </div>
                 
                 <div className="text-right text-sm text-gray-600">
-                  <p className="text-base font-bold text-gray-800 mb-1">{businessSettings.businessName}</p>
-                  <p>{businessSettings.streetAddress || 'Amerlingstraße 19'}<br />
-                  {businessSettings.zipCode || '1060'} {businessSettings.city || 'Wien'}<br />
-                  {businessSettings.phone || '+4314103511'}<br />
-                  {businessSettings.email || 'office@macandphonedoc.at'}</p>
+                  <p className="text-base font-bold text-gray-800 mb-1">{businessSettings?.businessName || 'Handyshop Verwaltung'}</p>
+                  <p>{businessSettings?.streetAddress || 'Amerlingstraße 19'}<br />
+                  {businessSettings?.zipCode || '1060'} {businessSettings?.city || 'Wien'}<br />
+                  {businessSettings?.phone || '+4314103511'}<br />
+                  {businessSettings?.email || 'office@macandphonedoc.at'}</p>
                 </div>
               </div>
 
