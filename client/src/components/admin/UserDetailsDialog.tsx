@@ -50,6 +50,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { Feature, FeatureOverrides } from "@/lib/permissions";
 
 interface UserDetailsDialogProps {
   open: boolean;
@@ -66,6 +67,7 @@ type UserResponse = {
   isActive: boolean;
   isAdmin: boolean;
   pricingPlan: 'basic' | 'professional' | 'enterprise';
+  featureOverrides?: string; // JSON string of feature overrides
   createdAt?: string;
 };
 
@@ -472,6 +474,35 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
                 <CardDescription>Verwalten Sie die Einstellungen dieses Benutzers</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Feature Overrides */}
+                {user.featureOverrides && (
+                  <div className="mb-6">
+                    <Label>Feature-Übersteuerungen</Label>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Individuell aktivierte oder deaktivierte Funktionen für diesen Benutzer.
+                    </div>
+                    <div className="mt-2 border rounded-md p-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        {Object.entries(JSON.parse(user.featureOverrides || '{}') as FeatureOverrides).map(([feature, value]) => (
+                          <div key={feature} className="flex items-center gap-2">
+                            <Badge
+                              variant={value === true ? "success" : value === false ? "destructive" : "outline"}
+                              className="whitespace-nowrap"
+                            >
+                              {feature}:
+                              {value === true ? " Erlaubt" : value === false ? " Blockiert" : " Standard"}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                      {(!user.featureOverrides || Object.keys(JSON.parse(user.featureOverrides || '{}')).length === 0) && (
+                        <div className="text-muted-foreground text-sm italic">
+                          Keine individuellen Feature-Übersteuerungen konfiguriert.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="user-status">Benutzerstatus</Label>
