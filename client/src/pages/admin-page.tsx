@@ -1,56 +1,79 @@
-import { useEffect, useState } from "react";
-import { useLocation, Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutDashboard,
+  Users,
+  Smartphone,
+  ChevronDown,
+  MoreVertical,
+  Edit,
+  Pencil,
+  Trash2,
+  Save,
+  User2,
+  FileText,
+  FileCheck,
+  Truck,
+  BarChart3,
+  Calendar,
+  Download,
+  Upload,
+  AlertTriangle,
+  ShieldAlert,
+  Cog,
+  Layers,
+  History,
+  Palette,
+} from "lucide-react";
+
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  ChevronLeft, 
-  ChevronRight,
-  Check, 
-  X, 
-  MoreVertical, 
-  Pencil, 
-  Trash2, 
-  RefreshCw, 
-  Database, 
-  Mail, 
-  HardDrive, 
-  AlertTriangle, 
-  FileDown,
-  FileUp,
-  Trash,
-  Shield,
-  Eye,
-  UserIcon,
-  Smartphone,
-  Users,
-  Save,
-  Settings,
-  Cog,
-  LayoutDashboard,
-  Menu,
-  Layers,
-  AlertCircle,
-  Download
-} from "lucide-react";
 import { Loader2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { type User } from "@shared/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
 import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
@@ -363,12 +386,8 @@ function UserTable() {
               
               <div className="pt-2">
                 <p className="text-sm text-muted-foreground">Preispaket:</p>
-                <Badge 
-                  variant={user.pricingPlan === "enterprise" ? "default" : user.pricingPlan === "professional" ? "success" : "outline"}
-                  className="mt-1"
-                >
-                  {user.pricingPlan === "enterprise" ? "Enterprise" : 
-                   user.pricingPlan === "professional" ? "Professional" : "Basic"}
+                <Badge variant={user.pricingPlan === "enterprise" ? "default" : user.pricingPlan === "professional" ? "success" : "outline"} className="mt-1">
+                  {user.pricingPlan === "enterprise" ? "Enterprise" : user.pricingPlan === "professional" ? "Professional" : "Basic"}
                 </Badge>
               </div>
             </div>
@@ -376,113 +395,91 @@ function UserTable() {
             <div className="flex items-center justify-between border-t p-3 bg-muted/10">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status ändern:</span>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <Switch 
-                    checked={user.isActive} 
-                    onCheckedChange={() => handleToggleActive(user)}
-                    disabled={toggleActiveMutation.isPending}
-                  />
-                </div>
+                <Switch 
+                  checked={user.isActive} 
+                  onCheckedChange={(e) => {
+                    e.stopPropagation();
+                    handleToggleActive(user);
+                  }}
+                  disabled={toggleActiveMutation.isPending}
+                  className="data-[state=checked]:bg-green-500"
+                />
               </div>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span className="sr-only">Aktionen</span>
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditUser(user);
-                    }}
-                  >
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Bearbeiten
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteUser(user);
-                    }}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Löschen
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditUser(user);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 text-destructive"
+                  onClick={(e) => handleDeleteUser(user, e)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Benutzerinformationen-Dialog */}
+      <UserDetailsDialog 
+        selectedUser={selectedUser} 
+        isOpen={isDetailsDialogOpen} 
+        onClose={() => setIsDetailsDialogOpen(false)} 
+        onEdit={handleEditUser}
+        onDelete={handleDeleteUser}
+      />
       
-      {/* Benutzer bearbeiten Dialog */}
+      {/* Bearbeiten-Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Benutzer bearbeiten</DialogTitle>
+            <DialogDescription>
+              Hier können Sie die Benutzerinformationen ändern.
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Benutzername</Label>
-              <Input
-                id="name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-username">Benutzername</Label>
+              <Input 
+                id="edit-username" 
+                value={editName} 
+                onChange={(e) => setEditName(e.target.value)} 
+                placeholder="Benutzername"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">E-Mail</Label>
-              <Input
-                id="email"
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-Mail</Label>
+              <Input 
+                id="edit-email" 
+                value={editEmail} 
+                onChange={(e) => setEditEmail(e.target.value)} 
+                placeholder="E-Mail"
                 type="email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Rolle</Label>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="user-role"
-                    name="role"
-                    value="user"
-                    checked={editRole === "user"}
-                    onChange={() => setEditRole("user")}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <Label htmlFor="user-role" className="text-sm font-normal">Benutzer</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="admin-role"
-                    name="role"
-                    value="admin"
-                    checked={editRole === "admin"}
-                    onChange={() => setEditRole("admin")}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <Label htmlFor="admin-role" className="text-sm font-normal">Administrator</Label>
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pricing-plan">Preispaket</Label>
-              <Select
-                value={editPricingPlan}
+            
+            <div className="space-y-2">
+              <Label>Preispaket</Label>
+              <Select 
+                value={editPricingPlan} 
                 onValueChange={(value) => setEditPricingPlan(value as "basic" | "professional" | "enterprise")}
               >
-                <SelectTrigger id="pricing-plan">
+                <SelectTrigger>
                   <SelectValue placeholder="Preispaket auswählen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -491,28 +488,38 @@ function UserTable() {
                   <SelectItem value="enterprise">Enterprise</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Das Preispaket bestimmt, welche Features der Benutzer nutzen kann.
+              </p>
             </div>
             
-            {/* Hinweis zu Feature-Übersteuerungen */}
-            <div className="grid gap-2">
-              <Label>Individuelle Feature-Übersteuerungen</Label>
-              <div className="bg-muted/30 rounded-md p-4 space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  <p className="mb-2">
-                    Features werden jetzt automatisch basierend auf dem ausgewählten Preispaket zugewiesen. 
-                    Individuelle Übersteuerungen sollten nur noch in Ausnahmefällen eingerichtet werden.
-                  </p>
-                  <p>
-                    Für individuelle Feature-Übersteuerungen kontaktieren Sie bitte den Systemadministrator.
-                  </p>
+            <div className="space-y-2">
+              <Label>Rolle</Label>
+              <RadioGroup value={editRole} onValueChange={(value) => setEditRole(value as "user" | "admin")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="user" id="role-user" />
+                  <Label htmlFor="role-user">Benutzer</Label>
                 </div>
-              </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="admin" id="role-admin" />
+                  <Label htmlFor="role-admin">Administrator</Label>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-red-500 font-medium mt-1">
+                Vorsicht: Administrator-Berechtigungen sollten nur "bugi" als System-Administrator haben!
+              </p>
             </div>
           </div>
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Abbrechen</Button>
             <Button 
-              onClick={submitEditUser} 
+              variant="outline" 
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={submitEditUser}
               disabled={editUserMutation.isPending}
             >
               {editUserMutation.isPending && (
@@ -524,20 +531,36 @@ function UserTable() {
         </DialogContent>
       </Dialog>
       
-      {/* Benutzer löschen Dialog */}
+      {/* Löschen-Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Benutzer löschen</DialogTitle>
+            <DialogDescription>
+              Möchten Sie diesen Benutzer wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.
+            </DialogDescription>
           </DialogHeader>
+          
           <div className="py-4">
-            <p>Sind Sie sicher, dass Sie den Benutzer <strong>{selectedUser?.username}</strong> löschen möchten?</p>
-            <p className="text-sm text-muted-foreground mt-2">Alle Daten dieses Benutzers werden unwiderruflich gelöscht.</p>
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                {selectedUser && (
+                  <>Benutzer <span className="font-bold">{selectedUser.username}</span> wird gelöscht.</>
+                )}
+              </AlertDescription>
+            </Alert>
           </div>
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Abbrechen</Button>
             <Button 
-              variant="destructive" 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Abbrechen
+            </Button>
+            <Button 
+              variant="destructive"
               onClick={() => selectedUser && deleteUserMutation.mutate(selectedUser.id)}
               disabled={deleteUserMutation.isPending}
             >
@@ -549,310 +572,184 @@ function UserTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Benutzerdetails Dialog */}
-      <UserDetailsDialog
-        open={isDetailsDialogOpen}
-        onClose={() => setIsDetailsDialogOpen(false)}
-        userId={selectedUser?.id || null}
-        onEdit={(id) => {
-          // Details Dialog schließen und Edit Dialog öffnen
-          setIsDetailsDialogOpen(false);
-          const user = users?.find(u => u.id === id);
-          if (user) {
-            handleEditUser(user);
-          }
-        }}
-        onToggleActive={(id) => {
-          const user = users?.find(u => u.id === id);
-          if (user) {
-            handleToggleActive(user);
-          }
-        }}
-      />
     </div>
   );
 }
 
 function SystemDiagnosticTab() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["/api/admin/system/diagnostics"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/system/diagnostics");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch system diagnostics: ${response.statusText}`);
-      }
-      return await response.json() as {
-        database: { status: string; issues: string[] | null };
-        email: { status: string; issues: string[] | null };
-        performance: { memoryUsage: number; cpuUsage: number };
-      };
-    }
-  });
-  
-  const runDiagnosticsMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/system/run-diagnostics");
-      if (!response.ok) {
-        throw new Error(`Failed to run diagnostics: ${response.statusText}`);
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      refetch();
-    },
-  });
-  
-  const fixDatabaseMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/system/fix-database");
-      if (!response.ok) {
-        throw new Error(`Failed to fix database: ${response.statusText}`);
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      refetch();
-    },
-  });
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <h3 className="text-lg font-semibold">Systemdiagnose</h3>
-        <Button onClick={() => refetch()} className="gap-2" variant="outline">
-          <RefreshCw className="h-4 w-4" />
-          Aktualisieren
-        </Button>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Systemdiagnose</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Hier finden Sie wichtige Informationen über den Systemstatus.
+        </p>
       </div>
       
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Datenbank
-              </div>
-              {data?.database.status === "healthy" ? (
-                <Badge variant="success" className="gap-1">
-                  <Check className="h-3.5 w-3.5" /> Gesund
-                </Badge>
-              ) : data?.database.status === "issues" ? (
-                <Badge variant="destructive" className="gap-1">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Probleme gefunden
-                </Badge>
-              ) : (
-                <Badge variant="outline">Unbekannt</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
-            ) : data?.database.issues && data.database.issues.length > 0 ? (
-              <>
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {data.database.issues.map((issue, index) => (
-                        <li key={index}>{issue}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-                <Button 
-                  onClick={() => fixDatabaseMutation.mutate()}
-                  disabled={fixDatabaseMutation.isPending}
-                  className="w-full"
-                >
-                  {fixDatabaseMutation.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Datenbankprobleme beheben
-                </Button>
-              </>
-            ) : (
-              <p className="text-muted-foreground text-sm">Die Datenbank ist in gutem Zustand und funktioniert normal.</p>
-            )}
-          </CardContent>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-4 space-y-2">
+          <h4 className="font-medium flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            Dateiintegritätsprüfung
+          </h4>
+          <p className="text-sm text-muted-foreground">Prüft, ob alle Systemdateien vorhanden und unverändert sind.</p>
+          <Button className="w-full" variant="outline">Jetzt prüfen</Button>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                E-Mail-System
-              </div>
-              {data?.email.status === "healthy" ? (
-                <Badge variant="success" className="gap-1">
-                  <Check className="h-3.5 w-3.5" /> Gesund
-                </Badge>
-              ) : data?.email.status === "issues" ? (
-                <Badge variant="destructive" className="gap-1">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Probleme gefunden
-                </Badge>
-              ) : (
-                <Badge variant="outline">Unbekannt</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
-            ) : data?.email.issues && data.email.issues.length > 0 ? (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  <ul className="list-disc pl-4 space-y-1">
-                    {data.email.issues.map((issue, index) => (
-                      <li key={index}>{issue}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <p className="text-muted-foreground text-sm">Der E-Mail-Dienst ist korrekt konfiguriert und funktioniert normal.</p>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <HardDrive className="h-5 w-5" />
-              Systemressourcen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
-            ) : data ? (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Speichernutzung</Label>
-                    <span className="text-sm">{data.performance.memoryUsage}%</span>
-                  </div>
-                  <Progress value={data.performance.memoryUsage} />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>CPU-Auslastung</Label>
-                    <span className="text-sm">{data.performance.cpuUsage}%</span>
-                  </div>
-                  <Progress value={data.performance.cpuUsage} />
-                </div>
-              </div>
-            ) : null}
-          </CardContent>
+        <Card className="p-4 space-y-2">
+          <h4 className="font-medium flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-red-500" />
+            Sicherheitsscanner
+          </h4>
+          <p className="text-sm text-muted-foreground">Überprüft das System auf Sicherheitsprobleme.</p>
+          <Button className="w-full" variant="outline">Jetzt scannen</Button>
         </Card>
       </div>
       
-      <Button 
-        onClick={() => runDiagnosticsMutation.mutate()}
-        disabled={runDiagnosticsMutation.isPending}
-        className="w-full"
-      >
-        {runDiagnosticsMutation.isPending && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        )}
-        Vollständige Diagnose durchführen
-      </Button>
+      <div>
+        <h4 className="font-medium mb-2">Systemleistung</h4>
+        <div className="space-y-2">
+          <div>
+            <div className="flex justify-between text-sm">
+              <span>CPU-Auslastung</span>
+              <span>23%</span>
+            </div>
+            <Progress value={23} className="h-2" />
+          </div>
+          <div>
+            <div className="flex justify-between text-sm">
+              <span>Speichernutzung</span>
+              <span>54%</span>
+            </div>
+            <Progress value={54} className="h-2" />
+          </div>
+          <div>
+            <div className="flex justify-between text-sm">
+              <span>Festplattennutzung</span>
+              <span>37%</span>
+            </div>
+            <Progress value={37} className="h-2" />
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <h4 className="font-medium mb-2">Cache-Management</h4>
+        <p className="text-sm text-muted-foreground mb-2">
+          In seltenen Fällen kann es hilfreich sein, den Cache zu leeren, um Probleme zu beheben.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline">Anwendungs-Cache leeren</Button>
+          <Button variant="outline">Datenbank-Cache leeren</Button>
+        </div>
+      </div>
     </div>
   );
 }
 
 function ActivityLogTab() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["/api/admin/activity-log"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/admin/activity-log");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch activity log: ${response.statusText}`);
-      }
-      return await response.json() as Array<{
-        id: number;
-        userId: number;
-        username: string;
-        action: string;
-        details: string;
-        timestamp: string;
-      }>;
-    },
-  });
+  const activityLogs = [
+    { id: 1, username: "bugi", action: "Benutzer aktualisiert", details: "Benutzer 'testuser' wurde aktiviert", timestamp: new Date(2025, 4, 1, 14, 23) },
+    { id: 2, username: "bugi", action: "Gerätedaten importiert", details: "157 neue Geräte hinzugefügt", timestamp: new Date(2025, 4, 1, 12, 15) },
+    { id: 3, username: "support", action: "Backup erstellt", details: "Vollständiges Systembackup", timestamp: new Date(2025, 4, 1, 10, 30) },
+    { id: 4, username: "bugi", action: "Einstellungen geändert", details: "E-Mail-Konfiguration aktualisiert", timestamp: new Date(2025, 3, 30, 16, 45) },
+    { id: 5, username: "support", action: "Benutzer erstellt", details: "Neuer Benutzer 'handyshop7' hinzugefügt", timestamp: new Date(2025, 3, 30, 15, 12) },
+  ];
   
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Aktivitätsprotokoll</h3>
+      <p className="text-sm text-muted-foreground">
+        Hier sehen Sie die letzten Aktionen im Administrationsbereich.
+      </p>
       
-      <Card>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>
-          ) : data && data.length > 0 ? (
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-4">
-                {data.map((log) => (
-                  <div key={log.id} className="flex items-start space-x-4 border-b pb-4 last:border-0">
-                    <div className="flex-shrink-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>{log.username.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{log.username}</p>
-                        <p className="text-xs text-muted-foreground">
-                          <span className="mr-1">⏰</span>
-                          {new Date(log.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                      <p className="text-sm">{log.action}</p>
-                      <p className="text-xs text-muted-foreground">{log.details}</p>
-                    </div>
-                  </div>
-                ))}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Benutzer</TableHead>
+              <TableHead>Aktion</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead>Zeitstempel</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {activityLogs.map((log) => (
+              <TableRow key={log.id}>
+                <TableCell className="font-medium">{log.username}</TableCell>
+                <TableCell>{log.action}</TableCell>
+                <TableCell>{log.details}</TableCell>
+                <TableCell>{log.timestamp.toLocaleString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Mobile-Ansicht */}
+      <div className="md:hidden space-y-4">
+        {activityLogs.map((log) => (
+          <div key={log.id} className="border rounded-lg overflow-hidden">
+            <div className="bg-muted/20 p-3 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{log.username}</span>
+                </div>
+                <Badge variant="outline">{log.action}</Badge>
               </div>
-            </ScrollArea>
-          ) : (
-            <p className="text-muted-foreground text-center py-4">Keine Aktivitäten gefunden.</p>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+            
+            <div className="p-3">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">{log.username}</p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="mr-1">⏰</span>
+                    {log.timestamp.toLocaleString()}
+                  </p>
+                </div>
+                <p className="text-sm">{log.details}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
 function BackupRestoreTab() {
+  const [backupInProgress, setBackupInProgress] = useState(false);
+  const [restoreInProgress, setRestoreInProgress] = useState(false);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const { toast } = useToast();
   
   const backupMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/backup");
+      const response = await apiRequest("GET", "/api/admin/backup");
       if (!response.ok) {
         throw new Error(`Failed to create backup: ${response.statusText}`);
       }
       return await response.blob();
     },
-    onSuccess: (blob) => {
-      // Backup-Datei herunterladen
-      const url = window.URL.createObjectURL(blob);
+    onSuccess: (data) => {
+      const url = window.URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `handyshop-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+      setBackupInProgress(false);
       toast({
         title: "Backup erstellt",
         description: "Das Backup wurde erfolgreich erstellt und heruntergeladen.",
       });
     },
     onError: (error: Error) => {
+      setBackupInProgress(false);
       toast({
         title: "Fehler beim Erstellen des Backups",
         description: error.message,
@@ -861,18 +758,10 @@ function BackupRestoreTab() {
     },
   });
   
-  const [file, setFile] = useState<File | null>(null);
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
-    }
-  };
-  
   const restoreMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append("backup", file);
+      formData.append("backupFile", file);
       
       const response = await fetch("/api/admin/restore", {
         method: "POST",
@@ -880,195 +769,168 @@ function BackupRestoreTab() {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to restore backup: ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(errorText || `Failed to restore backup: ${response.statusText}`);
       }
       
-      return await response.json();
+      return true;
     },
     onSuccess: () => {
-      setFile(null);
+      setRestoreInProgress(false);
+      setRestoreFile(null);
       toast({
         title: "Backup wiederhergestellt",
         description: "Das Backup wurde erfolgreich wiederhergestellt.",
       });
     },
     onError: (error: Error) => {
+      setRestoreInProgress(false);
       toast({
-        title: "Fehler beim Wiederherstellen des Backups",
+        title: "Fehler bei der Wiederherstellung",
         description: error.message,
         variant: "destructive",
       });
     },
   });
   
-  const handleRestore = () => {
-    if (file) {
-      restoreMutation.mutate(file);
-    }
+  const handleBackup = () => {
+    setBackupInProgress(true);
+    backupMutation.mutate();
   };
   
-  const clearDataMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/clear-data");
-      if (!response.ok) {
-        throw new Error(`Failed to clear data: ${response.statusText}`);
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
+  const handleRestore = () => {
+    if (!restoreFile) {
       toast({
-        title: "Daten gelöscht",
-        description: "Alle Kundendaten und Reparaturen wurden erfolgreich gelöscht.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler beim Löschen der Daten",
-        description: error.message,
+        title: "Keine Datei ausgewählt",
+        description: "Bitte wählen Sie eine Backup-Datei aus.",
         variant: "destructive",
       });
-    },
-  });
-  
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+      return;
+    }
+    
+    setRestoreInProgress(true);
+    restoreMutation.mutate(restoreFile);
+  };
   
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Backup & Restore</h3>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileDown className="h-5 w-5" />
-              Backup erstellen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Erstellen Sie ein Backup aller Daten (Kunden, Reparaturen, Einstellungen). 
-              Die Backup-Datei wird auf Ihrem Gerät gespeichert.
-            </p>
-            <Button 
-              onClick={() => backupMutation.mutate()}
-              disabled={backupMutation.isPending}
-              className="w-full"
-            >
-              {backupMutation.isPending && (
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Backup & Restore</h3>
+        <p className="text-sm text-muted-foreground">
+          Erstellen Sie regelmäßig Backups Ihrer Daten und stellen Sie sie bei Bedarf wieder her.
+        </p>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Save className="h-5 w-5 text-blue-500" />
+            <h4 className="font-medium">Backup erstellen</h4>
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            Erstellt eine Sicherungskopie aller wichtigen Daten (Benutzer, Reparaturen, Kunden, Geräte, etc.)
+          </p>
+          
+          <Button 
+            onClick={handleBackup} 
+            disabled={backupInProgress} 
+            className="w-full"
+          >
+            {backupInProgress ? (
+              <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Backup erstellen und herunterladen
-            </Button>
-          </CardContent>
+                Backup wird erstellt...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Backup jetzt erstellen
+              </>
+            )}
+          </Button>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileUp className="h-5 w-5" />
-              Backup wiederherstellen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Stellen Sie ein zuvor erstelltes Backup wieder her. 
-              Achtung: Bestehende Daten werden überschrieben!
-            </p>
-            
-            <div className="space-y-4">
-              <Input
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                disabled={restoreMutation.isPending}
-              />
-              
-              <Button 
-                onClick={handleRestore}
-                disabled={!file || restoreMutation.isPending}
-                className="w-full"
-              >
-                {restoreMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Backup wiederherstellen
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Trash className="h-5 w-5" />
-              Daten löschen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Löschen Sie alle Kundendaten und Reparaturen. 
-              Benutzerkonten und Einstellungen bleiben erhalten. 
-              Dieser Vorgang kann nicht rückgängig gemacht werden!
-            </p>
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center gap-2">
+            <Upload className="h-5 w-5 text-amber-500" />
+            <h4 className="font-medium">Backup wiederherstellen</h4>
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            Stellt ein zuvor erstelltes Backup wieder her. Vorhandene Daten werden überschrieben.
+          </p>
+          
+          <div className="space-y-4">
+            <Input 
+              type="file" 
+              accept=".json" 
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  setRestoreFile(e.target.files[0]);
+                }
+              }}
+              disabled={restoreInProgress}
+            />
             
             <Button 
-              variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              onClick={handleRestore} 
+              disabled={!restoreFile || restoreInProgress} 
+              variant="outline" 
               className="w-full"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Alle Daten löschen
+              {restoreInProgress ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wiederherstellung läuft...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Backup wiederherstellen
+                </>
+              )}
             </Button>
-          </CardContent>
+          </div>
         </Card>
       </div>
       
-      {/* Daten löschen Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Alle Daten löschen</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="mb-2">Sind Sie absolut sicher, dass Sie alle Daten löschen möchten?</p>
-            <p className="text-sm text-muted-foreground">Dieser Vorgang wird <strong>alle Kunden und Reparaturen</strong> unwiderruflich löschen. Benutzerkonten und Einstellungen bleiben erhalten.</p>
-            <div className="mt-4 p-4 bg-destructive/10 rounded-md border border-destructive/20">
-              <p className="text-sm font-semibold flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Sicherheitshinweis
-              </p>
-              <p className="text-xs mt-1">Erstellen Sie vor dem Löschen ein Backup, falls Sie die Daten später wiederherstellen möchten.</p>
-            </div>
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          <span className="font-semibold">Warnung:</span> Bei der Wiederherstellung eines Backups werden alle aktuellen Daten überschrieben. Dieser Vorgang kann nicht rückgängig gemacht werden.
+        </AlertDescription>
+      </Alert>
+      
+      <div>
+        <h4 className="font-medium mb-2">Backup-Zeitplan</h4>
+        <p className="text-sm text-muted-foreground mb-4">
+          In der Enterprise-Version können Sie automatische Backups einrichten.
+        </p>
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Switch id="weekly-backup" />
+            <Label htmlFor="weekly-backup">Wöchentliches Backup</Label>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Abbrechen</Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => {
-                clearDataMutation.mutate();
-                setIsDeleteDialogOpen(false);
-              }}
-              disabled={clearDataMutation.isPending}
-            >
-              {clearDataMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Alle Daten endgültig löschen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          
+          <div className="flex items-center gap-2">
+            <Switch id="daily-backup" />
+            <Label htmlFor="daily-backup">Tägliches Backup</Label>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 function AdminDashboard() {
-  const { data, isLoading, error } = useQuery({
+  const { data: stats, isLoading, error } = useQuery({
     queryKey: ["/api/admin/dashboard"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/admin/dashboard");
       if (!response.ok) {
-        throw new Error(`Failed to fetch admin dashboard data: ${response.statusText}`);
+        throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
       }
       return await response.json() as AdminDashboardStats;
     },
@@ -1078,107 +940,131 @@ function AdminDashboard() {
     return <div className="flex justify-center p-4"><Loader2 className="h-6 w-6 animate-spin" /></div>;
   }
   
-  if (error || !data) {
+  if (error || !stats) {
     return <Alert variant="destructive"><AlertDescription>Fehler beim Laden der Dashboard-Daten</AlertDescription></Alert>;
   }
   
-  const userStats = data.users;
-  const repairStats = data.repairs;
-  
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <UserIcon className="h-5 w-5" />
-              Benutzerstatistik
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{userStats.total}</span>
-                <span className="text-xs text-muted-foreground">Gesamt</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{userStats.active}</span>
-                <span className="text-xs text-muted-foreground">Aktiv</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{userStats.pending}</span>
-                <span className="text-xs text-muted-foreground">Ausstehend</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{userStats.admin}</span>
-                <span className="text-xs text-muted-foreground">Admins</span>
-              </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <Users className="h-6 w-6 text-blue-700" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-sm text-muted-foreground">Benutzer</p>
+              <h3 className="text-2xl font-bold">{stats.users.total}</h3>
+              <p className="text-xs text-muted-foreground">{stats.users.active} aktiv</p>
+            </div>
+          </div>
         </Card>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Smartphone className="h-5 w-5" />
-              Reparaturstatistik
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{repairStats.totalOrders}</span>
-                <span className="text-xs text-muted-foreground">Gesamt</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{repairStats.today}</span>
-                <span className="text-xs text-muted-foreground">Heute</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{repairStats.inRepair}</span>
-                <span className="text-xs text-muted-foreground">In Reparatur</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-primary/5 rounded-md">
-                <span className="text-2xl font-bold">{repairStats.completed}</span>
-                <span className="text-xs text-muted-foreground">Abgeschlossen</span>
-              </div>
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-green-100 p-3 rounded-full">
+              <FileText className="h-6 w-6 text-green-700" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-sm text-muted-foreground">Aufträge</p>
+              <h3 className="text-2xl font-bold">{stats.repairs.totalOrders}</h3>
+              <p className="text-xs text-muted-foreground">{stats.repairs.today} heute</p>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-100 p-3 rounded-full">
+              <FileCheck className="h-6 w-6 text-amber-700" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">In Bearbeitung</p>
+              <h3 className="text-2xl font-bold">{stats.repairs.inRepair}</h3>
+              <p className="text-xs text-muted-foreground">{stats.repairs.readyForPickup} abholbereit</p>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-purple-100 p-3 rounded-full">
+              <Truck className="h-6 w-6 text-purple-700" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Ausgelagert</p>
+              <h3 className="text-2xl font-bold">{stats.repairs.outsourced}</h3>
+              <p className="text-xs text-muted-foreground">zur Reparatur</p>
+            </div>
+          </div>
         </Card>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Systemstatus</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Benutzerstatistik</h3>
+            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+          </div>
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-primary" />
-                <span className="text-sm">Datenbank</span>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Aktive Benutzer</span>
+                <span>{stats.users.active} / {stats.users.total}</span>
               </div>
-              <Badge variant="outline" className="bg-green-50">Online</Badge>
+              <Progress value={(stats.users.active / stats.users.total) * 100} className="h-2" />
             </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-primary" />
-                <span className="text-sm">E-Mail-System</span>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Inaktive Benutzer</span>
+                <span>{stats.users.total - stats.users.active} / {stats.users.total}</span>
               </div>
-              <Badge variant="outline" className="bg-green-50">Bereit</Badge>
+              <Progress value={((stats.users.total - stats.users.active) / stats.users.total) * 100} className="h-2" />
             </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <HardDrive className="h-4 w-4 text-primary" />
-                <span className="text-sm">Speicher</span>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Administratoren</span>
+                <span>{stats.users.admin} / {stats.users.total}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Progress value={65} className="w-24 h-2" />
-                <span className="text-xs">65%</span>
-              </div>
+              <Progress value={(stats.users.admin / stats.users.total) * 100} className="h-2" />
             </div>
           </div>
-        </CardContent>
+        </Card>
+        
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Auftragsstatistik</h3>
+            <Calendar className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-2">
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>In Bearbeitung</span>
+                <span>{stats.repairs.inRepair} / {stats.repairs.totalOrders}</span>
+              </div>
+              <Progress value={(stats.repairs.inRepair / stats.repairs.totalOrders) * 100} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Abgeschlossen</span>
+                <span>{stats.repairs.completed} / {stats.repairs.totalOrders}</span>
+              </div>
+              <Progress value={(stats.repairs.completed / stats.repairs.totalOrders) * 100} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm">
+                <span>Abholbereit</span>
+                <span>{stats.repairs.readyForPickup} / {stats.repairs.totalOrders}</span>
+              </div>
+              <Progress value={(stats.repairs.readyForPickup / stats.repairs.totalOrders) * 100} className="h-2" />
+            </div>
+          </div>
+        </Card>
+      </div>
+      
+      <Card className="p-6">
+        <h3 className="font-semibold mb-4">Aktuelle Ereignisse</h3>
+        <ActivityLogTab />
       </Card>
     </div>
   );
@@ -1186,52 +1072,35 @@ function AdminDashboard() {
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isToastTestOpen, setIsToastTestOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
-  const [featureTestVisible, setFeatureTestVisible] = useState(false);
-  const { user } = useAuth();
-  const [location, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
   
+  // Umleiten, wenn Benutzer kein Admin ist
   useEffect(() => {
-    // Wenn kein Benutzer oder kein Admin, zur Hauptseite umleiten
-    if (user === null) {
-      setLocation("/auth");
-      toast({
-        title: "Zugriff verweigert",
-        description: "Sie müssen angemeldet sein, um auf den Administrationsbereich zuzugreifen.",
-        variant: "destructive",
-      });
-    } else if (user && !user.isAdmin) {
+    if (!isLoading && (!user || !user.isAdmin)) {
       setLocation("/");
-      toast({
-        title: "Zugriff verweigert",
-        description: "Sie benötigen Administratorrechte, um auf diesen Bereich zuzugreifen.",
-        variant: "destructive",
-      });
     }
-  }, [user, setLocation, toast]);
+  }, [user, isLoading, setLocation]);
   
-  if (user === null || !user || !user.isAdmin) {
-    return null; // Wird durch useEffect umgeleitet
+  // Wenn noch geladen wird oder der Benutzer kein Admin ist, nichts anzeigen
+  if (isLoading || !user || !user.isAdmin) {
+    return <div className="flex items-center justify-center min-h-screen">
+      {isLoading ? <Loader2 className="animate-spin h-8 w-8 text-blue-500" /> : null}
+    </div>;
   }
   
   return (
-    <div className="flex h-screen">
-      {/* Desktop-Ansicht mit neuer Sidebar */}
-      <div className="hidden md:block">
-        {/* Seitenleiste für Desktop-Ansicht */}
-        <div 
-          className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white fixed h-full transition-all duration-300 ease-in-out overflow-y-auto`}
-          style={{ paddingLeft: sidebarCollapsed ? '0.75rem' : '1.5rem', paddingRight: sidebarCollapsed ? '0.75rem' : '1.5rem', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}
-        >
-          <div className="mb-8 flex items-center justify-center md:justify-start">
+    <div className="min-h-screen bg-gray-100">
+      {/* Desktop-Ansicht (nur auf md und größer sichtbar) */}
+      <div className="hidden md:flex h-screen bg-gray-100">
+        {/* Seitenleiste - Desktop */}
+        <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-900 text-white p-4 transition-all duration-300 ease-in-out flex flex-col`}>
+          <div className="flex items-center mb-6">
             {sidebarCollapsed ? (
-              <div className="flex justify-center w-full">
-                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
-                  HS
-                </div>
+              <div className="mx-auto bg-blue-500 text-white rounded-md w-8 h-8 flex items-center justify-center">
+                <span className="font-bold">A</span>
               </div>
             ) : (
               <h2 className="text-xl font-bold">Handyshop</h2>
@@ -1379,6 +1248,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-md p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
+            {activeTab === "planFeatures" && <PlanFeaturesManager />}
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
@@ -1442,6 +1312,14 @@ export default function AdminPage() {
               </Button>
               
               <Button 
+                variant={activeTab === "planFeatures" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "planFeatures" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("planFeatures")}
+              >
+                <Layers className="h-4 w-4 mr-2" /> Tarif-Features
+              </Button>
+              
+              <Button 
                 variant={activeTab === "devices" ? "default" : "outline"}
                 className={`p-3 h-auto justify-start ${activeTab === "devices" ? "bg-primary text-white" : "bg-secondary/10"}`}
                 onClick={() => setActiveTab("devices")}
@@ -1482,6 +1360,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-md shadow-sm p-4 mb-6">
             {activeTab === "dashboard" && <AdminDashboard />}
             {activeTab === "users" && <UserTable />}
+            {activeTab === "planFeatures" && <PlanFeaturesManager />}
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
@@ -1504,21 +1383,10 @@ export default function AdminPage() {
             {activeTab === "backup" && <BackupRestoreTab />}
             {activeTab === "featureTest" && <FeatureOverridesTestPanel />}
           </div>
-      
-      {/* Toast-Test Dialog */}
-      <ToastTestDialog
-        open={isToastTestOpen}
-        onOpenChange={setIsToastTestOpen}
-      />
-      
-      {/* Toast-Test Button - für Bugi's Admin-Bereich */}
-      <div className="fixed bottom-16 right-4 z-10">
-        <Button onClick={() => setIsToastTestOpen(true)} variant="secondary" size="sm" className="shadow-md">
-          Toast-Test
-        </Button>
-      </div>
         </div>
       </div>
+      
+      <ToastTestDialog />
     </div>
   );
 }

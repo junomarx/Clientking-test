@@ -1,0 +1,75 @@
+Ich möchte das bestehende Feature-Zugriffssystem überarbeiten:
+
+---
+
+### 1. Entferne alte Logik:
+- Entferne das Feld `featureOverrides` aus dem `users`-Schema
+- Entferne alle Referenzen zu `featureOverrides` im Code (Frontend + Backend)
+- Entferne UI-Elemente in der Admin-Oberfläche, mit denen Features direkt einzelnen Benutzern zugewiesen wurden
+
+---
+
+### 2. Erstelle ein zentrales Paket-Verwaltungssystem:
+Ein Paket ("Plan") definiert:
+- Name
+- Beschreibung
+- Monatlicher Preis
+- Liste verfügbarer Features
+
+Ein Benutzer ist genau einem Paket zugeordnet.
+
+---
+
+### 3. Datenbankstruktur:
+#### Neue Tabelle `packages`:
+```ts
+id             integer  PK
+name           string   (z. B. "Basic", "Pro", "Enterprise")
+description    text
+price_monthly  decimal
+Neue Tabelle package_features:
+
+ts
+Kopieren
+Bearbeiten
+package_id     FK → packages.id
+feature        string (z. B. "emailTemplates", "costEstimates", "systemDiagnostics")
+Anpassung in users-Tabelle:
+
+ts
+Kopieren
+Bearbeiten
+Entferne: pricingPlan, featureOverrides
+Füge hinzu: package_id FK → packages.id
+4. Zugriffskontrolle:
+Implementiere hasAccess(user, featureName) serverseitig neu:
+Falls user.username === "bugi", gib immer true zurück (Superadmin)
+Sonst: prüfe, ob user.package_id einem Paket entspricht, das featureName in package_features enthält
+Update auch isProfessionalOrHigher() & isEnterprise() entsprechend, damit sie auf dem zugewiesenen Paket basieren
+5. UI-Änderung: Admin → Pakete
+Füge in der Admin-Seitenleiste einen neuen Menüpunkt hinzu:
+🧩 Pakete
+
+Beim Klick erscheint folgende Oberfläche (basierend auf Skizze):
+
+Tabellenansicht:
+
+Spalten:
+Name
+Beschreibung
+Monatlicher Preis (€)
+Features (z. B. Badge-Liste oder kurze Beschreibung)
+Aktionen (Bearbeiten / Löschen)
+Button: „+ Paket hinzufügen“ (oben rechts)
+Dialog zum Bearbeiten/Hinzufügen eines Pakets:
+
+Felder:
+Name (Text)
+Beschreibung (Textarea)
+Monatlicher Preis (€)
+Features: Checkboxliste aller verfügbaren Features (aus ENUM oder Konstante)
+Buttons: Speichern / Abbrechen
+6. User-Zuweisung:
+Beim Bearbeiten eines Benutzers (Adminbereich → User bearbeiten):
+Statt "Preispaket: Basic / Professional / Enterprise" zeige eine Dropdown-Liste mit echten packages.name-Einträgen aus der Datenbank
+Der Wert wird als package_id gespeichert
