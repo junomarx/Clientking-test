@@ -1082,14 +1082,7 @@ export class DatabaseStorage implements IStorage {
       const currentUser = await this.getUser(currentUserId);
       if (!currentUser) return false;
       
-      // Prüfen, ob der Benutzer Admin ist (bugi)
-      if (currentUser.isAdmin) {
-        // Admin kann alle Reparaturen löschen
-        await db.delete(repairs).where(eq(repairs.id, id));
-        return true;
-      }
-      
-      // Normaler Benutzer kann nur Reparaturen aus seinem Shop löschen
+      // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop löschen (DSGVO-konform)
       const shopIdValue = currentUser.shopId || 1;
       await db.delete(repairs).where(
         and(
@@ -1115,7 +1108,7 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      // Benutzer abrufen, um festzustellen, ob er Admin-Rechte besitzt und welche Shop-ID er hat
+      // Benutzer abrufen, um festzustellen, welche Shop-ID er hat
       const user = await this.getUser(userId);
       if (!user) {
         console.log(`Benutzer mit ID ${userId} nicht gefunden`);
@@ -1125,43 +1118,34 @@ export class DatabaseStorage implements IStorage {
       // Shop-ID aus dem Benutzer extrahieren
       const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID
       
-      // Bedingungen für Datenbankabfrage definieren
-      let conditions: SQL<unknown>;
+      // DSGVO-konform: Jeder Benutzer sieht nur Einstellungen seines eigenen Shops
+      console.log(`Suche nach Geschäftseinstellungen für Benutzer ${user.username} (ID ${userId}, Shop ${shopId})`);
       
-      if (user.username === 'bugi' && user.isAdmin) {
-        // Für bugi (Admin) suche erstmal nach den eigenen Einstellungen
-        console.log(`Suche nach Geschäftseinstellungen für Admin-Benutzer ${user.username} (ID ${userId})`);
-        conditions = eq(businessSettings.userId, userId);
-      } else {
-        // Für normale Benutzer nach den eigenen Einstellungen und der Shop-ID filtern
-        console.log(`Suche nach Geschäftseinstellungen für normalen Benutzer ${user.username} (ID ${userId}, Shop ${shopId})`);
-        conditions = and(
+      // Zuerst versuchen, die eigenen Benutzereinstellungen zu finden
+      const [userSettings] = await db.select()
+        .from(businessSettings)
+        .where(and(
           eq(businessSettings.userId, userId),
           eq(businessSettings.shopId, shopId)
-        ) as SQL<unknown>;
+        ));
+        
+      if (userSettings) {
+        console.log(`Gefunden: Einstellungen mit ID ${userSettings.id} für User ${userSettings.userId} (Shop ${shopId})`);
+        return userSettings;
       }
       
-      // Einstellungen mit den festgelegten Bedingungen abrufen
-      const [settings] = await db.select()
+      // Wenn keine eigenen Einstellungen gefunden wurden, versuche allgemeine Shop-Einstellungen zu finden
+      const [shopSettings] = await db.select()
         .from(businessSettings)
-        .where(conditions);
-      
-      // Wenn Admin keine eigenen Einstellungen hat, probiere andere Einstellungen aus demselben Shop
-      if (!settings && user.username === 'bugi' && user.isAdmin) {
-        console.log(`Keine eigenen Einstellungen für Admin gefunden, suche nach allen Shop-Einstellungen`);
-        const [adminShopSettings] = await db.select()
-          .from(businessSettings)
-          .where(eq(businessSettings.shopId, shopId));
-          
-        if (adminShopSettings) {
-          console.log(`Shop-Einstellungen gefunden: ID ${adminShopSettings.id} für Shop ${adminShopSettings.shopId}`);
-          return adminShopSettings;
-        }
+        .where(eq(businessSettings.shopId, shopId));
+        
+      if (shopSettings) {
+        console.log(`Shop-Einstellungen gefunden: ID ${shopSettings.id} für Shop ${shopId}`);
+        return shopSettings;
       }
       
-      console.log(`Gefundene Einstellungen:`, settings ? 
-        `ID ${settings.id} für User ${settings.userId} (Shop ${settings.shopId})` : 'keine');
-      return settings;
+      console.log(`Keine Einstellungen für Benutzer ${user.username} (ID ${userId}, Shop ${shopId}) gefunden`);
+      return undefined;
     } catch (error) {
       console.error('Fehler in getBusinessSettings:', error);
       throw error;
@@ -1198,21 +1182,12 @@ export class DatabaseStorage implements IStorage {
       
       console.log('⭐ Using forced userId:', userId, 'and shopId:', shopId, 'in settingsData');
       
-      // Bedingungen für die Suche nach bestehenden Einstellungen aufbauen
-      let conditions: SQL<unknown>;
-      
-      if (user.username === 'bugi' && user.isAdmin) {
-        // Für Bugi (Admin) nach Einstellungen mit der passenden Benutzer-ID suchen
-        console.log('⭐ Admin-Benutzer erkannt, suche nach seinen eigenen Einstellungen');
-        conditions = eq(businessSettings.userId, userId);
-      } else {
-        // Für normale Benutzer nach den Einstellungen mit passender Benutzer-ID und Shop-ID filtern
-        console.log('⭐ Normaler Benutzer erkannt, suche nach Einstellungen mit Shop-Isolation');
-        conditions = and(
-          eq(businessSettings.userId, userId),
-          eq(businessSettings.shopId, shopId)
-        ) as SQL<unknown>;
-      }
+      // DSGVO-konform: Jeder Benutzer darf nur Einstellungen seines eigenen Shops bearbeiten
+      console.log('⭐ Suche nach Einstellungen mit Shop-Isolation für Benutzer', user.username);
+      const conditions = and(
+        eq(businessSettings.userId, userId),
+        eq(businessSettings.shopId, shopId)
+      ) as SQL<unknown>;
       
       // Einstellungen für diesen Benutzer suchen
       const [existingSettings] = await db
@@ -1341,17 +1316,9 @@ export class DatabaseStorage implements IStorage {
       };
     }
     
-    // Basisfilter erstellen
-    let baseFilter: SQL<unknown>;
-    
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      baseFilter = sql`1=1`;  // Kein Filter für Admin (alle Datensätze)
-    } else {
-      // Normaler Benutzer sieht nur Statistiken aus seinem Shop
-      const shopIdValue = currentUser.shopId || 1;
-      baseFilter = eq(repairs.shopId, shopIdValue);
-    }
+    // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    const baseFilter = eq(repairs.shopId, shopIdValue);
     
     // Basisfilter für Benutzer erstellen
     let combinedFilter: SQL<unknown> = baseFilter;
@@ -1504,15 +1471,9 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
-      // Basisfilter erstellen
-      let baseFilter: SQL<unknown>;
-      if (currentUser.isAdmin) {
-        baseFilter = sql`1=1`;  // Kein Filter für Admin (alle Datensätze)
-      } else {
-        // Normaler Benutzer sieht nur Statistiken aus seinem Shop
-        const shopIdValue = currentUser.shopId || 1;
-        baseFilter = eq(repairs.shopId, shopIdValue);
-      }
+      // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
+      const shopIdValue = currentUser.shopId || 1;
+      const baseFilter = eq(repairs.shopId, shopIdValue);
       
       // Basisfilter für Benutzer erstellen
       let combinedFilter: SQL<unknown> = baseFilter;
@@ -1742,6 +1703,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Zuerst die Reparatur abrufen, um zu prüfen, ob sie dem aktuellen Benutzer gehört
+      // getRepair enthält bereits die Shop-Isolation basierend auf currentUserId
       const repair = await this.getRepair(repairId, currentUserId);
       if (!repair) {
         // Wenn die Reparatur nicht gefunden wurde oder nicht dem Benutzer gehört
@@ -1749,6 +1711,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Wenn die Reparatur dem Benutzer gehört, hole die zugehörigen Feedbacks
+      // Durch die vorherige Prüfung von getRepair ist die Shop-Isolation bereits sichergestellt
       return await db
         .select()
         .from(feedbacks)
