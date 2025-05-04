@@ -177,7 +177,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] min-h-[500px]" style={{ overflowY: "visible" }}>
         <DialogHeader>
           <DialogTitle>{isPreview ? "Bon Vorschau" : "Reparaturauftrag drucken"}</DialogTitle>
         </DialogHeader>
@@ -188,8 +188,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
           </div>
         ) : (
           <>
-            <div className="border rounded-md p-6 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner flex justify-center">
-              <div ref={printRef} className="bg-white rounded-md shadow-sm scale-100" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
+            <div className="border rounded-md p-6 h-auto max-h-[600px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
+              <div ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm', height: 'auto', minHeight: '200px' }}>
                 {settings?.receiptWidth === '58mm' ? (
                   <BonReceipt58mm 
                     firmenlogo={businessSettings?.logoImage || undefined}
