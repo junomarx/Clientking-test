@@ -273,7 +273,86 @@ export class DatabaseStorage implements IStorage {
   
   async deleteUser(id: number): Promise<boolean> {
     try {
-      await db.delete(users).where(eq(users.id, id));
+      // Suche alle Kunden, die zu diesem Benutzer gehören
+      const userCustomers = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.userId, id));
+      
+      // Für jeden Kunden, lösche alle zugehörigen Daten
+      for (const customer of userCustomers) {
+        // 1. Lösche Kostenvoranschläge des Kunden
+        await db
+          .delete(costEstimates)
+          .where(eq(costEstimates.customerId, customer.id));
+          
+        // 2. Lösche alle Reparaturen des Kunden
+        await db
+          .delete(repairs)
+          .where(eq(repairs.customerId, customer.id));
+          
+        // 3. Lösche alle Feedbacks des Kunden
+        await db
+          .delete(feedbacks)
+          .where(eq(feedbacks.customerId, customer.id));
+      }
+      
+      // Lösche alle Reparaturen, die zum Benutzer gehören
+      await db
+        .delete(repairs)
+        .where(eq(repairs.userId, id));
+        
+      // Lösche alle Kostenvoranschläge, die zum Benutzer gehören
+      await db
+        .delete(costEstimates)
+        .where(eq(costEstimates.userId, id));
+      
+      // Lösche alle Kunden des Benutzers
+      await db
+        .delete(customers)
+        .where(eq(customers.userId, id));
+      
+      // Lösche alle E-Mail-Vorlagen des Benutzers
+      await db
+        .delete(emailTemplates)
+        .where(eq(emailTemplates.userId, id));
+      
+      // Lösche den E-Mail-Verlauf des Benutzers
+      await db
+        .delete(emailHistory)
+        .where(eq(emailHistory.userId, id));
+      
+      // Lösche benutzerdefinierte Gerätemodelle
+      await db
+        .delete(userModels)
+        .where(eq(userModels.userId, id));
+      
+      // Lösche benutzerdefinierte Modellserien
+      await db
+        .delete(userModelSeries)
+        .where(eq(userModelSeries.userId, id));
+      
+      // Lösche benutzerdefinierte Marken/Hersteller
+      await db
+        .delete(userBrands)
+        .where(eq(userBrands.userId, id));
+      
+      // Lösche benutzerdefinierte Gerätetypen
+      await db
+        .delete(userDeviceTypes)
+        .where(eq(userDeviceTypes.userId, id));
+      
+      // Lösche Business-Einstellungen des Benutzers
+      await db
+        .delete(businessSettings)
+        .where(eq(businessSettings.userId, id));
+      
+      // Jetzt können wir den Benutzer sicher löschen
+      await db
+        .delete(users)
+        .where(eq(users.id, id));
+        
+      console.log(`Benutzer mit ID ${id} und alle zugehörigen Daten wurden erfolgreich gelöscht.`);
       return true;
     } catch (error) {
       console.error("Error deleting user:", error);
