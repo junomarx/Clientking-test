@@ -29,7 +29,7 @@ export function registerSuperadminRoutes(app: Express) {
   app.get("/api/superadmin/stats", isSuperadmin, async (req: Request, res: Response) => {
     try {
       // Statistiken für das Superadmin-Dashboard
-      const [userStats] = await db.execute(sql`
+      const userStatsResult = await db.execute(sql`
         SELECT 
           COUNT(*) as total_users,
           SUM(CASE WHEN is_active = true THEN 1 ELSE 0 END) as active_users,
@@ -41,7 +41,7 @@ export function registerSuperadminRoutes(app: Express) {
       `);
       
       // Statistiken für Reparaturen global
-      const [repairStats] = await db.execute(sql`
+      const repairStatsResult = await db.execute(sql`
         SELECT 
           COUNT(*) as total_repairs,
           SUM(CASE WHEN status = 'eingegangen' THEN 1 ELSE 0 END) as received,
@@ -52,7 +52,7 @@ export function registerSuperadminRoutes(app: Express) {
       `);
       
       // Statistiken für Pakete
-      const [packageStats] = await db.execute(sql`
+      const packageStatsResult = await db.execute(sql`
         SELECT
           p.name as package_name,
           COUNT(u.id) as user_count
@@ -62,10 +62,14 @@ export function registerSuperadminRoutes(app: Express) {
         ORDER BY user_count DESC
       `);
       
+      const userStats = userStatsResult.rows[0];
+      const repairStats = repairStatsResult.rows[0];
+      const packageStats = packageStatsResult.rows;
+      
       res.json({
-        users: userStats.rows[0],
-        repairs: repairStats.rows[0],
-        packages: packageStats.rows
+        users: userStats,
+        repairs: repairStats,
+        packages: packageStats
       });
     } catch (error) {
       console.error("Error fetching superadmin stats:", error);
@@ -294,13 +298,17 @@ export function registerSuperadminRoutes(app: Express) {
         // Neue Features hinzufügen
         const newFeatures = [];
         for (const feature of featuresToUpdate) {
+          // Werte für das Feature vorbereiten
+          const packageFeatureValues = {
+            packageId: packageId,
+            feature: feature.feature,
+            value: feature.value
+          };
+          
+          // Feature in die Datenbank einfügen
           const [newFeature] = await db
             .insert(packageFeatures)
-            .values({
-              packageId: packageId,
-              feature: feature.feature,
-              value: feature.value
-            })
+            .values(packageFeatureValues)
             .returning();
           
           newFeatures.push(newFeature);
@@ -347,13 +355,17 @@ export function registerSuperadminRoutes(app: Express) {
       if (featuresToAdd && Array.isArray(featuresToAdd) && featuresToAdd.length > 0) {
         const newFeatures = [];
         for (const feature of featuresToAdd) {
+          // Werte für das Feature vorbereiten
+          const packageFeatureValues = {
+            packageId: newPackage.id,
+            feature: feature.feature,
+            value: feature.value
+          };
+          
+          // Feature in die Datenbank einfügen
           const [newFeature] = await db
             .insert(packageFeatures)
-            .values({
-              packageId: newPackage.id,
-              feature: feature.feature,
-              value: feature.value
-            })
+            .values(packageFeatureValues)
             .returning();
           
           newFeatures.push(newFeature);

@@ -32,6 +32,7 @@ import {
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
+import { registerSuperadminRoutes } from "./superadmin-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
@@ -129,6 +130,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up admin routes
   registerAdminRoutes(app);
+  
+  // Set up superadmin routes
+  registerSuperadminRoutes(app);
   
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
