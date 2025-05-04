@@ -136,11 +136,11 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     };
 
     // Hole Firmendaten - zuerst aus der API-Antwort, als Fallback aus dem Hook
-    const businessName = businessSettings?.businessName || settings?.businessName || 'Mein Handyshop';
-    const streetAddress = businessSettings?.streetAddress || settings?.streetAddress || '';
-    const zipAndCity = `${businessSettings?.zipCode || settings?.zipCode || ''} ${businessSettings?.city || settings?.city || ''}`;
-    const phone = businessSettings?.phone || settings?.phone || '';
-    const email = businessSettings?.email || settings?.email || '';
+    const businessName = businessSettings?.businessName || hookSettings?.businessName || 'Mein Handyshop';
+    const streetAddress = businessSettings?.streetAddress || hookSettings?.streetAddress || '';
+    const zipAndCity = `${businessSettings?.zipCode || hookSettings?.zipCode || ''} ${businessSettings?.city || hookSettings?.city || ''}`;
+    const phone = businessSettings?.phone || hookSettings?.phone || '';
+    const email = businessSettings?.email || hookSettings?.email || '';
     
     // Logo-URL mit Cache-Busting für Druckdokument
     const logoUrl = '/uploads/firmenlogo.png';
