@@ -95,7 +95,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       });
       
       // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
-      const margin = 20; // 2cm Ränder in mm
+      const margin = 10; // 1cm Ränder in mm
       const pageWidth = 210; // A4 Breite in mm
       const pageHeight = 297; // A4 Höhe in mm
       const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
@@ -153,7 +153,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       });
       
       // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
-      const margin = 20; // 2cm Ränder in mm
+      const margin = 10; // 1cm Ränder in mm
       const pageWidth = 210; // A4 Breite in mm
       const pageHeight = 297; // A4 Höhe in mm
       const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
@@ -300,14 +300,14 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   }
                   @page {
                     size: A4;
-                    margin: 2cm;
+                    margin: 1cm;
                   }
                 }
               `}} />
               
               {/* Header mit Logo und Firmendaten */}
               <div className="flex justify-between items-start mb-10">
-                <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
+                <div className="w-[200px] p-3 text-center h-[60px] flex items-center justify-center">
                   {businessSettings?.logoImage ? (
                     <img 
                       src={businessSettings.logoImage} 
@@ -324,7 +324,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                       loading="eager" // Prioritäres Laden
                     />
                   ) : (
-                    <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
+                    <span className="text-transparent">Logo nicht verfügbar</span>
                   )}
                 </div>
                 
