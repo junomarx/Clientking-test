@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, Building, User, Palette, Upload, X } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
@@ -41,8 +41,9 @@ const businessSettingsSchema = z.object({
 });
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
-// Interface nutzt jetzt genau die Werte aus dem Schema-Typ ohne Erweiterungen
-type ExtendedBusinessSettingsFormValues = z.infer<typeof businessSettingsSchema>;
+interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
+  logoImage?: string;
+}
 
 interface BusinessSettingsModernizedProps {
   open: boolean;
@@ -54,7 +55,12 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
-  // Vereinfachte Implementierung ohne Logo-Funktionalität
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Max. Logo-Größe in Bytes (2MB)
+  const MAX_LOGO_SIZE = 2 * 1024 * 1024;
 
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -73,7 +79,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       phone: "",
       email: "",
       website: "",
-      // logoImage: "", // entfernt
+      logoImage: "",
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -92,6 +98,7 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       // Stelle sicher, dass receiptWidth als Enum-Wert behandelt wird und NULL-Werte in leere Strings umgewandelt werden
       const formattedSettings = {
         ...settings,
+        logoImage: settings.logoImage || "",
         // Validiere receiptWidth und setze auf "80mm" wenn ungültig
         receiptWidth: (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
           ? settings.receiptWidth as "58mm" | "80mm"
@@ -112,10 +119,54 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
       };
       
       form.reset(formattedSettings);
+      
+      // Setze das Logo-Vorschaubild, wenn vorhanden
+      if (settings.logoImage) {
+        setLogoPreview(settings.logoImage);
+      }
     }
   }, [settings, form]);
   
-  // Logo-Funktionalität wurde entfernt
+  // Funktion zum Hochladen des Logos
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoError(null);
+    const file = event.target.files?.[0];
+    
+    if (!file) return;
+    
+    // Überprüfe die Dateigröße
+    if (file.size > MAX_LOGO_SIZE) {
+      setLogoError(`Die Datei ist zu groß (${(file.size / (1024 * 1024)).toFixed(2)} MB). Maximale Größe: 2 MB.`);
+      return;
+    }
+    
+    // Überprüfe den Dateityp
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      setLogoError('Nur JPG, PNG und SVG-Dateien sind erlaubt.');
+      return;
+    }
+    
+    // Lese die Datei als Data-URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (dataUrl) {
+        setLogoPreview(dataUrl);
+        form.setValue('logoImage', dataUrl);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Funktion zum Entfernen des hochgeladenen Logos
+  const handleRemoveLogo = () => {
+    setLogoPreview(null);
+    form.setValue('logoImage', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // Mutation für das Update der Unternehmenseinstellungen
   const updateMutation = useMutation({
@@ -376,7 +427,54 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                     />
                   </div>
                   
-                  {/* Firmenlogo-Bereich wurde entfernt */}
+                  <h3 className="text-md font-medium border-b pb-2 mt-6 mb-4">Firmenlogo</h3>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center relative">
+                      {logoPreview || form.watch('logoImage') ? (
+                        <>
+                          <img 
+                            src={logoPreview || form.watch('logoImage')} 
+                            alt="Logo" 
+                            className="max-w-full max-h-full object-contain" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={handleRemoveLogo}
+                            className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-sm hover:bg-red-50"
+                            aria-label="Logo entfernen"
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </button>
+                        </>
+                      ) : (
+                        <Building className="h-8 w-8 text-gray-400" />
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="file"
+                        id="logo-upload"
+                        ref={fileInputRef}
+                        accept="image/jpeg,image/png,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Logo hochladen
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
+                      {logoError && (
+                        <p className="text-xs text-red-500 mt-1">{logoError}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
               

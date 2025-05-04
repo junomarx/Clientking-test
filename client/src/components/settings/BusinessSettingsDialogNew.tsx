@@ -85,7 +85,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Formulardaten die nicht im Schema sind
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  // logoImage wurde entfernt
+  logoImage?: string;
   // Das colorTheme-Feld ist für die Typisierung weiterhin vorhanden, wird aber nicht mehr verwendet
   colorTheme?: string;
 }
@@ -99,7 +99,9 @@ interface BusinessSettingsDialogProps {
 export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "unternehmen" }: BusinessSettingsDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  // Logo-Funktionalität und Variablen wurden entfernt
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
   // Verwende den initialActiveTab als Anfangswert
   const [activeTab, setActiveTab] = useState<"unternehmen" | "email" | "design">(initialActiveTab);
   
@@ -117,7 +119,8 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
   // Verwende den BusinessSettings Hook
   const { settings, isLoading, refetch } = useBusinessSettings();
 
-  // Logo-Konstanten wurden entfernt
+  // Max. Logo-Größe in Bytes (1MB)
+  const MAX_LOGO_SIZE = 1024 * 1024;
 
   console.log("NEUE IMPLEMENTATION - BusinessSettingsDialog geöffnet");
   console.log("NEUE IMPLEMENTATION - Settings im Hook:", settings ? settings.id : 'keine');
@@ -136,7 +139,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
       phone: "",
       email: "",
       website: "",
-      // logoImage wurde entfernt
+      logoImage: "",
       // colorTheme wird nicht mehr verwendet - Standard-Theme für alle
       receiptWidth: "80mm",
       // SMTP-Einstellungen
@@ -179,7 +182,7 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
         phone: settings.phone || "",
         email: settings.email || "",
         website: settings.website || "",
-        // logoImage wurde entfernt
+        logoImage: settings.logoImage || "",
         colorTheme: validColorTheme,
         receiptWidth: validReceiptWidth as "58mm" | "80mm",
         // SMTP-Einstellungen
@@ -191,21 +194,103 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
         reviewLink: settings.reviewLink || "",
       });
 
-      // Die Logo-Funktionalität wurde entfernt
+      // Vorschau des gespeicherten Logos anzeigen, wenn vorhanden
+      if (settings.logoImage) {
+        setLogoPreview(settings.logoImage);
+      }
     }
   }, [settings, form]);
 
-  // Logo-Funktionen wurden entfernt
+  // Funktion zum Validieren des hochgeladenen Bildes
+  const validateImage = (file: File): Promise<{ isValid: boolean; base64: string | null; error: string | null }> => {
+    return new Promise((resolve) => {
+      // Überprüfen der Dateigröße
+      if (file.size > MAX_LOGO_SIZE) {
+        resolve({
+          isValid: false,
+          base64: null,
+          error: `Die Datei ist zu groß. Maximale Größe ist ${MAX_LOGO_SIZE / 1024}KB.`
+        });
+        return;
+      }
+
+      // Überprüfen des Dateityps
+      if (!['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif', 'image/webp'].includes(file.type)) {
+        resolve({
+          isValid: false,
+          base64: null,
+          error: 'Nur JPEG, PNG, SVG, GIF und WEBP Dateien sind erlaubt.'
+        });
+        return;
+      }
+
+      // Bild in Base64 konvertieren
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          resolve({
+            isValid: true,
+            base64: e.target?.result as string,
+            error: null
+          });
+        };
+        img.onerror = () => {
+          resolve({
+            isValid: false,
+            base64: null,
+            error: 'Das Bild konnte nicht geladen werden.'
+          });
+        };
+        
+        if (e.target?.result) {
+          img.src = e.target.result as string;
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Event-Handler für das Hochladen des Logos
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const result = await validateImage(file);
+
+    if (result.isValid && result.base64) {
+      setLogoPreview(result.base64);
+      form.setValue('logoImage', result.base64);
+      setLogoError(null);
+    } else {
+      setLogoError(result.error || 'Unbekannter Fehler beim Hochladen des Logos.');
+      // Input zurücksetzen
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Funktion zum Löschen des Logos
+  const handleDeleteLogo = () => {
+    setLogoPreview(null);
+    form.setValue('logoImage', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const updateMutation = useMutation({
     mutationFn: async (data: ExtendedBusinessSettingsFormValues) => {
-      console.log('NEUE IMPLEMENTATION - Sende Daten an Server');
+      console.log('NEUE IMPLEMENTATION - Sende Daten an Server:', { hasLogo: !!logoPreview });
       
       try {
         // In dieser neuen Implementierung senden wir keine userId mehr mit
         const requestData = {
           ...data, // Die regulären Formulardaten
-          // logoImage wurde entfernt
+          logoImage: logoPreview // Das Logo als Base64
         };
         
         console.log('NEUE IMPLEMENTATION - Request data keys:', Object.keys(requestData));
@@ -301,7 +386,68 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
               </TabsList>
               
               <TabsContent value="unternehmen" className="mt-4">
-                {/* Logo-Upload-Funktionalität wurde entfernt */}
+                {/* Logo Upload UI */}
+                <div className="mb-6">
+                  <FormLabel>Firmenlogo</FormLabel>
+                  <FormDescription className="text-xs sm:text-sm">
+                    Laden Sie Ihr Firmenlogo hoch (max. 1MB, PNG, JPG, SVG, GIF oder WEBP). Hochauflösende Bilder werden automatisch skaliert.
+                  </FormDescription>
+                  
+                  <div className="mt-3 flex flex-col md:flex-row items-start md:items-center gap-4">
+                    {/* Logo Vorschau */}
+                    <div className={`relative flex justify-center items-center h-24 w-24 rounded-md border border-input 
+                      ${logoPreview ? 'bg-white' : 'bg-muted'}`}>
+                      {logoPreview ? (
+                        <>
+                          <img
+                            src={logoPreview}
+                            alt="Firmenlogo"
+                            className="max-h-full max-w-full object-contain rounded-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleDeleteLogo}
+                            className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground h-5 w-5 rounded-full flex items-center justify-center"
+                            aria-label="Logo löschen"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </>
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      )}
+                    </div>
+                    
+                    {/* Upload Button */}
+                    <div className="flex flex-col gap-3">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        id="logo-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4" /> Logo hochladen
+                      </Button>
+                      
+                      {/* Fehler Anzeige */}
+                      {logoError && (
+                        <Alert variant="destructive" className="py-2 px-3">
+                          <AlertDescription className="text-xs">
+                            {logoError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField

@@ -30,12 +30,9 @@ import {
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
-import { registerLogoRoutes } from "./logo-upload";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
-
-// Logo-Upload-Funktionalität ist bereits in Zeile 33 importiert
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -130,9 +127,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up admin routes
   registerAdminRoutes(app);
-  
-  // Set up logo upload routes
-  registerLogoRoutes(app);
   
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
@@ -410,37 +404,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid repair data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update repair" });
-    }
-  });
-  
-  // Spezieller Endpunkt für den Druck, der Reparatur- und Kundendaten in einem Aufruf zurückgibt
-  app.get("/api/print-data/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const userId = (req.user as any).id;
-      
-      // Hole Reparaturdaten mit Benutzerfilterung
-      const repair = await storage.getRepair(id, userId);
-      
-      if (!repair) {
-        return res.status(404).json({ message: "Repair not found" });
-      }
-      
-      // Hole zugehörige Kundendaten
-      const customer = await storage.getCustomer(repair.customerId, userId);
-      
-      // Hole Unternehmenseinstellungen
-      const businessSettings = await storage.getBusinessSettings(userId);
-      
-      // Sende alles als ein Objekt zurück
-      res.json({
-        repair,
-        customer,
-        businessSettings
-      });
-    } catch (error) {
-      console.error("Error fetching print data:", error);
-      res.status(500).json({ message: "Failed to fetch print data" });
     }
   });
   
@@ -817,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: businessSettings.phone,
           email: businessSettings.email,
           website: businessSettings.website,
-          // logoImage wurde entfernt
+          logoImage: businessSettings.logoImage,
           colorTheme: businessSettings.colorTheme,
           receiptWidth: businessSettings.receiptWidth,
           smtpSenderName: businessSettings.smtpSenderName,
@@ -889,8 +852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`NEUE IMPLEMENTATION: Updating business settings for user ${userId} (${username})`);
       
       // Daten aus dem Request-Body extrahieren
-      const { colorTheme, receiptWidth, ...otherData } = req.body;
-      // logoImage wurde entfernt
+      const { logoImage, colorTheme, receiptWidth, ...otherData } = req.body;
       
       // Versuche die aktuellen Einstellungen zu finden
       // Wir müssen bestimmte Spalten auswählen, um Spaltennamenkonflikte zu vermeiden
@@ -910,7 +872,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: businessSettings.phone,
           email: businessSettings.email,
           website: businessSettings.website,
-          // logoImage wurde entfernt
+          logoImage: businessSettings.logoImage,
           colorTheme: businessSettings.colorTheme,
           receiptWidth: businessSettings.receiptWidth,
           smtpSenderName: businessSettings.smtpSenderName,
@@ -933,7 +895,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Erstelle vollständige Einstellungen mit allen Eingaben
         const newSettingsData = {
           ...otherData,
-          // logoImage wurde entfernt
+          logoImage: logoImage || "",
           colorTheme: colorTheme || "blue",
           receiptWidth: receiptWidth || "80mm",
           userId: userId // WICHTIG: Benutzer-ID setzen
@@ -956,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Bereite die aktualisierten Daten vor
       const updateData = {
         ...otherData,
-        // logoImage wurde entfernt
+        logoImage: logoImage !== undefined ? logoImage : currentSettings[0].logoImage,
         colorTheme: colorTheme || currentSettings[0].colorTheme,
         receiptWidth: receiptWidth || currentSettings[0].receiptWidth,
         // userId wird nicht aktualisiert, bleibt die des authentifizierten Benutzers
@@ -1726,7 +1688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         business: {
           name: businessSettings?.businessName || "Handyshop Verwaltung",
-          // logoImage wurde entfernt
+          logoImage: businessSettings?.logoImage
         }
       });
     } catch (error) {
@@ -1993,7 +1955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "auftragsnummer": repair.orderCode || `#${repair.id}`,
         "fehler": repair.issue,
         "geschaeftsname": businessSettings?.businessName || "Handyshop",
-        // "logo" wurde entfernt,
+        "logo": businessSettings?.logoImage || "",
         "telefon": businessSettings?.phone || "",
         "email": businessSettings?.email || "",
         "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,

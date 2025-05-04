@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,87 +21,71 @@ interface PrintLabelDialogProps {
 
 export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings: hookSettings } = useBusinessSettings();
-  
-  // Logo-Status
-  const [logoExists, setLogoExists] = useState(false);
-  
-  // Überprüfe, ob das Logo existiert
-  useEffect(() => {
-    if (open && repairId) {
-      // Überprüfe, ob das Logo existiert
-      fetch('/api/business-settings/logo')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            setLogoExists(true);
-          }
-        })
-        .catch(err => {
-          console.error('Fehler beim Prüfen des Logos:', err);
-          setLogoExists(false);
-        });
-    }
-  }, [open, repairId]);
+  const { settings } = useBusinessSettings();
 
-  // Lade alle Daten auf einmal mit dem neuen API-Endpunkt
-  const { data: printData, isLoading: isLoadingPrintData } = useQuery<{
-    repair: Repair;
-    customer: Customer;
-    businessSettings: BusinessSettings;
-  }>({
-    queryKey: ['/api/print-data', repairId],
+  // Lade Reparaturdaten
+  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
+    queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
-        console.log(`Rufe /api/print-data/${repairId} für Etikett auf...`);
-        const response = await fetch(`/api/print-data/${repairId}`, {
+        const response = await fetch(`/api/repairs/${repairId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Accept': 'application/json'
           }
         });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Fehler beim Laden der Druckdaten (Status ${response.status}):`, errorText);
-          throw new Error(`Druckdaten konnten nicht geladen werden: ${response.status} ${response.statusText}`);
-        }
-        
-        // Überprüfen des Content-Types
-        const contentType = response.headers.get('Content-Type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
-        }
-        
-        const data = await response.json();
-        console.log('Geladene Druckdaten für Etikett:', data);
-        return data;
+        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        return response.json();
       } catch (err) {
-        console.error("Fehler beim Laden der Druckdaten:", err);
+        console.error("Fehler beim Laden der Reparaturdaten:", err);
         return null;
       }
     },
     enabled: !!repairId && open,
   });
-  
-  // Extrahiere die Daten aus dem Ergebnis
-  const repair = printData?.repair;
-  const customer = printData?.customer;
-  const businessSettings = printData?.businessSettings;
-  
-  // Debug-Ausgabe für Fehlersuche
-  useEffect(() => {
-    if (repairId && open) {
-      console.log(`Versuche Druckdaten für Reparatur #${repairId} (Etikett) zu laden`);
-    }
-    if (printData) {
-      console.log('Druckdaten für Etikett geladen:', printData);
-    }
-  }, [repairId, open, printData]);
-  
-  // Wir verwenden jetzt nur einen Ladeindikator, da wir alle Daten in einem Schritt laden
-  const isLoading = isLoadingPrintData;
+
+  // Lade Kundendaten wenn Reparatur geladen ist
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
+    queryKey: ['/api/customers', repair?.customerId],
+    queryFn: async () => {
+      if (!repair?.customerId) return null;
+      try {
+        const response = await fetch(`/api/customers/${repair.customerId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der Kundendaten:", err);
+        return null;
+      }
+    },
+    enabled: !!repair?.customerId && open,
+  });
+
+  // Lade Unternehmenseinstellungen
+  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
+    queryKey: ['/api/business-settings'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/business-settings', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) return null;
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
+        return null;
+      }
+    },
+    enabled: open,
+  });
+
+  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
   // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
@@ -120,22 +104,20 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     
     // Extrahiere den Inhalt aus dem Referenzobjekt
     const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
-    const repairIdStr = repair?.id?.toString() || '';
+    const repairId = repair?.id || '';
     const orderCode = repair?.orderCode || '';
     const firstName = customer?.firstName || '';
     const lastName = customer?.lastName || '';
     const customerPhone = customer?.phone || '';
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
-    // Logo-Informationen
-    const businessName = businessSettings?.businessName || hookSettings?.businessName || 'Handyshop Verwaltung';
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Etikett für Reparatur ${orderCode || `#${repairIdStr}`}</title>
+          <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
           <meta charset="UTF-8">
           <style>
             @page {
@@ -221,13 +203,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
-              ${logoExists ? `
-              <div style="margin-bottom: 2mm; max-height: 8mm; overflow: hidden;">
-                <img src="/uploads/firmenlogo.png?t=${new Date().getTime()}" alt="${businessName}" style="max-height: 8mm; max-width: 26mm;">
-              </div>
-              ` : ''}
-
-              <div class="repair-number">${orderCode || `#${repairIdStr}`}</div>
+              <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="qr-code">${qrCode}</div>
               
@@ -280,17 +256,6 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
                   {/* Vorschau im gleichen Format wie das Drucklayout (Hochformat) */}
                   <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
-                    {/* Logo, wenn vorhanden */}
-                    {logoExists && (
-                      <div className="flex justify-center mb-1" style={{ maxHeight: '8mm', overflow: 'hidden' }}>
-                        <img 
-                          src={`/uploads/firmenlogo.png?t=${new Date().getTime()}`} 
-                          alt={businessSettings?.businessName || "Handyshop Verwaltung"} 
-                          style={{ maxHeight: '8mm', maxWidth: '26mm' }}
-                        />
-                      </div>
-                    )}
-                    
                     {/* Auftragsnummer */}
                     <div className="text-center">
                       <p className="text-xl font-bold">{repair?.orderCode || `#${repair?.id}`}</p>

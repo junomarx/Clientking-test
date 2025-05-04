@@ -47,7 +47,7 @@ const businessSettingsSchema = z.object({
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
 interface ExtendedBusinessSettingsFormValues extends z.infer<typeof businessSettingsSchema> {
-  // logoImage wurde entfernt
+  logoImage?: string;
 }
 
 // Typ-Definition für die API-Antwort des Reparaturkontingents
@@ -230,7 +230,7 @@ export function SettingsPageContent() {
       phone: "",
       email: "",
       website: "",
-      // logoImage wurde entfernt
+      logoImage: "",
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -264,7 +264,7 @@ export function SettingsPageContent() {
         phone: settings.phone === null ? undefined : settings.phone,
         email: settings.email === null ? undefined : settings.email,
         website: settings.website === null ? undefined : settings.website,
-        // logoImage wurde entfernt
+        logoImage: settings.logoImage === null ? undefined : settings.logoImage,
         receiptWidth,
         smtpHost: settings.smtpHost === null ? undefined : settings.smtpHost,
         smtpPort: settings.smtpPort === null ? undefined : settings.smtpPort,
@@ -663,7 +663,36 @@ export function SettingsPageContent() {
 
           {/* Ausdrucke Tab */}
           <TabsContent value="prints" className="mt-4">
-            {/* Logo-Upload-Funktionalität wurde entfernt */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Firmenlogo</CardTitle>
+                <CardDescription>Laden Sie Ihr Firmenlogo hoch für Ihre Ausdrucke.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Form {...form}>
+                  <form className="space-y-4">
+                    <div>
+                      <h3 className="text-md font-medium mb-3">Logo</h3>
+                      <div className="mb-4 flex items-center space-x-4">
+                        <div className="w-20 h-20 border rounded-md flex items-center justify-center overflow-hidden">
+                          {settings?.logoImage ? (
+                            <img src={settings.logoImage} alt="Logo" className="max-w-full max-h-full" />
+                          ) : (
+                            <Building className="h-10 w-10 text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <Button variant="outline" type="button" size="sm">
+                            Logo hochladen
+                          </Button>
+                          <p className="text-sm text-gray-500 mt-1">Empfohlenes Format: PNG oder JPEG, 500x500px</p>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
             
             <Card>
               <CardHeader>

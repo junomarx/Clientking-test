@@ -27,24 +27,7 @@ export function useModels() {
     return useQuery<Model[]>({
       queryKey: ['/api/models'],
       staleTime: 30000, // 30 Sekunden Caching
-      queryFn: async () => {
-        try {
-          const res = await apiRequest('GET', '/api/models');
-          
-          // Prüfe den Content-Type vor dem JSON-Parsing
-          const contentType = res.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            console.error('Unerwarteter Content-Type für models:', contentType);
-            return [];
-          }
-          
-          return await res.json();
-        } catch (error) {
-          console.error('Fehler beim Laden der Modelle:', error);
-          return [];
-        }
-      },
-      // throwOnError entfernt, um besser mit Fehlern umzugehen
+      throwOnError: true,
     });
   };
 
@@ -54,24 +37,11 @@ export function useModels() {
       queryKey: ['/api/models', { modelSeriesId }],
       enabled: !!modelSeriesId,
       queryFn: async () => {
-        try {
-          const res = await apiRequest('GET', `/api/models?modelSeriesId=${modelSeriesId}`);
-          
-          // Prüfe den Content-Type vor dem JSON-Parsing
-          const contentType = res.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            console.error('Unerwarteter Content-Type für models mit modelSeriesId:', contentType);
-            return [];
-          }
-          
-          return await res.json();
-        } catch (error) {
-          console.error(`Fehler beim Laden der Modelle für Modellreihe ${modelSeriesId}:`, error);
-          return [];
-        }
+        const res = await apiRequest('GET', `/api/models?modelSeriesId=${modelSeriesId}`);
+        return await res.json();
       },
       staleTime: 30000, // 30 Sekunden Caching
-      // throwOnError entfernt, um besser mit Fehlern umzugehen
+      throwOnError: true,
     });
   };
 

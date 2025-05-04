@@ -13,7 +13,6 @@ import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
-import TestUpload from "@/components/test-upload";
 import { ProtectedRoute, AdminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -35,10 +34,6 @@ function Router() {
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>
-      {/* Test-Route für Logo-Upload */}
-      <ProtectedRoute path="/test-upload">
-        <TestUpload />
-      </ProtectedRoute>
       {/* Design Preview Routen wurden entfernt */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />

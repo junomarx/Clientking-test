@@ -141,7 +141,7 @@ export const businessSettings = pgTable("business_settings", {
   phone: text("phone"),
   email: text("email"),
   website: text("website"),
-  // logoImage-Feld wurde entfernt
+  logoImage: text("logo_image"), // Base64-encoded image data für das Logo
   colorTheme: text("color_theme").default("blue").notNull(), // Farbpalette (blue, green, purple, red, orange)
   receiptWidth: text("receipt_width").default("80mm").notNull(), // Bonbreite: 58mm oder 80mm
   
