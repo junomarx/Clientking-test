@@ -1,0 +1,72 @@
+Bitte führe folgende Änderungen durch:
+
+1. 📂 Datei öffnen:
+client/src/components/repairs/PrintOptionsDialog.tsx
+
+2. 🔁 Folgende Imports oben einfügen (oder ergänzen, falls schon vorhanden):
+tsx
+Kopieren
+Bearbeiten
+import { useState } from "react";
+import { FileText } from "lucide-react";
+import PrintRepairA4Dialog from "@/components/repairs/PrintRepairA4Dialog";
+3. 🧠 Innerhalb der Komponente einen neuen State einfügen:
+tsx
+Kopieren
+Bearbeiten
+const [showA4Preview, setShowA4Preview] = useState(false);
+4. 🧩 Falls noch nicht vorhanden, erweitere die PrintOptionsDialogProps Schnittstelle wie folgt:
+tsx
+Kopieren
+Bearbeiten
+interface PrintOptionsDialogProps {
+  onClose: () => void;
+  onPrintReceipt?: () => void;
+  onPrintLabel?: () => void;
+  onPrintA4?: () => void;
+  repair?: {
+    customerName: string;
+    customerStreet?: string;
+    customerCity?: string;
+    manufacturer?: string;
+    model?: string;
+    problem?: string;
+    totalPrice?: number;
+    id: number | string;
+    createdAt?: string;
+  };
+}
+5. 🧾 Füge den Vorschau-Button im JSX direkt unter den bestehenden Druck-Buttons ein (z. B. unter „Bon drucken“):
+tsx
+Kopieren
+Bearbeiten
+<Button
+  onClick={() => setShowA4Preview(true)}
+  className="h-24 flex flex-col items-center justify-center gap-2 text-lg w-full"
+  variant="outline"
+>
+  <FileText className="h-8 w-8" />
+  <span>A4 Vorschau</span>
+</Button>
+6. 🪟 Füge am Ende der JSX-Ausgabe den Dialog für die Vorschau ein:
+tsx
+Kopieren
+Bearbeiten
+<PrintRepairA4Dialog
+  open={showA4Preview}
+  onClose={() => setShowA4Preview(false)}
+  data={{
+    firmenlogo: 'Mac & PhoneDoc',
+    kundenname: repair?.customerName || 'Unbekannter Kunde',
+    kundenadresse1: repair?.customerStreet || '',
+    kundenadresse2: repair?.customerCity || '',
+    auftragsnummer: `#${repair?.id ?? ''}`,
+    hersteller: repair?.manufacturer || '',
+    modell: repair?.model || '',
+    problem: repair?.problem || '',
+    preis: repair?.totalPrice ? `${repair.totalPrice.toFixed(2)} €` : '',
+    datum_dropoff: repair?.createdAt
+      ? new Date(repair.createdAt).toLocaleDateString('de-AT')
+      : '',
+  }}
+/>

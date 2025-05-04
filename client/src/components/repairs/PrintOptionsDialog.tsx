@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Printer, Tag, AlertCircle, FileText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { PrintRepairA4Dialog } from "@/components/repairs/PrintRepairA4Dialog";
 
 // API for checking permissions
 const checkCanPrintLabels = async (): Promise<boolean> => {
@@ -30,6 +31,17 @@ interface PrintOptionsDialogProps {
   onPrintLabel: () => void;
   onPrintA4?: () => void; // Neuer Handler für DIN A4 Ausdruck
   repairId: number | null;
+  repair?: {
+    customerName: string;
+    customerStreet?: string;
+    customerCity?: string;
+    manufacturer?: string;
+    model?: string;
+    problem?: string;
+    totalPrice?: number;
+    id: number | string;
+    createdAt?: string;
+  };
 }
 
 export function PrintOptionsDialog({
@@ -38,11 +50,13 @@ export function PrintOptionsDialog({
   onPrintReceipt,
   onPrintLabel,
   onPrintA4,
-  repairId
+  repairId,
+  repair
 }: PrintOptionsDialogProps) {
   // State für die Berechtigung zum Drucken von Etiketten
   const [canPrintLabels, setCanPrintLabels] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showA4Preview, setShowA4Preview] = useState(false);
   
   // Abfrage der Berechtigung beim Öffnen des Dialogs
   useEffect(() => {
@@ -122,6 +136,18 @@ export function PrintOptionsDialog({
               </Button>
             </div>
           )}
+          
+          {/* A4 Vorschau-Button */}
+          <div className="mt-4">
+            <Button
+              onClick={() => setShowA4Preview(true)}
+              className="h-24 flex flex-col items-center justify-center gap-2 text-lg w-full"
+              variant="outline"
+            >
+              <FileText className="h-8 w-8" />
+              <span>A4 Vorschau</span>
+            </Button>
+          </div>
         </div>
         
         <DialogFooter>
@@ -134,6 +160,13 @@ export function PrintOptionsDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* A4 Vorschau Dialog */}
+      <PrintRepairA4Dialog
+        open={showA4Preview}
+        onClose={() => setShowA4Preview(false)}
+        repairId={repairId}
+      />
     </Dialog>
   );
 }
