@@ -57,6 +57,7 @@ import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import ToastTestDialog from "@/components/ToastTestDialog";
+import { Feature, FeatureOverrides } from "@/lib/permissions";
 
 type UserResponse = Omit<User, "password">;
 
@@ -86,6 +87,7 @@ function UserTable() {
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState<"user" | "admin">("user");
   const [editPricingPlan, setEditPricingPlan] = useState<"basic" | "professional" | "enterprise">("basic");
+  const [editFeatureOverrides, setEditFeatureOverrides] = useState<FeatureOverrides>({});
   const { toast } = useToast();
   
   const { data: users, isLoading, error } = useQuery({
@@ -135,7 +137,7 @@ function UserTable() {
   });
   
   const editUserMutation = useMutation({
-    mutationFn: async (userData: { id: number; username: string; email: string; isAdmin: boolean; pricingPlan?: string }) => {
+    mutationFn: async (userData: { id: number; username: string; email: string; isAdmin: boolean; pricingPlan?: string; featureOverrides?: FeatureOverrides }) => {
       const response = await apiRequest("PATCH", `/api/admin/users/${userData.id}`, userData);
       if (!response.ok) {
         throw new Error(`Failed to update user: ${response.statusText}`);
