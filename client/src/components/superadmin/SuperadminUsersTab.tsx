@@ -90,9 +90,28 @@ export default function SuperadminUsersTab() {
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery<User[]>({ 
     queryKey: ["/api/superadmin/users"],
     queryFn: async () => {
-      const res = await fetch('/api/superadmin/users');
-      if (!res.ok) throw new Error('API-Fehler beim Laden der Benutzer');
-      return res.json();
+      try {
+        const res = await fetch('/api/superadmin/users');
+        
+        const text = await res.text();
+        
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text);
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Benutzerdaten:', err);
+        throw err;
+      }
     },
   });
 
@@ -100,9 +119,28 @@ export default function SuperadminUsersTab() {
   const { data: packages, isLoading: isLoadingPackages, error: packagesError } = useQuery<Package[]>({ 
     queryKey: ["/api/superadmin/packages"],
     queryFn: async () => {
-      const res = await fetch('/api/superadmin/packages');
-      if (!res.ok) throw new Error('API-Fehler beim Laden der Pakete');
-      return res.json();
+      try {
+        const res = await fetch('/api/superadmin/packages');
+        
+        const text = await res.text();
+        
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text);
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Paketdaten:', err);
+        throw err;
+      }
     },
   });
   

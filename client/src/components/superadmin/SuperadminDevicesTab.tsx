@@ -78,32 +78,112 @@ export default function SuperadminDevicesTab() {
   const typesQuery = useQuery({
     queryKey: ['/api/superadmin/device-types'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/superadmin/device-types');
-      return await res.json() as DeviceType[];
+      try {
+        const res = await apiRequest('GET', '/api/superadmin/device-types');
+        
+        const text = await res.text();
+        
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text) as DeviceType[];
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Gerätetypen:', err);
+        throw err;
+      }
     }
   });
   
   const brandsQuery = useQuery({
     queryKey: ['/api/superadmin/device-brands'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/superadmin/device-brands');
-      return await res.json() as DeviceBrand[];
+      try {
+        const res = await apiRequest('GET', '/api/superadmin/device-brands');
+        
+        const text = await res.text();
+        
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text) as DeviceBrand[];
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Herstellermarken:', err);
+        throw err;
+      }
     }
   });
   
   const modelsQuery = useQuery({
     queryKey: ['/api/superadmin/device-models'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/superadmin/device-models');
-      return await res.json() as DeviceModel[];
+      try {
+        const res = await apiRequest('GET', '/api/superadmin/device-models');
+        
+        const text = await res.text();
+        
+        if (!res.ok) {
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text) as DeviceModel[];
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Gerätemodelle:', err);
+        throw err;
+      }
     }
   });
   
   const issuesQuery = useQuery({
     queryKey: ['/api/superadmin/device-issues'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/superadmin/device-issues');
-      return await res.json() as DeviceIssue[];
+      try {
+        const res = await apiRequest('GET', '/api/superadmin/device-issues');
+        
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`Serverfehler ${res.status}:`, text);
+          throw new Error(`Serverfehler: ${res.status}`);
+        }
+        
+        const contentType = res.headers.get('content-type') || '';
+        const text = await res.text();
+        
+        if (!contentType.includes('application/json')) {
+          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
+          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
+        }
+        
+        return JSON.parse(text) as DeviceIssue[];
+      } catch (err) {
+        console.error('❌ Fehler beim Laden der Geräteprobleme:', err);
+        throw err;
+      }
     }
   });
   
