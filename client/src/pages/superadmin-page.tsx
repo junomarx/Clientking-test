@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut } from "lucide-react";
+import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,16 @@ export default function SuperadminPage() {
             >
               <Laptop className="h-5 w-5 mr-2" />
               Geräte
+            </Button>
+            <Button 
+              variant="ghost"
+              className="w-full justify-start"
+              asChild
+            >
+              <Link to="/superadmin/shops">
+                <Building className="h-5 w-5 mr-2" />
+                Shops
+              </Link>
             </Button>
           </nav>
           <div className="px-2 mt-6">

@@ -1,418 +1,308 @@
 /**
- * Superadmin-Routen für das Superadmin-Dashboard
- * Zugänglich nur für Benutzer mit Superadmin-Rolle (isSuperadmin = true)
+ * Superadmin-Routen für die globale Systemverwaltung durch den Superadmin-Benutzer
  */
 
 import { Express, Request, Response } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
-import { storage } from "./storage";
-import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
-import { users, packages, packageFeatures, repairs } from "@shared/schema";
-import { scrypt, randomBytes } from "crypto";
-import { promisify } from "util";
-
-const scryptAsync = promisify(scrypt);
-
-// Funktion zum Hashen von Passwörtern für Neuanlage/Änderung von Benutzern
-async function hashPassword(password: string): Promise<string> {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
+import { storage } from "./storage";
+import { count, eq, and, or, sql } from "drizzle-orm";
+import { 
+  users, packages, packageFeatures, shops, 
+  customers, repairs, userDeviceTypes, userBrands, userModels
+} from "@shared/schema";
 
 /**
- * Registriert alle Superadmin-Routen
+ * Fügt alle Superadmin-Routen zur Express-App hinzu
+ * Diese Routen sind nur für Superadmin-Benutzer zugänglich
  */
 export function registerSuperadminRoutes(app: Express) {
-  // Superadmin-Dashboard Statistiken
+  // Superadmin Dashboard Statistiken
   app.get("/api/superadmin/stats", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // Statistik-Abfragen für den Superadmin-Bereich
+      // Benutzerstatistiken - wir zählen alle Benutzer und berechnen aktive/inaktive manuell
+      const [totalUserCount] = await db.select({
+        totalUsers: count().as("total_users"), 
+      }).from(users);
       
-      // Benutzerzahlen abrufen
-      const usersResult = await db.select({
-        totalUsers: sql<number>`COUNT(*)`,
-        activeUsers: sql<number>`SUM(CASE WHEN ${users.isActive} = true THEN 1 ELSE 0 END)`,
-        inactiveUsers: sql<number>`SUM(CASE WHEN ${users.isActive} = false THEN 1 ELSE 0 END)`,
-        admins: sql<number>`SUM(CASE WHEN ${users.isAdmin} = true THEN 1 ELSE 0 END)`,
-        totalShops: sql<number>`COUNT(DISTINCT ${users.shopId})`
-      })
-      .from(users)
-      .where(eq(users.isSuperadmin, false));
+      const [activeUserCount] = await db.select({
+        activeUsers: count().as("active_users"),
+      }).from(users).where(eq(users.isActive, true));
       
-      // Reparatur-Statistiken abrufen
-      const repairsResult = await db.select({
-        totalRepairs: sql<number>`COUNT(*)`,
-        received: sql<number>`SUM(CASE WHEN ${repairs.status} = 'eingegangen' THEN 1 ELSE 0 END)`,
-        inRepair: sql<number>`SUM(CASE WHEN ${repairs.status} = 'in_reparatur' THEN 1 ELSE 0 END)`,
-        readyForPickup: sql<number>`SUM(CASE WHEN ${repairs.status} = 'fertig' THEN 1 ELSE 0 END)`,
-        completed: sql<number>`SUM(CASE WHEN ${repairs.status} = 'abgeholt' THEN 1 ELSE 0 END)`
-      })
-      .from(repairs);
+      const [inactiveUserCount] = await db.select({
+        inactiveUsers: count().as("inactive_users"),
+      }).from(users).where(eq(users.isActive, false));
       
-      // Paket-Nutzungszahlen abrufen
-      const packagesWithCounts = await db
-        .select({
-          packageName: packages.name,
-          userCount: sql<number>`COUNT(${users.id})`
-        })
-        .from(packages)
-        .leftJoin(users, eq(users.packageId, packages.id))
-        .groupBy(packages.name)
-        .orderBy(sql`COUNT(${users.id}) DESC`);
-      
+      const userStats = {
+        totalUsers: totalUserCount.totalUsers,
+        activeUsers: activeUserCount.activeUsers,
+        inactiveUsers: inactiveUserCount.inactiveUsers
+      };
+
+      // Paketstatistiken
+      const [packageStats] = await db.select({
+        totalPackages: count().as("total_packages"),
+      }).from(packages);
+
+      // Shop-Statistiken
+      const [shopStats] = await db.select({
+        totalShops: sql<string>`COUNT(DISTINCT ${users.shopId})`.as("total_shops"),
+      }).from(users);
+
+      // Reparaturstatistiken
+      const [repairStats] = await db.select({
+        totalRepairs: count().as("total_repairs"),
+      }).from(repairs);
+
+      // Bestellungen (hier als Platzhalter, später kann das mit echten Bestellungsdaten gefüllt werden)
+      const orderStats = {
+        totalOrders: "0",
+      };
+
+      // Umsatz (hier als Platzhalter, später kann das mit echten Umsatzdaten gefüllt werden)
+      const revenueStats = {
+        totalRevenue: "0 €",
+      };
+
+      // Die gesammelten Statistiken zurückgeben
       res.json({
-        users: usersResult[0],
-        repairs: repairsResult[0],
-        packages: packagesWithCounts
+        users: {
+          totalUsers: userStats.totalUsers.toString(),
+          activeUsers: userStats.activeUsers.toString(),
+          inactiveUsers: userStats.inactiveUsers.toString(),
+        },
+        packages: {
+          totalPackages: packageStats.totalPackages.toString(),
+        },
+        shops: {
+          totalShops: shopStats.totalShops || "0",
+        },
+        repairs: {
+          totalRepairs: repairStats.totalRepairs.toString(),
+        },
+        orders: orderStats,
+        revenue: revenueStats,
       });
     } catch (error) {
-      console.error("Error fetching superadmin stats:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Superadmin-Statistiken" });
+      console.error("Fehler beim Abrufen der Superadmin-Statistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Statistiken" });
     }
   });
-  
-  // Alle Benutzer abrufen (ohne Superadmins)
+
+  // Benutzerverwaltung
   app.get("/api/superadmin/users", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // Alle Benutzer außer Superadmins abrufen
-      const allUsers = await db
-        .select()
-        .from(users)
-        .where(eq(users.isSuperadmin, false));
-      
-      // Passwort-Felder entfernen
-      const sanitizedUsers = allUsers.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      });
-      
-      res.json(sanitizedUsers);
+      const allUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        isActive: users.isActive,
+        isAdmin: users.isAdmin,
+        isSuperadmin: users.isSuperadmin,
+        shopId: users.shopId,
+        packageId: users.packageId,
+        createdAt: users.createdAt,
+      }).from(users);
+
+      res.json(allUsers);
     } catch (error) {
-      console.error("Error retrieving users for superadmin:", error);
+      console.error("Fehler beim Abrufen der Benutzer:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Benutzer" });
     }
   });
-  
-  // Einen Benutzer abrufen
+
+  // Detailinformationen zu einem Benutzer
   app.get("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.id);
-      const user = await storage.getUser(userId);
-      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+
       if (!user) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
-      
-      // Prüfen, ob der Benutzer ein Superadmin ist (diese dürfen nicht bearbeitet werden)
-      if (user.isSuperadmin) {
-        return res.status(403).json({ message: "Superadmin-Benutzer können nicht bearbeitet werden" });
-      }
-      
-      // Passwort aus der Antwort entfernen
+
+      // Wir entfernen das Passwort aus dem Ergebnis
       const { password, ...userWithoutPassword } = user;
-      
-      res.json(userWithoutPassword);
+
+      // Statistiken für den Benutzer abrufen
+      const [userStats] = await db.select({
+        customerCount: count().as("customer_count"),
+      }).from(customers).where(eq(customers.shopId, user.shopId || 0));
+
+      const [repairStats] = await db.select({
+        repairCount: count().as("repair_count"),
+      }).from(repairs).where(eq(repairs.shopId, user.shopId || 0));
+
+      res.json({
+        ...userWithoutPassword,
+        stats: {
+          customerCount: userStats.customerCount,
+          repairCount: repairStats.repairCount,
+        },
+      });
     } catch (error) {
-      console.error("Error retrieving specific user for superadmin:", error);
+      console.error("Fehler beim Abrufen des Benutzers:", error);
       res.status(500).json({ message: "Fehler beim Abrufen des Benutzers" });
     }
   });
-  
-  // Einen Benutzer aktualisieren
-  app.patch("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const userData = req.body;
-      
-      // Benutzer aus der Datenbank abrufen
-      const existingUser = await storage.getUser(userId);
-      
-      if (!existingUser) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      // Prüfen, ob der Benutzer ein Superadmin ist (diese dürfen nicht bearbeitet werden)
-      if (existingUser.isSuperadmin) {
-        return res.status(403).json({ message: "Superadmin-Benutzer können nicht bearbeitet werden" });
-      }
-      
-      // Wenn ein Passwort gesetzt werden soll, dieses hashen
-      if (userData.password) {
-        userData.password = await hashPassword(userData.password);
-      }
-      
-      // Benutzer aktualisieren
-      const updatedUser = await db
-        .update(users)
-        .set(userData)
-        .where(eq(users.id, userId))
-        .returning();
-      
-      // Passwort aus der Antwort entfernen
-      const { password, ...userWithoutPassword } = updatedUser[0];
-      
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error updating user for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren des Benutzers" });
-    }
-  });
-  
-  // Einen Benutzer als aktiv markieren
-  app.patch("/api/superadmin/users/:id/activate", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      // Benutzer aus der Datenbank abrufen
-      const existingUser = await storage.getUser(userId);
-      
-      if (!existingUser) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      // Prüfen, ob der Benutzer ein Superadmin ist (diese dürfen nicht bearbeitet werden)
-      if (existingUser.isSuperadmin) {
-        return res.status(403).json({ message: "Superadmin-Benutzer können nicht bearbeitet werden" });
-      }
-      
-      // Benutzer aktivieren
-      const updatedUser = await db
-        .update(users)
-        .set({ isActive: true })
-        .where(eq(users.id, userId))
-        .returning();
-      
-      // Passwort aus der Antwort entfernen
-      const { password, ...userWithoutPassword } = updatedUser[0];
-      
-      res.json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error activating user for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Aktivieren des Benutzers" });
-    }
-  });
-  
-  // Einen Benutzer löschen
-  app.delete("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const userId = parseInt(req.params.id);
-      
-      // Benutzer aus der Datenbank abrufen
-      const existingUser = await storage.getUser(userId);
-      
-      if (!existingUser) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
-      }
-      
-      // Prüfen, ob der Benutzer ein Superadmin ist (diese dürfen nicht gelöscht werden)
-      if (existingUser.isSuperadmin) {
-        return res.status(403).json({ message: "Superadmin-Benutzer können nicht gelöscht werden" });
-      }
-      
-      // Benutzer löschen
-      await db
-        .delete(users)
-        .where(eq(users.id, userId));
-      
-      res.json({ message: "Benutzer erfolgreich gelöscht" });
-    } catch (error) {
-      console.error("Error deleting user for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
-    }
-  });
-  
-  // Pakete abrufen
+
+  // Paket-Verwaltung
   app.get("/api/superadmin/packages", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const allPackages = await db
-        .select()
-        .from(packages);
-      
+      const allPackages = await db.select().from(packages);
       res.json(allPackages);
     } catch (error) {
-      console.error("Error retrieving packages for superadmin:", error);
+      console.error("Fehler beim Abrufen der Pakete:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Pakete" });
     }
   });
-  
-  // Ein Paket abrufen
+
+  // Details zu einem Paket
   app.get("/api/superadmin/packages/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const packageId = parseInt(req.params.id);
-      
-      const [packageData] = await db
-        .select()
-        .from(packages)
-        .where(eq(packages.id, packageId));
-      
+      if (isNaN(packageId)) {
+        return res.status(400).json({ message: "Ungültige Paket-ID" });
+      }
+
+      const [packageData] = await db.select().from(packages).where(eq(packages.id, packageId));
+
       if (!packageData) {
         return res.status(404).json({ message: "Paket nicht gefunden" });
       }
-      
-      // Features für das Paket abrufen
-      const packageFeaturesList = await db
-        .select()
-        .from(packageFeatures)
+
+      // Features des Pakets abrufen
+      const packageFeaturesList = await db.select().from(packageFeatures)
         .where(eq(packageFeatures.packageId, packageId));
-      
+
+      // Benutzer mit diesem Paket zählen
+      const [userCount] = await db.select({
+        count: count().as("user_count"),
+      }).from(users).where(eq(users.packageId, packageId));
+
       res.json({
         ...packageData,
-        features: packageFeaturesList
+        features: packageFeaturesList,
+        userCount: userCount.count,
       });
     } catch (error) {
-      console.error("Error retrieving specific package for superadmin:", error);
+      console.error("Fehler beim Abrufen des Pakets:", error);
       res.status(500).json({ message: "Fehler beim Abrufen des Pakets" });
     }
   });
-  
-  // Ein Paket aktualisieren
-  app.patch("/api/superadmin/packages/:id", isSuperadmin, async (req: Request, res: Response) => {
+
+  // Shop-Verwaltung
+  app.get("/api/superadmin/shops", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const packageId = parseInt(req.params.id);
-      const packageData = req.body;
-      const featuresToUpdate = packageData.features;
-      
-      // Wir entfernen das features-Feld, da es nicht direkt in die Tabelle gehört
-      delete packageData.features;
-      
-      // Paket aktualisieren
-      const updatedPackage = await db
-        .update(packages)
-        .set(packageData)
-        .where(eq(packages.id, packageId))
-        .returning();
-      
-      // Wenn Features angegeben wurden, diese aktualisieren
-      if (featuresToUpdate && Array.isArray(featuresToUpdate)) {
-        // Bestehende Features löschen
-        await db
-          .delete(packageFeatures)
-          .where(eq(packageFeatures.packageId, packageId));
-        
-        // Feature-Einträge sammeln
-        const featureEntries = featuresToUpdate.map(feature => ({
-          packageId: packageId,
-          feature: feature.feature
-        }));
-        
-        // Falls keine Features zu aktualisieren sind
-        if (featureEntries.length === 0) {
-          // Features für das Paket abrufen (sollten jetzt leer sein)
-          const packageFeaturesList = await db
-            .select()
-            .from(packageFeatures)
-            .where(eq(packageFeatures.packageId, packageId));
-          
-          return res.json({
-            ...updatedPackage[0],
-            features: packageFeaturesList
-          });
-        }
-        
-        // Alle Features auf einmal einfügen
-        const newFeatures = await db
-          .insert(packageFeatures)
-          .values(featureEntries)
-          .returning();
-        
-        res.json({
-          ...updatedPackage[0],
-          features: newFeatures
-        });
-      } else {
-        // Features für das Paket abrufen
-        const packageFeaturesList = await db
-          .select()
-          .from(packageFeatures)
-          .where(eq(packageFeatures.packageId, packageId));
-        
-        res.json({
-          ...updatedPackage[0],
-          features: packageFeaturesList
-        });
-      }
+      // Distinct Shop-IDs abrufen und Informationen aggregieren
+      const shopData = await db.execute(sql`
+        SELECT 
+          s.id, 
+          s.name, 
+          COUNT(DISTINCT u.id) as user_count,
+          COUNT(DISTINCT c.id) as customer_count,
+          COUNT(DISTINCT r.id) as repair_count,
+          MIN(s.created_at) as created_at
+        FROM 
+          (SELECT DISTINCT shop_id as id, shop_id as name, created_at FROM users WHERE shop_id IS NOT NULL) s
+        LEFT JOIN users u ON s.id = u.shop_id
+        LEFT JOIN customers c ON s.id = c.shop_id
+        LEFT JOIN repairs r ON s.id = r.shop_id
+        GROUP BY s.id, s.name
+        ORDER BY s.id
+      `);
+
+      // Die Ergebnisse in ein sauberes Format bringen
+      const formattedShops = shopData.rows.map((row: any) => ({
+        id: Number(row.id),
+        name: `Shop ${row.id}`, // Da wir aktuell keine echten Shop-Namen haben, verwenden wir Shop ID
+        userCount: Number(row.user_count),
+        customerCount: Number(row.customer_count),
+        repairCount: Number(row.repair_count),
+        createdAt: row.created_at,
+      }));
+
+      res.json(formattedShops);
     } catch (error) {
-      console.error("Error updating package for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren des Pakets" });
+      console.error("Fehler beim Abrufen der Shops:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Shops" });
     }
   });
-  
-  // Ein neues Paket erstellen
-  app.post("/api/superadmin/packages", isSuperadmin, async (req: Request, res: Response) => {
+
+  // Details zu einem Shop
+  app.get("/api/superadmin/shops/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const packageData = req.body;
-      const featuresToAdd = packageData.features;
-      
-      // Wir entfernen das features-Feld, da es nicht direkt in die Tabelle gehört
-      delete packageData.features;
-      
-      // Paket erstellen
-      const [newPackage] = await db
-        .insert(packages)
-        .values(packageData)
-        .returning();
-      
-      // Wenn Features angegeben wurden, diese hinzufügen
-      if (featuresToAdd && Array.isArray(featuresToAdd) && featuresToAdd.length > 0) {
-        // Sammeln aller Feature-Einträge
-        const featureEntries = featuresToAdd.map(feature => ({
-          packageId: newPackage.id,
-          feature: feature.feature
-        }));
-        
-        // Alle Features auf einmal einfügen
-        const newFeatures = await db
-          .insert(packageFeatures)
-          .values(featureEntries)
-          .returning();
-        
-        res.status(201).json({
-          ...newPackage,
-          features: newFeatures
-        });
-      } else {
-        res.status(201).json({
-          ...newPackage,
-          features: []
-        });
+      const shopId = parseInt(req.params.id);
+      if (isNaN(shopId)) {
+        return res.status(400).json({ message: "Ungültige Shop-ID" });
       }
+
+      // Benutzer dieses Shops abrufen
+      const shopUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        isActive: users.isActive,
+        isAdmin: users.isAdmin,
+        createdAt: users.createdAt,
+      }).from(users).where(eq(users.shopId, shopId));
+
+      // Anzahl der Kunden und Reparaturen für diesen Shop
+      const [customerCount] = await db.select({
+        count: count().as("customer_count"),
+      }).from(customers).where(eq(customers.shopId, shopId));
+
+      const [repairCount] = await db.select({
+        count: count().as("repair_count"),
+      }).from(repairs).where(eq(repairs.shopId, shopId));
+
+      // Shop-Informationen zurückgeben
+      res.json({
+        id: shopId,
+        name: `Shop ${shopId}`,
+        users: shopUsers,
+        customerCount: customerCount.count,
+        repairCount: repairCount.count,
+        // Weitere Shop-Informationen können hier hinzugefügt werden
+      });
     } catch (error) {
-      console.error("Error creating package for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Erstellen des Pakets" });
+      console.error("Fehler beim Abrufen des Shops:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Shops" });
     }
   });
-  
-  // Ein Paket löschen
-  app.delete("/api/superadmin/packages/:id", isSuperadmin, async (req: Request, res: Response) => {
+
+  // Globale Geräteverwaltung
+  app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const packageId = parseInt(req.params.id);
-      
-      // Prüfen, ob es Benutzer gibt, die diesem Paket zugeordnet sind
-      const assignedUsers = await db
-        .select()
-        .from(users)
-        .where(eq(users.packageId, packageId));
-      
-      if (assignedUsers.length > 0) {
-        return res.status(400).json({ message: `Dieses Paket kann nicht gelöscht werden, da es ${assignedUsers.length} Benutzern zugeordnet ist.` });
-      }
-      
-      // Zuerst alle Features dieses Pakets löschen
-      await db
-        .delete(packageFeatures)
-        .where(eq(packageFeatures.packageId, packageId));
-      
-      // Dann das Paket selbst löschen
-      await db
-        .delete(packages)
-        .where(eq(packages.id, packageId));
-      
-      res.json({ message: "Paket erfolgreich gelöscht" });
+      const allDeviceTypes = await db.select().from(userDeviceTypes);
+      res.json(allDeviceTypes);
     } catch (error) {
-      console.error("Error deleting package for superadmin:", error);
-      res.status(500).json({ message: "Fehler beim Löschen des Pakets" });
+      console.error("Fehler beim Abrufen der Gerätetypen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätetypen" });
+    }
+  });
+
+  app.get("/api/superadmin/brands", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const allBrands = await db.select().from(userBrands);
+      res.json(allBrands);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Marken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
+    }
+  });
+
+  app.get("/api/superadmin/models", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const allModels = await db.select().from(userModels);
+      res.json(allModels);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Modelle:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modelle" });
     }
   });
 }

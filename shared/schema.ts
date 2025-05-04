@@ -3,6 +3,23 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Shops Tabelle für Multi-Tenant-Unterstützung
+export const shops = pgTable("shops", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertShopSchema = createInsertSchema(shops).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Shop = typeof shops.$inferSelect;
+export type InsertShop = z.infer<typeof insertShopSchema>;
+
 // Customers table
 export const customers = pgTable("customers", {
   id: serial("id").primaryKey(),
@@ -308,6 +325,17 @@ export const userRelations = relations(users, ({ one }) => ({
     fields: [users.packageId],
     references: [packages.id],
   }),
+  shop: one(shops, {
+    fields: [users.shopId],
+    references: [shops.id],
+  }),
+}));
+
+// Beziehungen für shops
+export const shopRelations = relations(shops, ({ many }) => ({
+  users: many(users),
+  customers: many(customers),
+  repairs: many(repairs),
 }));
 
 // Benutzerspezifische Gerätearten
