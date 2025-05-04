@@ -618,17 +618,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf (nur Professional/Enterprise)
+  // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf (nur Enterprise)
   app.get("/api/can-view-detailed-stats", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-      const isProfessional = await isProfessionalOrHigher(userId);
+      // Prüfen, ob der Benutzer ein Enterprise-Paket hat
+      const isEnterpriseUser = await isEnterprise(userId);
       
       // Ergebnis zurückgeben
-      res.json({ canViewDetailedStats: isProfessional });
+      res.json({ canViewDetailedStats: isEnterpriseUser });
     } catch (error) {
       console.error("Error checking detailed stats permission:", error);
       res.status(500).json({ message: "Fehler bei der Überprüfung der Statistik-Berechtigungen" });
@@ -704,17 +704,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Detaillierte Reparaturstatistiken für Analysen und Diagramme (nur Professional/Enterprise)
+  // Detaillierte Reparaturstatistiken für Analysen und Diagramme (nur Enterprise)
   app.get("/api/stats/detailed", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
       // Prüfen, ob der Benutzer berechtigt ist, detaillierte Statistiken zu sehen
-      const isProfessional = await isProfessionalOrHigher(userId);
-      if (!isProfessional) {
+      // Diese Funktion ist nur für Enterprise-Nutzer verfügbar
+      const isEnterpriseUser = await isEnterprise(userId);
+      if (!isEnterpriseUser) {
         return res.status(403).json({ 
-          message: "Detaillierte Statistiken sind nur im Professional- und Enterprise-Paket verfügbar",
+          message: "Detaillierte Statistiken sind nur im Enterprise-Paket verfügbar",
           errorCode: "FEATURE_NOT_AVAILABLE"
         });
       }
