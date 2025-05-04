@@ -94,11 +94,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         format: 'a4'
       });
       
-      // Bildgröße berechnen, um im A4-Format zu passen
-      const imgWidth = 210; // A4 Breite in mm
+      // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
+      const margin = 20; // 2cm Ränder in mm
+      const pageWidth = 210; // A4 Breite in mm
+      const pageHeight = 297; // A4 Höhe in mm
+      const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Bild mit Rändern platzieren
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       
       // PDF speichern mit aussagekräftigem Dateinamen
       const orderCode = repair?.orderCode || repairId;
@@ -148,11 +152,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         format: 'a4'
       });
       
-      // Bildgröße berechnen, um im A4-Format zu passen
-      const imgWidth = 210; // A4 Breite in mm
+      // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
+      const margin = 20; // 2cm Ränder in mm
+      const pageWidth = 210; // A4 Breite in mm
+      const pageHeight = 297; // A4 Höhe in mm
+      const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Bild mit Rändern platzieren
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       
       // Öffne das PDF in einem neuen Tab und starte den Druckdialog automatisch
       const pdfBlob = pdf.output('blob');
@@ -284,7 +292,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         {printReady && repair && customer && (
           <>
             {/* Druckinhalt - Neue DIN A4 Vorlage */}
-            <div id="a4-print-content" className="bg-white text-black p-4 rounded-md">
+            <div id="a4-print-content" className="bg-white text-black p-8 sm:p-10 md:p-12 rounded-md">
               <style dangerouslySetInnerHTML={{ __html: `
                 @media print {
                   body {
