@@ -56,6 +56,7 @@ import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
 import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";
 import ToastTestDialog from "@/components/ToastTestDialog";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
 
@@ -1369,6 +1370,7 @@ export default function AdminPage() {
   const [isToastTestOpen, setIsToastTestOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deviceMenuOpen, setDeviceMenuOpen] = useState(false);
+  const [featureTestVisible, setFeatureTestVisible] = useState(false);
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
