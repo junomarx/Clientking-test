@@ -114,6 +114,7 @@ export const users = pgTable("users", {
   resetToken: text("reset_token"),                         // Token für Passwort-Zurücksetzung
   resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen/Sperren als JSON
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
