@@ -109,22 +109,33 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     setIsGeneratingPdf(true);
     
     try {
-      // Erfasse den Inhalt des Druckbereichs
-      const content = printRef.current;
-      const canvas = await html2canvas(content, {
+      // Erstelle ein unsichtbares Element außerhalb des Viewports zum Rendern
+      const fullContent = document.getElementById('receipt-for-pdf');
+      if (!fullContent) {
+        throw new Error('Receipt element not found');
+      }
+      
+      // Clone den Inhalt in ein neues, unsichtbares Element
+      const clonedContent = fullContent.cloneNode(true) as HTMLElement;
+      clonedContent.style.position = 'absolute';
+      clonedContent.style.left = '-9999px';
+      clonedContent.style.top = '-9999px';
+      clonedContent.style.width = fullContent.style.width; // Beibehalten der Breite
+      clonedContent.style.maxHeight = 'none'; // Keine Höhengrenze
+      clonedContent.style.overflow = 'visible';
+      document.body.appendChild(clonedContent);
+      
+      // Erfasse den vollständigen Inhalt
+      const canvas = await html2canvas(clonedContent, {
         scale: 2, // Höhere Qualität
         logging: true,
         useCORS: true,
         allowTaint: true,
-        height: content.scrollHeight, // Erfasst die gesamte Höhe
-        windowHeight: content.scrollHeight, // Setzt das Fenster hoch genug
-        onclone: (document, element) => {
-          // Stellt sicher, dass der geklonte Inhalt vollständig sichtbar ist
-          element.style.maxHeight = 'none';
-          element.style.height = 'auto';
-          element.style.overflow = 'visible';
-        }
+        imageTimeout: 2000, // Timeout für Bildladung erhöhen
       });
+      
+      // Entferne das temporäre Element nach dem Rendern
+      document.body.removeChild(clonedContent);
       
       // Berechne das Seitenverhältnis für PDF
       // Für Bon-Format, verwenden wir ein schmales Format
@@ -197,7 +208,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         ) : (
           <>
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
-              <div ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
+              <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
                 {settings?.receiptWidth === '58mm' ? (
                   <BonReceipt58mm 
                     firmenlogo={businessSettings?.logoImage || undefined}
