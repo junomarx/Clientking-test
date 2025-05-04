@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,13 @@ export default function SuperadminDashboardTab() {
   
   const { data: stats, isLoading, error } = useQuery<SuperadminStats>({ 
     queryKey: ["/api/superadmin/stats"],
+    queryFn: async () => {
+      const res = await fetch('/api/superadmin/stats');
+      if (!res.ok) {
+        throw new Error('API-Fehler beim Abrufen der Statistiken');
+      }
+      return res.json();
+    },
   });
 
   useEffect(() => {
