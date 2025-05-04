@@ -452,28 +452,41 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                       )}
                     </div>
                     <div>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/jpeg,image/png,image/svg+xml"
-                        onChange={handleLogoUpload}
-                        style={{ display: 'none' }}
-                      />
-
                       <Button 
                         variant="outline" 
                         size="sm" 
                         type="button"
-                        onClick={() => {
-                          console.log('Upload-Button wurde geklickt');
-                          console.log('fileInputRef exists:', !!fileInputRef.current);
-                          if (fileInputRef.current) {
-                            console.log('Attempting to click the file input');
-                            fileInputRef.current.click();
-                            console.log('File input clicked');
-                          } else {
-                            console.error('File input reference is null');
-                          }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('LOGO BUTTON CLICKED');
+                          
+                          // Direkter Ansatz ohne Ref
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/jpeg,image/png,image/svg+xml';
+                          
+                          // Event-Handler hinzufügen
+                          input.onchange = (event) => {
+                            const target = event.target as HTMLInputElement;
+                            console.log('File selected:', target.files);
+                            if (target.files && target.files.length > 0) {
+                              // Manuell handleLogoUpload aufrufen
+                              const fakeEvent = { 
+                                target: { files: target.files } 
+                              } as React.ChangeEvent<HTMLInputElement>;
+                              handleLogoUpload(fakeEvent);
+                            }
+                          };
+                          
+                          // Input zum DOM hinzufügen und klicken
+                          document.body.appendChild(input);
+                          input.click();
+                          
+                          // Nach Auswahl wieder entfernen
+                          setTimeout(() => {
+                            document.body.removeChild(input);
+                          }, 1000);
                         }}
                       >
                         <Upload className="h-4 w-4 mr-2" />
