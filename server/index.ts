@@ -7,6 +7,7 @@ import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
 import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
+import { addPackageTables } from "./add-package-tables";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -52,6 +53,7 @@ app.use((req, res, next) => {
     await addCompanySloganVatColumns();
     await addShopIdColumn();
     await addFeatureOverridesColumn();
+    await addPackageTables(); // Neue Migration für das Paketsystem
     
     const server = await registerRoutes(app);
 

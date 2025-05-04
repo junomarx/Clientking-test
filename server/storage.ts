@@ -173,22 +173,174 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      // Versuche zuerst, mit dem vollen Schema zu holen
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      // Wenn ein Fehler auftritt (z.B. fehlende Spalte), versuche es mit einer Raw-Abfrage
+      console.log(`Fehler beim Abrufen des Benutzers mit ID ${id}:`, error);
+      console.log("Verwende Fallback-Abfrage für Benutzer...");
+      
+      const result = await db.execute(sql`
+        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+               shop_id, company_name, company_address, company_vat_number,
+               company_phone, company_email, reset_token, reset_token_expires,
+               created_at, feature_overrides
+        FROM users
+        WHERE id = ${id}
+      `);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Konvertiere das Rohergebnis in ein User-Objekt
+      return {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        password: result.rows[0].password,
+        email: result.rows[0].email,
+        isActive: result.rows[0].is_active,
+        isAdmin: result.rows[0].is_admin,
+        pricingPlan: result.rows[0].pricing_plan,
+        shopId: result.rows[0].shop_id,
+        companyName: result.rows[0].company_name,
+        companyAddress: result.rows[0].company_address,
+        companyVatNumber: result.rows[0].company_vat_number,
+        companyPhone: result.rows[0].company_phone,
+        companyEmail: result.rows[0].company_email,
+        resetToken: result.rows[0].reset_token,
+        resetTokenExpires: result.rows[0].reset_token_expires,
+        createdAt: result.rows[0].created_at,
+        featureOverrides: result.rows[0].feature_overrides,
+        packageId: null // Während der Migration auf null setzen
+      };
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error) {
+      console.log(`Fehler beim Abrufen des Benutzers mit Username ${username}:`, error);
+      console.log("Verwende Fallback-Abfrage für Benutzer...");
+      
+      const result = await db.execute(sql`
+        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+               shop_id, company_name, company_address, company_vat_number,
+               company_phone, company_email, reset_token, reset_token_expires,
+               created_at, feature_overrides
+        FROM users
+        WHERE username = ${username}
+      `);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Konvertiere das Rohergebnis in ein User-Objekt
+      return {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        password: result.rows[0].password,
+        email: result.rows[0].email,
+        isActive: result.rows[0].is_active,
+        isAdmin: result.rows[0].is_admin,
+        pricingPlan: result.rows[0].pricing_plan,
+        shopId: result.rows[0].shop_id,
+        companyName: result.rows[0].company_name,
+        companyAddress: result.rows[0].company_address,
+        companyVatNumber: result.rows[0].company_vat_number,
+        companyPhone: result.rows[0].company_phone,
+        companyEmail: result.rows[0].company_email,
+        resetToken: result.rows[0].reset_token,
+        resetTokenExpires: result.rows[0].reset_token_expires,
+        createdAt: result.rows[0].created_at,
+        featureOverrides: result.rows[0].feature_overrides,
+        packageId: null // Während der Migration auf null setzen
+      };
+    }
   }
   
   async getUsersByEmail(email: string): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.email, email));
+    try {
+      return await db.select().from(users).where(eq(users.email, email));
+    } catch (error) {
+      console.log(`Fehler beim Abrufen der Benutzer mit Email ${email}:`, error);
+      console.log("Verwende Fallback-Abfrage...");
+      
+      const result = await db.execute(sql`
+        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+               shop_id, company_name, company_address, company_vat_number,
+               company_phone, company_email, reset_token, reset_token_expires,
+               created_at, feature_overrides
+        FROM users
+        WHERE email = ${email}
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        username: row.username,
+        password: row.password,
+        email: row.email,
+        isActive: row.is_active,
+        isAdmin: row.is_admin,
+        pricingPlan: row.pricing_plan,
+        shopId: row.shop_id,
+        companyName: row.company_name,
+        companyAddress: row.company_address,
+        companyVatNumber: row.company_vat_number,
+        companyPhone: row.company_phone,
+        companyEmail: row.company_email,
+        resetToken: row.reset_token,
+        resetTokenExpires: row.reset_token_expires,
+        createdAt: row.created_at,
+        featureOverrides: row.feature_overrides,
+        packageId: null // Während der Migration auf null setzen
+      }));
+    }
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      return user;
+    } catch (error) {
+      console.log(`Fehler beim Abrufen des Benutzers mit Email ${email}:`, error);
+      console.log("Verwende Fallback-Abfrage für Benutzer...");
+      
+      const result = await db.execute(sql`
+        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+               shop_id, company_name, company_address, company_vat_number,
+               company_phone, company_email, reset_token, reset_token_expires,
+               created_at, feature_overrides
+        FROM users
+        WHERE email = ${email}
+        LIMIT 1
+      `);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      // Konvertiere das Rohergebnis in ein User-Objekt
+      return {
+        id: result.rows[0].id,
+        username: result.rows[0].username,
+        password: result.rows[0].password,
+        email: result.rows[0].email,
+        isActive: result.rows[0].is_active,
+        isAdmin: result.rows[0].is_admin,
+        pricingPlan: result.rows[0].pricing_plan,
+        shopId: result.rows[0].shop_id,
+        companyName: result.rows[0].company_name,
+        companyAddress: result.rows[0].company_address,
+        companyVatNumber: result.rows[0].company_vat_number,
+        companyPhone: result.rows[0].company_phone,
+        companyEmail: result.rows[0].company_email,
+        resetToken: result.rows[0].reset_token,
+        resetTokenExpires: result.rows[0].reset_token_expires,
+        createdAt: result.rows[0].created_at,
+        featureOverrides: result.rows[0].feature_overrides,
+        packageId: null // Während der Migration auf null setzen
+      };
+    }
   }
   
   async getAllUsers(): Promise<User[]> {
