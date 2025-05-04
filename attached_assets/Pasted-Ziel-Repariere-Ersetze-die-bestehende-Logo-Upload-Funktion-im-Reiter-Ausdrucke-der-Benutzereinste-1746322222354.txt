@@ -1,0 +1,170 @@
+Ziel:
+Repariere/Ersetze die bestehende Logo-Upload-Funktion im Reiter "Ausdrucke" der Benutzereinstellungen.
+
+Anforderungen:
+Frontend (React):
+
+Die Komponente befindet sich bereits in den Benutzereinstellungen (z. B. UserSettings/Prints.jsx).
+
+Problemanalyse: Warum funktioniert die aktuelle Funktion nicht?
+
+Fehlermeldungen?
+
+Falsche API-Anbindung?
+
+Keine Vorschau?
+
+Neue Implementierung:
+
+Nutze useState für die Bildvorschau.
+
+Validiere Dateitypen (nur .png, .jpg, .jpeg).
+
+Sende die Datei per FormData an /api/upload (POST).
+
+Backend (Node.js/Express):
+
+Aktuelle Route prüfen: Erwartet sie multipart/form-data?
+
+Multer-Konfiguration:
+
+Zielordner: uploads/logos/ (automatisch erstellen).
+
+Dateigröße begrenzen (max. 5 MB).
+
+Response: Immer JSON ({ success: boolean, message: string }).
+
+Fehlerbehebung:
+
+Falls der Fehler Unexpected token '<' auftritt:
+
+Backend gibt HTML statt JSON zurück (z. B. 404-Fehler).
+
+Proxy in vite.config.js prüfen:
+
+javascript
+server: {
+  proxy: {
+    '/api': {
+      target: 'http://localhost:5000', // Backend-URL
+      changeOrigin: true,
+    },
+  },
+}
+Styling:
+
+Anpassung an bestehendes Design (z. B. Tailwind oder CSS-Module).
+
+Ausgabe der KI sollte enthalten:
+Code-Snippets für:
+
+React-Komponente (überarbeitete Version).
+
+Express-Route (mit Multer).
+
+Schritte zur Integration:
+
+Wo muss der Code ersetzt werden?
+
+Welche Abhängigkeiten sind nötig (multer, cors, etc.)?
+
+Debugging-Hilfe:
+
+Wie prüfe ich, ob die API korrekt antwortet? (DevTools → Network-Tab).
+
+Beispielantwort (Auszug):
+Frontend (React):
+
+jsx
+// UserSettings/Prints.jsx
+import { useState } from 'react';
+
+export default function PrintsSettings() {
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validiere Dateityp
+    if (!file.type.match('image.*')) {
+      setError('Nur Bilder erlaubt!');
+      return;
+    }
+
+    // Vorschau anzeigen
+    setLogoPreview(URL.createObjectURL(file));
+    setError('');
+  };
+
+  const handleUpload = async () => {
+    const fileInput = document.querySelector('input[type="file"]');
+    const formData = new FormData();
+    formData.append('logo', fileInput.files[0]);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.message);
+      alert('Logo erfolgreich hochgeladen!');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+      {logoPreview && <img src={logoPreview} alt="Logo Preview" width={200} />}
+      {error && <p className="text-red-500">{error}</p>}
+      <button onClick={handleUpload}>Logo speichern</button>
+    </div>
+  );
+}
+Backend (Node.js):
+
+javascript
+// server.js
+import express from 'express';
+import multer from 'multer';
+import cors from 'cors';
+
+const app = express();
+app.use(cors());
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/logos/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
+
+app.post('/api/upload', upload.single('logo'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Keine Datei hochgeladen' });
+  }
+  res.json({ success: true, message: 'Logo gespeichert!', filename: req.file.filename });
+});
+
+app.listen(5000, () => console.log('Server läuft auf Port 5000'));
+Integration:
+
+Ersetze die alte Upload-Komponente in Prints.jsx.
+
+Stelle sicher, dass der Ordner uploads/logos/ existiert.
+
+Installiere Abhängigkeiten:
+
+bash
+npm install multer cors express
