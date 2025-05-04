@@ -28,7 +28,24 @@ export function useModelSeries() {
     return useQuery<ModelSeries[]>({
       queryKey: ['/api/model-series'],
       staleTime: 30000, // 30 Sekunden Caching
-      throwOnError: true,
+      queryFn: async () => {
+        try {
+          const res = await apiRequest('GET', '/api/model-series');
+          
+          // Prüfe den Content-Type vor dem JSON-Parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('Unerwarteter Content-Type für model-series:', contentType);
+            return [];
+          }
+          
+          return await res.json();
+        } catch (error) {
+          console.error('Fehler beim Laden der Modellreihen:', error);
+          return [];
+        }
+      },
+      // throwOnError entfernt, um besser mit Fehlern umzugehen
     });
   };
 

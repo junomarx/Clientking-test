@@ -38,11 +38,25 @@ export function useBrands() {
       queryKey: ['/api/brands', { deviceTypeId }],
       enabled: !!deviceTypeId,
       queryFn: async () => {
-        const res = await apiRequest('GET', `/api/brands?deviceTypeId=${deviceTypeId}`);
-        return await res.json();
+        try {
+          const res = await apiRequest('GET', `/api/brands?deviceTypeId=${deviceTypeId}`);
+          
+          // Prüfe den Content-Type vor dem JSON-Parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('Unerwarteter Content-Type für brands:', contentType);
+            return [];
+          }
+          
+          return await res.json();
+        } catch (error) {
+          console.error('Fehler beim Laden der Hersteller:', error);
+          // Leeres Array zurückgeben statt einen Fehler zu werfen
+          return [];
+        }
       },
       staleTime: 30000, // 30 Sekunden Caching
-      throwOnError: true,
+      // throwOnError entfernt, um besser mit Fehlern umzugehen
     });
   };
 
