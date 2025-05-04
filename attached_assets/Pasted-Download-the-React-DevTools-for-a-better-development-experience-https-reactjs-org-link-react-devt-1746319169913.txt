@@ -1,0 +1,181 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:63 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:101 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:120 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team:1 
+        
+        
+       Failed to load resource: net::ERR_NAME_NOT_RESOLVED
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+2@tanstack_react-query.js?v=e0255da5:3043 Uncaught SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+chunk-RPCDYKBN.js?v=e0255da5:14032 The above error occurred in the <NewOrderModal> component:
+
+    at NewOrderModal (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/NewOrderModal.tsx:82:33)
+    at div
+    at Home (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/pages/Home.tsx:31:37)
+    at Route (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e0255da5:323:16)
+    at ProtectedRoute (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/lib/protected-route.tsx:23:34)
+    at Switch (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e0255da5:379:17)
+    at Router
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=e0255da5:38:15)
+    at TooltipProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e0255da5:64:5)
+    at PrintManagerProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/repairs/PrintOptionsManager.tsx:33:40)
+    at ThemeProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-theme.tsx:26:33)
+    at BusinessSettingsProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-business-settings.tsx:22:44)
+    at AuthProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-auth.tsx:27:32)
+    at QueryClientProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=e0255da5:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=e0255da5:14032
+chunk-RPCDYKBN.js?v=e0255da5:9129 Uncaught SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON

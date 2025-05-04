@@ -261,8 +261,21 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     enabled: !!watchDeviceType,
     queryFn: async () => {
       if (!watchDeviceType) return [];
-      const response = await apiRequest('GET', `/api/device-issues/${watchDeviceType}`);
-      return await response.json();
+      try {
+        const response = await apiRequest('GET', `/api/device-issues/${watchDeviceType}`);
+        
+        // Prüfe den Content-Type vor dem JSON-Parsing
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Unerwarteter Content-Type für device-issues:', contentType);
+          return [];
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Fehler beim Laden der Gerätefehler:', error);
+        return [];
+      }
     },
   });
 
@@ -312,8 +325,21 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     queryKey: ['/api/model-series', { brandId: selectedBrandId }],
     enabled: !!selectedBrandId,
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/model-series?brandId=${selectedBrandId}`);
-      return await res.json();
+      try {
+        const res = await apiRequest('GET', `/api/model-series?brandId=${selectedBrandId}`);
+        
+        // Prüfe den Content-Type vor dem JSON-Parsing
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Unerwarteter Content-Type für model-series:', contentType);
+          return [];
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error('Fehler beim Laden der Modellreihen:', error);
+        return [];
+      }
     },
     staleTime: 30000, // 30 Sekunden Caching
   });
@@ -366,8 +392,21 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     queryKey: ['/api/models', { modelSeriesId: selectedModelSeriesId }],
     enabled: !!selectedModelSeriesId,
     queryFn: async () => {
-      const res = await apiRequest('GET', `/api/models?modelSeriesId=${selectedModelSeriesId}`);
-      return await res.json();
+      try {
+        const res = await apiRequest('GET', `/api/models?modelSeriesId=${selectedModelSeriesId}`);
+        
+        // Prüfe den Content-Type vor dem JSON-Parsing
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Unerwarteter Content-Type für models:', contentType);
+          return [];
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error('Fehler beim Laden der Modelle:', error);
+        return [];
+      }
     },
     staleTime: 30000, // 30 Sekunden Caching
   });
