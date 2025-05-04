@@ -154,13 +154,29 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Öffne das PDF in einem neuen Tab
-      window.open(pdf.output('bloburl'), '_blank');
+      // Öffne das PDF in einem neuen Tab und starte den Druckdialog automatisch
+      const pdfBlob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(blobUrl, '_blank');
       
-      toast({
-        title: "PDF bereit",
-        description: "Das PDF wurde erstellt und kann nun ausgedruckt werden.",
-      });
+      if (printWindow) {
+        // Füge Skript hinzu, um den Druckdialog zu starten
+        printWindow.addEventListener('load', function() {
+          setTimeout(() => {
+            printWindow.print();
+          }, 1000);
+        });
+        
+        toast({
+          title: "PDF bereit zum Drucken",
+          description: "Das PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
+        });
+      } else {
+        toast({
+          title: "PDF bereit",
+          description: "Das PDF wurde erstellt. Bitte aktiviere Pop-ups, falls kein neues Fenster geöffnet wurde.",
+        });
+      }
       
     } catch (err) {
       console.error('Fehler beim Vorbereiten des PDFs:', err);
