@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { apiRequest } from '@/lib/queryClient';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -42,43 +41,17 @@ interface SuperadminStats {
 export default function SuperadminDashboardTab() {
   const { toast } = useToast();
   
-  const { data: stats, isLoading, error } = useQuery<SuperadminStats>({
-    queryKey: ['/api/superadmin/stats'],
-    queryFn: async () => {
-      try {
-        const res = await fetch('/api/superadmin/stats');
-
-        const text = await res.text();
-
-        if (!res.ok) {
-          console.error(`Serverfehler ${res.status}:`, text);
-          throw new Error(`Serverfehler: ${res.status}`);
-        }
-
-        const contentType = res.headers.get('content-type') || '';
-
-        if (!contentType.includes('application/json')) {
-          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
-          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
-        }
-
-        return JSON.parse(text);
-      } catch (err) {
-        console.error('❌ Fehler beim Laden der Statistikdaten:', err);
-        throw err;
-      }
-    }
+  const { data: stats, isLoading, error } = useQuery<SuperadminStats>({ 
+    queryKey: ["/api/superadmin/stats"],
   });
 
-  useEffect(() => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Fehler beim Laden der Statistiken",
-        description: error.message,
-      });
-    }
-  }, [error, toast]);
+  if (error) {
+    toast({
+      variant: "destructive",
+      title: "Fehler beim Laden der Statistiken",
+      description: error.message,
+    });
+  }
 
   // Daten für das Paket-Nutzungsdiagramm vorbereiten
   const packageUsageData = stats?.packages || [];
