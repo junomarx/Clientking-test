@@ -1742,7 +1742,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // E-Mail-Vorlagen API-Endpunkte
   app.get("/api/email-templates", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const templates = await storage.getAllEmailTemplates();
+      // Benutzer-ID aus der Authentifizierungsinformation extrahieren
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
+      const templates = await storage.getAllEmailTemplates(userId);
       return res.status(200).json(templates);
     } catch (error) {
       console.error("Error retrieving email templates:", error);
@@ -1757,7 +1765,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid template ID" });
       }
       
-      const template = await storage.getEmailTemplate(id);
+      // Benutzer-ID aus der Authentifizierungsinformation extrahieren
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
+      const template = await storage.getEmailTemplate(id, userId);
       if (!template) {
         return res.status(404).json({ error: "Email template not found" });
       }
@@ -1777,6 +1793,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Name, subject, and body are required" });
       }
       
+      // Benutzer-ID aus der Authentifizierungsinformation extrahieren
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
       // Verarbeitung der Variablen: Konvertiere String zu Array, wenn es als String kommt
       let variablesArray: string[] = [];
       if (variables) {
@@ -1794,7 +1817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subject,
         body,
         variables: variablesArray
-      });
+      }, userId); // userId übergeben für shop-basierte Zuordnung
       
       return res.status(201).json(newTemplate);
     } catch (error) {
@@ -1810,7 +1833,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid template ID" });
       }
       
-      const template = await storage.getEmailTemplate(id);
+      // Benutzer-ID aus der Authentifizierungsinformation extrahieren
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
+      const template = await storage.getEmailTemplate(id, userId);
       if (!template) {
         return res.status(404).json({ error: "Email template not found" });
       }
@@ -1831,7 +1862,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.variables = variablesArray;
       }
       
-      const updatedTemplate = await storage.updateEmailTemplate(id, updateData);
+      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
+      const updatedTemplate = await storage.updateEmailTemplate(id, updateData, userId);
       return res.status(200).json(updatedTemplate);
     } catch (error) {
       console.error("Error updating email template:", error);
@@ -1846,7 +1878,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid template ID" });
       }
       
-      const success = await storage.deleteEmailTemplate(id);
+      // Benutzer-ID aus der Authentifizierungsinformation extrahieren
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
+      const success = await storage.deleteEmailTemplate(id, userId);
       if (!success) {
         return res.status(404).json({ error: "Email template not found or could not be deleted" });
       }

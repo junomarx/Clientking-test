@@ -8,23 +8,24 @@ export async function getAllEmailTemplates(userId?: number): Promise<EmailTempla
   return await emailService.getAllEmailTemplates(userId);
 }
 
-export async function getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
-  return await emailService.getEmailTemplate(id);
+export async function getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined> {
+  return await emailService.getEmailTemplate(id, userId);
 }
 
-export async function createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
-  return await emailService.createEmailTemplate(template);
+export async function createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate> {
+  return await emailService.createEmailTemplate(template, userId);
 }
 
 export async function updateEmailTemplate(
   id: number, 
-  template: Partial<InsertEmailTemplate>
+  template: Partial<InsertEmailTemplate>,
+  userId?: number
 ): Promise<EmailTemplate | undefined> {
-  return await emailService.updateEmailTemplate(id, template);
+  return await emailService.updateEmailTemplate(id, template, userId);
 }
 
-export async function deleteEmailTemplate(id: number): Promise<boolean> {
-  return await emailService.deleteEmailTemplate(id);
+export async function deleteEmailTemplate(id: number, userId?: number): Promise<boolean> {
+  return await emailService.deleteEmailTemplate(id, userId);
 }
 
 // E-Mail-Versand mit Vorlagenverarbeitung
