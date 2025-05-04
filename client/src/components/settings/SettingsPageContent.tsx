@@ -282,6 +282,13 @@ export function SettingsPageContent() {
         setLogoPreview(dataUrl);
         form.setValue('logoImage', dataUrl);
         console.log('Logo preview set and form value updated');
+        
+        // Sofort die Einstellungen mit dem neuen Logo speichern
+        const currentFormData = form.getValues();
+        updateMutation.mutate({
+          ...currentFormData,
+          logoImage: dataUrl
+        });
       }
     };
     reader.onerror = () => {
