@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, doublePrecision, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -88,6 +88,42 @@ export type Repair = typeof repairs.$inferSelect;
 export type InsertRepair = z.infer<typeof insertRepairSchema>;
 
 // Define the user schema as it's required by the template
+// Paket-Tabelle (packages) für das neue Paket-System
+export const packages = pgTable("packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  priceMonthly: doublePrecision("price_monthly").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Paket-Features-Tabelle (package_features) für die Zuordnung von Features zu Paketen
+export const packageFeatures = pgTable("package_features", {
+  packageId: integer("package_id").notNull().references(() => packages.id),
+  feature: text("feature").notNull(),
+  // Zusammengesetzer Primary Key aus packageId und feature
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.packageId, table.feature] })
+  };
+});
+
+// Schemas für die Pakete
+export const insertPackageSchema = createInsertSchema(packages).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertPackageFeatureSchema = createInsertSchema(packageFeatures);
+
+// Types
+export type Package = typeof packages.$inferSelect;
+export type InsertPackage = z.infer<typeof insertPackageSchema>;
+
+export type PackageFeature = typeof packageFeatures.$inferSelect;
+export type InsertPackageFeature = z.infer<typeof insertPackageFeatureSchema>;
+
+// Für Legacy-Unterstützung beibehalten wir diese temporär:
 // Preispakete als enum für bessere Typsicherheit
 export const pricingPlans = [
   "basic",
@@ -104,7 +140,11 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
   isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
-  pricingPlan: text("pricing_plan").default("basic").notNull(), // Preispaket: basic, professional, enterprise
+  // Für Abwärtskompatibilität während der Migration
+  pricingPlan: text("pricing_plan").default("basic"),      // Wird ersetzt durch packageId
+  featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen (wird auslaufen)
+  // Neu: Fremdschlüssel-Referenz zu einem Paket
+  packageId: integer("package_id").references(() => packages.id),
   shopId: integer("shop_id").default(1),                   // Shop-ID für Mandantentrennung
   companyName: text("company_name"),                       // Firmenname
   companyAddress: text("company_address"),                 // Firmenadresse
@@ -114,7 +154,6 @@ export const users = pgTable("users", {
   resetToken: text("reset_token"),                         // Token für Passwort-Zurücksetzung
   resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  featureOverrides: jsonb("feature_overrides"),            // Individuelle Feature-Freischaltungen/Sperren als JSON
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -260,6 +299,14 @@ export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
 // Beziehungen für repairs zu emailHistory
 export const repairsRelations = relations(repairs, ({ many }) => ({
   emailHistory: many(emailHistory),
+}));
+
+// Beziehungen zwischen Benutzer und Paket definieren
+export const userRelations = relations(users, ({ one }) => ({
+  package: one(packages, {
+    fields: [users.packageId],
+    references: [packages.id],
+  }),
 }));
 
 // Benutzerspezifische Gerätearten
