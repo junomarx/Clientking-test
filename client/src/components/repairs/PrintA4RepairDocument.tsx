@@ -48,9 +48,17 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
         const response = await fetch(`/api/repairs/${repairId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Accept': 'application/json'
           }
         });
         if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        // Überprüfen des Content-Types
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
+        }
+        
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
@@ -59,6 +67,16 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     },
     enabled: !!repairId && open,
   });
+  
+  // Debug-Ausgabe für Fehlersuche
+  useEffect(() => {
+    if (repairId && open) {
+      console.log(`Versuche Reparatur #${repairId} für A4-Dokument zu laden`);
+    }
+    if (repair) {
+      console.log(`Reparatur #${repairId} für A4-Dokument geladen:`, repair);
+    }
+  }, [repairId, open, repair]);
 
   // Lade Kundendaten
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
@@ -69,9 +87,17 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
         const response = await fetch(`/api/customers/${repair.customerId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Accept': 'application/json'
           }
         });
         if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        
+        // Überprüfen des Content-Types
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
+        }
+        
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Kundendaten:", err);
@@ -80,6 +106,16 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     },
     enabled: !!repair?.customerId && open,
   });
+  
+  // Debug-Ausgabe für Fehlersuche
+  useEffect(() => {
+    if (repair?.customerId && open) {
+      console.log(`Versuche Kunde #${repair.customerId} für A4-Dokument zu laden`);
+    }
+    if (customer) {
+      console.log(`Kunde ${customer.firstName} ${customer.lastName} für A4-Dokument geladen:`, customer);
+    }
+  }, [repair?.customerId, open, customer]);
 
   // Funktion zum Drucken des Dokuments
   const handlePrint = () => {

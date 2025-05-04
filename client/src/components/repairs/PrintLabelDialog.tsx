@@ -53,9 +53,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         const response = await fetch(`/api/repairs/${repairId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Accept': 'application/json'
           }
         });
         if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        // Überprüfen des Content-Types
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
+        }
+        
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
@@ -64,6 +72,16 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     },
     enabled: !!repairId && open,
   });
+  
+  // Debug-Ausgabe für Fehlersuche
+  useEffect(() => {
+    if (repairId && open) {
+      console.log(`Versuche Reparatur #${repairId} für Etikett zu laden`);
+    }
+    if (repair) {
+      console.log(`Reparatur #${repairId} für Etikett geladen:`, repair);
+    }
+  }, [repairId, open, repair]);
 
   // Lade Kundendaten wenn Reparatur geladen ist
   const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
@@ -74,9 +92,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         const response = await fetch(`/api/customers/${repair.customerId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Accept': 'application/json'
           }
         });
         if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        
+        // Überprüfen des Content-Types
+        const contentType = response.headers.get('Content-Type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
+        }
+        
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Kundendaten:", err);
@@ -85,6 +111,16 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     },
     enabled: !!repair?.customerId && open,
   });
+  
+  // Debug-Ausgabe für Fehlersuche
+  useEffect(() => {
+    if (repair?.customerId && open) {
+      console.log(`Versuche Kunde #${repair.customerId} für Etikett zu laden`);
+    }
+    if (customer) {
+      console.log(`Kunde ${customer.firstName} ${customer.lastName} für Etikett geladen:`, customer);
+    }
+  }, [repair?.customerId, open, customer]);
 
   // Lade Unternehmenseinstellungen
   const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
