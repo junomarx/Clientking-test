@@ -58,6 +58,10 @@ export function BonReceipt80mm({
             src={firmenlogo} 
             alt={firmenname || "Firmenlogo"}
             style={{maxWidth: '80%', height: 'auto', display: 'block', margin: '0 auto'}}
+            onError={(e) => {
+              console.error('Fehler beim Laden des Logos in der 80mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
         )}
       </div>
@@ -130,6 +134,10 @@ export function BonReceipt80mm({
             src={signatur_dropoff} 
             alt="Unterschrift bei Abgabe" 
             style={{ maxWidth: "80%", maxHeight: "30mm", margin: "0 auto 5px auto", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abgabe-Unterschrift in der 80mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <div style={{ borderTop: "1px solid #000", width: "100%", margin: "3px 0 8px" }}></div>
           {kundenname}<br />
@@ -145,6 +153,10 @@ export function BonReceipt80mm({
             src={signatur_pickup} 
             alt="Unterschrift bei Abholung" 
             style={{ maxWidth: "80%", maxHeight: "30mm", margin: "0 auto 5px auto", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abholungs-Unterschrift in der 80mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <div style={{ borderTop: "1px solid #000", width: "100%", margin: "3px 0 8px" }}></div>
           {kundenname}<br />

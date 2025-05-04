@@ -53,7 +53,15 @@ export function BonReceipt58mm({
     }}>
       <div style={{ textAlign: "center", marginBottom: "5px" }}>
         {firmenlogo && (
-          <img src={firmenlogo} alt="Logo" style={{ maxWidth: "90%", height: "auto" }} />
+          <img 
+            src={firmenlogo} 
+            alt="Logo" 
+            style={{ maxWidth: "90%", height: "auto" }} 
+            onError={(e) => {
+              console.error('Fehler beim Laden des Logos in der 58mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
         )}
       </div>
 
@@ -117,6 +125,10 @@ export function BonReceipt58mm({
             src={signatur_dropoff} 
             alt="Unterschrift bei Abgabe" 
             style={{ maxWidth: "80%", maxHeight: "25mm", margin: "0 auto 5px auto", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abgabe-Unterschrift in der 58mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <div style={{ borderTop: "1px solid #000", width: "100%", margin: "2px 0 6px" }}></div>
           {kundenname}<br />
@@ -131,6 +143,10 @@ export function BonReceipt58mm({
             src={signatur_pickup} 
             alt="Unterschrift bei Abholung" 
             style={{ maxWidth: "80%", maxHeight: "25mm", margin: "0 auto 5px auto", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abholungs-Unterschrift in der 58mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <div style={{ borderTop: "1px solid #000", width: "100%", margin: "2px 0 6px" }}></div>
           {kundenname}<br />
