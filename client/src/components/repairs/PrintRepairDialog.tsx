@@ -132,20 +132,111 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               }
               
               body {
-                font-family: 'Courier New', monospace; /* Bessere Schrift für Thermodruck */
-                padding: 0;
-                margin: 0;
-                color: black;
-                font-size: ${settings?.receiptWidth === '58mm' ? '9pt' : '10pt'}; /* Angepasste Schriftgröße je nach Bonbreite */
+                font-family: Arial, sans-serif;
+                font-size: 10px;
                 width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
+                margin: 0;
+                padding: 10px;
+                color: #000;
+              }
+              
+              .logo {
+                text-align: center;
+                margin-bottom: 5px;
+              }
+              
+              .logo-img {
+                max-width: 80%;
+                height: auto;
+              }
+              
+              .company,
+              .top-info {
+                text-align: center;
+              }
+              
+              .company {
+                margin-bottom: 10px;
+              }
+              
+              .top-info {
+                margin: 10px 0 15px;
+              }
+              
+              .headline {
+                font-weight: bold;
+                font-size: 15px;
+                margin-bottom: 3px;
+              }
+              
+              .auftragsnummer {
+                font-weight: bold;
+                font-size: 13px;
+              }
+              
+              .section {
+                margin-bottom: 16px;
+              }
+              
+              .field {
+                margin-bottom: 4px;
+              }
+              
+              .kundenname,
+              .geraetinfo {
+                font-size: 13px;
+                font-weight: bold;
+                margin-bottom: 2px;
+              }
+              
+              .schaden-title {
+                font-weight: bold;
+                margin-top: 8px;
+                margin-bottom: 2px;
+              }
+              
+              .preis-label {
+                font-weight: bold;
+                font-size: 11px;
+                margin-top: 10px;
+                margin-bottom: 2px;
+              }
+              
+              .signature-box {
+                margin-top: 20px;
+                text-align: center;
+              }
+              
+              .signature-title {
+                font-weight: bold;
+                margin-bottom: 6px;
+              }
+              
+              .signature-line {
+                margin-top: 25px;
+                border-top: 1px solid #000;
+                width: 100%;
+              }
+              
+              .terms-box {
+                border: 1px solid #000;
+                padding: 8px;
+                font-size: 9px;
+                line-height: 1.4;
+              }
+              
+              .terms-title {
+                text-align: center;
+                font-weight: bold;
+                font-size: 11px;
+                margin-bottom: 6px;
               }
               
               .print-container {
                 width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
                 max-width: ${settings?.receiptWidth || '80mm'};
                 margin: 0 auto;
-                padding: 5mm 2mm;
-                padding-bottom: 15mm; /* Mehr Platz am Ende des Bons */
+                padding: 5px;
               }
               
               .print-header {
@@ -412,160 +503,97 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           <>
             <div className="border rounded-md p-4 max-h-[60vh] overflow-auto bg-gray-50 shadow-inner">
               <div ref={printRef} className="bg-white p-6 rounded-md shadow-sm">
-                {/* Logo und Unternehmensdaten */}
-                <div className="print-header mb-4">
-                  <div className="flex flex-col items-center justify-center">
-                    {/* Logo anzeigen, wenn vorhanden */}
-                    {businessSettings?.logoImage && (
-                      <div className="mb-2">
-                        <img 
-                          src={businessSettings.logoImage} 
-                          alt={businessSettings.businessName || "Firmenlogo"}
-                          className="max-h-16 max-w-[200px] object-contain"
-                        />
-                      </div>
-                    )}
-                    
-                    <h2 className="text-xl font-bold">{businessSettings?.businessName || "Handyshop Verwaltung"}</h2>
-                    <p className="text-xs">
-                      {businessSettings ? (
-                        `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}`
-                      ) : (
-                        "Adresse nicht verfügbar"
-                      )}
-                    </p>
-                    {businessSettings?.phone && <p className="text-xs">Tel: {businessSettings.phone}</p>}
-                    {businessSettings?.email && <p className="text-xs">E-Mail: {businessSettings.email}</p>}
-                    {businessSettings?.website && <p className="text-xs">{businessSettings.website}</p>}
+                {/* Logo */}
+                <div className="logo">
+                  {businessSettings?.logoImage && (
+                    <img 
+                      src={businessSettings.logoImage} 
+                      alt={businessSettings.businessName || "Firmenlogo"}
+                      className="logo-img"
+                    />
+                  )}
+                </div>
+
+                {/* Firmeninfo */}
+                <div className="company">
+                  <strong>{businessSettings?.businessName || "Handyshop Verwaltung"}</strong><br />
+                  {businessSettings?.streetAddress}, {businessSettings?.zipCode} {businessSettings?.city}<br />
+                  {businessSettings?.phone}
+                </div>
+
+                {/* Abholschein + Auftragsnummer */}
+                <div className="top-info">
+                  <div className="headline">Abholschein</div>
+                  <div className="auftragsnummer">{repair?.orderCode || `#${repair?.id}`}</div>
+                  <div>{repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}</div>
+                </div>
+
+                {/* Kunde */}
+                <div className="section">
+                  <div className="kundenname">{customer?.firstName} {customer?.lastName}</div>
+                  <div className="field">{customer?.phone}</div>
+                  <div className="field">{customer?.email}</div>
+                </div>
+
+                {/* Gerät */}
+                <div className="section">
+                  <div className="geraetinfo">{repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''} {repair?.model}</div>
+
+                  <div className="schaden-title">Schaden/Fehler</div>
+                  <div className="field">{repair?.issue}</div>
+
+                  {repair?.estimatedCost && (
+                    <>
+                      <div className="preis-label">Preis</div>
+                      <div className="field">{repair.estimatedCost} €</div>
+                    </>
+                  )}
+                </div>
+
+                {/* Reparaturbedingungen */}
+                <div className="section">
+                  <div className="terms-box">
+                    <div className="terms-title">Reparaturbedingungen</div>
+                    1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
+                    2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
+                    3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
+                    4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
+                    5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
+                    6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
                   </div>
                 </div>
-                
-                {/* Datum */}
-                <div className="text-sm text-center mb-2">
-                  <p>
-                    <span className="font-medium">Datum:</span> 
-                    {repair && format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}
-                  </p>
-                </div>
-                
-                {/* Reparaturauftrag Nummer */}
-                <div className="print-section mb-3 text-center">
-                  <div className="flex items-center justify-center">
-                    <h3 className="font-semibold text-lg">Reparaturauftrag</h3>
-                    <span className="receipt-number">{repair?.orderCode || `#${repair?.id}`}</span>
-                  </div>
-                </div>
-                
-                {/* Kundendaten */}
-                <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1 text-center">Kundendaten</h3>
-                  <div className="grid grid-cols-1 gap-1 text-sm text-center">
-                    <p><span className="font-medium">Name:</span> {customer?.firstName} {customer?.lastName}</p>
-                    <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
-                    {customer?.email && <p><span className="font-medium">E-Mail:</span> {customer?.email}</p>}
-                    {(customer?.address || customer?.zipCode || customer?.city) && (
-                      <p>
-                        <span className="font-medium">Adresse:</span> 
-                        {customer?.address}{customer?.address && (customer?.zipCode || customer?.city) ? ', ' : ''}
-                        {customer?.zipCode} {customer?.city}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Gerätedaten - ohne Typ */}
-                <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1 text-center">Gerätedaten</h3>
-                  <div className="grid grid-cols-1 gap-1 text-sm text-center">
-                    <p><span className="font-medium">Hersteller:</span> {repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}</p>
-                    <p><span className="font-medium">Modell:</span> {repair?.model}</p>
-                    {repair?.serialNumber && <p><span className="font-medium">Seriennummer:</span> {repair.serialNumber}</p>}
-                  </div>
-                </div>
-                
-                {/* Reparaturdetails */}
-                <div className="print-section mb-3">
-                  <h3 className="font-semibold mb-1 text-center">Reparaturdetails</h3>
-                  <div className="grid grid-cols-1 gap-2 text-sm text-center">
-                    <div className="highlight-box">
-                      <p>
-                        <span className="font-medium">Problem:</span> 
-                        <span className="whitespace-pre-wrap">{repair?.issue ? repair.issue.split(',').join('\n') : ''}</span>
-                      </p>
-                    </div>
-                    
-                    {repair?.estimatedCost && (
-                      <div className="highlight-box">
-                        <p><span className="font-medium">Preis:</span> {repair.estimatedCost} €</p>
-                      </div>
-                    )}
-                    
-                    {repair?.depositAmount && (
-                      <div className="highlight-box" style={{borderWidth: '0.5mm'}}>
-                        <p className="font-bold" style={{textDecoration: 'underline'}}>WICHTIG: Gerät beim Kunden / bei Kundin!</p>
-                        <p><span className="font-medium">Anzahlung:</span> {repair.depositAmount} €</p>
-                      </div>
-                    )}
-                    
-                    {repair?.notes && (
-                      <div className="highlight-box">
-                        <p><span className="font-medium">Notizen:</span> {repair.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Entfernt: Status wird nicht mehr angezeigt */}
-                
-                {/* Abgabe-Unterschrift (Dropoff) anzeigen, wenn vorhanden */}
+
+                {/* Unterschrift Abgabe */}
                 {repair?.dropoffSignature && (
-                  <div className="print-section mb-3 border-t">
-                    <h3 className="font-semibold mb-2 mt-2 text-center">Unterschrift bei Geräteabgabe</h3>
-                    <div className="border" style={{padding: '2mm'}}>
+                  <div className="signature-box">
+                    <div className="signature-title">Reparaturauftrag erteilt</div>
+                    <div className="signature-line">
                       <img 
                         src={repair.dropoffSignature} 
                         alt="Unterschrift bei Abgabe" 
                         style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
                       />
                     </div>
-                    {repair.dropoffSignedAt && (
-                      <div className="text-center text-xs mt-2">
-                        Unterschrieben am {format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy HH:mm', { locale: de })} Uhr
-                      </div>
-                    )}
-                    <div className="text-xs mt-3 text-center">
-                      <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich mit den Reparaturbedingungen einverstanden bin und die oben genannten Angaben zu meinem Gerät korrekt sind.</p>
-                    </div>
+                    {customer?.firstName} {customer?.lastName}<br />
+                    {repair.dropoffSignedAt && format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy', { locale: de })}
                   </div>
                 )}
-                
-                {/* Abholungs-Unterschrift (Pickup) anzeigen, wenn vorhanden */}
+
+                {/* Unterschrift Abholung */}
                 {repair?.pickupSignature && (
-                  <div className="print-section mb-3 border-t">
-                    <h3 className="font-semibold mb-2 mt-2 text-center">Unterschrift bei Geräteabholung</h3>
-                    <div className="border" style={{padding: '2mm'}}>
+                  <div className="signature-box">
+                    <div className="signature-title">Gerät abgeholt</div>
+                    <div className="signature-line">
                       <img 
                         src={repair.pickupSignature} 
                         alt="Unterschrift bei Abholung" 
                         style={{maxHeight: '20mm', margin: '0 auto', display: 'block'}}
                       />
                     </div>
-                    {repair.pickupSignedAt && (
-                      <div className="text-center text-xs mt-2">
-                        Unterschrieben am {format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy HH:mm', { locale: de })} Uhr
-                      </div>
-                    )}
-                    <div className="text-xs mt-3 text-center">
-                      <p className="font-medium">Hiermit bestätige ich, {customer?.firstName} {customer?.lastName}, dass ich das reparierte Gerät in einwandfreiem Zustand erhalten habe.</p>
-                    </div>
+                    {customer?.firstName} {customer?.lastName}<br />
+                    {repair.pickupSignedAt && format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de })}
                   </div>
                 )}
-                
-                {/* Dankeschön und extra Platz am Ende */}
-                <div className="text-center mt-8">
-                  <p className="text-sm">Vielen Dank für Ihren Auftrag!</p>
-                  <div style={{ height: '10mm' }}></div>
-                </div>
               </div>
             </div>
             
