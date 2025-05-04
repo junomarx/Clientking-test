@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
+import cors from "cors";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
@@ -12,6 +13,15 @@ import { addSuperadminColumn } from "./add-superadmin";
 import { addGlobalDeviceTables } from "./add-global-device-tables";
 
 const app = express();
+
+// Konfiguriere CORS, um Anfragen vom Vite Dev Server zu erlauben
+app.use(cors({
+  origin: '*', // Erlaube alle Ursprünge im Entwicklungsmodus
+  methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-ID']
+}));
+
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
 app.use(express.json({ limit: '10mb' }));
 // Erhöhe die maximale Größe für URL-codierte Anfragen auf 10 MB
