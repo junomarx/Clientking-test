@@ -465,8 +465,14 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                         size="sm" 
                         type="button"
                         onClick={() => {
+                          console.log('Upload-Button wurde geklickt');
+                          console.log('fileInputRef exists:', !!fileInputRef.current);
                           if (fileInputRef.current) {
+                            console.log('Attempting to click the file input');
                             fileInputRef.current.click();
+                            console.log('File input clicked');
+                          } else {
+                            console.error('File input reference is null');
                           }
                         }}
                       >
