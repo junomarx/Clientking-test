@@ -614,8 +614,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Handler für Formular-Submission
   const onSubmit = async (data: OrderFormValues) => {
     try {
+      let customerId = selectedCustomerId;
+      
       // Wenn kein Kunde ausgewählt wurde, erstellen wir einen neuen Kunden
-      if (!selectedCustomerId) {
+      if (!customerId) {
         const customerData = {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -626,13 +628,26 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           city: data.city || null
         };
         
-        // Kunden erstellen
-        await createCustomerMutation.mutateAsync(customerData);
+        // Kunden erstellen und ID sichern
+        const newCustomer = await createCustomerMutation.mutateAsync(customerData);
+        customerId = newCustomer.id;
+        console.log("Neuer Kunde erstellt mit ID:", customerId);
       }
       
       // Jetzt wird der Auftrag erstellt mit der Kunden-ID
+      // Stellen wir sicher, dass wir eine gültige customerId haben
+      if (!customerId) {
+        console.error("Konnte keinen Kunden finden oder erstellen");
+        toast({
+          title: "Fehler",
+          description: "Es konnte kein Kunde für den Auftrag gefunden oder erstellt werden.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const repairData = {
-        customerId: selectedCustomerId,
+        customerId: customerId,
         deviceType: data.deviceType,
         brand: data.brand,
         modelSeries: data.modelSeries || null,
@@ -644,6 +659,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         status: data.status || 'eingegangen',
         notes: data.notes || null
       };
+      
+      console.log("Sende Reparaturdaten mit Kunden-ID:", repairData.customerId);
       
       // Speichern des Gerätehierarchie mit der Datenbank-API
       // aber nur wenn der Benutzer Admin ist (Bugi, ID 3)
