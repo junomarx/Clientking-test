@@ -276,7 +276,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
           <DialogTitle className="text-xl font-semibold">DIN A4 Reparaturauftrag #{repairId}</DialogTitle>
         </DialogHeader>
         
-        {printReady && repair && customer && businessSettings && (
+        {printReady && repair && customer && (
           <>
             {/* Druckinhalt - Neue DIN A4 Vorlage */}
             <div id="a4-print-content" className="bg-white text-black p-4 rounded-md">
@@ -295,7 +295,24 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               {/* Header mit Logo und Firmendaten */}
               <div className="flex justify-between items-start mb-10">
                 <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
-                  <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
+                  {businessSettings.logoImage ? (
+                    <img 
+                      src={businessSettings.logoImage} 
+                      alt={businessSettings.businessName}
+                      className="max-h-[60px] max-w-[180px] object-contain"
+                      onError={(e) => {
+                        console.error('Fehler beim Laden des Logos in A4:', e);
+                        // Bei Fehler Platzhaltertext anzeigen
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          e.currentTarget.parentElement.innerHTML = '<span class="text-gray-400 italic">Logo konnte nicht geladen werden</span>';
+                        }
+                      }}
+                      loading="eager" // Prioritäres Laden
+                    />
+                  ) : (
+                    <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
+                  )}
                 </div>
                 
                 <div className="text-right text-sm text-gray-600">
