@@ -421,21 +421,17 @@ export function BusinessSettingsDialogNew({ open, onClose, initialActiveTab = "u
                     {/* Upload Button */}
                     <div className="flex flex-col gap-3">
                       <input
-                        ref={fileInputRef}
                         type="file"
                         accept="image/png,image/jpeg,image/svg+xml,image/gif,image/webp"
                         onChange={handleLogoUpload}
-                        className="hidden"
+                        className="block w-full text-sm text-slate-500
+                                  file:mr-4 file:py-2 file:px-4
+                                  file:rounded-md file:border-0
+                                  file:text-sm file:font-semibold
+                                  file:bg-primary file:text-white
+                                  hover:file:bg-primary/80"
                         id="logo-upload"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="gap-2"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4" /> Logo hochladen
-                      </Button>
                       
                       {/* Fehler Anzeige */}
                       {logoError && (
