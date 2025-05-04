@@ -39,6 +39,9 @@ setupAuth(app);
 // Statische Dateien (für Logo-Uploads und andere Dateien)
 app.use('/uploads', express.static(path.join(__dirname, '../static/uploads')));
 
+// HTML-Demo-Seite für Logo-Upload
+app.use('/logo-demo', express.static(path.join(__dirname, '../static')));
+
 // Logo-Upload-Routen registrieren
 registerLogoRoutes(app);
 
