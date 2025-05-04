@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   Card, 
@@ -89,12 +89,33 @@ export default function SuperadminUsersTab() {
   // Benutzer abrufen
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery<User[]>({ 
     queryKey: ["/api/superadmin/users"],
+    queryFn: async () => {
+      const res = await fetch('/api/superadmin/users');
+      if (!res.ok) throw new Error('API-Fehler beim Laden der Benutzer');
+      return res.json();
+    },
   });
 
   // Pakete abrufen
-  const { data: packages, isLoading: isLoadingPackages } = useQuery<Package[]>({ 
+  const { data: packages, isLoading: isLoadingPackages, error: packagesError } = useQuery<Package[]>({ 
     queryKey: ["/api/superadmin/packages"],
+    queryFn: async () => {
+      const res = await fetch('/api/superadmin/packages');
+      if (!res.ok) throw new Error('API-Fehler beim Laden der Pakete');
+      return res.json();
+    },
   });
+  
+  // Fehlerbehandlung für Pakete
+  useEffect(() => {
+    if (packagesError) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Pakete",
+        description: packagesError.message,
+      });
+    }
+  }, [packagesError, toast]);
 
   // Mutation zum Aktivieren/Deaktivieren eines Benutzers
   const toggleActivationMutation = useMutation({
@@ -203,13 +224,16 @@ export default function SuperadminUsersTab() {
     }
   };
 
-  if (usersError) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Benutzer",
-      description: usersError.message,
-    });
-  }
+  // Fehlerbehandlung mit useEffect anstatt im Render-Flow
+  useEffect(() => {
+    if (usersError) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Benutzer",
+        description: usersError.message,
+      });
+    }
+  }, [usersError, toast]);
 
   return (
     <div className="space-y-6">
