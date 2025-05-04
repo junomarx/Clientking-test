@@ -39,16 +39,10 @@ export function Header({ variant = "landing" }: HeaderProps) {
   return (
     <header className="w-full bg-white shadow-sm py-4 px-4 md:px-6">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo and App name */}
+        {/* Logo */}
         <Link href="/">
           <div className="flex items-center cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-blue-500 flex items-center justify-center mr-3">
-              <Smartphone className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl text-gray-900">Handyshop</h1>
-              <p className="text-xs text-gray-500">Verwaltung</p>
-            </div>
+            <img src="/assets/ClientKing_Logo.png" alt="ClientKing Logo" className="h-12" />
           </div>
         </Link>
 
