@@ -96,7 +96,7 @@ export function BonReceipt80mm({
 
         {preis && (
           <div>
-            <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>Preis</div>
+            <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>Reparaturkosten</div>
             <div>{preis}</div>
           </div>
         )}

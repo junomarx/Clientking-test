@@ -75,7 +75,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   });
 
   // Lade Unternehmenseinstellungen
-  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
+  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings | null>({
     queryKey: ['/api/business-settings'],
     queryFn: async () => {
       try {
@@ -192,7 +192,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
               <div ref={printRef} className="bg-white rounded-md shadow-sm">
                 {settings?.receiptWidth === '58mm' ? (
                   <BonReceipt58mm 
-                    firmenlogo={businessSettings?.logoImage}
+                    firmenlogo={businessSettings?.logoImage || undefined}
                     firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
                     firmenadresse={businessSettings?.streetAddress || ""}
                     firmenplz={businessSettings?.zipCode || ""}
@@ -201,19 +201,19 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     auftragsnummer={repair?.orderCode || `#${repair?.id}`}
                     datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                    kundentelefon={customer?.phone}
-                    kundenemail={customer?.email}
+                    kundentelefon={customer?.phone || undefined}
+                    kundenemail={customer?.email || undefined}
                     hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                    modell={repair?.model}
+                    modell={repair?.model || undefined}
                     problem={repair?.issue ? repair.issue : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                    signatur_dropoff={repair?.dropoffSignature}
-                    signatur_pickup={repair?.pickupSignature}
+                    signatur_dropoff={repair?.dropoffSignature || undefined}
+                    signatur_pickup={repair?.pickupSignature || undefined}
                     datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
                   />
                 ) : (
                   <BonReceipt80mm 
-                    firmenlogo={businessSettings?.logoImage}
+                    firmenlogo={businessSettings?.logoImage || undefined}
                     firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
                     firmenadresse={businessSettings?.streetAddress || ""}
                     firmenplz={businessSettings?.zipCode || ""}
@@ -222,14 +222,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     auftragsnummer={repair?.orderCode || `#${repair?.id}`}
                     datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                    kundentelefon={customer?.phone}
-                    kundenemail={customer?.email}
+                    kundentelefon={customer?.phone || undefined}
+                    kundenemail={customer?.email || undefined}
                     hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                    modell={repair?.model}
+                    modell={repair?.model || undefined}
                     problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                    signatur_dropoff={repair?.dropoffSignature}
-                    signatur_pickup={repair?.pickupSignature}
+                    signatur_dropoff={repair?.dropoffSignature || undefined}
+                    signatur_pickup={repair?.pickupSignature || undefined}
                     datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
                   />
                 )}

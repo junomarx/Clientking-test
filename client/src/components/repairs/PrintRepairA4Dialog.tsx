@@ -336,7 +336,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                     </div>
                   </div>
                   <div className="mb-4">
-                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Kosten</div>
+                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">REPARATURKOSTEN</div>
                     <div className="text-sm font-bold">
                       {repair.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : 'Auf Anfrage'}
                     </div>
