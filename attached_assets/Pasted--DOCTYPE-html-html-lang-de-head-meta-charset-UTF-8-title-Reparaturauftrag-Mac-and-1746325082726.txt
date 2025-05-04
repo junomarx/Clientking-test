@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Reparaturauftrag | Mac and PhoneDoc</title>
+  <style>
+    body {
+      font-family: 'Roboto', 'Open Sans', 'Arial', sans-serif;
+      font-size: 9pt;
+      width: 76mm; /* Etwas Rand lassen */
+      margin: 0 auto;
+      padding: 2mm;
+      color: #000;
+      line-height: 1.2;
+    }
+
+    /* Header mit Logo-Platzhalter */
+    .header {
+      text-align: center;
+      margin-bottom: 3mm;
+      padding-bottom: 2mm;
+      border-bottom: 0.5mm solid #000;
+    }
+    
+    .logo-placeholder {
+      width: 25mm;
+      height: 15mm;
+      border: 0.3mm solid #000;
+      margin: 0 auto 2mm auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7pt;
+    }
+    
+    .brand-name {
+      font-weight: bold;
+      font-size: 11pt;
+      text-transform: uppercase;
+      letter-spacing: 0.2mm;
+      margin-bottom: 2mm;
+    }
+
+    .company-info {
+      font-size: 7pt;
+      margin: 2mm 0;
+    }
+
+    /* Dokumententitel */
+    .document-title {
+      text-align: center;
+      font-size: 10pt;
+      font-weight: bold;
+      margin: 3mm 0;
+      letter-spacing: 0.5mm;
+      padding: 1.5mm 0;
+      background-color: #000;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    /* Auftragsinfo */
+    .order-info {
+      margin: 3mm 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .order-number {
+      font-weight: bold;
+      font-size: 9pt;
+    }
+
+    /* Datenblöcke */
+    .data-block {
+      margin-bottom: 4mm;
+    }
+    
+    .block-title {
+      font-weight: bold;
+      font-size: 9pt;
+      margin-bottom: 1mm;
+      border-bottom: 0.3mm solid #000;
+      padding-bottom: 0.5mm;
+      text-transform: uppercase;
+      letter-spacing: 0.2mm;
+    }
+    
+    .data-row {
+      margin-bottom: 1mm;
+    }
+    
+    .data-label {
+      font-weight: bold;
+      font-size: 8pt;
+      margin-right: 1mm;
+    }
+    
+    .data-value {
+      font-size: 8pt;
+    }
+
+    /* Trennlinien für visuelle Struktur */
+    .divider {
+      border-top: 0.2mm dashed #000;
+      margin: 3mm 0;
+    }
+
+    /* Bedingungen */
+    .conditions {
+      margin: 3mm 0;
+    }
+    
+    .conditions-box {
+      border: 0.3mm solid #000;
+      padding: 2mm;
+      margin: 2mm 0;
+    }
+    
+    .conditions ol {
+      margin: 0;
+      padding-left: 6mm;
+      font-size: 8pt;
+      line-height: 1.4;
+    }
+    
+    .conditions li {
+      margin-bottom: 1mm;
+    }
+
+    /* Unterschriftsfelder */
+    .signature-field {
+      margin-top: 5mm;
+    }
+    
+    .signature-line {
+      border-top: 0.2mm solid #000;
+      margin: 10mm 0 1mm 0;
+    }
+    
+    .signature-label {
+      font-size: 7pt;
+      text-align: center;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 7pt;
+      margin-top: 5mm;
+      border-top: 0.3mm solid #000;
+      padding-top: 2mm;
+    }
+
+    /* Technician Notes Section */
+    .tech-notes {
+      margin: 3mm 0;
+      border: 0.2mm dashed #000;
+      padding: 2mm;
+    }
+    
+    .tech-notes-title {
+      font-weight: bold;
+      font-size: 8pt;
+      text-align: center;
+      margin-bottom: 1mm;
+    }
+    
+    .notes-lines {
+      height: 12mm;
+    }
+
+    @media print {
+      @page {
+        size: 80mm auto;
+        margin: 0;
+      }
+      body {
+        padding: 2mm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header mit Logo -->
+  <div class="header">
+    <div class="logo-placeholder">LOGO</div>
+    <div class="brand-name">Mac & PhoneDoc</div>
+    <div class="company-info">
+      Amerlingstraße 19, 1060 Wien | +43 1 410 35 11
+    </div>
+  </div>
+
+  <!-- Dokumententitel -->
+  <div class="document-title">REPARATURAUFTRAG</div>
+
+  <!-- Auftragsinformationen -->
+  <div class="order-info">
+    <div class="order-number">#{{ auftragsnummer }}</div>
+    <div>{{ datum_dropoff }}</div>
+  </div>
+
+  <!-- Kundendaten -->
+  <div class="data-block">
+    <div class="block-title">KUNDENDATEN</div>
+    <div class="data-row">
+      <div class="data-value">{{ kundenname }}</div>
+    </div>
+    <div class="data-row">
+      <div class="data-value">{{ kundenadresse1 }}</div>
+    </div>
+    <div class="data-row">
+      <div class="data-value">{{ kundenadresse2 }}</div>
+    </div>
+  </div>
+
+  <!-- Gerätedaten -->
+  <div class="data-block">
+    <div class="block-title">GERÄT</div>
+    <div class="data-row">
+      <span class="data-label">Hersteller:</span>
+      <span class="data-value">{{ hersteller }}</span>
+    </div>
+    <div class="data-row">
+      <span class="data-label">Modell:</span>
+      <span class="data-value">{{ modell }}</span>
+    </div>
+    <div class="data-row">
+      <span class="data-label">S/N:</span>
+      <span class="data-value">{{ seriennummer }}</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Fehler/Schaden und Preis -->
+  <div class="data-block">
+    <div class="block-title">REPARATUR</div>
+    <div class="data-row">
+      <div class="data-label">Fehler/Schaden:</div>
+      <div class="data-value">{{ problem }}</div>
+    </div>
+    <div class="data-row">
+      <div class="data-label">Reparaturkosten:</div>
+      <div class="data-value">{{ preis }} €</div>
+    </div>
+  </div>
+
+  <!-- Reparaturbedingungen verbessert -->
+  <div class="conditions">
+    <div class="block-title">REPARATURBEDINGUNGEN</div>
+    <div class="conditions-box">
+      <ol>
+        <li>Keine Haftung für Datenverlust. Datensicherung liegt in der Verantwortung des Kunden.</li>
+        <li>Reparatur erfolgt mit hochwertigen Ersatzteilen.</li>
+        <li>6 Monate Gewährleistung auf durchgeführte Reparaturen.</li>
+        <li>Nicht abgeholte Geräte werden nach 60 Tagen kostenpflichtig entsorgt.</li>
+        <li>Mit Unterschrift werden diese Bedingungen anerkannt.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Unterschriftsfelder -->
+  <div class="signature-field">
+    <div class="signature-label">Auftrag erteilt am {{ datum_dropoff }}</div>
+    <div class="signature-line"></div>
+    <div class="signature-label">Unterschrift Kunde</div>
+  </div>
+
+  <div class="signature-field">
+    <div class="signature-label">Gerät abgeholt am {{ datum_pickup }}</div>
+    <div class="signature-line"></div>
+    <div class="signature-label">Unterschrift Kunde</div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    www.macandphonedoc.at
+  </div>
+
+</body>
+</html>
