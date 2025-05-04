@@ -545,6 +545,20 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
+    // Basisfilter erstellen abhängig von den angegebenen Suchparametern
+    let firstNameFilter = sql`1=1`; // Standard, wenn kein firstName angegeben
+    let lastNameFilter = sql`1=1`;  // Standard, wenn kein lastName angegeben
+    
+    // Wenn firstName angegeben, erstelle den entsprechenden Filter
+    if (firstName && firstName.length > 0) {
+      firstNameFilter = sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`;
+    }
+    
+    // Wenn lastName angegeben, erstelle den entsprechenden Filter
+    if (lastName && lastName.length > 0) {
+      lastNameFilter = sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`;
+    }
+    
     // Prüfen, ob der Benutzer Admin ist (bugi)
     if (currentUser.isAdmin) {
       // Admin kann alle Kunden suchen
@@ -553,9 +567,9 @@ export class DatabaseStorage implements IStorage {
         .from(customers)
         .where(
           and(
-            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
-            sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})` 
-          )
+            firstNameFilter,
+            lastNameFilter
+          ) as SQL<unknown>
         );
     }
     
@@ -566,10 +580,10 @@ export class DatabaseStorage implements IStorage {
       .from(customers)
       .where(
         and(
-          sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
-          sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`,
+          firstNameFilter,
+          lastNameFilter,
           eq(customers.shopId, shopIdValue)
-        )
+        ) as SQL<unknown>
       );
   }
   
@@ -2226,10 +2240,26 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return [];
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kostenvoranschläge sehen
+      return await db
+        .select()
+        .from(costEstimates)
+        .orderBy(desc(costEstimates.createdAt));
+    }
+    
+    // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
+    const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
       .from(costEstimates)
-      .where(eq(costEstimates.userId, currentUserId))
+      .where(eq(costEstimates.shopId, shopIdValue))
       .orderBy(desc(costEstimates.createdAt));
   }
   
@@ -2238,15 +2268,34 @@ export class DatabaseStorage implements IStorage {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
     
-    const [estimate] = await db
-      .select()
-      .from(costEstimates)
-      .where(
-        and(
-          eq(costEstimates.id, id),
-          eq(costEstimates.userId, currentUserId)
-        )
-      );
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
+    
+    let estimate: CostEstimate | undefined;
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kostenvoranschläge sehen
+      const [result] = await db
+        .select()
+        .from(costEstimates)
+        .where(eq(costEstimates.id, id));
+      estimate = result;
+    } else {
+      // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
+      const shopIdValue = currentUser.shopId || 1;
+      const [result] = await db
+        .select()
+        .from(costEstimates)
+        .where(
+          and(
+            eq(costEstimates.id, id),
+            eq(costEstimates.shopId, shopIdValue)
+          ) as SQL<unknown>
+        );
+      estimate = result;
+    }
     
     if (!estimate) {
       return undefined;
@@ -2271,20 +2320,51 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return []; // Wenn keine Benutzer-ID angegeben ist, gebe eine leere Liste zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return [];
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kostenvoranschläge für diesen Kunden sehen
+      return await db
+        .select()
+        .from(costEstimates)
+        .where(eq(costEstimates.customerId, customerId))
+        .orderBy(desc(costEstimates.createdAt));
+    }
+    
+    // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
+    const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
       .from(costEstimates)
       .where(
         and(
           eq(costEstimates.customerId, customerId),
-          eq(costEstimates.userId, currentUserId)
-        )
+          eq(costEstimates.shopId, shopIdValue)
+        ) as SQL<unknown>
       )
       .orderBy(desc(costEstimates.createdAt));
   }
   
   async createCostEstimate(estimate: InsertCostEstimate, currentUserId?: number): Promise<CostEstimate> {
     const now = new Date();
+    
+    // Wenn keine Benutzer-ID angegeben ist, gebe einen Fehler zurück
+    if (!currentUserId) {
+      throw new Error("Benutzer-ID erforderlich, um einen Kostenvoranschlag zu erstellen");
+    }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) {
+      throw new Error("Benutzer nicht gefunden");
+    }
+    
+    // Shop-ID des Benutzers ermitteln
+    const shopIdValue = currentUser.shopId || 1;
     
     // Generiere eine eindeutige Referenznummer für den Kostenvoranschlag
     const referenceNumber = await this.generateUniqueReferenceNumber();
@@ -2316,7 +2396,8 @@ export class DatabaseStorage implements IStorage {
       total,
       createdAt: now,
       updatedAt: now,
-      userId: currentUserId
+      userId: currentUserId,
+      shopId: shopIdValue // Shop-ID setzen
     };
     
     const [newEstimate] = await db.insert(costEstimates)
@@ -2330,6 +2411,10 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
     
     // Aktuellen Kostenvoranschlag abrufen
     const currentEstimate = await this.getCostEstimate(id, currentUserId);
@@ -2370,15 +2455,25 @@ export class DatabaseStorage implements IStorage {
       updateData.total = totalValue.toFixed(2) + ' €';
     }
     
+    // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
+    let whereCondition: SQL<unknown>;
+    
+    if (currentUser.isAdmin) {
+      // Admin kann jeden Kostenvoranschlag aktualisieren
+      whereCondition = eq(costEstimates.id, id);
+    } else {
+      // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop aktualisieren
+      const shopIdValue = currentUser.shopId || 1;
+      whereCondition = and(
+        eq(costEstimates.id, id),
+        eq(costEstimates.shopId, shopIdValue)
+      ) as SQL<unknown>;
+    }
+    
     const [updatedEstimate] = await db
       .update(costEstimates)
       .set(updateData)
-      .where(
-        and(
-          eq(costEstimates.id, id),
-          eq(costEstimates.userId, currentUserId)
-        )
-      )
+      .where(whereCondition)
       .returning();
     
     return updatedEstimate;
@@ -2388,6 +2483,10 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
     
     let updateData: any = { 
       status, 
@@ -2399,15 +2498,25 @@ export class DatabaseStorage implements IStorage {
       updateData.acceptedAt = new Date();
     }
     
+    // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
+    let whereCondition: SQL<unknown>;
+    
+    if (currentUser.isAdmin) {
+      // Admin kann jeden Kostenvoranschlag aktualisieren
+      whereCondition = eq(costEstimates.id, id);
+    } else {
+      // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop aktualisieren
+      const shopIdValue = currentUser.shopId || 1;
+      whereCondition = and(
+        eq(costEstimates.id, id),
+        eq(costEstimates.shopId, shopIdValue)
+      ) as SQL<unknown>;
+    }
+    
     const [updatedEstimate] = await db
       .update(costEstimates)
       .set(updateData)
-      .where(
-        and(
-          eq(costEstimates.id, id),
-          eq(costEstimates.userId, currentUserId)
-        )
-      )
+      .where(whereCondition)
       .returning();
     
     return updatedEstimate;
@@ -2419,12 +2528,26 @@ export class DatabaseStorage implements IStorage {
         return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
       }
       
-      await db.delete(costEstimates).where(
-        and(
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) return false;
+      
+      // SQL-Bedingung für das Löschen basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      if (currentUser.isAdmin) {
+        // Admin kann jeden Kostenvoranschlag löschen
+        whereCondition = eq(costEstimates.id, id);
+      } else {
+        // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop löschen
+        const shopIdValue = currentUser.shopId || 1;
+        whereCondition = and(
           eq(costEstimates.id, id),
-          eq(costEstimates.userId, currentUserId)
-        )
-      );
+          eq(costEstimates.shopId, shopIdValue)
+        ) as SQL<unknown>;
+      }
+      
+      await db.delete(costEstimates).where(whereCondition);
       return true;
     } catch (error) {
       console.error("Error deleting cost estimate:", error);
