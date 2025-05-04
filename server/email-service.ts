@@ -58,11 +58,8 @@ export class EmailService {
         return []; // Benutzer nicht gefunden
       }
       
-      // Wenn der Benutzer ein Admin ist, zeige alle Vorlagen
-      if (user.isAdmin) {
-        return await db.select().from(emailTemplates)
-          .orderBy(desc(emailTemplates.createdAt));
-      }
+      // DSGVO-konform: Auch Admins sehen nur Vorlagen ihres eigenen Shops plus globale Vorlagen
+      // Die isAdmin-Berechtigung wird hier entfernt, da Admins nicht übergreifend auf Daten anderer Shops zugreifen dürfen
       
       // Für normale Benutzer:
       // 1. Zeige alle Vorlagen, die zur Shop-ID des Benutzers gehören
@@ -103,15 +100,8 @@ export class EmailService {
         return undefined; // Benutzer nicht gefunden
       }
       
-      // Wenn der Benutzer ein Admin ist, kann er jede Vorlage sehen
-      if (user.isAdmin) {
-        const [template] = await db.select().from(emailTemplates)
-          .where(eq(emailTemplates.id, id));
-        return template;
-      }
-      
-      // Für normale Benutzer:
-      // Zeige nur Vorlagen, die zur Shop-ID des Benutzers gehören oder global sind
+      // DSGVO-konform: Alle Benutzer (inkl. Admins) dürfen nur Vorlagen ihres eigenen Shops sehen
+      // plus globale Vorlagen (userId=null)
       const shopId = user.shopId || 1;
       
       const [template] = await db.select().from(emailTemplates)
@@ -198,17 +188,12 @@ export class EmailService {
       // SQL-Bedingung basierend auf Benutzerrechten erstellen
       let whereCondition: SQL<unknown>;
       
-      if (user.isAdmin) {
-        // Admin kann jede Vorlage aktualisieren
-        whereCondition = eq(emailTemplates.id, id);
-      } else {
-        // Normale Benutzer können nur ihre eigenen Vorlagen oder Vorlagen ihres Shops aktualisieren
-        const shopId = user.shopId || 1;
-        whereCondition = and(
-          eq(emailTemplates.id, id),
-          eq(emailTemplates.shopId, shopId)
-        ) as SQL<unknown>;
-      }
+      // DSGVO-konform: Admins und normale Benutzer dürfen nur Vorlagen ihres eigenen Shops aktualisieren
+      const shopId = user.shopId || 1;
+      whereCondition = and(
+        eq(emailTemplates.id, id),
+        eq(emailTemplates.shopId, shopId)
+      ) as SQL<unknown>;
       
       const [updatedTemplate] = await db
         .update(emailTemplates)
@@ -246,17 +231,12 @@ export class EmailService {
       // SQL-Bedingung basierend auf Benutzerrechten erstellen
       let whereCondition: SQL<unknown>;
       
-      if (user.isAdmin) {
-        // Admin kann jede Vorlage löschen
-        whereCondition = eq(emailTemplates.id, id);
-      } else {
-        // Normale Benutzer können nur ihre eigenen Vorlagen oder Vorlagen ihres Shops löschen
-        const shopId = user.shopId || 1;
-        whereCondition = and(
-          eq(emailTemplates.id, id),
-          eq(emailTemplates.shopId, shopId)
-        ) as SQL<unknown>;
-      }
+      // DSGVO-konform: Admins und normale Benutzer dürfen nur Vorlagen ihres eigenen Shops löschen
+      const shopId = user.shopId || 1;
+      whereCondition = and(
+        eq(emailTemplates.id, id),
+        eq(emailTemplates.shopId, shopId)
+      ) as SQL<unknown>;
       
       await db.delete(emailTemplates).where(whereCondition);
       return true;
