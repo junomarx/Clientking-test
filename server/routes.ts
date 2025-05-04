@@ -413,6 +413,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Spezieller Endpunkt für den Druck, der Reparatur- und Kundendaten in einem Aufruf zurückgibt
+  app.get("/api/print-data/:id", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Hole Reparaturdaten mit Benutzerfilterung
+      const repair = await storage.getRepair(id, userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Repair not found" });
+      }
+      
+      // Hole zugehörige Kundendaten
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      
+      // Hole Unternehmenseinstellungen
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Sende alles als ein Objekt zurück
+      res.json({
+        repair,
+        customer,
+        businessSettings
+      });
+    } catch (error) {
+      console.error("Error fetching print data:", error);
+      res.status(500).json({ message: "Failed to fetch print data" });
+    }
+  });
+  
   app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);

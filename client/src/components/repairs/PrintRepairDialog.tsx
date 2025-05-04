@@ -45,19 +45,29 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
     }
   }, [open, repairId]);
 
-  // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
-    queryKey: ['/api/repairs', repairId],
+  // Lade alle Daten auf einmal mit dem neuen API-Endpunkt
+  const { data: printData, isLoading: isLoadingPrintData } = useQuery<{
+    repair: Repair;
+    customer: Customer;
+    businessSettings: BusinessSettings;
+  }>({
+    queryKey: ['/api/print-data', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
-        const response = await fetch(`/api/repairs/${repairId}`, {
+        console.log(`Rufe /api/print-data/${repairId} auf...`);
+        const response = await fetch(`/api/print-data/${repairId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Accept': 'application/json'
           }
         });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Fehler beim Laden der Druckdaten (Status ${response.status}):`, errorText);
+          throw new Error(`Druckdaten konnten nicht geladen werden: ${response.status} ${response.statusText}`);
+        }
         
         // Überprüfen des Content-Types
         const contentType = response.headers.get('Content-Type');
@@ -65,85 +75,34 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           throw new Error(`Unerwarteter Content-Type: ${contentType}`);
         }
         
-        return response.json();
+        const data = await response.json();
+        console.log('Geladene Druckdaten:', data);
+        return data;
       } catch (err) {
-        console.error("Fehler beim Laden der Reparaturdaten:", err);
+        console.error("Fehler beim Laden der Druckdaten:", err);
         return null;
       }
     },
     enabled: !!repairId && open,
   });
   
-  // Debug-Ausgabe für Fehlersuche
-  useEffect(() => {
-    if (repairId && open) {
-      console.log(`Versuche Reparatur #${repairId} zu laden`);
-    }
-    if (repair) {
-      console.log(`Reparatur #${repairId} geladen:`, repair);
-    }
-  }, [repairId, open, repair]);
-
-  // Lade Kundendaten wenn Reparatur geladen ist
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
-    queryKey: ['/api/customers', repair?.customerId],
-    queryFn: async () => {
-      if (!repair?.customerId) return null;
-      try {
-        const response = await fetch(`/api/customers/${repair.customerId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Accept': 'application/json'
-          }
-        });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
-        
-        // Überprüfen des Content-Types
-        const contentType = response.headers.get('Content-Type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
-        }
-        
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Kundendaten:", err);
-        return null;
-      }
-    },
-    enabled: !!repair?.customerId && open,
-  });
+  // Extrahiere die Daten aus dem Ergebnis
+  const repair = printData?.repair;
+  const customer = printData?.customer;
+  const businessSettings = printData?.businessSettings;
   
   // Debug-Ausgabe für Fehlersuche
   useEffect(() => {
-    if (repair?.customerId && open) {
-      console.log(`Versuche Kunde #${repair.customerId} zu laden`);
+    if (repairId && open) {
+      console.log(`Versuche Druckdaten für Reparatur #${repairId} zu laden`);
     }
-    if (customer) {
-      console.log(`Kunde ${customer.firstName} ${customer.lastName} geladen:`, customer);
+    if (printData) {
+      console.log('Druckdaten geladen:', printData);
     }
-  }, [repair?.customerId, open, customer]);
+  }, [repairId, open, printData]);
 
-  // Lade Unternehmenseinstellungen
-  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
-    queryKey: ['/api/business-settings'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/business-settings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
-        });
-        if (!response.ok) return null;
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
-        return null;
-      }
-    },
-    enabled: open,
-  });
-
-  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
+  // Verwende nur den Loading-Status der Print-Daten
+  const isLoading = isLoadingPrintData;
 
   // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
