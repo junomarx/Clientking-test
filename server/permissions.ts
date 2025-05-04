@@ -97,7 +97,7 @@ export async function isProfessionalOrHigher(userId: number): Promise<boolean> {
     if (user.isAdmin || user.username === 'bugi') return true;
     
     // Prüfe auf Feature-Übersteuerungen für Professional-Features
-    if (user.featureOverrides) {
+    if (user.featureOverrides && typeof user.featureOverrides === 'string') {
       try {
         const overrides = JSON.parse(user.featureOverrides);
         // Prüfen, ob mindestens eines der Professional-Features erlaubt ist
@@ -130,6 +130,19 @@ export async function isEnterprise(userId: number): Promise<boolean> {
     
     // Admin-Benutzer hat immer Zugriff
     if (user.isAdmin || user.username === 'bugi') return true;
+    
+    // Prüfe auf Feature-Übersteuerungen für Enterprise-Features
+    if (user.featureOverrides && typeof user.featureOverrides === 'string') {
+      try {
+        const overrides = JSON.parse(user.featureOverrides);
+        // Prüfen, ob mindestens eines der Enterprise-Features erlaubt ist
+        if (overrides.statistics === true || overrides.backup === true) {
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
+      }
+    }
     
     // Prüfen, ob der Benutzer das Enterprise-Paket hat
     return user.pricingPlan === 'enterprise';

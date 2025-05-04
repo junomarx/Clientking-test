@@ -115,10 +115,23 @@ export function useFeatureAccess(feature: string, requiredPlan: "professional" |
 function checkUserAccess(user: UserResponse | null, feature: string): boolean {
   if (!user) return false;
   
+  // Admin-Benutzer hat immer Zugriff auf alle Funktionen
+  if (user.isAdmin || user.username === 'bugi') return true;
+  
+  // Parse featureOverrides aus JSON-String, falls vorhanden
+  let parsedOverrides: any = null;
+  if (user.featureOverrides && typeof user.featureOverrides === 'string') {
+    try {
+      parsedOverrides = JSON.parse(user.featureOverrides);
+    } catch (e) {
+      console.warn(`Fehler beim Parsen der Feature-Übersteuerungen:`, e);
+    }
+  }
+  
   // Konvertiere pricingPlan und featureOverrides in die korrekten Typen für die hasAccess Funktion
   return hasAccess(
     user.pricingPlan as any, 
     feature as Feature, 
-    user.featureOverrides as any
+    parsedOverrides
   );
 }
