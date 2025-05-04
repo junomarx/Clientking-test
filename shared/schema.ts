@@ -16,6 +16,8 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   // Jeder Kunde gehört zu einem Benutzer/Unternehmen
   userId: integer("user_id").references(() => users.id),
+  // Jeder Kunde gehört zu einem Shop (für Multi-Tenant-Isolation)
+  shopId: integer("shop_id").default(1),
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -49,6 +51,8 @@ export const repairs = pgTable("repairs", {
   statusUpdatedAt: timestamp("status_updated_at"),
   // Jede Reparatur gehört zu einem Benutzer/Unternehmen
   userId: integer("user_id").references(() => users.id),
+  // Jede Reparatur gehört zu einem Shop (für Multi-Tenant-Isolation)
+  shopId: integer("shop_id").default(1),
   // Speichert, ob bereits eine Bewertungsanfrage gesendet wurde
   reviewRequestSent: boolean("review_request_sent").default(false),
   
@@ -101,6 +105,7 @@ export const users = pgTable("users", {
   isActive: boolean("is_active").default(false).notNull(), // Benutzer muss vom Admin freigeschaltet werden
   isAdmin: boolean("is_admin").default(false).notNull(),   // Administrator-Rechte
   pricingPlan: text("pricing_plan").default("basic").notNull(), // Preispaket: basic, professional, enterprise
+  shopId: integer("shop_id").default(1),                   // Shop-ID für Mandantentrennung
   companyName: text("company_name"),                       // Firmenname
   companyAddress: text("company_address"),                 // Firmenadresse
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.
@@ -158,6 +163,8 @@ export const businessSettings = pgTable("business_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),
+  // Jede Geschäftseinstellung gehört zu einem Shop (für Multi-Tenant-Isolation)
+  shopId: integer("shop_id").default(1),
 });
 
 export const insertBusinessSettingsSchema = createInsertSchema(businessSettings).omit({
@@ -195,6 +202,7 @@ export const emailTemplates = pgTable("email_templates", {
   body: text("body").notNull(),
   variables: text("variables").array(),  // Liste von Variablen, die in der Vorlage verwendet werden können
   userId: integer("user_id"), // Benutzer, dem die Vorlage gehört
+  shopId: integer("shop_id").default(1), // Shop, zu dem die Vorlage gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -220,6 +228,7 @@ export const emailHistory = pgTable("email_history", {
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   status: text("status").notNull(), // "success" oder "failed"
   userId: integer("user_id").references(() => users.id),
+  shopId: integer("shop_id").default(1), // Shop, zu dem der E-Mail-Verlauf gehört (für Multi-Tenant-Isolation)
 });
 
 export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
@@ -256,6 +265,7 @@ export const userDeviceTypes = pgTable("user_device_types", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   userId: integer("user_id").notNull().references(() => users.id), // Jede Geräteart gehört zu einem Benutzer
+  shopId: integer("shop_id").default(1), // Shop, zu dem die Geräteart gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -303,6 +313,7 @@ export const userBrands = pgTable("user_brands", {
   name: text("name").notNull(),
   deviceTypeId: integer("device_type_id").notNull().references(() => userDeviceTypes.id), // Jede Marke gehört zu einer Geräteart
   userId: integer("user_id").notNull().references(() => users.id), // Jede Marke gehört zu einem Benutzer
+  shopId: integer("shop_id").default(1), // Shop, zu dem die Marke gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
