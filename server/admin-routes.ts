@@ -1085,6 +1085,26 @@ export function registerAdminRoutes(app: Express) {
       });
       
       // Feature-Matrixansicht erstellen
+      // Feature-Labels mit benutzerfreundlichen Beschreibungen
+      const featureLabels: Record<string, { label: string; description?: string }> = {
+        dashboard: { label: "Dashboard", description: "Zugriff auf die Übersichtsseite" },
+        repairs: { label: "Reparaturen", description: "Verwaltung von Reparaturaufträgen" },
+        customers: { label: "Kunden", description: "Kundenverwaltung" },
+        emailTemplates: { label: "E-Mail-Vorlagen", description: "Verwaltung von E-Mail-Vorlagen" },
+        userManagement: { label: "Benutzerverwaltung", description: "Anlegen und Verwalten von Benutzern" },
+        editBusinessSettings: { label: "Geschäftseinstellungen", description: "Bearbeiten von Firmeninformationen" },
+        printLabels: { label: "Etikettendruck", description: "Drucken von Etiketten für Reparaturen" },
+        deviceManagement: { label: "Geräteverwaltung", description: "Verwaltung von Gerätetypen, Herstellern und Modellen" },
+        statistics: { label: "Statistiken", description: "Zugriff auf Statistiken und Berichte" },
+        fileUpload: { label: "Datei-Upload", description: "Hochladen von Dateien zu Reparaturen" },
+        bulkOperations: { label: "Massenoperationen", description: "Durchführen von Aktionen auf mehreren Datensätzen" },
+        advancedReporting: { label: "Erweiterte Berichte", description: "Zugriff auf detaillierte Berichte und Analysen" },
+        costEstimates: { label: "Kostenvoranschläge", description: "Erstellen und Verwalten von Kostenvoranschlägen" },
+        api: { label: "API-Zugriff", description: "Zugriff auf die API für externe Integrationen" },
+        shopCustomization: { label: "Shop-Anpassung", description: "Anpassen des Erscheinungsbilds" },
+        multiLocationSupport: { label: "Multi-Standort", description: "Unterstützung für mehrere Standorte" }
+      };
+      
       const featureMatrix = features.map(featureKey => {
         // Standardwerte aus der planFeatures.ts
         const defaultBasic = planFeatures.basic.includes(featureKey);
@@ -1101,7 +1121,8 @@ export function registerAdminRoutes(app: Express) {
         
         return {
           key: featureKey,
-          label: featureKey.charAt(0).toUpperCase() + featureKey.slice(1).replace(/([A-Z])/g, ' $1'),
+          label: featureLabels[featureKey]?.label ?? featureKey.charAt(0).toUpperCase() + featureKey.slice(1).replace(/([A-Z])/g, ' $1'),
+          description: featureLabels[featureKey]?.description ?? "",
           plans: {
             basic: basicFeature !== undefined ? true : defaultBasic,
             professional: proFeature !== undefined ? true : defaultPro,

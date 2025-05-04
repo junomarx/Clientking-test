@@ -1,0 +1,58 @@
+// 🛠️ Ziel: Features pro Tarif lesbar anzeigen (statt nur Zahlen)
+// Öffne die Datei: client/src/components/admin/FeatureMatrixTab.tsx
+// Führe folgende Änderungen durch:
+
+// 1. Stelle sicher, dass deine Features als Objekte mit key + label geladen werden
+// Beispielstruktur für ein Feature-Objekt:
+type FeatureEntry = {
+  key: string;
+  label: string;
+  description?: string;
+  plans: {
+    basic: boolean;
+    professional: boolean;
+    enterprise: boolean;
+  };
+};
+
+// 2. Ersetze in der Tabelle die bisherige Zelle mit dem reinen Feature-Wert:
+// Suche:
+<td className="border px-4 py-2">{feature}</td>
+
+// Ersetze durch:
+<td className="border px-4 py-2 font-medium">{feature.label ?? feature.key}</td>
+
+// 3. (Optional) Füge eine weitere Spalte für Beschreibung hinzu – falls vorhanden:
+// Direkt rechts neben dem Feature-Namen:
+<td className="border px-4 py-2 text-sm text-muted-foreground">
+  {feature.description ?? "—"}
+</td>
+
+// 4. Prüfe, ob deine Datenquelle im Admin-Backend bereits label + description enthält:
+// Öffne server/routes.ts oder server/admin-routes.ts
+// Suche die Route /api/admin/features
+// Falls nicht vorhanden, ergänze das Label-Mapping z. B. so:
+
+// Beispiel Mapping-Logik im Backend:
+const featureLabels: Record<string, { label: string; description?: string }> = {
+  dashboard: { label: "Dashboard", description: "Startseite mit Übersicht" },
+  repairs: { label: "Reparaturen", description: "Verwaltung von Reparaturaufträgen" },
+  customers: { label: "Kunden", description: "Kundenverwaltung" },
+  emailTemplates: { label: "E-Mail-Vorlagen", description: "Verwaltung von E-Mail-Vorlagen" },
+  // ... weitere Features hinzufügen
+};
+
+// Wenn deine Features aus der Datenbank als key: string[] kommen, erweitere sie:
+const fullFeatures = featureListFromDB.map((key) => ({
+  key,
+  label: featureLabels[key]?.label ?? key,
+  description: featureLabels[key]?.description ?? "",
+  plans: {
+    basic: ...,
+    professional: ...,
+    enterprise: ...
+  }
+}));
+
+// 5. Speichern & Anwendung neu starten.
+
