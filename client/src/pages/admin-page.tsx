@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -83,6 +84,7 @@ import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTe
 import { PlanFeaturesManager } from "@/components/admin/PlanFeaturesManager";
 import ToastTestDialog from "@/components/ToastTestDialog";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
+import { User } from "@shared/schema";
 
 type UserResponse = Omit<User, "password">;
 
