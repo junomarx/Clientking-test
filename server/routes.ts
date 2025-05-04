@@ -1,6 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+// Import der Berechtigungsprüfung aus permissions.ts
+import { isProfessionalOrHigher, isEnterprise, hasAccess } from './permissions';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -2143,24 +2145,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registriere die Admin-Routen
   registerAdminRoutes(app);
-  
-  // Hilfsfunktion, um zu prüfen ob ein Benutzer Professional oder Enterprise hat
-  async function isProfessionalOrHigher(userId: number): Promise<boolean> {
-    try {
-      // Benutzer direkt über Storage abrufen statt aus der Datenbank
-      const user = await storage.getUser(userId);
-      if (!user) return false;
-      
-      // Admin-Benutzer haben immer Zugriff auf alle Funktionen
-      if (user.isAdmin) return true;
-      
-      const pricingPlan = user.pricingPlan;
-      return pricingPlan === 'professional' || pricingPlan === 'enterprise';
-    } catch (error) {
-      console.error("Error checking pricing plan:", error);
-      return false;
-    }
-  }
   
   // KOSTENVORANSCHLAG API (COST ESTIMATES)
   // Alle Kostenvoranschläge abrufen

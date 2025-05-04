@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+// Import der Display-Namen Funktionen
 import { getPricingPlanDisplayName, getFeatureDisplayName } from "@/lib/permissions";
 import { LockIcon, PackageOpenIcon, ChevronRightIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
