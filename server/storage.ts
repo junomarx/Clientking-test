@@ -290,11 +290,6 @@ export class DatabaseStorage implements IStorage {
         await db
           .delete(repairs)
           .where(eq(repairs.customerId, customer.id));
-          
-        // 3. Lösche alle Feedbacks des Kunden
-        await db
-          .delete(feedbacks)
-          .where(eq(feedbacks.customerId, customer.id));
       }
       
       // Lösche alle Reparaturen, die zum Benutzer gehören
