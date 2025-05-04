@@ -293,14 +293,17 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getAllUsers(): Promise<User[]> {
-    // Für Bugi (Admin) alle Benutzer zurückgeben
-    const adminUser = await this.getUserByUsername('bugi');
-    if (adminUser?.isAdmin) {
-      return await db.select().from(users).orderBy(desc(users.createdAt));
-    }
-    // Für andere Benutzer nur die Benutzer des gleichen Shops zurückgeben
-    return await db.select().from(users).where(eq(users.shopId, adminUser?.shopId || 1)).orderBy(desc(users.createdAt));
+  async getAllUsers(currentUserId?: number): Promise<User[]> {
+    // Wenn keine Benutzer-ID angegeben ist, versuche den Standard-Admin zu laden
+    const currentUser = currentUserId 
+      ? await this.getUser(currentUserId)
+      : await this.getUserByUsername('bugi');
+      
+    if (!currentUser) return [];
+    
+    // Jeder Benutzer, auch Admin, sieht nur Benutzer aus seinem eigenen Shop (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    return await db.select().from(users).where(eq(users.shopId, shopIdValue)).orderBy(desc(users.createdAt));
   }
   
   async updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>): Promise<User | undefined> {
@@ -2277,16 +2280,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kostenvoranschläge sehen
-      return await db
-        .select()
-        .from(costEstimates)
-        .orderBy(desc(costEstimates.createdAt));
-    }
-    
-    // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
+    // Jeder Benutzer, auch Admin, sieht nur Kostenvoranschläge aus seinem Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -2304,30 +2298,17 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
     
-    let estimate: CostEstimate | undefined;
-    
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kostenvoranschläge sehen
-      const [result] = await db
-        .select()
-        .from(costEstimates)
-        .where(eq(costEstimates.id, id));
-      estimate = result;
-    } else {
-      // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
-      const shopIdValue = currentUser.shopId || 1;
-      const [result] = await db
-        .select()
-        .from(costEstimates)
-        .where(
-          and(
-            eq(costEstimates.id, id),
-            eq(costEstimates.shopId, shopIdValue)
-          ) as SQL<unknown>
-        );
-      estimate = result;
-    }
+    // Jeder Benutzer, auch Admin, sieht nur Kostenvoranschläge aus seinem eigenen Shop (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    const [estimate] = await db
+      .select()
+      .from(costEstimates)
+      .where(
+        and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.shopId, shopIdValue)
+        ) as SQL<unknown>
+      );
     
     if (!estimate) {
       return undefined;
@@ -2585,20 +2566,12 @@ export class DatabaseStorage implements IStorage {
       // Reparatur erstellen
       const repair = await this.createRepair(repairData, currentUserId);
       
-      // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
-      let whereCondition: SQL<unknown>;
-      
-      if (currentUser.isAdmin) {
-        // Admin kann jeden Kostenvoranschlag konvertieren
-        whereCondition = eq(costEstimates.id, id);
-      } else {
-        // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop konvertieren
-        const shopIdValue = currentUser.shopId || 1;
-        whereCondition = and(
-          eq(costEstimates.id, id),
-          eq(costEstimates.shopId, shopIdValue)
-        ) as SQL<unknown>;
-      }
+      // Jeder Benutzer, auch Admin, kann nur Kostenvoranschläge aus seinem Shop konvertieren (DSGVO-konform)
+      const shopIdValue = currentUser.shopId || 1;
+      const whereCondition = and(
+        eq(costEstimates.id, id),
+        eq(costEstimates.shopId, shopIdValue)
+      ) as SQL<unknown>;
       
       // Kostenvoranschlag als umgewandelt markieren
       await db
