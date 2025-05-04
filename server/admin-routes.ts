@@ -958,7 +958,7 @@ export function registerAdminRoutes(app: Express) {
   app.patch("/api/admin/users/:id", isAdmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { password, isAdmin, pricingPlan, ...updateData } = req.body;
+      const { password, isAdmin, pricingPlan, featureOverrides, ...updateData } = req.body;
       
       const user = await storage.getUser(id);
       
@@ -981,6 +981,7 @@ export function registerAdminRoutes(app: Express) {
         ...updateData,
         ...(isAdmin !== undefined && { isAdmin }),
         ...(pricingPlan !== undefined && { pricingPlan }),
+        ...(featureOverrides !== undefined && { featureOverrides: JSON.stringify(featureOverrides) }),
       });
       
       if (!updatedUser) {

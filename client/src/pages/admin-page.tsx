@@ -196,6 +196,8 @@ function UserTable() {
     setEditEmail(user.email);
     setEditRole(user.isAdmin ? "admin" : "user");
     setEditPricingPlan((user.pricingPlan as "basic" | "professional" | "enterprise") || "basic");
+    // Initialisiere Feature-Übersteuerungen
+    setEditFeatureOverrides(user.featureOverrides as FeatureOverrides || {});
     setIsEditDialogOpen(true);
   };
   
@@ -221,7 +223,8 @@ function UserTable() {
       username: editName,
       email: editEmail,
       isAdmin: editRole === "admin",
-      pricingPlan: editPricingPlan
+      pricingPlan: editPricingPlan,
+      featureOverrides: editFeatureOverrides
     });
   };
   
@@ -486,6 +489,204 @@ function UserTable() {
                   <SelectItem value="enterprise">Enterprise</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Feature-Übersteuerungen */}
+            <div className="grid gap-2">
+              <Label>Individuelle Feature-Freischaltungen</Label>
+              <div className="bg-muted/30 rounded-md p-2 space-y-2">
+                <div className="text-sm text-muted-foreground mb-3">
+                  Für ausgewählte Features können hier individuelle Freischaltungen oder Sperren eingerichtet werden, unabhängig vom gewählten Preispaket.
+                </div>
+                
+                {/* Kostenverschläge */}
+                <div className="flex items-center justify-between border-b pb-2">
+                  <div>
+                    <span className="font-medium">Kostenvoranschläge</span>
+                    <p className="text-xs text-muted-foreground">Erstellen und Verwalten von Kostenvoranschlägen</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.costEstimates === true ? "default" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          costEstimates: true
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Erlauben
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.costEstimates === false ? "destructive" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          costEstimates: false
+                        }));
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" /> Sperren
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => {
+                          const newOverrides = {...prev};
+                          delete newOverrides.costEstimates;
+                          return newOverrides;
+                        });
+                      }}
+                    >
+                      Standard
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* E-Mail-Vorlagen */}
+                <div className="flex items-center justify-between border-b py-2">
+                  <div>
+                    <span className="font-medium">E-Mail-Vorlagen</span>
+                    <p className="text-xs text-muted-foreground">Erstellen und Verwenden von E-Mail-Vorlagen</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.emailTemplates === true ? "default" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          emailTemplates: true
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Erlauben
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.emailTemplates === false ? "destructive" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          emailTemplates: false
+                        }));
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" /> Sperren
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => {
+                          const newOverrides = {...prev};
+                          delete newOverrides.emailTemplates;
+                          return newOverrides;
+                        });
+                      }}
+                    >
+                      Standard
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Statistiken */}
+                <div className="flex items-center justify-between border-b py-2">
+                  <div>
+                    <span className="font-medium">Erweiterte Statistiken</span>
+                    <p className="text-xs text-muted-foreground">Zugriff auf umfangreiche Datenanalysen und Reports</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.statistics === true ? "default" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          statistics: true
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Erlauben
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.statistics === false ? "destructive" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          statistics: false
+                        }));
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" /> Sperren
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => {
+                          const newOverrides = {...prev};
+                          delete newOverrides.statistics;
+                          return newOverrides;
+                        });
+                      }}
+                    >
+                      Standard
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Backup */}
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <span className="font-medium">Backup & Wiederherstellung</span>
+                    <p className="text-xs text-muted-foreground">Datenexport und Import-Funktionen</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.backup === true ? "default" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          backup: true
+                        }));
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-1" /> Erlauben
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={editFeatureOverrides?.backup === false ? "destructive" : "outline"}
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => ({
+                          ...prev,
+                          backup: false
+                        }));
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-1" /> Sperren
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setEditFeatureOverrides(prev => {
+                          const newOverrides = {...prev};
+                          delete newOverrides.backup;
+                          return newOverrides;
+                        });
+                      }}
+                    >
+                      Standard
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>
