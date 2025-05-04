@@ -147,12 +147,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
-        // Alle Kunden abrufen und sowohl nach Vor- als auch Nachnamen filtern
-        const allCustomers = await storage.getAllCustomers(userId);
-        const matchingCustomers = allCustomers.filter(customer => 
-          customer.firstName.toLowerCase().includes(firstName.toLowerCase()) &&
-          customer.lastName.toLowerCase().includes(lastName.toLowerCase())
-        );
+        // Verwende die findCustomersByName-Methode (die bereits Shop-ID-Filterung enthält)
+        const matchingCustomers = await storage.findCustomersByName(firstName, lastName, userId);
         console.log(`Found ${matchingCustomers.length} matching customers`);
         return res.json(matchingCustomers);
       }
@@ -165,16 +161,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
-        // Alle Kunden abrufen und nach Vornamen filtern
-        const allCustomers = await storage.getAllCustomers(userId);
-        const matchingCustomers = allCustomers.filter(customer => 
-          customer.firstName.toLowerCase().includes(firstName.toLowerCase())
-        );
+        // Verwende die findCustomersByName-Methode mit leerem lastName
+        const matchingCustomers = await storage.findCustomersByName(firstName, "", userId);
         console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}"`);
         return res.json(matchingCustomers);
       }
       
-      // Ansonsten gebe alle Kunden zurück (gefiltert nach Benutzer)
+      // Ansonsten gebe alle Kunden zurück (gefiltert nach Benutzer/Shop)
       const customers = await storage.getAllCustomers(userId);
       console.log(`Returning all ${customers.length} customers`);
       res.json(customers);

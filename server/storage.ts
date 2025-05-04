@@ -598,13 +598,31 @@ export class DatabaseStorage implements IStorage {
     if (!currentUserId) {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
+    
+    // Prüfen, ob der Benutzer Admin ist (bugi)
+    if (currentUser.isAdmin) {
+      // Admin kann alle Kunden aktualisieren
+      const [updatedCustomer] = await db
+        .update(customers)
+        .set(customerUpdate)
+        .where(eq(customers.id, id))
+        .returning();
+      return updatedCustomer;
+    }
+    
+    // Normaler Benutzer kann nur Kunden aus seinem Shop aktualisieren
+    const shopIdValue = currentUser.shopId || 1;
     const [updatedCustomer] = await db
       .update(customers)
       .set(customerUpdate)
       .where(
         and(
           eq(customers.id, id),
-          eq(customers.userId, currentUserId)
+          eq(customers.shopId, shopIdValue)
         )
       )
       .returning();
@@ -616,10 +634,24 @@ export class DatabaseStorage implements IStorage {
       if (!currentUserId) {
         return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
       }
+      
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) return false;
+      
+      // Prüfen, ob der Benutzer Admin ist (bugi)
+      if (currentUser.isAdmin) {
+        // Admin kann alle Kunden löschen
+        await db.delete(customers).where(eq(customers.id, id));
+        return true;
+      }
+      
+      // Normaler Benutzer kann nur Kunden aus seinem Shop löschen
+      const shopIdValue = currentUser.shopId || 1;
       await db.delete(customers).where(
         and(
           eq(customers.id, id),
-          eq(customers.userId, currentUserId)
+          eq(customers.shopId, shopIdValue)
         )
       );
       return true;
@@ -1393,9 +1425,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Basisfilter erstellen
-      let baseFilter;
-      
-      // Prüfen, ob der Benutzer Admin ist (bugi)
+      let baseFilter: SQL<unknown>;
       if (currentUser.isAdmin) {
         baseFilter = sql`1=1`;  // Kein Filter für Admin (alle Datensätze)
       } else {
