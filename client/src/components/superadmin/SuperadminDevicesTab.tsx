@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -165,14 +165,14 @@ export default function SuperadminDevicesTab() {
       try {
         const res = await apiRequest('GET', '/api/superadmin/device-issues');
         
+        const text = await res.text();
+        
         if (!res.ok) {
-          const text = await res.text();
           console.error(`Serverfehler ${res.status}:`, text);
           throw new Error(`Serverfehler: ${res.status}`);
         }
         
         const contentType = res.headers.get('content-type') || '';
-        const text = await res.text();
         
         if (!contentType.includes('application/json')) {
           console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
@@ -187,6 +187,47 @@ export default function SuperadminDevicesTab() {
     }
   });
   
+  // Fehlerbehandlung mit useEffect
+  useEffect(() => {
+    if (typesQuery.error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Gerätetypen",
+        description: typesQuery.error instanceof Error ? typesQuery.error.message : "Unbekannter Fehler",
+      });
+    }
+  }, [typesQuery.error, toast]);
+
+  useEffect(() => {
+    if (brandsQuery.error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Hersteller",
+        description: brandsQuery.error instanceof Error ? brandsQuery.error.message : "Unbekannter Fehler",
+      });
+    }
+  }, [brandsQuery.error, toast]);
+
+  useEffect(() => {
+    if (modelsQuery.error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Modelle",
+        description: modelsQuery.error instanceof Error ? modelsQuery.error.message : "Unbekannter Fehler",
+      });
+    }
+  }, [modelsQuery.error, toast]);
+
+  useEffect(() => {
+    if (issuesQuery.error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Problembeschreibungen",
+        description: issuesQuery.error instanceof Error ? issuesQuery.error.message : "Unbekannter Fehler",
+      });
+    }
+  }, [issuesQuery.error, toast]);
+
   // Memoized filtered data to prevent unnecessary rerenders
   const filteredBrands = useMemo(() => {
     if (!newDeviceModel.deviceType) return [];
