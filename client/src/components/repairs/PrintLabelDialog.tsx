@@ -21,7 +21,7 @@ interface PrintLabelDialogProps {
 
 export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings } = useBusinessSettings();
+  const { settings: hookSettings } = useBusinessSettings();
   
   // Logo-Status
   const [logoExists, setLogoExists] = useState(false);
@@ -120,7 +120,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     
     // Extrahiere den Inhalt aus dem Referenzobjekt
     const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
-    const repairId = repair?.id || '';
+    const repairIdStr = repair?.id?.toString() || '';
     const orderCode = repair?.orderCode || '';
     const firstName = customer?.firstName || '';
     const lastName = customer?.lastName || '';
@@ -128,14 +128,14 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
     // Logo-Informationen
-    const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
+    const businessName = businessSettings?.businessName || hookSettings?.businessName || 'Handyshop Verwaltung';
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Etikett für Reparatur ${orderCode || `#${repairId}`}</title>
+          <title>Etikett für Reparatur ${orderCode || `#${repairIdStr}`}</title>
           <meta charset="UTF-8">
           <style>
             @page {
@@ -227,7 +227,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               </div>
               ` : ''}
 
-              <div class="repair-number">${orderCode || `#${repairId}`}</div>
+              <div class="repair-number">${orderCode || `#${repairIdStr}`}</div>
               
               <div class="qr-code">${qrCode}</div>
               

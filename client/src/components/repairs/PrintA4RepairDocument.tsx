@@ -16,7 +16,7 @@ interface PrintA4RepairDocumentProps {
 
 export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4RepairDocumentProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings } = useBusinessSettings();
+  const { settings: hookSettings } = useBusinessSettings();
   
   // Logo-Status
   const [logoExists, setLogoExists] = useState(false);

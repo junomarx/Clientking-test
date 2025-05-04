@@ -22,7 +22,7 @@ interface PrintRepairDialogProps {
 
 export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
-  const { settings } = useBusinessSettings();
+  const { settings: hookSettings } = useBusinessSettings();
   
   // Logo-Status
   const [logoExists, setLogoExists] = useState(false);
@@ -138,7 +138,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
           body {
             font-family: monospace, sans-serif;
             font-size: 10px;
-            width: ${settings?.receiptWidth || '80mm'};
+            width: ${businessSettings?.receiptWidth || hookSettings?.receiptWidth || '80mm'};
             margin: 0;
             padding: 10px;
             color: #000;
@@ -230,7 +230,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
 
           @media print {
             @page {
-              size: ${settings?.receiptWidth || '80mm'} auto;
+              size: ${businessSettings?.receiptWidth || hookSettings?.receiptWidth || '80mm'} auto;
               margin: 0;
             }
             body {
