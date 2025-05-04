@@ -864,8 +864,8 @@ export default function SuperadminDevicesTab() {
                 </Label>
                 <Input
                   id="editBrandName"
-                  value={selectedBrand.name}
-                  onChange={(e) => setSelectedBrand({ ...selectedBrand, name: e.target.value })}
+                  value={selectedBrand?.name || ''}
+                  onChange={(e) => selectedBrand && setSelectedBrand({ ...selectedBrand, name: e.target.value })}
                   className="col-span-3"
                 />
               </div>
@@ -874,8 +874,8 @@ export default function SuperadminDevicesTab() {
                   Gerätetyp
                 </Label>
                 <Select
-                  value={selectedBrand.deviceType}
-                  onValueChange={(value) => setSelectedBrand({ ...selectedBrand, deviceType: value })}
+                  value={selectedBrand?.deviceType || ''}
+                  onValueChange={(value) => selectedBrand && setSelectedBrand({ ...selectedBrand, deviceType: value })}
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
@@ -896,8 +896,8 @@ export default function SuperadminDevicesTab() {
                 <div className="flex items-center space-x-2 col-span-3">
                   <Checkbox
                     id="editBrandGlobal"
-                    checked={selectedBrand.isGlobal}
-                    onCheckedChange={(checked) => setSelectedBrand({ ...selectedBrand, isGlobal: !!checked })}
+                    checked={selectedBrand?.isGlobal || false}
+                    onCheckedChange={(checked) => selectedBrand && setSelectedBrand({ ...selectedBrand, isGlobal: !!checked })}
                   />
                   <label
                     htmlFor="editBrandGlobal"
