@@ -354,15 +354,8 @@ export class DatabaseStorage implements IStorage {
         console.warn(`Fehler beim Löschen der E-Mail-Vorlagen:`, error.message);
       }
       
-      // 6. Lösche SMS-Vorlagen des Benutzers
-      try {
-        // Direkte SQL-Anfrage für snake_case Spaltennamen
-        await db.execute(sql`DELETE FROM sms_templates WHERE user_id = ${id}`);
-        console.log(`Alle SMS-Vorlagen des Benutzers gelöscht`);
-      } catch (err) {
-        const error = err as Error;
-        console.warn(`Fehler beim Löschen der SMS-Vorlagen:`, error.message);
-      }
+      // 6. SMS-Vorlagen-Löschung wurde entfernt
+      // SMS-Funktionalität wurde vollständig auf Kundenwunsch entfernt
       
       // 7. Lösche den E-Mail-Verlauf des Benutzers
       try {
