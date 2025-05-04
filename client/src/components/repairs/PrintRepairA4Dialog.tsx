@@ -123,9 +123,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
   
-  // Druckt den Inhalt als PDF
+  // Einfachste Variante: Ein zusätzliches PDF-Download-Fenster anzeigen
   const handlePrint = async () => {
-    // Der gleiche Prozess wie beim PDF generieren, nur dass wir am Ende drucken statt speichern
     if (!document.getElementById('a4-print-content')) return;
     
     setIsGeneratingPdf(true);
@@ -155,15 +154,19 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // PDF direkt drucken
-      pdf.autoPrint();
+      // Öffne das PDF in einem neuen Tab
       window.open(pdf.output('bloburl'), '_blank');
       
+      toast({
+        title: "PDF bereit",
+        description: "Das PDF wurde erstellt und kann nun ausgedruckt werden.",
+      });
+      
     } catch (err) {
-      console.error('Fehler beim Vorbereiten des Drucks:', err);
+      console.error('Fehler beim Vorbereiten des PDFs:', err);
       toast({
         title: "Fehler",
-        description: "Der Druck konnte nicht vorbereitet werden.",
+        description: "Das PDF konnte nicht erstellt werden.",
         variant: "destructive",
       });
     } finally {
@@ -427,7 +430,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 
                 <Button onClick={handlePrint}>
                   <Printer className="mr-2 h-4 w-4" />
-                  Drucken
+                  PDF erstellen & drucken
                 </Button>
               </div>
             </div>
