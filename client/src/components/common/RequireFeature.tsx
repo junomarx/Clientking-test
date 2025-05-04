@@ -115,6 +115,10 @@ export function useFeatureAccess(feature: string, requiredPlan: "professional" |
 function checkUserAccess(user: UserResponse | null, feature: string): boolean {
   if (!user) return false;
   
-  // Konvertiere pricingPlan in den korrekten Typ für die hasAccess Funktion
-  return hasAccess(user.pricingPlan as any, feature as Feature);
+  // Konvertiere pricingPlan und featureOverrides in die korrekten Typen für die hasAccess Funktion
+  return hasAccess(
+    user.pricingPlan as any, 
+    feature as Feature, 
+    user.featureOverrides as any
+  );
 }
