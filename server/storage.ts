@@ -1038,11 +1038,24 @@ export class DatabaseStorage implements IStorage {
       if (!currentUserId) {
         return false; // Wenn keine Benutzer-ID angegeben ist, gebe false zurück
       }
-      // Lösche nur Reparaturen, die dem aktuellen Benutzer gehören
+      
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) return false;
+      
+      // Prüfen, ob der Benutzer Admin ist (bugi)
+      if (currentUser.isAdmin) {
+        // Admin kann alle Reparaturen löschen
+        await db.delete(repairs).where(eq(repairs.id, id));
+        return true;
+      }
+      
+      // Normaler Benutzer kann nur Reparaturen aus seinem Shop löschen
+      const shopIdValue = currentUser.shopId || 1;
       await db.delete(repairs).where(
         and(
           eq(repairs.id, id),
-          eq(repairs.userId, currentUserId)
+          eq(repairs.shopId, shopIdValue)
         )
       );
       return true;
@@ -1234,23 +1247,23 @@ export class DatabaseStorage implements IStorage {
     // Füge Zeitraumfilter hinzu, wenn vorhanden
     if (startDate && endDate) {
       combinedFilter = and(
-        userFilter,
+        baseFilter,
         gte(repairs.createdAt, startDate),
         lte(repairs.createdAt, endDate)
       );
     } else if (startDate) {
       combinedFilter = and(
-        userFilter,
+        baseFilter,
         gte(repairs.createdAt, startDate)
       );
     } else if (endDate) {
       combinedFilter = and(
-        userFilter,
+        baseFilter,
         lte(repairs.createdAt, endDate)
       );
     } else {
       // Falls kein Datum gesetzt ist, behalte einfach den Benutzerfilter bei
-      combinedFilter = userFilter;
+      combinedFilter = baseFilter;
     }
     
     // Get total number of orders with optional date range filter
@@ -1314,7 +1327,7 @@ export class DatabaseStorage implements IStorage {
     const todayFilter = and(
       gte(repairs.createdAt, today),
       lt(repairs.createdAt, tomorrow),
-      userFilter
+      baseFilter
     );
     
     const [todayResult] = await db
@@ -1362,29 +1375,58 @@ export class DatabaseStorage implements IStorage {
         };
       }
       
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) {
+        return {
+          byDeviceType: {},
+          byBrand: {},
+          byIssue: {},
+          mostRecentRepairs: [],
+          revenue: {
+            total: 0,
+            byStatus: {},
+            byMonth: {},
+            byDay: {}
+          }
+        };
+      }
+      
+      // Basisfilter erstellen
+      let baseFilter;
+      
+      // Prüfen, ob der Benutzer Admin ist (bugi)
+      if (currentUser.isAdmin) {
+        baseFilter = sql`1=1`;  // Kein Filter für Admin (alle Datensätze)
+      } else {
+        // Normaler Benutzer sieht nur Statistiken aus seinem Shop
+        const shopIdValue = currentUser.shopId || 1;
+        baseFilter = eq(repairs.shopId, shopIdValue);
+      }
+      
       // Basisfilter für Benutzer erstellen
-      let combinedFilter = eq(repairs.userId, currentUserId);
+      let combinedFilter = baseFilter;
       
       // Füge Zeitraumfilter hinzu, wenn vorhanden
       if (startDate && endDate) {
         combinedFilter = and(
-          eq(repairs.userId, currentUserId),
+          baseFilter,
           gte(repairs.createdAt, startDate),
           lte(repairs.createdAt, endDate)
         );
       } else if (startDate) {
         combinedFilter = and(
-          eq(repairs.userId, currentUserId),
+          baseFilter,
           gte(repairs.createdAt, startDate)
         );
       } else if (endDate) {
         combinedFilter = and(
-          eq(repairs.userId, currentUserId),
+          baseFilter,
           lte(repairs.createdAt, endDate)
         );
       } else {
-        // Falls kein Datum gesetzt ist, behalte einfach den Benutzerfilter bei
-        combinedFilter = eq(repairs.userId, currentUserId);
+        // Falls kein Datum gesetzt ist, behalte einfach den Basisfilter bei
+        combinedFilter = baseFilter;
       }
       
       // Alle Reparaturen des Benutzers abrufen mit optionalem Zeitraumfilter
