@@ -61,25 +61,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     enabled: open,
   });
   
-  // Zurücksetzen beim Öffnen und Timer für Timeout setzen
+  // Zurücksetzen beim Öffnen
   useEffect(() => {
     if (open) {
       setPrintReady(false);
       setIsGeneratingPdf(false);
-      
-      // Timeout nach 1 Sekunde, um sicherzustellen, dass die Vorschau nicht hängen bleibt
-      const timeoutId = setTimeout(() => {
-        console.warn('Timeout beim Laden der Druckvorschau - Zeige Vorschau trotzdem an');
-        // Setze printReady auf true, wenn repair und customer vorhanden sind (minimale Anforderung)
-        if (repair && customer) {
-          setPrintReady(true);
-        }
-      }, 1000); // 1 Sekunde Timeout
-      
-      // Cleanup-Funktion
-      return () => clearTimeout(timeoutId);
     }
-  }, [open, printReady, repair, customer, businessSettings]);
+  }, [open]); // Nur bei Änderungen an 'open' ausführen
   
   // Generiert ein PDF zum Herunterladen
   const generatePDF = async () => {
@@ -222,21 +210,38 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   
   // Setzt das Dokument auf "druckbereit", wenn alle Daten geladen sind
   useEffect(() => {
-    try {
-      if (repair && customer && businessSettings && !isLoading && !isLoadingCustomer && !isLoadingSettings) {
-        // Überprüfen, ob wichtige Daten vorhanden sind, bevor wir printReady setzen
-        // Wenn es Probleme mit dem Logo oder den Signaturen gibt, sollte die Vorschau trotzdem gezeigt werden
+    // Wenn der Dialog nicht geöffnet ist, nichts tun
+    if (!open) return;
+    
+    // Timeout, der maximal 2 Sekunden wartet und dann die Vorschau auf jeden Fall anzeigt
+    const backupTimerId = setTimeout(() => {
+      if (repair && customer) {
+        console.warn('Backup-Timer: Zeige A4-Vorschau nach Timeout mit minimalen Daten');
         setPrintReady(true);
+      }
+    }, 2000);
+    
+    try {
+      // Normale Bedingung: Wenn alle Daten geladen sind, sofort anzeigen
+      if (repair && customer && !isLoading && !isLoadingCustomer) {
+        // businessSettings ist optional - Vorschau wird trotzdem angezeigt
+        console.log('A4-Vorschau wird angezeigt mit Repair/Customer');
+        setPrintReady(true);
+        clearTimeout(backupTimerId); // Timer nicht mehr benötigt
       }
     } catch (error) {
       console.error('Fehler beim Vorbereiten der Druckansicht:', error);
       // Trotz Fehler auf druckbereit setzen, damit der Benutzer die Vorschau sehen kann
       setPrintReady(true);
+      clearTimeout(backupTimerId);
     }
-  }, [repair, customer, businessSettings, isLoading, isLoadingCustomer, isLoadingSettings]);
+    
+    // Cleanup-Funktion zum Aufräumen
+    return () => clearTimeout(backupTimerId);
+  }, [open, repair, customer, isLoading, isLoadingCustomer]);
   
   // Zeigt eine Lade-Animation, wenn die Daten noch nicht bereit sind
-  if (open && (!printReady || isLoading || isLoadingCustomer || isLoadingSettings)) {
+  if (open && (!printReady || isLoading || isLoadingCustomer)) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl">
@@ -295,7 +300,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               {/* Header mit Logo und Firmendaten */}
               <div className="flex justify-between items-start mb-10">
                 <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
-                  {businessSettings.logoImage ? (
+                  {businessSettings?.logoImage ? (
                     <img 
                       src={businessSettings.logoImage} 
                       alt={businessSettings.businessName}
