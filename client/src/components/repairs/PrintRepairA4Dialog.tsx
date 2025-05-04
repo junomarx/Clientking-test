@@ -259,9 +259,9 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               {/* Header mit Logo und Firmendaten */}
               <div className="flex justify-between items-start mb-10">
                 <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
-                  {businessSettings.logoUrl ? (
+                  {businessSettings.logoImage ? (
                     <img 
-                      src={businessSettings.logoUrl} 
+                      src={businessSettings.logoImage} 
                       alt={businessSettings.businessName}
                       className="max-h-[60px] max-w-[180px] object-contain"
                     />
@@ -272,7 +272,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 
                 <div className="text-right text-sm text-gray-600">
                   <p className="text-base font-bold text-gray-800 mb-1">{businessSettings.businessName}</p>
-                  <p>{businessSettings.street || 'Amerlingstraße 19'}<br />
+                  <p>{businessSettings.streetAddress || 'Amerlingstraße 19'}<br />
                   {businessSettings.zipCode || '1060'} {businessSettings.city || 'Wien'}<br />
                   {businessSettings.phone || '+4314103511'}<br />
                   {businessSettings.email || 'office@macandphonedoc.at'}</p>
@@ -283,8 +283,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               <div className="mb-8">
                 <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
                 <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
-                <p>{customer.street}</p>
-                <p>{customer.zipCode} {customer.city}</p>
+                <p>{customer.street || ''}</p>
+                <p>{customer.zipCode || ''} {customer.city || ''}</p>
               </div>
               
               {/* Dokumententitel und Auftragsnummer */}
@@ -298,7 +298,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 <div className="flex-1">
                   <div className="mb-4">
                     <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Hersteller</div>
-                    <div className="text-sm font-bold">{repair.manufacturer}</div>
+                    <div className="text-sm font-bold">{repair.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : repair.manufacturer}</div>
                   </div>
                   <div className="mb-4">
                     <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Modell</div>
