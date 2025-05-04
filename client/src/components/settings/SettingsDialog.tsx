@@ -53,11 +53,9 @@ import {
   Phone, 
   MapPin,
   Settings,
-  MessageSquare,
   UserCog
 } from "lucide-react";
 import { EmailTemplateTab } from "@/components/settings/EmailTemplateTab";
-import { SmsTemplateTab } from "@/components/settings/SmsTemplateTab";
 import { BusinessSettingsDialogNew } from "@/components/settings/BusinessSettingsDialogNew";
 
 import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
@@ -605,17 +603,12 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             </Form>
           </TabsContent>
 
-          {/* Tab: Kommunikation (E-Mail und SMS) */}
+          {/* Tab: Kommunikation (E-Mail) */}
           <TabsContent value="communication" className="max-h-[65vh] overflow-y-auto">
             <Tabs defaultValue="email" className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> E-Mail
-                </TabsTrigger>
-                <TabsTrigger value="sms" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" /> SMS
-                </TabsTrigger>
-              </TabsList>
+              <div className="mb-4 flex items-center gap-2">
+                <Mail className="h-4 w-4" /> E-Mail-Einstellungen
+              </div>
               
               {/* E-Mail-Einstellungen */}
               <TabsContent value="email">
@@ -765,10 +758,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 </Tabs>
               </TabsContent>
               
-              {/* SMS-Einstellungen */}
-              <TabsContent value="sms">
-                <SmsTemplateTab />
-              </TabsContent>
+
+
             </Tabs>
           </TabsContent>
           
