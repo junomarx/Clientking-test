@@ -55,11 +55,24 @@ export function useModelSeries() {
       queryKey: ['/api/model-series', { brandId }],
       enabled: !!brandId,
       queryFn: async () => {
-        const res = await apiRequest('GET', `/api/model-series?brandId=${brandId}`);
-        return await res.json();
+        try {
+          const res = await apiRequest('GET', `/api/model-series?brandId=${brandId}`);
+          
+          // Prüfe den Content-Type vor dem JSON-Parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('Unerwarteter Content-Type für model-series mit brandId:', contentType);
+            return [];
+          }
+          
+          return await res.json();
+        } catch (error) {
+          console.error(`Fehler beim Laden der Modellreihen für Hersteller ${brandId}:`, error);
+          return [];
+        }
       },
       staleTime: 30000, // 30 Sekunden Caching
-      throwOnError: true,
+      // throwOnError entfernt, um besser mit Fehlern umzugehen
     });
   };
 
@@ -69,14 +82,27 @@ export function useModelSeries() {
       queryKey: ['/api/device-types', deviceTypeId, 'brands', brandId, 'model-series'],
       enabled: !!deviceTypeId && !!brandId,
       queryFn: async () => {
-        const res = await apiRequest(
-          'GET', 
-          `/api/device-types/${deviceTypeId}/brands/${brandId}/model-series`
-        );
-        return await res.json();
+        try {
+          const res = await apiRequest(
+            'GET', 
+            `/api/device-types/${deviceTypeId}/brands/${brandId}/model-series`
+          );
+          
+          // Prüfe den Content-Type vor dem JSON-Parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('Unerwarteter Content-Type für model-series nach Gerätetyp und Hersteller:', contentType);
+            return [];
+          }
+          
+          return await res.json();
+        } catch (error) {
+          console.error(`Fehler beim Laden der Modellreihen für Gerätetyp ${deviceTypeId} und Hersteller ${brandId}:`, error);
+          return [];
+        }
       },
       staleTime: 30000, // 30 Sekunden Caching
-      throwOnError: true,
+      // throwOnError entfernt, um besser mit Fehlern umzugehen
     });
   };
 
