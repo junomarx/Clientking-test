@@ -464,6 +464,30 @@ export default function SuperadminPackagesTab() {
                       )}
                     </Button>
                   </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label>Globale Geräteverwaltung</Label>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => updateFeatureValue(
+                        setCreateForm,
+                        createForm,
+                        'canManageGlobalDevices',
+                        !getFeatureValue(createForm, 'canManageGlobalDevices', false)
+                      )}
+                    >
+                      {getFeatureValue(createForm, 'canManageGlobalDevices', false) ? (
+                        <>
+                          <ToggleRight className="h-4 w-4 mr-2 text-green-500" /> Aktiviert
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="h-4 w-4 mr-2 text-red-500" /> Deaktiviert
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 {/* Numerical Features */}
@@ -636,6 +660,30 @@ export default function SuperadminPackagesTab() {
                       )}
                     >
                       {getFeatureValue(editForm, 'canSendEmails', true) ? (
+                        <>
+                          <ToggleRight className="h-4 w-4 mr-2 text-green-500" /> Aktiviert
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="h-4 w-4 mr-2 text-red-500" /> Deaktiviert
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label>Globale Geräteverwaltung</Label>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => updateFeatureValue(
+                        setEditForm,
+                        editForm,
+                        'canManageGlobalDevices',
+                        !getFeatureValue(editForm, 'canManageGlobalDevices', false)
+                      )}
+                    >
+                      {getFeatureValue(editForm, 'canManageGlobalDevices', false) ? (
                         <>
                           <ToggleRight className="h-4 w-4 mr-2 text-green-500" /> Aktiviert
                         </>
