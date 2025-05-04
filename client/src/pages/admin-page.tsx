@@ -1510,6 +1510,14 @@ export default function AdminPage() {
               {!sidebarCollapsed && <span className="ml-3">Backup & Restore</span>}
             </div>
             
+            <div 
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "featureTest" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("featureTest")}
+            >
+              <Layers className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">Feature-Tests</span>}
+            </div>
+            
 
             
             {/* Design Preview Menüpunkte wurden entfernt */}
@@ -1564,6 +1572,7 @@ export default function AdminPage() {
             )}
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
+            {activeTab === "featureTest" && <FeatureOverridesTestPanel />}
           </div>
         </div>
       </div>
@@ -1628,6 +1637,14 @@ export default function AdminPage() {
               >
                 <Save className="h-4 w-4 mr-2" /> Backup & Restore
               </Button>
+              
+              <Button 
+                variant={activeTab === "featureTest" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "featureTest" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("featureTest")}
+              >
+                <Layers className="h-4 w-4 mr-2" /> Feature-Tests
+              </Button>
 
               {/* Design-Preview Buttons wurden entfernt */}
               
@@ -1658,6 +1675,7 @@ export default function AdminPage() {
             )}
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
+            {activeTab === "featureTest" && <FeatureOverridesTestPanel />}
           </div>
       
       {/* Toast-Test Dialog */}
