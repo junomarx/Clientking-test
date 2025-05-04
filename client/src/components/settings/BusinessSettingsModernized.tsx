@@ -458,17 +458,25 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                         ref={fileInputRef}
                         accept="image/jpeg,image/png,image/svg+xml"
                         onChange={handleLogoUpload}
-                        className="hidden"
+                        style={{ display: 'none' }}
                       />
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Logo hochladen
-                      </Button>
+                      <label htmlFor="logo-upload">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (fileInputRef.current) {
+                              fileInputRef.current.click();
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Logo hochladen
+                        </Button>
+                      </label>
                       <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
                       {logoError && (
                         <p className="text-xs text-red-500 mt-1">{logoError}</p>
