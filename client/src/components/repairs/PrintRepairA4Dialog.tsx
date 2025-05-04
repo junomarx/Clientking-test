@@ -123,9 +123,52 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
   
-  // Druckt den Inhalt direkt
-  const handlePrint = () => {
-    window.print();
+  // Druckt den Inhalt als PDF
+  const handlePrint = async () => {
+    // Der gleiche Prozess wie beim PDF generieren, nur dass wir am Ende drucken statt speichern
+    if (!document.getElementById('a4-print-content')) return;
+    
+    setIsGeneratingPdf(true);
+    
+    try {
+      const content = document.getElementById('a4-print-content');
+      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
+      
+      const canvas = await html2canvas(content, {
+        scale: 2, // Höhere Qualität
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      // A4 Format: 210 x 297 mm
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Bildgröße berechnen, um im A4-Format zu passen
+      const imgWidth = 210; // A4 Breite in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // PDF direkt drucken
+      pdf.autoPrint();
+      window.open(pdf.output('bloburl'), '_blank');
+      
+    } catch (err) {
+      console.error('Fehler beim Vorbereiten des Drucks:', err);
+      toast({
+        title: "Fehler",
+        description: "Der Druck konnte nicht vorbereitet werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
   
   // Formatiert das Datum schön
@@ -264,9 +307,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   <div className="mb-4">
                     <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Schaden / Fehler</div>
                     <div className="text-sm font-bold">
-                      {repair.issue ? repair.issue.split(',').map((issue, index) => (
-                        <div key={index}>{issue.trim()}</div>
-                      )) : 'Keine Angabe'}
+                      {repair.issue ? 
+                        (() => {
+                          const issues = repair.issue.split(',');
+                          return issues.map((issue, index) => (
+                            <div key={index}>{issue.trim()}</div>
+                          ));
+                        })() : 'Keine Angabe'}
                     </div>
                   </div>
                   <div className="mb-4">
