@@ -14,7 +14,7 @@ import {
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
-import { eq, desc, and, or, sql, gte, lt, lte, gt, count, isNotNull, like } from "drizzle-orm";
+import { eq, desc, and, or, sql, gte, lt, lte, gt, count, isNotNull, like, SQL } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -1262,7 +1262,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Basisfilter erstellen
-    let baseFilter;
+    let baseFilter: SQL<unknown>;
     
     // Prüfen, ob der Benutzer Admin ist (bugi)
     if (currentUser.isAdmin) {
@@ -1274,7 +1274,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Basisfilter für Benutzer erstellen
-    let combinedFilter = baseFilter;
+    let combinedFilter: SQL<unknown> = baseFilter;
     
     // Füge Zeitraumfilter hinzu, wenn vorhanden
     if (startDate && endDate) {
@@ -1282,17 +1282,17 @@ export class DatabaseStorage implements IStorage {
         baseFilter,
         gte(repairs.createdAt, startDate),
         lte(repairs.createdAt, endDate)
-      );
+      ) as SQL<unknown>;
     } else if (startDate) {
       combinedFilter = and(
         baseFilter,
         gte(repairs.createdAt, startDate)
-      );
+      ) as SQL<unknown>;
     } else if (endDate) {
       combinedFilter = and(
         baseFilter,
         lte(repairs.createdAt, endDate)
-      );
+      ) as SQL<unknown>;
     } else {
       // Falls kein Datum gesetzt ist, behalte einfach den Benutzerfilter bei
       combinedFilter = baseFilter;
@@ -1360,7 +1360,7 @@ export class DatabaseStorage implements IStorage {
       gte(repairs.createdAt, today),
       lt(repairs.createdAt, tomorrow),
       baseFilter
-    );
+    ) as SQL<unknown>;
     
     const [todayResult] = await db
       .select({ count: count() })
@@ -1435,7 +1435,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Basisfilter für Benutzer erstellen
-      let combinedFilter = baseFilter;
+      let combinedFilter: SQL<unknown> = baseFilter;
       
       // Füge Zeitraumfilter hinzu, wenn vorhanden
       if (startDate && endDate) {
@@ -1443,17 +1443,17 @@ export class DatabaseStorage implements IStorage {
           baseFilter,
           gte(repairs.createdAt, startDate),
           lte(repairs.createdAt, endDate)
-        );
+        ) as SQL<unknown>;
       } else if (startDate) {
         combinedFilter = and(
           baseFilter,
           gte(repairs.createdAt, startDate)
-        );
+        ) as SQL<unknown>;
       } else if (endDate) {
         combinedFilter = and(
           baseFilter,
           lte(repairs.createdAt, endDate)
-        );
+        ) as SQL<unknown>;
       } else {
         // Falls kein Datum gesetzt ist, behalte einfach den Basisfilter bei
         combinedFilter = baseFilter;
