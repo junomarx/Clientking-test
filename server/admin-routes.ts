@@ -1067,8 +1067,31 @@ export function registerAdminRoutes(app: Express) {
         return res.status(403).json({ message: "Nur der Hauptadministrator darf Features verwalten" });
       }
       
-      // Feature-Definitionen aus der planFeatures.ts importieren
-      const features = Object.keys(planFeatures.enterprise) as Feature[];
+      // Feature-Definitionen direkt aus den Feature-Typen auflisten
+      const features: Feature[] = [
+        // Basic Features
+        "dashboard",
+        "repairs",
+        "customers",
+        "printA4",
+        "deviceTypes",
+        "brands",
+        // Professional Features
+        "costEstimates",
+        "emailTemplates",
+        "print58mm",
+        "printThermal",
+        "downloadRepairReport",
+        // Enterprise Features
+        "statistics",
+        "backup",
+        "advancedSearch",
+        "apiAccess",
+        "multiUser",
+        "advancedReporting",
+        "customEmailTemplates",
+        "feedbackSystem"
+      ];
       
       // Alle aktuell konfigurierten Feature-Zuordnungen aus der Datenbank abrufen
       const pkgFeatures = await db.select().from(packageFeatures);
