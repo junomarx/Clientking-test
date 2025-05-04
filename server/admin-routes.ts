@@ -4,7 +4,8 @@ import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { db } from "./db";
-import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels, businessSettings } from "@shared/schema";
+import { deviceIssues, insertDeviceIssueSchema, userDeviceTypes, userBrands, userModelSeries, userModels, businessSettings, packageFeatures, packages } from "@shared/schema";
+import { Feature, planFeatures } from "@shared/planFeatures";
 import { eq, and } from "drizzle-orm";
 // CSV-Bibliotheken werden nicht mehr benötigt, da wir JSON verwenden
 
@@ -1052,6 +1053,148 @@ export function registerAdminRoutes(app: Express) {
         details: errorMessage,
         technicalInfo: error instanceof Error ? error.stack : null
       });
+    }
+  });
+
+  //==========================================================================
+  // FEATURE MATRIX ROUTEN
+  //==========================================================================
+  // Alle verfügbaren Features abrufen
+  app.get("/api/admin/features", isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Nur Bugi darf Features verwalten
+      if (!req.user || req.user.username !== 'bugi') {
+        return res.status(403).json({ message: "Nur der Hauptadministrator darf Features verwalten" });
+      }
+      
+      // Feature-Definitionen aus der planFeatures.ts importieren
+      const features = Object.keys(planFeatures.enterprise) as Feature[];
+      
+      // Alle aktuell konfigurierten Feature-Zuordnungen aus der Datenbank abrufen
+      const pkgFeatures = await db.select().from(packageFeatures);
+      
+      // Paket-IDs und Namen abrufen
+      const pkgs = await db.select().from(packages);
+      
+      // Mapping von Paket-Namen zu IDs erstellen
+      const packageMap: Record<string, number> = {};
+      pkgs.forEach(pkg => {
+        if (pkg.name.toLowerCase() === 'basic') packageMap['basic'] = pkg.id;
+        if (pkg.name.toLowerCase() === 'professional') packageMap['professional'] = pkg.id;
+        if (pkg.name.toLowerCase() === 'enterprise') packageMap['enterprise'] = pkg.id;
+      });
+      
+      // Feature-Matrixansicht erstellen
+      const featureMatrix = features.map(featureKey => {
+        // Standardwerte aus der planFeatures.ts
+        const defaultBasic = planFeatures.basic.includes(featureKey);
+        const defaultPro = planFeatures.professional.includes(featureKey);
+        const defaultEnterprise = planFeatures.enterprise.includes(featureKey);
+        
+        // Tatsächliche Werte aus der Datenbank (falls vorhanden)
+        const basicFeature = pkgFeatures.find(f => 
+          f.packageId === packageMap['basic'] && f.feature === featureKey);
+        const proFeature = pkgFeatures.find(f => 
+          f.packageId === packageMap['professional'] && f.feature === featureKey);
+        const enterpriseFeature = pkgFeatures.find(f => 
+          f.packageId === packageMap['enterprise'] && f.feature === featureKey);
+        
+        return {
+          key: featureKey,
+          label: featureKey.charAt(0).toUpperCase() + featureKey.slice(1).replace(/([A-Z])/g, ' $1'),
+          plans: {
+            basic: basicFeature !== undefined ? true : defaultBasic,
+            professional: proFeature !== undefined ? true : defaultPro,
+            enterprise: enterpriseFeature !== undefined ? true : defaultEnterprise
+          }
+        };
+      });
+      
+      res.json(featureMatrix);
+    } catch (error) {
+      console.error("Error retrieving features:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Features" });
+    }
+  });
+  
+  // Features aktualisieren
+  app.post("/api/admin/features/update", isAdmin, async (req: Request, res: Response) => {
+    try {
+      // Nur Bugi darf Features aktualisieren
+      if (!req.user || req.user.username !== 'bugi') {
+        return res.status(403).json({ message: "Nur der Hauptadministrator darf Features aktualisieren" });
+      }
+      
+      const { features } = req.body;
+      
+      if (!Array.isArray(features)) {
+        return res.status(400).json({ message: "Ungültiges Format: features muss ein Array sein" });
+      }
+      
+      // Paket-IDs und Namen abrufen
+      const pkgs = await db.select().from(packages);
+      
+      // Mapping von Paket-Namen zu IDs erstellen
+      const packageMap: Record<string, number> = {};
+      pkgs.forEach(pkg => {
+        if (pkg.name.toLowerCase() === 'basic') packageMap['basic'] = pkg.id;
+        if (pkg.name.toLowerCase() === 'professional') packageMap['professional'] = pkg.id;
+        if (pkg.name.toLowerCase() === 'enterprise') packageMap['enterprise'] = pkg.id;
+      });
+      
+      // Überprüfen, ob alle Pakete existieren
+      if (!packageMap['basic'] || !packageMap['professional'] || !packageMap['enterprise']) {
+        return res.status(500).json({ 
+          message: "Nicht alle Pakete sind in der Datenbank definiert",
+          packageMap
+        });
+      }
+      
+      // Bestehende Feature-Zuordnungen löschen und neue einfügen
+      await db.transaction(async (tx) => {
+        // Bestehende Feature-Zuordnungen löschen
+        await tx.delete(packageFeatures);
+        
+        // Neue Feature-Zuordnungen einfügen
+        const insertValues = [];
+        
+        for (const feature of features) {
+          const { key, plans } = feature;
+          
+          // Für Basic
+          if (plans.basic) {
+            insertValues.push({ 
+              packageId: packageMap['basic'], 
+              feature: key 
+            });
+          }
+          
+          // Für Professional
+          if (plans.professional) {
+            insertValues.push({ 
+              packageId: packageMap['professional'], 
+              feature: key 
+            });
+          }
+          
+          // Für Enterprise
+          if (plans.enterprise) {
+            insertValues.push({ 
+              packageId: packageMap['enterprise'], 
+              feature: key 
+            });
+          }
+        }
+        
+        if (insertValues.length > 0) {
+          await tx.insert(packageFeatures).values(insertValues);
+        }
+      });
+      
+      res.json({ success: true, message: "Features erfolgreich aktualisiert" });
+    } catch (error) {
+      console.error("Error updating features:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Features" });
     }
   });
 }

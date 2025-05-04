@@ -1,0 +1,157 @@
+// Ziel: Die aktuelle Ansicht unter dem Menüpunkt „Tarif-Features“ soll ersetzt werden
+// durch eine Matrix-Ansicht (Feature-Zeilen vs. Plan-Spalten), um Features pro Tarifpaket übersichtlich zu verwalten
+// ⚠️ Bestehende Checkbox-Listen/Tabs je Tarif bitte entfernen und durch eine gemeinsame Matrix-Tabelle ersetzen
+
+// 📁 Datei: client/src/pages/admin-page.tsx
+// Schritt 1: Tab-Titel "Tarif-Features" in der Sidebar und Tabs zu „Pakete“ umbenennen
+
+// Schritt 2: Neue Komponente FeatureMatrixTab.tsx erstellen (optional im Verzeichnis client/src/components/admin)
+import { useEffect, useState } from "react";
+
+type PricingPlan = "basic" | "professional" | "enterprise";
+
+type Feature = {
+  key: string;
+  label: string;
+  description?: string;
+  plans: Record<PricingPlan, boolean>;
+};
+
+export default function FeatureMatrixTab() {
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/features")
+      .then((res) => res.json())
+      .then(setFeatures);
+  }, []);
+
+  const toggleFeature = (featureKey: string, plan: PricingPlan) => {
+    setFeatures((prev) =>
+      prev.map((f) =>
+        f.key === featureKey
+          ? { ...f, plans: { ...f.plans, [plan]: !f.plans[plan] } }
+          : f
+      )
+    );
+  };
+
+  const saveChanges = async () => {
+    setSaving(true);
+    await fetch("/api/admin/features/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ features }),
+    });
+    setSaving(false);
+    alert("Änderungen gespeichert!");
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Features pro Tarifpaket</h2>
+      <p className="text-sm text-muted mb-6">
+        Definieren Sie, welche Funktionen in welchem Tarif enthalten sind.
+      </p>
+      <table className="w-full text-left border">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="border px-4 py-2">Feature</th>
+            <th className="border px-4 py-2 text-center">Basic</th>
+            <th className="border px-4 py-2 text-center">Professional</th>
+            <th className="border px-4 py-2 text-center">Enterprise</th>
+          </tr>
+        </thead>
+        <tbody>
+          {features.map((feature) => (
+            <tr key={feature.key}>
+              <td className="border px-4 py-2">{feature.label}</td>
+              {(["basic", "professional", "enterprise"] as PricingPlan[]).map(
+                (plan) => (
+                  <td className="border px-4 py-2 text-center" key={plan}>
+                    <input
+                      type="checkbox"
+                      checked={feature.plans[plan]}
+                      onChange={() => toggleFeature(feature.key, plan)}
+                    />
+                  </td>
+                )
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button
+        onClick={saveChanges}
+        disabled={saving}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        {saving ? "Speichern..." : "Speichern"}
+      </button>
+    </div>
+  );
+}
+
+// Schritt 3: In admin-page.tsx einbinden:
+// - Im Tab-Navigationsbereich umbenennen zu "Pakete"
+// - Inhalt des Tabs ersetzen durch:
+
+{activeTab === "pakete" && <FeatureMatrixTab />}
+
+// 📁 Schritt 4: API-Anbindung serverseitig vorbereiten
+
+// GET /api/admin/features
+// Antwort-Beispiel:
+[
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    plans: { basic: true, professional: true, enterprise: true }
+  },
+  {
+    key: "emailTemplates",
+    label: "E-Mail-Vorlagen",
+    plans: { basic: false, professional: true, enterprise: true }
+  }
+]
+
+// POST /api/admin/features/update
+// Payload:
+{
+  features: [
+    {
+      key: "dashboard",
+      plans: {
+        basic: true,
+        professional: true,
+        enterprise: true
+      }
+    },
+    ...
+  ]
+}
+
+// In server/routes.ts hinzufügen:
+app.get("/api/admin/features", async (req, res) => {
+  const features = await db.select().from(featureAccessTable); // Beispiel
+  res.json(features);
+});
+
+app.post("/api/admin/features/update", async (req, res) => {
+  const { features } = req.body;
+  // Bestehende Daten überschreiben oder aktualisieren
+  await db.transaction(async (trx) => {
+    for (const feature of features) {
+      await trx
+        .insertInto("featureAccess")
+        .values({ ...feature })
+        .onConflict("key")
+        .merge();
+    }
+  });
+  res.json({ success: true });
+});
+
+// Schritt 5: Optional: Beim Laden eines Users dynamisch prüfen, welche Features laut Plan aktiviert sind
+// Beispiel-Funktion: hasAccess(user, featureName) prüft user.featureOverrides → fallback auf planMatrix
