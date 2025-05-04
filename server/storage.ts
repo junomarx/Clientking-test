@@ -2357,17 +2357,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kostenvoranschläge für diesen Kunden sehen
-      return await db
-        .select()
-        .from(costEstimates)
-        .where(eq(costEstimates.customerId, customerId))
-        .orderBy(desc(costEstimates.createdAt));
-    }
-    
-    // Normaler Benutzer sieht nur Kostenvoranschläge aus seinem Shop
+    // Jeder Benutzer, auch Admin, sieht nur Kostenvoranschläge aus seinem Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -2487,20 +2477,12 @@ export class DatabaseStorage implements IStorage {
       updateData.total = totalValue.toFixed(2) + ' €';
     }
     
-    // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
-    let whereCondition: SQL<unknown>;
-    
-    if (currentUser.isAdmin) {
-      // Admin kann jeden Kostenvoranschlag aktualisieren
-      whereCondition = eq(costEstimates.id, id);
-    } else {
-      // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop aktualisieren
-      const shopIdValue = currentUser.shopId || 1;
-      whereCondition = and(
-        eq(costEstimates.id, id),
-        eq(costEstimates.shopId, shopIdValue)
-      ) as SQL<unknown>;
-    }
+    // Jeder Benutzer, auch Admin, kann nur Kostenvoranschläge aus seinem Shop aktualisieren (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    const whereCondition = and(
+      eq(costEstimates.id, id),
+      eq(costEstimates.shopId, shopIdValue)
+    ) as SQL<unknown>;
     
     const [updatedEstimate] = await db
       .update(costEstimates)
@@ -2530,20 +2512,12 @@ export class DatabaseStorage implements IStorage {
       updateData.acceptedAt = new Date();
     }
     
-    // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
-    let whereCondition: SQL<unknown>;
-    
-    if (currentUser.isAdmin) {
-      // Admin kann jeden Kostenvoranschlag aktualisieren
-      whereCondition = eq(costEstimates.id, id);
-    } else {
-      // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop aktualisieren
-      const shopIdValue = currentUser.shopId || 1;
-      whereCondition = and(
-        eq(costEstimates.id, id),
-        eq(costEstimates.shopId, shopIdValue)
-      ) as SQL<unknown>;
-    }
+    // Jeder Benutzer, auch Admin, kann nur Kostenvoranschläge aus seinem Shop aktualisieren (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    const whereCondition = and(
+      eq(costEstimates.id, id),
+      eq(costEstimates.shopId, shopIdValue)
+    ) as SQL<unknown>;
     
     const [updatedEstimate] = await db
       .update(costEstimates)
@@ -2564,20 +2538,12 @@ export class DatabaseStorage implements IStorage {
       const currentUser = await this.getUser(currentUserId);
       if (!currentUser) return false;
       
-      // SQL-Bedingung für das Löschen basierend auf Benutzerrechten erstellen
-      let whereCondition: SQL<unknown>;
-      
-      if (currentUser.isAdmin) {
-        // Admin kann jeden Kostenvoranschlag löschen
-        whereCondition = eq(costEstimates.id, id);
-      } else {
-        // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop löschen
-        const shopIdValue = currentUser.shopId || 1;
-        whereCondition = and(
-          eq(costEstimates.id, id),
-          eq(costEstimates.shopId, shopIdValue)
-        ) as SQL<unknown>;
-      }
+      // Jeder Benutzer, auch Admin, kann nur Kostenvoranschläge aus seinem Shop löschen (DSGVO-konform)
+      const shopIdValue = currentUser.shopId || 1;
+      const whereCondition = and(
+        eq(costEstimates.id, id),
+        eq(costEstimates.shopId, shopIdValue)
+      ) as SQL<unknown>;
       
       await db.delete(costEstimates).where(whereCondition);
       return true;
