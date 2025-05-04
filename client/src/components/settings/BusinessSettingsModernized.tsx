@@ -452,50 +452,28 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                       )}
                     </div>
                     <div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log('LOGO BUTTON CLICKED');
-                          
-                          // Direkter Ansatz ohne Ref
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/jpeg,image/png,image/svg+xml';
-                          
-                          // Event-Handler hinzufügen
-                          input.onchange = (event) => {
-                            const target = event.target as HTMLInputElement;
-                            console.log('File selected:', target.files);
-                            if (target.files && target.files.length > 0) {
-                              // Manuell handleLogoUpload aufrufen
-                              const fakeEvent = { 
-                                target: { files: target.files } 
-                              } as React.ChangeEvent<HTMLInputElement>;
-                              handleLogoUpload(fakeEvent);
-                            }
-                          };
-                          
-                          // Input zum DOM hinzufügen und klicken
-                          document.body.appendChild(input);
-                          input.click();
-                          
-                          // Nach Auswahl wieder entfernen
-                          setTimeout(() => {
-                            document.body.removeChild(input);
-                          }, 1000);
-                        }}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Logo hochladen
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
-                      {logoError && (
-                        <p className="text-xs text-red-500 mt-1">{logoError}</p>
-                      )}
+                      <div className="flex flex-col space-y-2">
+                        <input
+                          id="file-upload"
+                          name="logo"
+                          type="file"
+                          accept="image/jpeg,image/png,image/svg+xml"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                        
+                        <label htmlFor="file-upload">
+                          <Button variant="outline" size="sm" type="button">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Logo hochladen
+                          </Button>
+                        </label>
+                        
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
+                        {logoError && (
+                          <p className="text-xs text-red-500 mt-1">{logoError}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
