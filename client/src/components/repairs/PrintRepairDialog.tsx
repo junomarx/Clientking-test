@@ -21,9 +21,10 @@ interface PrintRepairDialogProps {
   open: boolean;
   onClose: () => void;
   repairId: number | null;
+  isPreview?: boolean;
 }
 
-export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialogProps) {
+export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }: PrintRepairDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
   const { toast } = useToast();
@@ -95,6 +96,9 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
 
   // Funktion zum Erstellen eines PDFs für den Kassenbon
   const handlePrint = async () => {
+    // Bei Vorschau nicht drucken
+    if (isPreview) return;
+    
     if (!printRef.current) {
       console.error('Druckelement nicht gefunden');
       return;

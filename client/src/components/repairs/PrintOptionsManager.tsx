@@ -7,6 +7,8 @@ import { PrintRepairA4Dialog } from './PrintRepairA4Dialog';
 // Kontext für globale Druckoptionen
 type PrintManagerContextType = {
   showPrintOptions: (repairId: number) => void;
+  previewBon: (repairId: number) => void;
+  previewRepairId: number | null;
 };
 
 const PrintManagerContext = createContext<PrintManagerContextType | undefined>(undefined);
@@ -26,6 +28,7 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
   const [showLabelPrintDialog, setShowLabelPrintDialog] = useState(false);
   const [showA4PrintDialog, setShowA4PrintDialog] = useState(false);
   const [repairId, setRepairId] = useState<number | null>(null);
+  const [previewRepairId, setPreviewRepairId] = useState<number | null>(null);
   
   // Druckoptionen anzeigen
   const handleShowPrintOptions = (id: number) => {
@@ -49,9 +52,18 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
     setShowPrintOptions(false);
     setShowA4PrintDialog(true);
   };
+  
+  // Bon-Vorschau anzeigen ohne direkt zu drucken
+  const previewBon = (id: number) => {
+    setPreviewRepairId(id);
+  };
 
   return (
-    <PrintManagerContext.Provider value={{ showPrintOptions: handleShowPrintOptions }}>
+    <PrintManagerContext.Provider value={{ 
+      showPrintOptions: handleShowPrintOptions,
+      previewBon, 
+      previewRepairId 
+    }}>
       {children}
       
       {/* Druckoptionen Dialog - separater Dialog */}
@@ -83,6 +95,14 @@ export function PrintManagerProvider({ children }: { children: ReactNode }) {
         open={showA4PrintDialog}
         onClose={() => setShowA4PrintDialog(false)}
         repairId={repairId}
+      />
+      
+      {/* Bon Vorschau Dialog */}
+      <PrintRepairDialog
+        open={previewRepairId !== null}
+        onClose={() => setPreviewRepairId(null)}
+        repairId={previewRepairId}
+        isPreview={true}
       />
     </PrintManagerContext.Provider>
   );
