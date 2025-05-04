@@ -1,3 +1,5 @@
+// client/src/components/superadmin/SuperadminDevicesTab.tsx
+
 import React from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +11,9 @@ export default function SuperadminDevicesTab() {
       <Tabs defaultValue="types" className="w-full">
         <TabsList>
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
-          <TabsTrigger value="brands">Marken</TabsTrigger>
+          <TabsTrigger value="brands">Hersteller</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
+          <TabsTrigger value="errors">Fehlerkatalog</TabsTrigger>
         </TabsList>
 
         <TabsContent value="types">
@@ -27,10 +30,10 @@ export default function SuperadminDevicesTab() {
         <TabsContent value="brands">
           <Card>
             <CardHeader>
-              <CardTitle>Marken</CardTitle>
+              <CardTitle>Hersteller</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Hier werden die Marken angezeigt.</p>
+              <p>Hier werden die Hersteller angezeigt.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -42,6 +45,17 @@ export default function SuperadminDevicesTab() {
             </CardHeader>
             <CardContent>
               <p>Hier werden die Modelle angezeigt.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="errors">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fehlerkatalog</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Hier werden die häufigsten Fehler und Diagnosen verwaltet.</p>
             </CardContent>
           </Card>
         </TabsContent>
