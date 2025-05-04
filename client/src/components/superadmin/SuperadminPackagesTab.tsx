@@ -86,6 +86,7 @@ export default function SuperadminPackagesTab() {
       { feature: 'canUseCostEstimates', value: true },
       { feature: 'canViewDetailedStats', value: true },
       { feature: 'canSendEmails', value: true },
+      { feature: 'canManageGlobalDevices', value: false },
       { feature: 'maxRepairs', value: 1000 }
     ]
   };

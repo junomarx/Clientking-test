@@ -13,7 +13,8 @@ import {
   Settings,
   UserCog,
   Shield,
-  LayoutDashboard
+  LayoutDashboard,
+  Smartphone
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import SuperadminDashboardTab from "@/components/superadmin/SuperadminDashboardTab";
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
+import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
 
 export default function SuperadminPage() {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -60,6 +62,14 @@ export default function SuperadminPage() {
             >
               Pakete
             </SideNavItem>
+            
+            <SideNavItem 
+              icon={<Smartphone className="h-5 w-5" />} 
+              isActive={activeTab === "devices"} 
+              onClick={() => setActiveTab("devices")}
+            >
+              Geräte
+            </SideNavItem>
           </nav>
         </div>
       </aside>
@@ -69,10 +79,11 @@ export default function SuperadminPage() {
         <main className="flex-1 px-4 sm:px-6 md:px-8 py-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="md:hidden">
-              <TabsList className="grid grid-cols-3 w-full">
+              <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="users">Benutzer</TabsTrigger>
                 <TabsTrigger value="packages">Pakete</TabsTrigger>
+                <TabsTrigger value="devices">Geräte</TabsTrigger>
               </TabsList>
             </div>
             
@@ -86,6 +97,10 @@ export default function SuperadminPage() {
             
             <TabsContent value="packages" className="mt-0">
               <SuperadminPackagesTab />
+            </TabsContent>
+            
+            <TabsContent value="devices" className="mt-0">
+              <SuperadminDevicesTab />
             </TabsContent>
           </Tabs>
         </main>
