@@ -585,16 +585,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kunden sehen
-      return await db
-        .select()
-        .from(customers)
-        .orderBy(desc(customers.createdAt));
-    }
-    
-    // Normaler Benutzer sieht nur Kunden aus seinem Shop
+    // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -612,17 +603,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kunden sehen
-      const [customer] = await db
-        .select()
-        .from(customers)
-        .where(eq(customers.id, id));
-      return customer;
-    }
-    
-    // Normaler Benutzer sieht nur Kunden aus seinem Shop
+    // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     const [customer] = await db
       .select()
@@ -661,21 +642,7 @@ export class DatabaseStorage implements IStorage {
       lastNameFilter = sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`;
     }
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kunden suchen
-      return await db
-        .select()
-        .from(customers)
-        .where(
-          and(
-            firstNameFilter,
-            lastNameFilter
-          ) as SQL<unknown>
-        );
-    }
-    
-    // Normaler Benutzer sieht nur Kunden aus seinem Shop
+    // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -719,18 +686,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Kunden aktualisieren
-      const [updatedCustomer] = await db
-        .update(customers)
-        .set(customerUpdate)
-        .where(eq(customers.id, id))
-        .returning();
-      return updatedCustomer;
-    }
-    
-    // Normaler Benutzer kann nur Kunden aus seinem Shop aktualisieren
+    // Jeder Benutzer kann nur Kunden aus seinem eigenen Shop aktualisieren (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     const [updatedCustomer] = await db
       .update(customers)
@@ -755,14 +711,7 @@ export class DatabaseStorage implements IStorage {
       const currentUser = await this.getUser(currentUserId);
       if (!currentUser) return false;
       
-      // Prüfen, ob der Benutzer Admin ist (bugi)
-      if (currentUser.isAdmin) {
-        // Admin kann alle Kunden löschen
-        await db.delete(customers).where(eq(customers.id, id));
-        return true;
-      }
-      
-      // Normaler Benutzer kann nur Kunden aus seinem Shop löschen
+      // Jeder Benutzer kann nur Kunden aus seinem eigenen Shop löschen (DSGVO-konform)
       const shopIdValue = currentUser.shopId || 1;
       await db.delete(customers).where(
         and(
@@ -787,16 +736,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Reparaturen sehen
-      return await db
-        .select()
-        .from(repairs)
-        .orderBy(desc(repairs.createdAt));
-    }
-    
-    // Normaler Benutzer sieht nur Reparaturen aus seinem Shop
+    // Jeder Benutzer sieht nur Reparaturen aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -833,17 +773,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Reparaturen sehen
-      const [repair] = await db
-        .select()
-        .from(repairs)
-        .where(eq(repairs.id, id));
-      return repair;
-    }
-    
-    // Normaler Benutzer sieht nur Reparaturen aus seinem Shop
+    // Jeder Benutzer sieht nur Reparaturen aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     const [repair] = await db
       .select()
@@ -866,17 +796,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return [];
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Reparaturen für den Kunden sehen
-      return await db
-        .select()
-        .from(repairs)
-        .where(eq(repairs.customerId, customerId))
-        .orderBy(desc(repairs.createdAt));
-    }
-    
-    // Normaler Benutzer sieht nur Reparaturen aus seinem Shop
+    // Jeder Benutzer sieht nur Reparaturen aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
@@ -1079,21 +999,7 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann alle Reparaturen aktualisieren
-      const [updatedRepair] = await db
-        .update(repairs)
-        .set({
-          ...repairUpdate,
-          updatedAt: new Date()
-        })
-        .where(eq(repairs.id, id))
-        .returning();
-      return updatedRepair;
-    }
-    
-    // Normaler Benutzer kann nur Reparaturen aus seinem Shop aktualisieren
+    // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     const [updatedRepair] = await db
       .update(repairs)
@@ -1146,22 +1052,7 @@ export class DatabaseStorage implements IStorage {
     
     const now = new Date();
     
-    // Prüfen, ob der Benutzer Admin ist (bugi)
-    if (currentUser.isAdmin) {
-      // Admin kann den Status aller Reparaturen aktualisieren
-      const [updatedRepair] = await db
-        .update(repairs)
-        .set({
-          status,
-          updatedAt: now,
-          statusUpdatedAt: now // Setze den Zeitpunkt der Statusänderung für Umsatzanalysen
-        })
-        .where(eq(repairs.id, id))
-        .returning();
-      return updatedRepair;
-    }
-    
-    // Normaler Benutzer kann nur den Status von Reparaturen aus seinem Shop aktualisieren
+    // Jeder Benutzer kann nur den Status von Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
     const [updatedRepair] = await db
       .update(repairs)
