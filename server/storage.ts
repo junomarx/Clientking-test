@@ -1468,10 +1468,23 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, prüfen wir auf Superadmin-Rechte
       if (!user.shopId) {
-        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
-        return undefined;
+        // Superadmins dürfen auf die Einstellungen zugreifen (wir verwenden Default-Einstellungen)
+        if (user.isSuperadmin) {
+          console.log(`Superadmin ${user.username} (ID: ${user.id}) greift auf Geschäftseinstellungen zu`);
+          const [defaultSettings] = await db
+            .select()
+            .from(businessSettings)
+            .limit(1);
+          
+          if (defaultSettings) {
+            return defaultSettings;
+          }
+        } else {
+          console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+          return undefined;
+        }
       }
 
       // Shop-ID aus dem Benutzer extrahieren (ohne Fallback auf 1)

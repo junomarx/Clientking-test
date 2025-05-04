@@ -142,8 +142,8 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: errorMessage });
       }
       
-      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat
-      if (!user.shopId) {
+      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
+      if (!user.shopId && !user.isSuperadmin) {
         console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
         return res.status(403).json({ 
           message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
@@ -200,8 +200,8 @@ export function setupAuth(app: Express) {
         return res.sendStatus(401);
       }
       
-      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat
-      if (!user.shopId) {
+      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
+      if (!user.shopId && !user.isSuperadmin) {
         console.error(`❌ Token-Auth verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
         return res.status(403).json({ 
           message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
