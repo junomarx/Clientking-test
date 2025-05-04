@@ -39,19 +39,29 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
     }
   }, [open, repairId]);
 
-  // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
-    queryKey: ['/api/repairs', repairId],
+  // Lade alle Daten auf einmal mit dem neuen API-Endpunkt
+  const { data: printData, isLoading: isLoadingPrintData } = useQuery<{
+    repair: Repair;
+    customer: Customer;
+    businessSettings: BusinessSettings;
+  }>({
+    queryKey: ['/api/print-data', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
-        const response = await fetch(`/api/repairs/${repairId}`, {
+        console.log(`Rufe /api/print-data/${repairId} für A4-Dokument auf...`);
+        const response = await fetch(`/api/print-data/${repairId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Accept': 'application/json'
           }
         });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Fehler beim Laden der Druckdaten (Status ${response.status}):`, errorText);
+          throw new Error(`Druckdaten konnten nicht geladen werden: ${response.status} ${response.statusText}`);
+        }
         
         // Überprüfen des Content-Types
         const contentType = response.headers.get('Content-Type');
@@ -59,63 +69,31 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
           throw new Error(`Unerwarteter Content-Type: ${contentType}`);
         }
         
-        return response.json();
+        const data = await response.json();
+        console.log('Geladene Druckdaten für A4-Dokument:', data);
+        return data;
       } catch (err) {
-        console.error("Fehler beim Laden der Reparaturdaten:", err);
+        console.error("Fehler beim Laden der Druckdaten:", err);
         return null;
       }
     },
     enabled: !!repairId && open,
   });
   
-  // Debug-Ausgabe für Fehlersuche
-  useEffect(() => {
-    if (repairId && open) {
-      console.log(`Versuche Reparatur #${repairId} für A4-Dokument zu laden`);
-    }
-    if (repair) {
-      console.log(`Reparatur #${repairId} für A4-Dokument geladen:`, repair);
-    }
-  }, [repairId, open, repair]);
-
-  // Lade Kundendaten
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery({
-    queryKey: ['/api/customers', repair?.customerId],
-    queryFn: async () => {
-      if (!repair?.customerId) return null;
-      try {
-        const response = await fetch(`/api/customers/${repair.customerId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Accept': 'application/json'
-          }
-        });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
-        
-        // Überprüfen des Content-Types
-        const contentType = response.headers.get('Content-Type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error(`Unerwarteter Content-Type: ${contentType}`);
-        }
-        
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Kundendaten:", err);
-        return null;
-      }
-    },
-    enabled: !!repair?.customerId && open,
-  });
+  // Extrahiere die Daten aus dem Ergebnis
+  const repair = printData?.repair;
+  const customer = printData?.customer;
+  const businessSettings = printData?.businessSettings;
   
   // Debug-Ausgabe für Fehlersuche
   useEffect(() => {
-    if (repair?.customerId && open) {
-      console.log(`Versuche Kunde #${repair.customerId} für A4-Dokument zu laden`);
+    if (repairId && open) {
+      console.log(`Versuche Druckdaten für Reparatur #${repairId} (A4) zu laden`);
     }
-    if (customer) {
-      console.log(`Kunde ${customer.firstName} ${customer.lastName} für A4-Dokument geladen:`, customer);
+    if (printData) {
+      console.log('Druckdaten für A4-Dokument geladen:', printData);
     }
-  }, [repair?.customerId, open, customer]);
+  }, [repairId, open, printData]);
 
   // Funktion zum Drucken des Dokuments
   const handlePrint = () => {
@@ -157,12 +135,12 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
       return 'nach Aufwand';
     };
 
-    // Hole Firmendaten aus den Settings
-    const businessName = settings?.businessName || 'Mein Handyshop';
-    const streetAddress = settings?.streetAddress || '';
-    const zipAndCity = `${settings?.zipCode || ''} ${settings?.city || ''}`;
-    const phone = settings?.phone || '';
-    const email = settings?.email || '';
+    // Hole Firmendaten - zuerst aus der API-Antwort, als Fallback aus dem Hook
+    const businessName = businessSettings?.businessName || settings?.businessName || 'Mein Handyshop';
+    const streetAddress = businessSettings?.streetAddress || settings?.streetAddress || '';
+    const zipAndCity = `${businessSettings?.zipCode || settings?.zipCode || ''} ${businessSettings?.city || settings?.city || ''}`;
+    const phone = businessSettings?.phone || settings?.phone || '';
+    const email = businessSettings?.email || settings?.email || '';
     
     // Logo-URL mit Cache-Busting für Druckdokument
     const logoUrl = '/uploads/firmenlogo.png';
@@ -447,7 +425,7 @@ export function PrintA4RepairDocument({ open, onClose, repairId }: PrintA4Repair
           <DialogTitle>A4 Reparaturauftrag drucken</DialogTitle>
         </DialogHeader>
         
-        {(isLoadingRepair || isLoadingCustomer) ? (
+        {isLoadingPrintData ? (
           <div className="py-8 text-center">
             <div className="animate-spin w-10 h-10 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
             <p className="mt-2 text-sm text-muted-foreground">Daten werden geladen...</p>
