@@ -1012,9 +1012,15 @@ export class DatabaseStorage implements IStorage {
     // Benutzer holen, um Shop-ID zu erhalten
     const currentUser = await this.getUser(userId);
     if (!currentUser) return 0;
-
-    // Shop-ID des Benutzers ermitteln
-    const shopIdValue = currentUser.shopId || 1;
+    
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, 0 zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return 0;
+    }
+    
+    // Shop-ID des Benutzers verwenden
+    const shopIdValue = currentUser.shopId;
 
     const result = await db
       .select({ count: count() })
@@ -3296,7 +3302,7 @@ export class DatabaseStorage implements IStorage {
           "email_templates" t ON h."emailTemplateId" = t.id 
         WHERE 
           h."repairId" = ${repairId} AND
-          h."shopId" = ${shopIdValue}
+          h."shop_id" = ${shopIdValue}
         ORDER BY 
           h."sentAt" DESC
       `;
