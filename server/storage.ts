@@ -1066,6 +1066,19 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateRepairSignature(id: number, signature: string, type: 'dropoff' | 'pickup' = 'dropoff', currentUserId?: number): Promise<Repair | undefined> {
+    // DSGVO-konform: Ohne Benutzer-ID kein Zugriff auf Daten
+    if (!currentUserId) {
+      console.log(`Sicherheitswarnung: updateRepairSignature ohne Benutzer-ID aufgerufen für Reparatur ${id}`);
+      return undefined;
+    }
+    
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) {
+      console.log(`Sicherheitswarnung: Benutzer ${currentUserId} nicht gefunden beim Aktualisieren der Signatur für Reparatur ${id}`);
+      return undefined;
+    }
+    
     const now = new Date();
     
     // Je nach Typ (Abgabe oder Abholung) unterschiedliche Spalten aktualisieren
@@ -1079,33 +1092,19 @@ export class DatabaseStorage implements IStorage {
       updatedAt: now
     };
     
-    // Wenn eine Benutzer-ID angegeben ist, Shop-Isolation anwenden (DSGVO-konform)
-    if (currentUserId) {
-      // Benutzer holen, um Shop-ID zu erhalten
-      const currentUser = await this.getUser(currentUserId);
-      if (currentUser) {
-        const shopIdValue = currentUser.shopId || 1;
-        const [updatedRepair] = await db
-          .update(repairs)
-          .set(updateData)
-          .where(
-            and(
-              eq(repairs.id, id),
-              eq(repairs.shopId, shopIdValue)
-            )
-          )
-          .returning();
-        
-        return updatedRepair;
-      }
-    }
+    // Jeder Benutzer kann nur Reparaturen aus seinem eigenen Shop aktualisieren (DSGVO-konform)
+    const shopIdValue = currentUser.shopId || 1;
+    console.log(`Aktualisiere Signatur (${type}) für Reparatur ${id} mit Shop-Isolation für Shop ${shopIdValue}`);
     
-    // Fallback für den Fall, dass keine Benutzer-ID angegeben wird
-    // (nur für Kompatibilität mit bestehenden Aufrufen)
     const [updatedRepair] = await db
       .update(repairs)
       .set(updateData)
-      .where(eq(repairs.id, id))
+      .where(
+        and(
+          eq(repairs.id, id),
+          eq(repairs.shopId, shopIdValue)
+        )
+      )
       .returning();
     
     return updatedRepair;
@@ -1895,10 +1894,22 @@ export class DatabaseStorage implements IStorage {
   
   // User device types methods
   async getUserDeviceTypes(userId: number): Promise<UserDeviceType[]> {
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+    
     return await db
       .select()
       .from(userDeviceTypes)
-      .where(eq(userDeviceTypes.userId, userId))
+      .where(
+        and(
+          eq(userDeviceTypes.userId, userId),
+          eq(userDeviceTypes.shopId, shopId)
+        )
+      )
       .orderBy(userDeviceTypes.name);
   }
   
