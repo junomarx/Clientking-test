@@ -313,9 +313,17 @@ export class DatabaseStorage implements IStorage {
         .where(eq(emailTemplates.userId, id));
       
       // Lösche den E-Mail-Verlauf des Benutzers
-      await db
-        .delete(emailHistory)
-        .where(eq(emailHistory.userId, id));
+      try {
+        await db
+          .delete(emailHistory)
+          .where(eq(emailHistory.userId, id));
+        console.log('E-Mail-Verlauf des Benutzers gelöscht');
+      } catch (err) {
+        // Fehler sicher behandeln
+        const error = err as Error;
+        console.warn('Fehler beim Löschen des E-Mail-Verlaufs:', error.message);
+        // Fortfahren, auch wenn das Löschen der E-Mail-Historie fehlschlägt
+      }
       
       // Lösche benutzerdefinierte Gerätemodelle
       await db

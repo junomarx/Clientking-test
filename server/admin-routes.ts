@@ -1017,6 +1017,7 @@ export function registerAdminRoutes(app: Express) {
   app.delete("/api/admin/users/:id", isAdmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Versuch, Benutzer mit ID ${id} zu löschen.`);
       
       const user = await storage.getUser(id);
       
@@ -1037,13 +1038,19 @@ export function registerAdminRoutes(app: Express) {
       const deleted = await storage.deleteUser(id);
       
       if (!deleted) {
-        return res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
+        return res.status(500).json({ message: "Fehler beim Löschen des Benutzers und seiner zugehörigen Daten" });
       }
       
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting user:", error);
-      res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
+      // Detailliertere Fehlermeldung für Debugging
+      const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+      res.status(500).json({ 
+        message: "Fehler beim Löschen des Benutzers", 
+        details: errorMessage,
+        technicalInfo: error instanceof Error ? error.stack : null
+      });
     }
   });
 }
