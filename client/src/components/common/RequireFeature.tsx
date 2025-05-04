@@ -1,9 +1,9 @@
 import { useAuth } from "@/hooks/use-auth";
-import { hasAccessClient as hasAccess, Feature } from "@/lib/permissions";
-import { useState } from "react";
+import { hasAccessClient as hasAccess, hasAccessClientAsync, Feature } from "@/lib/permissions";
+import { useState, useEffect } from "react";
 import { UpgradeRequiredDialog } from "./UpgradeRequiredDialog";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, Loader2 } from "lucide-react";
 
 type UserResponse = Omit<import("@shared/schema").User, "password">;
 
@@ -26,9 +26,54 @@ export function RequireFeature({
 }: RequireFeatureProps) {
   const { user } = useAuth();
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [hasFeatureAccess, setHasFeatureAccess] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
-  const hasFeatureAccess = user ? checkUserAccess(user, feature) : false;
+  // Asynchrone Überprüfung des Feature-Zugriffs
+  useEffect(() => {
+    async function checkAccess() {
+      setIsLoading(true);
+      
+      // Für nicht angemeldete Benutzer
+      if (!user) {
+        setHasFeatureAccess(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Admin hat immer Zugriff (schnelle lokale Prüfung)
+      if (user.isAdmin || user.username === 'bugi') {
+        setHasFeatureAccess(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // Server-seitige Prüfung (berücksichtigt das neue Paketsystem)
+        const hasAccess = await hasAccessClientAsync(user, feature);
+        setHasFeatureAccess(hasAccess);
+      } catch (error) {
+        console.error('Fehler bei der Feature-Zugriffsprüfung:', error);
+        
+        // Fallback auf lokale Prüfung bei Server-Fehlern
+        const fallbackAccess = checkUserAccessSync(user, feature);
+        setHasFeatureAccess(fallbackAccess);
+      }
+      
+      setIsLoading(false);
+    }
+    
+    checkAccess();
+  }, [user, feature]);
+  
+  // Lade-Indikator während der Prüfung
+  if (isLoading) {
+    return (
+      <div className="p-4 flex justify-center items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary/50" />
+      </div>
+    );
+  }
   
   if (hasFeatureAccess) {
     // Wenn der Benutzer Zugriff hat, zeige den normalen Inhalt
@@ -89,9 +134,45 @@ export function withFeatureAccess<P extends object>(
 export function useFeatureAccess(feature: string, requiredPlan: "professional" | "enterprise") {
   const { user } = useAuth();
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [hasFeatureAccess, setHasFeatureAccess] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Prüfe, ob der Benutzer Zugriff auf die Funktion hat
-  const hasFeatureAccess = user ? checkUserAccess(user, feature) : false;
+  // Asynchrone Überprüfung des Feature-Zugriffs
+  useEffect(() => {
+    async function checkAccess() {
+      setIsLoading(true);
+      
+      // Für nicht angemeldete Benutzer
+      if (!user) {
+        setHasFeatureAccess(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Admin hat immer Zugriff (schnelle lokale Prüfung)
+      if (user.isAdmin || user.username === 'bugi') {
+        setHasFeatureAccess(true);
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // Server-seitige Prüfung (berücksichtigt das neue Paketsystem)
+        const hasAccess = await hasAccessClientAsync(user, feature);
+        setHasFeatureAccess(hasAccess);
+      } catch (error) {
+        console.error('Fehler bei der Feature-Zugriffsprüfung:', error);
+        
+        // Fallback auf lokale Prüfung bei Server-Fehlern
+        const fallbackAccess = checkUserAccessSync(user, feature);
+        setHasFeatureAccess(fallbackAccess);
+      }
+      
+      setIsLoading(false);
+    }
+    
+    checkAccess();
+  }, [user, feature]);
   
   // Dialog-Komponente für Upgrade-Hinweis
   const UpgradeDialog = () => (
@@ -103,16 +184,17 @@ export function useFeatureAccess(feature: string, requiredPlan: "professional" |
   );
   
   return {
-    hasAccess: hasFeatureAccess,
+    hasAccess: hasFeatureAccess === true,
+    isLoading,
     checkAccess: () => setShowUpgradeDialog(true),
     UpgradeDialog
   };
 }
 
 /**
- * Hilfsfunktion zur Prüfung des Benutzer-Zugriffs
+ * Synchrone Hilfsfunktion zur Prüfung des Benutzer-Zugriffs als Fallback
  */
-function checkUserAccess(user: UserResponse | null, feature: string): boolean {
+function checkUserAccessSync(user: UserResponse | null, feature: string): boolean {
   if (!user) return false;
   
   // Admin-Benutzer hat immer Zugriff auf alle Funktionen
