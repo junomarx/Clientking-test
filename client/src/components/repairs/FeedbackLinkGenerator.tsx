@@ -101,7 +101,7 @@ export function FeedbackLinkGenerator({ repairId }: FeedbackLinkGeneratorProps) 
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Teilen Sie diesen Link mit dem Kunden per E-Mail oder SMS, damit er seine Erfahrung bewerten kann.
+              Teilen Sie diesen Link mit dem Kunden per E-Mail, damit er seine Erfahrung bewerten kann.
             </p>
           </div>
         ) : (
