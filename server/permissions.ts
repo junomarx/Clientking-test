@@ -16,6 +16,19 @@ export function hasAccess(user: User | null | undefined, feature: string): boole
   // Admin-Benutzer hat immer Zugriff auf alle Funktionen
   if (user.isAdmin || user.username === 'bugi') return true;
 
+  // Prüfen, ob für dieses Feature eine individuelle Übersteuerung existiert
+  if (user.featureOverrides && typeof user.featureOverrides === 'string') {
+    try {
+      const overrides = JSON.parse(user.featureOverrides);
+      if (feature in overrides) {
+        return overrides[feature] === true;
+      }
+    } catch (e) {
+      console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
+      // Bei Fehlern im JSON wird der Standard-Prüfmechanismus verwendet
+    }
+  }
+
   const pricingPlan = user.pricingPlan as string;
   
   // Funktionen nach Tarifmodell definieren
@@ -82,6 +95,19 @@ export async function isProfessionalOrHigher(userId: number): Promise<boolean> {
     
     // Admin-Benutzer hat immer Zugriff
     if (user.isAdmin || user.username === 'bugi') return true;
+    
+    // Prüfe auf Feature-Übersteuerungen für Professional-Features
+    if (user.featureOverrides) {
+      try {
+        const overrides = JSON.parse(user.featureOverrides);
+        // Prüfen, ob mindestens eines der Professional-Features erlaubt ist
+        if (overrides.costEstimates === true || overrides.emailTemplates === true) {
+          return true;
+        }
+      } catch (e) {
+        console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
+      }
+    }
     
     // Prüfen, ob der Benutzer mindestens das Professional-Paket hat
     return ['professional', 'enterprise'].includes(user.pricingPlan);
