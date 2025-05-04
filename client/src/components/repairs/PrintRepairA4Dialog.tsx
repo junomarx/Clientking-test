@@ -139,9 +139,17 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       const canvas = await html2canvas(content, {
         scale: 2, // Höhere Qualität
-        logging: false,
+        logging: true,
         useCORS: true,
         allowTaint: true,
+        height: content.scrollHeight, // Erfasst die gesamte Höhe
+        windowHeight: content.scrollHeight, // Setzt das Fenster hoch genug
+        onclone: (document, element) => {
+          // Stellt sicher, dass der geklonte Inhalt vollständig sichtbar ist
+          element.style.maxHeight = 'none';
+          element.style.height = 'auto';
+          element.style.overflow = 'visible';
+        }
       });
       
       // A4 Format: 210 x 297 mm

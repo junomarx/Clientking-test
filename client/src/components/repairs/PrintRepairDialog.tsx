@@ -113,9 +113,17 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       const content = printRef.current;
       const canvas = await html2canvas(content, {
         scale: 2, // Höhere Qualität
-        logging: false,
+        logging: true,
         useCORS: true,
         allowTaint: true,
+        height: content.scrollHeight, // Erfasst die gesamte Höhe
+        windowHeight: content.scrollHeight, // Setzt das Fenster hoch genug
+        onclone: (document, element) => {
+          // Stellt sicher, dass der geklonte Inhalt vollständig sichtbar ist
+          element.style.maxHeight = 'none';
+          element.style.height = 'auto';
+          element.style.overflow = 'visible';
+        }
       });
       
       // Berechne das Seitenverhältnis für PDF
