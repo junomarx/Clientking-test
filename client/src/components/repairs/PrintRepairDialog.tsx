@@ -133,7 +133,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               
               body {
                 font-family: Arial, sans-serif;
-                font-size: 10px;
+                font-size: ${settings?.receiptWidth === '58mm' ? '11px' : '10px'};
                 width: ${settings?.receiptWidth || '80mm'}; /* Bonbreite aus Einstellungen */
                 margin: 0;
                 padding: 10px;
@@ -146,7 +146,7 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               }
               
               .logo-img {
-                max-width: 80%;
+                max-width: ${settings?.receiptWidth === '58mm' ? '90%' : '80%'};
                 height: auto;
               }
               
@@ -165,71 +165,71 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
               
               .headline {
                 font-weight: bold;
-                font-size: 15px;
-                margin-bottom: 3px;
+                font-size: ${settings?.receiptWidth === '58mm' ? '14px' : '15px'};
+                margin-bottom: ${settings?.receiptWidth === '58mm' ? '2px' : '3px'};
               }
               
               .auftragsnummer {
                 font-weight: bold;
-                font-size: 13px;
+                font-size: ${settings?.receiptWidth === '58mm' ? '12px' : '13px'};
               }
               
               .section {
-                margin-bottom: 16px;
+                margin-bottom: ${settings?.receiptWidth === '58mm' ? '14px' : '16px'};
               }
               
               .field {
-                margin-bottom: 4px;
+                margin-bottom: ${settings?.receiptWidth === '58mm' ? '3px' : '4px'};
               }
               
               .kundenname,
               .geraetinfo {
-                font-size: 13px;
+                font-size: ${settings?.receiptWidth === '58mm' ? '12px' : '13px'};
                 font-weight: bold;
                 margin-bottom: 2px;
               }
               
               .schaden-title {
                 font-weight: bold;
-                margin-top: 8px;
+                margin-top: ${settings?.receiptWidth === '58mm' ? '6px' : '8px'};
                 margin-bottom: 2px;
               }
               
               .preis-label {
                 font-weight: bold;
                 font-size: 11px;
-                margin-top: 10px;
+                margin-top: ${settings?.receiptWidth === '58mm' ? '8px' : '10px'};
                 margin-bottom: 2px;
               }
               
               .signature-box {
-                margin-top: 20px;
+                margin-top: ${settings?.receiptWidth === '58mm' ? '16px' : '20px'};
                 text-align: center;
               }
               
               .signature-title {
                 font-weight: bold;
-                margin-bottom: 6px;
+                margin-bottom: ${settings?.receiptWidth === '58mm' ? '4px' : '6px'};
               }
               
               .signature-line {
-                margin-top: 25px;
+                margin-top: ${settings?.receiptWidth === '58mm' ? '20px' : '25px'};
                 border-top: 1px solid #000;
                 width: 100%;
               }
               
               .terms-box {
                 border: 1px solid #000;
-                padding: 8px;
+                padding: ${settings?.receiptWidth === '58mm' ? '6px' : '8px'};
                 font-size: 9px;
-                line-height: 1.4;
+                line-height: ${settings?.receiptWidth === '58mm' ? '1.3' : '1.4'};
               }
               
               .terms-title {
                 text-align: center;
                 font-weight: bold;
-                font-size: 11px;
-                margin-bottom: 6px;
+                font-size: ${settings?.receiptWidth === '58mm' ? '10px' : '11px'};
+                margin-bottom: ${settings?.receiptWidth === '58mm' ? '4px' : '6px'};
               }
               
               .print-container {
@@ -558,12 +558,25 @@ export function PrintRepairDialog({ open, onClose, repairId }: PrintRepairDialog
                 <div className="section">
                   <div className="terms-box">
                     <div className="terms-title">Reparaturbedingungen</div>
-                    1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
-                    2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
-                    3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
-                    4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
-                    5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
-                    6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
+                    {settings?.receiptWidth === '58mm' ? (
+                      <>
+                        1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+                        2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+                        3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+                        4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+                        5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+                        6. Mit Unterschrift werden Bedingungen akzeptiert.
+                      </>
+                    ) : (
+                      <>
+                        1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
+                        2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
+                        3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
+                        4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
+                        5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
+                        6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
+                      </>
+                    )}
                   </div>
                 </div>
 
