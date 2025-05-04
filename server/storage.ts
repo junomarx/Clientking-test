@@ -2560,7 +2560,11 @@ export class DatabaseStorage implements IStorage {
       return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
     }
     
-    // Kostenvoranschlag abrufen
+    // Benutzer holen, um Shop-ID zu erhalten
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
+    
+    // Kostenvoranschlag abrufen (getCostEstimate enthält bereits die Shop-ID-Überprüfung)
     const estimate = await this.getCostEstimate(id, currentUserId);
     if (!estimate) {
       return undefined;
@@ -2583,6 +2587,21 @@ export class DatabaseStorage implements IStorage {
       // Reparatur erstellen
       const repair = await this.createRepair(repairData, currentUserId);
       
+      // SQL-Bedingung für das Update basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      if (currentUser.isAdmin) {
+        // Admin kann jeden Kostenvoranschlag konvertieren
+        whereCondition = eq(costEstimates.id, id);
+      } else {
+        // Normaler Benutzer kann nur Kostenvoranschläge aus seinem Shop konvertieren
+        const shopIdValue = currentUser.shopId || 1;
+        whereCondition = and(
+          eq(costEstimates.id, id),
+          eq(costEstimates.shopId, shopIdValue)
+        ) as SQL<unknown>;
+      }
+      
       // Kostenvoranschlag als umgewandelt markieren
       await db
         .update(costEstimates)
@@ -2591,12 +2610,7 @@ export class DatabaseStorage implements IStorage {
           repairId: repair.id,
           updatedAt: new Date()
         })
-        .where(
-          and(
-            eq(costEstimates.id, id),
-            eq(costEstimates.userId, currentUserId)
-          )
-        );
+        .where(whereCondition);
       
       return repair;
     } catch (error) {

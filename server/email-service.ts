@@ -1,6 +1,6 @@
 import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
-import { eq, desc, isNull, or } from 'drizzle-orm';
+import { eq, desc, isNull, or, and, SQL } from 'drizzle-orm';
 import { storage } from './storage';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
@@ -44,69 +44,224 @@ export class EmailService {
 
   // Die grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
   async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
-    // Wenn eine userId angegeben ist, filtern wir nach Vorlagen dieses Benutzers
-    // und fügen zusätzlich Vorlagen ohne userId hinzu (Standard-Vorlagen)
-    if (userId !== undefined) {
-      const templates = await db.select().from(emailTemplates)
-        .where(
-          // Entweder die userId entspricht der übergebenen userId ODER die userId ist NULL
-          // Das stellt sicher, dass wir sowohl benutzerspezifische als auch globale Vorlagen zurückgeben
-          eq(emailTemplates.userId, userId)
-        )
+    if (!userId) {
+      // Ohne userId Filterung geben wir nur globale Vorlagen zurück
+      return await db.select().from(emailTemplates)
+        .where(eq(emailTemplates.userId, null as any))
         .orderBy(desc(emailTemplates.createdAt));
-      
-      // Zusätzlich auch die globalen Vorlagen (ohne userId) abfragen
-      const globalTemplates = await db.select().from(emailTemplates)
-        .where(
-          // SQL-Ausdruck für "userId IS NULL"
-          eq(emailTemplates.userId, null as any)
-        )
-        .orderBy(desc(emailTemplates.createdAt));
-      
-      // Beide Ergebnisse kombinieren
-      return [...templates, ...globalTemplates];
     }
     
-    // Ohne userId Filterung geben wir alle Vorlagen zurück
-    return await db.select().from(emailTemplates).orderBy(desc(emailTemplates.createdAt));
+    try {
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return []; // Benutzer nicht gefunden
+      }
+      
+      // Wenn der Benutzer ein Admin ist, zeige alle Vorlagen
+      if (user.isAdmin) {
+        return await db.select().from(emailTemplates)
+          .orderBy(desc(emailTemplates.createdAt));
+      }
+      
+      // Für normale Benutzer:
+      // 1. Zeige alle Vorlagen, die zur Shop-ID des Benutzers gehören
+      // 2. Zeige alle globalen Vorlagen (userId ist NULL)
+      const shopId = user.shopId || 1;
+      
+      return await db.select().from(emailTemplates)
+        .where(
+          or(
+            eq(emailTemplates.shopId, shopId),
+            eq(emailTemplates.userId, null as any)
+          )
+        )
+        .orderBy(desc(emailTemplates.createdAt));
+    } catch (error) {
+      console.error("Fehler beim Abrufen der E-Mail-Vorlagen:", error);
+      return [];
+    }
   }
 
-  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
-    const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
-    return template;
+  async getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined> {
+    if (!userId) {
+      // Wenn keine Benutzer-ID angegeben ist, geben wir nur globale Vorlagen zurück
+      const [template] = await db.select().from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.id, id),
+            eq(emailTemplates.userId, null as any)
+          )
+        );
+      return template;
+    }
+    
+    try {
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return undefined; // Benutzer nicht gefunden
+      }
+      
+      // Wenn der Benutzer ein Admin ist, kann er jede Vorlage sehen
+      if (user.isAdmin) {
+        const [template] = await db.select().from(emailTemplates)
+          .where(eq(emailTemplates.id, id));
+        return template;
+      }
+      
+      // Für normale Benutzer:
+      // Zeige nur Vorlagen, die zur Shop-ID des Benutzers gehören oder global sind
+      const shopId = user.shopId || 1;
+      
+      const [template] = await db.select().from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.id, id),
+            or(
+              eq(emailTemplates.shopId, shopId),
+              eq(emailTemplates.userId, null as any)
+            )
+          )
+        );
+      return template;
+    } catch (error) {
+      console.error("Fehler beim Abrufen der E-Mail-Vorlage:", error);
+      return undefined;
+    }
   }
 
-  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+  async createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate> {
     const now = new Date();
+    
+    // Wenn eine userId angegeben ist, holen wir den Benutzer, um die Shop-ID zu setzen
+    if (userId) {
+      try {
+        const user = await storage.getUser(userId);
+        if (user) {
+          // Shop-ID des Benutzers zur Vorlage hinzufügen
+          const shopId = user.shopId || 1;
+          
+          const [newTemplate] = await db.insert(emailTemplates).values({
+            ...template,
+            userId, // Benutzer-ID setzen
+            shopId, // Shop-ID setzen
+            createdAt: now,
+            updatedAt: now
+          }).returning();
+          
+          return newTemplate;
+        }
+      } catch (error) {
+        console.error("Fehler beim Abrufen des Benutzers beim Erstellen der E-Mail-Vorlage:", error);
+      }
+    }
+    
+    // Ohne Benutzer (oder wenn der Benutzer nicht gefunden wurde) erstellen wir eine globale Vorlage
     const [newTemplate] = await db.insert(emailTemplates).values({
       ...template,
       createdAt: now,
       updatedAt: now
     }).returning();
+    
     return newTemplate;
   }
 
   async updateEmailTemplate(
     id: number, 
-    template: Partial<InsertEmailTemplate>
+    template: Partial<InsertEmailTemplate>,
+    userId?: number
   ): Promise<EmailTemplate | undefined> {
-    const [updatedTemplate] = await db
-      .update(emailTemplates)
-      .set({
-        ...template,
-        updatedAt: new Date()
-      })
-      .where(eq(emailTemplates.id, id))
-      .returning();
-    return updatedTemplate;
+    if (!userId) {
+      // Ohne Benutzer-ID können nur globale Vorlagen aktualisiert werden
+      const [updatedTemplate] = await db
+        .update(emailTemplates)
+        .set({
+          ...template,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(emailTemplates.id, id),
+            eq(emailTemplates.userId, null as any)
+          )
+        )
+        .returning();
+      return updatedTemplate;
+    }
+    
+    try {
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId);
+      if (!user) return undefined;
+      
+      // SQL-Bedingung basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      if (user.isAdmin) {
+        // Admin kann jede Vorlage aktualisieren
+        whereCondition = eq(emailTemplates.id, id);
+      } else {
+        // Normale Benutzer können nur ihre eigenen Vorlagen oder Vorlagen ihres Shops aktualisieren
+        const shopId = user.shopId || 1;
+        whereCondition = and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.shopId, shopId)
+        ) as SQL<unknown>;
+      }
+      
+      const [updatedTemplate] = await db
+        .update(emailTemplates)
+        .set({
+          ...template,
+          updatedAt: new Date()
+        })
+        .where(whereCondition)
+        .returning();
+      
+      return updatedTemplate;
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der E-Mail-Vorlage:", error);
+      return undefined;
+    }
   }
 
-  async deleteEmailTemplate(id: number): Promise<boolean> {
+  async deleteEmailTemplate(id: number, userId?: number): Promise<boolean> {
     try {
-      await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+      if (!userId) {
+        // Ohne Benutzer-ID können nur globale Vorlagen gelöscht werden
+        await db.delete(emailTemplates).where(
+          and(
+            eq(emailTemplates.id, id),
+            eq(emailTemplates.userId, null as any)
+          )
+        );
+        return true;
+      }
+      
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId);
+      if (!user) return false;
+      
+      // SQL-Bedingung basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      if (user.isAdmin) {
+        // Admin kann jede Vorlage löschen
+        whereCondition = eq(emailTemplates.id, id);
+      } else {
+        // Normale Benutzer können nur ihre eigenen Vorlagen oder Vorlagen ihres Shops löschen
+        const shopId = user.shopId || 1;
+        whereCondition = and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.shopId, shopId)
+        ) as SQL<unknown>;
+      }
+      
+      await db.delete(emailTemplates).where(whereCondition);
       return true;
     } catch (error) {
-      console.error("Error deleting email template:", error);
+      console.error("Fehler beim Löschen der E-Mail-Vorlage:", error);
       return false;
     }
   }
