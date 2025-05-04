@@ -3,25 +3,14 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
-import cors from "cors";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
 import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
 import { addPackageTables } from "./add-package-tables";
 import { addSuperadminColumn } from "./add-superadmin";
-import { addGlobalDeviceTables } from "./add-global-device-tables";
 
 const app = express();
-
-// Konfiguriere CORS, um Anfragen vom Vite Dev Server zu erlauben
-app.use(cors({
-  origin: '*', // Erlaube alle Ursprünge im Entwicklungsmodus
-  methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-ID']
-}));
-
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
 app.use(express.json({ limit: '10mb' }));
 // Erhöhe die maximale Größe für URL-codierte Anfragen auf 10 MB
@@ -67,7 +56,6 @@ app.use((req, res, next) => {
     await addFeatureOverridesColumn();
     await addPackageTables(); // Neue Migration für das Paketsystem
     await addSuperadminColumn(); // Migration für Superadmin-Rolle
-    await addGlobalDeviceTables(); // Migration für globale Gerätetabellen
     
     const server = await registerRoutes(app);
 
@@ -77,11 +65,6 @@ app.use((req, res, next) => {
 
       res.status(status).json({ message });
       throw err;
-    });
-
-    // Hinzufügen eines speziellen Routes für API-Anfragen, um 404 mit JSON zurückzugeben
-    app.use('/api/*', (req, res) => {
-      res.status(404).json({ message: `API-Route nicht gefunden: ${req.path}` });
     });
 
     // importantly only setup vite in development and after

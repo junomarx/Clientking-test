@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   Card, 
@@ -89,71 +89,12 @@ export default function SuperadminUsersTab() {
   // Benutzer abrufen
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery<User[]>({ 
     queryKey: ["/api/superadmin/users"],
-    queryFn: async () => {
-      try {
-        const res = await fetch('/api/superadmin/users');
-        
-        const text = await res.text();
-        
-        if (!res.ok) {
-          console.error(`Serverfehler ${res.status}:`, text);
-          throw new Error(`Serverfehler: ${res.status}`);
-        }
-        
-        const contentType = res.headers.get('content-type') || '';
-        
-        if (!contentType.includes('application/json')) {
-          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
-          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
-        }
-        
-        return JSON.parse(text);
-      } catch (err) {
-        console.error('❌ Fehler beim Laden der Benutzerdaten:', err);
-        throw err;
-      }
-    },
   });
 
   // Pakete abrufen
-  const { data: packages, isLoading: isLoadingPackages, error: packagesError } = useQuery<Package[]>({ 
+  const { data: packages, isLoading: isLoadingPackages } = useQuery<Package[]>({ 
     queryKey: ["/api/superadmin/packages"],
-    queryFn: async () => {
-      try {
-        const res = await fetch('/api/superadmin/packages');
-        
-        const text = await res.text();
-        
-        if (!res.ok) {
-          console.error(`Serverfehler ${res.status}:`, text);
-          throw new Error(`Serverfehler: ${res.status}`);
-        }
-        
-        const contentType = res.headers.get('content-type') || '';
-        
-        if (!contentType.includes('application/json')) {
-          console.error('⚠️ Nicht-JSON-Antwort vom Server:', text);
-          throw new Error('Die Antwort des Servers ist kein gültiges JSON.');
-        }
-        
-        return JSON.parse(text);
-      } catch (err) {
-        console.error('❌ Fehler beim Laden der Paketdaten:', err);
-        throw err;
-      }
-    },
   });
-  
-  // Fehlerbehandlung für Pakete
-  useEffect(() => {
-    if (packagesError) {
-      toast({
-        variant: "destructive",
-        title: "Fehler beim Laden der Pakete",
-        description: packagesError.message,
-      });
-    }
-  }, [packagesError, toast]);
 
   // Mutation zum Aktivieren/Deaktivieren eines Benutzers
   const toggleActivationMutation = useMutation({
@@ -262,16 +203,13 @@ export default function SuperadminUsersTab() {
     }
   };
 
-  // Fehlerbehandlung mit useEffect anstatt im Render-Flow
-  useEffect(() => {
-    if (usersError) {
-      toast({
-        variant: "destructive",
-        title: "Fehler beim Laden der Benutzer",
-        description: usersError.message,
-      });
-    }
-  }, [usersError, toast]);
+  if (usersError) {
+    toast({
+      variant: "destructive",
+      title: "Fehler beim Laden der Benutzer",
+      description: usersError.message,
+    });
+  }
 
   return (
     <div className="space-y-6">

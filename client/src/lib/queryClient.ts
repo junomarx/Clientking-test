@@ -1,8 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 // API-Basis-URL - kann durch die VITE_API_URL Umgebungsvariable überschrieben werden
-// Verwende explizit den Port 5000, auf dem unser Express-Server läuft
-const API_BASE_URL = import.meta.env.VITE_API_URL || window.location.protocol + '//' + window.location.hostname + ':5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

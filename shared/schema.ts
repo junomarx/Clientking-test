@@ -25,41 +25,8 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
   createdAt: true,
 });
 
-// Device types enum - beibehalten für Abwärtskompatibilität
-export const deviceTypeEnum = z.enum(["smartphone", "tablet", "laptop"]);
-
-// Globale Gerätetypen-Tabelle für Superadmin
-export const deviceTypes = pgTable("global_device_types", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  isGlobal: boolean("is_global").default(true).notNull(),  // Immer true für globale Typen
-  userId: integer("user_id").references(() => users.id),    // null für globale Typen
-  shopId: integer("shop_id"),                              // null für globale Typen 
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Globale Marken-Tabelle für Superadmin
-export const deviceBrands = pgTable("global_device_brands", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  deviceType: text("device_type").notNull(),                // Referenz zum Gerätetyp (Name)
-  isGlobal: boolean("is_global").default(true).notNull(),  // Immer true für globale Typen
-  userId: integer("user_id").references(() => users.id),    // null für globale Typen
-  shopId: integer("shop_id"),                              // null für globale Typen
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Globale Modell-Tabelle für Superadmin
-export const deviceModels = pgTable("global_device_models", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  brand: text("brand").notNull(),                          // Referenz zur Marke (Name)
-  deviceType: text("device_type").notNull(),                // Referenz zum Gerätetyp (Name)
-  isGlobal: boolean("is_global").default(true).notNull(),  // Immer true für globale Typen
-  userId: integer("user_id").references(() => users.id),    // null für globale Typen
-  shopId: integer("shop_id"),                              // null für globale Typen
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// Device types enum
+export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 
 // Repair statuses enum
 export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
@@ -353,16 +320,14 @@ export const userDeviceTypes = pgTable("user_device_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Superadmin (früher: Admin/Bugi)
+// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Admin (Bugi)
 export const deviceIssues = pgTable("device_issues", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),      // Die Fehlerbeschreibung
   deviceType: text("device_type").notNull(),       // Für welche Geräteart ist die Fehlerbeschreibung
-  isGlobal: boolean("is_global").default(true).notNull(),  // Immer true für globale Einträge
-  userId: integer("user_id").references(() => users.id),    // null für globale Einträge
-  shopId: integer("shop_id"),                              // null für globale Einträge
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Nur Bugi (Admin) darf Fehlerbeschreibungen erstellen, daher kein userId hier
 });
 
 export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({

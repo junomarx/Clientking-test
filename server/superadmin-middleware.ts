@@ -1,42 +1,92 @@
 /**
- * Middleware zur Überprüfung von Superadmin-Rechten
+ * Superadmin-Middleware zur Prüfung von Superadmin-Berechtigungen
+ * und zum Schutz von Superadmin-Routen
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { db } from './db';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { Request, Response, NextFunction } from "express";
+import { storage } from "./storage";
 
-// Middleware zur Überprüfung, ob der Benutzer Superadmin ist
+/**
+ * Middleware zum Prüfen, ob ein Benutzer Superadmin-Berechtigungen hat
+ * Prüft zunächst HTTP-Header für Debugging, dann Session-Auth, dann Token-Auth
+ */
 export function isSuperadmin(req: Request, res: Response, next: NextFunction) {
-  // Header X-User-ID prüfen (wird vom Client gesendet)
-  const userIdHeader = req.headers['x-user-id'];
-  console.log('Superadmin-Bereich: X-User-ID Header gefunden:', userIdHeader);
-  
-  if (!userIdHeader) {
-    return res.status(401).json({ error: 'Keine Benutzer-ID im Header gefunden' });
+  // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
+  const customUserId = req.headers['x-user-id'];
+  if (customUserId) {
+    console.log(`Superadmin-Bereich: X-User-ID Header gefunden: ${customUserId}`);
+    // Wenn wir eine Benutzer-ID im Header haben, versuchen wir, den Benutzer zu laden
+    try {
+      const userId = parseInt(customUserId.toString());
+      storage.getUser(userId).then(user => {
+        if (user) {
+          console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
+          if (user.isSuperadmin) {
+            console.log(`Superadmin-Bereich: Superadmin-Benutzer mit ID ${userId} gefunden: ${user.username}`);
+            req.user = user;
+            return next();
+          } else {
+            console.log(`Superadmin-Bereich: Benutzer ist kein Superadmin`);
+            return res.status(403).json({ message: "Keine Superadmin-Rechte" });
+          }
+        } else {
+          console.log(`Benutzer mit ID ${userId} nicht gefunden`);
+          return res.status(404).json({ message: "Benutzer nicht gefunden" });
+        }
+      }).catch(err => {
+        console.error('Superadmin-Bereich: Fehler beim Verarbeiten der X-User-ID:', err);
+        return res.status(401).json({ message: "Nicht angemeldet" });
+      });
+      return; // Wichtig: Früher Return, da wir asynchron arbeiten
+    } catch (error) {
+      console.error('Superadmin-Bereich: Fehler beim Verarbeiten der X-User-ID:', error);
+    }
   }
   
-  const userId = parseInt(userIdHeader as string);
-  
-  // Benutzer in der Datenbank suchen
-  db.select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .then(([user]) => {
-      if (!user) {
-        return res.status(401).json({ error: 'Benutzer nicht gefunden' });
+  // Standardmäßig die Session-Authentifizierung prüfen
+  if (!req.isAuthenticated()) {
+    // Als Fallback, versuche die Token-Authentifizierung
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const decoded = Buffer.from(token, 'base64').toString();
+        const tokenParts = decoded.split(':');
+        
+        if (tokenParts.length < 2) {
+          return res.status(401).json({ message: "Ungültiges Token-Format" });
+        }
+        
+        const userId = parseInt(tokenParts[0]);
+        
+        // Benutzer aus der Datenbank abrufen
+        storage.getUser(userId).then(user => {
+          if (!user) {
+            return res.status(401).json({ message: "Benutzer nicht gefunden" });
+          }
+          
+          if (!user.isSuperadmin) {
+            return res.status(403).json({ message: "Keine Superadmin-Rechte" });
+          }
+          
+          // Benutzer in Request setzen
+          req.user = user;
+          return next();
+        }).catch(err => {
+          console.error('Superadmin-Bereich: Token-Auth Fehler:', err);
+          return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
+        });
+        return; // Wichtig: Früher Return, da wir asynchron arbeiten
+      } catch (error) {
+        console.error('Superadmin-Bereich: Token-Auth Fehler:', error);
+        return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
       }
-      
-      if (!user.isSuperadmin) {
-        return res.status(403).json({ error: 'Keine Superadmin-Berechtigung' });
-      }
-      
-      console.log(`Superadmin-Bereich: Superadmin-Benutzer mit ID ${userId} gefunden: ${user.username}`);
-      next();
-    })
-    .catch((error) => {
-      console.error('Fehler bei der Superadmin-Überprüfung:', error);
-      res.status(500).json({ error: 'Interner Serverfehler' });
-    });
+    } else {
+      return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+  } else if (!req.user || !(req.user as any).isSuperadmin) {
+    return res.status(403).json({ message: "Keine Superadmin-Rechte" });
+  } else {
+    next();
+  }
 }
