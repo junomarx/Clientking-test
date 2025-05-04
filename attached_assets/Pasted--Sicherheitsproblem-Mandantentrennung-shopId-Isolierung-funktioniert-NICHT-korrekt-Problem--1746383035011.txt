@@ -1,0 +1,75 @@
+🚨 Sicherheitsproblem: Mandantentrennung (shopId-Isolierung) funktioniert NICHT korrekt
+
+Problem:
+→ Normale Benutzer (also **nicht Admins**) können **alle Kunden- und Reparaturaufträge sehen**, auch von anderen Shops  
+→ Das **verstößt gegen die DSGVO** und muss dringend behoben werden
+
+Bitte behebe das jetzt vollständig und konsequent:
+
+---
+
+✅ Ziel:
+- Jeder Benutzer darf **nur Daten sehen**, die zu seinem eigenen Shop gehören (shopId)
+- Es gibt **keine Ausnahmen** – auch **Admin "bugi" darf nur seinen Shop sehen**
+- Alle Datenbankabfragen (select, insert, update, delete) müssen korrekt gefiltert werden
+
+---
+
+🔍 Aufgaben:
+
+1. **Überprüfe alle Methoden in `server/storage.ts`**, speziell:
+   - `getAllCustomers`, `getCustomer`
+   - `getAllRepairs`, `getRepair`, `getRepairsByCustomerId`
+   - `getStats`, `getDetailedRepairStats`
+   - `updateRepair`, `deleteRepair`
+   - `getAllCostEstimates`, `getCostEstimate`, `createRepairFromEstimate`
+   - `getAllUsers` usw.
+
+   → Dort **immer prüfen, ob `.where(eq(table.shopId, user.shopId))` korrekt gesetzt ist**  
+   → Auch bei Updates und Deletes muss `shopId` im Filter enthalten sein
+
+2. **Stelle sicher, dass `req.user.shopId` korrekt gesetzt und verfügbar ist**
+   - Prüfe die Session / JWT oder den Auth-Wrapper
+
+3. **Entferne alle Bedingungen wie**:
+   ```ts
+   if (user.isAdmin) {
+     // bypass
+   }
+   ```
+   → So etwas darf es **nicht mehr geben** – Admins dürfen keinen globalen Zugriff haben
+
+4. **Log-Ausgabe prüfen**
+   - Füge z. B. in `getAllCustomers()` hinzu:
+     ```ts
+     console.log("🔒 Aktiver shopId-Filter:", user.shopId);
+     ```
+
+5. **Überprüfe beim Erstellen von Kunden, Reparaturen, Kostenvoranschlägen etc., ob `shopId` korrekt gespeichert wird**
+
+---
+
+🧪 SQL-Kontrolle:
+
+Führe in deiner Datenbank folgenden Befehl aus, um inkonsistente Daten zu finden:
+
+```sql
+-- Finde Kunden ohne shopId
+SELECT id, first_name, last_name FROM customers WHERE shop_id IS NULL;
+
+-- Finde Reparaturen ohne shopId
+SELECT id, device_name FROM repairs WHERE shop_id IS NULL;
+
+-- Finde Kostenvoranschläge ohne shopId
+SELECT id, title FROM cost_estimates WHERE shop_id IS NULL;
+```
+
+→ Wenn hier Einträge erscheinen, wurden Daten ohne gültigen shopId gespeichert – das muss korrigiert werden
+
+---
+
+📌 Wichtig:
+- Diese Sicherheitslücke ist DSGVO-relevant – bitte höchste Priorität
+- Nach Abschluss: Mit 2 Benutzern (verschiedene Shops) einloggen und prüfen: **sehen sie wirklich NUR ihre eigenen Daten?**
+
+Bitte setze das jetzt vollständig und sauber um. Danke!

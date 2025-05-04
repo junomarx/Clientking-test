@@ -306,12 +306,31 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).where(eq(users.shopId, shopIdValue)).orderBy(desc(users.createdAt));
   }
   
-  async updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>): Promise<User | undefined> {
+  async updateUser(id: number, userData: Partial<Omit<User, 'id' | 'password'>>, currentUserId?: number): Promise<User | undefined> {
+    // Prüfe Berechtigungen: Nur Benutzer aus dem eigenen Shop können bearbeitet werden
+    if (!currentUserId) return undefined;
+    
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return undefined;
+    
+    // Benutzer abrufen, dessen Daten geändert werden sollen
+    const targetUser = await this.getUser(id);
+    if (!targetUser) return undefined;
+    
+    // DSGVO-konform: Auch Admin kann nur Benutzer aus dem eigenen Shop bearbeiten
+    if (targetUser.shopId !== currentUser.shopId) {
+      console.log(`Sicherheitswarnung: Benutzer ${currentUserId} (Shop ${currentUser.shopId}) versucht, 
+        Benutzer ${id} (Shop ${targetUser.shopId}) zu bearbeiten - Zugriff verweigert`);
+      return undefined; // Keine Berechtigung, da anderer Shop
+    }
+    
+    // Jetzt können wir das Update durchführen
     const [updatedUser] = await db
       .update(users)
       .set(userData)
       .where(eq(users.id, id))
       .returning();
+    
     return updatedUser;
   }
   
@@ -382,7 +401,24 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async deleteUser(id: number): Promise<boolean> {
+  async deleteUser(id: number, currentUserId?: number): Promise<boolean> {
+    // Prüfe Berechtigungen: Nur Benutzer aus dem eigenen Shop können gelöscht werden
+    if (!currentUserId) return false;
+    
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) return false;
+    
+    // Benutzer abrufen, der gelöscht werden soll
+    const targetUser = await this.getUser(id);
+    if (!targetUser) return false;
+    
+    // DSGVO-konform: Auch Admin kann nur Benutzer aus dem eigenen Shop löschen
+    if (targetUser.shopId !== currentUser.shopId) {
+      console.log(`Sicherheitswarnung: Benutzer ${currentUserId} (Shop ${currentUser.shopId}) versucht, 
+        Benutzer ${id} (Shop ${targetUser.shopId}) zu löschen - Zugriff verweigert`);
+      return false; // Keine Berechtigung, da anderer Shop
+    }
+    
     try {
       console.log(`Beginne mit dem Löschen des Benutzers mit ID ${id} und aller zugehörigen Daten...`);
       
