@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // Import der Berechtigungsprüfung aus permissions.ts
-import { isProfessionalOrHigher, isEnterprise, hasAccess } from './permissions';
+import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from './permissions';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -2510,6 +2510,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Fehler bei der Zugriffsprüfung", 
         error: (error as Error).message 
       });
+    }
+  });
+
+  // API-Endpunkt zur Überprüfung des Feature-Zugriffs (für das neue Paketsystem)
+  app.get("/api/check-feature-access", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { feature } = req.query;
+      
+      if (!feature || typeof feature !== 'string') {
+        return res.status(400).json({ message: "Feature-Parameter muss angegeben werden" });
+      }
+      
+      // Benutzer aus dem Request verwenden
+      const user = req.user;
+      
+      // Berechtigungsprüfung mit dem neuen System durchführen
+      const hasAccess = await hasAccessAsync(user, feature);
+      
+      res.json({
+        feature,
+        hasAccess,
+        // Debug-Informationen für Admin-Benutzer
+        debug: user?.isAdmin ? {
+          userId: (user as any).id,
+          packageId: (user as any).packageId,
+          pricingPlan: (user as any).pricingPlan,
+          username: (user as any).username
+        } : undefined
+      });
+    } catch (error) {
+      console.error("Fehler bei der Feature-Zugriffsüberprüfung:", error);
+      res.status(500).json({ message: "Fehler bei der Feature-Zugriffsüberprüfung" });
     }
   });
 
