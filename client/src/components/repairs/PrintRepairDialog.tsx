@@ -177,7 +177,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Reparaturauftrag drucken</DialogTitle>
+          <DialogTitle>{isPreview ? "Bon Vorschau" : "Reparaturauftrag drucken"}</DialogTitle>
         </DialogHeader>
         
         {isLoading ? (
@@ -301,25 +301,27 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
             
             <DialogFooter className="flex justify-between mt-4">
               <Button variant="outline" onClick={onClose}>
-                Abbrechen
+                {isPreview ? "Schließen" : "Abbrechen"}
               </Button>
-              <Button 
-                onClick={handlePrint} 
-                className="gap-2"
-                disabled={isGeneratingPdf}
-              >
-                {isGeneratingPdf ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    PDF wird erstellt...
-                  </>
-                ) : (
-                  <>
-                    <Printer className="h-4 w-4" />
-                    PDF erstellen & drucken
-                  </>
-                )}
-              </Button>
+              {!isPreview && (
+                <Button 
+                  onClick={handlePrint} 
+                  className="gap-2"
+                  disabled={isGeneratingPdf}
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      PDF wird erstellt...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="h-4 w-4" />
+                      PDF erstellen & drucken
+                    </>
+                  )}
+                </Button>
+              )}
             </DialogFooter>
           </>
         )}
