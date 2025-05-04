@@ -899,10 +899,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Benutzerspezifische Gerätearten abrufen
   app.get("/api/device-types", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // WORKAROUND: Wir holen immer Bugis Gerätetypen (ID 3)
-      const bugisUserId = 3;
+      const userId = (req.user as any).id;
       
-      const deviceTypes = await storage.getUserDeviceTypes(bugisUserId);
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/device-types: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
+      
+      const deviceTypes = await storage.getUserDeviceTypes(userId);
       res.json(deviceTypes);
     } catch (error) {
       console.error("Error retrieving device types:", error);
@@ -1023,16 +1026,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alle benutzerspezifischen Marken abrufen (optional nach Gerätetyp gefiltert)
   app.get("/api/brands", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // WORKAROUND: Wir holen immer Bugis Marken (ID 3)
-      const bugisUserId = 3;
+      const userId = (req.user as any).id;
+      
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/brands: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
       
       let brands;
       if (deviceTypeId) {
-        brands = await storage.getUserBrandsByDeviceTypeId(deviceTypeId, bugisUserId);
+        brands = await storage.getUserBrandsByDeviceTypeId(deviceTypeId, userId);
       } else {
-        brands = await storage.getUserBrands(bugisUserId);
+        brands = await storage.getUserBrands(userId);
       }
       
       res.json(brands);
@@ -1157,16 +1163,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Alle benutzerspezifischen Modellreihen abrufen (optional nach Marke gefiltert)
   app.get("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
-      const bugisUserId = 3;
+      const userId = (req.user as any).id;
+      
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
       
       let modelSeries;
       if (brandId) {
-        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, bugisUserId);
+        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, userId);
       } else {
-        modelSeries = await storage.getUserModelSeries(bugisUserId);
+        modelSeries = await storage.getUserModelSeries(userId);
       }
       
       res.json(modelSeries);
@@ -1181,11 +1190,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deviceTypeId = parseInt(req.params.deviceTypeId);
       const brandId = parseInt(req.params.brandId);
+      const userId = (req.user as any).id;
       
-      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
-      const bugisUserId = 3;
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/device-types/${deviceTypeId}/brands/${brandId}/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, bugisUserId);
+      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, userId);
       
       res.json(modelSeries);
     } catch (error) {
@@ -1198,11 +1209,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      // WORKAROUND: Wir holen immer Bugis Modellreihen (ID 3)
-      const bugisUserId = 3;
+      const userId = (req.user as any).id;
+      
+      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
+      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
+      console.log(`GET /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       // Diese Methode existiert nicht direkt, daher holen wir alle Modellreihen und filtern nach ID
-      const allModelSeries = await storage.getUserModelSeries(bugisUserId);
+      const allModelSeries = await storage.getUserModelSeries(userId);
       const modelSeries = allModelSeries.find(ms => ms.id === id);
       
       if (!modelSeries) {

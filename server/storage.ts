@@ -626,6 +626,10 @@ export class DatabaseStorage implements IStorage {
     
     // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
+    
+    // Debug-Ausgabe für Shop-Isolation
+    console.log(`getAllCustomers: Benutzer ${currentUser.username} (ID: ${currentUserId}) mit Shop-ID ${shopIdValue} - isAdmin: ${currentUser.isAdmin}`);
+    
     return await db
       .select()
       .from(customers)
@@ -777,6 +781,10 @@ export class DatabaseStorage implements IStorage {
     
     // Jeder Benutzer sieht nur Reparaturen aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
+    
+    // Debug-Ausgabe für Shop-Isolation
+    console.log(`getAllRepairs: Benutzer ${currentUser.username} (ID: ${currentUserId}) mit Shop-ID ${shopIdValue} - isAdmin: ${currentUser.isAdmin}`);
+    
     return await db
       .select()
       .from(repairs)
@@ -1387,6 +1395,10 @@ export class DatabaseStorage implements IStorage {
     
     // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
     const shopIdValue = currentUser.shopId || 1;
+    
+    // Debug-Ausgabe für Shop-Isolation
+    console.log(`getStats: Benutzer ${currentUser.username} (ID: ${currentUserId}) mit Shop-ID ${shopIdValue} - isAdmin: ${currentUser.isAdmin}`);
+    
     const baseFilter = eq(repairs.shopId, shopIdValue);
     
     // Basisfilter für Benutzer erstellen
@@ -1542,6 +1554,10 @@ export class DatabaseStorage implements IStorage {
       
       // Jeder Benutzer sieht nur Statistiken aus seinem eigenen Shop (DSGVO-konform)
       const shopIdValue = currentUser.shopId || 1;
+      
+      // Debug-Ausgabe für Shop-Isolation
+      console.log(`getDetailedRepairStats: Benutzer ${currentUser.username} (ID: ${currentUserId}) mit Shop-ID ${shopIdValue} - isAdmin: ${currentUser.isAdmin}`);
+      
       const baseFilter = eq(repairs.shopId, shopIdValue);
       
       // Basisfilter für Benutzer erstellen
