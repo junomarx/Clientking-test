@@ -273,87 +273,190 @@ export class DatabaseStorage implements IStorage {
   
   async deleteUser(id: number): Promise<boolean> {
     try {
-      // Suche alle Kunden, die zu diesem Benutzer gehören
-      const userCustomers = await db
-        .select()
-        .from(customers)
-        .where(eq(customers.userId, id));
+      console.log(`Beginne mit dem Löschen des Benutzers mit ID ${id} und aller zugehörigen Daten...`);
       
-      // Für jeden Kunden, lösche alle zugehörigen Daten
-      for (const customer of userCustomers) {
-        // 1. Lösche Kostenvoranschläge des Kunden
-        await db
-          .delete(costEstimates)
-          .where(eq(costEstimates.customerId, customer.id));
+      // 1. Lösche alle Kunden des Benutzers und deren Reparaturen
+      try {
+        const userCustomers = await db
+          .select()
+          .from(customers)
+          .where(eq(customers.userId, id));
           
-        // 2. Lösche alle Reparaturen des Kunden
+        console.log(`Gefundene Kunden des Benutzers: ${userCustomers.length}`);
+        
+        // Für jeden Kunden, lösche alle zugehörigen Daten
+        for (const customer of userCustomers) {
+          try {
+            // 1a. Lösche Kostenvoranschläge des Kunden
+            await db
+              .delete(costEstimates)
+              .where(eq(costEstimates.customerId, customer.id));
+              
+            console.log(`Kostenvoranschläge für Kunde ${customer.id} gelöscht`);
+            
+            // 1b. Lösche alle Reparaturen des Kunden
+            await db
+              .delete(repairs)
+              .where(eq(repairs.customerId, customer.id));
+              
+            console.log(`Reparaturen für Kunde ${customer.id} gelöscht`);
+          } catch (err) {
+            const error = err as Error;
+            console.warn(`Fehler beim Löschen der Daten für Kunde ${customer.id}:`, error.message);
+            // Fortfahren mit dem nächsten Kunden
+          }
+        }
+        
+        // 2. Lösche alle Reparaturen, die zum Benutzer gehören (und nicht über Kunden erfasst wurden)
+        try {
+          await db
+            .delete(repairs)
+            .where(eq(repairs.userId, id));
+            
+          console.log(`Alle direkten Reparaturen des Benutzers gelöscht`);
+        } catch (err) {
+          const error = err as Error;
+          console.warn(`Fehler beim Löschen der Reparaturen des Benutzers:`, error.message);
+        }
+        
+        // 3. Lösche alle Kostenvoranschläge, die zum Benutzer gehören (und nicht über Kunden erfasst wurden)
+        try {
+          await db
+            .delete(costEstimates)
+            .where(eq(costEstimates.userId, id));
+            
+          console.log(`Alle direkten Kostenvoranschläge des Benutzers gelöscht`);
+        } catch (err) {
+          const error = err as Error;
+          console.warn(`Fehler beim Löschen der Kostenvoranschläge des Benutzers:`, error.message);
+        }
+      
+        // 4. Lösche alle Kunden des Benutzers
         await db
-          .delete(repairs)
-          .where(eq(repairs.customerId, customer.id));
+          .delete(customers)
+          .where(eq(customers.userId, id));
+          
+        console.log(`Alle Kunden des Benutzers gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Kundendaten:`, error.message);
       }
       
-      // Lösche alle Reparaturen, die zum Benutzer gehören
-      await db
-        .delete(repairs)
-        .where(eq(repairs.userId, id));
-        
-      // Lösche alle Kostenvoranschläge, die zum Benutzer gehören
-      await db
-        .delete(costEstimates)
-        .where(eq(costEstimates.userId, id));
-      
-      // Lösche alle Kunden des Benutzers
-      await db
-        .delete(customers)
-        .where(eq(customers.userId, id));
-      
-      // Lösche alle E-Mail-Vorlagen des Benutzers
-      await db
-        .delete(emailTemplates)
-        .where(eq(emailTemplates.userId, id));
-      
-      // Lösche den E-Mail-Verlauf des Benutzers
+      // 5. Lösche alle E-Mail-Vorlagen des Benutzers
       try {
         await db
-          .delete(emailHistory)
-          .where(eq(emailHistory.userId, id));
-        console.log('E-Mail-Verlauf des Benutzers gelöscht');
+          .delete(emailTemplates)
+          .where(eq(emailTemplates.userId, id));
+          
+        console.log(`Alle E-Mail-Vorlagen des Benutzers gelöscht`);
       } catch (err) {
-        // Fehler sicher behandeln
         const error = err as Error;
-        console.warn('Fehler beim Löschen des E-Mail-Verlaufs:', error.message);
-        // Fortfahren, auch wenn das Löschen der E-Mail-Historie fehlschlägt
+        console.warn(`Fehler beim Löschen der E-Mail-Vorlagen:`, error.message);
       }
       
-      // Lösche benutzerdefinierte Gerätemodelle
-      await db
-        .delete(userModels)
-        .where(eq(userModels.userId, id));
+      // 6. Lösche SMS-Vorlagen des Benutzers
+      try {
+        // Direkte SQL-Anfrage für snake_case Spaltennamen
+        await db.execute(sql`DELETE FROM sms_templates WHERE user_id = ${id}`);
+        console.log(`Alle SMS-Vorlagen des Benutzers gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der SMS-Vorlagen:`, error.message);
+      }
       
-      // Lösche benutzerdefinierte Modellserien
-      await db
-        .delete(userModelSeries)
-        .where(eq(userModelSeries.userId, id));
+      // 7. Lösche den E-Mail-Verlauf des Benutzers
+      try {
+        // Die Spalte heißt in der Datenbank "userId" (camelCase), aber wir verwenden quoted Identifier
+        // um sicherzustellen, dass es genau so abgefragt wird
+        await db.execute(sql`DELETE FROM email_history WHERE "userId" = ${id}`);
+        console.log(`E-Mail-Verlauf des Benutzers gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen des E-Mail-Verlaufs:`, error.message);
+      }
       
-      // Lösche benutzerdefinierte Marken/Hersteller
-      await db
-        .delete(userBrands)
-        .where(eq(userBrands.userId, id));
+      // 8. Lösche benutzerdefinierte Gerätemodelle
+      try {
+        await db
+          .delete(userModels)
+          .where(eq(userModels.userId, id));
+          
+        console.log(`Alle benutzerdefinierten Gerätemodelle gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Gerätemodelle:`, error.message);
+      }
       
-      // Lösche benutzerdefinierte Gerätetypen
-      await db
-        .delete(userDeviceTypes)
-        .where(eq(userDeviceTypes.userId, id));
+      // 9. Lösche benutzerdefinierte Modellserien
+      try {
+        await db
+          .delete(userModelSeries)
+          .where(eq(userModelSeries.userId, id));
+          
+        console.log(`Alle benutzerdefinierten Modellserien gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Modellserien:`, error.message);
+      }
       
-      // Lösche Business-Einstellungen des Benutzers
-      await db
-        .delete(businessSettings)
-        .where(eq(businessSettings.userId, id));
+      // 10. Lösche benutzerdefinierte Marken/Hersteller
+      try {
+        await db
+          .delete(userBrands)
+          .where(eq(userBrands.userId, id));
+          
+        console.log(`Alle benutzerdefinierten Marken/Hersteller gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Marken/Hersteller:`, error.message);
+      }
       
-      // Jetzt können wir den Benutzer sicher löschen
-      await db
-        .delete(users)
-        .where(eq(users.id, id));
+      // 11. Lösche benutzerdefinierte Gerätetypen
+      try {
+        await db
+          .delete(userDeviceTypes)
+          .where(eq(userDeviceTypes.userId, id));
+          
+        console.log(`Alle benutzerdefinierten Gerätetypen gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Gerätetypen:`, error.message);
+      }
+      
+      // 12. Lösche Business-Einstellungen des Benutzers
+      try {
+        await db
+          .delete(businessSettings)
+          .where(eq(businessSettings.userId, id));
+          
+        console.log(`Business-Einstellungen des Benutzers gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Business-Einstellungen:`, error.message);
+      }
+      
+      // 13. Entferne alle möglichen Sessions des Benutzers
+      try {
+        // Direkte SQL-Anfrage, da sessions möglicherweise nicht im Schema definiert ist
+        await db.execute(sql`DELETE FROM sessions WHERE sess->'user'->>'id' = ${id.toString()}`);
+        console.log(`Sessions des Benutzers gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.warn(`Fehler beim Löschen der Sessions:`, error.message);
+      }
+      
+      // 14. Jetzt können wir den Benutzer sicher löschen
+      try {
+        await db
+          .delete(users)
+          .where(eq(users.id, id));
+          
+        console.log(`Benutzer mit ID ${id} erfolgreich gelöscht`);
+      } catch (err) {
+        const error = err as Error;
+        console.error(`KRITISCHER FEHLER: Benutzer konnte nicht gelöscht werden:`, error.message);
+        return false;
+      }
         
       console.log(`Benutzer mit ID ${id} und alle zugehörigen Daten wurden erfolgreich gelöscht.`);
       return true;
