@@ -15,10 +15,21 @@ export function LogoUpload() {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        const response = await fetch('/api/business-settings/logo');
-        const data = await response.json();
-        if (data.success && data.logoUrl) {
-          setLogoUrl(data.logoUrl);
+        const response = await fetch('/api/business-settings/logo', {
+          headers: {
+            'X-User-ID': '3'  // Development-Header für Bugi-Benutzer
+          }
+        });
+        
+        // Prüfe den Content-Type
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.success && data.logoUrl) {
+            setLogoUrl(data.logoUrl);
+          }
+        } else {
+          console.error('Unerwarteter Content-Type bei Logo-Abruf:', contentType);
         }
       } catch (err) {
         console.error('Logo konnte nicht geladen werden:', err);
@@ -54,6 +65,9 @@ export function LogoUpload() {
     try {
       const response = await fetch('/api/business-settings/logo', {
         method: 'POST',
+        headers: {
+          'X-User-ID': '3'  // Development-Header für Bugi-Benutzer
+        },
         body: formData,
       });
       
@@ -85,7 +99,12 @@ export function LogoUpload() {
 
   const handleDeleteLogo = async () => {
     try {
-      const response = await fetch('/api/business-settings/logo', { method: 'DELETE' });
+      const response = await fetch('/api/business-settings/logo', { 
+        method: 'DELETE',
+        headers: {
+          'X-User-ID': '3'  // Development-Header für Bugi-Benutzer
+        }
+      });
       
       // Prüfe den Content-Type
       const contentType = response.headers.get('content-type');
