@@ -560,8 +560,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       return await response.json();
     },
     onSuccess: (data) => {
-      // Cache aktualisieren
+      // Cache für Reparaturen und Statistiken aktualisieren
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      
+      console.log("Neue Reparatur erstellt und Cache aktualisiert");
       
       // Erfolgsmeldung anzeigen
       toast({
