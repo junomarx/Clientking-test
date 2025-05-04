@@ -453,21 +453,18 @@ export default function BusinessSettingsModernized({ open, onClose, initialTab =
                     </div>
                     <div>
                       <div className="flex flex-col space-y-2">
+                        {/* Einfacher sichtbarer Datei-Input ohne weitere Verschachtelung */}
                         <input
-                          id="file-upload"
-                          name="logo"
                           type="file"
                           accept="image/jpeg,image/png,image/svg+xml"
                           onChange={handleLogoUpload}
-                          className="hidden"
+                          className="block w-full text-sm text-slate-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-md file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-primary file:text-white
+                                    hover:file:bg-primary/80"
                         />
-                        
-                        <label htmlFor="file-upload">
-                          <Button variant="outline" size="sm" type="button">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Logo hochladen
-                          </Button>
-                        </label>
                         
                         <p className="text-xs text-gray-500 mt-1">PNG, JPG oder SVG, max. 2MB</p>
                         {logoError && (
