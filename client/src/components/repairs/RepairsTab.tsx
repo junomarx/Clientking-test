@@ -274,7 +274,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     
     console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
-    // Status auf "fertig" aktualisieren mit optionalen E-Mail- und SMS-Benachrichtigungen
+    // Status auf "fertig" aktualisieren mit optionaler E-Mail-Benachrichtigung
     if (newStatus === 'fertig') {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
