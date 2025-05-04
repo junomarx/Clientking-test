@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -45,13 +45,15 @@ export default function SuperadminDashboardTab() {
     queryKey: ["/api/superadmin/stats"],
   });
 
-  if (error) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Statistiken",
-      description: error.message,
-    });
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Statistiken",
+        description: error.message,
+      });
+    }
+  }, [error, toast]);
 
   // Daten für das Paket-Nutzungsdiagramm vorbereiten
   const packageUsageData = stats?.packages || [];
