@@ -82,6 +82,7 @@ import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";
 import { PlanFeaturesManager } from "@/components/admin/PlanFeaturesManager";
+import { FeatureMatrixTab } from "@/components/admin/FeatureMatrixTab";
 import ToastTestDialog from "@/components/ToastTestDialog";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
 import { User } from "@shared/schema";
@@ -1127,11 +1128,11 @@ export default function AdminPage() {
             </div>
             
             <div 
-              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "planFeatures" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
-              onClick={() => setActiveTab("planFeatures")}
+              className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "pakete" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+              onClick={() => setActiveTab("pakete")}
             >
               <Layers className="h-5 w-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span className="ml-3">Tarif-Features</span>}
+              {!sidebarCollapsed && <span className="ml-3">Pakete</span>}
             </div>
             
             {/* Geräte mit Unterkategorien */}
@@ -1314,11 +1315,11 @@ export default function AdminPage() {
               </Button>
               
               <Button 
-                variant={activeTab === "planFeatures" ? "default" : "outline"}
-                className={`p-3 h-auto justify-start ${activeTab === "planFeatures" ? "bg-primary text-white" : "bg-secondary/10"}`}
-                onClick={() => setActiveTab("planFeatures")}
+                variant={activeTab === "pakete" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "pakete" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("pakete")}
               >
-                <Layers className="h-4 w-4 mr-2" /> Tarif-Features
+                <Layers className="h-4 w-4 mr-2" /> Pakete
               </Button>
               
               <Button 
