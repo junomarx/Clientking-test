@@ -7,8 +7,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, Tag, AlertCircle, FileText, Eye } from 'lucide-react';
-import { usePrintManager } from './PrintOptionsManager';
+import { Printer, Tag, AlertCircle, FileText } from 'lucide-react';
+// Import für PrintOptionsManager entfernt, da nicht mehr benötigt
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PrintRepairA4Dialog } from "@/components/repairs/PrintRepairA4Dialog";
 
@@ -54,7 +54,7 @@ export function PrintOptionsDialog({
   repairId,
   repair
 }: PrintOptionsDialogProps) {
-  const printManager = usePrintManager();
+  // printManager entfernt, da nicht mehr benötigt
   // State für die Berechtigung zum Drucken von Etiketten
   const [canPrintLabels, setCanPrintLabels] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -141,15 +141,6 @@ export function PrintOptionsDialog({
         </div>
         
         <DialogFooter className="flex flex-col space-y-2 sm:space-y-0">
-          <Button 
-            onClick={() => repairId && printManager.previewBon(repairId)}
-            variant="ghost"
-            size="sm"
-            className="w-full flex items-center gap-2 justify-center"
-          >
-            <Eye size={16} />
-            Bon Vorschau
-          </Button>
           <Button 
             onClick={onClose} 
             variant="ghost"
