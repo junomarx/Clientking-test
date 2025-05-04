@@ -125,19 +125,7 @@ export function PrintOptionsDialog({
             </TooltipProvider>
           </div>
           
-          {/* DIN A4 Druckoption */}
-          {onPrintA4 && (
-            <div className="mt-4">
-              <Button 
-                onClick={onPrintA4}
-                className="h-24 flex flex-col items-center justify-center gap-2 text-lg w-full"
-                variant="outline"
-              >
-                <FileText className="h-8 w-8" />
-                <span>DIN A4 Ausdruck</span>
-              </Button>
-            </div>
-          )}
+          {/* DIN A4 Druckoption wurde entfernt */}
           
           {/* A4 Vorschau-Button */}
           <div className="mt-4">
