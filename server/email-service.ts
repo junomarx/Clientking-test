@@ -273,8 +273,11 @@ export class EmailService {
     variables: Record<string, string>
   ): Promise<boolean> {
     try {
-      // Lade die Vorlage
-      const template = await this.getEmailTemplate(templateId);
+      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden)
+      const userId = variables.userId ? parseInt(variables.userId) : 0;
+      
+      // Lade die Vorlage unter Berücksichtigung der Shop-ID des Benutzers
+      const template = await this.getEmailTemplate(templateId, userId);
       if (!template) {
         throw new Error("E-Mail-Vorlage nicht gefunden");
       }
@@ -282,9 +285,6 @@ export class EmailService {
       // Variablen in Betreff und Text ersetzen
       let subject = template.subject;
       let body = template.body;
-      
-      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden)
-      const userId = variables.userId ? parseInt(variables.userId) : 0;
       
       // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
       const [businessSetting] = await db.select().from(businessSettings)
