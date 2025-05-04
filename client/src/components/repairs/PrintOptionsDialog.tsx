@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Printer, Tag, AlertCircle } from 'lucide-react';
+import { Printer, Tag, AlertCircle, FileText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // API for checking permissions
@@ -28,6 +28,7 @@ interface PrintOptionsDialogProps {
   onClose: () => void;
   onPrintReceipt: () => void;
   onPrintLabel: () => void;
+  onPrintA4?: () => void; // Neuer Handler für DIN A4 Ausdruck
   repairId: number | null;
 }
 
@@ -36,6 +37,7 @@ export function PrintOptionsDialog({
   onClose,
   onPrintReceipt,
   onPrintLabel,
+  onPrintA4,
   repairId
 }: PrintOptionsDialogProps) {
   // State für die Berechtigung zum Drucken von Etiketten
@@ -106,6 +108,20 @@ export function PrintOptionsDialog({
               </Tooltip>
             </TooltipProvider>
           </div>
+          
+          {/* DIN A4 Druckoption */}
+          {onPrintA4 && (
+            <div className="mt-4">
+              <Button 
+                onClick={onPrintA4}
+                className="h-24 flex flex-col items-center justify-center gap-2 text-lg w-full"
+                variant="outline"
+              >
+                <FileText className="h-8 w-8" />
+                <span>DIN A4 Ausdruck</span>
+              </Button>
+            </div>
+          )}
         </div>
         
         <DialogFooter>
