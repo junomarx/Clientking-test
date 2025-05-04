@@ -49,12 +49,13 @@ registerLogoRoutes(app);
 // Admin-Routen registrieren
 registerAdminRoutes(app);
 
-// Weitere API-Routen hier hinzufügen
-
 // Vite-Integration für das Frontend
 const startServer = async () => {
   try {
-    // Vite-Integration für Frontend
+    // Alle API-Routen aus routes.ts registrieren
+    await registerRoutes(app);
+    
+    // Vite-Integration für Frontend NACH den API-Routen, damit die API-Anfragen nicht von Vite abgefangen werden
     await setupVite(app, server);
     
     // Server starten
