@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, FileText, RefreshCcw, Trash, Edit, ClipboardCheck, Ban, Clock, FileSpreadsheet } from "lucide-react";
+import { CostEstimatesGuard } from "./ProfessionalFeatureGuard";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -253,49 +254,18 @@ export default function CostEstimatesTab() {
   // Prüfen, ob der Fehler wegen fehlendem Professional-Plan auftritt
   const isFeatureNotAvailableError = isError && canUseCostEstimates === false;
 
+  // Statt der eigenen Implementierung für die Upgrade-Meldung nutzen wir die neue CostEstimatesGuard Komponente
+  if (isFeatureNotAvailableError) {
+    return (
+      <CostEstimatesGuard>
+        {/* Hier würde der eigentliche Inhalt kommen, der aber nur angezeigt wird, wenn der Benutzer Zugriff hat */}
+        {/* Da wir hier im Fehlerfall sind, wird dieser Inhalt nie angezeigt */}
+        <div></div>
+      </CostEstimatesGuard>
+    );
+  }
+
   if (isError) {
-    // Spezifische Meldung für Basic-Benutzer
-    if (isFeatureNotAvailableError) {
-      return (
-        <div className="p-6 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
-          <h3 className="font-semibold text-lg mb-2">Funktionalität eingeschränkt</h3>
-          <p className="mb-4">Kostenvoranschläge sind nur für Benutzer mit Professional- oder Enterprise-Paket verfügbar.</p>
-          <p className="mb-6">Bitte kontaktieren Sie den Administrator, um Ihr Paket zu upgraden.</p>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 border border-amber-200 rounded-md bg-white">
-              <h4 className="font-medium text-amber-800 mb-2">Professional-Paket</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Unbegrenzte Reparaturaufträge
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Kostenvoranschläge erstellen
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Kunden-Feedback Funktionen
-                </li>
-              </ul>
-            </div>
-            
-            <div className="p-4 border border-amber-200 rounded-md bg-white">
-              <h4 className="font-medium text-amber-800 mb-2">Enterprise-Paket</h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Alle Professional-Funktionen
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Erweiterte Statistiken
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span> Mehrere Standorte verwalten
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      );
-    }
     
     // Standard-Fehlermeldung für andere Fehler
     return (
