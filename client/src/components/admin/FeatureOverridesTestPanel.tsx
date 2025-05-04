@@ -34,8 +34,18 @@ export function FeatureOverridesTestPanel() {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedFeature, setSelectedFeature] = useState<string>("");
   
+  type UserResponse = {
+    id: number;
+    username: string;
+    email: string;
+    isAdmin: boolean;
+    isActive: boolean;
+    pricingPlan?: string;
+    featureOverrides?: string | Record<string, any>;
+  };
+
   // Alle Benutzer laden
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<any[]>({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<UserResponse[]>({
     queryKey: ["/api/admin/users"],
   });
 
@@ -114,7 +124,7 @@ export function FeatureOverridesTestPanel() {
                       <SelectValue placeholder="Benutzer auswählen" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users.map((user: any) => (
+                      {users.map((user) => (
                         <SelectItem key={user.id} value={String(user.id)}>
                           {user.username} ({user.pricingPlan || 'Kein Tarif'})
                         </SelectItem>
@@ -153,7 +163,7 @@ export function FeatureOverridesTestPanel() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Test-Konfiguration</AlertTitle>
                   <AlertDescription>
-                    Benutzer: {users.find((u: any) => String(u.id) === selectedUserId)?.username || 'Unbekannt'}<br />
+                    Benutzer: {users.find(u => String(u.id) === selectedUserId)?.username || 'Unbekannt'}<br />
                     Feature: {FEATURES.find(f => f.id === selectedFeature)?.name || 'Unbekannt'}
                   </AlertDescription>
                 </Alert>

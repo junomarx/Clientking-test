@@ -2592,6 +2592,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint zum Testen der Feature-Zugriffsberechtigung
+  app.get("/api/check-feature-access/:feature", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const featureName = req.params.feature;
+      const user = req.user as any;
+
+      if (!user) {
+        return res.status(401).json({ hasAccess: false, message: "Nicht authentifiziert" });
+      }
+
+      // Featureübersteuerungen parsen
+      let featureOverrides = null;
+      if (user.featureOverrides) {
+        try {
+          if (typeof user.featureOverrides === "string") {
+            featureOverrides = JSON.parse(user.featureOverrides);
+          } else {
+            featureOverrides = user.featureOverrides;
+          }
+        } catch (e) {
+          console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
+        }
+      }
+
+      // Zugriffsberechtigung prüfen
+      const accessGranted = hasAccess(user, featureName);
+
+      res.json({ 
+        hasAccess: accessGranted,
+        userId: user.id,
+        username: user.username,
+        feature: featureName,
+        pricingPlan: user.pricingPlan || "basic",
+        featureOverrides
+      });
+    } catch (error) {
+      console.error("Fehler bei der Zugriffsprüfung:", error);
+      res.status(500).json({ 
+        hasAccess: false, 
+        message: "Fehler bei der Zugriffsprüfung", 
+        error: (error as Error).message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
