@@ -1,35 +1,24 @@
-export type PricingPlan = "basic" | "professional" | "enterprise";
-export type Feature =
-  | "backup"
-  | "emailTemplates"
-  | "costEstimates"
-  | "analytics"
-  | "prioritySupport"
-  | "statistics"
-  | "printThermal"
-  | "downloadRepairReport";
+// Importiere die zentrale Konfiguration aus dem shared-Verzeichnis
+import { PricingPlan, Feature, FeatureOverrides, isPlanAllowed } from "@shared/planFeatures";
 
-const accessMatrix: Record<Feature, PricingPlan> = {
-  backup: "enterprise",
-  emailTemplates: "professional",
-  costEstimates: "professional",
-  analytics: "enterprise",
-  prioritySupport: "enterprise",
-  statistics: "enterprise",
-  printThermal: "professional",
-  downloadRepairReport: "professional"
-};
+// Re-exportiere die Typen, damit sie weiterhin aus diesem Modul importiert werden können
+export type { PricingPlan, Feature, FeatureOverrides };
 
-// Typdefinition für die featureOverrides in der User-Tabelle
-export type FeatureOverrides = Partial<Record<Feature, boolean>>;
-
+/**
+ * Prüft, ob ein Benutzer Zugriff auf ein bestimmtes Feature hat,
+ * basierend auf seinem Preispaket und eventuellen Feature-Übersteuerungen
+ * 
+ * @param plan Das Preispaket des Benutzers
+ * @param feature Das zu prüfende Feature
+ * @param featureOverrides Optionale Feature-Übersteuerungen des Benutzers
+ * @returns true wenn der Benutzer Zugriff hat, sonst false
+ */
 export function hasAccessClient(plan: PricingPlan, feature: Feature, featureOverrides?: FeatureOverrides | null) {
-  // Überprüfe zuerst, ob es für dieses Feature eine individuelle Übersteuerung gibt
+  // 1. Prüfe zuerst, ob es für dieses Feature eine individuelle Übersteuerung gibt
   if (featureOverrides && feature in featureOverrides) {
     return featureOverrides[feature] === true;
   }
   
-  // Wenn keine Übersteuerung definiert ist, prüfe anhand des Preispakets
-  const order: PricingPlan[] = ["basic", "professional", "enterprise"];
-  return order.indexOf(plan) >= order.indexOf(accessMatrix[feature]);
+  // 2. Wenn keine Übersteuerung definiert ist, prüfe anhand der zentralen Tarif-Feature-Matrix
+  return isPlanAllowed(plan, feature);
 }

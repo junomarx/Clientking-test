@@ -1,4 +1,5 @@
 import { User } from "@shared/schema";
+import { Feature, PricingPlan, isPlanAllowed } from "@shared/planFeatures";
 
 /**
  * Prüft, ob ein Benutzer Zugriff auf eine bestimmte Funktion hat,
@@ -29,57 +30,9 @@ export function hasAccess(user: User | null | undefined, feature: string): boole
     }
   }
 
-  const pricingPlan = user.pricingPlan as string;
-  
-  // Funktionen nach Tarifmodell definieren
-  const permissions: Record<string, string[]> = {
-    basic: [
-      // Grundlegende Funktionen für alle Tarife
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands"
-    ],
-    professional: [
-      // Enthält alle basic-Funktionen
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands",
-      // Professional-spezifische Funktionen
-      "costEstimates", 
-      "emailTemplates", 
-      "printThermal",
-      "downloadRepairReport"
-    ],
-    enterprise: [
-      // Enthält alle professional-Funktionen
-      "dashboard", 
-      "repairs", 
-      "customers", 
-      "printA4",
-      "deviceTypes",
-      "brands",
-      "costEstimates", 
-      "emailTemplates", 
-      "printThermal",
-      "downloadRepairReport",
-      // Enterprise-spezifische Funktionen
-      "statistics", 
-      "backup",
-      "multiUser",
-      "advancedReporting",
-      "customEmailTemplates",
-      "feedbackSystem"
-    ]
-  };
-
-  // Prüfen, ob die angeforderte Funktion im Tarifmodell des Benutzers enthalten ist
-  return permissions[pricingPlan]?.includes(feature) ?? false;
+  // Wenn keine Übersteuerung definiert ist, prüfe anhand der zentralen Feature-Matrix
+  const pricingPlan = user.pricingPlan as PricingPlan;
+  return isPlanAllowed(pricingPlan, feature as Feature);
 }
 
 /**
