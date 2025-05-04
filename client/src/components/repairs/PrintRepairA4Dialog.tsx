@@ -61,13 +61,24 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     enabled: open,
   });
   
-  // Zurücksetzen beim Öffnen
+  // Zurücksetzen beim Öffnen und Timer für Timeout setzen
   useEffect(() => {
     if (open) {
       setPrintReady(false);
       setIsGeneratingPdf(false);
+      
+      // Timeout nach 5 Sekunden, um sicherzustellen, dass die Vorschau nicht hängen bleibt
+      const timeoutId = setTimeout(() => {
+        if (!printReady && repair && customer && businessSettings) {
+          console.warn('Timeout beim Laden der Druckvorschau - Zeige Vorschau trotzdem an');
+          setPrintReady(true);
+        }
+      }, 5000); // 5 Sekunden Timeout
+      
+      // Cleanup-Funktion
+      return () => clearTimeout(timeoutId);
     }
-  }, [open]);
+  }, [open, printReady, repair, customer, businessSettings]);
   
   // Generiert ein PDF zum Herunterladen
   const generatePDF = async () => {
@@ -210,7 +221,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   
   // Setzt das Dokument auf "druckbereit", wenn alle Daten geladen sind
   useEffect(() => {
-    if (repair && customer && businessSettings && !isLoading && !isLoadingCustomer && !isLoadingSettings) {
+    try {
+      if (repair && customer && businessSettings && !isLoading && !isLoadingCustomer && !isLoadingSettings) {
+        // Überprüfen, ob wichtige Daten vorhanden sind, bevor wir printReady setzen
+        // Wenn es Probleme mit dem Logo oder den Signaturen gibt, sollte die Vorschau trotzdem gezeigt werden
+        setPrintReady(true);
+      }
+    } catch (error) {
+      console.error('Fehler beim Vorbereiten der Druckansicht:', error);
+      // Trotz Fehler auf druckbereit setzen, damit der Benutzer die Vorschau sehen kann
       setPrintReady(true);
     }
   }, [repair, customer, businessSettings, isLoading, isLoadingCustomer, isLoadingSettings]);
@@ -280,6 +299,11 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                       src={businessSettings.logoImage} 
                       alt={businessSettings.businessName}
                       className="max-h-[60px] max-w-[180px] object-contain"
+                      onError={(e) => {
+                        console.error('Fehler beim Laden des Logos:', e);
+                        // Quell-Element auf ein Fallback oder leeren String setzen
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   ) : (
                     <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
@@ -366,6 +390,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                           src={repair.dropoffSignature} 
                           alt="Unterschrift bei Abgabe" 
                           className="max-h-[40px] object-contain"
+                          onError={(e) => {
+                            console.error('Fehler beim Laden der Abgabe-Unterschrift:', e);
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       </div>
                       <div className="border-t border-gray-900 mt-1"></div>
@@ -397,6 +425,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                           src={repair.pickupSignature} 
                           alt="Unterschrift bei Abholung" 
                           className="max-h-[40px] object-contain"
+                          onError={(e) => {
+                            console.error('Fehler beim Laden der Abholungs-Unterschrift:', e);
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       </div>
                       <div className="border-t border-gray-900 mt-1"></div>
