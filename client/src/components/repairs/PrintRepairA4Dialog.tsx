@@ -67,13 +67,14 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       setPrintReady(false);
       setIsGeneratingPdf(false);
       
-      // Timeout nach 5 Sekunden, um sicherzustellen, dass die Vorschau nicht hängen bleibt
+      // Timeout nach 1 Sekunde, um sicherzustellen, dass die Vorschau nicht hängen bleibt
       const timeoutId = setTimeout(() => {
-        if (!printReady && repair && customer && businessSettings) {
-          console.warn('Timeout beim Laden der Druckvorschau - Zeige Vorschau trotzdem an');
+        console.warn('Timeout beim Laden der Druckvorschau - Zeige Vorschau trotzdem an');
+        // Setze printReady auf true, wenn repair und customer vorhanden sind (minimale Anforderung)
+        if (repair && customer) {
           setPrintReady(true);
         }
-      }, 5000); // 5 Sekunden Timeout
+      }, 1000); // 1 Sekunde Timeout
       
       // Cleanup-Funktion
       return () => clearTimeout(timeoutId);
@@ -294,20 +295,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               {/* Header mit Logo und Firmendaten */}
               <div className="flex justify-between items-start mb-10">
                 <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
-                  {businessSettings.logoImage ? (
-                    <img 
-                      src={businessSettings.logoImage} 
-                      alt={businessSettings.businessName}
-                      className="max-h-[60px] max-w-[180px] object-contain"
-                      onError={(e) => {
-                        console.error('Fehler beim Laden des Logos:', e);
-                        // Quell-Element auf ein Fallback oder leeren String setzen
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
-                  )}
+                  <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
                 </div>
                 
                 <div className="text-right text-sm text-gray-600">
