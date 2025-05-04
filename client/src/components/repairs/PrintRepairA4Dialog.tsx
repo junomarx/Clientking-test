@@ -1,18 +1,19 @@
-import { useState, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
-import { Repair } from '@shared/schema';
-import { useBusinessSettings } from '@/hooks/use-business-settings';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Printer } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface PrintRepairA4DialogProps {
   open: boolean;
@@ -21,460 +22,400 @@ interface PrintRepairA4DialogProps {
 }
 
 export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4DialogProps) {
-  const printRef = useRef<HTMLDivElement>(null);
-  const { settings: businessSettings } = useBusinessSettings();
-
-  // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
-    queryKey: ['/api/repairs', repairId],
+  const { toast } = useToast();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [printReady, setPrintReady] = useState(false);
+  
+  // Daten für die Reparatur laden
+  const { data: repair, isLoading, error } = useQuery({
+    queryKey: ["/api/repairs", repairId],
     queryFn: async () => {
       if (!repairId) return null;
-      try {
-        const response = await fetch(`/api/repairs/${repairId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
-        });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Reparaturdaten:", err);
-        return null;
-      }
+      const response = await fetch(`/api/repairs/${repairId}`);
+      if (!response.ok) throw new Error('Reparaturdaten konnten nicht geladen werden');
+      return response.json();
     },
-    enabled: !!repairId && open,
+    enabled: open && repairId !== null,
   });
-
-  // Lade Kundendaten, wenn Reparatur geladen wurde
+  
+  // Daten für den Kunden laden
   const { data: customer, isLoading: isLoadingCustomer } = useQuery({
-    queryKey: ['/api/customers', repair?.customerId],
+    queryKey: ["/api/customers", repair?.customerId],
     queryFn: async () => {
       if (!repair?.customerId) return null;
-      try {
-        const response = await fetch(`/api/customers/${repair.customerId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
-        });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Kundendaten:", err);
-        return null;
-      }
+      const response = await fetch(`/api/customers/${repair.customerId}`);
+      if (!response.ok) throw new Error('Kundendaten konnten nicht geladen werden');
+      return response.json();
     },
-    enabled: !!repair?.customerId && open,
+    enabled: open && repair?.customerId !== undefined,
   });
-
-  const isLoading = isLoadingRepair || isLoadingCustomer;
-
-  const handlePrint = () => {
-    // Öffne ein neues Fenster für den Druck
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Bitte erlauben Sie Pop-ups für diese Seite, um den Ausdruck anzuzeigen.');
-      return;
+  
+  // Geschäftsdaten laden
+  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ["/api/business-settings"],
+    queryFn: async () => {
+      const response = await fetch('/api/business-settings');
+      if (!response.ok) throw new Error('Geschäftsdaten konnten nicht geladen werden');
+      return response.json();
+    },
+    enabled: open,
+  });
+  
+  // Zurücksetzen beim Öffnen
+  useEffect(() => {
+    if (open) {
+      setPrintReady(false);
+      setIsGeneratingPdf(false);
     }
+  }, [open]);
+  
+  // Generiert ein PDF zum Herunterladen
+  const generatePDF = async () => {
+    if (!document.getElementById('a4-print-content')) return;
     
-    // Formatiere Adressen für den Ausdruck
-    const fullAddress = customer ? 
-      [customer.address, `${customer.zipCode || ''} ${customer.city || ''}`].filter(Boolean).join(', ') : '';
-
-    // Preis formatieren
-    const formattedPrice = repair?.estimatedCost 
-      ? parseFloat(repair.estimatedCost).toFixed(2).replace('.', ',') 
-      : '-';
-
-    // Datum für Unterschriften formatieren
-    const dropoffDate = repair?.dropoffSignedAt 
-      ? format(new Date(repair.dropoffSignedAt), 'dd.MM.yyyy', { locale: de }) 
-      : '';
-    const pickupDate = repair?.pickupSignedAt 
-      ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) 
-      : '';
-
-    // Unterschriftsbilder einbinden
-    const dropoffSignature = repair?.dropoffSignature 
-      ? `<img src="${repair.dropoffSignature}" alt="Unterschrift bei Abgabe" style="max-height: 80px; max-width: 100%;">` 
-      : '';
-    const pickupSignature = repair?.pickupSignature 
-      ? `<img src="${repair.pickupSignature}" alt="Unterschrift bei Abholung" style="max-height: 80px; max-width: 100%;">` 
-      : '';
-
-    // Logo einbinden
-    const logoHTML = businessSettings?.logoImage 
-      ? `<img src="${businessSettings.logoImage}" alt="${businessSettings.businessName || 'Firmenlogo'}" style="max-width: 100%; max-height: 80px;">` 
-      : 'Firmenlogo';
-
-    // Schließe den Dialog
-    onClose();
-    
-    // Fülle das Druckfenster mit Inhalten und starte direkt den Druckvorgang
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="de">
-      <head>
-          <meta charset="UTF-8">
-          <title>Reparaturauftrag | ${businessSettings?.businessName || 'Handyshop Verwaltung'}</title>
-          <style>
-              :root {
-                  --primary: #2563eb;  /* Modernes Blau */
-                  --secondary: #4b5563; /* Grau für Text */
-                  --light-bg: #f8fafc;  /* Hellgrauer Hintergrund */
-                  --border: #e2e8f0;    /* Dezentere Rahmen */
-              }
-              
-              body {
-                  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-                  margin: 0;
-                  padding: 40px;
-                  font-size: 13px;
-                  color: var(--secondary);
-                  line-height: 1.5;
-              }
-              
-              /* Header mit Logo */
-              .header {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: flex-end;
-                  margin-bottom: 30px;
-                  padding-bottom: 20px;
-                  border-bottom: 1px solid var(--border);
-              }
-              
-              .logo-container {
-                  width: 200px;
-                  padding: 12px;
-                  text-align: center;
-              }
-              
-              .company-info {
-                  text-align: right;
-              }
-              
-              .company-name {
-                  font-weight: 600;
-                  font-size: 18px;
-                  color: var(--primary);
-                  margin-bottom: 8px;
-              }
-              
-              .company-contact {
-                  font-size: 12px;
-                  color: var(--secondary);
-              }
-              
-              /* Dokumententitel */
-              .document-title {
-                  text-align: center;
-                  font-size: 28px;
-                  font-weight: 600;
-                  margin: 30px 0 15px;
-                  color: var(--primary);
-                  letter-spacing: -0.5px;
-              }
-              
-              .auftragsnummer {
-                  text-align: center;
-                  font-size: 16px;
-                  font-weight: 500;
-                  margin: 0 0 40px;
-                  color: var(--secondary);
-              }
-              
-              /* Kundeninfo */
-              .customer-info {
-                  margin-bottom: 40px;
-                  padding: 20px;
-                  background: var(--light-bg);
-                  border-radius: 12px;
-              }
-              
-              .section-title {
-                  font-weight: 600;
-                  margin-bottom: 15px;
-                  font-size: 15px;
-                  color: var(--primary);
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-              }
-              
-              .customer-name {
-                  font-weight: 600;
-                  font-size: 16px;
-                  margin-bottom: 8px;
-                  color: #111;
-              }
-              
-              /* Geräteinformationen */
-              .device-repair-box {
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 30px;
-                  margin-bottom: 30px;
-                  padding: 25px;
-                  border: 1px solid var(--border);
-                  border-radius: 12px;
-                  background: white;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-              }
-              
-              .info-item {
-                  margin-bottom: 18px;
-              }
-              
-              .info-label {
-                  font-size: 11px;
-                  color: var(--secondary);
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-                  margin-bottom: 4px;
-                  opacity: 0.8;
-              }
-              
-              .info-value {
-                  font-size: 15px;
-                  font-weight: 500;
-                  color: #111;
-              }
-              
-              .price-value {
-                  font-size: 18px;
-                  font-weight: 600;
-                  color: var(--primary);
-              }
-              
-              /* Bedingungen */
-              .repair-terms-box {
-                  border: 1px solid var(--border);
-                  border-radius: 12px;
-                  background: white;
-                  padding: 25px;
-                  margin-bottom: 40px;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-              }
-              
-              .terms-list {
-                  padding-left: 18px;
-              }
-              
-              .terms-list li {
-                  margin-bottom: 12px;
-                  font-size: 13px;
-                  color: var(--secondary);
-              }
-              
-              /* Unterschriftsbereich */
-              .signature-section {
-                  margin-top: 60px;
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 40px;
-              }
-              
-              .signature-box {
-                  padding: 20px 0;
-              }
-              
-              .signature-title {
-                  font-weight: 600;
-                  margin-bottom: 20px;
-                  color: var(--primary);
-              }
-              
-              .signature-line {
-                  margin-top: 40px;
-                  border-top: 1px solid var(--border);
-                  height: 1px;
-              }
-              
-              .signature-placeholder {
-                  font-size: 11px;
-                  color: var(--secondary);
-                  margin-top: 8px;
-                  opacity: 0.7;
-              }
-              
-              .signature-date {
-                  font-size: 12px;
-                  color: var(--secondary);
-                  margin-top: 8px;
-              }
-              
-              .signature-image {
-                  margin-top: 10px;
-                  margin-bottom: 10px;
-                  min-height: 30px;
-              }
-              
-              @media print {
-                  body {
-                      padding: 0;
-                  }
-                  @page {
-                      size: A4;
-                      margin: 2cm;
-                  }
-                  .repair-terms-box, .device-repair-box {
-                      box-shadow: none;
-                  }
-              }
-          </style>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.close();
-              }, 500);
-            };
-          </script>
-      </head>
-      <body>
-          <div class="header">
-              <div class="logo-container">
-                  ${logoHTML}
-              </div>
-              <div class="company-info">
-                  <div class="company-name">${businessSettings?.businessName || 'Handyshop Verwaltung'}</div>
-                  <div class="company-contact">
-                      ${businessSettings?.streetAddress || ''}, ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
-                      ${businessSettings?.phone ? `${businessSettings.phone}<br>` : ''}
-                      ${businessSettings?.email ? `${businessSettings.email}` : ''}
-                  </div>
-              </div>
-          </div>
-
-          <div class="customer-info">
-              <div class="section-title">Kundeninformationen</div>
-              <div class="customer-name">${customer?.firstName || ''} ${customer?.lastName || ''}</div>
-              <div>${customer?.phone || ''}</div>
-              <div>${customer?.email || ''}</div>
-              <div>${fullAddress}</div>
-          </div>
-
-          <div class="document-title">Reparaturauftrag</div>
-          <div class="auftragsnummer">Auftragsnummer: ${repair?.orderCode || `#${repair?.id}`}</div>
-
-          <!-- Gerätedaten & Reparaturdetails -->
-          <div class="device-repair-box">
-              <div class="info-column">
-                  <div class="info-item">
-                      <div class="info-label">Hersteller</div>
-                      <div class="info-value">${repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '-'}</div>
-                  </div>
-                  <div class="info-item">
-                      <div class="info-label">Modell</div>
-                      <div class="info-value">${repair?.model || '-'}</div>
-                  </div>
-                  ${repair?.serialNumber ? `
-                  <div class="info-item">
-                      <div class="info-label">Seriennummer</div>
-                      <div class="info-value">${repair.serialNumber}</div>
-                  </div>
-                  ` : ''}
-              </div>
-              <div class="info-column">
-                  <div class="info-item">
-                      <div class="info-label">Fehlerbeschreibung</div>
-                      <div class="info-value">${repair?.issue ? repair.issue.replace(/,/g, '<br>') : '-'}</div>
-                  </div>
-                  <div class="info-item">
-                      <div class="info-label">Kostenvoranschlag</div>
-                      <div class="info-value price-value">${formattedPrice} €</div>
-                  </div>
-                  ${repair?.notes ? `
-                  <div class="info-item">
-                      <div class="info-label">Notizen</div>
-                      <div class="info-value">${repair.notes}</div>
-                  </div>
-                  ` : ''}
-              </div>
-          </div>
-
-          <!-- Reparaturbedingungen -->
-          <div class="repair-terms-box">
-              <div class="section-title">Reparaturbedingungen</div>
-              <ul class="terms-list">
-                  <li><strong>Datenverlust:</strong> Wir übernehmen keine Haftung für Datenverluste. Der Kunde ist für die Datensicherung verantwortlich.</li>
-                  <li><strong>Ersatzteile:</strong> Die Reparatur erfolgt mit hochwertigen Komponenten. Originalteile werden nach Verfügbarkeit eingesetzt.</li>
-                  <li><strong>Gewährleistung:</strong> 6 Monate auf ausgeführte Reparaturen und verwendete Komponenten.</li>
-                  <li><strong>Abholfrist:</strong> Nicht abgeholte Geräte werden nach 60 Tagen kostenpflichtig eingelagert oder entsorgt.</li>
-                  <li><strong>Auftragsbestätigung:</strong> Mit Unterschrift werden diese Bedingungen anerkannt.</li>
-              </ul>
-          </div>
-
-          <!-- Unterschriftsbereich -->
-          <div class="signature-section">
-              <div class="signature-box">
-                  <div class="signature-title">Reparaturauftrag erteilt</div>
-                  <div class="signature-image">${dropoffSignature}</div>
-                  ${!dropoffSignature ? `<div class="signature-line"></div>
-                  <div class="signature-placeholder">Unterschrift Kunde</div>` : ''}
-                  <div class="signature-date">${dropoffDate}</div>
-              </div>
-              <div class="signature-box">
-                  <div class="signature-title">Gerät abgeholt</div>
-                  <div class="signature-image">${pickupSignature}</div>
-                  ${!pickupSignature ? `<div class="signature-line"></div>
-                  <div class="signature-placeholder">Unterschrift Kunde</div>` : ''}
-                  <div class="signature-date">${pickupDate}</div>
-              </div>
-          </div>
-
-          <script>
-            window.addEventListener('afterprint', function() {
-              // Fenster nach dem Drucken automatisch schließen
-              window.close();
-            });
-          </script>
-      </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
+    setIsGeneratingPdf(true);
     
     try {
-      printWindow.focus();
-    } catch (error) {
-      console.error('Fehler beim Fokussieren des Druckfensters:', error);
+      const content = document.getElementById('a4-print-content');
+      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
+      
+      const canvas = await html2canvas(content, {
+        scale: 2, // Höhere Qualität
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      // A4 Format: 210 x 297 mm
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Bildgröße berechnen, um im A4-Format zu passen
+      const imgWidth = 210; // A4 Breite in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // PDF speichern mit aussagekräftigem Dateinamen
+      const orderCode = repair?.orderCode || repairId;
+      const customerName = customer ? `${customer.lastName}_${customer.firstName}` : 'Kunde';
+      const fileName = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
+      
+      pdf.save(fileName);
+      
+      toast({
+        title: "PDF erstellt",
+        description: "Das PDF wurde erfolgreich erstellt und heruntergeladen.",
+      });
+    } catch (err) {
+      console.error('Fehler beim Generieren des PDFs:', err);
+      toast({
+        title: "Fehler",
+        description: "Das PDF konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
-
-  if (!open) return null;
-
+  
+  // Druckt den Inhalt direkt
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  // Formatiert das Datum schön
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
+    } catch (e) {
+      return dateString || 'k.A.';
+    }
+  };
+  
+  // Formatiert die Uhrzeit
+  const formatTime = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'HH:mm', { locale: de }) + ' Uhr';
+    } catch (e) {
+      return 'k.A.';
+    }
+  };
+  
+  // Setzt das Dokument auf "druckbereit", wenn alle Daten geladen sind
+  useEffect(() => {
+    if (repair && customer && businessSettings && !isLoading && !isLoadingCustomer && !isLoadingSettings) {
+      setPrintReady(true);
+    }
+  }, [repair, customer, businessSettings, isLoading, isLoadingCustomer, isLoadingSettings]);
+  
+  // Zeigt eine Lade-Animation, wenn die Daten noch nicht bereit sind
+  if (open && (!printReady || isLoading || isLoadingCustomer || isLoadingSettings)) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-4xl">
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Lade Daten...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  // Zeigt eine Fehlermeldung, wenn ein Fehler aufgetreten ist
+  if (error) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Fehler</DialogTitle>
+          </DialogHeader>
+          <div className="py-6">
+            <p>Die Reparaturdaten konnten nicht geladen werden.</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={onClose}>Schließen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  // Zeigt den Druckinhalt an, wenn die Daten geladen wurden
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>DIN A4 Reparaturauftrag drucken</DialogTitle>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto print:shadow-none print:border-none print:p-0">
+        <DialogHeader className="print:hidden">
+          <DialogTitle className="text-xl font-semibold">DIN A4 Reparaturauftrag #{repairId}</DialogTitle>
         </DialogHeader>
         
-        {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
+        {printReady && repair && customer && businessSettings && (
           <>
-            <div className="p-4 bg-gray-50 rounded-md">
-              <p className="text-sm">Diese Ansicht druckt einen DIN A4 Reparaturauftrag mit ansprechendem Layout:</p>
-              <ul className="list-disc list-inside text-sm mt-2 space-y-1">
-                <li>Professionelles Design im Hochformat</li>
-                <li>Alle Reparatur- und Kundendaten übersichtlich dargestellt</li>
-                <li>Unterschriftsbereiche für Auftragserteilung und Abholung</li>
-                <li>Reparaturbedingungen vollständig aufgeführt</li>
-              </ul>
+            {/* Druckinhalt */}
+            <div id="a4-print-content" className="bg-white text-black p-4 rounded-md">
+              {/* Briefkopf */}
+              <div className="flex justify-between items-start mb-8 border-b pb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold">{businessSettings.businessName}</h1>
+                  {businessSettings.companySlogan && (
+                    <p className="text-sm italic">{businessSettings.companySlogan}</p>
+                  )}
+                  <div className="mt-2 text-sm">
+                    <p>{businessSettings.street}, {businessSettings.zipCode} {businessSettings.city}</p>
+                    <p>Tel: {businessSettings.phone}</p>
+                    <p>E-Mail: {businessSettings.email}</p>
+                    {businessSettings.website && <p>Web: {businessSettings.website}</p>}
+                  </div>
+                </div>
+
+                <div className="flex-1 text-right">
+                  {businessSettings.logoUrl && (
+                    <img 
+                      src={businessSettings.logoUrl} 
+                      alt="Firmenlogo" 
+                      className="max-h-24 max-w-32 ml-auto mb-2"
+                    />
+                  )}
+                  <p className="text-sm">
+                    {businessSettings.vatNumber && (
+                      <span className="block">USt-IdNr: {businessSettings.vatNumber}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Dokumententitel */}
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold border-b border-t py-2">Reparaturauftrag #{repair.orderCode}</h2>
+              </div>
+
+              {/* Kundeninformationen */}
+              <div className="flex mb-6">
+                <div className="flex-1">
+                  <h3 className="font-bold mb-2">Kundeninformationen</h3>
+                  <p>{customer.firstName} {customer.lastName}</p>
+                  <p>{customer.street}</p>
+                  <p>{customer.zipCode} {customer.city}</p>
+                  <p>Tel: {customer.phone}</p>
+                  <p>E-Mail: {customer.email}</p>
+                </div>
+
+                <div className="flex-1 text-right">
+                  <p><span className="font-semibold">Auftragsnummer:</span> {repair.orderCode}</p>
+                  <p><span className="font-semibold">Datum:</span> {formatDate(repair.createdAt)}</p>
+                  <p><span className="font-semibold">Status:</span> {repair.status}</p>
+                </div>
+              </div>
+
+              {/* Geräteinformationen */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-2">Geräteinformationen</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p><span className="font-semibold">Geräteart:</span> {repair.deviceType}</p>
+                    <p><span className="font-semibold">Hersteller:</span> {repair.manufacturer}</p>
+                    <p><span className="font-semibold">Modell:</span> {repair.model}</p>
+                  </div>
+                  <div>
+                    <p><span className="font-semibold">IMEI/Seriennummer:</span> {repair.serialNumber || 'Nicht angegeben'}</p>
+                    <p><span className="font-semibold">Zustand:</span> {repair.deviceCondition || 'Nicht angegeben'}</p>
+                    <p><span className="font-semibold">Passcode:</span> {repair.passcode || 'Nicht angegeben'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reparaturdetails */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-2">Reparaturdetails</h3>
+                <p><span className="font-semibold">Fehlerbeschreibung:</span></p>
+                <p className="border p-2 rounded-md min-h-[40px]">{repair.issue || 'Keine Fehlerbeschreibung angegeben'}</p>
+                
+                {repair.customerNotes && (
+                  <>
+                    <p className="mt-2"><span className="font-semibold">Kundennotizen:</span></p>
+                    <p className="border p-2 rounded-md min-h-[40px]">{repair.customerNotes}</p>
+                  </>
+                )}
+                
+                {repair.internalNotes && (
+                  <>
+                    <p className="mt-2"><span className="font-semibold">Interne Notizen:</span></p>
+                    <p className="border p-2 rounded-md min-h-[40px]">{repair.internalNotes}</p>
+                  </>
+                )}
+              </div>
+
+              {/* Kosten */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-2">Kostenübersicht</h3>
+                <div className="border rounded-md overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="p-2 text-left">Beschreibung</th>
+                        <th className="p-2 text-right">Preis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-t">
+                        <td className="p-2">{repair.repairDescription || 'Reparaturleistung'}</td>
+                        <td className="p-2 text-right">{repair.price?.toFixed(2).replace('.', ',')} €</td>
+                      </tr>
+                      {repair.sparePartsCost > 0 && (
+                        <tr className="border-t">
+                          <td className="p-2">Ersatzteile</td>
+                          <td className="p-2 text-right">{repair.sparePartsCost.toFixed(2).replace('.', ',')} €</td>
+                        </tr>
+                      )}
+                      <tr className="border-t bg-gray-50 font-bold">
+                        <td className="p-2">Gesamtbetrag</td>
+                        <td className="p-2 text-right">
+                          {((repair.price || 0) + (repair.sparePartsCost || 0)).toFixed(2).replace('.', ',')} €
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-sm mt-1">Alle Preise inkl. gesetzl. MwSt.</p>
+              </div>
+
+              {/* Unterschriften */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-2">Unterschriften</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* Abgabe-Unterschrift */}
+                  <div className="border rounded-md p-2">
+                    <h4 className="font-semibold mb-1">Abgabe des Geräts</h4>
+                    {repair.dropoffSignature ? (
+                      <div className="mb-2">
+                        <img 
+                          src={repair.dropoffSignature} 
+                          alt="Abgabe-Unterschrift" 
+                          className="max-h-16 border-b border-gray-300 mb-1 pb-1"
+                        />
+                        <p className="text-xs">
+                          Unterschrieben von {customer.firstName} {customer.lastName} am {formatDate(repair.dropoffSignatureDate || repair.createdAt)} um {formatTime(repair.dropoffSignatureDate || repair.createdAt)}
+                        </p>
+                        <p className="text-xs mt-1">
+                          Mit der Unterschrift bestätige ich die Abgabe des Geräts und akzeptiere die AGB.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="h-24 flex items-center justify-center border-b">
+                        <p className="text-gray-400">Keine Unterschrift vorhanden</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Abholungs-Unterschrift */}
+                  <div className="border rounded-md p-2">
+                    <h4 className="font-semibold mb-1">Abholung des Geräts</h4>
+                    {repair.signature ? (
+                      <div className="mb-2">
+                        <img 
+                          src={repair.signature} 
+                          alt="Abholungs-Unterschrift" 
+                          className="max-h-16 border-b border-gray-300 mb-1 pb-1"
+                        />
+                        <p className="text-xs">
+                          Unterschrieben von {customer.firstName} {customer.lastName} am {formatDate(repair.signatureDate || repair.updatedAt)} um {formatTime(repair.signatureDate || repair.updatedAt)}
+                        </p>
+                        <p className="text-xs mt-1">
+                          Mit der Unterschrift bestätige ich den Erhalt des reparierten Geräts und die ordnungsgemäße Durchführung der Reparatur.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="h-24 flex items-center justify-center border-b">
+                        <p className="text-gray-400">Keine Unterschrift vorhanden</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fußzeile */}
+              <div className="text-xs text-center mt-8 border-t pt-2">
+                <p>&copy; {new Date().getFullYear()} {businessSettings.businessName} - Alle Rechte vorbehalten</p>
+                <p className="mt-1">Dieses Dokument wurde elektronisch erstellt und ist auch ohne Unterschrift gültig.</p>
+              </div>
             </div>
             
-            <DialogFooter className="flex justify-between">
-              <Button variant="outline" onClick={onClose}>
+            {/* Aktionsbuttons */}
+            <div className="flex justify-between items-center mt-4 print:hidden">
+              <Button
+                variant="outline"
+                onClick={onClose}
+              >
                 Abbrechen
               </Button>
-              <Button onClick={handlePrint} className="gap-2">
-                <Printer className="h-4 w-4" />
-                A4 Ausdruck erstellen
-              </Button>
-            </DialogFooter>
+              
+              <div className="flex space-x-2">
+                <Button
+                  onClick={generatePDF}
+                  disabled={isGeneratingPdf}
+                  variant="outline"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      PDF wird erstellt...
+                    </>
+                  ) : (
+                    <>PDF herunterladen</>
+                  )}
+                </Button>
+                
+                <Button onClick={handlePrint}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Drucken
+                </Button>
+              </div>
+            </div>
           </>
         )}
       </DialogContent>
