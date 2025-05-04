@@ -219,7 +219,7 @@
   @apply fixed top-1/2 left-0 w-full text-center opacity-5 transform -rotate-45 text-6xl font-bold -z-10 text-black hidden md:block;
 }
 
-/* Kassenbon-Styling für 80mm */
+/* Kassenbon-Styling */
 .logo {
   text-align: center;
   margin-bottom: 5px;
@@ -327,6 +327,55 @@
   margin-top: 25px;
   border-top: 1px solid #000;
   width: 100%;
+}
+
+/* Einstellungen für kleinere Kassenbon-Breite (58mm) */
+@media print, (max-width: 58mm) {
+  body {
+    width: 58mm;
+    margin: 0;
+    padding: 5px;
+    font-size: 9px;
+  }
+  
+  .logo-img {
+    max-width: 90%;
+  }
+  
+  .company {
+    font-size: 9px;
+    margin-bottom: 8px;
+  }
+  
+  .headline {
+    font-size: 13px;
+  }
+  
+  .auftragsnummer {
+    font-size: 11px;
+  }
+  
+  .kundenname,
+  .geraetinfo {
+    font-size: 11px;
+  }
+  
+  .field {
+    font-size: 9px;
+  }
+  
+  .terms-box {
+    padding: 5px;
+    font-size: 8px;
+  }
+  
+  .terms-title {
+    font-size: 10px;
+  }
+  
+  .signature-box {
+    font-size: 9px;
+  }
 }
 
 .status-badge.status-eingegangen {
