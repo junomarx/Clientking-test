@@ -1111,7 +1111,7 @@ export default function SuperadminDevicesTab() {
                     <SelectValue placeholder="Wählen Sie eine Marke" />
                   </SelectTrigger>
                   <SelectContent>
-                    {filteredBrandsForSelectedModel.map((brand) => (
+                    {filteredBrandsForSelectedModel.map((brand: DeviceBrand) => (
                         <SelectItem key={brand.id} value={brand.name}>
                           {brand.name}
                         </SelectItem>
