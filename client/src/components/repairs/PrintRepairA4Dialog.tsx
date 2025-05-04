@@ -196,192 +196,160 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         
         {printReady && repair && customer && businessSettings && (
           <>
-            {/* Druckinhalt */}
+            {/* Druckinhalt - Neue DIN A4 Vorlage */}
             <div id="a4-print-content" className="bg-white text-black p-4 rounded-md">
-              {/* Briefkopf */}
-              <div className="flex justify-between items-start mb-8 border-b pb-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold">{businessSettings.businessName}</h1>
-                  {businessSettings.companySlogan && (
-                    <p className="text-sm italic">{businessSettings.companySlogan}</p>
-                  )}
-                  <div className="mt-2 text-sm">
-                    <p>{businessSettings.street}, {businessSettings.zipCode} {businessSettings.city}</p>
-                    <p>Tel: {businessSettings.phone}</p>
-                    <p>E-Mail: {businessSettings.email}</p>
-                    {businessSettings.website && <p>Web: {businessSettings.website}</p>}
-                  </div>
-                </div>
-
-                <div className="flex-1 text-right">
-                  {businessSettings.logoUrl && (
+              <style dangerouslySetInnerHTML={{ __html: `
+                @media print {
+                  body {
+                    padding: 0;
+                  }
+                  @page {
+                    size: A4;
+                    margin: 2cm;
+                  }
+                }
+              `}} />
+              
+              {/* Header mit Logo und Firmendaten */}
+              <div className="flex justify-between items-start mb-10">
+                <div className="w-[200px] border border-dashed border-gray-300 p-3 text-center h-[60px] flex items-center justify-center">
+                  {businessSettings.logoUrl ? (
                     <img 
                       src={businessSettings.logoUrl} 
-                      alt="Firmenlogo" 
-                      className="max-h-24 max-w-32 ml-auto mb-2"
+                      alt={businessSettings.businessName}
+                      className="max-h-[60px] max-w-[180px] object-contain"
                     />
+                  ) : (
+                    <span className="text-gray-400 italic">Logo wird hier angezeigt</span>
                   )}
-                  <p className="text-sm">
-                    {businessSettings.vatNumber && (
-                      <span className="block">USt-IdNr: {businessSettings.vatNumber}</span>
-                    )}
-                  </p>
                 </div>
-              </div>
-
-              {/* Dokumententitel */}
-              <div className="text-center mb-6">
-                <h2 className="text-xl font-bold border-b border-t py-2">Reparaturauftrag #{repair.orderCode}</h2>
+                
+                <div className="text-right text-sm text-gray-600">
+                  <p className="text-base font-bold text-gray-800 mb-1">{businessSettings.businessName}</p>
+                  <p>{businessSettings.street || 'Amerlingstraße 19'}<br />
+                  {businessSettings.zipCode || '1060'} {businessSettings.city || 'Wien'}<br />
+                  {businessSettings.phone || '+4314103511'}<br />
+                  {businessSettings.email || 'office@macandphonedoc.at'}</p>
+                </div>
               </div>
 
               {/* Kundeninformationen */}
-              <div className="flex mb-6">
+              <div className="mb-8">
+                <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
+                <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
+                <p>{customer.street}</p>
+                <p>{customer.zipCode} {customer.city}</p>
+              </div>
+              
+              {/* Dokumententitel und Auftragsnummer */}
+              <div className="text-center mb-10">
+                <h1 className="text-2xl font-bold mb-2">Reparaturauftrag</h1>
+                <div className="text-lg">{repair.orderCode}</div>
+              </div>
+              
+              {/* Gerätedaten & Reparaturdetails Box */}
+              <div className="border border-gray-300 rounded-lg bg-gray-50 p-5 mb-8 flex gap-10">
                 <div className="flex-1">
-                  <h3 className="font-bold mb-2">Kundeninformationen</h3>
-                  <p>{customer.firstName} {customer.lastName}</p>
-                  <p>{customer.street}</p>
-                  <p>{customer.zipCode} {customer.city}</p>
-                  <p>Tel: {customer.phone}</p>
-                  <p>E-Mail: {customer.email}</p>
-                </div>
-
-                <div className="flex-1 text-right">
-                  <p><span className="font-semibold">Auftragsnummer:</span> {repair.orderCode}</p>
-                  <p><span className="font-semibold">Datum:</span> {formatDate(repair.createdAt)}</p>
-                  <p><span className="font-semibold">Status:</span> {repair.status}</p>
-                </div>
-              </div>
-
-              {/* Geräteinformationen */}
-              <div className="mb-6">
-                <h3 className="font-bold mb-2">Geräteinformationen</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p><span className="font-semibold">Geräteart:</span> {repair.deviceType}</p>
-                    <p><span className="font-semibold">Hersteller:</span> {repair.manufacturer}</p>
-                    <p><span className="font-semibold">Modell:</span> {repair.model}</p>
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Hersteller</div>
+                    <div className="text-sm font-bold">{repair.manufacturer}</div>
                   </div>
-                  <div>
-                    <p><span className="font-semibold">IMEI/Seriennummer:</span> {repair.serialNumber || 'Nicht angegeben'}</p>
-                    <p><span className="font-semibold">Zustand:</span> {repair.deviceCondition || 'Nicht angegeben'}</p>
-                    <p><span className="font-semibold">Passcode:</span> {repair.passcode || 'Nicht angegeben'}</p>
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Modell</div>
+                    <div className="text-sm font-bold">{repair.model}</div>
+                  </div>
+                </div>
+                
+                <div className="flex-1">
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Schaden / Fehler</div>
+                    <div className="text-sm font-bold">
+                      {repair.issue ? repair.issue.split(',').map((issue, index) => (
+                        <div key={index}>{issue.trim()}</div>
+                      )) : 'Keine Angabe'}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Kosten</div>
+                    <div className="text-sm font-bold">
+                      {repair.price !== undefined ? `${repair.price.toFixed(2).replace('.', ',')} €` : 'Auf Anfrage'}
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Reparaturdetails */}
-              <div className="mb-6">
-                <h3 className="font-bold mb-2">Reparaturdetails</h3>
-                <p><span className="font-semibold">Fehlerbeschreibung:</span></p>
-                <p className="border p-2 rounded-md min-h-[40px]">{repair.issue || 'Keine Fehlerbeschreibung angegeben'}</p>
-                
-                {repair.customerNotes && (
-                  <>
-                    <p className="mt-2"><span className="font-semibold">Kundennotizen:</span></p>
-                    <p className="border p-2 rounded-md min-h-[40px]">{repair.customerNotes}</p>
-                  </>
-                )}
-                
-                {repair.internalNotes && (
-                  <>
-                    <p className="mt-2"><span className="font-semibold">Interne Notizen:</span></p>
-                    <p className="border p-2 rounded-md min-h-[40px]">{repair.internalNotes}</p>
-                  </>
-                )}
+              
+              {/* Reparaturbedingungen */}
+              <div className="border border-gray-300 rounded-lg bg-gray-50 p-5 mb-8">
+                <div className="text-sm font-bold mb-3">Reparaturbedingungen</div>
+                <p className="text-sm mb-2"><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
+                <p className="text-sm mb-2"><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
+                <p className="text-sm mb-2"><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
+                <p className="text-sm mb-2"><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
+                <p className="text-sm mb-2"><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
+                <p className="text-sm mb-2"><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
               </div>
-
-              {/* Kosten */}
-              <div className="mb-6">
-                <h3 className="font-bold mb-2">Kostenübersicht</h3>
-                <div className="border rounded-md overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="p-2 text-left">Beschreibung</th>
-                        <th className="p-2 text-right">Preis</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t">
-                        <td className="p-2">{repair.repairDescription || 'Reparaturleistung'}</td>
-                        <td className="p-2 text-right">{repair.price?.toFixed(2).replace('.', ',')} €</td>
-                      </tr>
-                      {repair.sparePartsCost > 0 && (
-                        <tr className="border-t">
-                          <td className="p-2">Ersatzteile</td>
-                          <td className="p-2 text-right">{repair.sparePartsCost.toFixed(2).replace('.', ',')} €</td>
-                        </tr>
-                      )}
-                      <tr className="border-t bg-gray-50 font-bold">
-                        <td className="p-2">Gesamtbetrag</td>
-                        <td className="p-2 text-right">
-                          {((repair.price || 0) + (repair.sparePartsCost || 0)).toFixed(2).replace('.', ',')} €
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p className="text-sm mt-1">Alle Preise inkl. gesetzl. MwSt.</p>
-              </div>
-
-              {/* Unterschriften */}
-              <div className="mb-6">
-                <h3 className="font-bold mb-2">Unterschriften</h3>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {/* Abgabe-Unterschrift */}
-                  <div className="border rounded-md p-2">
-                    <h4 className="font-semibold mb-1">Abgabe des Geräts</h4>
-                    {repair.dropoffSignature ? (
-                      <div className="mb-2">
+              
+              {/* Unterschriftsbereich mit Datum */}
+              <div className="flex mt-16 gap-10">
+                <div className="flex-1 text-center">
+                  <p className="font-bold mb-2">Reparaturauftrag erteilt</p>
+                  {repair.dropoffSignature ? (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center">
                         <img 
                           src={repair.dropoffSignature} 
-                          alt="Abgabe-Unterschrift" 
-                          className="max-h-16 border-b border-gray-300 mb-1 pb-1"
+                          alt="Unterschrift bei Abgabe" 
+                          className="max-h-[40px] object-contain"
                         />
-                        <p className="text-xs">
-                          Unterschrieben von {customer.firstName} {customer.lastName} am {formatDate(repair.dropoffSignatureDate || repair.createdAt)} um {formatTime(repair.dropoffSignatureDate || repair.createdAt)}
-                        </p>
-                        <p className="text-xs mt-1">
-                          Mit der Unterschrift bestätige ich die Abgabe des Geräts und akzeptiere die AGB.
-                        </p>
                       </div>
-                    ) : (
-                      <div className="h-24 flex items-center justify-center border-b">
-                        <p className="text-gray-400">Keine Unterschrift vorhanden</p>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Abholungs-Unterschrift */}
-                  <div className="border rounded-md p-2">
-                    <h4 className="font-semibold mb-1">Abholung des Geräts</h4>
-                    {repair.signature ? (
-                      <div className="mb-2">
-                        <img 
-                          src={repair.signature} 
-                          alt="Abholungs-Unterschrift" 
-                          className="max-h-16 border-b border-gray-300 mb-1 pb-1"
-                        />
-                        <p className="text-xs">
-                          Unterschrieben von {customer.firstName} {customer.lastName} am {formatDate(repair.signatureDate || repair.updatedAt)} um {formatTime(repair.signatureDate || repair.updatedAt)}
-                        </p>
-                        <p className="text-xs mt-1">
-                          Mit der Unterschrift bestätige ich den Erhalt des reparierten Geräts und die ordnungsgemäße Durchführung der Reparatur.
-                        </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
+                        <span>Keine Unterschrift vorhanden</span>
                       </div>
-                    ) : (
-                      <div className="h-24 flex items-center justify-center border-b">
-                        <p className="text-gray-400">Keine Unterschrift vorhanden</p>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {formatDate(repair.createdAt)}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
-              </div>
-
-              {/* Fußzeile */}
-              <div className="text-xs text-center mt-8 border-t pt-2">
-                <p>&copy; {new Date().getFullYear()} {businessSettings.businessName} - Alle Rechte vorbehalten</p>
-                <p className="mt-1">Dieses Dokument wurde elektronisch erstellt und ist auch ohne Unterschrift gültig.</p>
+                
+                <div className="flex-1 text-center">
+                  <p className="font-bold mb-2">Gerät abgeholt</p>
+                  {repair.pickupSignature ? (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center">
+                        <img 
+                          src={repair.pickupSignature} 
+                          alt="Unterschrift bei Abholung" 
+                          className="max-h-[40px] object-contain"
+                        />
+                      </div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {repair.pickupSignedAt && formatDate(repair.pickupSignedAt)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
+                        <span>Keine Unterschrift vorhanden</span>
+                      </div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1"></div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             
