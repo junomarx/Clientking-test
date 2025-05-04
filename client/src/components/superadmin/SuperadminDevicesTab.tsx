@@ -1,60 +1,22 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import {
-  Smartphone,
-  Laptop,
-  Plus,
-  Pencil,
-  Trash2,
-  Settings,
-  Tag,
-  AlertCircle,
-  Building,
-  BarChart4
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Trash2, PlusCircle, Smartphone, Briefcase, Book, AlertTriangle } from 'lucide-react';
 
-// Schnittstellen für die Gerätedaten
 interface DeviceType {
   id: number;
   name: string;
   isGlobal: boolean;
-  userId?: number | null;
-  shopId?: number | null;
   createdAt: string;
 }
 
@@ -63,8 +25,6 @@ interface DeviceBrand {
   name: string;
   deviceType: string;
   isGlobal: boolean;
-  userId?: number | null;
-  shopId?: number | null;
   createdAt: string;
 }
 
@@ -74,8 +34,6 @@ interface DeviceModel {
   brand: string;
   deviceType: string;
   isGlobal: boolean;
-  userId?: number | null;
-  shopId?: number | null;
   createdAt: string;
 }
 
@@ -84,65 +42,81 @@ interface DeviceIssue {
   description: string;
   deviceType: string;
   isGlobal: boolean;
-  userId?: number | null;
-  shopId?: number | null;
   createdAt: string;
 }
 
 export default function SuperadminDevicesTab() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("types");
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('types');
   
-  // State für Dialoge
+  // Device Type State
   const [isCreateTypeDialogOpen, setIsCreateTypeDialogOpen] = useState(false);
   const [isEditTypeDialogOpen, setIsEditTypeDialogOpen] = useState(false);
+  const [newDeviceType, setNewDeviceType] = useState({ name: '', isGlobal: true });
   const [selectedType, setSelectedType] = useState<DeviceType | null>(null);
   
+  // Device Brand State
   const [isCreateBrandDialogOpen, setIsCreateBrandDialogOpen] = useState(false);
   const [isEditBrandDialogOpen, setIsEditBrandDialogOpen] = useState(false);
+  const [newDeviceBrand, setNewDeviceBrand] = useState({ name: '', deviceType: '', isGlobal: true });
   const [selectedBrand, setSelectedBrand] = useState<DeviceBrand | null>(null);
   
+  // Device Model State
   const [isCreateModelDialogOpen, setIsCreateModelDialogOpen] = useState(false);
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState(false);
+  const [newDeviceModel, setNewDeviceModel] = useState({ name: '', brand: '', deviceType: '', isGlobal: true });
   const [selectedModel, setSelectedModel] = useState<DeviceModel | null>(null);
   
+  // Device Issue State
   const [isCreateIssueDialogOpen, setIsCreateIssueDialogOpen] = useState(false);
   const [isEditIssueDialogOpen, setIsEditIssueDialogOpen] = useState(false);
+  const [newDeviceIssue, setNewDeviceIssue] = useState({ description: '', deviceType: '', isGlobal: true });
   const [selectedIssue, setSelectedIssue] = useState<DeviceIssue | null>(null);
   
-  // State für Formulare
-  const [typeForm, setTypeForm] = useState({ name: '', isGlobal: true });
-  const [brandForm, setBrandForm] = useState({ name: '', deviceType: '', isGlobal: true });
-  const [modelForm, setModelForm] = useState({ name: '', brand: '', deviceType: '', isGlobal: true });
-  const [issueForm, setIssueForm] = useState({ description: '', deviceType: '', isGlobal: true });
-  
-  // Gerätedaten abrufen
-  const { data: deviceTypes, isLoading: isLoadingTypes, error: typesError } = useQuery<DeviceType[]>({ 
-    queryKey: ["/api/superadmin/device-types"],
+  // Queries
+  const typesQuery = useQuery({
+    queryKey: ['/api/superadmin/device-types'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/superadmin/device-types');
+      return await res.json() as DeviceType[];
+    }
   });
   
-  const { data: deviceBrands, isLoading: isLoadingBrands, error: brandsError } = useQuery<DeviceBrand[]>({ 
-    queryKey: ["/api/superadmin/device-brands"],
+  const brandsQuery = useQuery({
+    queryKey: ['/api/superadmin/device-brands'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/superadmin/device-brands');
+      return await res.json() as DeviceBrand[];
+    }
   });
   
-  const { data: deviceModels, isLoading: isLoadingModels, error: modelsError } = useQuery<DeviceModel[]>({ 
-    queryKey: ["/api/superadmin/device-models"],
+  const modelsQuery = useQuery({
+    queryKey: ['/api/superadmin/device-models'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/superadmin/device-models');
+      return await res.json() as DeviceModel[];
+    }
   });
   
-  const { data: deviceIssues, isLoading: isLoadingIssues, error: issuesError } = useQuery<DeviceIssue[]>({ 
-    queryKey: ["/api/superadmin/device-issues"],
+  const issuesQuery = useQuery({
+    queryKey: ['/api/superadmin/device-issues'],
+    queryFn: async () => {
+      const res = await apiRequest('GET', '/api/superadmin/device-issues');
+      return await res.json() as DeviceIssue[];
+    }
   });
   
-  // Mutations für Gerätetypen
+  // Mutations for Device Types
   const createTypeMutation = useMutation({
-    mutationFn: async (data: { name: string, isGlobal: boolean }) => {
-      const response = await apiRequest("POST", "/api/superadmin/device-types", data);
-      return await response.json();
+    mutationFn: async (data: { name: string; isGlobal: boolean }) => {
+      const res = await apiRequest('POST', '/api/superadmin/device-types', data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-types'] });
       setIsCreateTypeDialogOpen(false);
-      setTypeForm({ name: '', isGlobal: true });
+      setNewDeviceType({ name: '', isGlobal: true });
       toast({
         title: "Gerätetyp erstellt",
         description: "Der Gerätetyp wurde erfolgreich erstellt.",
@@ -150,21 +124,22 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Gerätetyp konnte nicht erstellt werden: ${error.message}`,
+        description: `Fehler beim Erstellen des Gerätetyps: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const updateTypeMutation = useMutation({
-    mutationFn: async ({ typeId, data }: { typeId: number; data: { name: string, isGlobal: boolean } }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/device-types/${typeId}`, data);
-      return await response.json();
+    mutationFn: async ({ id, data }: { id: number; data: { name: string; isGlobal: boolean } }) => {
+      const res = await apiRequest('PATCH', `/api/superadmin/device-types/${id}`, data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-types'] });
       setIsEditTypeDialogOpen(false);
+      setSelectedType(null);
       toast({
         title: "Gerätetyp aktualisiert",
         description: "Der Gerätetyp wurde erfolgreich aktualisiert.",
@@ -172,19 +147,19 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Gerätetyp konnte nicht aktualisiert werden: ${error.message}`,
+        description: `Fehler beim Aktualisieren des Gerätetyps: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const deleteTypeMutation = useMutation({
-    mutationFn: async (typeId: number) => {
-      await apiRequest("DELETE", `/api/superadmin/device-types/${typeId}`);
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/superadmin/device-types/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-types'] });
       toast({
         title: "Gerätetyp gelöscht",
         description: "Der Gerätetyp wurde erfolgreich gelöscht.",
@@ -192,23 +167,23 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Gerätetyp konnte nicht gelöscht werden: ${error.message}`,
+        description: `Fehler beim Löschen des Gerätetyps: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
-  // Mutations für Marken
+  // Mutations for Device Brands
   const createBrandMutation = useMutation({
-    mutationFn: async (data: { name: string, deviceType: string, isGlobal: boolean }) => {
-      const response = await apiRequest("POST", "/api/superadmin/device-brands", data);
-      return await response.json();
+    mutationFn: async (data: { name: string; deviceType: string; isGlobal: boolean }) => {
+      const res = await apiRequest('POST', '/api/superadmin/device-brands', data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-brands"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-brands'] });
       setIsCreateBrandDialogOpen(false);
-      setBrandForm({ name: '', deviceType: '', isGlobal: true });
+      setNewDeviceBrand({ name: '', deviceType: '', isGlobal: true });
       toast({
         title: "Marke erstellt",
         description: "Die Marke wurde erfolgreich erstellt.",
@@ -216,21 +191,22 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Marke konnte nicht erstellt werden: ${error.message}`,
+        description: `Fehler beim Erstellen der Marke: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const updateBrandMutation = useMutation({
-    mutationFn: async ({ brandId, data }: { brandId: number; data: { name: string, deviceType: string, isGlobal: boolean } }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/device-brands/${brandId}`, data);
-      return await response.json();
+    mutationFn: async ({ id, data }: { id: number; data: { name: string; deviceType: string; isGlobal: boolean } }) => {
+      const res = await apiRequest('PATCH', `/api/superadmin/device-brands/${id}`, data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-brands"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-brands'] });
       setIsEditBrandDialogOpen(false);
+      setSelectedBrand(null);
       toast({
         title: "Marke aktualisiert",
         description: "Die Marke wurde erfolgreich aktualisiert.",
@@ -238,19 +214,19 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Marke konnte nicht aktualisiert werden: ${error.message}`,
+        description: `Fehler beim Aktualisieren der Marke: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const deleteBrandMutation = useMutation({
-    mutationFn: async (brandId: number) => {
-      await apiRequest("DELETE", `/api/superadmin/device-brands/${brandId}`);
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/superadmin/device-brands/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-brands"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-brands'] });
       toast({
         title: "Marke gelöscht",
         description: "Die Marke wurde erfolgreich gelöscht.",
@@ -258,23 +234,23 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Marke konnte nicht gelöscht werden: ${error.message}`,
+        description: `Fehler beim Löschen der Marke: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
-  // Mutations für Modelle
+  // Mutations for Device Models
   const createModelMutation = useMutation({
-    mutationFn: async (data: { name: string, brand: string, deviceType: string, isGlobal: boolean }) => {
-      const response = await apiRequest("POST", "/api/superadmin/device-models", data);
-      return await response.json();
+    mutationFn: async (data: { name: string; brand: string; deviceType: string; isGlobal: boolean }) => {
+      const res = await apiRequest('POST', '/api/superadmin/device-models', data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-models"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-models'] });
       setIsCreateModelDialogOpen(false);
-      setModelForm({ name: '', brand: '', deviceType: '', isGlobal: true });
+      setNewDeviceModel({ name: '', brand: '', deviceType: '', isGlobal: true });
       toast({
         title: "Modell erstellt",
         description: "Das Modell wurde erfolgreich erstellt.",
@@ -282,21 +258,22 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Modell konnte nicht erstellt werden: ${error.message}`,
+        description: `Fehler beim Erstellen des Modells: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const updateModelMutation = useMutation({
-    mutationFn: async ({ modelId, data }: { modelId: number; data: { name: string, brand: string, deviceType: string, isGlobal: boolean } }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/device-models/${modelId}`, data);
-      return await response.json();
+    mutationFn: async ({ id, data }: { id: number; data: { name: string; brand: string; deviceType: string; isGlobal: boolean } }) => {
+      const res = await apiRequest('PATCH', `/api/superadmin/device-models/${id}`, data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-models"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-models'] });
       setIsEditModelDialogOpen(false);
+      setSelectedModel(null);
       toast({
         title: "Modell aktualisiert",
         description: "Das Modell wurde erfolgreich aktualisiert.",
@@ -304,19 +281,19 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Modell konnte nicht aktualisiert werden: ${error.message}`,
+        description: `Fehler beim Aktualisieren des Modells: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const deleteModelMutation = useMutation({
-    mutationFn: async (modelId: number) => {
-      await apiRequest("DELETE", `/api/superadmin/device-models/${modelId}`);
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/superadmin/device-models/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-models"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-models'] });
       toast({
         title: "Modell gelöscht",
         description: "Das Modell wurde erfolgreich gelöscht.",
@@ -324,915 +301,1010 @@ export default function SuperadminDevicesTab() {
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Modell konnte nicht gelöscht werden: ${error.message}`,
+        description: `Fehler beim Löschen des Modells: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
-  // Mutations für Probleme/Fehler
+  // Mutations for Device Issues
   const createIssueMutation = useMutation({
-    mutationFn: async (data: { description: string, deviceType: string, isGlobal: boolean }) => {
-      const response = await apiRequest("POST", "/api/superadmin/device-issues", data);
-      return await response.json();
+    mutationFn: async (data: { description: string; deviceType: string; isGlobal: boolean }) => {
+      const res = await apiRequest('POST', '/api/superadmin/device-issues', data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
       setIsCreateIssueDialogOpen(false);
-      setIssueForm({ description: '', deviceType: '', isGlobal: true });
+      setNewDeviceIssue({ description: '', deviceType: '', isGlobal: true });
       toast({
-        title: "Problem erstellt",
-        description: "Das Problem wurde erfolgreich erstellt.",
+        title: "Problembeschreibung erstellt",
+        description: "Die Problembeschreibung wurde erfolgreich erstellt.",
       });
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Problem konnte nicht erstellt werden: ${error.message}`,
+        description: `Fehler beim Erstellen der Problembeschreibung: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const updateIssueMutation = useMutation({
-    mutationFn: async ({ issueId, data }: { issueId: number; data: { description: string, deviceType: string, isGlobal: boolean } }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/device-issues/${issueId}`, data);
-      return await response.json();
+    mutationFn: async ({ id, data }: { id: number; data: { description: string; deviceType: string; isGlobal: boolean } }) => {
+      const res = await apiRequest('PATCH', `/api/superadmin/device-issues/${id}`, data);
+      return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
       setIsEditIssueDialogOpen(false);
+      setSelectedIssue(null);
       toast({
-        title: "Problem aktualisiert",
-        description: "Das Problem wurde erfolgreich aktualisiert.",
+        title: "Problembeschreibung aktualisiert",
+        description: "Die Problembeschreibung wurde erfolgreich aktualisiert.",
       });
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Problem konnte nicht aktualisiert werden: ${error.message}`,
+        description: `Fehler beim Aktualisieren der Problembeschreibung: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
   const deleteIssueMutation = useMutation({
-    mutationFn: async (issueId: number) => {
-      await apiRequest("DELETE", `/api/superadmin/device-issues/${issueId}`);
+    mutationFn: async (id: number) => {
+      await apiRequest('DELETE', `/api/superadmin/device-issues/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
       toast({
-        title: "Problem gelöscht",
-        description: "Das Problem wurde erfolgreich gelöscht.",
+        title: "Problembeschreibung gelöscht",
+        description: "Die Problembeschreibung wurde erfolgreich gelöscht.",
       });
     },
     onError: (error: Error) => {
       toast({
-        variant: "destructive",
         title: "Fehler",
-        description: `Problem konnte nicht gelöscht werden: ${error.message}`,
+        description: `Fehler beim Löschen der Problembeschreibung: ${error.message}`,
+        variant: "destructive",
       });
-    },
+    }
   });
   
-  // Handler für Gerätetypen
-  const handleEditType = (type: DeviceType) => {
-    setSelectedType(type);
-    setTypeForm({
-      name: type.name,
-      isGlobal: type.isGlobal
-    });
-    setIsEditTypeDialogOpen(true);
-  };
-  
-  const handleDeleteType = (typeId: number) => {
-    if (confirm("Sind Sie sicher, dass Sie diesen Gerätetyp löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-      deleteTypeMutation.mutate(typeId);
-    }
-  };
-  
-  // Handler für Marken
-  const handleEditBrand = (brand: DeviceBrand) => {
-    setSelectedBrand(brand);
-    setBrandForm({
-      name: brand.name,
-      deviceType: brand.deviceType,
-      isGlobal: brand.isGlobal
-    });
-    setIsEditBrandDialogOpen(true);
-  };
-  
-  const handleDeleteBrand = (brandId: number) => {
-    if (confirm("Sind Sie sicher, dass Sie diese Marke löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-      deleteBrandMutation.mutate(brandId);
-    }
-  };
-  
-  // Handler für Modelle
-  const handleEditModel = (model: DeviceModel) => {
-    setSelectedModel(model);
-    setModelForm({
-      name: model.name,
-      brand: model.brand,
-      deviceType: model.deviceType,
-      isGlobal: model.isGlobal
-    });
-    setIsEditModelDialogOpen(true);
-  };
-  
-  const handleDeleteModel = (modelId: number) => {
-    if (confirm("Sind Sie sicher, dass Sie dieses Modell löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-      deleteModelMutation.mutate(modelId);
-    }
-  };
-  
-  // Handler für Probleme
-  const handleEditIssue = (issue: DeviceIssue) => {
-    setSelectedIssue(issue);
-    setIssueForm({
-      description: issue.description,
-      deviceType: issue.deviceType,
-      isGlobal: issue.isGlobal
-    });
-    setIsEditIssueDialogOpen(true);
-  };
-  
-  const handleDeleteIssue = (issueId: number) => {
-    if (confirm("Sind Sie sicher, dass Sie dieses Problem löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-      deleteIssueMutation.mutate(issueId);
-    }
-  };
-  
-  if (typesError || brandsError || modelsError || issuesError) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Gerätedaten",
-      description: "Es ist ein Fehler beim Laden der Daten aufgetreten.",
-    });
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Geräteverwaltung</h1>
-          <p className="text-muted-foreground">Verwalten Sie Gerätetypen, Marken, Modelle und Fehlerkatalog</p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold tracking-tight">Geräteverwaltung</h2>
       </div>
       
-      <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="types">Gerätetypen</TabsTrigger>
-            <TabsTrigger value="brands">Marken</TabsTrigger>
-            <TabsTrigger value="models">Modelle</TabsTrigger>
-            <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
-          </TabsList>
-          
-          {activeTab === "types" && (
-            <Button onClick={() => setIsCreateTypeDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Neuen Gerätetyp erstellen
-            </Button>
-          )}
-          
-          {activeTab === "brands" && (
-            <Button onClick={() => setIsCreateBrandDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Neue Marke erstellen
-            </Button>
-          )}
-          
-          {activeTab === "models" && (
-            <Button onClick={() => setIsCreateModelDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Neues Modell erstellen
-            </Button>
-          )}
-          
-          {activeTab === "issues" && (
-            <Button onClick={() => setIsCreateIssueDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Neuen Fehler erstellen
-            </Button>
-          )}
-        </div>
-        
-        {/* Tab-Inhalte */}
-        <TabsContent value="types" className="space-y-4">
-          {isLoadingTypes ? (
-            <Skeleton className="w-full h-96" />
-          ) : deviceTypes?.length ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerätetypen</CardTitle>
-                <CardDescription>Verwalten Sie global verfügbare Gerätetypen</CardDescription>
-              </CardHeader>
-              <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Globale Gerätedaten verwalten</CardTitle>
+          <CardDescription>
+            Hier können Sie Gerätetypen, Marken, Modelle und Fehlerbeschreibungen verwalten, die für alle Shops sichtbar sind.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="types" className="flex items-center gap-2">
+                <Smartphone className="h-4 w-4" />
+                Gerätetypen
+              </TabsTrigger>
+              <TabsTrigger value="brands" className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                Marken
+              </TabsTrigger>
+              <TabsTrigger value="models" className="flex items-center gap-2">
+                <Book className="h-4 w-4" />
+                Modelle
+              </TabsTrigger>
+              <TabsTrigger value="issues" className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Problembeschreibungen
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Gerätetypen Tab */}
+            <TabsContent value="types">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsCreateTypeDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Neuen Gerätetyp erstellen
+                </Button>
+              </div>
+              
+              {typesQuery.isLoading ? (
+                <div className="text-center py-6">Lade Gerätetypen...</div>
+              ) : typesQuery.isError ? (
+                <div className="text-center py-6 text-red-500">Fehler beim Laden der Gerätetypen</div>
+              ) : typesQuery.data && typesQuery.data.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">Keine Gerätetypen gefunden</div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Name</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Global</TableHead>
                       <TableHead>Erstellt am</TableHead>
-                      <TableHead>Aktionen</TableHead>
+                      <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deviceTypes.map((type) => (
+                    {typesQuery.data?.map((type) => (
                       <TableRow key={type.id}>
-                        <TableCell>{type.id}</TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            {type.name === "Smartphone" || type.name === "Handy" ? (
-                              <Smartphone className="h-4 w-4 mr-2" />
-                            ) : type.name === "Laptop" || type.name === "Notebook" ? (
-                              <Laptop className="h-4 w-4 mr-2" />
-                            ) : (
-                              <Settings className="h-4 w-4 mr-2" />
-                            )}
-                            {type.name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {type.isGlobal ? (
-                            <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Global
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                              Shop: {type.shopId}
-                            </Badge>
-                          )}
-                        </TableCell>
+                        <TableCell className="font-medium">{type.name}</TableCell>
+                        <TableCell>{type.isGlobal ? 'Ja' : 'Nein'}</TableCell>
                         <TableCell>{new Date(type.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditType(type)}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleDeleteType(type.id)}
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" /> Löschen
-                            </Button>
-                          </div>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedType(type);
+                              setIsEditTypeDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm(`Sind Sie sicher, dass Sie den Gerätetyp "${type.name}" löschen möchten?`)) {
+                                deleteTypeMutation.mutate(type.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Keine Gerätetypen gefunden</CardTitle>
-                <CardDescription>
-                  Es wurden noch keine Gerätetypen erstellt. Klicken Sie auf "Neuen Gerätetyp erstellen", um zu beginnen.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="brands" className="space-y-4">
-          {isLoadingBrands ? (
-            <Skeleton className="w-full h-96" />
-          ) : deviceBrands?.length ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerätemarken</CardTitle>
-                <CardDescription>Verwalten Sie global verfügbare Marken</CardDescription>
-              </CardHeader>
-              <CardContent>
+              )}
+            </TabsContent>
+            
+            {/* Marken Tab */}
+            <TabsContent value="brands">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsCreateBrandDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Neue Marke erstellen
+                </Button>
+              </div>
+              
+              {brandsQuery.isLoading ? (
+                <div className="text-center py-6">Lade Marken...</div>
+              ) : brandsQuery.isError ? (
+                <div className="text-center py-6 text-red-500">Fehler beim Laden der Marken</div>
+              ) : brandsQuery.data && brandsQuery.data.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">Keine Marken gefunden</div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Gerätetyp</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Global</TableHead>
                       <TableHead>Erstellt am</TableHead>
-                      <TableHead>Aktionen</TableHead>
+                      <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deviceBrands.map((brand) => (
+                    {brandsQuery.data?.map((brand) => (
                       <TableRow key={brand.id}>
-                        <TableCell>{brand.id}</TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <Tag className="h-4 w-4 mr-2" />
-                            {brand.name}
-                          </div>
-                        </TableCell>
+                        <TableCell className="font-medium">{brand.name}</TableCell>
                         <TableCell>{brand.deviceType}</TableCell>
-                        <TableCell>
-                          {brand.isGlobal ? (
-                            <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Global
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                              Shop: {brand.shopId}
-                            </Badge>
-                          )}
-                        </TableCell>
+                        <TableCell>{brand.isGlobal ? 'Ja' : 'Nein'}</TableCell>
                         <TableCell>{new Date(brand.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditBrand(brand)}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleDeleteBrand(brand.id)}
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" /> Löschen
-                            </Button>
-                          </div>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedBrand(brand);
+                              setIsEditBrandDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm(`Sind Sie sicher, dass Sie die Marke "${brand.name}" löschen möchten?`)) {
+                                deleteBrandMutation.mutate(brand.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Keine Marken gefunden</CardTitle>
-                <CardDescription>
-                  Es wurden noch keine Marken erstellt. Klicken Sie auf "Neue Marke erstellen", um zu beginnen.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="models" className="space-y-4">
-          {isLoadingModels ? (
-            <Skeleton className="w-full h-96" />
-          ) : deviceModels?.length ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerätemodelle</CardTitle>
-                <CardDescription>Verwalten Sie global verfügbare Modelle</CardDescription>
-              </CardHeader>
-              <CardContent>
+              )}
+            </TabsContent>
+            
+            {/* Modelle Tab */}
+            <TabsContent value="models">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsCreateModelDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Neues Modell erstellen
+                </Button>
+              </div>
+              
+              {modelsQuery.isLoading ? (
+                <div className="text-center py-6">Lade Modelle...</div>
+              ) : modelsQuery.isError ? (
+                <div className="text-center py-6 text-red-500">Fehler beim Laden der Modelle</div>
+              ) : modelsQuery.data && modelsQuery.data.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">Keine Modelle gefunden</div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Marke</TableHead>
                       <TableHead>Gerätetyp</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Global</TableHead>
                       <TableHead>Erstellt am</TableHead>
-                      <TableHead>Aktionen</TableHead>
+                      <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deviceModels.map((model) => (
+                    {modelsQuery.data?.map((model) => (
                       <TableRow key={model.id}>
-                        <TableCell>{model.id}</TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <Settings className="h-4 w-4 mr-2" />
-                            {model.name}
-                          </div>
-                        </TableCell>
+                        <TableCell className="font-medium">{model.name}</TableCell>
                         <TableCell>{model.brand}</TableCell>
                         <TableCell>{model.deviceType}</TableCell>
-                        <TableCell>
-                          {model.isGlobal ? (
-                            <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Global
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                              Shop: {model.shopId}
-                            </Badge>
-                          )}
-                        </TableCell>
+                        <TableCell>{model.isGlobal ? 'Ja' : 'Nein'}</TableCell>
                         <TableCell>{new Date(model.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditModel(model)}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleDeleteModel(model.id)}
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" /> Löschen
-                            </Button>
-                          </div>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedModel(model);
+                              setIsEditModelDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm(`Sind Sie sicher, dass Sie das Modell "${model.name}" löschen möchten?`)) {
+                                deleteModelMutation.mutate(model.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Keine Modelle gefunden</CardTitle>
-                <CardDescription>
-                  Es wurden noch keine Modelle erstellt. Klicken Sie auf "Neues Modell erstellen", um zu beginnen.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="issues" className="space-y-4">
-          {isLoadingIssues ? (
-            <Skeleton className="w-full h-96" />
-          ) : deviceIssues?.length ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Fehlerkatalog</CardTitle>
-                <CardDescription>Verwalten Sie global verfügbare Problemkategorien</CardDescription>
-              </CardHeader>
-              <CardContent>
+              )}
+            </TabsContent>
+            
+            {/* Problembeschreibungen Tab */}
+            <TabsContent value="issues">
+              <div className="flex justify-end mb-4">
+                <Button onClick={() => setIsCreateIssueDialogOpen(true)}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Neue Problembeschreibung erstellen
+                </Button>
+              </div>
+              
+              {issuesQuery.isLoading ? (
+                <div className="text-center py-6">Lade Problembeschreibungen...</div>
+              ) : issuesQuery.isError ? (
+                <div className="text-center py-6 text-red-500">Fehler beim Laden der Problembeschreibungen</div>
+              ) : issuesQuery.data && issuesQuery.data.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">Keine Problembeschreibungen gefunden</div>
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Beschreibung</TableHead>
                       <TableHead>Gerätetyp</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Global</TableHead>
                       <TableHead>Erstellt am</TableHead>
-                      <TableHead>Aktionen</TableHead>
+                      <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {deviceIssues.map((issue) => (
+                    {issuesQuery.data?.map((issue) => (
                       <TableRow key={issue.id}>
-                        <TableCell>{issue.id}</TableCell>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            {issue.description}
-                          </div>
-                        </TableCell>
+                        <TableCell className="font-medium">{issue.description}</TableCell>
                         <TableCell>{issue.deviceType}</TableCell>
-                        <TableCell>
-                          {issue.isGlobal ? (
-                            <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                              Global
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                              Shop: {issue.shopId}
-                            </Badge>
-                          )}
-                        </TableCell>
+                        <TableCell>{issue.isGlobal ? 'Ja' : 'Nein'}</TableCell>
                         <TableCell>{new Date(issue.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditIssue(issue)}
-                            >
-                              <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleDeleteIssue(issue.id)}
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" /> Löschen
-                            </Button>
-                          </div>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedIssue(issue);
+                              setIsEditIssueDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (window.confirm(`Sind Sie sicher, dass Sie die Problembeschreibung "${issue.description}" löschen möchten?`)) {
+                                deleteIssueMutation.mutate(issue.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Keine Probleme gefunden</CardTitle>
-                <CardDescription>
-                  Es wurden noch keine Probleme erstellt. Klicken Sie auf "Neuen Fehler erstellen", um zu beginnen.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
       
-      {/* Dialog zum Erstellen eines neuen Gerätetyps */}
+      {/* Dialogs for Device Types */}
       <Dialog open={isCreateTypeDialogOpen} onOpenChange={setIsCreateTypeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neuen Gerätetyp erstellen</DialogTitle>
+            <DialogTitle>Gerätetyp erstellen</DialogTitle>
             <DialogDescription>
-              Erstellen Sie einen neuen globalen Gerätetyp, der von allen Shops verwendet werden kann.
+              Erstellen Sie einen neuen Gerätetyp, der in allen Shops verwendet werden kann.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
+              <Label htmlFor="typeName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="typeName"
+                value={newDeviceType.name}
+                onChange={(e) => setNewDeviceType({ ...newDeviceType, name: e.target.value })}
                 className="col-span-3"
-                value={typeForm.name}
-                onChange={(e) => setTypeForm({ ...typeForm, name: e.target.value })}
-                placeholder="z.B. Smartphone, Laptop, Tablet"
               />
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="typeGlobal" className="text-right">
+                Global
+              </Label>
+              <div className="flex items-center space-x-2 col-span-3">
+                <Checkbox
+                  id="typeGlobal"
+                  checked={newDeviceType.isGlobal}
+                  onCheckedChange={(checked) => setNewDeviceType({ ...newDeviceType, isGlobal: !!checked })}
+                />
+                <label
+                  htmlFor="typeGlobal"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Für alle Shops sichtbar
+                </label>
+              </div>
+            </div>
           </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateTypeDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => createTypeMutation.mutate(typeForm)}
-              disabled={!typeForm.name}
-            >
-              Gerätetyp erstellen
+            <Button onClick={() => createTypeMutation.mutate(newDeviceType)} disabled={!newDeviceType.name.trim()}>
+              Erstellen
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Bearbeiten eines Gerätetyps */}
       <Dialog open={isEditTypeDialogOpen} onOpenChange={setIsEditTypeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerätetyp bearbeiten: {selectedType?.name}</DialogTitle>
+            <DialogTitle>Gerätetyp bearbeiten</DialogTitle>
             <DialogDescription>
-              Bearbeiten Sie die Informationen für diesen Gerätetyp.
+              Bearbeiten Sie die Informationen des ausgewählten Gerätetyps.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
-                className="col-span-3"
-                value={typeForm.name}
-                onChange={(e) => setTypeForm({ ...typeForm, name: e.target.value })}
-                placeholder="z.B. Smartphone, Laptop, Tablet"
-              />
+          {selectedType && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editTypeName" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="editTypeName"
+                  value={selectedType.name}
+                  onChange={(e) => setSelectedType({ ...selectedType, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editTypeGlobal" className="text-right">
+                  Global
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="editTypeGlobal"
+                    checked={selectedType.isGlobal}
+                    onCheckedChange={(checked) => setSelectedType({ ...selectedType, isGlobal: !!checked })}
+                  />
+                  <label
+                    htmlFor="editTypeGlobal"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Für alle Shops sichtbar
+                  </label>
+                </div>
+              </div>
             </div>
-          </div>
-          
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditTypeDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => selectedType && updateTypeMutation.mutate({ typeId: selectedType.id, data: typeForm })}
-              disabled={!typeForm.name}
+            <Button
+              onClick={() => selectedType && updateTypeMutation.mutate({ id: selectedType.id, data: { name: selectedType.name, isGlobal: selectedType.isGlobal } })}
+              disabled={!selectedType || !selectedType.name.trim()}
             >
-              Gerätetyp aktualisieren
+              Aktualisieren
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Erstellen einer neuen Marke */}
+      {/* Dialogs for Device Brands */}
       <Dialog open={isCreateBrandDialogOpen} onOpenChange={setIsCreateBrandDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neue Marke erstellen</DialogTitle>
+            <DialogTitle>Marke erstellen</DialogTitle>
             <DialogDescription>
-              Erstellen Sie eine neue globale Marke, die von allen Shops verwendet werden kann.
+              Erstellen Sie eine neue Marke, die in allen Shops verwendet werden kann.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
+              <Label htmlFor="brandName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="brandName"
+                value={newDeviceBrand.name}
+                onChange={(e) => setNewDeviceBrand({ ...newDeviceBrand, name: e.target.value })}
                 className="col-span-3"
-                value={brandForm.name}
-                onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value })}
-                placeholder="z.B. Apple, Samsung, HP"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={brandForm.deviceType}
-                onChange={(e) => setBrandForm({ ...brandForm, deviceType: e.target.value })}
+              <Label htmlFor="brandDeviceType" className="text-right">
+                Gerätetyp
+              </Label>
+              <Select
+                value={newDeviceBrand.deviceType}
+                onValueChange={(value) => setNewDeviceBrand({ ...newDeviceBrand, deviceType: value })}
               >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typesQuery.data?.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="brandGlobal" className="text-right">
+                Global
+              </Label>
+              <div className="flex items-center space-x-2 col-span-3">
+                <Checkbox
+                  id="brandGlobal"
+                  checked={newDeviceBrand.isGlobal}
+                  onCheckedChange={(checked) => setNewDeviceBrand({ ...newDeviceBrand, isGlobal: !!checked })}
+                />
+                <label
+                  htmlFor="brandGlobal"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Für alle Shops sichtbar
+                </label>
+              </div>
             </div>
           </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateBrandDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => createBrandMutation.mutate(brandForm)}
-              disabled={!brandForm.name || !brandForm.deviceType}
+            <Button
+              onClick={() => createBrandMutation.mutate(newDeviceBrand)}
+              disabled={!newDeviceBrand.name.trim() || !newDeviceBrand.deviceType}
             >
-              Marke erstellen
+              Erstellen
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Bearbeiten einer Marke */}
       <Dialog open={isEditBrandDialogOpen} onOpenChange={setIsEditBrandDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Marke bearbeiten: {selectedBrand?.name}</DialogTitle>
+            <DialogTitle>Marke bearbeiten</DialogTitle>
             <DialogDescription>
-              Bearbeiten Sie die Informationen für diese Marke.
+              Bearbeiten Sie die Informationen der ausgewählten Marke.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
-                className="col-span-3"
-                value={brandForm.name}
-                onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value })}
-                placeholder="z.B. Apple, Samsung, HP"
-              />
+          {selectedBrand && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editBrandName" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="editBrandName"
+                  value={selectedBrand.name}
+                  onChange={(e) => setSelectedBrand({ ...selectedBrand, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editBrandDeviceType" className="text-right">
+                  Gerätetyp
+                </Label>
+                <Select
+                  value={selectedBrand.deviceType}
+                  onValueChange={(value) => setSelectedBrand({ ...selectedBrand, deviceType: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typesQuery.data?.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editBrandGlobal" className="text-right">
+                  Global
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="editBrandGlobal"
+                    checked={selectedBrand.isGlobal}
+                    onCheckedChange={(checked) => setSelectedBrand({ ...selectedBrand, isGlobal: !!checked })}
+                  />
+                  <label
+                    htmlFor="editBrandGlobal"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Für alle Shops sichtbar
+                  </label>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={brandForm.deviceType}
-                onChange={(e) => setBrandForm({ ...brandForm, deviceType: e.target.value })}
-              >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditBrandDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => selectedBrand && updateBrandMutation.mutate({ brandId: selectedBrand.id, data: brandForm })}
-              disabled={!brandForm.name || !brandForm.deviceType}
+            <Button
+              onClick={() =>
+                selectedBrand &&
+                updateBrandMutation.mutate({
+                  id: selectedBrand.id,
+                  data: {
+                    name: selectedBrand.name,
+                    deviceType: selectedBrand.deviceType,
+                    isGlobal: selectedBrand.isGlobal,
+                  },
+                })
+              }
+              disabled={!selectedBrand || !selectedBrand.name.trim() || !selectedBrand.deviceType}
             >
-              Marke aktualisieren
+              Aktualisieren
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Erstellen eines neuen Modells */}
+      {/* Dialogs for Device Models */}
       <Dialog open={isCreateModelDialogOpen} onOpenChange={setIsCreateModelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neues Modell erstellen</DialogTitle>
+            <DialogTitle>Modell erstellen</DialogTitle>
             <DialogDescription>
-              Erstellen Sie ein neues globales Modell, das von allen Shops verwendet werden kann.
+              Erstellen Sie ein neues Modell, das in allen Shops verwendet werden kann.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
+              <Label htmlFor="modelName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="modelName"
+                value={newDeviceModel.name}
+                onChange={(e) => setNewDeviceModel({ ...newDeviceModel, name: e.target.value })}
                 className="col-span-3"
-                value={modelForm.name}
-                onChange={(e) => setModelForm({ ...modelForm, name: e.target.value })}
-                placeholder="z.B. iPhone 13, Galaxy S21, MacBook Pro"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={modelForm.deviceType}
-                onChange={(e) => setModelForm({ ...modelForm, deviceType: e.target.value, brand: '' })}
+              <Label htmlFor="modelDeviceType" className="text-right">
+                Gerätetyp
+              </Label>
+              <Select
+                value={newDeviceModel.deviceType}
+                onValueChange={(value) => setNewDeviceModel({ ...newDeviceModel, deviceType: value, brand: '' })}
               >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typesQuery.data?.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Marke</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={modelForm.brand}
-                onChange={(e) => setModelForm({ ...modelForm, brand: e.target.value })}
-                disabled={!modelForm.deviceType}
+              <Label htmlFor="modelBrand" className="text-right">
+                Marke
+              </Label>
+              <Select
+                value={newDeviceModel.brand}
+                onValueChange={(value) => setNewDeviceModel({ ...newDeviceModel, brand: value })}
               >
-                <option value="">Bitte wählen Sie eine Marke</option>
-                {deviceBrands?.filter(brand => brand.deviceType === modelForm.deviceType).map((brand) => (
-                  <option key={brand.id} value={brand.name}>{brand.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wählen Sie eine Marke" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brandsQuery.data
+                    ?.filter((brand) => brand.deviceType === newDeviceModel.deviceType)
+                    .map((brand) => (
+                      <SelectItem key={brand.id} value={brand.name}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="modelGlobal" className="text-right">
+                Global
+              </Label>
+              <div className="flex items-center space-x-2 col-span-3">
+                <Checkbox
+                  id="modelGlobal"
+                  checked={newDeviceModel.isGlobal}
+                  onCheckedChange={(checked) => setNewDeviceModel({ ...newDeviceModel, isGlobal: !!checked })}
+                />
+                <label
+                  htmlFor="modelGlobal"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Für alle Shops sichtbar
+                </label>
+              </div>
             </div>
           </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateModelDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => createModelMutation.mutate(modelForm)}
-              disabled={!modelForm.name || !modelForm.deviceType || !modelForm.brand}
+            <Button
+              onClick={() => createModelMutation.mutate(newDeviceModel)}
+              disabled={
+                !newDeviceModel.name.trim() || !newDeviceModel.deviceType || !newDeviceModel.brand
+              }
             >
-              Modell erstellen
+              Erstellen
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Bearbeiten eines Modells */}
       <Dialog open={isEditModelDialogOpen} onOpenChange={setIsEditModelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modell bearbeiten: {selectedModel?.name}</DialogTitle>
+            <DialogTitle>Modell bearbeiten</DialogTitle>
             <DialogDescription>
-              Bearbeiten Sie die Informationen für dieses Modell.
+              Bearbeiten Sie die Informationen des ausgewählten Modells.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
-              <Input 
-                className="col-span-3"
-                value={modelForm.name}
-                onChange={(e) => setModelForm({ ...modelForm, name: e.target.value })}
-                placeholder="z.B. iPhone 13, Galaxy S21, MacBook Pro"
-              />
+          {selectedModel && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editModelName" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="editModelName"
+                  value={selectedModel.name}
+                  onChange={(e) => setSelectedModel({ ...selectedModel, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editModelDeviceType" className="text-right">
+                  Gerätetyp
+                </Label>
+                <Select
+                  value={selectedModel.deviceType}
+                  onValueChange={(value) => {
+                    if (value !== selectedModel.deviceType) {
+                      // Wenn der Gerätetyp geändert wird, setze die Marke zurück
+                      setSelectedModel({ ...selectedModel, deviceType: value, brand: '' });
+                    } else {
+                      setSelectedModel({ ...selectedModel, deviceType: value });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typesQuery.data?.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editModelBrand" className="text-right">
+                  Marke
+                </Label>
+                <Select
+                  value={selectedModel.brand}
+                  onValueChange={(value) => setSelectedModel({ ...selectedModel, brand: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wählen Sie eine Marke" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brandsQuery.data
+                      ?.filter((brand) => brand.deviceType === selectedModel.deviceType)
+                      .map((brand) => (
+                        <SelectItem key={brand.id} value={brand.name}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editModelGlobal" className="text-right">
+                  Global
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="editModelGlobal"
+                    checked={selectedModel.isGlobal}
+                    onCheckedChange={(checked) => setSelectedModel({ ...selectedModel, isGlobal: !!checked })}
+                  />
+                  <label
+                    htmlFor="editModelGlobal"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Für alle Shops sichtbar
+                  </label>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={modelForm.deviceType}
-                onChange={(e) => setModelForm({ ...modelForm, deviceType: e.target.value, brand: '' })}
-              >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Marke</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={modelForm.brand}
-                onChange={(e) => setModelForm({ ...modelForm, brand: e.target.value })}
-                disabled={!modelForm.deviceType}
-              >
-                <option value="">Bitte wählen Sie eine Marke</option>
-                {deviceBrands?.filter(brand => brand.deviceType === modelForm.deviceType).map((brand) => (
-                  <option key={brand.id} value={brand.name}>{brand.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditModelDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => selectedModel && updateModelMutation.mutate({ modelId: selectedModel.id, data: modelForm })}
-              disabled={!modelForm.name || !modelForm.deviceType || !modelForm.brand}
+            <Button
+              onClick={() =>
+                selectedModel &&
+                updateModelMutation.mutate({
+                  id: selectedModel.id,
+                  data: {
+                    name: selectedModel.name,
+                    brand: selectedModel.brand,
+                    deviceType: selectedModel.deviceType,
+                    isGlobal: selectedModel.isGlobal,
+                  },
+                })
+              }
+              disabled={
+                !selectedModel ||
+                !selectedModel.name.trim() ||
+                !selectedModel.deviceType ||
+                !selectedModel.brand
+              }
             >
-              Modell aktualisieren
+              Aktualisieren
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Erstellen eines neuen Problems */}
+      {/* Dialogs for Device Issues */}
       <Dialog open={isCreateIssueDialogOpen} onOpenChange={setIsCreateIssueDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Neuen Fehlereintrag erstellen</DialogTitle>
+            <DialogTitle>Problembeschreibung erstellen</DialogTitle>
             <DialogDescription>
-              Erstellen Sie einen neuen globalen Fehlereintrag, der von allen Shops verwendet werden kann.
+              Erstellen Sie eine neue Problembeschreibung, die in allen Shops verwendet werden kann.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">Beschreibung</Label>
-              <Textarea 
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="issueDescription" className="text-right">
+                Beschreibung
+              </Label>
+              <Input
+                id="issueDescription"
+                value={newDeviceIssue.description}
+                onChange={(e) => setNewDeviceIssue({ ...newDeviceIssue, description: e.target.value })}
                 className="col-span-3"
-                value={issueForm.description}
-                onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })}
-                placeholder="z.B. Displaybruch, Wasserschaden, Akku defekt"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={issueForm.deviceType}
-                onChange={(e) => setIssueForm({ ...issueForm, deviceType: e.target.value })}
+              <Label htmlFor="issueDeviceType" className="text-right">
+                Gerätetyp
+              </Label>
+              <Select
+                value={newDeviceIssue.deviceType}
+                onValueChange={(value) => setNewDeviceIssue({ ...newDeviceIssue, deviceType: value })}
               >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                </SelectTrigger>
+                <SelectContent>
+                  {typesQuery.data?.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="issueGlobal" className="text-right">
+                Global
+              </Label>
+              <div className="flex items-center space-x-2 col-span-3">
+                <Checkbox
+                  id="issueGlobal"
+                  checked={newDeviceIssue.isGlobal}
+                  onCheckedChange={(checked) => setNewDeviceIssue({ ...newDeviceIssue, isGlobal: !!checked })}
+                />
+                <label
+                  htmlFor="issueGlobal"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Für alle Shops sichtbar
+                </label>
+              </div>
             </div>
           </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateIssueDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => createIssueMutation.mutate(issueForm)}
-              disabled={!issueForm.description || !issueForm.deviceType}
+            <Button
+              onClick={() => createIssueMutation.mutate(newDeviceIssue)}
+              disabled={!newDeviceIssue.description.trim() || !newDeviceIssue.deviceType}
             >
-              Fehlereintrag erstellen
+              Erstellen
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Bearbeiten eines Problems */}
       <Dialog open={isEditIssueDialogOpen} onOpenChange={setIsEditIssueDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Fehlereintrag bearbeiten</DialogTitle>
+            <DialogTitle>Problembeschreibung bearbeiten</DialogTitle>
             <DialogDescription>
-              Bearbeiten Sie die Informationen für diesen Fehlereintrag.
+              Bearbeiten Sie die Informationen der ausgewählten Problembeschreibung.
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">Beschreibung</Label>
-              <Textarea 
-                className="col-span-3"
-                value={issueForm.description}
-                onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })}
-                placeholder="z.B. Displaybruch, Wasserschaden, Akku defekt"
-              />
+          {selectedIssue && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editIssueDescription" className="text-right">
+                  Beschreibung
+                </Label>
+                <Input
+                  id="editIssueDescription"
+                  value={selectedIssue.description}
+                  onChange={(e) => setSelectedIssue({ ...selectedIssue, description: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editIssueDeviceType" className="text-right">
+                  Gerätetyp
+                </Label>
+                <Select
+                  value={selectedIssue.deviceType}
+                  onValueChange={(value) => setSelectedIssue({ ...selectedIssue, deviceType: value })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Wählen Sie einen Gerätetyp" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typesQuery.data?.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editIssueGlobal" className="text-right">
+                  Global
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="editIssueGlobal"
+                    checked={selectedIssue.isGlobal}
+                    onCheckedChange={(checked) => setSelectedIssue({ ...selectedIssue, isGlobal: !!checked })}
+                  />
+                  <label
+                    htmlFor="editIssueGlobal"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Für alle Shops sichtbar
+                  </label>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gerätetyp</Label>
-              <select 
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                value={issueForm.deviceType}
-                onChange={(e) => setIssueForm({ ...issueForm, deviceType: e.target.value })}
-              >
-                <option value="">Bitte wählen Sie einen Gerätetyp</option>
-                {deviceTypes?.map((type) => (
-                  <option key={type.id} value={type.name}>{type.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditIssueDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button 
-              onClick={() => selectedIssue && updateIssueMutation.mutate({ issueId: selectedIssue.id, data: issueForm })}
-              disabled={!issueForm.description || !issueForm.deviceType}
+            <Button
+              onClick={() =>
+                selectedIssue &&
+                updateIssueMutation.mutate({
+                  id: selectedIssue.id,
+                  data: {
+                    description: selectedIssue.description,
+                    deviceType: selectedIssue.deviceType,
+                    isGlobal: selectedIssue.isGlobal,
+                  },
+                })
+              }
+              disabled={!selectedIssue || !selectedIssue.description.trim() || !selectedIssue.deviceType}
             >
-              Fehlereintrag aktualisieren
+              Aktualisieren
             </Button>
           </DialogFooter>
         </DialogContent>

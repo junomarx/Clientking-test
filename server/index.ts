@@ -9,6 +9,7 @@ import { addShopIdColumn } from "./add-shop-id-column";
 import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
 import { addPackageTables } from "./add-package-tables";
 import { addSuperadminColumn } from "./add-superadmin";
+import { addGlobalDeviceTables } from "./add-global-device-tables";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -56,6 +57,7 @@ app.use((req, res, next) => {
     await addFeatureOverridesColumn();
     await addPackageTables(); // Neue Migration für das Paketsystem
     await addSuperadminColumn(); // Migration für Superadmin-Rolle
+    await addGlobalDeviceTables(); // Migration für globale Gerätetabellen
     
     const server = await registerRoutes(app);
 
