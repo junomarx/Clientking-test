@@ -45,10 +45,21 @@ export default function SuperadminDashboardTab() {
     queryKey: ["/api/superadmin/stats"],
     queryFn: async () => {
       const res = await fetch('/api/superadmin/stats');
+      
+      const contentType = res.headers.get('content-type') || '';
+      const text = await res.text(); // erst lesen als Text
+
       if (!res.ok) {
-        throw new Error('API-Fehler beim Abrufen der Statistiken');
+        console.error('Fehlerhafte HTTP-Antwort:', res.status, text);
+        throw new Error(`Fehler ${res.status}: ${text}`);
       }
-      return res.json();
+
+      if (!contentType.includes('application/json')) {
+        console.error('Unerwartete Server-Antwort (kein JSON):', text);
+        throw new Error('Unerwartete Antwort vom Server (nicht JSON)');
+      }
+
+      return JSON.parse(text); // erst hier sicher parsen
     },
   });
 
