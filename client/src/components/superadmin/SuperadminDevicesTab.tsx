@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,14 +48,7 @@ interface DeviceIssue {
 export default function SuperadminDevicesTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('types');
-  
-  useEffect(() => {
-    const validTabs = ['types', 'brands', 'models', 'issues'];
-    if (!validTabs.includes(activeTab)) {
-      setActiveTab('types');
-    }
-  }, [activeTab]);
+  const [activeTab, setActiveTab] = useState<'types' | 'brands' | 'models' | 'issues'>('types');
   
   // Device Type State
   const [isCreateTypeDialogOpen, setIsCreateTypeDialogOpen] = useState(false);
@@ -74,14 +67,6 @@ export default function SuperadminDevicesTab() {
   const [isEditModelDialogOpen, setIsEditModelDialogOpen] = useState(false);
   const [newDeviceModel, setNewDeviceModel] = useState({ name: '', brand: '', deviceType: '', isGlobal: true });
   const [selectedModel, setSelectedModel] = useState<DeviceModel | null>(null);
-  
-  const filteredBrands = useMemo(() => {
-    return brandsQuery.data?.filter(brand => brand.deviceType === newDeviceModel.deviceType) ?? [];
-  }, [brandsQuery.data, newDeviceModel.deviceType]);
-  
-  const filteredBrandsForSelectedModel = useMemo(() => {
-    return brandsQuery.data?.filter(brand => selectedModel && brand.deviceType === selectedModel.deviceType) ?? [];
-  }, [brandsQuery.data, selectedModel]);
   
   // Device Issue State
   const [isCreateIssueDialogOpen, setIsCreateIssueDialogOpen] = useState(false);
@@ -121,6 +106,21 @@ export default function SuperadminDevicesTab() {
       return await res.json() as DeviceIssue[];
     }
   });
+  
+  // Memoized filtered data to prevent unnecessary rerenders
+  const filteredBrands = useMemo(() => {
+    if (!newDeviceModel.deviceType) return [];
+    return (brandsQuery.data || []).filter(
+      (brand) => brand.deviceType === newDeviceModel.deviceType
+    );
+  }, [brandsQuery.data, newDeviceModel.deviceType]);
+  
+  const filteredBrandsForSelectedModel = useMemo(() => {
+    if (!selectedModel) return [];
+    return (brandsQuery.data || []).filter(
+      (brand) => brand.deviceType === selectedModel.deviceType
+    );
+  }, [brandsQuery.data, selectedModel]);
   
   // Mutations for Device Types
   const createTypeMutation = useMutation({
@@ -404,9 +404,14 @@ export default function SuperadminDevicesTab() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab || 'types'} onValueChange={(val) => {
-            if (val !== activeTab) setActiveTab(val);
-          }}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(val) => {
+              if (val !== activeTab) {
+                setActiveTab(val as 'types' | 'brands' | 'models' | 'issues');
+              }
+            }}
+          >
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="types" className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
@@ -1003,7 +1008,7 @@ export default function SuperadminDevicesTab() {
                   <SelectValue placeholder="Wählen Sie eine Marke" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredBrands.map((brand) => (
+                  {filteredBrands.map((brand: DeviceBrand) => (
                       <SelectItem key={brand.id} value={brand.name}>
                         {brand.name}
                       </SelectItem>
