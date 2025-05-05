@@ -521,7 +521,7 @@ export default function BusinessSettingsModern({ open, onClose, initialTab = "bu
                               <FormControl>
                                 <Select 
                                   onValueChange={field.onChange} 
-                                  defaultValue={field.value}
+                                  value={field.value}
                                 >
                                   <SelectTrigger>
                                     <SelectValue placeholder="Wählen Sie eine Breite" />
