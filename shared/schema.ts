@@ -575,3 +575,25 @@ export type CostEstimate = typeof costEstimates.$inferSelect;
 export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
 export type CostEstimateItem = z.infer<typeof costEstimateItemSchema>;
 export type InsertCostEstimateItems = z.infer<typeof insertCostEstimateItemsSchema>;
+
+// Druckvorlagen
+export const printTemplates = pgTable('print_templates', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(), // receipt_58mm, receipt_80mm, invoice_a4, label
+  content: text('content').notNull(),
+  variables: text('variables').array(),
+  userId: integer('user_id'),
+  shopId: integer('shop_id').default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const insertPrintTemplateSchema = createInsertSchema(printTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type PrintTemplate = typeof printTemplates.$inferSelect;
+export type InsertPrintTemplate = z.infer<typeof insertPrintTemplateSchema>;
