@@ -27,6 +27,16 @@ interface DeviceIssue {
   updatedAt: string;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  deviceTypeId: number;
+  userId: number;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function SuperadminDevicesTab() {
   const { toast } = useToast();
 
@@ -199,9 +209,18 @@ export default function SuperadminDevicesTab() {
   const [isEditDeviceTypeOpen, setIsEditDeviceTypeOpen] = useState(false);
   const [deviceTypeForm, setDeviceTypeForm] = useState({ name: "" });
   
+  // State für Markenverwaltung
+  const [brandSearchTerm, setBrandSearchTerm] = useState("");
+  
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
+    enabled: true,
+  });
+  
+  // API-Abfrage: Alle Marken abrufen
+  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<Brand[]>({
+    queryKey: ["/api/superadmin/brands"],
     enabled: true,
   });
   
@@ -473,12 +492,76 @@ export default function SuperadminDevicesTab() {
             <HerstellerBulkImport deviceTypes={deviceTypes} />
             
             <Card>
-              <CardHeader>
-                <CardTitle>Marken</CardTitle>
-                <CardDescription>Hier werden alle vorhandenen Marken angezeigt</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>Marken</CardTitle>
+                  <CardDescription>Hier werden alle vorhandenen Marken angezeigt</CardDescription>
+                </div>
               </CardHeader>
               <CardContent>
-                <p>Hier werden die Marken angezeigt.</p>
+                <div className="mb-4">
+                  <div className="relative w-full md:w-72">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Marken suchen..." 
+                      className="pl-8" 
+                      value={brandSearchTerm}
+                      onChange={(e) => setBrandSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                {isLoadingBrands ? (
+                  <div className="flex justify-center p-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                ) : brandsData && brandsData.length > 0 ? (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Gerätetyp-ID</TableHead>
+                          <TableHead>Shop</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {brandsData
+                          .filter(brand => 
+                            brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
+                          )
+                          .map((brand) => (
+                            <TableRow key={brand.id}>
+                              <TableCell className="font-medium">{brand.name}</TableCell>
+                              <TableCell>{brand.deviceTypeId}</TableCell>
+                              <TableCell>Shop {brand.shopId}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    title="Marke löschen"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        }
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">Keine Marken gefunden</h3>
+                    <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                      {brandSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Marken gefunden. Importieren Sie Marken über den Massenimport.'}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
