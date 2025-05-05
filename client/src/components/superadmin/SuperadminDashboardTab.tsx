@@ -1,22 +1,27 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip as RechartsTooltip,
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
   Cell,
-  Legend 
+  Legend
 } from 'recharts';
-import { Building, Users, Wrench, Shield } from "lucide-react";
 
 interface SuperadminStats {
   users: {
@@ -54,7 +59,7 @@ export default function SuperadminDashboardTab() {
     });
   }
 
-  const packageUsageData = stats?.packages || [];
+  const packageUsageData = Array.isArray(stats?.packages) ? stats.packages : [];
 
   const userStatusData = stats ? [
     { name: 'Aktiv', value: stats.users.activeUsers },
@@ -90,34 +95,33 @@ export default function SuperadminDashboardTab() {
         </div>
       ) : stats ? (
         <div className="space-y-6">
+          {/* Übersichtskarten */}
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               title="Benutzer"
               value={stats.users.totalUsers}
               description="Gesamtanzahl der Benutzer"
-              icon={<Users className="h-5 w-5" />}
             />
             <StatsCard
               title="Shops"
               value={stats.users.totalShops}
-              description="Aktive Shops"
-              icon={<Building className="h-5 w-5" />}
+              description="Anzahl der Shops"
             />
             <StatsCard
               title="Reparaturen"
               value={stats.repairs.totalRepairs}
               description="Gesamtanzahl der Reparaturen"
-              icon={<Wrench className="h-5 w-5" />}
             />
             <StatsCard
               title="Admins"
               value={stats.users.admins}
               description="Anzahl der Admins"
-              icon={<Shield className="h-5 w-5" />}
             />
           </div>
 
+          {/* Diagramme */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            {/* Paket-Nutzung-Diagramm */}
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Paket-Nutzung</CardTitle>
@@ -140,6 +144,7 @@ export default function SuperadminDashboardTab() {
               </CardContent>
             </Card>
 
+            {/* Benutzer-Status-Diagramm */}
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Benutzer-Status</CardTitle>
@@ -168,6 +173,7 @@ export default function SuperadminDashboardTab() {
               </CardContent>
             </Card>
 
+            {/* Reparatur-Status-Diagramm */}
             <Card className="col-span-1">
               <CardHeader>
                 <CardTitle>Reparatur-Status</CardTitle>
@@ -204,12 +210,11 @@ export default function SuperadminDashboardTab() {
   );
 }
 
-function StatsCard({ title, value, description, icon }: { title: string; value: number; description: string; icon: React.ReactNode }) {
+function StatsCard({ title, value, description }: { title: string; value: number; description: string }) {
   return (
     <Card>
-      <CardHeader className="pb-2 flex justify-between items-center">
+      <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>

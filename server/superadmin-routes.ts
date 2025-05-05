@@ -11,6 +11,17 @@ import {
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels
 } from "@shared/schema";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+// Passwort-Hash-Funktion (gleich wie in auth.ts)
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 /**
  * Fügt alle Superadmin-Routen zur Express-App hinzu
@@ -147,6 +158,110 @@ export function registerSuperadminRoutes(app: Express) {
     } catch (error) {
       console.error("Fehler beim Abrufen des Benutzers:", error);
       res.status(500).json({ message: "Fehler beim Abrufen des Benutzers" });
+    }
+  });
+
+  // Benutzer aktualisieren
+  app.patch("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      // Prüfen, ob der Benutzer existiert
+      const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
+      if (!existingUser) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Daten für das Update vorbereiten
+      const updateData: any = {};
+      
+      // Zulässige Felder zum Aktualisieren
+      const allowedFields = ['email', 'isAdmin', 'packageId', 'shopId', 'companyName', 
+                            'companyAddress', 'companyVatNumber', 'companyPhone', 'companyEmail'];
+      
+      // Nur vorhandene Felder aktualisieren
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      // Passwort separat behandeln, da es gehasht werden muss
+      if (req.body.password) {
+        const hashedPassword = await hashPassword(req.body.password);
+        updateData.password = hashedPassword;
+      }
+
+      // Benutzer aktualisieren
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+
+      // Passwort aus der Antwort entfernen
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Benutzers:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Benutzers" });
+    }
+  });
+
+  // Benutzer aktivieren/deaktivieren
+  app.patch("/api/superadmin/users/:id/activate", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      // Aktuellen Status des Benutzers abrufen
+      const [user] = await db.select({ isActive: users.isActive }).from(users).where(eq(users.id, userId));
+      
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Status umkehren
+      const [updatedUser] = await db
+        .update(users)
+        .set({ isActive: !user.isActive })
+        .where(eq(users.id, userId))
+        .returning({ id: users.id, isActive: users.isActive });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Fehler beim Ändern des Aktivierungsstatus:", error);
+      res.status(500).json({ message: "Fehler beim Ändern des Aktivierungsstatus" });
+    }
+  });
+
+  // Benutzer löschen
+  app.delete("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      // Prüfen, ob der Benutzer existiert
+      const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
+      if (!existingUser) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Benutzer löschen
+      await db.delete(users).where(eq(users.id, userId));
+
+      res.json({ message: "Benutzer erfolgreich gelöscht" });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Benutzers:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
     }
   });
 
