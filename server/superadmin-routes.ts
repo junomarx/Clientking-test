@@ -392,7 +392,18 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Globale Geräteverwaltung
+  // Abrufen aller verfügbaren Gerätetypen (vollständige Objekte mit IDs)
+  app.get("/api/superadmin/device-types/all", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const deviceTypes = await db.select().from(userDeviceTypes);
+      res.json(deviceTypes);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der vollständigen Gerätetypen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätetypen" });
+    }
+  });
+
+  // Globale Geräteverwaltung - nur Namen der Gerätetypen
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       // Standardgerätetypen (unabhängig von Benutzern)

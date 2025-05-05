@@ -235,9 +235,10 @@ export default function SuperadminDevicesTab() {
     enabled: true,
   });
   
-  // API-Abfrage: Alle benutzerdefinierten Gerätetypen abrufen
+  // Da wir auch die IDs der Gerätetypen benötigen, müssen wir sie direkt abfragen
+  // Wir verwenden die URL ohne "-" für die API-Anfrage
   const { data: userDeviceTypes } = useQuery<UserDeviceType[]>({
-    queryKey: ["/api/superadmin/user-device-types"],
+    queryKey: ["/api/superadmin/device-types/all"],
     enabled: true,
   });
   
