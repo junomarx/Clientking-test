@@ -109,6 +109,15 @@ export function Header({ variant = "landing" }: HeaderProps) {
                     </Link>
                   )}
                   
+                  {user.isSuperadmin && (
+                    <Link href="/superadmin">
+                      <DropdownMenuItem>
+                        <Shield className="mr-2 h-4 w-4 text-red-500" />
+                        <span className="text-red-500 font-semibold">Superadmin-Bereich</span>
+                      </DropdownMenuItem>
+                    </Link>
+                  )}
+                  
                   <DropdownMenuSeparator />
                   
                   <DropdownMenuItem onClick={handleLogout}>
@@ -173,6 +182,15 @@ export function Header({ variant = "landing" }: HeaderProps) {
                     <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
                       <Shield className="h-4 w-4 mr-2 text-gray-500" />
                       <span>Admin-Bereich</span>
+                    </div>
+                  </Link>
+                )}
+                
+                {user.isSuperadmin && (
+                  <Link href="/superadmin">
+                    <div className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                      <Shield className="h-4 w-4 mr-2 text-red-500" />
+                      <span className="text-red-500 font-semibold">Superadmin-Bereich</span>
                     </div>
                   </Link>
                 )}
