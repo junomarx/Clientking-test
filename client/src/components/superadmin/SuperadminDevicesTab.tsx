@@ -12,6 +12,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch } from "lucide-react";
+import HerstellerBulkImport from "./HerstellerBulkImport";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
@@ -467,14 +468,20 @@ export default function SuperadminDevicesTab() {
         </TabsContent>
 
         <TabsContent value="brands">
-          <Card>
-            <CardHeader>
-              <CardTitle>Marken</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Hier werden die Marken angezeigt.</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Komponente für den Marken-Massenimport */}
+            <HerstellerBulkImport deviceTypes={deviceTypes} />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Marken</CardTitle>
+                <CardDescription>Hier werden alle vorhandenen Marken angezeigt</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>Hier werden die Marken angezeigt.</p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="models">

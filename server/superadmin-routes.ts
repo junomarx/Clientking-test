@@ -579,6 +579,92 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
     }
   });
+  
+  // Bulk-Import für Hersteller (Marken)
+  app.post("/api/superadmin/device-brands/bulk", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { deviceType, brands } = req.body;
+      
+      if (!deviceType || !brands || !Array.isArray(brands) || brands.length === 0) {
+        return res.status(400).json({ message: "Ungültige Daten für den Massenimport" });
+      }
+      
+      // Prüfen, ob der Gerätetyp existiert
+      // Erst in der Datenbank suchen für benutzerdefinierte Typen
+      const userDeviceType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceType));
+      const deviceTypeExists = userDeviceType.length > 0 || 
+                             ["Smartphone", "Tablet", "Laptop", "Watch",
+                              "smartphone", "tablet", "laptop", "watch"].includes(deviceType);
+      
+      if (!deviceTypeExists) {
+        return res.status(400).json({ message: `Gerätetyp '${deviceType}' existiert nicht` });
+      }
+      
+      // Zunächst den Gerätetyp in der Tabelle nachschlagen
+      let deviceTypeId;
+      if (userDeviceType.length > 0) {
+        deviceTypeId = userDeviceType[0].id;
+      } else {
+        // Für Standard-Gerätetypen müssen wir deren ID abrufen oder erstellen
+        const deviceTypeUpperCase = deviceType.charAt(0).toUpperCase() + deviceType.slice(1).toLowerCase();
+        const standardDeviceType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceTypeUpperCase));
+        
+        if (standardDeviceType.length > 0) {
+          deviceTypeId = standardDeviceType[0].id;
+        } else {
+          // Den Standardtyp falls nötig in die Datenbank einfügen
+          const [newDeviceType] = await db.insert(userDeviceTypes)
+            .values({
+              name: deviceTypeUpperCase,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+          deviceTypeId = newDeviceType.id;
+        }
+      }
+      
+      // Liste für erfolgreich eingefügte Marken
+      const importedBrands = [];
+      
+      // Marken einfügen
+      for (const brandName of brands) {
+        try {
+          // Prüfen, ob die Marke bereits existiert
+          const existingBrand = await db.select().from(userBrands)
+            .where(and(
+              eq(userBrands.name, brandName),
+              eq(userBrands.deviceTypeId, deviceTypeId)
+            ));
+          
+          if (existingBrand.length === 0) {
+            // Nur einfügen, wenn noch nicht vorhanden
+            const [newBrand] = await db.insert(userBrands)
+              .values({
+                name: brandName,
+                deviceTypeId: deviceTypeId,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              })
+              .returning();
+              
+            importedBrands.push(newBrand);
+          }
+        } catch (innerError) {
+          console.error(`Fehler beim Import der Marke '${brandName}':`, innerError);
+          // Wir machen weiter mit der nächsten Marke
+        }
+      }
+      
+      res.status(201).json({ 
+        importedCount: importedBrands.length,
+        importedBrands: importedBrands 
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenimport von Herstellern:", error);
+      res.status(500).json({ message: "Fehler beim Massenimport von Herstellern" });
+    }
+  });
 
   app.get("/api/superadmin/models", isSuperadmin, async (req: Request, res: Response) => {
     try {
