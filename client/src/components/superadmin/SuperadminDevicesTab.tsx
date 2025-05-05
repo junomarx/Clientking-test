@@ -1374,29 +1374,62 @@ export default function SuperadminDevicesTab() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 flex items-center space-x-2">
-                <div className="flex-1">
+              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
+                {selectedIssueIds.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleDeleteSelectedIssues}
+                    className="flex items-center space-x-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    <span>{selectedIssueIds.length} Eintrag{selectedIssueIds.length > 1 ? 'e' : ''} löschen</span>
+                  </Button>
+                )}
+                
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Fehler suchen..." 
+                    className="pl-8" 
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="issueDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
                   <Select 
                     value={selectedDeviceType || "all"}
                     onValueChange={(value) => setSelectedDeviceType(value === "all" ? null : value)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Nach Gerätetyp filtern" />
+                    <SelectTrigger className="w-full md:w-40">
+                      <SelectValue placeholder="Alle Typen" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle Gerätetypen</SelectItem>
+                      <SelectItem value="all">Alle Typen</SelectItem>
                       {deviceTypes?.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                        <SelectItem key={type} value={type}>
+                          <div className="flex items-center gap-2">
+                            {getDeviceTypeIcon(type)}
+                            <span>{type}</span>
+                          </div>
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Suchen..." className="pl-8" />
-                  </div>
-                </div>
+                
+                {/* Nur anzeigen, wenn ein Filter aktiv ist */}
+                {selectedDeviceType && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedDeviceType(null)}
+                    className="flex items-center space-x-1"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Filter zurücksetzen</span>
+                  </Button>
+                )}
               </div>
               
               {isLoadingIssues ? (
@@ -1408,6 +1441,13 @@ export default function SuperadminDevicesTab() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={selectAllIssues}
+                            onCheckedChange={handleToggleSelectAllIssues}
+                            aria-label="Alle Fehlereinträge auswählen"
+                          />
+                        </TableHead>
                         <TableHead>Gerätetyp</TableHead>
                         <TableHead>Titel</TableHead>
                         <TableHead>Schweregrad</TableHead>
@@ -1420,6 +1460,13 @@ export default function SuperadminDevicesTab() {
                         .filter(issue => !selectedDeviceType || issue.deviceType === selectedDeviceType)
                         .map((issue) => (
                           <TableRow key={issue.id}>
+                            <TableCell className="w-10">
+                              <Checkbox
+                                checked={selectedIssueIds.includes(issue.id)}
+                                onCheckedChange={() => handleToggleIssueSelection(issue.id)}
+                                aria-label={`Fehlereintrag ${issue.title} auswählen`}
+                              />
+                            </TableCell>
                             <TableCell>{issue.deviceType}</TableCell>
                             <TableCell>
                               <div className="font-medium">{issue.title}</div>
