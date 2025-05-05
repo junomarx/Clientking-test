@@ -10,6 +10,7 @@ import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
 import { addPackageTables } from "./add-package-tables";
 import { addSuperadminColumn } from "./add-superadmin";
 import { addDeviceIssuesFields } from "./add-device-issues-fields";
+import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -58,6 +59,7 @@ app.use((req, res, next) => {
     await addPackageTables(); // Neue Migration für das Paketsystem
     await addSuperadminColumn(); // Migration für Superadmin-Rolle
     await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
+    await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
     
     const server = await registerRoutes(app);
 

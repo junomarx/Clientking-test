@@ -9,7 +9,8 @@ import { storage } from "./storage";
 import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
-  customers, repairs, userDeviceTypes, userBrands, userModels, deviceIssues, insertDeviceIssueSchema
+  customers, repairs, userDeviceTypes, userBrands, userModels, 
+  deviceIssues, insertDeviceIssueSchema, hiddenStandardDeviceTypes
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
@@ -397,13 +398,23 @@ export function registerSuperadminRoutes(app: Express) {
       // Standardgerätetypen (unabhängig von Benutzern)
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
       
+      // Alle ausgeblendeten Standard-Gerätetypen abrufen
+      const hiddenTypes = await db.select({
+        name: hiddenStandardDeviceTypes.name
+      }).from(hiddenStandardDeviceTypes);
+      
+      const hiddenTypeNames = hiddenTypes.map(ht => ht.name);
+      
+      // Filtere die ausgeblendeten Typen aus den Standardtypen heraus
+      const visibleStandardTypes = standardDeviceTypes.filter(type => !hiddenTypeNames.includes(type));
+      
       // Alle benutzerdefinierten Gerätetypen abrufen
       const customDeviceTypes = await db.select({
         name: userDeviceTypes.name
       }).from(userDeviceTypes);
       
-      // Kombiniere Standard- und benutzerdefinierte Gerätetypen ohne Duplikate
-      const allTypes = [...standardDeviceTypes, ...customDeviceTypes.map(dt => dt.name)];
+      // Kombiniere sichtbare Standard- und benutzerdefinierte Gerätetypen ohne Duplikate
+      const allTypes = [...visibleStandardTypes, ...customDeviceTypes.map(dt => dt.name)];
       const uniqueTypes = Array.from(new Set(allTypes));
       
       res.json(uniqueTypes);
@@ -520,9 +531,26 @@ export function registerSuperadminRoutes(app: Express) {
       // müssen wir nicht nach ihm in der Datenbank suchen, weil er nicht wirklich existiert,
       // sondern nur virtuell in der Anwendung
       if (standardDeviceTypes.includes(name)) {
-        // Erfolg simulieren - es ist OK, einen lowercase-Standardtyp zu "löschen",
-        // da er eh nur virtuell existiert und beim nächsten GET wieder auftauchen würde
-        return res.status(204).send();
+        try {
+          // Prüfen, ob der Standardtyp bereits ausgeblendet ist
+          const hiddenType = await db.select().from(hiddenStandardDeviceTypes)
+            .where(eq(hiddenStandardDeviceTypes.name, name));
+            
+          if (hiddenType.length === 0) {
+            // Füge den Standardtyp zur Liste der ausgeblendeten Standardtypen hinzu
+            await db.insert(hiddenStandardDeviceTypes).values({
+              name
+            });
+            console.log(`Standardgerätetyp "${name}" wurde zur Liste der ausgeblendeten Typen hinzugefügt.`);
+          } else {
+            console.log(`Standardgerätetyp "${name}" ist bereits in der Liste der ausgeblendeten Typen.`);
+          }
+          
+          return res.status(204).send();
+        } catch (innerError) {
+          console.error(`Fehler beim Ausblenden des Standardgerätetyps ${name}:`, innerError);
+          return res.status(500).json({ message: "Fehler beim Ausblenden des Standardgerätetyps" });
+        }
       }
       
       // Prüfen, ob der Gerätetyp existiert (für nicht-Standard-Typen)
