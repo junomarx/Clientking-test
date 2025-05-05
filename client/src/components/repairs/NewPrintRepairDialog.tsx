@@ -246,7 +246,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     logoUrl: businessSettings?.logoImage || "",
     businessSlogan: businessSettings?.companySlogan || "",
     vatNumber: businessSettings?.vatNumber || "",
-    website: businessSettings?.website || ""
+    websiteUrl: businessSettings?.website || ""
   };
 
   return (
