@@ -700,26 +700,45 @@ export function registerSuperadminRoutes(app: Express) {
   // Mehrere Modelle auf einmal löschen
   app.post("/api/superadmin/models/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
     try {
+      // Debugging: Request-Body ausgeben
+      console.log("Request-Body für Massenlöschen:", req.body);
+      
       const { ids } = req.body;
       
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        console.log("Ungültiges Format für IDs:", ids);
         return res.status(400).json({ message: "Ungültige Daten für das Massenlöschen" });
       }
       
-      // Alle ausgewählten Modelle löschen
-      // Wir verwenden eine sichere Methode mit Prepared Statements
-      // Jede ID wird einzeln gelöscht, um SQL-Injection zu vermeiden
-      for (const id of ids) {
-        await db.delete(userModels).where(eq(userModels.id, id));
-      }
+      console.log(`Lösche ${ids.length} Modelle mit IDs:`, ids);
       
-      // Anzahl der gelöschten Einträge bestimmen
-      const deletedCount = ids.length;
+      // Zählen wie viele Einträge gelöscht wurden
+      let successCount = 0;
+      
+      // Alle ausgewählten Modelle löschen
+      // Wir verarbeiten jede ID separat
+      for (const modelId of ids) {
+        try {
+          const id = Number(modelId);
+          if (isNaN(id)) {
+            console.log(`Ungültige Modell-ID: ${modelId}`);
+            continue;
+          }
+          
+          // Löschvorgang für diese ID
+          const result = await db.delete(userModels).where(eq(userModels.id, id));
+          console.log(`Modell mit ID ${id} gelöscht`);
+          successCount++;
+        } catch (deleteError) {
+          console.error(`Fehler beim Löschen des Modells mit ID ${modelId}:`, deleteError);
+          // Wir machen mit den anderen IDs weiter
+        }
+      }
       
       res.json({ 
         success: true, 
-        message: `${deletedCount} Modelle erfolgreich gelöscht`,
-        deletedCount
+        message: `${successCount} Modelle erfolgreich gelöscht`,
+        deletedCount: successCount
       });
     } catch (error) {
       console.error("Fehler beim Massenlöschen von Modellen:", error);

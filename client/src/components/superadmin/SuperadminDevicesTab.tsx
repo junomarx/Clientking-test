@@ -446,7 +446,15 @@ export default function SuperadminDevicesTab() {
   // Mutation zum Löschen mehrerer Modelle
   const deleteBulkModelsMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      const response = await apiRequest('POST', '/api/superadmin/models/bulk-delete', { ids });
+      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
+      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
+      
+      console.log('Sende folgende Modell-IDs zum Löschen:', numericIds);
+      
+      const response = await apiRequest('POST', '/api/superadmin/models/bulk-delete', { 
+        ids: numericIds 
+      });
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Fehler beim Löschen der Modelle');
