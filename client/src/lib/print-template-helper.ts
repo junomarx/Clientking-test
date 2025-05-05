@@ -35,12 +35,54 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
     variables = { ...variables, creationDate: variables.currentDate };
   }
 
+  // Zeilen mit leeren Werten oder fehlenden Unterschriften entfernen
+  // Suche nach allen HTML-Elementen, die einen Platzhalter enthalten
+  const placeholderRegex = /\<[^>]*\{\{([^\}]+)\}\}[^>]*\>/g;
+  const matches = [...templateHtml.matchAll(placeholderRegex)];
+  
+  // Für jedes gefundene Element prüfen, ob der Wert leer oder eine nicht vorhandene Unterschrift ist
+  matches.forEach(match => {
+    const fullMatch = match[0]; // Das komplette HTML-Element
+    const placeholderName = match[1]; // Der Name des Platzhalters
+
+    // Bei Unterschriften spezielle Behandlung
+    if (placeholderName === 'customerSignature' || placeholderName === 'secondSignature') {
+      const value = variables[placeholderName];
+      
+      // Wenn keine Unterschrift vorhanden ist
+      if (!value || value.trim() === '') {
+        // Die ganze Zeile/Element mit dem Platzhalter entfernen
+        // Suche nach dem übergeordneten Element (meist ein div oder p)
+        const regex = new RegExp(`\\s*<(div|p|tr|section)[^>]*>[^<]*${fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*<\/(div|p|tr|section)>\\s*`, 'gi');
+        result = result.replace(regex, '');
+      } else {
+        // Wenn eine Unterschrift vorhanden ist, ersetze den Platzhalter durch ein img-Element
+        result = result.replace(
+          new RegExp(`\\{\\{${placeholderName}\\}\\}`, 'g'), 
+          `<img src="${value}" alt="Unterschrift" style="max-width: 100%; height: auto; max-height: 80px;" />`
+        );
+      }
+    } 
+    // Für alle anderen Felder: Zeilen mit leeren Werten entfernen
+    else {
+      const value = variables[placeholderName];
+      
+      if (!value || value.trim() === '') {
+        // Die ganze Zeile/Element mit dem Platzhalter entfernen
+        // Suche nach dem übergeordneten Element (meist ein div oder p)
+        const regex = new RegExp(`\\s*<(div|p|tr|section)[^>]*>[^<]*${fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^<]*<\/(div|p|tr|section)>\\s*`, 'gi');
+        result = result.replace(regex, '');
+      } else {
+        // Normaler Platzhalter-Ersatz für nicht-leere Werte
+        const placeholder = new RegExp(`\\{\\{${placeholderName}\\}\\}`, 'g');
+        result = result.replace(placeholder, value);
+      }
+    }
+  });
+
+  // Restliche Platzhalter ersetzen, die nicht in HTML-Elementen eingebettet sind
   Object.entries(variables).forEach(([key, value]) => {
     const placeholder = new RegExp(`\{\{${key}\}\}`, 'g');
-    const matches = result.match(placeholder);
-    if (matches) {
-      console.log(`Platzhalter gefunden für '${key}':`, matches.length);
-    }
     result = result.replace(placeholder, value || '');
   });
   
