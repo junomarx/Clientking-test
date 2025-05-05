@@ -254,14 +254,14 @@ export default function SuperadminDevicesTab() {
               <div className="mb-4 flex items-center space-x-2">
                 <div className="flex-1">
                   <Select 
-                    value={selectedDeviceType || ""}
-                    onValueChange={(value) => setSelectedDeviceType(value || null)}
+                    value={selectedDeviceType || "all"}
+                    onValueChange={(value) => setSelectedDeviceType(value === "all" ? null : value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Nach Gerätetyp filtern" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Alle Gerätetypen</SelectItem>
+                      <SelectItem value="all">Alle Gerätetypen</SelectItem>
                       {deviceTypes?.map((type) => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
