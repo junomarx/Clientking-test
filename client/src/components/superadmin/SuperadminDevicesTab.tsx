@@ -15,6 +15,7 @@ import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, 
 import { Checkbox } from "@/components/ui/checkbox";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
+import FehlerkatalogBulkImport from "./FehlerkatalogBulkImport";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
@@ -1082,7 +1083,10 @@ export default function SuperadminDevicesTab() {
         
         {/* Fehlerkatalog Tab */}
         <TabsContent value="issues">
-          <Card>
+          {/* Komponente für den Fehlerkatalog-Massenimport */}
+          <FehlerkatalogBulkImport deviceTypes={deviceTypes} />
+          
+          <Card className="mt-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <CardTitle>Fehlerkatalog</CardTitle>
