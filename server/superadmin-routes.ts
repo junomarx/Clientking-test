@@ -1088,4 +1088,153 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Löschen der Fehlerbeschreibung" });
     }
   });
+  
+  // Mehrere Fehlerbeschreibungen auf einmal löschen
+  app.post("/api/superadmin/device-issues/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Request-Body für Massenlöschen von Fehlereinträgen:", req.body);
+      
+      const { ids } = req.body;
+      
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        console.log("Ungültiges Format für Fehlereinträge-IDs:", ids);
+        return res.status(400).json({ message: "Ungültige Daten für das Massenlöschen" });
+      }
+      
+      console.log(`Lösche ${ids.length} Fehlereinträge mit IDs:`, ids);
+      
+      // Zählen wie viele Einträge gelöscht wurden
+      let successCount = 0;
+      
+      // Alle ausgewählten Fehlereinträge löschen
+      // Wir verarbeiten jede ID separat
+      for (const issueId of ids) {
+        try {
+          const id = Number(issueId);
+          if (isNaN(id)) {
+            console.log(`Ungültige Fehlereintrag-ID: ${issueId}`);
+            continue;
+          }
+          
+          // Prüfen, ob der Fehlereintrag existiert
+          const [existingIssue] = await db.select().from(deviceIssues).where(eq(deviceIssues.id, id));
+          
+          if (!existingIssue) {
+            console.log(`Fehlereintrag mit ID ${id} nicht gefunden`);
+            continue;
+          }
+          
+          // Fehlereintrag löschen
+          await db.delete(deviceIssues).where(eq(deviceIssues.id, id));
+          
+          console.log(`Fehlereintrag mit ID ${id} gelöscht`);
+          successCount++;
+        } catch (deleteError) {
+          console.error(`Fehler beim Löschen des Fehlereintrags mit ID ${issueId}:`, deleteError);
+          // Wir machen mit den anderen IDs weiter
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        deletedCount: successCount,
+        message: `${successCount} Fehlereinträge wurden erfolgreich gelöscht.`
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenlöschen von Fehlereinträgen:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim Massenlöschen von Fehlereinträgen" 
+      });
+    }
+  });
+  
+  // Marke löschen
+  app.delete("/api/superadmin/brands/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Prüfen, ob die Marke existiert
+      const [existingBrand] = await db.select().from(userBrands).where(eq(userBrands.id, id));
+      
+      if (!existingBrand) {
+        return res.status(404).json({ message: "Marke nicht gefunden" });
+      }
+      
+      // Alle Modelle dieser Marke löschen
+      await db.delete(userModels).where(eq(userModels.brandId, id));
+      
+      // Marke löschen
+      await db.delete(userBrands).where(eq(userBrands.id, id));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Fehler beim Löschen der Marke:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Marke" });
+    }
+  });
+  
+  // Mehrere Marken auf einmal löschen
+  app.post("/api/superadmin/brands/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Debugging: Request-Body ausgeben
+      console.log("Request-Body für Massenlöschen von Marken:", req.body);
+      
+      const { ids } = req.body;
+      
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        console.log("Ungültiges Format für Marken-IDs:", ids);
+        return res.status(400).json({ message: "Ungültige Daten für das Massenlöschen" });
+      }
+      
+      console.log(`Lösche ${ids.length} Marken mit IDs:`, ids);
+      
+      // Zählen wie viele Einträge gelöscht wurden
+      let successCount = 0;
+      
+      // Alle ausgewählten Marken löschen
+      // Wir verarbeiten jede ID separat
+      for (const brandId of ids) {
+        try {
+          const id = Number(brandId);
+          if (isNaN(id)) {
+            console.log(`Ungültige Marken-ID: ${brandId}`);
+            continue;
+          }
+          
+          // Prüfen, ob die Marke existiert
+          const [existingBrand] = await db.select().from(userBrands).where(eq(userBrands.id, id));
+          
+          if (!existingBrand) {
+            console.log(`Marke mit ID ${id} nicht gefunden`);
+            continue;
+          }
+          
+          // Alle Modelle dieser Marke löschen
+          await db.delete(userModels).where(eq(userModels.brandId, id));
+          
+          // Marke löschen
+          await db.delete(userBrands).where(eq(userBrands.id, id));
+          
+          console.log(`Marke mit ID ${id} und alle zugehörigen Modelle gelöscht`);
+          successCount++;
+        } catch (deleteError) {
+          console.error(`Fehler beim Löschen der Marke mit ID ${brandId}:`, deleteError);
+          // Wir machen mit den anderen IDs weiter
+        }
+      }
+      
+      res.json({ 
+        success: true,
+        deletedCount: successCount,
+        message: `${successCount} Marken wurden erfolgreich gelöscht.`
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenlöschen von Marken:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim Massenlöschen von Marken" 
+      });
+    }
+  });
 }
