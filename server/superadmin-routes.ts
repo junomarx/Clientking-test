@@ -607,9 +607,11 @@ export function registerSuperadminRoutes(app: Express) {
       let deviceTypeId;
       if (userDeviceType.length > 0) {
         deviceTypeId = userDeviceType[0].id;
+        console.log(`Gefundener Gerätetyp: ${userDeviceType[0].name} mit ID ${deviceTypeId}`);
       } else {
         // Für Standard-Gerätetypen müssen wir deren ID abrufen oder erstellen
         const deviceTypeUpperCase = deviceType.charAt(0).toUpperCase() + deviceType.slice(1).toLowerCase();
+        console.log(`Suche nach standardisiertem Gerätetyp: ${deviceTypeUpperCase}`);
         const standardDeviceType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceTypeUpperCase));
         
         if (standardDeviceType.length > 0) {
@@ -643,6 +645,7 @@ export function registerSuperadminRoutes(app: Express) {
             ));
           
           if (existingBrand.length === 0) {
+            console.log(`Füge neue Marke '${brandName}' für Gerätetyp ID ${deviceTypeId} hinzu...`);
             // Nur einfügen, wenn noch nicht vorhanden
             const [newBrand] = await db.insert(userBrands)
               .values({
@@ -656,6 +659,8 @@ export function registerSuperadminRoutes(app: Express) {
               .returning();
               
             importedBrands.push(newBrand);
+          } else {
+            console.log(`Marke '${brandName}' für Gerätetyp ID ${deviceTypeId} existiert bereits.`);
           }
         } catch (innerError) {
           console.error(`Fehler beim Import der Marke '${brandName}':`, innerError);

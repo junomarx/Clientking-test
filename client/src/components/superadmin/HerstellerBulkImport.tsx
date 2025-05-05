@@ -63,10 +63,20 @@ export default function HerstellerBulkImport({ deviceTypes }: HerstellerBulkImpo
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
-      toast({
-        title: "Import erfolgreich",
-        description: `${data.importedCount} Marken wurden erfolgreich importiert.`,
-      });
+      
+      if (data.importedCount > 0) {
+        toast({
+          title: "Import erfolgreich",
+          description: `${data.importedCount} Marken wurden erfolgreich importiert.`,
+        });
+      } else {
+        toast({
+          title: "Keine neuen Marken importiert",
+          description: "Alle angegebenen Marken existieren bereits für diesen Gerätetyp.",
+          variant: "warning"
+        });
+      }
+      
       form.reset();
       setImportInProgress(false);
     },
