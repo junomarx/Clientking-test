@@ -28,7 +28,26 @@ export async function addBrandIdToModels() {
       console.log("Die brandId-Spalte existiert bereits.");
     }
 
-    console.log("Migration für brandId-Spalte erfolgreich abgeschlossen.");
+    // Prüfen, ob model_series_id eine NOT NULL Constraint hat
+    const constraintResult = await db.execute(sql`
+      SELECT * FROM information_schema.columns
+      WHERE table_name = 'user_models' 
+      AND column_name = 'model_series_id' 
+      AND is_nullable = 'NO';
+    `);
+
+    if (constraintResult.rows.length > 0) {
+      // Die Spalte als nullable setzen
+      await db.execute(sql`
+        ALTER TABLE user_models 
+        ALTER COLUMN model_series_id DROP NOT NULL;
+      `);
+      console.log("Die model_series_id-Spalte wurde als nullable definiert.");
+    } else {
+      console.log("Die model_series_id-Spalte ist bereits nullable.");
+    }
+
+    console.log("Migration für userModels-Tabelle erfolgreich abgeschlossen.");
   } catch (error) {
     console.error("Fehler bei der Migration:", error);
   }

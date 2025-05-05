@@ -644,7 +644,8 @@ export function registerSuperadminRoutes(app: Express) {
                   userId: superadminUserId,
                   shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
                   createdAt: new Date(),
-                  updatedAt: new Date()
+                  updatedAt: new Date(),
+                  modelSeriesId: null // Explizit null setzen, um das Problem mit der NOT NULL Constraint zu vermeiden
                 });
               console.log(`Modell '${modelName}' erfolgreich hinzugefügt`);
             } catch (insertError) {
