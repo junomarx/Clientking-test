@@ -416,7 +416,7 @@ export default function SuperadminDevicesTab() {
                           <TableCell className="font-medium">
                             <div className="flex items-center space-x-2">
                               <span>{type}</span>
-                              {["smartphone", "tablet", "laptop", "watch"].includes(type.toLowerCase()) && (
+                              {["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) && (
                                 <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                   Standard
                                 </Badge>
@@ -429,8 +429,8 @@ export default function SuperadminDevicesTab() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEditDeviceType(type)}
-                                disabled={["smartphone", "tablet", "laptop", "watch"].includes(type.toLowerCase())}
-                                title={["smartphone", "tablet", "laptop", "watch"].includes(type.toLowerCase()) ? "Standardgerätetypen können nicht bearbeitet werden" : "Gerätetyp bearbeiten"}
+                                disabled={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type)}
+                                title={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) ? "Standardgerätetypen können nicht bearbeitet werden" : "Gerätetyp bearbeiten"}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -438,8 +438,8 @@ export default function SuperadminDevicesTab() {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleDeleteDeviceType(type)}
-                                disabled={["smartphone", "tablet", "laptop", "watch"].includes(type.toLowerCase())}
-                                title={["smartphone", "tablet", "laptop", "watch"].includes(type.toLowerCase()) ? "Standardgerätetypen können nicht gelöscht werden" : "Gerätetyp löschen"}
+                                disabled={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type)}
+                                title={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) ? "Standardgerätetypen können nicht gelöscht werden" : "Gerätetyp löschen"}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

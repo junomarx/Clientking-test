@@ -464,8 +464,8 @@ export function registerSuperadminRoutes(app: Express) {
       // Standardgerätetypen abrufen
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
       
-      // Prüfen, ob der zu aktualisierende Gerätetyp ein Standardtyp ist
-      if (standardDeviceTypes.includes(oldName.toLowerCase())) {
+      // Prüfen, ob der zu aktualisierende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
+      if (standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).includes(oldName)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht bearbeitet werden" });
       }
       
@@ -503,8 +503,13 @@ export function registerSuperadminRoutes(app: Express) {
       // Standardgerätetypen abrufen
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
       
-      // Prüfen, ob der zu löschende Gerätetyp ein Standardtyp ist
-      if (standardDeviceTypes.includes(name.toLowerCase())) {
+      // Spezielle Behandlung für kleingeschriebene Standardtypen
+      // Löschen von "smartphone", "tablet", "laptop", und "watch" ist erlaubt,
+      // während "Smartphone", "Tablet", "Laptop", und "Watch" (Großbuchstaben) geschützt bleiben
+      const lowercaseExactMatch = standardDeviceTypes.includes(name) && name === name.toLowerCase();
+      
+      // Prüfen, ob der zu löschende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
+      if (standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).includes(name)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht gelöscht werden" });
       }
       
