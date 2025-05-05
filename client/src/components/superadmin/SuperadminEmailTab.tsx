@@ -471,10 +471,24 @@ export default function SuperadminEmailTab() {
                   <FileText className="h-5 w-5 mr-2" />
                   <CardTitle>E-Mail-Vorlagen</CardTitle>
                 </div>
-                <Button onClick={() => setIsCreateTemplateOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Neue Vorlage
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => createDefaultTemplatesMutation.mutate()}
+                    disabled={createDefaultTemplatesMutation.isPending}
+                  >
+                    {createDefaultTemplatesMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Mail className="h-4 w-4 mr-2" />
+                    )}
+                    App-Standardvorlagen
+                  </Button>
+                  <Button onClick={() => setIsCreateTemplateOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Neue Vorlage
+                  </Button>
+                </div>
               </div>
               <CardDescription>
                 Verwalten Sie E-Mail-Vorlagen für verschiedene Benachrichtigungen. Sie können Variablen wie {`{{kundenname}}`} verwenden, die beim Versand automatisch ersetzt werden.
