@@ -697,6 +697,32 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  // Mehrere Modelle auf einmal löschen
+  app.post("/api/superadmin/models/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { ids } = req.body;
+      
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Ungültige Daten für das Massenlöschen" });
+      }
+      
+      // Alle ausgewählten Modelle löschen
+      const result = await db.delete(userModels).where(sql`${userModels.id} IN (${ids.join(',')})`);
+      
+      // Anzahl der gelöschten Einträge bestimmen
+      const deletedCount = ids.length;
+      
+      res.json({ 
+        success: true, 
+        message: `${deletedCount} Modelle erfolgreich gelöscht`,
+        deletedCount
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenlöschen von Modellen:", error);
+      res.status(500).json({ message: "Fehler beim Massenlöschen von Modellen" });
+    }
+  });
+  
   app.get("/api/superadmin/user-device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const deviceTypes = await db.select().from(userDeviceTypes);

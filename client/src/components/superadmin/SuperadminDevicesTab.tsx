@@ -12,6 +12,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
 
@@ -928,6 +929,13 @@ export default function SuperadminDevicesTab() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox 
+                              checked={selectAllModels} 
+                              onCheckedChange={handleToggleSelectAll}
+                              aria-label="Alle Modelle auswählen" 
+                            />
+                          </TableHead>
                           <TableHead>Modell</TableHead>
                           <TableHead>Marke</TableHead>
                           <TableHead>Gerätetyp</TableHead>
@@ -968,6 +976,13 @@ export default function SuperadminDevicesTab() {
                           })
                           .map((model) => (
                             <TableRow key={model.id}>
+                              <TableCell className="p-0 text-center">
+                                <Checkbox 
+                                  checked={selectedModelIds.includes(model.id)} 
+                                  onCheckedChange={() => handleToggleModelSelection(model.id)}
+                                  aria-label={`Modell ${model.name} auswählen`} 
+                                />
+                              </TableCell>
                               <TableCell className="font-medium">{model.name}</TableCell>
                               <TableCell>{model.brandName}</TableCell>
                               <TableCell>
