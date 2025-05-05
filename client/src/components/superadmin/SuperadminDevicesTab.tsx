@@ -192,6 +192,168 @@ export default function SuperadminDevicesTab() {
     updateIssueMutation.mutate({ id: selectedIssue.id, data: issueForm });
   };
 
+  // State für Gerätetypen-Verwaltung
+  const [deviceTypeSearchTerm, setDeviceTypeSearchTerm] = useState("");
+  const [isCreateDeviceTypeOpen, setIsCreateDeviceTypeOpen] = useState(false);
+  const [isEditDeviceTypeOpen, setIsEditDeviceTypeOpen] = useState(false);
+  const [deviceTypeForm, setDeviceTypeForm] = useState({ name: "" });
+  
+  // API-Abfrage: Alle Gerätetypen abrufen
+  const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
+    queryKey: ["/api/superadmin/device-types"],
+    enabled: true,
+  });
+  
+  // Mutation zum Erstellen eines neuen Gerätetyps
+  const createDeviceTypeMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-types', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen des Gerätetyps');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      toast({
+        title: "Erfolg",
+        description: "Gerätetyp wurde erfolgreich erstellt.",
+      });
+      setIsCreateDeviceTypeOpen(false);
+      setDeviceTypeForm({ name: "" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Aktualisieren eines Gerätetyps
+  const updateDeviceTypeMutation = useMutation({
+    mutationFn: async ({ oldName, newName }: { oldName: string; newName: string }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/device-types/${encodeURIComponent(oldName)}`, { name: newName });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Aktualisieren des Gerätetyps');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      toast({
+        title: "Erfolg",
+        description: "Gerätetyp wurde erfolgreich aktualisiert.",
+      });
+      setIsEditDeviceTypeOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Löschen eines Gerätetyps
+  const deleteDeviceTypeMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const response = await apiRequest('DELETE', `/api/superadmin/device-types/${encodeURIComponent(name)}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen des Gerätetyps');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
+      toast({
+        title: "Erfolg",
+        description: "Gerätetyp wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler für Gerätetypen-Management
+  const handleCreateDeviceType = () => {
+    setDeviceTypeForm({ name: "" });
+    setIsCreateDeviceTypeOpen(true);
+  };
+  
+  const handleEditDeviceType = (name: string) => {
+    setDeviceTypeForm({ name });
+    setIsEditDeviceTypeOpen(true);
+  };
+  
+  const handleDeleteDeviceType = (name: string) => {
+    if (confirm(`Möchten Sie den Gerätetyp "${name}" wirklich löschen?`)) {
+      deleteDeviceTypeMutation.mutate(name);
+    }
+  };
+  
+  const handleSubmitCreateDeviceType = () => {
+    if (!deviceTypeForm.name) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie einen Namen für den Gerätetyp ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createDeviceTypeMutation.mutate({ name: deviceTypeForm.name });
+  };
+  
+  const handleSubmitEditDeviceType = () => {
+    if (!deviceTypeForm.name) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie einen Namen für den Gerätetyp ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateDeviceTypeMutation.mutate({
+      oldName: deviceTypeForm.name,
+      newName: deviceTypeForm.name,
+    });
+  };
+  
+  // Icon-Funktion basierend auf dem Gerätetyp
+  const getDeviceTypeIcon = (type: string) => {
+    const iconProps = { className: "h-5 w-5" };
+    const normalizedType = type.toLowerCase();
+    
+    if (normalizedType.includes("smartphone") || normalizedType.includes("handy") || normalizedType.includes("phone")) {
+      return <Smartphone {...iconProps} />;
+    } else if (normalizedType.includes("tablet") || normalizedType.includes("pad")) {
+      return <Tablet {...iconProps} />;
+    } else if (normalizedType.includes("laptop") || normalizedType.includes("computer") || normalizedType.includes("pc")) {
+      return <Laptop {...iconProps} />;
+    } else if (normalizedType.includes("watch") || normalizedType.includes("uhr")) {
+      return <Watch {...iconProps} />;
+    } else {
+      return <Smartphone {...iconProps} />; // Default-Icon
+    }
+  };
+  
+  // Gefilterte Gerätetypen basierend auf dem Suchbegriff
+  const filteredDeviceTypes = deviceTypesList
+    ? deviceTypesList.filter(type =>
+        type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
+      )
+    : [];
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Geräteverwaltung</h1>
@@ -205,11 +367,88 @@ export default function SuperadminDevicesTab() {
 
         <TabsContent value="types">
           <Card>
-            <CardHeader>
-              <CardTitle>Gerätetypen</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Gerätetypen</CardTitle>
+                <CardDescription>
+                  Verwalten Sie globale Gerätetypen, die von allen Shops verwendet werden können
+                </CardDescription>
+              </div>
+              <Button onClick={handleCreateDeviceType}>
+                <Plus className="mr-2 h-4 w-4" /> Gerätetyp hinzufügen
+              </Button>
             </CardHeader>
             <CardContent>
-              <p>Hier werden die Gerätetypen angezeigt.</p>
+              <div className="mb-4">
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Gerätetypen suchen..." 
+                    className="pl-8" 
+                    value={deviceTypeSearchTerm}
+                    onChange={(e) => setDeviceTypeSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              {isLoadingDeviceTypesList ? (
+                <div className="flex justify-center p-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : filteredDeviceTypes.length > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">Icon</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDeviceTypes.map((type) => (
+                        <TableRow key={type}>
+                          <TableCell>
+                            <div className="flex items-center justify-center">
+                              {getDeviceTypeIcon(type)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{type}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditDeviceType(type)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteDeviceType(type)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Keine Gerätetypen gefunden</h3>
+                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                    {deviceTypeSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Gerätetypen gefunden. Fügen Sie neue Gerätetypen hinzu.'}
+                  </p>
+                  <Button onClick={handleCreateDeviceType}>
+                    <Plus className="mr-2 h-4 w-4" /> Gerätetyp hinzufügen
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -591,6 +830,73 @@ export default function SuperadminDevicesTab() {
               Abbrechen
             </Button>
             <Button onClick={() => handleSubmitEditIssue()} disabled={!issueForm.title || !issueForm.deviceType}>
+              Aktualisieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog zum Erstellen eines neuen Gerätetyps */}
+      <Dialog open={isCreateDeviceTypeOpen} onOpenChange={setIsCreateDeviceTypeOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Neuen Gerätetyp erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie einen neuen Gerätetyp zum System hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="deviceTypeName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="deviceTypeName"
+                value={deviceTypeForm.name}
+                onChange={(e) => setDeviceTypeForm({...deviceTypeForm, name: e.target.value})}
+                className="col-span-3"
+                placeholder="z.B. Smartphone, Tablet, Laptop"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateDeviceTypeOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleSubmitCreateDeviceType} disabled={!deviceTypeForm.name}>
+              Erstellen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog zum Bearbeiten eines Gerätetyps */}
+      <Dialog open={isEditDeviceTypeOpen} onOpenChange={setIsEditDeviceTypeOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Gerätetyp bearbeiten</DialogTitle>
+            <DialogDescription>
+              Ändern Sie den Namen des Gerätetyps.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="editDeviceTypeName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="editDeviceTypeName"
+                value={deviceTypeForm.name}
+                onChange={(e) => setDeviceTypeForm({...deviceTypeForm, name: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDeviceTypeOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleSubmitEditDeviceType} disabled={!deviceTypeForm.name}>
               Aktualisieren
             </Button>
           </DialogFooter>

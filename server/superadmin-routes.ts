@@ -404,7 +404,7 @@ export function registerSuperadminRoutes(app: Express) {
       
       // Kombiniere Standard- und benutzerdefinierte Gerätetypen ohne Duplikate
       const allTypes = [...standardDeviceTypes, ...customDeviceTypes.map(dt => dt.name)];
-      const uniqueTypes = [...new Set(allTypes)];
+      const uniqueTypes = Array.from(new Set(allTypes));
       
       res.json(uniqueTypes);
     } catch (error) {
@@ -437,9 +437,11 @@ export function registerSuperadminRoutes(app: Express) {
       }
       
       // Neuen Gerätetyp in die Datenbank einfügen
+      const userId = (req.user as any).id;
       const [newDeviceType] = await db.insert(userDeviceTypes).values({
         name,
-        shop_id: null, // Globaler Gerätetyp (für alle Shops verfügbar)
+        userId,
+        shopId: null, // Globaler Gerätetyp (für alle Shops verfügbar)
       }).returning();
       
       res.status(201).json(newDeviceType);
