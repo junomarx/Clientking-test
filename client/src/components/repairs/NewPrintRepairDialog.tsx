@@ -185,15 +185,44 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Direktes Drucken aktivieren und PDF im Browser öffnen
-      pdf.autoPrint();
+      // Direktes Drucken wird über window.print() in einem neuen Fenster realisiert
       
-      // Dialog schließen nach erfolgreicher PDF-Erstellung
-      onClose();
-      
-      // PDF im Browser öffnen - der Druckdialog wird automatisch geöffnet
+      // Wir verwenden window.print() anstelle von pdf.autoPrint()
+      // PDF im Browser öffnen
       const pdfOutput = pdf.output('dataurlstring');
-      const printWindow = window.open(pdfOutput, '_blank');
+      
+      // Neues Fenster öffnen und PDF anzeigen
+      const printWindow = window.open("", "_blank");
+      
+      if (printWindow) {
+        // Inhalt des Fensters mit PDF füllen
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Druckvorschau - Reparaturauftrag ${repair?.orderCode || `#${repair?.id}`}</title>
+              <style>
+                body, html { margin: 0; padding: 0; }
+                iframe { width: 100%; height: 100vh; border: none; }
+              </style>
+              <script>
+                // Druckdialog automatisch öffnen, sobald PDF geladen ist
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                  }, 500); // Kurze Verzögerung, damit das PDF vollständig geladen wird
+                };
+              </script>
+            </head>
+            <body>
+              <iframe src="${pdfOutput}" width="100%" height="100%"></iframe>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+        
+        // Dialog schließen nach erfolgreicher PDF-Erstellung
+        onClose();
+      }
       
       if (printWindow) {
         toast({
