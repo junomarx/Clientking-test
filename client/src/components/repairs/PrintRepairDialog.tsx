@@ -198,8 +198,12 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       // PDF im Browser öffnen
       const pdfOutput = pdf.output('dataurlstring');
       
+      // Verwenden eines Blob-URLs für das PDF, um Content-Type korrekt zu setzen
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      
       // PDF direkt in einem neuen Tab öffnen
-      const printWindow = window.open(pdfOutput, "_blank");
+      const printWindow = window.open(blobUrl, "_blank");
       
       if (printWindow) {
         // Warte kurz und öffne dann den Druckdialog
