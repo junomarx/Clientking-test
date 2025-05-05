@@ -40,19 +40,11 @@ interface Brand {
   deviceTypeName?: string;
 }
 
-interface UserDeviceType {
-  id: number;
-  name: string;
-  userId: number;
-  shopId: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface Model {
   id: number;
   name: string;
   brandId: number;
+  modelSeriesId?: number;
   userId: number;
   shopId: number;
   createdAt: string;
@@ -60,6 +52,15 @@ interface Model {
   // Virtuelle Eigenschaften für Anzeigezwecke
   brandName?: string;
   deviceTypeName?: string;
+}
+
+interface UserDeviceType {
+  id: number;
+  name: string;
+  userId: number;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function SuperadminDevicesTab() {

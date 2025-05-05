@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Check, Laptop, Smartphone, Tablet, Upload, Watch } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import React, { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "../../lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { UploadCloud, AlertCircle, Trash2, Check } from "lucide-react";
 
-interface Brand {
+interface ModelleBulkImportProps {
+  deviceTypes: string[];
+}
+
+interface UserBrand {
   id: number;
   name: string;
   deviceTypeId: number;
@@ -18,10 +24,9 @@ interface Brand {
   shopId: number;
   createdAt: string;
   updatedAt: string;
-  deviceTypeName?: string;
 }
 
-interface DeviceType {
+interface UserDeviceType {
   id: number;
   name: string;
   userId: number;
@@ -30,68 +35,110 @@ interface DeviceType {
   updatedAt: string;
 }
 
-interface ModelleBulkImportProps {
-  deviceTypes: string[] | undefined;
-}
-
 export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProps) {
-  const { toast } = useToast();
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
+  const [selectedDeviceType, setSelectedDeviceType] = useState<string>("");
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [models, setModels] = useState<string>('');
-  const [isImporting, setIsImporting] = useState(false);
-  const [importSuccess, setImportSuccess] = useState(false);
-  const [importStats, setImportStats] = useState<{ imported: number; existing: number }>({ imported: 0, existing: 0 });
+  const [modelsList, setModelsList] = useState<string>("");
+  const [importStatus, setImportStatus] = useState<{
+    loading: boolean;
+    success: boolean;
+    error: string | null;
+    importedCount: number;
+    existingCount: number;
+    totalCount: number;
+  }>({
+    loading: false,
+    success: false,
+    error: null,
+    importedCount: 0,
+    existingCount: 0,
+    totalCount: 0,
+  });
 
-  // Alle Gerätetypen mit vollständigen Objekten abrufen
-  const { data: allDeviceTypes } = useQuery<DeviceType[]>({
+  const { toast } = useToast();
+
+  // Gerätetypen direkt für Dropdown abrufen
+  const { data: userDeviceTypes } = useQuery<UserDeviceType[]>({
     queryKey: ["/api/superadmin/device-types/all"],
     enabled: true,
   });
 
   // Alle Marken abrufen
-  const { data: brandsData } = useQuery<Brand[]>({
+  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<UserBrand[]>({
     queryKey: ["/api/superadmin/brands"],
     enabled: true,
   });
 
-  // Gefilterte Marken basierend auf ausgewählten Gerätetyp
-  const filteredBrands = brandsData?.filter(brand => {
-    if (!selectedDeviceType || !allDeviceTypes) return false;
+  // Gefiltertes Array von Marken basierend auf dem ausgewählten Gerätetyp
+  const filteredBrands = brandsData ? brandsData.filter(brand => {
+    if (!selectedDeviceType) return true;
     
-    const deviceType = allDeviceTypes.find(dt => dt.name === selectedDeviceType);
+    // Finde die ID des ausgewählten Gerätetyps
+    const deviceType = userDeviceTypes?.find(dt => dt.name === selectedDeviceType);
     if (!deviceType) return false;
     
     return brand.deviceTypeId === deviceType.id;
-  }) || [];
+  }) : [];
 
-  // Mutation für den Massenimport von Modellen
-  const bulkImportModelsMutation = useMutation({
+  // Markenname basierend auf der ID finden
+  const getSelectedBrandName = () => {
+    if (!selectedBrandId || !brandsData) return "";
+    const brand = brandsData.find(b => b.id === selectedBrandId);
+    return brand ? brand.name : "";
+  };
+
+  // Name des ausgewählten Gerätetyps als ID für die Markensuche verwenden
+  const handleDeviceTypeChange = (value: string) => {
+    setSelectedDeviceType(value);
+    setSelectedBrandId(null); // Brand zurücksetzen bei Änderung des Gerätetyps
+  };
+
+  // Mutation zum Importieren der Modelle
+  const importModelsMutation = useMutation({
     mutationFn: async (data: { brandId: number; models: string[] }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-models/bulk', data);
+      const response = await apiRequest("POST", "/api/superadmin/device-models/bulk", data);
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Massenimport von Modellen');
+        throw new Error(errorData.message || "Fehler beim Importieren der Modelle");
       }
       return response.json();
     },
+    onMutate: () => {
+      setImportStatus(prev => ({ ...prev, loading: true, error: null }));
+    },
     onSuccess: (data) => {
-      setImportStats({
-        imported: data.importedCount,
-        existing: data.existingCount
-      });
-      setImportSuccess(true);
-      setIsImporting(false);
-      setModels('');
-      
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      setImportStatus({
+        loading: false,
+        success: true,
+        error: null,
+        importedCount: data.importedCount || 0,
+        existingCount: data.existingCount || 0,
+        totalCount: data.totalCount || 0,
+      });
+      
+      // Erfolgsmeldung anzeigen
       toast({
         title: "Import erfolgreich",
         description: `${data.importedCount} neue Modelle wurden importiert. ${data.existingCount} existierten bereits.`,
       });
+      
+      // Formularfelder zurücksetzen
+      setTimeout(() => {
+        setImportStatus(prev => ({ ...prev, success: false }));
+      }, 3000);
     },
     onError: (error: Error) => {
-      setIsImporting(false);
+      console.error("Fehler beim Importieren:", error);
+      setImportStatus({
+        loading: false,
+        success: false,
+        error: error.message,
+        importedCount: 0,
+        existingCount: 0,
+        totalCount: 0,
+      });
+      
       toast({
         title: "Fehler beim Import",
         description: error.message,
@@ -100,7 +147,6 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
     },
   });
 
-  // Submit-Handler für den Massenimport von Modellen
   const handleImport = () => {
     if (!selectedBrandId) {
       toast({
@@ -111,7 +157,7 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
       return;
     }
 
-    if (!models.trim()) {
+    if (!modelsList.trim()) {
       toast({
         title: "Fehler",
         description: "Bitte geben Sie mindestens ein Modell ein.",
@@ -120,78 +166,63 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
       return;
     }
 
-    setIsImporting(true);
-    setImportSuccess(false);
-
-    // Bereinigung der Eingabe: Leere Zeilen entfernen und trimmen
-    const modelList = models
-      .split('\n')
+    // Liste der Modelle als Array verarbeiten (zeilenweise aufteilen)
+    const models = modelsList
+      .split("\n")
       .map(model => model.trim())
       .filter(model => model.length > 0);
 
-    bulkImportModelsMutation.mutate({
-      brandId: selectedBrandId,
-      models: modelList
-    });
-  };
-
-  // Zurücksetzen des Formulars
-  const resetForm = () => {
-    setSelectedDeviceType(null);
-    setSelectedBrandId(null);
-    setModels('');
-    setImportSuccess(false);
-  };
-
-  // Gerätetyp-Icon basierend auf dem Namen
-  const getDeviceTypeIcon = (type: string) => {
-    const iconProps = { className: "h-5 w-5" };
-    const normalizedType = type.toLowerCase();
-    
-    if (normalizedType.includes("smartphone") || normalizedType.includes("handy") || normalizedType.includes("phone")) {
-      return <Smartphone {...iconProps} />;
-    } else if (normalizedType.includes("tablet") || normalizedType.includes("pad")) {
-      return <Tablet {...iconProps} />;
-    } else if (normalizedType.includes("laptop") || normalizedType.includes("computer") || normalizedType.includes("pc")) {
-      return <Laptop {...iconProps} />;
-    } else if (normalizedType.includes("watch") || normalizedType.includes("uhr")) {
-      return <Watch {...iconProps} />;
-    } else {
-      return <Smartphone {...iconProps} />; // Default-Icon
+    if (models.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie mindestens ein gültiges Modell ein.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    // Massenimport durchführen
+    importModelsMutation.mutate({ brandId: selectedBrandId, models });
+  };
+
+  const handleClearForm = () => {
+    setSelectedDeviceType("");
+    setSelectedBrandId(null);
+    setModelsList("");
+    setImportStatus({
+      loading: false,
+      success: false,
+      error: null,
+      importedCount: 0,
+      existingCount: 0,
+      totalCount: 0,
+    });
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Modelle Massenimport</CardTitle>
+        <CardTitle>Modell Massenimport</CardTitle>
         <CardDescription>
-          Importieren Sie mehrere Modelle für eine Marke auf einmal.
+          Importieren Sie mehrere Modelle für eine bestimmte Marke auf einmal
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="deviceType">Gerätetyp</Label>
+              <Label htmlFor="deviceType">Gerätetyp auswählen</Label>
               <Select
-                value={selectedDeviceType || "all"}
-                onValueChange={(value) => {
-                  setSelectedDeviceType(value === "all" ? null : value);
-                  setSelectedBrandId(null); // Marke zurücksetzen bei Änderung des Gerätetyps
-                }}
+                value={selectedDeviceType}
+                onValueChange={handleDeviceTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Gerätetyp auswählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Gerätetyp auswählen</SelectItem>
-                  {deviceTypes?.map((type) => (
+                  {deviceTypes.map((type) => (
                     <SelectItem key={type} value={type}>
-                      <div className="flex items-center gap-2">
-                        {getDeviceTypeIcon(type)}
-                        <span>{type}</span>
-                      </div>
+                      {type}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -199,26 +230,26 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
             </div>
 
             <div>
-              <Label htmlFor="brand">Marke</Label>
+              <Label htmlFor="brand">Marke auswählen</Label>
               <Select
                 value={selectedBrandId?.toString() || ""}
                 onValueChange={(value) => setSelectedBrandId(parseInt(value))}
-                disabled={!selectedDeviceType || filteredBrands.length === 0}
+                disabled={!selectedDeviceType || isLoadingBrands}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Marke auswählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredBrands.length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      Keine Marken verfügbar
-                    </SelectItem>
-                  ) : (
+                  {filteredBrands.length > 0 ? (
                     filteredBrands.map((brand) => (
                       <SelectItem key={brand.id} value={brand.id.toString()}>
                         {brand.name}
                       </SelectItem>
                     ))
+                  ) : (
+                    <SelectItem value="no-brands" disabled>
+                      Keine Marken für diesen Gerätetyp
+                    </SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -226,50 +257,65 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
           </div>
 
           <div>
-            <Label htmlFor="models">Modelle (ein Modell pro Zeile)</Label>
+            <Label htmlFor="modelsList">
+              Modelle (ein Modell pro Zeile)
+              {selectedDeviceType && selectedBrandId && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  für {getSelectedBrandName()} ({selectedDeviceType})
+                </span>
+              )}
+            </Label>
             <Textarea
-              id="models"
-              value={models}
-              onChange={(e) => setModels(e.target.value)}
-              placeholder="iPhone 14\niPhone 14 Pro\niPhone 13\niPhone SE"
-              className="min-h-[150px]"
+              id="modelsList"
+              placeholder="iPhone 16\niPhone 16 Plus\niPhone 16 Pro\niPhone 16 Pro Max\niPhone 16e"
+              className="h-40 font-mono"
+              value={modelsList}
+              onChange={(e) => setModelsList(e.target.value)}
               disabled={!selectedBrandId}
             />
           </div>
 
-          {importSuccess && (
-            <Alert className="bg-green-50 border-green-200">
-              <Check className="h-4 w-4 text-green-600" />
-              <AlertTitle>Import erfolgreich!</AlertTitle>
+          {importStatus.error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{importStatus.error}</AlertDescription>
+            </Alert>
+          )}
+
+          {importStatus.success && (
+            <Alert variant="default" className="bg-green-50 text-green-800 border-green-200">
+              <Check className="h-4 w-4" />
               <AlertDescription>
-                Es wurden {importStats.imported} neue Modelle importiert. {importStats.existing} Modelle existierten bereits.
+                Import erfolgreich
+                <div>
+                  {importStatus.importedCount} neue Modelle wurden importiert.
+                  {importStatus.existingCount > 0 && ` ${importStatus.existingCount} existierten bereits.`}
+                </div>
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="flex space-x-2">
-            <Button
-              onClick={handleImport}
-              disabled={isImporting || !selectedBrandId || !models.trim()}
-              className="flex items-center space-x-2"
-            >
-              <Upload className="h-4 w-4" />
-              <span>{isImporting ? "Importiere..." : "Modelle importieren"}</span>
-            </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
-              onClick={resetForm}
-              disabled={isImporting}
+              onClick={handleClearForm}
+              disabled={importStatus.loading}
+              className="flex items-center"
             >
-              Zurücksetzen
+              <Trash2 className="mr-2 h-4 w-4" /> Formular zurücksetzen
             </Button>
-          </div>
-          
-          <div className="text-sm text-gray-500 mt-2">
-            <p className="flex items-center">
-              <AlertCircle className="h-4 w-4 mr-1" />
-              Hinweis: Modelle werden nur importiert, wenn sie noch nicht existieren.
-            </p>
+            <Button
+              onClick={handleImport}
+              disabled={
+                importStatus.loading ||
+                !selectedBrandId ||
+                !modelsList.trim()
+              }
+              className="flex items-center"
+            >
+              <UploadCloud className="mr-2 h-4 w-4" />
+              {importStatus.loading ? "Importiere..." : "Modelle importieren"}
+            </Button>
           </div>
         </div>
       </CardContent>

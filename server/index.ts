@@ -61,6 +61,7 @@ app.use((req, res, next) => {
     await addSuperadminColumn(); // Migration für Superadmin-Rolle
     await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
     await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
+    await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
     
     const server = await registerRoutes(app);
 

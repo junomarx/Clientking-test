@@ -636,15 +636,21 @@ export function registerSuperadminRoutes(app: Express) {
             console.log(`Füge neues Modell '${modelName}' für Marke ID ${brandId} hinzu...`);
             // Nur einfügen, wenn noch nicht vorhanden
             const superadminUserId = (req.user as any).id;
-            await db.insert(userModels)
-              .values({
-                name: modelName,
-                brandId: brandId,
-                userId: superadminUserId,
-                shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
-                createdAt: new Date(),
-                updatedAt: new Date()
-              });
+            try {
+              await db.insert(userModels)
+                .values({
+                  name: modelName,
+                  brandId: brandId,
+                  userId: superadminUserId,
+                  shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+              console.log(`Modell '${modelName}' erfolgreich hinzugefügt`);
+            } catch (insertError) {
+              console.error(`Fehler beim Einfügen des Modells '${modelName}':`, insertError);
+              throw insertError;
+            }
             importedCount++;
           } else {
             existingCount++;
