@@ -42,8 +42,11 @@ const defaultPrintTemplates = [
       font-family: 'Courier New', monospace;
       font-size: 9pt;
       margin: 0;
-      padding: 0;
+      padding: 3mm;
       width: 58mm;
+      /* 10mm zusätzliche Länge durch Padding oben und unten */
+      padding-top: 5mm;
+      padding-bottom: 8mm;
     }
     .center { text-align: center; }
     .header { margin-bottom: 10px; }
@@ -125,8 +128,11 @@ Abholung des oben genannten Geräts.</p>
       font-family: 'Courier New', monospace;
       font-size: 10pt;
       margin: 0;
-      padding: 0;
+      padding: 3mm;
       width: 80mm;
+      /* 10mm zusätzliche Länge durch Padding oben und unten */
+      padding-top: 5mm;
+      padding-bottom: 8mm;
     }
     .center { text-align: center; }
     .header { margin-bottom: 10px; }
