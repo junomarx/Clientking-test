@@ -478,13 +478,17 @@ async function createDefaultPrintTemplates(): Promise<boolean> {
       console.log('Template-Variablen:', template.variables);
       console.log('JSON String:', JSON.stringify(template.variables));
       
-      // Sichere Methode zum Einfügen mit Arrays
-      await db.execute(sql`
-        INSERT INTO print_templates
-          (name, type, content, variables, user_id, shop_id, created_at, updated_at)
-        VALUES
-          (${template.name}, ${template.type}, ${template.content}, array[${template.variables.map(v => sql`${v}`)}], NULL, 0, NOW(), NOW())
-      `);
+      // Verwende eine parametrisierte Abfrage mit manueller Array-Umwandlung
+      const variablesJsonArray = JSON.stringify(template.variables);
+      
+      // Bereite die Abfrage direkt vor und führe sie manuell aus
+      await db.execute(
+        `INSERT INTO print_templates 
+          (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
+        VALUES 
+          ($1, $2, $3, $4::text[], NULL, 0, NOW(), NOW())`, 
+        [template.name, template.type, template.content, template.variables]
+      );
     }
     
     return true;
@@ -567,11 +571,12 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
       // Debug-Ausgabe
       console.log('Neue Vorlage Variables:', newTemplate.variables);
       
-      const result = await db.execute(sql`
-        INSERT INTO print_templates
-          (name, type, content, variables, user_id, shop_id, created_at, updated_at)
-        VALUES
-          (${newTemplate.name}, ${newTemplate.type}, ${newTemplate.content}, array[${newTemplate.variables.map(v => sql`${v}`)}], NULL, 0, NOW(), NOW())
+      // Verwende eine parametrisierte Abfrage mit manueller Array-Umwandlung
+      const result = await db.execute(
+        `INSERT INTO print_templates 
+          (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
+        VALUES 
+          ($1, $2, $3, $4::text[], NULL, 0, NOW(), NOW())
         RETURNING 
           id, 
           name, 
@@ -581,8 +586,9 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           user_id as "userId", 
           shop_id as "shopId",
           created_at as "createdAt", 
-          updated_at as "updatedAt"
-      `);
+          updated_at as "updatedAt"`, 
+        [newTemplate.name, newTemplate.type, newTemplate.content, newTemplate.variables]
+      );
       
       const createdTemplate = result.rows[0];
       res.status(201).json(createdTemplate);
@@ -604,16 +610,16 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      const result = await db.execute(sql`
-        UPDATE print_templates
+      const result = await db.execute(
+        `UPDATE print_templates
         SET 
-          name = ${name}, 
-          type = ${type}, 
-          content = ${content}, 
-          variables = array[${variables.map(v => sql`${v}`)}], 
+          name = $1, 
+          type = $2, 
+          content = $3, 
+          variables = $4::text[], 
           updated_at = NOW()
         WHERE 
-          id = ${id}
+          id = $5
         RETURNING 
           id, 
           name, 
@@ -623,8 +629,9 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           user_id as "userId", 
           shop_id as "shopId",
           created_at as "createdAt", 
-          updated_at as "updatedAt"
-      `);
+          updated_at as "updatedAt"`,
+        [name, type, content, variables, id]
+      );
       
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Druckvorlage nicht gefunden" });
