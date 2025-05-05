@@ -74,7 +74,31 @@ export default function SuperadminEmailTab() {
   }, [smtpConfig]);
   
   // E-Mail-Vorlagen abrufen
-  const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError } = useQuery<EmailTemplate[]>({
+  // Standard-App-Vorlagen erstellen
+  const createDefaultTemplatesMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/superadmin/email/create-default-templates");
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Standard-Vorlagen erstellt",
+        description: "Die App-Standard-E-Mail-Vorlagen wurden erfolgreich erstellt.",
+        variant: "default",
+      });
+      // Vorlagenliste aktualisieren
+      refetchTemplates();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Erstellen der Standard-Vorlagen",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError, refetch: refetchTemplates } = useQuery<EmailTemplate[]>({
     queryKey: ['/api/superadmin/email/templates']
   });
   

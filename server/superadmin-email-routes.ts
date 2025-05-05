@@ -8,6 +8,149 @@ import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
 
 /**
+ * Standard E-Mail-Vorlagen für die App
+ */
+const defaultAppEmailTemplates = [
+  {
+    name: "Registrierungsbestätigung",
+    subject: "Ihre Registrierung bei Handyshop Verwaltung",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #4f46e5;">Vielen Dank für Ihre Registrierung!</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{benutzername}},</p>
+        
+        <p>vielen Dank für Ihre Registrierung bei der Handyshop Verwaltung.</p>
+        
+        <p>Ihre Registrierung wird aktuell von unserem Team überprüft. 
+        Sobald die Überprüfung abgeschlossen ist, erhalten Sie eine Benachrichtigung per E-Mail.</p>
+        
+        <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+        
+        <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+        </div>
+      </div>
+    `,
+    variables: ["benutzername"]
+  },
+  {
+    name: "Konto freigeschaltet",
+    subject: "Ihr Konto wurde freigeschaltet",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #4f46e5;">Ihr Konto wurde freigeschaltet!</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{benutzername}},</p>
+        
+        <p>wir freuen uns, Ihnen mitteilen zu können, dass Ihr Konto bei der Handyshop Verwaltung nun freigeschaltet wurde.</p>
+        
+        <p>Sie können sich ab sofort über folgenden Link anmelden:</p>
+        
+        <p style="text-align: center;">
+          <a href="{{loginLink}}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Jetzt anmelden
+          </a>
+        </p>
+        
+        <p>Wir wünschen Ihnen viel Erfolg mit der Handyshop Verwaltung!</p>
+        
+        <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+        </div>
+      </div>
+    `,
+    variables: ["benutzername", "loginLink"]
+  },
+  {
+    name: "Passwort zurücksetzen",
+    subject: "Anleitung zum Zurücksetzen Ihres Passworts",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #4f46e5;">Passwort zurücksetzen</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{benutzername}},</p>
+        
+        <p>wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto erhalten. 
+        Um Ihr Passwort zurückzusetzen, klicken Sie bitte auf den folgenden Link:</p>
+        
+        <p style="text-align: center;">
+          <a href="{{resetLink}}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Passwort zurücksetzen
+          </a>
+        </p>
+        
+        <p>Der Link ist 24 Stunden gültig. Falls Sie keine Anfrage zum Zurücksetzen Ihres Passworts gestellt haben, können Sie diese E-Mail ignorieren.</p>
+        
+        <p>Mit freundlichen Grüßen,<br>Ihr Handyshop Verwaltungs-Team</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht darauf.</p>
+        </div>
+      </div>
+    `,
+    variables: ["benutzername", "resetLink"]
+  }
+];
+
+/**
+ * Erstellt die Standard-App-E-Mail-Vorlagen
+ */
+async function createDefaultAppEmailTemplates(): Promise<boolean> {
+  try {
+    // Prüfen, welche Vorlagen bereits existieren, um Duplikate zu vermeiden
+    const existingTemplates = await db.select({ name: emailTemplates.name })
+      .from(emailTemplates)
+      .where(isNull(emailTemplates.userId));
+    
+    const existingTemplateNames = existingTemplates.map(t => t.name);
+    
+    // Nur Vorlagen hinzufügen, die noch nicht existieren
+    const templatesToAdd = defaultAppEmailTemplates.filter(
+      template => !existingTemplateNames.includes(template.name)
+    );
+    
+    if (templatesToAdd.length === 0) {
+      console.log('Alle Standard-App-E-Mail-Vorlagen existieren bereits');
+      return true;
+    }
+    
+    const now = new Date();
+    
+    // Vorlagen als globale Vorlagen (userId = null) hinzufügen
+    for (const template of templatesToAdd) {
+      await db.insert(emailTemplates).values({
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+        variables: template.variables,
+        userId: null,
+        shopId: 0, // Global für alle Shops
+        createdAt: now,
+        updatedAt: now
+      });
+      
+      console.log(`Standard-E-Mail-Vorlage '${template.name}' wurde erstellt`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen:', error);
+    return false;
+  }
+}
+
+/**
  * SMTP-Konfiguration
  */
 interface SMTPConfig {
@@ -38,6 +181,32 @@ async function updateEnvironmentVariable(key: string, value: string): Promise<bo
  * Registriert alle Routen für die E-Mail-Verwaltung im Superadmin-Bereich
  */
 export function registerSuperadminEmailRoutes(app: Express) {
+  /**
+   * Standard-App-E-Mail-Vorlagen erstellen
+   */
+  app.post("/api/superadmin/email/create-default-templates", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const success = await createDefaultAppEmailTemplates();
+      
+      if (success) {
+        res.status(200).json({ 
+          success: true, 
+          message: "Standard-App-E-Mail-Vorlagen wurden erfolgreich erstellt" 
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen" 
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ 
+        success: false, 
+        message: `Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen: ${error.message}` 
+      });
+    }
+  });
+  
   /**
    * SMTP-Konfiguration abrufen
    */
