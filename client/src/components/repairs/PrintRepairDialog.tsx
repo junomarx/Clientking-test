@@ -19,6 +19,25 @@ import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { BonReceipt58mm } from './BonReceipt58mm';
 import { BonReceipt80mm } from './BonReceipt80mm';
 
+/**
+ * Ersetzt Platzhalter im Template durch die entsprechenden Werte
+ * Platzhalter haben das Format {{variableName}}
+ */
+function applyTemplateVariables(templateHtml: string, variables: Record<string, string>): string {
+  // Falls kein Template vorhanden, leeren String zurückgeben
+  if (!templateHtml) return '';
+  
+  let result = templateHtml;
+  
+  // Alle Platzhalter im Format {{variableName}} durch die entsprechenden Werte ersetzen
+  Object.entries(variables).forEach(([key, value]) => {
+    const placeholder = new RegExp(`\{\{${key}\}\}`, 'g');
+    result = result.replace(placeholder, value || '');
+  });
+  
+  return result;
+}
+
 interface PrintRepairDialogProps {
   open: boolean;
   onClose: () => void;
@@ -248,48 +267,79 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
           <>
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
               <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
-                {settings?.receiptWidth === '58mm' ? (
-                  <BonReceipt58mm 
-                    firmenlogo={businessSettings?.logoImage || undefined}
-                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                    firmenadresse={businessSettings?.streetAddress || ""}
-                    firmenplz={businessSettings?.zipCode || ""}
-                    firmenort={businessSettings?.city || ""}
-                    firmentelefon={businessSettings?.phone || ""}
-                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
-                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
-                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                    kundentelefon={customer?.phone || undefined}
-                    kundenemail={customer?.email || undefined}
-                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                    modell={repair?.model || undefined}
-                    problem={repair?.issue ? repair.issue : ''}
-                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                    signatur_dropoff={repair?.dropoffSignature || undefined}
-                    signatur_pickup={repair?.pickupSignature || undefined}
-                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                {/* Wenn eine Vorlage geladen wurde, diese verwenden */}
+                {templateContent ? (
+                  <div 
+                    dangerouslySetInnerHTML={{
+                      __html: applyTemplateVariables(templateContent, {
+                        businessName: businessSettings?.businessName || "Handyshop Verwaltung",
+                        businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
+                        businessPhone: businessSettings?.phone || "",
+                        repairId: repair?.orderCode || `#${repair?.id}`,
+                        currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+                        customerPhone: customer?.phone || "",
+                        customerEmail: customer?.email || "",
+                        deviceType: repair?.deviceType || "",
+                        deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+                        deviceModel: repair?.model || "",
+                        deviceIssue: repair?.issue ? repair.issue : '',
+                        preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        dropoffSignature: repair?.dropoffSignature || "",
+                        pickupSignature: repair?.pickupSignature || "",
+                        pickupDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        logoUrl: businessSettings?.logoImage || "",
+                        businessSlogan: businessSettings?.companySlogan || "",
+                        vatNumber: businessSettings?.vatNumber || "",
+                        websiteUrl: businessSettings?.website || ""
+                      })
+                    }}
                   />
                 ) : (
-                  <BonReceipt80mm 
-                    firmenlogo={businessSettings?.logoImage || undefined}
-                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                    firmenadresse={businessSettings?.streetAddress || ""}
-                    firmenplz={businessSettings?.zipCode || ""}
-                    firmenort={businessSettings?.city || ""}
-                    firmentelefon={businessSettings?.phone || ""}
-                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
-                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
-                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                    kundentelefon={customer?.phone || undefined}
-                    kundenemail={customer?.email || undefined}
-                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                    modell={repair?.model || undefined}
-                    problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
-                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                    signatur_dropoff={repair?.dropoffSignature || undefined}
-                    signatur_pickup={repair?.pickupSignature || undefined}
-                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
-                  />
+                  // Fallback auf die fest codierten Komponenten
+                  settings?.receiptWidth === '58mm' ? (
+                    <BonReceipt58mm 
+                      firmenlogo={businessSettings?.logoImage || undefined}
+                      firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                      firmenadresse={businessSettings?.streetAddress || ""}
+                      firmenplz={businessSettings?.zipCode || ""}
+                      firmenort={businessSettings?.city || ""}
+                      firmentelefon={businessSettings?.phone || ""}
+                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                      kundentelefon={customer?.phone || undefined}
+                      kundenemail={customer?.email || undefined}
+                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                      modell={repair?.model || undefined}
+                      problem={repair?.issue ? repair.issue : ''}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                      signatur_dropoff={repair?.dropoffSignature || undefined}
+                      signatur_pickup={repair?.pickupSignature || undefined}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                    />
+                  ) : (
+                    <BonReceipt80mm 
+                      firmenlogo={businessSettings?.logoImage || undefined}
+                      firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                      firmenadresse={businessSettings?.streetAddress || ""}
+                      firmenplz={businessSettings?.zipCode || ""}
+                      firmenort={businessSettings?.city || ""}
+                      firmentelefon={businessSettings?.phone || ""}
+                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                      kundentelefon={customer?.phone || undefined}
+                      kundenemail={customer?.email || undefined}
+                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                      modell={repair?.model || undefined}
+                      problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                      signatur_dropoff={repair?.dropoffSignature || undefined}
+                      signatur_pickup={repair?.pickupSignature || undefined}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                    />
+                  )
                 )}
               </div>
             </div>
