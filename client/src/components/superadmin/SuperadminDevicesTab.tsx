@@ -243,6 +243,8 @@ export default function SuperadminDevicesTab() {
   const [modelSearchTerm, setModelSearchTerm] = useState("");
   const [selectedModelDeviceType, setSelectedModelDeviceType] = useState<string | null>(null);
   const [selectedModelBrandId, setSelectedModelBrandId] = useState<number | null>(null);
+  const [selectedModelIds, setSelectedModelIds] = useState<number[]>([]);
+  const [selectAllModels, setSelectAllModels] = useState(false);
   
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
@@ -427,6 +429,38 @@ export default function SuperadminDevicesTab() {
         title: "Erfolg",
         description: "Modell wurde erfolgreich gelöscht.",
       });
+      // Auswahl zurücksetzen
+      setSelectedModelIds([]);
+      setSelectAllModels(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Löschen mehrerer Modelle
+  const deleteBulkModelsMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const response = await apiRequest('POST', '/api/superadmin/models/bulk-delete', { ids });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Modelle');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      toast({
+        title: "Erfolg",
+        description: `${data.deletedCount} Modelle wurden erfolgreich gelöscht.`,
+      });
+      // Auswahl zurücksetzen
+      setSelectedModelIds([]);
+      setSelectAllModels(false);
     },
     onError: (error: Error) => {
       toast({
@@ -441,6 +475,70 @@ export default function SuperadminDevicesTab() {
   const handleDeleteModel = (id: number) => {
     if (confirm('Sind Sie sicher, dass Sie dieses Modell löschen möchten?')) {
       deleteModelMutation.mutate(id);
+    }
+  };
+  
+  // Handler für Mehrfachauswahl von Modellen
+  const handleToggleModelSelection = (id: number) => {
+    setSelectedModelIds(prev => {
+      if (prev.includes(id)) {
+        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
+        return prev.filter(modelId => modelId !== id);
+      } else {
+        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
+        return [...prev, id];
+      }
+    });
+  };
+  
+  // Handler für "Alle auswählen"-Checkbox
+  const handleToggleSelectAll = () => {
+    if (selectAllModels) {
+      // Wenn alle ausgewählt sind, Auswahl aufheben
+      setSelectedModelIds([]);
+      setSelectAllModels(false);
+    } else {
+      // Sonst alle auswählen (gefilterte Modelle)
+      const filteredModelIds = modelsData
+        ?.filter(model => {
+          // Filterung nach Modellnamen
+          const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
+          
+          // Filterung nach Gerätetyp, falls ausgewählt
+          let typeMatches = true;
+          if (selectedModelDeviceType) {
+            const brand = brandsData?.find(b => b.id === model.brandId);
+            const deviceType = userDeviceTypes?.find(t => t.id === brand?.deviceTypeId);
+            typeMatches = deviceType?.name === selectedModelDeviceType;
+          }
+          
+          // Filterung nach Marke, falls ausgewählt
+          let brandMatches = true;
+          if (selectedModelBrandId !== null) {
+            brandMatches = model.brandId === selectedModelBrandId;
+          }
+          
+          return nameMatches && typeMatches && brandMatches;
+        })
+        .map(model => model.id) || [];
+      
+      setSelectedModelIds(filteredModelIds);
+      setSelectAllModels(true);
+    }
+  };
+  
+  // Handler für das Löschen ausgewählter Modelle
+  const handleDeleteSelectedModels = () => {
+    if (selectedModelIds.length === 0) {
+      toast({
+        title: "Hinweis",
+        description: "Bitte wählen Sie mindestens ein Modell aus."
+      });
+      return;
+    }
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedModelIds.length} ausgewählte Modelle löschen möchten?`)) {
+      deleteBulkModelsMutation.mutate(selectedModelIds);
     }
   };
   
@@ -743,6 +841,18 @@ export default function SuperadminDevicesTab() {
                       onChange={(e) => setModelSearchTerm(e.target.value)}
                     />
                   </div>
+                  
+                  {selectedModelIds.length > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleDeleteSelectedModels}
+                      className="flex items-center space-x-1"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span>{selectedModelIds.length} Modell{selectedModelIds.length > 1 ? 'e' : ''} löschen</span>
+                    </Button>
+                  )}
                   
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="modelDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
