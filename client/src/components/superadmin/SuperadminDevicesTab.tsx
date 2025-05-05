@@ -537,7 +537,7 @@ export default function SuperadminDevicesTab() {
   };
   
   // Handler für das Löschen ausgewählter Modelle
-  const handleDeleteSelectedModels = () => {
+  const handleDeleteSelectedModels = async () => {
     if (selectedModelIds.length === 0) {
       toast({
         title: "Hinweis",
@@ -547,7 +547,47 @@ export default function SuperadminDevicesTab() {
     }
     
     if (confirm(`Sind Sie sicher, dass Sie ${selectedModelIds.length} ausgewählte Modelle löschen möchten?`)) {
-      deleteBulkModelsMutation.mutate(selectedModelIds);
+      // Statt des Bulk-Endpoints verwenden wir einzelne Löschvorgänge
+      let successCount = 0;
+      
+      try {
+        // Toast anzeigen, dass der Löschvorgang läuft
+        toast({
+          title: "Löschvorgang läuft",
+          description: `${selectedModelIds.length} Modelle werden gelöscht...`
+        });
+        
+        // Modelle nacheinander löschen
+        for (const id of selectedModelIds) {
+          try {
+            const response = await apiRequest('DELETE', `/api/superadmin/models/${id}`);
+            if (response.ok) {
+              successCount++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Löschen des Modells ${id}:`, error);
+          }
+        }
+        
+        // Daten aktualisieren
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+        
+        // Erfolgs-Toast anzeigen
+        toast({
+          title: "Erfolg",
+          description: `${successCount} von ${selectedModelIds.length} Modellen wurden erfolgreich gelöscht.`
+        });
+        
+        // Auswahl zurücksetzen
+        setSelectedModelIds([]);
+        setSelectAllModels(false);
+      } catch (error) {
+        toast({
+          title: "Fehler",
+          description: 'Beim Löschen ist ein Fehler aufgetreten.',
+          variant: "destructive"
+        });
+      }
     }
   };
   
