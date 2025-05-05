@@ -477,7 +477,7 @@ async function createDefaultPrintTemplates(): Promise<boolean> {
       console.log('Template-Variablen:', template.variables);
       console.log('JSON String:', JSON.stringify(template.variables));
       
-      // Verwende ein direktes Insert mit dem Pool
+      // Verwende ein direktes Insert mit dem Pool und nativer Array-Unterstützung
       await pool.query(
         'INSERT INTO print_templates (name, type, content, variables, user_id, shop_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NULL, 0, NOW(), NOW())',
         [template.name, template.type, template.content, template.variables]
@@ -565,13 +565,12 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
       // Debug-Ausgabe
       console.log('Neue Vorlage Variables:', newTemplate.variables);
       
-      // Verwende direkte Pool-Abfrage mit Parametern und manueller Array-Konvertierung
-      const variablesString = JSON.stringify(newTemplate.variables);
+      // Verwende direkte Pool-Abfrage mit Parametern und korrekter Array-Syntax für PostgreSQL
       const result = await pool.query(
         `INSERT INTO print_templates 
           (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
         VALUES 
-          ($1, $2, $3, $4::text[], NULL, 0, NOW(), NOW())
+          ($1, $2, $3, $4, NULL, 0, NOW(), NOW())
         RETURNING 
           id, 
           name, 
@@ -583,7 +582,7 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           created_at as "createdAt", 
           updated_at as "updatedAt"
         `, 
-        [newTemplate.name, newTemplate.type, newTemplate.content, variablesString]
+        [newTemplate.name, newTemplate.type, newTemplate.content, newTemplate.variables]
       );
       
       const createdTemplate = result.rows[0];
@@ -606,7 +605,7 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      // Verwende direkte Pool-Abfrage mit Parametern
+      // Verwende direkte Pool-Abfrage mit Parametern und korrekter Array-Syntax für PostgreSQL
       const result = await pool.query(
         `UPDATE print_templates
         SET 
