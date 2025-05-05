@@ -36,23 +36,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   const [templateContent, setTemplateContent] = useState<string | null>(null);
 
   // Aktuelle Druckvorlage laden basierend auf der gewählten Breite
-  const fetchPrintTemplate = async () => {
+  const loadPrintTemplate = async () => {
     setIsLoadingTemplate(true);
     try {
       const templateType = settings?.receiptWidth === '58mm' ? 'receipt_58mm' : 'receipt_80mm';
-      const response = await fetch(`/api/print-templates/${templateType}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Fehler beim Laden der Druckvorlage: ${response.status}`);
+      const content = await fetchLatestPrintTemplate(templateType);
+      if (content) {
+        setTemplateContent(content);
       }
-      
-      const template = await response.json();
-      console.log(`Druckvorlage vom Typ '${templateType}' geladen:`, template.name);
-      setTemplateContent(template.content);
     } catch (error) {
       console.error('Fehler beim Laden der Druckvorlage:', error);
       toast({
@@ -68,7 +59,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   // Beim Öffnen des Dialogs die aktuelle Vorlage laden
   useEffect(() => {
     if (open) {
-      fetchPrintTemplate();
+      loadPrintTemplate();
     }
   }, [open, settings?.receiptWidth]);
 
@@ -234,6 +225,30 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
 
   if (!open) return null;
 
+  // Erstelle Template-Variablen für die Vorlage
+  const templateVariables = {
+    businessName: businessSettings?.businessName || "Handyshop Verwaltung",
+    businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
+    businessPhone: businessSettings?.phone || "",
+    repairId: repair?.orderCode || `#${repair?.id}`,
+    currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+    customerPhone: customer?.phone || "",
+    customerEmail: customer?.email || "",
+    deviceType: repair?.deviceType || "",
+    deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+    deviceModel: repair?.model || "",
+    deviceIssue: repair?.issue ? repair.issue : '',
+    preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    dropoffSignature: repair?.dropoffSignature || "",
+    pickupSignature: repair?.pickupSignature || "",
+    pickupDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+    logoUrl: businessSettings?.logoImage || "",
+    businessSlogan: businessSettings?.companySlogan || "",
+    vatNumber: businessSettings?.vatNumber || "",
+    website: businessSettings?.website || ""
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]" style={{ maxHeight: "500px", overflowY: "auto" }}>
@@ -249,8 +264,13 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
           <>
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
               <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
-                {/* Wenn eine Vorlage geladen wurde, diese verwenden */}
-                {
+                {templateContent ? (
+                  <div 
+                    dangerouslySetInnerHTML={{
+                      __html: applyTemplateVariables(templateContent, templateVariables)
+                    }}
+                  />
+                ) : (
                   // Fallback auf die fest codierten Komponenten
                   settings?.receiptWidth === '58mm' ? (
                     <BonReceipt58mm 
@@ -307,7 +327,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                 {!isPreview && (
                   <Button 
                     variant="outline"
-                    onClick={fetchPrintTemplate}
+                    onClick={loadPrintTemplate}
                     className="gap-1 text-xs"
                     disabled={isLoadingTemplate}
                     title="Aktuellste Druckvorlage laden"

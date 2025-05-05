@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { PrintOptionsDialog } from './PrintOptionsDialog';
-import { PrintRepairDialog } from './PrintRepairDialog';
+import { PrintRepairDialog } from './NewPrintRepairDialog';
 import { PrintLabelDialog } from './PrintLabelDialog';
 import { PrintRepairA4Dialog } from './PrintRepairA4Dialog';
 
