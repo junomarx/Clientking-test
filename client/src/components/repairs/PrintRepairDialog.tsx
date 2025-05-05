@@ -18,7 +18,7 @@ import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { BonReceipt58mm } from './BonReceipt58mm';
 import { BonReceipt80mm } from './BonReceipt80mm';
-import { applyTemplateVariables, fetchLatestPrintTemplate } from '@/lib/print-template-helper';
+import { applyTemplateVariables, fetchLatestPrintTemplate } from '@/lib/print-helper';
 
 interface PrintRepairDialogProps {
   open: boolean;
