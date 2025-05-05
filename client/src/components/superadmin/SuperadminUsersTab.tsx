@@ -402,16 +402,16 @@ export default function SuperadminUsersTab() {
                   <Label className="text-right">Paket</Label>
                   <div className="col-span-3">
                     <Select
-                      value={editForm.packageId?.toString() || ''}
+                      value={editForm.packageId?.toString() || 'null'}
                       onValueChange={(value) => 
-                        setEditForm({ ...editForm, packageId: value ? parseInt(value) : null })
+                        setEditForm({ ...editForm, packageId: (value && value !== "null") ? parseInt(value) : null })
                       }
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Wählen Sie ein Paket" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Kein Paket</SelectItem>
+                        <SelectItem value="null">Kein Paket</SelectItem>
                         {packages?.map((pkg) => (
                           <SelectItem key={pkg.id} value={pkg.id.toString()}>
                             {pkg.name} ({pkg.priceMonthly.toFixed(2)} €/Monat)
