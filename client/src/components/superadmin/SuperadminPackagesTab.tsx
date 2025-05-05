@@ -229,13 +229,16 @@ export default function SuperadminPackagesTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Paketverwaltung</h1>
-          <p className="text-muted-foreground">Verwalten Sie die verfügbaren Pakete und deren Features</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Paketverwaltung</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie die verfügbaren Pakete und deren Features</p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="w-full sm:w-auto"
+        >
           <Plus className="mr-2 h-4 w-4" /> Neues Paket erstellen
         </Button>
       </div>
@@ -287,11 +290,12 @@ export default function SuperadminPackagesTab() {
                 </div>
               </CardContent>
               <CardFooter className="border-t bg-muted/50 p-3">
-                <div className="flex justify-between w-full">
+                <div className="flex flex-col sm:flex-row justify-between w-full gap-2">
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => handleEditPackage(pkg.id)}
+                    className="w-full sm:w-auto"
                   >
                     <Pencil className="h-3.5 w-3.5 mr-1" /> Bearbeiten
                   </Button>
@@ -299,6 +303,7 @@ export default function SuperadminPackagesTab() {
                     size="sm" 
                     variant="destructive"
                     onClick={() => handleDeletePackage(pkg.id)}
+                    className="w-full sm:w-auto"
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Löschen
                   </Button>
@@ -329,10 +334,10 @@ export default function SuperadminPackagesTab() {
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Name</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+              <Label className="sm:text-right">Name</Label>
               <Input 
-                className="col-span-3"
+                className="col-span-1 sm:col-span-3"
                 value={createForm.name}
                 onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                 placeholder="Paketname"
