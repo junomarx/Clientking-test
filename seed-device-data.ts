@@ -266,10 +266,12 @@ async function seedDeviceData() {
   for (const [typeName, issues] of Object.entries(issuesData)) {
     for (const issue of issues) {
       // Prüfen, ob der Fehlereintrag bereits existiert
-      const existingIssue = await db.select().from(deviceIssues).where({
-        deviceType: typeName,
-        title: issue.title
-      });
+      const existingIssue = await db.select().from(deviceIssues).where(
+        and(
+          eq(deviceIssues.deviceType, typeName),
+          eq(deviceIssues.title, issue.title)
+        )
+      );
 
       if (existingIssue.length === 0) {
         // Fehlereintrag existiert noch nicht, hinzufügen
