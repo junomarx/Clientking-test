@@ -56,6 +56,83 @@ export default function SuperadminDevicesTab() {
     enabled: true,
   });
 
+  // Mutations für API-Anfragen
+  const createIssueMutation = useMutation({
+    mutationFn: async (data: typeof issueForm) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-issues', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen des Eintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich erstellt.",
+      });
+      setIsCreateIssueOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateIssueMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: typeof issueForm }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/device-issues/${id}`, data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Aktualisieren des Eintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich aktualisiert.",
+      });
+      setIsEditIssueOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteIssueMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/superadmin/device-issues/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen des Eintrags');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Dialog-Handler
   const handleCreateIssue = () => {
     setIssueForm({
@@ -80,6 +157,39 @@ export default function SuperadminDevicesTab() {
       isCommon: issue.isCommon
     });
     setIsEditIssueOpen(true);
+  };
+  
+  const handleDeleteIssue = (id: number) => {
+    if (confirm('Sind Sie sicher, dass Sie diesen Fehlereintrag löschen möchten?')) {
+      deleteIssueMutation.mutate(id);
+    }
+  };
+  
+  const handleSubmitCreateIssue = () => {
+    if (!issueForm.title || !issueForm.deviceType || !issueForm.description) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createIssueMutation.mutate(issueForm);
+  };
+  
+  const handleSubmitEditIssue = () => {
+    if (!selectedIssue) return;
+    
+    if (!issueForm.title || !issueForm.deviceType || !issueForm.description) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateIssueMutation.mutate({ id: selectedIssue.id, data: issueForm });
   };
 
   return (
