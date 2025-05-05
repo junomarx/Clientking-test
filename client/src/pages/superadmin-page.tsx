@@ -22,12 +22,12 @@ export default function SuperadminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Benutzer abrufen, um den richtigen Namen anzuzeigen
-  const { data: currentUser } = useQuery({ 
+  const { data: currentUser } = useQuery<User>({ 
     queryKey: ["/api/user"],
   });
 
   // Geschäftseinstellungen für den Kopfbereich
-  const { data: businessSettings } = useQuery({
+  const { data: businessSettings } = useQuery<BusinessSettings>({
     queryKey: ["/api/business-settings"],
   });
 
@@ -177,7 +177,7 @@ export default function SuperadminPage() {
                   <div className="p-4 border-b">
                     <h2 className="text-lg font-semibold text-primary">Superadmin</h2>
                     <p className="text-sm text-muted-foreground">
-                      {businessSettings?.businessName || "Handyshop Verwaltung"}
+                      {businessSettings && businessSettings.businessName || "Handyshop Verwaltung"}
                     </p>
                   </div>
                   
@@ -226,17 +226,17 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräteverwaltung"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Angemeldet als {currentUser?.username}
+              Angemeldet als {currentUser && currentUser.username || ""}
             </p>
           </div>
           
           {/* Benutzerinfo (Desktop rechts, Mobile ganz) */}
           <div className="flex items-center text-right">
             <p className="text-sm text-muted-foreground md:hidden">
-              {currentUser?.username}
+              {currentUser && currentUser.username || ""}
             </p>
             <p className="text-sm text-muted-foreground hidden md:block">
-              {businessSettings?.businessName || "Handyshop Verwaltung"}
+              {businessSettings && businessSettings.businessName || "Handyshop Verwaltung"}
             </p>
           </div>
         </header>
