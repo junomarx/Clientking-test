@@ -212,11 +212,11 @@ export default function SuperadminUsersTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
-          <p className="text-muted-foreground">Verwalten Sie alle Benutzer der Plattform</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie alle Benutzer der Plattform</p>
         </div>
       </div>
       
@@ -229,18 +229,18 @@ export default function SuperadminUsersTab() {
             <CardDescription>Insgesamt {users.length} Benutzer im System</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-auto">
-              <Table>
+            <div className="overflow-x-auto -mx-6 px-6">
+              <Table className="w-[900px] md:w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
+                    <TableHead className="w-10">ID</TableHead>
                     <TableHead>Benutzername</TableHead>
                     <TableHead>E-Mail</TableHead>
-                    <TableHead>Shop</TableHead>
+                    <TableHead className="w-10">Shop</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Rolle</TableHead>
                     <TableHead>Paket</TableHead>
-                    <TableHead>Erstellt am</TableHead>
+                    <TableHead>Erstellt</TableHead>
                     <TableHead>Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -287,11 +287,12 @@ export default function SuperadminUsersTab() {
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
                           <Button 
                             size="sm" 
                             variant="outline"
                             onClick={() => handleEditUser(user)}
+                            className="w-full sm:w-auto"
                           >
                             <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
                           </Button>
@@ -299,6 +300,7 @@ export default function SuperadminUsersTab() {
                             size="sm"
                             variant={user.isActive ? "outline" : "default"}
                             onClick={() => toggleActivationMutation.mutate(user.id)}
+                            className="w-full sm:w-auto"
                           >
                             {user.isActive ? (
                               <>
@@ -314,6 +316,7 @@ export default function SuperadminUsersTab() {
                             size="sm" 
                             variant="destructive"
                             onClick={() => handleDeleteUser(user.id)}
+                            className="w-full sm:w-auto"
                           >
                             Löschen
                           </Button>
@@ -341,7 +344,7 @@ export default function SuperadminUsersTab() {
           </DialogHeader>
           
           <Tabs defaultValue="settings" className="w-full mt-4">
-            <TabsList className="w-full grid grid-cols-3">
+            <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-0">
               <TabsTrigger value="settings">Einstellungen</TabsTrigger>
               <TabsTrigger value="permissions">Berechtigungen</TabsTrigger>
               <TabsTrigger value="company">Unternehmensdaten</TabsTrigger>
@@ -349,30 +352,30 @@ export default function SuperadminUsersTab() {
             
             <TabsContent value="settings" className="space-y-4 py-4">
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">E-Mail</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                  <Label className="sm:text-right">E-Mail</Label>
                   <Input
                     id="email"
-                    className="col-span-3"
+                    className="col-span-1 sm:col-span-3"
                     value={editForm.email || ''}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     placeholder="E-Mail-Adresse"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Shop ID</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                  <Label className="sm:text-right">Shop ID</Label>
                   <Input
                     id="shopId"
-                    className="col-span-3"
+                    className="col-span-1 sm:col-span-3"
                     type="number"
                     value={editForm.shopId?.toString() || ''}
                     onChange={(e) => setEditForm({ ...editForm, shopId: parseInt(e.target.value) || null })}
                     placeholder="Shop ID"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Passwort zurücksetzen</Label>
-                  <div className="col-span-3">
+                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
+                  <Label className="sm:text-right">Passwort zurücksetzen</Label>
+                  <div className="col-span-1 sm:col-span-3">
                     <Input
                       id="password"
                       type="password"
