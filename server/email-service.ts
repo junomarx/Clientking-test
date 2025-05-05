@@ -41,6 +41,74 @@ export class EmailService {
       this.smtpTransporter = null;
     }
   }
+  
+  /**
+   * Aktualisiert die SMTP-Einstellungen für den globalen Transporter
+   */
+  async updateSmtpTransporter(config: SMTPTransport.Options): Promise<boolean> {
+    try {
+      // Bestehenden Transporter schließen, wenn vorhanden
+      if (this.smtpTransporter) {
+        this.smtpTransporter.close();
+      }
+      
+      // Neuen Transporter erstellen
+      this.smtpTransporter = nodemailer.createTransport(config);
+      
+      // Verbindung testen
+      await this.smtpTransporter.verify();
+      
+      console.log(`Globaler SMTP-Transporter für ${config.host} wurde aktualisiert`);
+      return true;
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren des SMTP-Transporters:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Sendet eine Test-E-Mail mit den globalen SMTP-Einstellungen
+   */
+  async sendTestEmail(to: string): Promise<boolean> {
+    try {
+      if (!this.smtpTransporter) {
+        throw new Error('Kein SMTP-Transporter konfiguriert');
+      }
+      
+      const senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+      const senderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER || 'no-reply@example.com';
+      
+      const mailOptions = {
+        from: `"${senderName}" <${senderEmail}>`,
+        to: to,
+        subject: 'Test-E-Mail von Handyshop Verwaltung',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <h2 style="color: #4f46e5;">Test-E-Mail erfolgreich!</h2>
+            </div>
+            
+            <p>Diese E-Mail bestätigt, dass Ihre SMTP-Einstellungen korrekt konfiguriert sind.</p>
+            
+            <p>Ihre Handyshop Verwaltung ist nun bereit, E-Mails zu versenden.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+              <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
+            </div>
+          </div>
+        `,
+        text: 'Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, E-Mails zu versenden.'
+      };
+      
+      const info = await this.smtpTransporter.sendMail(mailOptions);
+      console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+      
+      return true;
+    } catch (error) {
+      console.error('Fehler beim Senden der Test-E-Mail:', error);
+      return false;
+    }
+  }
 
   // Die grundlegenden CRUD-Funktionen für E-Mail-Vorlagen
   async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {

@@ -453,7 +453,7 @@ export default function SuperadminEmailTab() {
                 </Button>
               </div>
               <CardDescription>
-                Verwalten Sie E-Mail-Vorlagen für verschiedene Benachrichtigungen. Sie können Variablen wie {{kundenname}} verwenden, die beim Versand automatisch ersetzt werden.
+                Verwalten Sie E-Mail-Vorlagen für verschiedene Benachrichtigungen. Sie können Variablen wie {`{{kundenname}}`} verwenden, die beim Versand automatisch ersetzt werden.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -570,12 +570,12 @@ export default function SuperadminEmailTab() {
                 <Textarea
                   id="templateBody"
                   rows={10}
-                  placeholder="<p>Sehr geehrte(r) {{kundenname}},</p><p>Ihre Reparatur ist abgeschlossen...</p>"
+                  placeholder="<p>Sehr geehrte(r) {`{{kundenname}}`},</p><p>Ihre Reparatur ist abgeschlossen...</p>"
                   value={newTemplate.body}
                   onChange={(e) => setNewTemplate({ ...newTemplate, body: e.target.value })}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Verwenden Sie {{variableName}} für dynamische Inhalte, z.B. {{kundenname}}, {{auftragsnummer}}, etc.
+                  Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{kundenname}}`}, {`{{auftragsnummer}}`}, etc.
                 </p>
               </div>
               
@@ -651,7 +651,7 @@ export default function SuperadminEmailTab() {
                     onChange={(e) => setSelectedTemplate({ ...selectedTemplate, body: e.target.value })}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Verwenden Sie {{variableName}} für dynamische Inhalte, z.B. {{kundenname}}, {{auftragsnummer}}, etc.
+                    Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{kundenname}}`}, {`{{auftragsnummer}}`}, etc.
                   </p>
                 </div>
                 
