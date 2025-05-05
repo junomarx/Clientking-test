@@ -942,6 +942,78 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  // Massenimport von Fehlereinträgen für einen bestimmten Gerätetyp
+  app.post("/api/superadmin/device-issues/bulk", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { deviceType, errors } = req.body;
+      
+      if (!deviceType) {
+        return res.status(400).json({ message: "Gerätetyp ist erforderlich" });
+      }
+      
+      if (!Array.isArray(errors) || errors.length === 0) {
+        return res.status(400).json({ message: "Mindestens ein Fehlereintrag ist erforderlich" });
+      }
+      
+      // Zähler für importierte und existierende Einträge
+      let importedCount = 0;
+      let existingCount = 0;
+      
+      // Array für Werte zum Einfügen
+      const valuesToInsert = [];
+      
+      // Vorhandene Fehlereinträge für diesen Gerätetyp abrufen
+      const existingIssues = await db.select({
+        title: deviceIssues.title
+      })
+      .from(deviceIssues)
+      .where(eq(deviceIssues.deviceType, deviceType));
+      
+      const existingTitles = existingIssues.map(issue => issue.title.toLowerCase());
+      
+      // Jeden Fehlereintrag verarbeiten
+      for (const errorTitle of errors) {
+        // Prüfen, ob der Eintrag bereits existiert (Fall-insensitiv)
+        if (existingTitles.includes(errorTitle.toLowerCase())) {
+          existingCount++;
+          continue;
+        }
+        
+        // Neuen Eintrag erstellen
+        valuesToInsert.push({
+          deviceType,
+          title: errorTitle,
+          description: "Automatisch importiert", 
+          solution: "",
+          severity: "medium",
+          isCommon: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        
+        importedCount++;
+      }
+      
+      // Nur importieren, wenn es neue Einträge gibt
+      if (valuesToInsert.length > 0) {
+        await db.insert(deviceIssues).values(valuesToInsert);
+      }
+      
+      res.status(200).json({
+        success: true,
+        importedCount,
+        existingCount,
+        message: `${importedCount} Fehlereinträge wurden importiert, ${existingCount} existieren bereits.`
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenimport von Fehlereinträgen:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim Massenimport von Fehlereinträgen" 
+      });
+    }
+  });
+  
   // Fehlerbeschreibung aktualisieren
   app.patch("/api/superadmin/device-issues/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
