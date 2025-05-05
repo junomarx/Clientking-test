@@ -82,7 +82,7 @@ export function PrintOptionsDialog({
     <Dialog open={open} onOpenChange={onClose} modal={true}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Auftrag #{repairId} - Druckoptionen</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Druckoptionen</DialogTitle>
         </DialogHeader>
         
         <div className="py-6 space-y-6">
