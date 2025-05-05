@@ -707,7 +707,11 @@ export function registerSuperadminRoutes(app: Express) {
       }
       
       // Alle ausgewählten Modelle löschen
-      const result = await db.delete(userModels).where(sql`${userModels.id} IN (${ids.join(',')})`);
+      // Wir verwenden eine sichere Methode mit Prepared Statements
+      // Jede ID wird einzeln gelöscht, um SQL-Injection zu vermeiden
+      for (const id of ids) {
+        await db.delete(userModels).where(eq(userModels.id, id));
+      }
       
       // Anzahl der gelöschten Einträge bestimmen
       const deletedCount = ids.length;
