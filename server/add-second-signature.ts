@@ -1,5 +1,6 @@
 import { pool } from './db';
 
+// Migration für die Unterschriftsfelder (Abgabe und Abholung)
 async function addSecondSignatureColumns() {
   try {
     console.log('Starte Migration: Hinzufügen von Spalten für zweite Unterschrift...');

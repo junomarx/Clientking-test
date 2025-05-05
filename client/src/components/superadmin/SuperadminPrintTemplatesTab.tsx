@@ -114,6 +114,7 @@ export default function SuperadminPrintTemplatesTab() {
   // Druckvorlage aktualisieren
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, template }: { id: number, template: Partial<PrintTemplate> }) => {
+      console.log('Updating template with data:', template);
       const response = await apiRequest('PATCH', `/api/superadmin/print-templates/${id}`, template);
       return await response.json();
     },

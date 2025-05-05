@@ -477,10 +477,14 @@ async function createDefaultPrintTemplates(): Promise<boolean> {
       console.log('Template-Variablen:', template.variables);
       console.log('JSON String:', JSON.stringify(template.variables));
       
-      // Verwende ein direktes Insert mit dem Pool und nativer Array-Unterstützung
+      // Verwende Array-Literal-Syntax für PostgreSQL
+      const variablesArray = "ARRAY[" + template.variables.map(v => `'${v}'`).join(',') + "]";
+      console.log('SQL Array Syntax StandardTemplate:', variablesArray);
+      
       await pool.query(
-        'INSERT INTO print_templates (name, type, content, variables, user_id, shop_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NULL, 0, NOW(), NOW())',
-        [template.name, template.type, template.content, template.variables]
+        `INSERT INTO print_templates (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
+         VALUES ($1, $2, $3, ${variablesArray}, NULL, 0, NOW(), NOW())`,
+        [template.name, template.type, template.content]
       );
     }
     
@@ -565,12 +569,15 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
       // Debug-Ausgabe
       console.log('Neue Vorlage Variables:', newTemplate.variables);
       
-      // Verwende direkte Pool-Abfrage mit Parametern und korrekter Array-Syntax für PostgreSQL
+      // Verwende Array-Literal-Syntax für PostgreSQL
+      const variablesArray = "ARRAY[" + newTemplate.variables.map(v => `'${v}'`).join(',') + "]";
+      console.log('SQL Array Syntax:', variablesArray);
+      
       const result = await pool.query(
         `INSERT INTO print_templates 
           (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
         VALUES 
-          ($1, $2, $3, $4, NULL, 0, NOW(), NOW())
+          ($1, $2, $3, ${variablesArray}, NULL, 0, NOW(), NOW())
         RETURNING 
           id, 
           name, 
@@ -582,7 +589,7 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           created_at as "createdAt", 
           updated_at as "updatedAt"
         `, 
-        [newTemplate.name, newTemplate.type, newTemplate.content, newTemplate.variables]
+        [newTemplate.name, newTemplate.type, newTemplate.content]
       );
       
       const createdTemplate = result.rows[0];
@@ -605,17 +612,20 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      // Verwende direkte Pool-Abfrage mit Parametern und korrekter Array-Syntax für PostgreSQL
+      // Verwende Array-Literal-Syntax für PostgreSQL
+      const variablesArray = "ARRAY[" + variables.map(v => `'${v}'`).join(',') + "]";
+      console.log('SQL Array Syntax Update:', variablesArray);
+      
       const result = await pool.query(
         `UPDATE print_templates
         SET 
           name = $1, 
           type = $2, 
           content = $3, 
-          variables = $4, 
+          variables = ${variablesArray}, 
           updated_at = NOW()
         WHERE 
-          id = $5
+          id = $4
         RETURNING 
           id, 
           name, 
@@ -627,7 +637,7 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           created_at as "createdAt", 
           updated_at as "updatedAt"
         `,
-        [name, type, content, variables, id]
+        [name, type, content, id]
       );
       
       if (result.rows.length === 0) {
