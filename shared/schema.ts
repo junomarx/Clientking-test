@@ -348,14 +348,18 @@ export const userDeviceTypes = pgTable("user_device_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Admin (Bugi)
+// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Admin/Superadmin
 export const deviceIssues = pgTable("device_issues", {
   id: serial("id").primaryKey(),
-  description: text("description").notNull(),      // Die Fehlerbeschreibung
+  title: text("title").notNull(),                 // Titel der Fehlerbeschreibung
+  description: text("description").notNull(),      // Ausführliche Beschreibung des Problems
+  solution: text("solution"),                     // Lösungsvorschlag für das Problem
   deviceType: text("device_type").notNull(),       // Für welche Geräteart ist die Fehlerbeschreibung
+  severity: text("severity").default("medium"),     // Schweregrad: low, medium, high, critical
+  isCommon: boolean("is_common").default(false),  // Ist dieser Fehler häufig?
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  // Nur Bugi (Admin) darf Fehlerbeschreibungen erstellen, daher kein userId hier
+  // Von Superadmin verwaltet, kein userId hier
 });
 
 export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
