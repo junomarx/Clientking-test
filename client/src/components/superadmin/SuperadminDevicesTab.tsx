@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, X } from "lucide-react";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 
 // Interfaces für den Fehlerkatalog
@@ -222,6 +222,7 @@ export default function SuperadminDevicesTab() {
   
   // State für Markenverwaltung
   const [brandSearchTerm, setBrandSearchTerm] = useState("");
+  const [selectedBrandDeviceType, setSelectedBrandDeviceType] = useState<string | null>(null);
   
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
@@ -517,7 +518,7 @@ export default function SuperadminDevicesTab() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
+                <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
                   <div className="relative w-full md:w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
@@ -527,6 +528,42 @@ export default function SuperadminDevicesTab() {
                       onChange={(e) => setBrandSearchTerm(e.target.value)}
                     />
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="deviceTypeFilter" className="whitespace-nowrap">Nach Gerätetyp filtern:</Label>
+                    <Select 
+                      value={selectedBrandDeviceType || ""}
+                      onValueChange={(value) => setSelectedBrandDeviceType(value || null)}
+                    >
+                      <SelectTrigger className="w-full md:w-40">
+                        <SelectValue placeholder="Alle Typen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Alle Typen</SelectItem>
+                        {deviceTypesList?.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
+                  {(selectedBrandDeviceType || brandSearchTerm) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedBrandDeviceType(null);
+                        setBrandSearchTerm("");
+                      }}
+                      className="flex items-center space-x-1"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Filter zurücksetzen</span>
+                    </Button>
+                  )}
                 </div>
                 
                 {isLoadingBrands ? (
@@ -554,9 +591,16 @@ export default function SuperadminDevicesTab() {
                               deviceTypeName: typeInfo?.name || 'Smartphone' // Fallback auf Smartphone, wenn kein Match gefunden wird
                             };
                           })
-                          .filter(brand => 
-                            brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
-                          )
+                          .filter(brand => {
+                            // Filterung nach Markennamen
+                            const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
+                            
+                            // Filterung nach Gerätetyp, falls ausgewählt
+                            const typeMatches = !selectedBrandDeviceType || 
+                                               brand.deviceTypeName === selectedBrandDeviceType;
+                            
+                            return nameMatches && typeMatches;
+                          })
                           .map((brand) => (
                             <TableRow key={brand.id}>
                               <TableCell className="font-medium">{brand.name}</TableCell>
@@ -589,7 +633,13 @@ export default function SuperadminDevicesTab() {
                     <AlertCircle className="h-10 w-10 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-semibold">Keine Marken gefunden</h3>
                     <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                      {brandSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Marken gefunden. Importieren Sie Marken über den Massenimport.'}
+                      {selectedBrandDeviceType && brandSearchTerm
+                        ? `Keine Ergebnisse für "${brandSearchTerm}" mit Gerätetyp "${selectedBrandDeviceType}".` 
+                        : selectedBrandDeviceType 
+                          ? `Keine Marken für Gerätetyp "${selectedBrandDeviceType}" gefunden.`
+                          : brandSearchTerm 
+                            ? `Keine Ergebnisse für "${brandSearchTerm}".` 
+                            : 'Es wurden keine Marken gefunden. Importieren Sie Marken über den Massenimport.'}
                     </p>
                   </div>
                 )}
