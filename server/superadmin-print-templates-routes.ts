@@ -517,8 +517,9 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
    */
   app.get("/api/superadmin/print-templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const result = await db.execute(sql`
-        SELECT 
+      // Verwende direkte Pool-Abfrage
+      const result = await pool.query(
+        `SELECT 
           id, 
           name, 
           type, 
@@ -531,8 +532,8 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         FROM 
           print_templates
         ORDER BY 
-          id ASC
-      `);
+          id ASC`
+      );
       
       res.json(result.rows);
     } catch (error) {
@@ -564,12 +565,13 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
       // Debug-Ausgabe
       console.log('Neue Vorlage Variables:', newTemplate.variables);
       
-      // Verwende SQL-Template-String für die Abfrage
-      const result = await db.execute(sql`
-        INSERT INTO print_templates 
+      // Verwende direkte Pool-Abfrage mit Parametern und manueller Array-Konvertierung
+      const variablesString = JSON.stringify(newTemplate.variables);
+      const result = await pool.query(
+        `INSERT INTO print_templates 
           (name, type, content, variables, user_id, shop_id, created_at, updated_at) 
         VALUES 
-          (${newTemplate.name}, ${newTemplate.type}, ${newTemplate.content}, ${newTemplate.variables}::text[], NULL, 0, NOW(), NOW())
+          ($1, $2, $3, $4::text[], NULL, 0, NOW(), NOW())
         RETURNING 
           id, 
           name, 
@@ -580,7 +582,9 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           shop_id as "shopId",
           created_at as "createdAt", 
           updated_at as "updatedAt"
-      `);
+        `, 
+        [newTemplate.name, newTemplate.type, newTemplate.content, variablesString]
+      );
       
       const createdTemplate = result.rows[0];
       res.status(201).json(createdTemplate);
@@ -602,16 +606,17 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      const result = await db.execute(sql`
-        UPDATE print_templates
+      // Verwende direkte Pool-Abfrage mit Parametern
+      const result = await pool.query(
+        `UPDATE print_templates
         SET 
-          name = ${name}, 
-          type = ${type}, 
-          content = ${content}, 
-          variables = ${variables}::text[], 
+          name = $1, 
+          type = $2, 
+          content = $3, 
+          variables = $4, 
           updated_at = NOW()
         WHERE 
-          id = ${id}
+          id = $5
         RETURNING 
           id, 
           name, 
@@ -622,7 +627,9 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           shop_id as "shopId",
           created_at as "createdAt", 
           updated_at as "updatedAt"
-      `);
+        `,
+        [name, type, content, variables, id]
+      );
       
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Druckvorlage nicht gefunden" });
@@ -642,11 +649,13 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
     try {
       const id = parseInt(req.params.id);
       
-      const result = await db.execute(sql`
-        DELETE FROM print_templates
-        WHERE id = ${id}
-        RETURNING id
-      `);
+      // Verwende direkte Pool-Abfrage mit Parametern
+      const result = await pool.query(
+        `DELETE FROM print_templates
+        WHERE id = $1
+        RETURNING id`,
+        [id]
+      );
       
       if (result.rows.length === 0) {
         return res.status(404).json({ message: "Druckvorlage nicht gefunden" });
