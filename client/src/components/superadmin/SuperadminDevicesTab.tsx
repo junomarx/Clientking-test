@@ -13,6 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, X } from "lucide-react";
 import HerstellerBulkImport from "./HerstellerBulkImport";
+import ModelleBulkImport from "./ModelleBulkImport";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
@@ -46,6 +47,19 @@ interface UserDeviceType {
   shopId: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  brandId: number;
+  userId: number;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
+  // Virtuelle Eigenschaften für Anzeigezwecke
+  brandName?: string;
+  deviceTypeName?: string;
 }
 
 export default function SuperadminDevicesTab() {
@@ -224,6 +238,11 @@ export default function SuperadminDevicesTab() {
   const [brandSearchTerm, setBrandSearchTerm] = useState("");
   const [selectedBrandDeviceType, setSelectedBrandDeviceType] = useState<string | null>(null);
   
+  // State für Modellverwaltung
+  const [modelSearchTerm, setModelSearchTerm] = useState("");
+  const [selectedModelDeviceType, setSelectedModelDeviceType] = useState<string | null>(null);
+  const [selectedModelBrandId, setSelectedModelBrandId] = useState<number | null>(null);
+  
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
@@ -240,6 +259,12 @@ export default function SuperadminDevicesTab() {
   // Wir verwenden die URL ohne "-" für die API-Anfrage
   const { data: userDeviceTypes } = useQuery<UserDeviceType[]>({
     queryKey: ["/api/superadmin/device-types/all"],
+    enabled: true,
+  });
+  
+  // API-Abfrage: Alle Modelle abrufen
+  const { data: modelsData, isLoading: isLoadingModels } = useQuery<Model[]>({
+    queryKey: ["/api/superadmin/models"],
     enabled: true,
   });
   
@@ -386,12 +411,58 @@ export default function SuperadminDevicesTab() {
     }
   };
   
+  // Mutation zum Löschen eines Modells
+  const deleteModelMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/superadmin/models/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen des Modells');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      toast({
+        title: "Erfolg",
+        description: "Modell wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler für Modell-Management
+  const handleDeleteModel = (id: number) => {
+    if (confirm('Sind Sie sicher, dass Sie dieses Modell löschen möchten?')) {
+      deleteModelMutation.mutate(id);
+    }
+  };
+  
   // Gefilterte Gerätetypen basierend auf dem Suchbegriff
   const filteredDeviceTypes = deviceTypesList
     ? deviceTypesList.filter(type =>
         type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
       )
     : [];
+  
+  // Hilfsfunktion zum Filtern von Marken basierend auf dem ausgewählten Gerätetyp
+  const getFilteredBrands = (deviceType: string | null) => {
+    if (!brandsData || !userDeviceTypes) return [];
+    
+    if (!deviceType) return brandsData;
+    
+    // Gerätetyp-ID ermitteln
+    const deviceTypeObj = userDeviceTypes.find(dt => dt.name === deviceType);
+    if (!deviceTypeObj) return [];
+    
+    // Marken nach Gerätetyp-ID filtern
+    return brandsData.filter(brand => brand.deviceTypeId === deviceTypeObj.id);
+  };
 
   return (
     <div className="space-y-6">
@@ -649,14 +720,190 @@ export default function SuperadminDevicesTab() {
         </TabsContent>
 
         <TabsContent value="models">
-          <Card>
-            <CardHeader>
-              <CardTitle>Modelle</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Hier werden die Modelle angezeigt.</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Komponente für den Modell-Massenimport */}
+            <ModelleBulkImport deviceTypes={deviceTypes} />
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <CardTitle>Modelle</CardTitle>
+                  <CardDescription>Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
+                  <div className="relative w-full md:w-72">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Modelle suchen..." 
+                      className="pl-8" 
+                      value={modelSearchTerm}
+                      onChange={(e) => setModelSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="modelDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
+                    <Select 
+                      value={selectedModelDeviceType || "all"}
+                      onValueChange={(value) => {
+                        setSelectedModelDeviceType(value === "all" ? null : value);
+                        setSelectedModelBrandId(null); // Brand zurücksetzen bei Änderung des Gerätetyps
+                      }}
+                    >
+                      <SelectTrigger className="w-full md:w-40">
+                        <SelectValue placeholder="Alle Typen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Typen</SelectItem>
+                        {deviceTypesList?.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            <div className="flex items-center gap-2">
+                              {getDeviceTypeIcon(type)}
+                              <span>{type}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="modelBrandFilter" className="whitespace-nowrap">Marke:</Label>
+                    <Select
+                      value={selectedModelBrandId?.toString() || "all"}
+                      onValueChange={(value) => setSelectedModelBrandId(value === "all" ? null : parseInt(value))}
+                      disabled={!selectedModelDeviceType}
+                    >
+                      <SelectTrigger className="w-full md:w-40">
+                        <SelectValue placeholder="Alle Marken" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Marken</SelectItem>
+                        {getFilteredBrands(selectedModelDeviceType).map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id.toString()}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
+                  {(selectedModelDeviceType || selectedModelBrandId || modelSearchTerm) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedModelDeviceType(null);
+                        setSelectedModelBrandId(null);
+                        setModelSearchTerm("");
+                      }}
+                      className="flex items-center space-x-1"
+                    >
+                      <X className="h-4 w-4" />
+                      <span>Filter zurücksetzen</span>
+                    </Button>
+                  )}
+                </div>
+                
+                {isLoadingModels ? (
+                  <div className="flex justify-center p-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                ) : modelsData && modelsData.length > 0 ? (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Modell</TableHead>
+                          <TableHead>Marke</TableHead>
+                          <TableHead>Gerätetyp</TableHead>
+                          <TableHead>Shop</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {modelsData
+                          // Virtuelle Eigenschaften hinzufügen
+                          .map(model => {
+                            const brand = brandsData?.find(b => b.id === model.brandId);
+                            const deviceType = userDeviceTypes?.find(t => t.id === brand?.deviceTypeId);
+                            return {
+                              ...model,
+                              brandName: brand?.name || 'Unbekannt',
+                              deviceTypeName: deviceType?.name || 'Smartphone'
+                            };
+                          })
+                          // Filterfunktionen anwenden
+                          .filter(model => {
+                            // Filterung nach Modellnamen
+                            const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
+                            
+                            // Filterung nach Gerätetyp, falls ausgewählt
+                            let typeMatches = true;
+                            if (selectedModelDeviceType) {
+                              typeMatches = model.deviceTypeName === selectedModelDeviceType;
+                            }
+                            
+                            // Filterung nach Marke, falls ausgewählt
+                            let brandMatches = true;
+                            if (selectedModelBrandId !== null) {
+                              brandMatches = model.brandId === selectedModelBrandId;
+                            }
+                            
+                            return nameMatches && typeMatches && brandMatches;
+                          })
+                          .map((model) => (
+                            <TableRow key={model.id}>
+                              <TableCell className="font-medium">{model.name}</TableCell>
+                              <TableCell>{model.brandName}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  {getDeviceTypeIcon(model.deviceTypeName || 'Smartphone')}
+                                  <span>{model.deviceTypeName}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>Shop {model.shopId}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end space-x-2">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteModel(model.id)}
+                                    title="Modell löschen"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        }
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">Keine Modelle gefunden</h3>
+                    <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                      {selectedModelDeviceType && selectedModelBrandId
+                        ? `Keine Modelle für ${getFilteredBrands(selectedModelDeviceType).find(b => b.id === selectedModelBrandId)?.name || ''} (${selectedModelDeviceType}) gefunden.`
+                        : selectedModelDeviceType
+                          ? `Keine Modelle für Gerätetyp "${selectedModelDeviceType}" gefunden.`
+                          : selectedModelBrandId
+                            ? `Keine Modelle für die ausgewählte Marke gefunden.`
+                            : modelSearchTerm
+                              ? `Keine Ergebnisse für "${modelSearchTerm}".`
+                              : 'Es wurden keine Modelle gefunden. Importieren Sie Modelle über den Massenimport.'}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         {/* Fehlerkatalog Tab */}

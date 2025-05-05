@@ -591,6 +591,105 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  // API-Endpunkte für Modellverwaltung
+  app.get("/api/superadmin/models", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const allModels = await db.select().from(userModels);
+      res.json(allModels);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Modelle:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Modelle" });
+    }
+  });
+  
+  app.post("/api/superadmin/device-models/bulk", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { brandId, models } = req.body;
+      
+      console.log('Server empfängt Modell-Bulk-Import-Anfrage:', { brandId, models });
+      
+      if (!brandId || !models || !Array.isArray(models) || models.length === 0) {
+        console.log('Validierungsfehler bei Modell-Bulk-Import:', { brandId, models });
+        return res.status(400).json({ message: "Ungültige Daten für den Massenimport" });
+      }
+      
+      // Überprüfe, ob die Marke existiert
+      const brand = await db.select().from(userBrands).where(eq(userBrands.id, brandId));
+      if (brand.length === 0) {
+        return res.status(404).json({ message: "Die angegebene Marke wurde nicht gefunden" });
+      }
+      
+      let importedCount = 0;
+      let existingCount = 0;
+      
+      // Modelle einfügen
+      for (const modelName of models) {
+        try {
+          // Prüfen, ob das Modell bereits existiert
+          const existingModel = await db.select().from(userModels)
+            .where(and(
+              eq(userModels.name, modelName),
+              eq(userModels.brandId, brandId)
+            ));
+          
+          if (existingModel.length === 0) {
+            console.log(`Füge neues Modell '${modelName}' für Marke ID ${brandId} hinzu...`);
+            // Nur einfügen, wenn noch nicht vorhanden
+            const superadminUserId = (req.user as any).id;
+            await db.insert(userModels)
+              .values({
+                name: modelName,
+                brandId,
+                userId: superadminUserId,
+                shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+            importedCount++;
+          } else {
+            existingCount++;
+          }
+        } catch (error) {
+          console.error(`Fehler beim Importieren des Modells '${modelName}':`, error);
+        }
+      }
+      
+      res.json({
+        success: true,
+        importedCount,
+        existingCount,
+        totalCount: models.length
+      });
+    } catch (error) {
+      console.error("Fehler beim Massenimport von Modellen:", error);
+      res.status(500).json({ message: "Fehler beim Massenimport von Modellen" });
+    }
+  });
+  
+  app.delete("/api/superadmin/models/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const modelId = parseInt(req.params.id);
+      
+      if (isNaN(modelId)) {
+        return res.status(400).json({ message: "Ungültige Modell-ID" });
+      }
+      
+      // Prüfen, ob das Modell existiert
+      const model = await db.select().from(userModels).where(eq(userModels.id, modelId));
+      if (model.length === 0) {
+        return res.status(404).json({ message: "Modell nicht gefunden" });
+      }
+      
+      // Modell löschen
+      await db.delete(userModels).where(eq(userModels.id, modelId));
+      
+      res.json({ success: true, message: "Modell erfolgreich gelöscht" });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Modells:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Modells" });
+    }
+  });
+  
   app.get("/api/superadmin/user-device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const deviceTypes = await db.select().from(userDeviceTypes);
