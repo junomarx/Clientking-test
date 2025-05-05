@@ -463,10 +463,17 @@ export function registerSuperadminRoutes(app: Express) {
       
       // Standardgerätetypen abrufen
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu aktualisierende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
-      if (standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).includes(oldName)) {
+      if (capitalizedStandardTypes.includes(oldName)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht bearbeitet werden" });
+      }
+      
+      // Spezialfall: Wenn der Name ein lowercase-Standardtyp ist (z.B. "smartphone"),
+      // müssen wir nicht nach ihm in der Datenbank suchen, weil er nicht wirklich existiert
+      if (standardDeviceTypes.includes(oldName)) {
+        return res.status(400).json({ message: "Virtuelle Standardgerätetypen können nicht bearbeitet werden" });
       }
       
       // Prüfen, ob der neue Name bereits verwendet wird
@@ -502,18 +509,23 @@ export function registerSuperadminRoutes(app: Express) {
       
       // Standardgerätetypen abrufen
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
-      
-      // Spezielle Behandlung für kleingeschriebene Standardtypen
-      // Löschen von "smartphone", "tablet", "laptop", und "watch" ist erlaubt,
-      // während "Smartphone", "Tablet", "Laptop", und "Watch" (Großbuchstaben) geschützt bleiben
-      const lowercaseExactMatch = standardDeviceTypes.includes(name) && name === name.toLowerCase();
+      const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu löschende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
-      if (standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).includes(name)) {
+      if (capitalizedStandardTypes.includes(name)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht gelöscht werden" });
       }
       
-      // Prüfen, ob der Gerätetyp existiert
+      // Spezialfall: Wenn der Name ein lowercase-Standardtyp ist (z.B. "smartphone"),
+      // müssen wir nicht nach ihm in der Datenbank suchen, weil er nicht wirklich existiert,
+      // sondern nur virtuell in der Anwendung
+      if (standardDeviceTypes.includes(name)) {
+        // Erfolg simulieren - es ist OK, einen lowercase-Standardtyp zu "löschen",
+        // da er eh nur virtuell existiert und beim nächsten GET wieder auftauchen würde
+        return res.status(204).send();
+      }
+      
+      // Prüfen, ob der Gerätetyp existiert (für nicht-Standard-Typen)
       const existingType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, name));
       
       if (existingType.length === 0) {
