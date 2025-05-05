@@ -618,10 +618,12 @@ export function registerSuperadminRoutes(app: Express) {
           deviceTypeId = standardDeviceType[0].id;
         } else {
           // Den Standardtyp falls nötig in die Datenbank einfügen
+          // Verwende den ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+          const superadminUserId = (req.user as any).id;
           const [newDeviceType] = await db.insert(userDeviceTypes)
             .values({
               name: deviceTypeUpperCase,
-              userId: 0, // System-User als Eigentümer für globale Typen
+              userId: superadminUserId, // Der aktuelle Superadmin als Eigentümer für globale Typen
               shopId: 0, // Globale Typen gehören zu keinem Shop (0 = global)
               createdAt: new Date(),
               updatedAt: new Date()
@@ -647,10 +649,12 @@ export function registerSuperadminRoutes(app: Express) {
           if (existingBrand.length === 0) {
             console.log(`Füge neue Marke '${brandName}' für Gerätetyp ID ${deviceTypeId} hinzu...`);
             // Nur einfügen, wenn noch nicht vorhanden
+            // Verwende den ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+            const superadminUserId = (req.user as any).id;
             const [newBrand] = await db.insert(userBrands)
               .values({
                 name: brandName,
-                userId: 0, // System-User als Eigentümer für globale Marken
+                userId: superadminUserId, // Der aktuelle Superadmin als Eigentümer für globale Marken
                 deviceTypeId: deviceTypeId,
                 shopId: 0, // Globale Marken gehören zu keinem Shop (0 = global)
                 createdAt: new Date(),
