@@ -477,7 +477,7 @@ export default function SuperadminDevicesTab() {
             <Button variant="outline" onClick={() => setIsCreateIssueOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleSubmitCreateIssue} disabled={!issueForm.title || !issueForm.deviceType}>
+            <Button onClick={() => handleSubmitCreateIssue()} disabled={!issueForm.title || !issueForm.deviceType}>
               Erstellen
             </Button>
           </DialogFooter>
@@ -590,7 +590,7 @@ export default function SuperadminDevicesTab() {
             <Button variant="outline" onClick={() => setIsEditIssueOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleSubmitEditIssue} disabled={!issueForm.title || !issueForm.deviceType}>
+            <Button onClick={() => handleSubmitEditIssue()} disabled={!issueForm.title || !issueForm.deviceType}>
               Aktualisieren
             </Button>
           </DialogFooter>

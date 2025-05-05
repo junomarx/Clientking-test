@@ -394,8 +394,19 @@ export function registerSuperadminRoutes(app: Express) {
   // Globale Geräteverwaltung
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const allDeviceTypes = await db.select().from(userDeviceTypes);
-      res.json(allDeviceTypes);
+      // Standardgerätetypen (unabhängig von Benutzern)
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop"];
+      
+      // Alle benutzerdefinierten Gerätetypen abrufen
+      const customDeviceTypes = await db.select({
+        name: userDeviceTypes.name
+      }).from(userDeviceTypes);
+      
+      // Kombiniere Standard- und benutzerdefinierte Gerätetypen ohne Duplikate
+      const allTypes = [...standardDeviceTypes, ...customDeviceTypes.map(dt => dt.name)];
+      const uniqueTypes = [...new Set(allTypes)];
+      
+      res.json(uniqueTypes);
     } catch (error) {
       console.error("Fehler beim Abrufen der Gerätetypen:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Gerätetypen" });
