@@ -185,30 +185,26 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // PDF in neuem Tab öffnen und Druckdialog automatisch starten
-      const pdfBlob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(blobUrl, '_blank');
+      // Direktes Drucken aktivieren und PDF im Browser öffnen
+      pdf.autoPrint();
+      
+      // Dialog schließen nach erfolgreicher PDF-Erstellung
+      onClose();
+      
+      // PDF im Browser öffnen - der Druckdialog wird automatisch geöffnet
+      const pdfOutput = pdf.output('dataurlstring');
+      const printWindow = window.open(pdfOutput, '_blank');
       
       if (printWindow) {
-        // Füge Skript hinzu, um den Druckdialog zu starten
-        printWindow.addEventListener('load', function() {
-          setTimeout(() => {
-            printWindow.print();
-          }, 1000);
-        });
-        
-        // Dialog schließen nach erfolgreicher PDF-Erstellung
-        onClose();
-        
         toast({
-          title: "PDF bereit zum Drucken",
-          description: "Das PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
+          title: "Druckdialog wird geöffnet",
+          description: "Der Druckdialog wird automatisch im Browser geöffnet.",
         });
       } else {
         toast({
-          title: "PDF bereit",
-          description: "Das PDF wurde erstellt. Bitte aktiviere Pop-ups, falls kein neues Fenster geöffnet wurde.",
+          title: "Drucken fehlgeschlagen",
+          description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
+          variant: "destructive"
         });
       }
     } catch (err) {
@@ -371,12 +367,12 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                   {isGeneratingPdf ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      PDF wird erstellt...
+                      Druckvorschau wird erstellt...
                     </>
                   ) : (
                     <>
                       <Printer className="h-4 w-4" />
-                      PDF erstellen & drucken
+                      Drucken
                     </>
                   )}
                 </Button>
