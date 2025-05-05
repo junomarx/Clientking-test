@@ -532,14 +532,14 @@ export default function SuperadminDevicesTab() {
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="deviceTypeFilter" className="whitespace-nowrap">Nach Gerätetyp filtern:</Label>
                     <Select 
-                      value={selectedBrandDeviceType || ""}
-                      onValueChange={(value) => setSelectedBrandDeviceType(value || null)}
+                      value={selectedBrandDeviceType || "all"}
+                      onValueChange={(value) => setSelectedBrandDeviceType(value === "all" ? null : value)}
                     >
                       <SelectTrigger className="w-full md:w-40">
                         <SelectValue placeholder="Alle Typen" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Alle Typen</SelectItem>
+                        <SelectItem value="all">Alle Typen</SelectItem>
                         {deviceTypesList?.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
