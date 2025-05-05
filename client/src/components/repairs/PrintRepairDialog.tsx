@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
-import { Loader2, Printer, Download } from 'lucide-react';
+import { Loader2, Printer, Download, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
@@ -31,6 +31,45 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   const { settings } = useBusinessSettings();
   const { toast } = useToast();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [templateContent, setTemplateContent] = useState<string | null>(null);
+
+  // Aktuelle Druckvorlage laden basierend auf der gewählten Breite
+  const fetchPrintTemplate = async () => {
+    setIsLoadingTemplate(true);
+    try {
+      const templateType = settings?.receiptWidth === '58mm' ? 'receipt_58mm' : 'receipt_80mm';
+      const response = await fetch(`/api/print-templates/${templateType}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fehler beim Laden der Druckvorlage: ${response.status}`);
+      }
+      
+      const template = await response.json();
+      console.log(`Druckvorlage vom Typ '${templateType}' geladen:`, template.name);
+      setTemplateContent(template.content);
+    } catch (error) {
+      console.error('Fehler beim Laden der Druckvorlage:', error);
+      toast({
+        title: "Warnung",
+        description: "Die aktuelle Druckvorlage konnte nicht geladen werden. Es wird die Standard-Vorlage verwendet.",
+        variant: "warning"
+      });
+    } finally {
+      setIsLoadingTemplate(false);
+    }
+  };
+  
+  // Beim Öffnen des Dialogs die aktuelle Vorlage laden
+  useEffect(() => {
+    if (open) {
+      fetchPrintTemplate();
+    }
+  }, [open, settings?.receiptWidth]);
 
   // Lade Reparaturdaten
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
@@ -256,9 +295,27 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
             </div>
             
             <DialogFooter className="flex justify-between mt-4">
-              <Button variant="outline" onClick={onClose}>
-                {isPreview ? "Schließen" : "Abbrechen"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  {isPreview ? "Schließen" : "Abbrechen"}
+                </Button>
+                {!isPreview && (
+                  <Button 
+                    variant="outline"
+                    onClick={fetchPrintTemplate}
+                    className="gap-1 text-xs"
+                    disabled={isLoadingTemplate}
+                    title="Aktuellste Druckvorlage laden"
+                  >
+                    {isLoadingTemplate ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3 w-3" />
+                    )}
+                    Vorlage neu laden
+                  </Button>
+                )}
+              </div>
               {!isPreview && (
                 <Button 
                   onClick={handlePrint} 

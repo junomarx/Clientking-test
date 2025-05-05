@@ -2552,6 +2552,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Druckvorlagen für Benutzer abrufen
+   * Diese Route gibt die globalen (Standard-)Druckvorlagen zurück
+   */
+  app.get("/api/print-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { type } = req.query;
+      
+      // Direkte Abfrage an den Pool, um immer die aktuellsten Vorlagen zu bekommen (kein Caching)
+      let query = `
+        SELECT 
+          id, 
+          name, 
+          type, 
+          content, 
+          variables, 
+          user_id as "userId", 
+          shop_id as "shopId",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+        FROM 
+          print_templates
+        WHERE 
+          shop_id = 0`; // Nur globale Vorlagen (shop_id = 0)
+          
+      const queryParams = [];
+      
+      // Optionale Filterung nach Vorlagentyp
+      if (type && typeof type === 'string') {
+        query += ` AND type = $1`;
+        queryParams.push(type);
+      }
+      
+      query += ` ORDER BY id ASC`;
+      
+      const { pool } = await import('./db');
+      const result = await pool.query(query, queryParams);
+      
+      console.log(`Druckvorlagen abgerufen für Benutzer ${(req.user as any).username}, Typ: ${type || 'alle'}, Anzahl: ${result.rows.length}`);
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Druckvorlagen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Druckvorlagen" });
+    }
+  });
+
+  /**
+   * Spezifische Druckvorlage für einen bestimmten Typ abrufen
+   */
+  app.get("/api/print-templates/:type", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { type } = req.params;
+      
+      if (!type) {
+        return res.status(400).json({ message: "Vorlagentyp muss angegeben werden" });
+      }
+      
+      // Direkte Abfrage an den Pool, um immer die aktuellste Vorlage zu bekommen (kein Caching)
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        `SELECT 
+          id, 
+          name, 
+          type, 
+          content, 
+          variables, 
+          user_id as "userId", 
+          shop_id as "shopId",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+        FROM 
+          print_templates
+        WHERE 
+          shop_id = 0 AND
+          type = $1
+        ORDER BY 
+          id DESC
+        LIMIT 1`,
+        [type]
+      );
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: `Keine Druckvorlage für Typ '${type}' gefunden` });
+      }
+      
+      console.log(`Druckvorlage vom Typ '${type}' abgerufen für Benutzer ${(req.user as any).username}`);
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Druckvorlage:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Druckvorlage" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
