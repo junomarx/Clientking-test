@@ -73,6 +73,8 @@ export default function SuperadminDevicesTab() {
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
   const [isEditIssueOpen, setIsEditIssueOpen] = useState(false);
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
+  const [selectedIssueIds, setSelectedIssueIds] = useState<number[]>([]);
+  const [selectAllIssues, setSelectAllIssues] = useState(false);
   
   // Formular-State für Fehler
   const [issueForm, setIssueForm] = useState({
@@ -240,6 +242,8 @@ export default function SuperadminDevicesTab() {
   // State für Markenverwaltung
   const [brandSearchTerm, setBrandSearchTerm] = useState("");
   const [selectedBrandDeviceType, setSelectedBrandDeviceType] = useState<string | null>(null);
+  const [selectedBrandIds, setSelectedBrandIds] = useState<number[]>([]);
+  const [selectAllBrands, setSelectAllBrands] = useState(false);
   
   // State für Modellverwaltung
   const [modelSearchTerm, setModelSearchTerm] = useState("");
@@ -413,6 +417,250 @@ export default function SuperadminDevicesTab() {
       return <Watch {...iconProps} />;
     } else {
       return <Smartphone {...iconProps} />; // Default-Icon
+    }
+  };
+  
+  // Mutation zum Löschen einer Marke
+  const deleteBrandMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/superadmin/brands/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Marke');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
+      toast({
+        title: "Erfolg",
+        description: "Marke wurde erfolgreich gelöscht.",
+      });
+      // Auswahl zurücksetzen
+      setSelectedBrandIds([]);
+      setSelectAllBrands(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Löschen mehrerer Marken
+  const deleteBulkBrandsMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
+      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
+      
+      console.log('Sende folgende Marken-IDs zum Löschen:', numericIds);
+      
+      const response = await apiRequest('POST', '/api/superadmin/brands/bulk-delete', { 
+        ids: numericIds 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Marken');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
+      toast({
+        title: "Erfolg",
+        description: `${data.deletedCount} Marken wurden erfolgreich gelöscht.`,
+      });
+      // Auswahl zurücksetzen
+      setSelectedBrandIds([]);
+      setSelectAllBrands(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler für Marken-Management
+  const handleDeleteBrand = (id: number) => {
+    if (confirm('Sind Sie sicher, dass Sie diese Marke löschen möchten?')) {
+      deleteBrandMutation.mutate(id);
+    }
+  };
+  
+  // Handler für Mehrfachauswahl von Marken
+  const handleToggleBrandSelection = (id: number) => {
+    setSelectedBrandIds(prev => {
+      if (prev.includes(id)) {
+        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
+        return prev.filter(brandId => brandId !== id);
+      } else {
+        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
+        return [...prev, id];
+      }
+    });
+  };
+  
+  // Handler für "Alle auswählen"-Checkbox bei Marken
+  const handleToggleSelectAllBrands = () => {
+    if (selectAllBrands) {
+      // Wenn alle ausgewählt sind, Auswahl aufheben
+      setSelectedBrandIds([]);
+      setSelectAllBrands(false);
+    } else {
+      // Sonst alle auswählen (gefilterte Marken)
+      const filteredBrandIds = brandsData
+        ?.filter(brand => {
+          // Filterung nach Markennamen
+          const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
+          
+          // Filterung nach Gerätetyp, falls ausgewählt
+          const typeInfo = userDeviceTypes?.find(type => type.id === brand.deviceTypeId);
+          const deviceTypeName = typeInfo?.name || 'Smartphone';
+          const typeMatches = !selectedBrandDeviceType || deviceTypeName === selectedBrandDeviceType;
+          
+          return nameMatches && typeMatches;
+        })
+        .map(brand => brand.id) || [];
+      
+      setSelectedBrandIds(filteredBrandIds);
+      setSelectAllBrands(true);
+    }
+  };
+  
+  // Handler für das Löschen ausgewählter Marken
+  const handleDeleteSelectedBrands = async () => {
+    if (selectedBrandIds.length === 0) {
+      toast({
+        title: "Hinweis",
+        description: "Bitte wählen Sie mindestens eine Marke aus."
+      });
+      return;
+    }
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedBrandIds.length} ausgewählte Marken löschen möchten?`)) {
+      try {
+        // Toast anzeigen, dass der Löschvorgang läuft
+        toast({
+          title: "Löschvorgang läuft",
+          description: `${selectedBrandIds.length} Marken werden gelöscht...`
+        });
+        
+        // Statt einzelner Löschvorgänge verwenden wir den Bulk-Endpoint
+        await deleteBulkBrandsMutation.mutateAsync(selectedBrandIds);
+      } catch (error) {
+        console.error("Fehler beim Löschen von Marken:", error);
+        toast({
+          title: "Fehler",
+          description: "Beim Löschen der Marken ist ein Fehler aufgetreten.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+  
+  // Mutation zum Löschen mehrerer Fehlereinträge
+  const deleteBulkIssuesMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
+      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
+      
+      console.log('Sende folgende Fehlereinträge-IDs zum Löschen:', numericIds);
+      
+      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk-delete', { 
+        ids: numericIds 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Fehlereinträge');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: `${data.deletedCount} Fehlereinträge wurden erfolgreich gelöscht.`,
+      });
+      // Auswahl zurücksetzen
+      setSelectedIssueIds([]);
+      setSelectAllIssues(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler für Mehrfachauswahl von Fehlereinträgen
+  const handleToggleIssueSelection = (id: number) => {
+    setSelectedIssueIds(prev => {
+      if (prev.includes(id)) {
+        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
+        return prev.filter(issueId => issueId !== id);
+      } else {
+        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
+        return [...prev, id];
+      }
+    });
+  };
+  
+  // Handler für "Alle auswählen"-Checkbox bei Fehlereinträgen
+  const handleToggleSelectAllIssues = () => {
+    if (selectAllIssues) {
+      // Wenn alle ausgewählt sind, Auswahl aufheben
+      setSelectedIssueIds([]);
+      setSelectAllIssues(false);
+    } else {
+      // Sonst alle auswählen (gefilterte Fehlereinträge)
+      const filteredIssueIds = deviceIssues
+        ?.filter(issue => {
+          // Filterung nach Fehlertyp
+          return !selectedDeviceType || issue.deviceType === selectedDeviceType;
+        })
+        .map(issue => issue.id) || [];
+      
+      setSelectedIssueIds(filteredIssueIds);
+      setSelectAllIssues(true);
+    }
+  };
+  
+  // Handler für das Löschen ausgewählter Fehlereinträge
+  const handleDeleteSelectedIssues = async () => {
+    if (selectedIssueIds.length === 0) {
+      toast({
+        title: "Hinweis",
+        description: "Bitte wählen Sie mindestens einen Fehlereintrag aus."
+      });
+      return;
+    }
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedIssueIds.length} ausgewählte Fehlereinträge löschen möchten?`)) {
+      try {
+        // Toast anzeigen, dass der Löschvorgang läuft
+        toast({
+          title: "Löschvorgang läuft",
+          description: `${selectedIssueIds.length} Fehlereinträge werden gelöscht...`
+        });
+        
+        // Bulk-Endpoint für das Löschen verwenden
+        await deleteBulkIssuesMutation.mutateAsync(selectedIssueIds);
+      } catch (error) {
+        console.error("Fehler beim Löschen von Fehlereinträgen:", error);
+        toast({
+          title: "Fehler",
+          description: "Beim Löschen der Fehlereinträge ist ein Fehler aufgetreten.",
+          variant: "destructive"
+        });
+      }
     }
   };
   
@@ -749,6 +997,18 @@ export default function SuperadminDevicesTab() {
                     />
                   </div>
                   
+                  {selectedBrandIds.length > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleDeleteSelectedBrands}
+                      className="flex items-center space-x-1"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span>{selectedBrandIds.length} Marke{selectedBrandIds.length > 1 ? 'n' : ''} löschen</span>
+                    </Button>
+                  )}
+                  
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="deviceTypeFilter" className="whitespace-nowrap">Nach Gerätetyp filtern:</Label>
                     <Select 
@@ -795,8 +1055,15 @@ export default function SuperadminDevicesTab() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={selectAllBrands}
+                              onCheckedChange={handleToggleSelectAllBrands}
+                              aria-label="Alle Marken auswählen"
+                            />
+                          </TableHead>
                           <TableHead>Name</TableHead>
-                          <TableHead>Gerätetyp-ID</TableHead>
+                          <TableHead>Gerätetyp</TableHead>
                           <TableHead>Shop</TableHead>
                           <TableHead className="text-right">Aktionen</TableHead>
                         </TableRow>
@@ -823,6 +1090,13 @@ export default function SuperadminDevicesTab() {
                           })
                           .map((brand) => (
                             <TableRow key={brand.id}>
+                              <TableCell className="w-10">
+                                <Checkbox
+                                  checked={selectedBrandIds.includes(brand.id)}
+                                  onCheckedChange={() => handleToggleBrandSelection(brand.id)}
+                                  aria-label={`Marke ${brand.name} auswählen`}
+                                />
+                              </TableCell>
                               <TableCell className="font-medium">{brand.name}</TableCell>
                               <TableCell>
                                 <div className="flex items-center space-x-2">
@@ -837,6 +1111,7 @@ export default function SuperadminDevicesTab() {
                                     size="sm"
                                     variant="destructive"
                                     title="Marke löschen"
+                                    onClick={() => handleDeleteBrand(brand.id)}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
