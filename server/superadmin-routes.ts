@@ -945,15 +945,21 @@ export function registerSuperadminRoutes(app: Express) {
   // Massenimport von Fehlereinträgen für einen bestimmten Gerätetyp
   app.post("/api/superadmin/device-issues/bulk", isSuperadmin, async (req: Request, res: Response) => {
     try {
+      console.log("Empfange Fehlerkatalog-Bulk-Import-Anfrage:", req.body);
+      
       const { deviceType, errors } = req.body;
       
       if (!deviceType) {
+        console.log("Fehler: Kein Gerätetyp angegeben");
         return res.status(400).json({ message: "Gerätetyp ist erforderlich" });
       }
       
       if (!Array.isArray(errors) || errors.length === 0) {
+        console.log("Fehler: Keine Fehlereinträge oder ungültiges Format", errors);
         return res.status(400).json({ message: "Mindestens ein Fehlereintrag ist erforderlich" });
       }
+      
+      console.log(`Gültige Anfrage: Gerätetyp ${deviceType}, ${errors.length} Fehlereinträge`);
       
       // Zähler für importierte und existierende Einträge
       let importedCount = 0;

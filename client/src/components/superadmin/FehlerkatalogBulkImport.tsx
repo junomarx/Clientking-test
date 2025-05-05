@@ -83,8 +83,16 @@ const FehlerkatalogBulkImport: React.FC<FehlerkatalogBulkImportProps> = ({ devic
       });
       return;
     }
+    
+    console.log("Import Fehlereinträge:", { deviceType, errors: errorsList });
 
     bulkImportMutation.mutate({ deviceType, errors: errorsList });
+    
+    // Erfolgsmeldung anzeigen, dass der Import-Vorgang gestartet wurde
+    toast({
+      title: "Import gestartet",
+      description: `Import von ${errorsList.length} Fehlereinträgen für ${deviceType} wurde gestartet...`
+    });
   };
 
   return (
