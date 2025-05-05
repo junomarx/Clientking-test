@@ -395,7 +395,7 @@ export function registerSuperadminRoutes(app: Express) {
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       // Standardgerätetypen (unabhängig von Benutzern)
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop"];
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
       
       // Alle benutzerdefinierten Gerätetypen abrufen
       const customDeviceTypes = await db.select({
@@ -410,6 +410,116 @@ export function registerSuperadminRoutes(app: Express) {
     } catch (error) {
       console.error("Fehler beim Abrufen der Gerätetypen:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Gerätetypen" });
+    }
+  });
+  
+  // Neuen Gerätetyp hinzufügen
+  app.post("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ message: "Der Name des Gerätetyps ist erforderlich" });
+      }
+      
+      // Standardgerätetypen abrufen
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      
+      // Prüfen, ob der Gerätetyp bereits existiert (inklusive Standardtypen)
+      if (standardDeviceTypes.includes(name.toLowerCase())) {
+        return res.status(400).json({ message: "Dieser Gerätetyp existiert bereits als Standardtyp" });
+      }
+      
+      const existingType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, name));
+      
+      if (existingType.length > 0) {
+        return res.status(400).json({ message: "Dieser Gerätetyp existiert bereits" });
+      }
+      
+      // Neuen Gerätetyp in die Datenbank einfügen
+      const [newDeviceType] = await db.insert(userDeviceTypes).values({
+        name,
+        shop_id: null, // Globaler Gerätetyp (für alle Shops verfügbar)
+      }).returning();
+      
+      res.status(201).json(newDeviceType);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Gerätetyps:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Gerätetyps" });
+    }
+  });
+  
+  // Gerätetyp aktualisieren
+  app.patch("/api/superadmin/device-types/:name", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const oldName = decodeURIComponent(req.params.name);
+      const { name: newName } = req.body;
+      
+      if (!newName) {
+        return res.status(400).json({ message: "Der neue Name des Gerätetyps ist erforderlich" });
+      }
+      
+      // Standardgerätetypen abrufen
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      
+      // Prüfen, ob der zu aktualisierende Gerätetyp ein Standardtyp ist
+      if (standardDeviceTypes.includes(oldName.toLowerCase())) {
+        return res.status(400).json({ message: "Standardgerätetypen können nicht bearbeitet werden" });
+      }
+      
+      // Prüfen, ob der neue Name bereits verwendet wird
+      if (oldName !== newName) {
+        const existingType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, newName));
+        
+        if (existingType.length > 0) {
+          return res.status(400).json({ message: "Dieser Gerätetyp existiert bereits" });
+        }
+      }
+      
+      // Gerätetyp aktualisieren
+      const [updatedDeviceType] = await db.update(userDeviceTypes)
+        .set({ name: newName })
+        .where(eq(userDeviceTypes.name, oldName))
+        .returning();
+      
+      if (!updatedDeviceType) {
+        return res.status(404).json({ message: "Gerätetyp nicht gefunden" });
+      }
+      
+      res.json(updatedDeviceType);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Gerätetyps:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Gerätetyps" });
+    }
+  });
+  
+  // Gerätetyp löschen
+  app.delete("/api/superadmin/device-types/:name", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const name = decodeURIComponent(req.params.name);
+      
+      // Standardgerätetypen abrufen
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      
+      // Prüfen, ob der zu löschende Gerätetyp ein Standardtyp ist
+      if (standardDeviceTypes.includes(name.toLowerCase())) {
+        return res.status(400).json({ message: "Standardgerätetypen können nicht gelöscht werden" });
+      }
+      
+      // Prüfen, ob der Gerätetyp existiert
+      const existingType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, name));
+      
+      if (existingType.length === 0) {
+        return res.status(404).json({ message: "Gerätetyp nicht gefunden" });
+      }
+      
+      // Gerätetyp löschen
+      await db.delete(userDeviceTypes).where(eq(userDeviceTypes.name, name));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Fehler beim Löschen des Gerätetyps:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Gerätetyps" });
     }
   });
 

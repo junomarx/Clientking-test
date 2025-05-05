@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Pencil, Search, Filter, AlertCircle } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch } from "lucide-react";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
