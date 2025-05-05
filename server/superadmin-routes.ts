@@ -585,7 +585,10 @@ export function registerSuperadminRoutes(app: Express) {
     try {
       const { deviceType, brands } = req.body;
       
+      console.log('Server empfängt Bulk-Import-Anfrage:', { deviceType, brands });
+      
       if (!deviceType || !brands || !Array.isArray(brands) || brands.length === 0) {
+        console.log('Validierungsfehler bei Bulk-Import:', { deviceType, brands });
         return res.status(400).json({ message: "Ungültige Daten für den Massenimport" });
       }
       

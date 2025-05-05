@@ -41,11 +41,17 @@ export default function HerstellerBulkImport({ deviceTypes }: HerstellerBulkImpo
   // Mutation für den Massenimport
   const bulkImportMutation = useMutation({
     mutationFn: async (data: BulkImportFormValues) => {
+      // Bereite die Markenliste vor und debugge sie
+      const brandsList = data.brands.split('\n')
+          .map(brand => brand.trim())
+          .filter(brand => brand.length > 0);
+      
+      console.log('Marken zum Import:', brandsList);
+      console.log('Gerätetyp zum Import:', data.deviceType);
+      
       const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', {
         deviceType: data.deviceType,
-        brands: data.brands.split('\n')
-          .map(brand => brand.trim())
-          .filter(brand => brand.length > 0)
+        brands: brandsList
       });
       
       if (!response.ok) {
