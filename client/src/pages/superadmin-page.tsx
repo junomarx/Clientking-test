@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X } from "lucide-react";
+import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import SuperadminDashboardTab from "@/components/superadmin/SuperadminDashboardT
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
 import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
+import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 
 export default function SuperadminPage() {
   const [_, setLocation] = useLocation();
@@ -109,6 +110,17 @@ export default function SuperadminPage() {
       >
         <Laptop className="h-5 w-5 mr-2" />
         Geräte
+      </Button>
+      <Button 
+        variant={activeTab === "email" ? "default" : "ghost"}
+        className="w-full justify-start"
+        onClick={() => {
+          setActiveTab("email");
+          if (isMobile) closeMenu();
+        }}
+      >
+        <Mail className="h-5 w-5 mr-2" />
+        E-Mail
       </Button>
       <Button 
         variant="ghost"
@@ -248,6 +260,7 @@ export default function SuperadminPage() {
             {activeTab === "users" && <SuperadminUsersTab />}
             {activeTab === "packages" && <SuperadminPackagesTab />}
             {activeTab === "devices" && <SuperadminDevicesTab />}
+            {activeTab === "email" && <SuperadminEmailTab />}
           </ScrollArea>
         </main>
       </div>
