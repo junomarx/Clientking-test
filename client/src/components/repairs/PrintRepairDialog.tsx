@@ -194,30 +194,26 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // PDF in neuem Tab öffnen und Druckdialog automatisch starten
-      const pdfBlob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(blobUrl, '_blank');
+      // Direktes Drucken aktivieren und PDF im Browser öffnen
+      pdf.autoPrint();
+      
+      // Dialog schließen nach erfolgreicher PDF-Erstellung
+      onClose();
+      
+      // PDF im Browser öffnen - der Druckdialog wird automatisch geöffnet
+      const pdfOutput = pdf.output('dataurlstring');
+      const printWindow = window.open(pdfOutput, '_blank');
       
       if (printWindow) {
-        // Füge Skript hinzu, um den Druckdialog zu starten
-        printWindow.addEventListener('load', function() {
-          setTimeout(() => {
-            printWindow.print();
-          }, 1000);
-        });
-        
-        // Dialog schließen nach erfolgreicher PDF-Erstellung
-        onClose();
-        
         toast({
-          title: "PDF bereit zum Drucken",
-          description: "Das PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
+          title: "Druckdialog wird geöffnet",
+          description: "Der Druckdialog wird automatisch im Browser geöffnet.",
         });
       } else {
         toast({
-          title: "PDF bereit",
-          description: "Das PDF wurde erstellt. Bitte aktiviere Pop-ups, falls kein neues Fenster geöffnet wurde.",
+          title: "Drucken fehlgeschlagen",
+          description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
+          variant: "destructive"
         });
       }
     } catch (err) {
@@ -250,51 +246,91 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
               <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
                 {/* Wenn eine Vorlage geladen wurde, diese verwenden */}
-                {
-                  // Fallback auf die fest codierten Komponenten
-                  settings?.receiptWidth === '58mm' ? (
-                    <BonReceipt58mm 
-                      firmenlogo={businessSettings?.logoImage || undefined}
-                      firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={businessSettings?.streetAddress || ""}
-                      firmenplz={businessSettings?.zipCode || ""}
-                      firmenort={businessSettings?.city || ""}
-                      firmentelefon={businessSettings?.phone || ""}
-                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
-                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
-                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                      kundentelefon={customer?.phone || undefined}
-                      kundenemail={customer?.email || undefined}
-                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                      modell={repair?.model || undefined}
-                      problem={repair?.issue ? repair.issue : ''}
-                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                      signatur_dropoff={repair?.dropoffSignature || undefined}
-                      signatur_pickup={repair?.pickupSignature || undefined}
-                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
-                    />
-                  ) : (
-                    <BonReceipt80mm 
-                      firmenlogo={businessSettings?.logoImage || undefined}
-                      firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={businessSettings?.streetAddress || ""}
-                      firmenplz={businessSettings?.zipCode || ""}
-                      firmenort={businessSettings?.city || ""}
-                      firmentelefon={businessSettings?.phone || ""}
-                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
-                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
-                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
-                      kundentelefon={customer?.phone || undefined}
-                      kundenemail={customer?.email || undefined}
-                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
-                      modell={repair?.model || undefined}
-                      problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
-                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
-                      signatur_dropoff={repair?.dropoffSignature || undefined}
-                      signatur_pickup={repair?.pickupSignature || undefined}
-                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
-                    />
-                  )
+                {templateContent ? (
+                  <div 
+                    dangerouslySetInnerHTML={{
+                      __html: applyTemplateVariables(templateContent, {
+                        businessName: businessSettings?.businessName || "Handyshop Verwaltung",
+                        businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
+                        businessPhone: businessSettings?.phone || "",
+                        businessEmail: businessSettings?.email || "",
+                        businessLogo: businessSettings?.logoImage || "",
+                        businessSlogan: businessSettings?.companySlogan || "",
+                        vatNumber: businessSettings?.vatNumber || "",
+                        websiteUrl: businessSettings?.website || "",
+                        
+                        // Reparatur-Platzhalter
+                        repairId: repair?.orderCode || `#${repair?.id}`,
+                        orderCode: repair?.orderCode || `#${repair?.id}`,
+                        currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        
+                        // Kunden-Platzhalter
+                        customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+                        customerPhone: customer?.phone || "",
+                        customerEmail: customer?.email || "",
+                        customerSignature: repair?.dropoffSignature || "",
+                        secondSignature: repair?.pickupSignature || "",
+                        
+                        // Geräte-Platzhalter
+                        deviceType: repair?.deviceType || "",
+                        deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+                        deviceModel: repair?.model || "",
+                        deviceIssue: repair?.issue ? repair.issue : '',
+                        deviceImei: "",
+                        
+                        // Preis-Platzhalter
+                        estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        finalPrice: "",
+                        
+                        // Zusätzliche Platzhalter für Kompatibilität
+                        logoUrl: businessSettings?.logoImage || ""
+                      })
+                    }}
+                  />
+                ) : settings?.receiptWidth === '58mm' ? (
+                  <BonReceipt58mm 
+                    firmenlogo={businessSettings?.logoImage || undefined}
+                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={businessSettings?.streetAddress || ""}
+                    firmenplz={businessSettings?.zipCode || ""}
+                    firmenort={businessSettings?.city || ""}
+                    firmentelefon={businessSettings?.phone || ""}
+                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                    kundentelefon={customer?.phone || undefined}
+                    kundenemail={customer?.email || undefined}
+                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                    modell={repair?.model || undefined}
+                    problem={repair?.issue ? repair.issue : ''}
+                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    signatur_dropoff={repair?.dropoffSignature || undefined}
+                    signatur_pickup={repair?.pickupSignature || undefined}
+                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                  />
+                ) : (
+                  <BonReceipt80mm 
+                    firmenlogo={businessSettings?.logoImage || undefined}
+                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={businessSettings?.streetAddress || ""}
+                    firmenplz={businessSettings?.zipCode || ""}
+                    firmenort={businessSettings?.city || ""}
+                    firmentelefon={businessSettings?.phone || ""}
+                    auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                    datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                    kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                    kundentelefon={customer?.phone || undefined}
+                    kundenemail={customer?.email || undefined}
+                    hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                    modell={repair?.model || undefined}
+                    problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
+                    preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    signatur_dropoff={repair?.dropoffSignature || undefined}
+                    signatur_pickup={repair?.pickupSignature || undefined}
+                    datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
+                  />
                 )}
               </div>
             </div>
@@ -330,12 +366,12 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                   {isGeneratingPdf ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      PDF wird erstellt...
+                      Druckvorschau wird erstellt...
                     </>
                   ) : (
                     <>
                       <Printer className="h-4 w-4" />
-                      PDF erstellen & drucken
+                      Drucken
                     </>
                   )}
                 </Button>
