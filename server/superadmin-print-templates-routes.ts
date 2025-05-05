@@ -1,391 +1,203 @@
-import { Request, Response } from "express";
-import { Express } from "express";
-import { isSuperadmin } from "./superadmin-middleware";
-import { db } from "./db";
-import { printTemplates, type PrintTemplate, type InsertPrintTemplate } from "@shared/schema";
-import { eq, desc, isNull, or } from "drizzle-orm";
+import { Express, Request, Response } from 'express';
+import { db } from './db';
+import { eq, asc } from 'drizzle-orm';
+import { isSuperadmin } from './superadmin-middleware';
+import { sql } from 'drizzle-orm';
+
+// Definition der Druckvorlagentypen
+interface PrintTemplate {
+  id: number;
+  name: string;
+  type: string;
+  content: string;
+  variables: string[];
+  userId: number | null;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface InsertPrintTemplate {
+  name: string;
+  type: string;
+  content: string;
+  variables: string[];
+  userId?: number | null;
+  shopId?: number;
+}
 
 /**
  * Standard Druckvorlagen
  */
 const defaultPrintTemplates = [
   {
-    name: "Bondruck 58mm",
-    type: "receipt_58mm",
-    content: `<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Abholschein 58mm</title>
-  <style>
-    @page {
-      margin: 0;
-      size: 58mm auto;
-    }
-    body {
-      margin: 0;
-      padding: 3mm;
-      font-family: sans-serif;
-      font-size: 9pt;
-      line-height: 1.2;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 5mm;
-    }
-    .logo {
-      max-width: 45mm;
-      max-height: 20mm;
-      margin-bottom: 3mm;
-    }
-    h1 {
-      font-size: 10pt;
-      margin: 0 0 1mm 0;
-    }
-    h2 {
-      font-size: 9pt;
-      margin: 0 0 1mm 0;
-    }
-    .divider {
-      border-top: 1px dashed #000;
-      margin: 3mm 0;
-    }
-    .contact-info {
-      margin-bottom: 3mm;
-      font-size: 8pt;
-    }
-    .repair-details {
-      margin-bottom: 3mm;
-    }
-    .repair-details p {
-      margin: 0 0 1mm 0;
-    }
-    .footer {
-      margin-top: 3mm;
-      text-align: center;
-      font-size: 8pt;
-    }
-    table {
-      width: 100%;
-      margin: 0 0 3mm 0;
-      border-collapse: collapse;
-    }
-    table td {
-      padding: 1mm 0;
-    }
-    td.label {
-      font-weight: bold;
-      width: 40%;
-    }
-    .qr-code {
-      text-align: center;
-      margin: 2mm 0;
-    }
-    .qr-code svg {
-      width: 20mm;
-      height: 20mm;
-    }
-    .notice {
-      font-size: 8pt;
-      font-style: italic;
-      text-align: center;
-      margin: 3mm 0;
-    }
-    .date {
-      text-align: right;
-      font-size: 8pt;
-      margin-bottom: 2mm;
-    }
-    .page-break {
-      page-break-after: always;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    {{#if logoUrl}}
-      <img src="{{logoUrl}}" class="logo" alt="Logo" />
-    {{/if}}
-    <h1>{{businessName}}</h1>
-    <div class="contact-info">
-      {{businessAddress}}<br>
-      Tel: {{businessPhone}}
-      {{#if businessEmail}}<br>{{businessEmail}}{{/if}}
-      {{#if businessWebsite}}<br>{{businessWebsite}}{{/if}}
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <h2 style="text-align: center;">ABHOLSCHEIN</h2>
-  <div class="date">
-    {{formattedDate}}
-  </div>
-
-  <table>
-    <tr>
-      <td class="label">Auftragsnr.:</td>
-      <td>{{orderCode}}</td>
-    </tr>
-  </table>
-
-  <div class="divider"></div>
-
-  <table>
-    <tr>
-      <td class="label">Kunde:</td>
-      <td>{{customerName}}</td>
-    </tr>
-    {{#if customerPhone}}
-    <tr>
-      <td class="label">Telefon:</td>
-      <td>{{customerPhone}}</td>
-    </tr>
-    {{/if}}
-  </table>
-
-  <div class="divider"></div>
-
-  <div class="repair-details">
-    <table>
-      <tr>
-        <td class="label">Gerät:</td>
-        <td>{{deviceType}} {{deviceBrand}} {{deviceModel}}</td>
-      </tr>
-      <tr>
-        <td class="label">Status:</td>
-        <td>{{status}}</td>
-      </tr>
-      {{#if repairPrice}}
-      <tr>
-        <td class="label">Preis:</td>
-        <td>{{repairPrice}} €</td>
-      </tr>
-      {{/if}}
-    </table>
-  </div>
-
-  {{#if showQrCode}}
-  <div class="qr-code">
-    {{qrCode}}
-    <p>{{trackingUrl}}</p>
-  </div>
-  {{/if}}
-
-  <div class="divider"></div>
-
-  <div class="footer">
-    <p>Vielen Dank für Ihren Auftrag!</p>
-    <p>UID: {{vatNumber}}</p>
-  </div>
-</body>
-</html>`,
-    variables: [
-      "logoUrl", "businessName", "businessAddress", "businessPhone", "businessEmail", 
-      "businessWebsite", "formattedDate", "orderCode", "customerName", "customerPhone", 
-      "deviceType", "deviceBrand", "deviceModel", "status", "repairPrice", "showQrCode", 
-      "qrCode", "trackingUrl", "vatNumber"
-    ]
-  },
-  {
-    name: "Bondruck 80mm",
-    type: "receipt_80mm",
+    name: 'Standard Bondruck 58mm',
+    type: 'receipt_58mm',
     content: `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <title>Abholschein</title>
   <style>
-    @page {
-      margin: 0;
-      size: 80mm auto;
-    }
     body {
+      font-family: 'Courier New', monospace;
+      font-size: 9pt;
       margin: 0;
-      padding: 4mm;
-      font-family: sans-serif;
-      font-size: 10pt;
-      line-height: 1.2;
+      padding: 0;
+      width: 58mm;
     }
-    .header {
-      text-align: center;
-      margin-bottom: 5mm;
-    }
-    .logo {
-      max-width: 60mm;
-      max-height: 25mm;
-      margin-bottom: 3mm;
-    }
-    h1 {
-      font-size: 12pt;
-      margin: 0 0 1mm 0;
-    }
-    h2 {
-      font-size: 11pt;
-      margin: 0 0 1mm 0;
-    }
-    .divider {
-      border-top: 1px dashed #000;
-      margin: 3mm 0;
-    }
-    .contact-info {
-      margin-bottom: 3mm;
-      font-size: 9pt;
-    }
-    .repair-details {
-      margin-bottom: 3mm;
-    }
-    .repair-details p {
-      margin: 0 0 1mm 0;
-    }
-    .footer {
-      margin-top: 3mm;
-      text-align: center;
-      font-size: 9pt;
-    }
-    table {
-      width: 100%;
-      margin: 0 0 3mm 0;
-      border-collapse: collapse;
-    }
-    table td {
-      padding: 1mm 0;
-    }
-    td.label {
-      font-weight: bold;
-      width: 40%;
-    }
-    .qr-code {
-      text-align: center;
-      margin: 3mm 0;
-    }
-    .qr-code svg {
-      width: 25mm;
-      height: 25mm;
-    }
-    .notice {
-      font-size: 9pt;
-      font-style: italic;
-      text-align: center;
-      margin: 3mm 0;
-    }
-    .date {
-      text-align: right;
-      font-size: 9pt;
-      margin-bottom: 2mm;
-    }
-    .page-break {
-      page-break-after: always;
-    }
+    .center { text-align: center; }
+    .header { margin-bottom: 10px; }
+    .divider { border-top: 1px dashed #000; margin: 5px 0; }
+    .bold { font-weight: bold; }
+    .text-sm { font-size: 8pt; }
+    .text-xs { font-size: 7pt; }
+    .info-row { display: flex; justify-content: space-between; margin: 2px 0; }
+    .logo { max-width: 100%; height: auto; max-height: 50px; }
   </style>
 </head>
 <body>
-  <div class="header">
-    {{#if logoUrl}}
-      <img src="{{logoUrl}}" class="logo" alt="Logo" />
-    {{/if}}
-    <h1>{{businessName}}</h1>
-    <div class="contact-info">
-      {{businessAddress}}<br>
-      Tel: {{businessPhone}}
-      {{#if businessEmail}}<br>{{businessEmail}}{{/if}}
-      {{#if businessWebsite}}<br>{{businessWebsite}}{{/if}}
-    </div>
+  <div class="header center">
+    <img src="{{logoUrl}}" alt="{{businessName}}" class="logo">
+    <div class="bold">{{businessName}}</div>
+    <div class="text-sm">{{businessAddress}}</div>
+    <div class="text-sm">Tel: {{businessPhone}}</div>
   </div>
-
+  
   <div class="divider"></div>
-
-  <h2 style="text-align: center;">ABHOLSCHEIN</h2>
-  <div class="date">
-    {{formattedDate}}
+  
+  <div class="center bold">Abholschein Nr. {{repairId}}</div>
+  <div class="center text-sm">{{currentDate}}</div>
+  
+  <div class="divider"></div>
+  
+  <div class="info-row">
+    <span>Kunde:</span>
+    <span>{{customerName}}</span>
   </div>
-
-  <table>
-    <tr>
-      <td class="label">Auftragsnr.:</td>
-      <td>{{orderCode}}</td>
-    </tr>
-  </table>
-
-  <div class="divider"></div>
-
-  <table>
-    <tr>
-      <td class="label">Kunde:</td>
-      <td>{{customerName}}</td>
-    </tr>
-    {{#if customerPhone}}
-    <tr>
-      <td class="label">Telefon:</td>
-      <td>{{customerPhone}}</td>
-    </tr>
-    {{/if}}
-    {{#if customerEmail}}
-    <tr>
-      <td class="label">E-Mail:</td>
-      <td>{{customerEmail}}</td>
-    </tr>
-    {{/if}}
-  </table>
-
-  <div class="divider"></div>
-
-  <div class="repair-details">
-    <table>
-      <tr>
-        <td class="label">Gerät:</td>
-        <td>{{deviceType}} {{deviceBrand}} {{deviceModel}}</td>
-      </tr>
-      {{#if deviceColor}}
-      <tr>
-        <td class="label">Farbe:</td>
-        <td>{{deviceColor}}</td>
-      </tr>
-      {{/if}}
-      {{#if deviceImei}}
-      <tr>
-        <td class="label">IMEI/SN:</td>
-        <td>{{deviceImei}}</td>
-      </tr>
-      {{/if}}
-      <tr>
-        <td class="label">Status:</td>
-        <td>{{status}}</td>
-      </tr>
-      {{#if repairPrice}}
-      <tr>
-        <td class="label">Preis:</td>
-        <td>{{repairPrice}} €</td>
-      </tr>
-      {{/if}}
-    </table>
+  <div class="info-row">
+    <span>Telefon:</span>
+    <span>{{customerPhone}}</span>
   </div>
-
-  {{#if showQrCode}}
-  <div class="qr-code">
-    {{qrCode}}
-    <p>{{trackingUrl}}</p>
+  <div class="info-row">
+    <span>Gerät:</span>
+    <span>{{deviceType}} {{deviceBrand}}</span>
   </div>
-  {{/if}}
-
+  <div class="info-row">
+    <span>Modell:</span>
+    <span>{{deviceModel}}</span>
+  </div>
+  <div class="info-row">
+    <span>Fehler:</span>
+    <span>{{deviceIssue}}</span>
+  </div>
+  
   <div class="divider"></div>
-
-  <div class="footer">
-    <p>Vielen Dank für Ihren Auftrag!</p>
-    <p>UID: {{vatNumber}}</p>
+  
+  <div>
+    <p>Mit Ihrer Unterschrift bestätigen Sie die
+Abholung des oben genannten Geräts.</p>
+    <div style="height: 60px;"></div>
+    <div class="center">____________________________</div>
+    <div class="center text-xs">Unterschrift Kunde</div>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="text-xs center">
+    <p>{{businessName}} - {{businessSlogan}}</p>
+    <p>USt-IdNr.: {{vatNumber}}</p>
+    <p>{{websiteUrl}}</p>
   </div>
 </body>
 </html>`,
-    variables: [
-      "logoUrl", "businessName", "businessAddress", "businessPhone", "businessEmail", 
-      "businessWebsite", "formattedDate", "orderCode", "customerName", "customerPhone", 
-      "customerEmail", "deviceType", "deviceBrand", "deviceModel", "deviceColor", "deviceImei", 
-      "status", "repairPrice", "showQrCode", "qrCode", "trackingUrl", "vatNumber"
-    ]
+    variables: ['businessName', 'businessAddress', 'businessPhone', 'repairId', 'currentDate', 'customerName', 'customerPhone', 'deviceType', 'deviceBrand', 'deviceModel', 'deviceIssue', 'businessSlogan', 'vatNumber', 'websiteUrl', 'logoUrl']
   },
   {
-    name: "DIN A4 Ausdruck",
-    type: "invoice_a4",
+    name: 'Standard Bondruck 80mm',
+    type: 'receipt_80mm',
+    content: `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Abholschein</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 10pt;
+      margin: 0;
+      padding: 0;
+      width: 80mm;
+    }
+    .center { text-align: center; }
+    .header { margin-bottom: 10px; }
+    .divider { border-top: 1px dashed #000; margin: 5px 0; }
+    .bold { font-weight: bold; }
+    .text-sm { font-size: 9pt; }
+    .text-xs { font-size: 8pt; }
+    .info-row { display: flex; justify-content: space-between; margin: 3px 0; }
+    .logo { max-width: 100%; height: auto; max-height: 60px; }
+  </style>
+</head>
+<body>
+  <div class="header center">
+    <img src="{{logoUrl}}" alt="{{businessName}}" class="logo">
+    <div class="bold">{{businessName}}</div>
+    <div class="text-sm">{{businessAddress}}</div>
+    <div class="text-sm">Tel: {{businessPhone}}</div>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="center bold">Abholschein Nr. {{repairId}}</div>
+  <div class="center text-sm">{{currentDate}}</div>
+  
+  <div class="divider"></div>
+  
+  <div class="info-row">
+    <span>Kunde:</span>
+    <span>{{customerName}}</span>
+  </div>
+  <div class="info-row">
+    <span>Telefon:</span>
+    <span>{{customerPhone}}</span>
+  </div>
+  <div class="info-row">
+    <span>Gerät:</span>
+    <span>{{deviceType}} {{deviceBrand}}</span>
+  </div>
+  <div class="info-row">
+    <span>Modell:</span>
+    <span>{{deviceModel}}</span>
+  </div>
+  <div class="info-row">
+    <span>Fehler:</span>
+    <span>{{deviceIssue}}</span>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div>
+    <p>Mit Ihrer Unterschrift bestätigen Sie die Abholung des oben genannten Geräts.</p>
+    <div style="height: 60px;"></div>
+    <div class="center">____________________________</div>
+    <div class="center text-xs">Unterschrift Kunde</div>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="text-xs center">
+    <p>{{businessName}} - {{businessSlogan}}</p>
+    <p>USt-IdNr.: {{vatNumber}}</p>
+    <p>{{websiteUrl}}</p>
+  </div>
+</body>
+</html>`,
+    variables: ['businessName', 'businessAddress', 'businessPhone', 'repairId', 'currentDate', 'customerName', 'customerPhone', 'deviceType', 'deviceBrand', 'deviceModel', 'deviceIssue', 'businessSlogan', 'vatNumber', 'websiteUrl', 'logoUrl']
+  },
+  {
+    name: 'Standard Reparaturauftrag A4',
+    type: 'invoice_a4',
     content: `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -394,65 +206,52 @@ const defaultPrintTemplates = [
   <style>
     body {
       font-family: Arial, sans-serif;
+      font-size: 12pt;
       margin: 0;
-      padding: 15mm;
-      color: #333;
-      font-size: 11pt;
+      padding: 20mm;
+      width: 210mm;
+      height: 297mm;
+      box-sizing: border-box;
     }
     .header {
       display: flex;
       justify-content: space-between;
       margin-bottom: 10mm;
     }
-    .company-info {
-      width: 60%;
-    }
     .logo {
-      max-width: 50mm;
-      max-height: 25mm;
-      margin-bottom: 5mm;
+      max-height: 30mm;
+      max-width: 90mm;
+    }
+    .business-info {
+      text-align: right;
+      font-size: 10pt;
     }
     .document-title {
       font-size: 18pt;
       font-weight: bold;
-      margin-bottom: 5mm;
-      border-bottom: 1px solid #333;
-      padding-bottom: 2mm;
+      margin: 10mm 0;
+      text-align: center;
     }
-    .customer-info {
-      width: 35%;
-      padding: 5mm;
-      background-color: #f5f5f5;
-      border-radius: 2mm;
+    .section {
+      margin-bottom: 8mm;
     }
     .section-title {
-      font-size: 14pt;
       font-weight: bold;
-      margin: 5mm 0 3mm 0;
+      border-bottom: 1px solid #333;
+      margin-bottom: 2mm;
+      padding-bottom: 1mm;
     }
-    table {
+    .info-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 5mm;
     }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th {
-      background-color: #f5f5f5;
+    .info-table td {
       padding: 2mm;
-      text-align: left;
+      vertical-align: top;
     }
-    td {
-      padding: 2mm;
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 3mm;
-    }
-    .info-column {
-      width: 48%;
+    .info-table td:first-child {
+      width: 40%;
+      font-weight: bold;
     }
     .signature-section {
       margin-top: 15mm;
@@ -461,228 +260,198 @@ const defaultPrintTemplates = [
     }
     .signature-box {
       width: 45%;
-      padding-top: 4mm;
-      border-top: 1px solid #333;
-      text-align: center;
     }
-    .signature-image {
-      max-width: 100%;
-      max-height: 30mm;
-      margin-bottom: 2mm;
+    .signature-line {
+      border-top: 1px solid #333;
+      margin-top: 15mm;
+      padding-top: 2mm;
+      text-align: center;
     }
     .footer {
-      margin-top: 15mm;
-      padding-top: 3mm;
-      border-top: 1px solid #ddd;
+      position: absolute;
+      bottom: 20mm;
+      left: 20mm;
+      right: 20mm;
+      text-align: center;
       font-size: 9pt;
       color: #666;
-      text-align: center;
-    }
-    .qr-code {
-      text-align: right;
-      margin-bottom: 5mm;
-    }
-    .qr-code svg {
-      width: 25mm;
-      height: 25mm;
-    }
-    .text-center {
-      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="company-info">
-      {{#if logoUrl}}
-        <img src="{{logoUrl}}" class="logo" alt="{{businessName}} Logo" />
-      {{/if}}
-      <h1>{{businessName}}</h1>
-      <p>{{businessAddress}}<br>
-         Tel: {{businessPhone}}
-         {{#if businessEmail}}<br>{{businessEmail}}{{/if}}
-         {{#if businessWebsite}}<br>{{businessWebsite}}{{/if}}</p>
+    <div>
+      <img src="{{logoUrl}}" alt="{{businessName}}" class="logo">
     </div>
-    <div class="customer-info">
-      <strong>Kundendaten:</strong><br>
-      {{customerName}}<br>
-      {{#if customerAddress}}{{customerAddress}}<br>{{/if}}
-      {{#if customerPhone}}Tel: {{customerPhone}}<br>{{/if}}
-      {{#if customerEmail}}E-Mail: {{customerEmail}}{{/if}}
+    <div class="business-info">
+      <p><strong>{{businessName}}</strong></p>
+      <p>{{businessAddress}}</p>
+      <p>Tel: {{businessPhone}}</p>
+      <p>E-Mail: {{businessEmail}}</p>
+      <p>Web: {{websiteUrl}}</p>
     </div>
   </div>
 
-  <div class="document-title">REPARATURAUFTRAG</div>
+  <div class="document-title">Reparaturauftrag Nr. {{repairId}}</div>
 
-  <div class="info-row">
-    <div class="info-column">
-      <table>
-        <tr>
-          <th colspan="2">Auftragsdaten</th>
-        </tr>
-        <tr>
-          <td><strong>Auftragsnummer:</strong></td>
-          <td>{{orderCode}}</td>
-        </tr>
-        <tr>
-          <td><strong>Datum:</strong></td>
-          <td>{{formattedDate}}</td>
-        </tr>
-      </table>
-    </div>
-    
-    {{#if showQrCode}}
-    <div class="qr-code">
-      {{qrCode}}
-      <p style="font-size: 8pt;">{{trackingUrl}}</p>
-    </div>
-    {{/if}}
+  <div class="section">
+    <div class="section-title">Kundendaten</div>
+    <table class="info-table">
+      <tr>
+        <td>Name:</td>
+        <td>{{customerName}}</td>
+      </tr>
+      <tr>
+        <td>Adresse:</td>
+        <td>{{customerAddress}}</td>
+      </tr>
+      <tr>
+        <td>Telefon:</td>
+        <td>{{customerPhone}}</td>
+      </tr>
+      <tr>
+        <td>E-Mail:</td>
+        <td>{{customerEmail}}</td>
+      </tr>
+    </table>
   </div>
 
-  <h2 class="section-title">Gerätedaten</h2>
-  <table>
-    <tr>
-      <th style="width: 30%;">Gerätetyp</th>
-      <th style="width: 35%;">Hersteller & Modell</th>
-      <th style="width: 35%;">IMEI/Seriennummer</th>
-    </tr>
-    <tr>
-      <td>{{deviceType}}</td>
-      <td>{{deviceBrand}} {{deviceModel}}</td>
-      <td>{{deviceImei}}</td>
-    </tr>
-  </table>
+  <div class="section">
+    <div class="section-title">Geräteinformationen</div>
+    <table class="info-table">
+      <tr>
+        <td>Gerätetyp:</td>
+        <td>{{deviceType}}</td>
+      </tr>
+      <tr>
+        <td>Marke:</td>
+        <td>{{deviceBrand}}</td>
+      </tr>
+      <tr>
+        <td>Modell:</td>
+        <td>{{deviceModel}}</td>
+      </tr>
+      <tr>
+        <td>Seriennummer:</td>
+        <td>{{deviceSerial}}</td>
+      </tr>
+      <tr>
+        <td>IMEI:</td>
+        <td>{{deviceImei}}</td>
+      </tr>
+    </table>
+  </div>
 
-  {{#if deviceIssue}}
-  <h2 class="section-title">Fehlerbeschreibung</h2>
-  <table>
-    <tr>
-      <th>Beschreibung des Problems</th>
-    </tr>
-    <tr>
-      <td>{{deviceIssue}}</td>
-    </tr>
-  </table>
-  {{/if}}
+  <div class="section">
+    <div class="section-title">Fehlerbeschreibung</div>
+    <p>{{deviceIssue}}</p>
+    <p>{{additionalNotes}}</p>
+  </div>
 
-  <h2 class="section-title">Reparaturdetails</h2>
-  <table>
-    <tr>
-      <th style="width: 60%;">Beschreibung</th>
-      <th style="width: 20%;">Status</th>
-      <th style="width: 20%;">Preis</th>
-    </tr>
-    <tr>
-      <td>{{repairDescription}}</td>
-      <td>{{status}}</td>
-      <td>{{#if repairPrice}}{{repairPrice}} €{{else}}Auf Anfrage{{/if}}</td>
-    </tr>
-  </table>
+  <div class="section">
+    <div class="section-title">Geschätzte Kosten und Dauer</div>
+    <table class="info-table">
+      <tr>
+        <td>Geschätzte Kosten:</td>
+        <td>{{estimatedCost}} €</td>
+      </tr>
+      <tr>
+        <td>Geschätzte Fertigstellung:</td>
+        <td>{{estimatedCompletionDate}}</td>
+      </tr>
+    </table>
+  </div>
 
   <div class="signature-section">
     <div class="signature-box">
-      {{#if customerSignatureUrl}}
-      <img src="{{customerSignatureUrl}}" class="signature-image" alt="Kundenunterschrift" />
-      {{/if}}
-      <p>Unterschrift Kunde</p>
+      <div class="signature-line">Unterschrift Kunde</div>
     </div>
     <div class="signature-box">
-      {{#if technicianSignatureUrl}}
-      <img src="{{technicianSignatureUrl}}" class="signature-image" alt="Technikerunterschrift" />
-      {{/if}}
-      <p>Unterschrift Techniker</p>
+      <div class="signature-line">Unterschrift {{businessName}}</div>
     </div>
   </div>
 
   <div class="footer">
-    <p>{{businessName}} | {{businessAddress}} | Tel: {{businessPhone}} | UID: {{vatNumber}}</p>
-    <p>{{companySlogan}}</p>
+    <p>{{businessName}} - {{businessSlogan}}</p>
+    <p>USt-IdNr.: {{vatNumber}}</p>
   </div>
 </body>
 </html>`,
-    variables: [
-      "logoUrl", "businessName", "businessAddress", "businessPhone", "businessEmail", 
-      "businessWebsite", "customerName", "customerAddress", "customerPhone", "customerEmail", 
-      "orderCode", "formattedDate", "showQrCode", "qrCode", "trackingUrl", "deviceType", 
-      "deviceBrand", "deviceModel", "deviceImei", "deviceIssue", "repairDescription", 
-      "status", "repairPrice", "customerSignatureUrl", "technicianSignatureUrl", 
-      "vatNumber", "companySlogan"
-    ]
+    variables: ['businessName', 'businessAddress', 'businessPhone', 'businessEmail', 'websiteUrl', 'repairId', 'customerName', 'customerAddress', 'customerPhone', 'customerEmail', 'deviceType', 'deviceBrand', 'deviceModel', 'deviceSerial', 'deviceImei', 'deviceIssue', 'additionalNotes', 'estimatedCost', 'estimatedCompletionDate', 'businessSlogan', 'vatNumber', 'logoUrl']
   },
   {
-    name: "Etikett",
-    type: "label",
+    name: 'Standard Etikett',
+    type: 'label',
     content: `<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reparaturetikett</title>
+  <title>Etikett</title>
   <style>
-    @page {
-      size: 50mm 25mm;
-      margin: 0;
-    }
     body {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
       margin: 0;
       padding: 2mm;
-      font-family: Arial, sans-serif;
-      font-size: 8pt;
-      line-height: 1.2;
-      width: 46mm;
-      height: 21mm;
-    }
-    .container {
-      display: flex;
-      height: 100%;
-    }
-    .qr-section {
-      width: 21mm;
+      width: 62mm;
+      height: 29mm;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    .qr-code {
-      width: 21mm;
-      height: 21mm;
-    }
-    .info-section {
-      width: 25mm;
-      padding-left: 2mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
     }
     .repair-id {
+      font-size: 12pt;
       font-weight: bold;
-      font-size: 10pt;
-      margin-bottom: 1mm;
+      text-align: center;
+      margin-bottom: 2mm;
     }
-    .customer {
+    .info-row {
+      display: flex;
+      justify-content: space-between;
       margin-bottom: 1mm;
+      font-size: 8pt;
     }
-    .device {
-      font-style: italic;
+    .info-label {
+      font-weight: bold;
+    }
+    .divider {
+      border-top: 1px dashed #ccc;
+      margin: 1mm 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="qr-section">
-      {{qrCode}}
-    </div>
-    <div class="info-section">
-      <div class="repair-id">{{orderCode}}</div>
-      <div class="customer">{{customerName}}</div>
-      <div class="device">{{deviceType}}<br>{{deviceBrand}} {{deviceModel}}</div>
-    </div>
+  <div class="repair-id">Auftrag #{{repairId}}</div>
+  
+  <div class="info-row">
+    <span class="info-label">Kunde:</span>
+    <span>{{customerName}}</span>
+  </div>
+  
+  <div class="info-row">
+    <span class="info-label">Tel:</span>
+    <span>{{customerPhone}}</span>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="info-row">
+    <span class="info-label">Gerät:</span>
+    <span>{{deviceType}} {{deviceBrand}}</span>
+  </div>
+  
+  <div class="info-row">
+    <span class="info-label">Modell:</span>
+    <span>{{deviceModel}}</span>
+  </div>
+  
+  <div class="info-row">
+    <span class="info-label">Fehler:</span>
+    <span>{{deviceIssue}}</span>
   </div>
 </body>
 </html>`,
-    variables: [
-      "qrCode", "orderCode", "customerName", "deviceType", "deviceBrand", "deviceModel"
-    ]
+    variables: ['repairId', 'customerName', 'customerPhone', 'deviceType', 'deviceBrand', 'deviceModel', 'deviceIssue']
   }
 ];
 
@@ -691,39 +460,26 @@ const defaultPrintTemplates = [
  */
 async function createDefaultPrintTemplates(): Promise<boolean> {
   try {
-    // Prüfen, welche Vorlagen bereits existieren, um Duplikate zu vermeiden
-    const existingTemplates = await db.select({ name: printTemplates.name })
-      .from(printTemplates)
-      .where(isNull(printTemplates.userId));
+    // Prüfen, ob bereits Standard-Vorlagen existieren
+    const existingTemplates = await db.execute(sql`
+      SELECT COUNT(*) AS count FROM print_templates
+    `);
     
-    const existingTemplateNames = existingTemplates.map(t => t.name);
+    const count = parseInt(existingTemplates.rows[0].count as string, 10);
     
-    // Nur Vorlagen hinzufügen, die noch nicht existieren
-    const templatesToAdd = defaultPrintTemplates.filter(
-      template => !existingTemplateNames.includes(template.name)
-    );
-    
-    if (templatesToAdd.length === 0) {
-      console.log('Alle Standard-Druckvorlagen existieren bereits');
-      return true;
+    // Wenn bereits Vorlagen existieren, nicht erneut erstellen
+    if (count > 0) {
+      return false;
     }
     
-    const now = new Date();
-    
-    // Vorlagen als globale Vorlagen (userId = null) hinzufügen
-    for (const template of templatesToAdd) {
-      await db.insert(printTemplates).values({
-        name: template.name,
-        type: template.type,
-        content: template.content,
-        variables: template.variables,
-        userId: null,
-        shopId: 0, // Global für alle Shops
-        createdAt: now,
-        updatedAt: now
-      });
-      
-      console.log(`Standard-Druckvorlage '${template.name}' wurde erstellt`);
+    // Standard-Vorlagen in die Datenbank einfügen
+    for (const template of defaultPrintTemplates) {
+      await db.execute(sql`
+        INSERT INTO print_templates
+          (name, type, content, variables, user_id, shop_id, created_at, updated_at)
+        VALUES
+          (${template.name}, ${template.type}, ${template.content}, ${template.variables}::text[], NULL, 0, NOW(), NOW())
+      `);
     }
     
     return true;
@@ -742,24 +498,15 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
    */
   app.post("/api/superadmin/print-templates/create-default-templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const success = await createDefaultPrintTemplates();
-      
-      if (success) {
-        res.status(200).json({ 
-          success: true, 
-          message: "Standard-Druckvorlagen wurden erfolgreich erstellt" 
-        });
+      const created = await createDefaultPrintTemplates();
+      if (created) {
+        res.status(201).json({ success: true, message: "Standard-Druckvorlagen wurden erstellt" });
       } else {
-        res.status(500).json({ 
-          success: false, 
-          message: "Fehler beim Erstellen der Standard-Druckvorlagen" 
-        });
+        res.status(200).json({ success: false, message: "Standard-Druckvorlagen existieren bereits" });
       }
-    } catch (error: any) {
-      res.status(500).json({ 
-        success: false, 
-        message: `Fehler beim Erstellen der Standard-Druckvorlagen: ${error.message}` 
-      });
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Standard-Druckvorlagen:", error);
+      res.status(500).json({ success: false, message: "Fehler beim Erstellen der Standard-Druckvorlagen" });
     }
   });
   
@@ -768,14 +515,27 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
    */
   app.get("/api/superadmin/print-templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const templates = await db
-        .select()
-        .from(printTemplates)
-        .orderBy(desc(printTemplates.updatedAt));
+      const result = await db.execute(sql`
+        SELECT 
+          id, 
+          name, 
+          type, 
+          content, 
+          variables, 
+          user_id as "userId", 
+          shop_id as "shopId",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+        FROM 
+          print_templates
+        ORDER BY 
+          id ASC
+      `);
       
-      res.status(200).json(templates);
-    } catch (error: any) {
-      res.status(500).json({ message: `Fehler beim Abrufen der Druckvorlagen: ${error.message}` });
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Druckvorlagen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Druckvorlagen" });
     }
   });
   
@@ -784,33 +544,43 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
    */
   app.post("/api/superadmin/print-templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const templateData = req.body;
+      const { name, type, content, variables } = req.body;
       
-      // Validiere die Vorlagendaten
-      if (!templateData.name || !templateData.type || !templateData.content) {
-        return res.status(400).json({
-          message: "Ungültige Vorlagendaten. Name, Typ und Inhalt sind erforderlich."
-        });
+      if (!name || !type || !content) {
+        return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      // Erstelle die Vorlage für systemweite Nutzung (userId = null, shopId = 0)
       const newTemplate: InsertPrintTemplate = {
-        name: templateData.name,
-        type: templateData.type,
-        content: templateData.content,
-        variables: templateData.variables || [],
-        userId: null, // Globale Vorlage
-        shopId: 0 // Systemweit verfügbar
+        name,
+        type,
+        content,
+        variables: variables || [],
+        userId: null,  // Globale Vorlage (kein Benutzer)
+        shopId: 0      // Globale Vorlage (kein Shop)
       };
       
-      const [createdTemplate] = await db
-        .insert(printTemplates)
-        .values(newTemplate)
-        .returning();
+      const result = await db.execute(sql`
+        INSERT INTO print_templates
+          (name, type, content, variables, user_id, shop_id, created_at, updated_at)
+        VALUES
+          (${newTemplate.name}, ${newTemplate.type}, ${newTemplate.content}, ${newTemplate.variables}::text[], NULL, 0, NOW(), NOW())
+        RETURNING 
+          id, 
+          name, 
+          type, 
+          content, 
+          variables, 
+          user_id as "userId", 
+          shop_id as "shopId",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+      `);
       
+      const createdTemplate = result.rows[0];
       res.status(201).json(createdTemplate);
-    } catch (error: any) {
-      res.status(500).json({ message: `Fehler beim Erstellen der Druckvorlage: ${error.message}` });
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Druckvorlage:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Druckvorlage" });
     }
   });
   
@@ -820,39 +590,42 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
   app.patch("/api/superadmin/print-templates/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const templateData = req.body;
+      const { name, type, content, variables } = req.body;
       
-      // Validiere die ID
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Ungültige Vorlagen-ID" });
+      if (!name || !type || !content) {
+        return res.status(400).json({ message: "Name, Typ und Inhalt sind erforderlich" });
       }
       
-      // Prüfe, ob die Vorlage existiert
-      const [existingTemplate] = await db
-        .select()
-        .from(printTemplates)
-        .where(eq(printTemplates.id, id));
+      const result = await db.execute(sql`
+        UPDATE print_templates
+        SET 
+          name = ${name}, 
+          type = ${type}, 
+          content = ${content}, 
+          variables = ${variables}::text[], 
+          updated_at = NOW()
+        WHERE 
+          id = ${id}
+        RETURNING 
+          id, 
+          name, 
+          type, 
+          content, 
+          variables, 
+          user_id as "userId", 
+          shop_id as "shopId",
+          created_at as "createdAt", 
+          updated_at as "updatedAt"
+      `);
       
-      if (!existingTemplate) {
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "Druckvorlage nicht gefunden" });
       }
       
-      // Aktualisiere die Vorlage
-      const [updatedTemplate] = await db
-        .update(printTemplates)
-        .set({
-          name: templateData.name || existingTemplate.name,
-          type: templateData.type || existingTemplate.type,
-          content: templateData.content || existingTemplate.content,
-          variables: templateData.variables || existingTemplate.variables,
-          updatedAt: new Date()
-        })
-        .where(eq(printTemplates.id, id))
-        .returning();
-      
-      res.status(200).json(updatedTemplate);
-    } catch (error: any) {
-      res.status(500).json({ message: `Fehler beim Aktualisieren der Druckvorlage: ${error.message}` });
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Druckvorlage:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Druckvorlage" });
     }
   });
   
@@ -863,29 +636,20 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
     try {
       const id = parseInt(req.params.id);
       
-      // Validiere die ID
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Ungültige Vorlagen-ID" });
-      }
+      const result = await db.execute(sql`
+        DELETE FROM print_templates
+        WHERE id = ${id}
+        RETURNING id
+      `);
       
-      // Prüfe, ob die Vorlage existiert
-      const [existingTemplate] = await db
-        .select()
-        .from(printTemplates)
-        .where(eq(printTemplates.id, id));
-      
-      if (!existingTemplate) {
+      if (result.rows.length === 0) {
         return res.status(404).json({ message: "Druckvorlage nicht gefunden" });
       }
       
-      // Lösche die Vorlage
-      await db
-        .delete(printTemplates)
-        .where(eq(printTemplates.id, id));
-      
       res.status(204).send();
-    } catch (error: any) {
-      res.status(500).json({ message: `Fehler beim Löschen der Druckvorlage: ${error.message}` });
+    } catch (error) {
+      console.error("Fehler beim Löschen der Druckvorlage:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Druckvorlage" });
     }
   });
 }

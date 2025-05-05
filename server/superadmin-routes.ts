@@ -16,6 +16,7 @@ import { ZodError, z } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { registerSuperadminEmailRoutes } from "./superadmin-email-routes";
+import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 
 // Passwort-Hash-Funktion (gleich wie in auth.ts)
 const scryptAsync = promisify(scrypt);
@@ -33,6 +34,9 @@ async function hashPassword(password: string) {
 export function registerSuperadminRoutes(app: Express) {
   // E-Mail-Routen registrieren
   registerSuperadminEmailRoutes(app);
+  
+  // Druckvorlagen-Routen registrieren
+  registerSuperadminPrintTemplatesRoutes(app);
   // Superadmin Dashboard Statistiken
   app.get("/api/superadmin/stats", isSuperadmin, async (req: Request, res: Response) => {
     try {

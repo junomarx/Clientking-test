@@ -12,6 +12,7 @@ import { addSuperadminColumn } from "./add-superadmin";
 import { addDeviceIssuesFields } from "./add-device-issues-fields";
 import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
 import { addBrandIdToModels } from "./add-brand-id-to-models";
+import { addPrintTemplatesTable } from "./add-print-templates-table";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
@@ -62,6 +63,7 @@ app.use((req, res, next) => {
     await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
     await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
     await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
+    await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
     
     const server = await registerRoutes(app);
 

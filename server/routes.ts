@@ -33,6 +33,7 @@ import { ZodError } from "zod";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
+import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
