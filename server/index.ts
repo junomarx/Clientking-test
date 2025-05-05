@@ -11,6 +11,7 @@ import { addPackageTables } from "./add-package-tables";
 import { addSuperadminColumn } from "./add-superadmin";
 import { addDeviceIssuesFields } from "./add-device-issues-fields";
 import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
+import { addBrandIdToModels } from "./add-brand-id-to-models";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB

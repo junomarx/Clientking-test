@@ -415,8 +415,8 @@ export const userBrands = pgTable("user_brands", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Beziehungen definieren - userBrands zu userDeviceTypes und users
-export const userBrandsRelations = relations(userBrands, ({ one }) => ({
+// Beziehungen definieren - userBrands zu userDeviceTypes, users und userModels
+export const userBrandsRelations = relations(userBrands, ({ one, many }) => ({
   deviceType: one(userDeviceTypes, {
     fields: [userBrands.deviceTypeId],
     references: [userDeviceTypes.id],
@@ -425,6 +425,7 @@ export const userBrandsRelations = relations(userBrands, ({ one }) => ({
     fields: [userBrands.userId],
     references: [users.id],
   }),
+  models: many(userModels),
 }));
 
 export const insertUserBrandSchema = createInsertSchema(userBrands).omit({
@@ -473,18 +474,23 @@ export type InsertUserModelSeries = z.infer<typeof insertUserModelSeriesSchema>;
 export const userModels = pgTable("user_models", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  modelSeriesId: integer("model_series_id").notNull().references(() => userModelSeries.id), // Jedes Modell gehört zu einer Modellreihe
+  modelSeriesId: integer("model_series_id").references(() => userModelSeries.id), // Optional: Modell kann zu einer Modellreihe gehören
+  brandId: integer("brand_id").references(() => userBrands.id), // Neues Feld: Modell gehört zu einer Marke
   userId: integer("user_id").notNull().references(() => users.id), // Jedes Modell gehört zu einem Benutzer
   shopId: integer("shop_id").default(1), // Shop, zu dem das Modell gehört (für Multi-Tenant-Isolation)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Beziehungen definieren - userModels zu userModelSeries und users
+// Beziehungen definieren - userModels zu userModelSeries, userBrands und users
 export const userModelsRelations = relations(userModels, ({ one }) => ({
   modelSeries: one(userModelSeries, {
     fields: [userModels.modelSeriesId],
     references: [userModelSeries.id],
+  }),
+  brand: one(userBrands, {
+    fields: [userModels.brandId],
+    references: [userBrands.id],
   }),
   user: one(users, {
     fields: [userModels.userId],

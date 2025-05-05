@@ -639,7 +639,7 @@ export function registerSuperadminRoutes(app: Express) {
             await db.insert(userModels)
               .values({
                 name: modelName,
-                brandId,
+                brandId: brandId,
                 userId: superadminUserId,
                 shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
                 createdAt: new Date(),
