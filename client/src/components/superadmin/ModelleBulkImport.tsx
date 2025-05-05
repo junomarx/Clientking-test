@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UploadCloud, AlertCircle, Trash2, Check } from "lucide-react";
 
 interface ModelleBulkImportProps {
-  deviceTypes: string[];
+  deviceTypes?: string[];
 }
 
 interface UserBrand {
@@ -220,11 +220,11 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
                   <SelectValue placeholder="Gerätetyp auswählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {deviceTypes.map((type) => (
+                  {deviceTypes?.map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
-                  ))}
+                  )) || null}
                 </SelectContent>
               </Select>
             </div>

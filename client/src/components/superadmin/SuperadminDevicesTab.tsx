@@ -723,7 +723,7 @@ export default function SuperadminDevicesTab() {
         <TabsContent value="models">
           <div className="space-y-6">
             {/* Komponente für den Modell-Massenimport */}
-            <ModelleBulkImport deviceTypes={deviceTypes} />
+            <ModelleBulkImport deviceTypes={deviceTypes || []} />
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
