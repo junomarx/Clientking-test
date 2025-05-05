@@ -41,10 +41,32 @@ const FehlerkatalogBulkImport: React.FC<FehlerkatalogBulkImportProps> = ({ devic
       setErrors(""); // Textfeld leeren nach erfolgreichem Import
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
     },
-    onError: (error: Error) => {
+    onError: async (error: Error) => {
+      console.error("Fehler beim Bulk-Import:", error);
+      
+      // Mehr Details vom Server holen, falls verfügbar
+      let errorMessage = error.message;
+      if (error instanceof Error && 'cause' in error) {
+        const cause = (error as any).cause;
+        if (cause?.response instanceof Response) {
+          try {
+            const errorData = await cause.response.json();
+            if (errorData.errors) {
+              // Für Zod-Validierungsfehler
+              errorMessage = "Validierungsfehler: " + 
+                Object.values(errorData.errors).map((err: any) => err.message).join(", ");
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (e) {
+            // Wenn die Antwort kein gültiges JSON ist, verwenden wir die ursprüngliche Fehlermeldung
+          }
+        }
+      }
+      
       toast({
         title: "Fehler",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },

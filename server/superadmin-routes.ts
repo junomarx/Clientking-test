@@ -944,8 +944,8 @@ export function registerSuperadminRoutes(app: Express) {
   
   // Schema für Bulk-Import von Fehlereinträgen
   const bulkImportSchema = z.object({
-    deviceType: z.string(),
-    errors: z.array(z.string())
+    deviceType: z.string().min(1, "Der Gerätetyp darf nicht leer sein"),
+    errors: z.array(z.string().min(1, "Fehlereinträge dürfen nicht leer sein")).min(1, "Mindestens ein Fehlereintrag ist erforderlich")
   });
   
   // Massenimport von Fehlereinträgen für einen bestimmten Gerätetyp
