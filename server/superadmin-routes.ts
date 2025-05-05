@@ -580,6 +580,16 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  app.get("/api/superadmin/user-device-types", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const deviceTypes = await db.select().from(userDeviceTypes);
+      res.json(deviceTypes);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der benutzerdefinierten Gerätetypen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätetypen" });
+    }
+  });
+  
   // Bulk-Import für Hersteller (Marken)
   app.post("/api/superadmin/device-brands/bulk", isSuperadmin, async (req: Request, res: Response) => {
     try {

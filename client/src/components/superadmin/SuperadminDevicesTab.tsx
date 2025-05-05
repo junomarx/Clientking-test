@@ -35,6 +35,17 @@ interface Brand {
   shopId: number;
   createdAt: string;
   updatedAt: string;
+  // Virtuelle Eigenschaft für Gerätetyp-Name
+  deviceTypeName?: string;
+}
+
+interface UserDeviceType {
+  id: number;
+  name: string;
+  userId: number;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function SuperadminDevicesTab() {
@@ -221,6 +232,12 @@ export default function SuperadminDevicesTab() {
   // API-Abfrage: Alle Marken abrufen
   const { data: brandsData, isLoading: isLoadingBrands } = useQuery<Brand[]>({
     queryKey: ["/api/superadmin/brands"],
+    enabled: true,
+  });
+  
+  // API-Abfrage: Alle benutzerdefinierten Gerätetypen abrufen
+  const { data: userDeviceTypes } = useQuery<UserDeviceType[]>({
+    queryKey: ["/api/superadmin/user-device-types"],
     enabled: true,
   });
   
@@ -528,13 +545,26 @@ export default function SuperadminDevicesTab() {
                       </TableHeader>
                       <TableBody>
                         {brandsData
+                          ?.map(brand => {
+                            // Für jede Marke den entsprechenden Gerätetyp anhand der deviceTypeId ermitteln
+                            const typeInfo = userDeviceTypes?.find(type => type.id === brand.deviceTypeId);
+                            return {
+                              ...brand,
+                              deviceTypeName: typeInfo?.name || 'Smartphone' // Fallback auf Smartphone, wenn kein Match gefunden wird
+                            };
+                          })
                           .filter(brand => 
                             brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase())
                           )
                           .map((brand) => (
                             <TableRow key={brand.id}>
                               <TableCell className="font-medium">{brand.name}</TableCell>
-                              <TableCell>{brand.deviceTypeId}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  {getDeviceTypeIcon(brand.deviceTypeName || 'Smartphone')}
+                                  <span>{brand.deviceTypeName || 'Smartphone'}</span>
+                                </div>
+                              </TableCell>
                               <TableCell>Shop {brand.shopId}</TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end space-x-2">
