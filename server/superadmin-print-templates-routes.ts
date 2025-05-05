@@ -474,11 +474,16 @@ async function createDefaultPrintTemplates(): Promise<boolean> {
     
     // Standard-Vorlagen in die Datenbank einfügen
     for (const template of defaultPrintTemplates) {
+      // Debug-Ausgabe
+      console.log('Template-Variablen:', template.variables);
+      console.log('JSON String:', JSON.stringify(template.variables));
+      
+      // Sichere Methode zum Einfügen mit Arrays
       await db.execute(sql`
         INSERT INTO print_templates
           (name, type, content, variables, user_id, shop_id, created_at, updated_at)
         VALUES
-          (${template.name}, ${template.type}, ${template.content}, ${template.variables}::text[], NULL, 0, NOW(), NOW())
+          (${template.name}, ${template.type}, ${template.content}, array[${template.variables.map(v => sql`${v}`)}], NULL, 0, NOW(), NOW())
       `);
     }
     
@@ -559,11 +564,14 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
         shopId: 0      // Globale Vorlage (kein Shop)
       };
       
+      // Debug-Ausgabe
+      console.log('Neue Vorlage Variables:', newTemplate.variables);
+      
       const result = await db.execute(sql`
         INSERT INTO print_templates
           (name, type, content, variables, user_id, shop_id, created_at, updated_at)
         VALUES
-          (${newTemplate.name}, ${newTemplate.type}, ${newTemplate.content}, ${newTemplate.variables}::text[], NULL, 0, NOW(), NOW())
+          (${newTemplate.name}, ${newTemplate.type}, ${newTemplate.content}, array[${newTemplate.variables.map(v => sql`${v}`)}], NULL, 0, NOW(), NOW())
         RETURNING 
           id, 
           name, 
@@ -602,7 +610,7 @@ export function registerSuperadminPrintTemplatesRoutes(app: Express) {
           name = ${name}, 
           type = ${type}, 
           content = ${content}, 
-          variables = ${variables}::text[], 
+          variables = array[${variables.map(v => sql`${v}`)}], 
           updated_at = NOW()
         WHERE 
           id = ${id}
