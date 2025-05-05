@@ -194,7 +194,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      // Direktes Drucken aktivieren und PDF im Browser öffnen
+      // Direktes Drucken aktivieren
       pdf.autoPrint();
       
       // Dialog schließen nach erfolgreicher PDF-Erstellung
