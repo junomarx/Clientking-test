@@ -9,8 +9,9 @@ import { storage } from "./storage";
 import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
-  customers, repairs, userDeviceTypes, userBrands, userModels
+  customers, repairs, userDeviceTypes, userBrands, userModels, deviceIssues, insertDeviceIssueSchema
 } from "@shared/schema";
+import { ZodError } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -418,6 +419,136 @@ export function registerSuperadminRoutes(app: Express) {
     } catch (error) {
       console.error("Fehler beim Abrufen der Modelle:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Modelle" });
+    }
+  });
+
+  //==========================================================================
+  // FEHLERKATALOG ROUTEN - Für Superadmins
+  //==========================================================================
+  // Alle Fehlerbeschreibungen abrufen (als flache Liste für die Tabelle)
+  app.get("/api/superadmin/device-issues", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Alle Fehlerbeschreibungen aus der Datenbank abrufen
+      const allIssues = await db.select().from(deviceIssues);
+      
+      // Nach Gerätetyp und Titel sortieren
+      allIssues.sort((a, b) => {
+        if (a.deviceType !== b.deviceType) {
+          return a.deviceType.localeCompare(b.deviceType);
+        }
+        return a.title.localeCompare(b.title);
+      });
+      
+      res.json(allIssues);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Fehlerbeschreibungen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });
+    }
+  });
+  
+  // Fehlerbeschreibungen für einen bestimmten Gerätetyp abrufen
+  app.get("/api/superadmin/device-issues/:deviceType", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const deviceType = req.params.deviceType;
+      
+      // Alle Fehlerbeschreibungen für diesen Gerätetyp abrufen
+      const issues = await db.select().from(deviceIssues)
+        .where(eq(deviceIssues.deviceType, deviceType));
+      
+      // Sortieren nach Titel
+      issues.sort((a, b) => a.title.localeCompare(b.title));
+      
+      res.json(issues);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Fehlerbeschreibungen für Gerätetyp:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });
+    }
+  });
+  
+  // Fehlerbeschreibung erstellen
+  app.post("/api/superadmin/device-issues", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const issueData = insertDeviceIssueSchema.parse(req.body);
+      
+      // Prüfen, ob die Fehlerbeschreibung bereits existiert
+      const existingIssue = await db.select().from(deviceIssues)
+        .where(and(
+          eq(deviceIssues.title, issueData.title),
+          eq(deviceIssues.deviceType, issueData.deviceType)
+        ));
+      
+      if (existingIssue.length > 0) {
+        return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
+      }
+      
+      // Fehlerbeschreibung in der Datenbank speichern
+      const [newIssue] = await db.insert(deviceIssues).values(issueData).returning();
+      
+      res.status(201).json(newIssue);
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Fehlerbeschreibung:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Fehlerbeschreibungsdaten", errors: error.errors });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Erstellen der Fehlerbeschreibung" });
+    }
+  });
+  
+  // Fehlerbeschreibung aktualisieren
+  app.patch("/api/superadmin/device-issues/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const issueData = insertDeviceIssueSchema.partial().parse(req.body);
+      
+      // Prüfen, ob die Fehlerbeschreibung existiert
+      const [existingIssue] = await db.select().from(deviceIssues).where(eq(deviceIssues.id, id));
+      
+      if (!existingIssue) {
+        return res.status(404).json({ message: "Fehlerbeschreibung nicht gefunden" });
+      }
+      
+      // Fehlerbeschreibung aktualisieren
+      const [updatedIssue] = await db.update(deviceIssues)
+        .set({
+          ...issueData,
+          updatedAt: new Date()
+        })
+        .where(eq(deviceIssues.id, id))
+        .returning();
+      
+      res.json(updatedIssue);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Fehlerbeschreibung:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Fehlerbeschreibungsdaten", errors: error.errors });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Fehlerbeschreibung" });
+    }
+  });
+  
+  // Fehlerbeschreibung löschen
+  app.delete("/api/superadmin/device-issues/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Prüfen, ob die Fehlerbeschreibung existiert
+      const [existingIssue] = await db.select().from(deviceIssues).where(eq(deviceIssues.id, id));
+      
+      if (!existingIssue) {
+        return res.status(404).json({ message: "Fehlerbeschreibung nicht gefunden" });
+      }
+      
+      // Fehlerbeschreibung löschen
+      await db.delete(deviceIssues).where(eq(deviceIssues.id, id));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Fehler beim Löschen der Fehlerbeschreibung:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Fehlerbeschreibung" });
     }
   });
 }
