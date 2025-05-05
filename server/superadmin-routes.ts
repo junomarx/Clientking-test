@@ -12,7 +12,7 @@ import {
   customers, repairs, userDeviceTypes, userBrands, userModels, 
   deviceIssues, insertDeviceIssueSchema, hiddenStandardDeviceTypes
 } from "@shared/schema";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -942,20 +942,23 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  // Schema für Bulk-Import von Fehlereinträgen
+  const bulkImportSchema = z.object({
+    deviceType: z.string(),
+    errors: z.array(z.string())
+  });
+  
   // Massenimport von Fehlereinträgen für einen bestimmten Gerätetyp
   app.post("/api/superadmin/device-issues/bulk", isSuperadmin, async (req: Request, res: Response) => {
     try {
       console.log("Empfange Fehlerkatalog-Bulk-Import-Anfrage:", req.body);
       
-      const { deviceType, errors } = req.body;
+      // Validieren der Anfrage mit Zod-Schema
+      const validatedData = bulkImportSchema.parse(req.body);
+      const { deviceType, errors } = validatedData;
       
-      if (!deviceType) {
-        console.log("Fehler: Kein Gerätetyp angegeben");
-        return res.status(400).json({ message: "Gerätetyp ist erforderlich" });
-      }
-      
-      if (!Array.isArray(errors) || errors.length === 0) {
-        console.log("Fehler: Keine Fehlereinträge oder ungültiges Format", errors);
+      if (errors.length === 0) {
+        console.log("Fehler: Keine Fehlereinträge");
         return res.status(400).json({ message: "Mindestens ein Fehlereintrag ist erforderlich" });
       }
       
@@ -1013,6 +1016,16 @@ export function registerSuperadminRoutes(app: Express) {
       });
     } catch (error) {
       console.error("Fehler beim Massenimport von Fehlereinträgen:", error);
+      
+      if (error instanceof ZodError) {
+        console.log("Zod-Validierungsfehler:", error.errors);
+        return res.status(400).json({
+          success: false,
+          message: "Ungültige Daten für den Massenimport",
+          errors: error.errors
+        });
+      }
+      
       res.status(500).json({ 
         success: false,
         message: "Fehler beim Massenimport von Fehlereinträgen" 
