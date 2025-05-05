@@ -1,142 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Plus } from "lucide-react";
 
 interface HerstellerBulkImportProps {
   deviceTypes: string[] | undefined;
 }
 
+// Validierungsschema für das Formular
+const bulkImportSchema = z.object({
+  deviceType: z.string().min(1, "Bitte wählen Sie einen Gerätetyp aus"),
+  brands: z.string().min(3, "Bitte geben Sie mindestens einen Markennamen ein"),
+});
+
+type BulkImportFormValues = z.infer<typeof bulkImportSchema>;
+
 export default function HerstellerBulkImport({ deviceTypes }: HerstellerBulkImportProps) {
   const { toast } = useToast();
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string>("");
-  const [brandsInput, setBrandsInput] = useState<string>("");
+  const [importInProgress, setImportInProgress] = useState(false);
   
-  // Mutation für den Bulk-Import von Herstellern
+  // Formularsteuerung mit react-hook-form und zod für Validierung
+  const form = useForm<BulkImportFormValues>({
+    resolver: zodResolver(bulkImportSchema),
+    defaultValues: {
+      deviceType: "",
+      brands: "",
+    },
+  });
+
+  // Mutation für den Massenimport
   const bulkImportMutation = useMutation({
-    mutationFn: async (data: { deviceType: string; brands: string[] }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', data);
+    mutationFn: async (data: BulkImportFormValues) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', {
+        deviceType: data.deviceType,
+        brands: data.brands.split('\n')
+          .map(brand => brand.trim())
+          .filter(brand => brand.length > 0)
+      });
+      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Massenimport der Hersteller');
+        throw new Error(errorData.message || 'Fehler beim Massenimport');
       }
+      
       return response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
       toast({
-        title: "Erfolg",
-        description: `${data.importedCount} Hersteller erfolgreich importiert.`,
+        title: "Import erfolgreich",
+        description: `${data.importedCount} Marken wurden erfolgreich importiert.`,
       });
-      // Textfeld zurücksetzen
-      setBrandsInput("");
+      form.reset();
+      setImportInProgress(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Fehler",
+        title: "Fehler beim Import",
         description: error.message,
         variant: "destructive",
       });
+      setImportInProgress(false);
     },
   });
 
-  // Funktion zum Verarbeiten und Absenden der Hersteller
-  const handleSubmit = () => {
-    // Prüfen, ob ein Gerätetyp ausgewählt wurde
-    if (!selectedDeviceType) {
-      toast({
-        title: "Fehler",
-        description: "Bitte wählen Sie einen Gerätetyp aus.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Zeilen aufteilen und leere Zeilen/Leerzeichen entfernen
-    const brandsArray = brandsInput
-      .split('\n')
-      .map(brand => brand.trim())
-      .filter(brand => brand.length > 0);
-
-    // Prüfen, ob Hersteller vorhanden sind
-    if (brandsArray.length === 0) {
-      toast({
-        title: "Fehler",
-        description: "Bitte geben Sie mindestens einen Hersteller ein.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // API-Anfrage senden
-    bulkImportMutation.mutate({
-      deviceType: selectedDeviceType,
-      brands: brandsArray
-    });
-  };
+  // Formular abschicken
+  function onSubmit(data: BulkImportFormValues) {
+    setImportInProgress(true);
+    bulkImportMutation.mutate(data);
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Hersteller-Massenimport</CardTitle>
+        <CardTitle>Marken-Massenimport</CardTitle>
         <CardDescription>
-          Fügen Sie mehrere Hersteller auf einmal hinzu, indem Sie einen Hersteller pro Zeile eingeben
+          Importieren Sie mehrere Marken auf einmal für einen Gerätetyp
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="deviceType">
-              Gerätetyp
-            </label>
-            <Select 
-              value={selectedDeviceType} 
-              onValueChange={setSelectedDeviceType}
-            >
-              <SelectTrigger id="deviceType" className="w-full">
-                <SelectValue placeholder="Gerätetyp auswählen" />
-              </SelectTrigger>
-              <SelectContent>
-                {deviceTypes?.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1" htmlFor="brands">
-              Hersteller (ein Hersteller pro Zeile)
-            </label>
-            <Textarea
-              id="brands"
-              value={brandsInput}
-              onChange={(e) => setBrandsInput(e.target.value)}
-              placeholder="Apple\nSamsung\nHuawei\n..."
-              rows={5}
-              className="font-mono"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="deviceType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gerätetyp</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={importInProgress}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Gerätetyp auswählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {deviceTypes?.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <Button 
-            onClick={handleSubmit}
-            disabled={bulkImportMutation.isPending}
-            className="w-full"
-          >
-            {bulkImportMutation.isPending ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                Speichern...
-              </>
-            ) : (
-              "Hersteller speichern"
-            )}
-          </Button>
-        </div>
+            
+            <FormField
+              control={form.control}
+              name="brands"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Markennamen</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Geben Sie jeden Markennamen in eine neue Zeile ein"
+                      className="min-h-[120px]"
+                      {...field}
+                      disabled={importInProgress}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pro Zeile ein Markenname. Leerzeilen werden ignoriert.
+                  </p>
+                </FormItem>
+              )}
+            />
+            
+            <Button type="submit" disabled={importInProgress}>
+              {importInProgress ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                  Importiere...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" /> Marken importieren
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

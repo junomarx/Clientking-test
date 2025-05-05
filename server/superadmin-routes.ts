@@ -616,6 +616,8 @@ export function registerSuperadminRoutes(app: Express) {
           const [newDeviceType] = await db.insert(userDeviceTypes)
             .values({
               name: deviceTypeUpperCase,
+              userId: 0, // System-User als Eigentümer für globale Typen
+              shopId: 0, // Globale Typen gehören zu keinem Shop (0 = global)
               createdAt: new Date(),
               updatedAt: new Date()
             })
@@ -642,7 +644,9 @@ export function registerSuperadminRoutes(app: Express) {
             const [newBrand] = await db.insert(userBrands)
               .values({
                 name: brandName,
+                userId: 0, // System-User als Eigentümer für globale Marken
                 deviceTypeId: deviceTypeId,
+                shopId: 0, // Globale Marken gehören zu keinem Shop (0 = global)
                 createdAt: new Date(),
                 updatedAt: new Date()
               })
