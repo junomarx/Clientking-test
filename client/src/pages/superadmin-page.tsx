@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail } from "lucide-react";
+import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail, FileCode } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
 import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
+import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 
 export default function SuperadminPage() {
   const [_, setLocation] = useLocation();
@@ -123,6 +124,17 @@ export default function SuperadminPage() {
         E-Mail
       </Button>
       <Button 
+        variant={activeTab === "print-templates" ? "default" : "ghost"}
+        className="w-full justify-start"
+        onClick={() => {
+          setActiveTab("print-templates");
+          if (isMobile) closeMenu();
+        }}
+      >
+        <FileCode className="h-5 w-5 mr-2" />
+        Vorlagen
+      </Button>
+      <Button 
         variant="ghost"
         className="w-full justify-start"
         asChild
@@ -226,6 +238,8 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzer"}
               {activeTab === "packages" && "Pakete"}
               {activeTab === "devices" && "Geräte"}
+              {activeTab === "email" && "E-Mail"}
+              {activeTab === "print-templates" && "Vorlagen"}
             </h1>
           </div>
           
@@ -261,6 +275,7 @@ export default function SuperadminPage() {
             {activeTab === "packages" && <SuperadminPackagesTab />}
             {activeTab === "devices" && <SuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
+            {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
           </ScrollArea>
         </main>
       </div>

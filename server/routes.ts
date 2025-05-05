@@ -135,6 +135,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up superadmin routes
   registerSuperadminRoutes(app);
   
+  // Set up superadmin print templates routes
+  registerSuperadminPrintTemplatesRoutes(app);
+  
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
     try {
