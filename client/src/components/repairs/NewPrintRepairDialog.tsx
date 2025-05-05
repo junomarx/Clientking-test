@@ -256,12 +256,12 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
     deviceModel: repair?.model || "",
     deviceIssue: repair?.issue ? repair.issue : '',
-    deviceImei: repair?.deviceIMEI || "",
+    deviceImei: "", // IMEI ist derzeit kein Teil des Repair-Objekts
     
     // Preis-Platzhalter
     preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
     estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-    finalPrice: repair?.finalCost ? `${repair.finalCost.replace('.', ',')} €` : "",
+    finalPrice: "", // finalPrice ist derzeit kein Teil des Repair-Objekts
     
     // Zusätzliche Platzhalter für Kompatibilität
     logoUrl: businessSettings?.logoImage || "",
