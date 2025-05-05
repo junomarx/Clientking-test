@@ -338,6 +338,21 @@ export const shopRelations = relations(shops, ({ many }) => ({
   repairs: many(repairs),
 }));
 
+// Tabelle für gelöschte Standard-Gerätetypen
+export const hiddenStandardDeviceTypes = pgTable("hidden_standard_device_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Name des gelöschten Standardtyps (z.B. "smartphone")
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertHiddenStandardDeviceTypeSchema = createInsertSchema(hiddenStandardDeviceTypes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type HiddenStandardDeviceType = typeof hiddenStandardDeviceTypes.$inferSelect;
+export type InsertHiddenStandardDeviceType = z.infer<typeof insertHiddenStandardDeviceTypeSchema>;
+
 // Benutzerspezifische Gerätearten
 export const userDeviceTypes = pgTable("user_device_types", {
   id: serial("id").primaryKey(),
