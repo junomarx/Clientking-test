@@ -227,26 +227,47 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
 
   // Erstelle Template-Variablen für die Vorlage
   const templateVariables = {
+    // Standard-Platzhalter
     businessName: businessSettings?.businessName || "Handyshop Verwaltung",
     businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
     businessPhone: businessSettings?.phone || "",
+    businessEmail: businessSettings?.email || "",
+    businessLogo: businessSettings?.logoImage || "",
+    businessSlogan: businessSettings?.companySlogan || "",
+    vatNumber: businessSettings?.vatNumber || "",
+    websiteUrl: businessSettings?.website || "",
+    
+    // Reparatur-Platzhalter
     repairId: repair?.orderCode || `#${repair?.id}`,
+    orderCode: repair?.orderCode || `#${repair?.id}`,
     currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+    
+    // Kunden-Platzhalter
     customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
     customerPhone: customer?.phone || "",
     customerEmail: customer?.email || "",
+    customerSignature: repair?.dropoffSignature || "",
+    secondSignature: repair?.pickupSignature || "",
+    
+    // Geräte-Platzhalter
     deviceType: repair?.deviceType || "",
     deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
     deviceModel: repair?.model || "",
     deviceIssue: repair?.issue ? repair.issue : '',
+    deviceImei: repair?.deviceIMEI || "",
+    
+    // Preis-Platzhalter
     preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    finalPrice: repair?.finalCost ? `${repair.finalCost.replace('.', ',')} €` : "",
+    
+    // Zusätzliche Platzhalter für Kompatibilität
+    logoUrl: businessSettings?.logoImage || "",
     dropoffSignature: repair?.dropoffSignature || "",
     pickupSignature: repair?.pickupSignature || "",
-    pickupDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
-    logoUrl: businessSettings?.logoImage || "",
-    businessSlogan: businessSettings?.companySlogan || "",
-    vatNumber: businessSettings?.vatNumber || "",
-    websiteUrl: businessSettings?.website || ""
+    pickupDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""
   };
 
   return (

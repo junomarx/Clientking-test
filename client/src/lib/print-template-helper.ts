@@ -15,6 +15,26 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
   // Alle Platzhalter im Format {{variableName}} durch die entsprechenden Werte ersetzen
   console.log('Template-Variablen:', variables);
   
+  // Spezielle Behandlung für Logo-URL - kann entweder businessLogo oder logoUrl sein
+  if (variables.businessLogo && !variables.logoUrl) {
+    variables = { ...variables, logoUrl: variables.businessLogo };
+  } else if (variables.logoUrl && !variables.businessLogo) {
+    variables = { ...variables, businessLogo: variables.logoUrl };
+  }
+
+  // Spezielle Behandlung für Order Code und Datum - doppelte Namen verwenden
+  if (variables.orderCode && !variables.repairId) {
+    variables = { ...variables, repairId: variables.orderCode };
+  } else if (variables.repairId && !variables.orderCode) {
+    variables = { ...variables, orderCode: variables.repairId };
+  }
+
+  if (variables.creationDate && !variables.currentDate) {
+    variables = { ...variables, currentDate: variables.creationDate };
+  } else if (variables.currentDate && !variables.creationDate) {
+    variables = { ...variables, creationDate: variables.currentDate };
+  }
+
   Object.entries(variables).forEach(([key, value]) => {
     const placeholder = new RegExp(`\{\{${key}\}\}`, 'g');
     const matches = result.match(placeholder);
