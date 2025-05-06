@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Abholschein 80mm</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+      width: 74mm;
+      margin: 0;
+      padding: 8px;
+      color: #000;
+    }
+
+    /* Modernes Layout ohne Flächenfarben */
+    .container {
+      width: 100%;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .logo img {
+      max-width: 85%;
+      height: auto;
+    }
+
+    .company {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .headline {
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 10px 0;
+      padding: 5px 0;
+      border-bottom: 1px solid #000;
+    }
+
+    .order-info {
+      text-align: center;
+      margin-bottom: 15px;
+      padding: 5px 0;
+    }
+
+    .order-number {
+      font-size: 18px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .order-date {
+      font-size: 14px;
+      margin-top: 3px;
+    }
+
+    /* Neues Layout für Info-Boxen */
+    .info-grid {
+      display: table;
+      width: 100%;
+      margin-bottom: 15px;
+      table-layout: fixed;
+    }
+    
+    .info-row {
+      display: table-row;
+    }
+    
+    .info-label {
+      display: table-cell;
+      font-weight: bold;
+      padding-right: 5px;
+      width: 30%;
+      vertical-align: top;
+      padding-bottom: 8px;
+    }
+    
+    .info-value {
+      display: table-cell;
+      width: 70%;
+      vertical-align: top;
+      padding-bottom: 8px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 15px;
+      border-bottom: 1px solid #000;
+      padding-bottom: 3px;
+      margin: 12px 0 8px 0;
+      text-align: left;
+    }
+
+    .price-row {
+      margin: 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      padding: 8px 0;
+    }
+
+    .separator {
+      border-top: 1px dashed #000;
+      margin: 12px 0;
+    }
+
+    .signature {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .signature .label {
+      font-weight: bold;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .signature .img {
+      margin-bottom: 4px;
+      min-height: 30px;
+    }
+
+    .signature-line {
+      border-top: 1px solid #000;
+      width: 100%;
+      margin: 4px 0 6px;
+    }
+
+    .terms {
+      border: 1px solid #000;
+      padding: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .terms-title {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .terms p {
+      margin: 0 0 5px 0;
+    }
+
+    .terms b {
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      margin-top: 10mm;
+      border-top: 1px dashed #000;
+      padding-top: 5px;
+      color: #666;
+    }
+
+    .footer::after {
+      content: '';
+      display: block;
+      height: 10mm;
+    }
+
+    @media print {
+      @page {
+        size: 80mm auto;
+        margin: 2mm;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        width: 74mm;
+      }
+      .info-label, .info-value, .price-row {
+        display: table-cell !important;
+        text-align: left !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <img src="{{businessLogo}}" alt="Logo">
+    </div>
+
+    <div class="company">
+      <strong>{{businessName}}</strong><br>
+      {{businessAddress}}<br>
+      Tel: {{businessPhone}}<br>
+      {{businessEmail}}
+    </div>
+
+    <div class="headline">Abholschein / Reparaturauftrag</div>
+    
+    <div class="order-info">
+      <div class="order-number">
+        {{orderCode}}
+      </div>
+      <div class="order-date">
+        {{creationDate}}
+      </div>
+    </div>
+
+    <!-- Neu strukturierte Informationsbereiche -->
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-label">Kunde:</div>
+        <div class="info-value"><strong>{{customerName}}</strong></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Telefon:</div>
+        <div class="info-value">{{customerPhone}}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">E-Mail:</div>
+        <div class="info-value">{{customerEmail}}</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-row">
+        <div class="info-label">Gerät:</div>
+        <div class="info-value">{{deviceBrand}} {{deviceModel}}</div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">IMEI:</div>
+        <div class="info-value">{{deviceImei}}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Fehlerbeschreibung</div>
+    <div>{{deviceIssue}}</div>
+
+    <div class="separator"></div>
+
+    <div class="price-row">Reparaturkosten: {{estimatedPrice}}</div>
+    <div class="price-row">Anzahlung: {{finalPrice}}</div>
+
+    <div class="separator"></div>
+
+    <div class="section">
+      <div class="terms">
+        <div class="terms-title">Reparaturbedingungen</div>
+        <p><b>1.</b> Der Kunde ist für die Sicherung aller Daten verantwortlich. Für etwaigen Datenverlust übernimmt der Dienstleister keine Haftung.</p>
+        <p><b>2.</b> Reparaturen können mit qualitativ hochwertigen Ersatzteilen in Erstausrüsterqualität durchgeführt werden, sofern Originalteile nicht verfügbar sind.</p>
+        <p><b>3.</b> Für durchgeführte Reparaturen wird eine Gewährleistung von 6 Monaten auf die erbrachte Leistung gewährt. Ausgenommen sind Schäden durch unsachgemäße Nutzung oder äußere Einflüsse.</p>
+        <p><b>4.</b> Der Kunde erklärt sich damit einverstanden, dass das Gerät zur Diagnose und Überprüfung geöffnet und geprüft wird.</p>
+        <p><b>5.</b> Das Gerät muss innerhalb von 60 Kalendertagen nach Fertigstellung abgeholt werden. Nach Ablauf dieser Frist kann eine Lagergebühr erhoben oder das Gerät entsorgt werden.</p>
+        <p><b>6.</b> Mit der Unterschrift bestätigt der Kunde, dass er den Auftrag erteilt und die oben genannten Bedingungen gelesen, verstanden und akzeptiert hat.</p>
+      </div>
+    </div>
+
+    <div class="signature">
+      <div class="label">Reparaturauftrag erteilt</div>
+      <div class="img">{{customerSignature}}</div>
+      <div class="signature-line"></div>
+      {{customerName}} - {{creationDate}}
+    </div>
+
+    <div class="signature">
+      <div class="label">Gerät abgeholt</div>
+      <div class="img">{{secondSignature}}</div>
+      <div class="signature-line"></div>
+      {{customerName}} - {{completionDate}}
+    </div>
+
+    <div class="footer">Bitte bringen Sie diesen Beleg zur Abholung Ihres Geräts mit.<br><br>– Ende des Belegs –<br>Kontakt: {{businessPhone}} | {{businessEmail}}</div>
+  </div>
+</body>
+</html>
