@@ -1586,11 +1586,21 @@ export function registerSuperadminRoutes(app: Express) {
         }
       }
       
+      // Gesamtzahl aller Elemente (existierende + neu hinzugefügte)
+      const total = {
+        deviceTypes: importData.deviceTypes?.length || 0,
+        brands: importData.brands?.length || 0,
+        modelSeries: importData.modelSeries?.length || 0,
+        models: importData.models?.length || 0,
+        deviceIssues: importData.deviceIssues?.length || 0
+      };
+      
       // Import-Statistik zurückgeben
       res.json({
         success: true,
         message: "Import abgeschlossen",
-        stats
+        stats,     // Nur die neu hinzugefügten Elemente
+        total      // Alle importierten Elemente (neu + bereits existierende)
       });
     } catch (error) {
       console.error("Fehler beim Importieren der Gerätedaten:", error);

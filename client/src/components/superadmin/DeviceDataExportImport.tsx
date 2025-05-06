@@ -120,10 +120,36 @@ const DeviceDataExportImport: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
       
-      // Statistik anzeigen
+      // Hole total (neu + bereits existierend) und new (nur neu hinzugefügt) aus der Antwort
+      const total = {
+        deviceTypes: (data.total?.deviceTypes || 0),
+        brands: (data.total?.brands || 0),
+        modelSeries: (data.total?.modelSeries || 0),
+        models: (data.total?.models || 0),
+        deviceIssues: (data.total?.deviceIssues || 0)
+      };
+      
+      const newItems = {
+        deviceTypes: (data.stats?.deviceTypes || 0),
+        brands: (data.stats?.brands || 0),
+        modelSeries: (data.stats?.modelSeries || 0),
+        models: (data.stats?.models || 0),
+        deviceIssues: (data.stats?.deviceIssues || 0)
+      };
+      
+      // Berechne bestehende Einträge
+      const existing = {
+        deviceTypes: total.deviceTypes - newItems.deviceTypes,
+        brands: total.brands - newItems.brands,
+        modelSeries: total.modelSeries - newItems.modelSeries,
+        models: total.models - newItems.models,
+        deviceIssues: total.deviceIssues - newItems.deviceIssues
+      };
+      
+      // Statistik anzeigen mit Unterscheidung zwischen neu und bereits vorhanden
       toast({
         title: "Import erfolgreich",
-        description: `Es wurden ${data.stats.deviceTypes} Gerätearten, ${data.stats.brands} Hersteller, ${data.stats.modelSeries} Modellreihen, ${data.stats.models} Modelle und ${data.stats.deviceIssues} Fehlereinträge importiert.`
+        description: `Es wurden ${total.deviceTypes} Gerätearten (${newItems.deviceTypes} neu), ${total.brands} Hersteller (${newItems.brands} neu), ${total.modelSeries} Modellreihen (${newItems.modelSeries} neu), ${total.models} Modelle (${newItems.models} neu) und ${total.deviceIssues} Fehlereinträge (${newItems.deviceIssues} neu) importiert.`
       });
       
       // Datei zurücksetzen
