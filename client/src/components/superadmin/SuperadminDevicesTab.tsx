@@ -862,12 +862,24 @@ export default function SuperadminDevicesTab() {
     
     if (!deviceType) return brandsData;
     
-    // Gerätetyp-ID ermitteln
-    const deviceTypeObj = userDeviceTypes.find(dt => dt.name === deviceType);
-    if (!deviceTypeObj) return [];
+    // Gerätetyp-ID ermitteln - Groß-/Kleinschreibung ignorieren
+    const deviceTypeObj = userDeviceTypes.find(dt => 
+      dt.name.toLowerCase() === deviceType.toLowerCase()
+    );
+    
+    if (!deviceTypeObj) {
+      console.log(`Kein Gerätetyp gefunden für: "${deviceType}"`);
+      console.log("Verfügbare Gerätetypen:", userDeviceTypes.map(dt => dt.name));
+      return [];
+    }
+    
+    console.log(`Gefilterte Marken für Gerätetyp: "${deviceType}" (ID: ${deviceTypeObj.id})`);
     
     // Marken nach Gerätetyp-ID filtern
-    return brandsData.filter(brand => brand.deviceTypeId === deviceTypeObj.id);
+    const filteredBrands = brandsData.filter(brand => brand.deviceTypeId === deviceTypeObj.id);
+    console.log(`Gefunden: ${filteredBrands.length} Marken:`, filteredBrands.map(b => b.name));
+    
+    return filteredBrands;
   };
 
   return (
