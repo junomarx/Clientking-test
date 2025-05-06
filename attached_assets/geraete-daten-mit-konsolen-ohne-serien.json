@@ -1,0 +1,1984 @@
+{
+  "deviceTypes": [
+    {
+      "id": 55,
+      "name": "Smartphone",
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-04-30T22:16:16.592Z",
+      "updatedAt": "2025-05-05T07:21:07.833Z"
+    },
+    {
+      "id": 60,
+      "name": "Tablet",
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-04-30T22:16:16.592Z",
+      "updatedAt": "2025-05-05T07:21:07.833Z"
+    },
+    {
+      "id": 61,
+      "name": "Laptop",
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-04-30T22:16:16.592Z",
+      "updatedAt": "2025-05-05T07:21:07.833Z"
+    },
+    {
+      "id": 62,
+      "name": "Watch",
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-04-30T22:16:16.592Z",
+      "updatedAt": "2025-05-05T07:21:07.833Z"
+    },
+    {
+      "id": 65,
+      "name": "Smartphone",
+      "userId": 3,
+      "shopId": 1,
+      "createdAt": "2025-05-05T12:05:07.597Z",
+      "updatedAt": "2025-05-05T12:05:07.597Z"
+    },
+    {
+      "id": 66,
+      "name": "Spielekonsole",
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-05T15:51:58.300Z",
+      "updatedAt": "2025-05-05T15:51:58.300Z"
+    }
+  ],
+  "brands": [
+    {
+      "id": 217,
+      "name": "Apple",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T08:32:33.270Z",
+      "updatedAt": "2025-05-05T08:32:33.270Z"
+    },
+    {
+      "id": 218,
+      "name": "Apple",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T08:42:38.449Z",
+      "updatedAt": "2025-05-05T08:42:38.449Z"
+    },
+    {
+      "id": 219,
+      "name": "Samsung",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:45.960Z",
+      "updatedAt": "2025-05-05T10:41:45.960Z"
+    },
+    {
+      "id": 220,
+      "name": "Google",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.048Z",
+      "updatedAt": "2025-05-05T10:41:46.048Z"
+    },
+    {
+      "id": 221,
+      "name": "Xiaomi",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.120Z",
+      "updatedAt": "2025-05-05T10:41:46.120Z"
+    },
+    {
+      "id": 222,
+      "name": "Huawei",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.196Z",
+      "updatedAt": "2025-05-05T10:41:46.196Z"
+    },
+    {
+      "id": 223,
+      "name": "OnePlus",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.265Z",
+      "updatedAt": "2025-05-05T10:41:46.265Z"
+    },
+    {
+      "id": 224,
+      "name": "Sony",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.330Z",
+      "updatedAt": "2025-05-05T10:41:46.330Z"
+    },
+    {
+      "id": 225,
+      "name": "Motorola",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.398Z",
+      "updatedAt": "2025-05-05T10:41:46.398Z"
+    },
+    {
+      "id": 226,
+      "name": "Nokia",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.473Z",
+      "updatedAt": "2025-05-05T10:41:46.473Z"
+    },
+    {
+      "id": 227,
+      "name": "Samsung",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.565Z",
+      "updatedAt": "2025-05-05T10:41:46.565Z"
+    },
+    {
+      "id": 228,
+      "name": "Microsoft",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.631Z",
+      "updatedAt": "2025-05-05T10:41:46.631Z"
+    },
+    {
+      "id": 229,
+      "name": "Lenovo",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.702Z",
+      "updatedAt": "2025-05-05T10:41:46.702Z"
+    },
+    {
+      "id": 230,
+      "name": "Huawei",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.790Z",
+      "updatedAt": "2025-05-05T10:41:46.790Z"
+    },
+    {
+      "id": 231,
+      "name": "Amazon",
+      "deviceTypeId": 60,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.872Z",
+      "updatedAt": "2025-05-05T10:41:46.873Z"
+    },
+    {
+      "id": 232,
+      "name": "Apple",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:46.936Z",
+      "updatedAt": "2025-05-05T10:41:46.936Z"
+    },
+    {
+      "id": 233,
+      "name": "Dell",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.002Z",
+      "updatedAt": "2025-05-05T10:41:47.002Z"
+    },
+    {
+      "id": 234,
+      "name": "HP",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.068Z",
+      "updatedAt": "2025-05-05T10:41:47.068Z"
+    },
+    {
+      "id": 235,
+      "name": "Lenovo",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.134Z",
+      "updatedAt": "2025-05-05T10:41:47.134Z"
+    },
+    {
+      "id": 236,
+      "name": "Asus",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.206Z",
+      "updatedAt": "2025-05-05T10:41:47.206Z"
+    },
+    {
+      "id": 237,
+      "name": "Acer",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.281Z",
+      "updatedAt": "2025-05-05T10:41:47.281Z"
+    },
+    {
+      "id": 238,
+      "name": "Microsoft",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.360Z",
+      "updatedAt": "2025-05-05T10:41:47.360Z"
+    },
+    {
+      "id": 239,
+      "name": "MSI",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.425Z",
+      "updatedAt": "2025-05-05T10:41:47.425Z"
+    },
+    {
+      "id": 240,
+      "name": "Razer",
+      "deviceTypeId": 61,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.491Z",
+      "updatedAt": "2025-05-05T10:41:47.491Z"
+    },
+    {
+      "id": 241,
+      "name": "Apple",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.568Z",
+      "updatedAt": "2025-05-05T10:41:47.568Z"
+    },
+    {
+      "id": 242,
+      "name": "Samsung",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.640Z",
+      "updatedAt": "2025-05-05T10:41:47.640Z"
+    },
+    {
+      "id": 243,
+      "name": "Garmin",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.704Z",
+      "updatedAt": "2025-05-05T10:41:47.704Z"
+    },
+    {
+      "id": 244,
+      "name": "Fitbit",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.769Z",
+      "updatedAt": "2025-05-05T10:41:47.769Z"
+    },
+    {
+      "id": 245,
+      "name": "Amazfit",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.838Z",
+      "updatedAt": "2025-05-05T10:41:47.838Z"
+    },
+    {
+      "id": 246,
+      "name": "Huawei",
+      "deviceTypeId": 62,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:47.911Z",
+      "updatedAt": "2025-05-05T10:41:47.911Z"
+    },
+    {
+      "id": 247,
+      "name": "Nintendo",
+      "deviceTypeId": 66,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    }
+  ],
+  "models": [
+    {
+      "id": 691,
+      "name": "iPhone 5",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.428Z",
+      "updatedAt": "2025-05-05T09:21:56.428Z"
+    },
+    {
+      "id": 692,
+      "name": "iPhone 5c",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.493Z",
+      "updatedAt": "2025-05-05T09:21:56.493Z"
+    },
+    {
+      "id": 693,
+      "name": "iPhone 5s",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.552Z",
+      "updatedAt": "2025-05-05T09:21:56.552Z"
+    },
+    {
+      "id": 694,
+      "name": "iPhone 6",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.613Z",
+      "updatedAt": "2025-05-05T09:21:56.613Z"
+    },
+    {
+      "id": 695,
+      "name": "iPhone 6 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.673Z",
+      "updatedAt": "2025-05-05T09:21:56.673Z"
+    },
+    {
+      "id": 696,
+      "name": "iPhone 6s",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.734Z",
+      "updatedAt": "2025-05-05T09:21:56.734Z"
+    },
+    {
+      "id": 697,
+      "name": "iPhone 6s Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.795Z",
+      "updatedAt": "2025-05-05T09:21:56.795Z"
+    },
+    {
+      "id": 698,
+      "name": "iPhone SE (1. Generation)",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.855Z",
+      "updatedAt": "2025-05-05T09:21:56.855Z"
+    },
+    {
+      "id": 699,
+      "name": "iPhone 7",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.916Z",
+      "updatedAt": "2025-05-05T09:21:56.916Z"
+    },
+    {
+      "id": 700,
+      "name": "iPhone 7 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:56.976Z",
+      "updatedAt": "2025-05-05T09:21:56.976Z"
+    },
+    {
+      "id": 701,
+      "name": "iPhone 8",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.035Z",
+      "updatedAt": "2025-05-05T09:21:57.035Z"
+    },
+    {
+      "id": 702,
+      "name": "iPhone 8 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.095Z",
+      "updatedAt": "2025-05-05T09:21:57.095Z"
+    },
+    {
+      "id": 703,
+      "name": "iPhone X",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.155Z",
+      "updatedAt": "2025-05-05T09:21:57.155Z"
+    },
+    {
+      "id": 704,
+      "name": "iPhone XR",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.215Z",
+      "updatedAt": "2025-05-05T09:21:57.215Z"
+    },
+    {
+      "id": 705,
+      "name": "iPhone XS",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.274Z",
+      "updatedAt": "2025-05-05T09:21:57.274Z"
+    },
+    {
+      "id": 706,
+      "name": "iPhone XS Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.334Z",
+      "updatedAt": "2025-05-05T09:21:57.334Z"
+    },
+    {
+      "id": 707,
+      "name": "iPhone 11",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.394Z",
+      "updatedAt": "2025-05-05T09:21:57.394Z"
+    },
+    {
+      "id": 708,
+      "name": "iPhone 11 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.456Z",
+      "updatedAt": "2025-05-05T09:21:57.456Z"
+    },
+    {
+      "id": 709,
+      "name": "iPhone 11 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.515Z",
+      "updatedAt": "2025-05-05T09:21:57.515Z"
+    },
+    {
+      "id": 710,
+      "name": "iPhone SE (2. Generation)",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.575Z",
+      "updatedAt": "2025-05-05T09:21:57.575Z"
+    },
+    {
+      "id": 711,
+      "name": "iPhone 12 mini",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.634Z",
+      "updatedAt": "2025-05-05T09:21:57.634Z"
+    },
+    {
+      "id": 712,
+      "name": "iPhone 12",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.695Z",
+      "updatedAt": "2025-05-05T09:21:57.695Z"
+    },
+    {
+      "id": 713,
+      "name": "iPhone 12 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.755Z",
+      "updatedAt": "2025-05-05T09:21:57.755Z"
+    },
+    {
+      "id": 714,
+      "name": "iPhone 12 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.816Z",
+      "updatedAt": "2025-05-05T09:21:57.816Z"
+    },
+    {
+      "id": 715,
+      "name": "iPhone 13 mini",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.877Z",
+      "updatedAt": "2025-05-05T09:21:57.877Z"
+    },
+    {
+      "id": 716,
+      "name": "iPhone 13",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.937Z",
+      "updatedAt": "2025-05-05T09:21:57.937Z"
+    },
+    {
+      "id": 717,
+      "name": "iPhone 13 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:57.998Z",
+      "updatedAt": "2025-05-05T09:21:57.998Z"
+    },
+    {
+      "id": 718,
+      "name": "iPhone 13 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.057Z",
+      "updatedAt": "2025-05-05T09:21:58.057Z"
+    },
+    {
+      "id": 719,
+      "name": "iPhone SE (3. Generation)",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.117Z",
+      "updatedAt": "2025-05-05T09:21:58.117Z"
+    },
+    {
+      "id": 720,
+      "name": "iPhone 14",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.180Z",
+      "updatedAt": "2025-05-05T09:21:58.180Z"
+    },
+    {
+      "id": 721,
+      "name": "iPhone 14 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.240Z",
+      "updatedAt": "2025-05-05T09:21:58.240Z"
+    },
+    {
+      "id": 722,
+      "name": "iPhone 14 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.300Z",
+      "updatedAt": "2025-05-05T09:21:58.300Z"
+    },
+    {
+      "id": 723,
+      "name": "iPhone 14 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.359Z",
+      "updatedAt": "2025-05-05T09:21:58.359Z"
+    },
+    {
+      "id": 724,
+      "name": "iPhone 15",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.419Z",
+      "updatedAt": "2025-05-05T09:21:58.419Z"
+    },
+    {
+      "id": 725,
+      "name": "iPhone 15 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.478Z",
+      "updatedAt": "2025-05-05T09:21:58.478Z"
+    },
+    {
+      "id": 726,
+      "name": "iPhone 15 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.538Z",
+      "updatedAt": "2025-05-05T09:21:58.538Z"
+    },
+    {
+      "id": 727,
+      "name": "iPhone 15 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.598Z",
+      "updatedAt": "2025-05-05T09:21:58.598Z"
+    },
+    {
+      "id": 728,
+      "name": "iPhone 16",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.658Z",
+      "updatedAt": "2025-05-05T09:21:58.658Z"
+    },
+    {
+      "id": 729,
+      "name": "iPhone 16 Plus",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.721Z",
+      "updatedAt": "2025-05-05T09:21:58.721Z"
+    },
+    {
+      "id": 730,
+      "name": "iPhone 16 Pro",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.783Z",
+      "updatedAt": "2025-05-05T09:21:58.783Z"
+    },
+    {
+      "id": 731,
+      "name": "iPhone 16 Pro Max",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.843Z",
+      "updatedAt": "2025-05-05T09:21:58.843Z"
+    },
+    {
+      "id": 732,
+      "name": "iPhone 16e",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-05T09:21:58.903Z",
+      "updatedAt": "2025-05-05T09:21:58.903Z"
+    },
+    {
+      "id": 738,
+      "name": "iPhone SE",
+      "modelSeriesId": null,
+      "brandId": 217,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.490Z",
+      "updatedAt": "2025-05-05T10:41:48.490Z"
+    },
+    {
+      "id": 739,
+      "name": "Galaxy S24 Ultra",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.568Z",
+      "updatedAt": "2025-05-05T10:41:48.568Z"
+    },
+    {
+      "id": 740,
+      "name": "Galaxy S24+",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.631Z",
+      "updatedAt": "2025-05-05T10:41:48.631Z"
+    },
+    {
+      "id": 741,
+      "name": "Galaxy S24",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.701Z",
+      "updatedAt": "2025-05-05T10:41:48.701Z"
+    },
+    {
+      "id": 742,
+      "name": "Galaxy S23",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.773Z",
+      "updatedAt": "2025-05-05T10:41:48.773Z"
+    },
+    {
+      "id": 743,
+      "name": "Galaxy S22",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.864Z",
+      "updatedAt": "2025-05-05T10:41:48.864Z"
+    },
+    {
+      "id": 744,
+      "name": "Galaxy A54",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:48.935Z",
+      "updatedAt": "2025-05-05T10:41:48.935Z"
+    },
+    {
+      "id": 745,
+      "name": "Galaxy A34",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.008Z",
+      "updatedAt": "2025-05-05T10:41:49.008Z"
+    },
+    {
+      "id": 746,
+      "name": "Galaxy Z Fold 5",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.087Z",
+      "updatedAt": "2025-05-05T10:41:49.087Z"
+    },
+    {
+      "id": 747,
+      "name": "Galaxy Z Flip 5",
+      "modelSeriesId": null,
+      "brandId": 219,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.201Z",
+      "updatedAt": "2025-05-05T10:41:49.201Z"
+    },
+    {
+      "id": 748,
+      "name": "Pixel 8 Pro",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.269Z",
+      "updatedAt": "2025-05-05T10:41:49.269Z"
+    },
+    {
+      "id": 749,
+      "name": "Pixel 8",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.350Z",
+      "updatedAt": "2025-05-05T10:41:49.350Z"
+    },
+    {
+      "id": 750,
+      "name": "Pixel 7",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.413Z",
+      "updatedAt": "2025-05-05T10:41:49.413Z"
+    },
+    {
+      "id": 751,
+      "name": "Pixel 7a",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.475Z",
+      "updatedAt": "2025-05-05T10:41:49.475Z"
+    },
+    {
+      "id": 752,
+      "name": "Pixel 6",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.539Z",
+      "updatedAt": "2025-05-05T10:41:49.539Z"
+    },
+    {
+      "id": 753,
+      "name": "Pixel 6a",
+      "modelSeriesId": null,
+      "brandId": 220,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.601Z",
+      "updatedAt": "2025-05-05T10:41:49.601Z"
+    },
+    {
+      "id": 754,
+      "name": "Redmi Note 13 Pro",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.673Z",
+      "updatedAt": "2025-05-05T10:41:49.673Z"
+    },
+    {
+      "id": 755,
+      "name": "Redmi Note 13",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.735Z",
+      "updatedAt": "2025-05-05T10:41:49.735Z"
+    },
+    {
+      "id": 756,
+      "name": "Mi 13",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.798Z",
+      "updatedAt": "2025-05-05T10:41:49.798Z"
+    },
+    {
+      "id": 757,
+      "name": "Mi 13 Lite",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.858Z",
+      "updatedAt": "2025-05-05T10:41:49.858Z"
+    },
+    {
+      "id": 758,
+      "name": "POCO X5 Pro",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.924Z",
+      "updatedAt": "2025-05-05T10:41:49.924Z"
+    },
+    {
+      "id": 759,
+      "name": "POCO X5",
+      "modelSeriesId": null,
+      "brandId": 221,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:49.985Z",
+      "updatedAt": "2025-05-05T10:41:49.985Z"
+    },
+    {
+      "id": 760,
+      "name": "iPad Pro 12.9",
+      "modelSeriesId": null,
+      "brandId": 218,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.059Z",
+      "updatedAt": "2025-05-05T10:41:50.059Z"
+    },
+    {
+      "id": 761,
+      "name": "iPad Pro 11",
+      "modelSeriesId": null,
+      "brandId": 218,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.134Z",
+      "updatedAt": "2025-05-05T10:41:50.134Z"
+    },
+    {
+      "id": 762,
+      "name": "iPad Air",
+      "modelSeriesId": null,
+      "brandId": 218,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.202Z",
+      "updatedAt": "2025-05-05T10:41:50.202Z"
+    },
+    {
+      "id": 763,
+      "name": "iPad Mini",
+      "modelSeriesId": null,
+      "brandId": 218,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.273Z",
+      "updatedAt": "2025-05-05T10:41:50.273Z"
+    },
+    {
+      "id": 764,
+      "name": "iPad",
+      "modelSeriesId": null,
+      "brandId": 218,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.362Z",
+      "updatedAt": "2025-05-05T10:41:50.362Z"
+    },
+    {
+      "id": 765,
+      "name": "Galaxy Tab S9 Ultra",
+      "modelSeriesId": null,
+      "brandId": 227,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.427Z",
+      "updatedAt": "2025-05-05T10:41:50.427Z"
+    },
+    {
+      "id": 766,
+      "name": "Galaxy Tab S9+",
+      "modelSeriesId": null,
+      "brandId": 227,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.489Z",
+      "updatedAt": "2025-05-05T10:41:50.489Z"
+    },
+    {
+      "id": 767,
+      "name": "Galaxy Tab S9",
+      "modelSeriesId": null,
+      "brandId": 227,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.554Z",
+      "updatedAt": "2025-05-05T10:41:50.554Z"
+    },
+    {
+      "id": 768,
+      "name": "Galaxy Tab A9+",
+      "modelSeriesId": null,
+      "brandId": 227,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.625Z",
+      "updatedAt": "2025-05-05T10:41:50.625Z"
+    },
+    {
+      "id": 769,
+      "name": "Galaxy Tab A9",
+      "modelSeriesId": null,
+      "brandId": 227,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.699Z",
+      "updatedAt": "2025-05-05T10:41:50.699Z"
+    },
+    {
+      "id": 770,
+      "name": "MacBook Pro 16",
+      "modelSeriesId": null,
+      "brandId": 232,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.798Z",
+      "updatedAt": "2025-05-05T10:41:50.798Z"
+    },
+    {
+      "id": 771,
+      "name": "MacBook Pro 14",
+      "modelSeriesId": null,
+      "brandId": 232,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.884Z",
+      "updatedAt": "2025-05-05T10:41:50.884Z"
+    },
+    {
+      "id": 772,
+      "name": "MacBook Air 15",
+      "modelSeriesId": null,
+      "brandId": 232,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:50.978Z",
+      "updatedAt": "2025-05-05T10:41:50.978Z"
+    },
+    {
+      "id": 773,
+      "name": "MacBook Air 13",
+      "modelSeriesId": null,
+      "brandId": 232,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.077Z",
+      "updatedAt": "2025-05-05T10:41:51.077Z"
+    },
+    {
+      "id": 774,
+      "name": "XPS 17",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.142Z",
+      "updatedAt": "2025-05-05T10:41:51.142Z"
+    },
+    {
+      "id": 775,
+      "name": "XPS 15",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.206Z",
+      "updatedAt": "2025-05-05T10:41:51.206Z"
+    },
+    {
+      "id": 776,
+      "name": "XPS 13",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.289Z",
+      "updatedAt": "2025-05-05T10:41:51.289Z"
+    },
+    {
+      "id": 777,
+      "name": "Latitude 7440",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.369Z",
+      "updatedAt": "2025-05-05T10:41:51.369Z"
+    },
+    {
+      "id": 778,
+      "name": "Inspiron 16",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.439Z",
+      "updatedAt": "2025-05-05T10:41:51.439Z"
+    },
+    {
+      "id": 779,
+      "name": "Inspiron 14",
+      "modelSeriesId": null,
+      "brandId": 233,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.513Z",
+      "updatedAt": "2025-05-05T10:41:51.513Z"
+    },
+    {
+      "id": 780,
+      "name": "ThinkPad X1 Carbon",
+      "modelSeriesId": null,
+      "brandId": 235,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.577Z",
+      "updatedAt": "2025-05-05T10:41:51.577Z"
+    },
+    {
+      "id": 781,
+      "name": "ThinkPad T14",
+      "modelSeriesId": null,
+      "brandId": 235,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.655Z",
+      "updatedAt": "2025-05-05T10:41:51.655Z"
+    },
+    {
+      "id": 782,
+      "name": "Yoga 9i",
+      "modelSeriesId": null,
+      "brandId": 235,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.719Z",
+      "updatedAt": "2025-05-05T10:41:51.719Z"
+    },
+    {
+      "id": 783,
+      "name": "IdeaPad Slim 5",
+      "modelSeriesId": null,
+      "brandId": 235,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.785Z",
+      "updatedAt": "2025-05-05T10:41:51.785Z"
+    },
+    {
+      "id": 784,
+      "name": "Watch Series 9",
+      "modelSeriesId": null,
+      "brandId": 241,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.888Z",
+      "updatedAt": "2025-05-05T10:41:51.888Z"
+    },
+    {
+      "id": 785,
+      "name": "Watch Ultra 2",
+      "modelSeriesId": null,
+      "brandId": 241,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:51.965Z",
+      "updatedAt": "2025-05-05T10:41:51.965Z"
+    },
+    {
+      "id": 786,
+      "name": "Watch SE",
+      "modelSeriesId": null,
+      "brandId": 241,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:52.044Z",
+      "updatedAt": "2025-05-05T10:41:52.044Z"
+    },
+    {
+      "id": 787,
+      "name": "Galaxy Watch 6",
+      "modelSeriesId": null,
+      "brandId": 242,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:52.128Z",
+      "updatedAt": "2025-05-05T10:41:52.128Z"
+    },
+    {
+      "id": 788,
+      "name": "Galaxy Watch 6 Classic",
+      "modelSeriesId": null,
+      "brandId": 242,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:52.201Z",
+      "updatedAt": "2025-05-05T10:41:52.201Z"
+    },
+    {
+      "id": 789,
+      "name": "Galaxy Watch 5",
+      "modelSeriesId": null,
+      "brandId": 242,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:52.266Z",
+      "updatedAt": "2025-05-05T10:41:52.266Z"
+    },
+    {
+      "id": 790,
+      "name": "Galaxy Watch 5 Pro",
+      "modelSeriesId": null,
+      "brandId": 242,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-05T10:41:52.335Z",
+      "updatedAt": "2025-05-05T10:41:52.335Z"
+    },
+    {
+      "id": 791,
+      "name": "Switch",
+      "modelSeriesId": null,
+      "brandId": 247,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 792,
+      "name": "Switch Lite",
+      "modelSeriesId": null,
+      "brandId": 247,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 793,
+      "name": "Switch OLED",
+      "modelSeriesId": null,
+      "brandId": 247,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 794,
+      "name": "PlayStation 4",
+      "modelSeriesId": null,
+      "brandId": 224,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 795,
+      "name": "PlayStation 4 Pro",
+      "modelSeriesId": null,
+      "brandId": 224,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 796,
+      "name": "PlayStation 5",
+      "modelSeriesId": null,
+      "brandId": 224,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 797,
+      "name": "Xbox One",
+      "modelSeriesId": null,
+      "brandId": 238,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 798,
+      "name": "Xbox Series S",
+      "modelSeriesId": null,
+      "brandId": 238,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    },
+    {
+      "id": 799,
+      "name": "Xbox Series X",
+      "modelSeriesId": null,
+      "brandId": 238,
+      "userId": 10,
+      "shopId": 2,
+      "createdAt": "2025-05-06T22:19:49.277126",
+      "updatedAt": "2025-05-06T22:19:49.277126"
+    }
+  ],
+  "deviceIssues": [
+    {
+      "id": 1,
+      "title": "Fehlerbeschreibung",
+      "description": "Display defekt/gebrochen",
+      "solution": null,
+      "deviceType": "Smartphone",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T21:00:29.496Z",
+      "updatedAt": "2025-04-30T21:00:29.496Z"
+    },
+    {
+      "id": 3,
+      "title": "Fehlerbeschreibung",
+      "description": "Display defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.113Z",
+      "updatedAt": "2025-04-30T22:33:29.113Z"
+    },
+    {
+      "id": 4,
+      "title": "Fehlerbeschreibung",
+      "description": "Display gebrochen",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.220Z",
+      "updatedAt": "2025-04-30T22:33:29.220Z"
+    },
+    {
+      "id": 5,
+      "title": "Fehlerbeschreibung",
+      "description": "Touch reagiert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.421Z",
+      "updatedAt": "2025-04-30T22:33:29.421Z"
+    },
+    {
+      "id": 6,
+      "title": "Fehlerbeschreibung",
+      "description": "Akku defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.520Z",
+      "updatedAt": "2025-04-30T22:33:29.520Z"
+    },
+    {
+      "id": 7,
+      "title": "Fehlerbeschreibung",
+      "description": "Akku entlädt sich schnell",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.657Z",
+      "updatedAt": "2025-04-30T22:33:29.657Z"
+    },
+    {
+      "id": 8,
+      "title": "Fehlerbeschreibung",
+      "description": "Lädt nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.659Z",
+      "updatedAt": "2025-04-30T22:33:29.659Z"
+    },
+    {
+      "id": 9,
+      "title": "Fehlerbeschreibung",
+      "description": "Ladebuchse defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.661Z",
+      "updatedAt": "2025-04-30T22:33:29.661Z"
+    },
+    {
+      "id": 10,
+      "title": "Fehlerbeschreibung",
+      "description": "Ladebuchse wackelt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.684Z",
+      "updatedAt": "2025-04-30T22:33:29.684Z"
+    },
+    {
+      "id": 11,
+      "title": "Fehlerbeschreibung",
+      "description": "Rückseite beschädigt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.718Z",
+      "updatedAt": "2025-04-30T22:33:29.718Z"
+    },
+    {
+      "id": 12,
+      "title": "Fehlerbeschreibung",
+      "description": "Gehäuse beschädigt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.823Z",
+      "updatedAt": "2025-04-30T22:33:29.823Z"
+    },
+    {
+      "id": 13,
+      "title": "Fehlerbeschreibung",
+      "description": "Gehäuse verbogen",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.955Z",
+      "updatedAt": "2025-04-30T22:33:29.955Z"
+    },
+    {
+      "id": 14,
+      "title": "Fehlerbeschreibung",
+      "description": "Kamera defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.957Z",
+      "updatedAt": "2025-04-30T22:33:29.957Z"
+    },
+    {
+      "id": 15,
+      "title": "Fehlerbeschreibung",
+      "description": "Kamera unscharf",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.958Z",
+      "updatedAt": "2025-04-30T22:33:29.958Z"
+    },
+    {
+      "id": 16,
+      "title": "Fehlerbeschreibung",
+      "description": "Kamera-App stürzt ab",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:29.980Z",
+      "updatedAt": "2025-04-30T22:33:29.980Z"
+    },
+    {
+      "id": 17,
+      "title": "Fehlerbeschreibung",
+      "description": "Kein Ton",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.011Z",
+      "updatedAt": "2025-04-30T22:33:30.011Z"
+    },
+    {
+      "id": 18,
+      "title": "Fehlerbeschreibung",
+      "description": "Lautsprecher defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.121Z",
+      "updatedAt": "2025-04-30T22:33:30.121Z"
+    },
+    {
+      "id": 19,
+      "title": "Fehlerbeschreibung",
+      "description": "Ton verzerrt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.252Z",
+      "updatedAt": "2025-04-30T22:33:30.252Z"
+    },
+    {
+      "id": 20,
+      "title": "Fehlerbeschreibung",
+      "description": "Sprachaufnahme nicht möglich",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.253Z",
+      "updatedAt": "2025-04-30T22:33:30.253Z"
+    },
+    {
+      "id": 21,
+      "title": "Fehlerbeschreibung",
+      "description": "Mikrofon defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.255Z",
+      "updatedAt": "2025-04-30T22:33:30.255Z"
+    },
+    {
+      "id": 22,
+      "title": "Fehlerbeschreibung",
+      "description": "Wasserschaden",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.275Z",
+      "updatedAt": "2025-04-30T22:33:30.275Z"
+    },
+    {
+      "id": 23,
+      "title": "Fehlerbeschreibung",
+      "description": "Flüssigkeit eingedrungen",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.317Z",
+      "updatedAt": "2025-04-30T22:33:30.317Z"
+    },
+    {
+      "id": 24,
+      "title": "Fehlerbeschreibung",
+      "description": "Home-Button funktioniert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.416Z",
+      "updatedAt": "2025-04-30T22:33:30.416Z"
+    },
+    {
+      "id": 25,
+      "title": "Fehlerbeschreibung",
+      "description": "Home-Button reagiert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.558Z",
+      "updatedAt": "2025-04-30T22:33:30.558Z"
+    },
+    {
+      "id": 26,
+      "title": "Fehlerbeschreibung",
+      "description": "Lautstärketasten defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.561Z",
+      "updatedAt": "2025-04-30T22:33:30.561Z"
+    },
+    {
+      "id": 27,
+      "title": "Fehlerbeschreibung",
+      "description": "Power-Button defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.567Z",
+      "updatedAt": "2025-04-30T22:33:30.567Z"
+    },
+    {
+      "id": 28,
+      "title": "Fehlerbeschreibung",
+      "description": "Vibration funktioniert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.567Z",
+      "updatedAt": "2025-04-30T22:33:30.567Z"
+    },
+    {
+      "id": 29,
+      "title": "Fehlerbeschreibung",
+      "description": "Face ID defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.640Z",
+      "updatedAt": "2025-04-30T22:33:30.640Z"
+    },
+    {
+      "id": 30,
+      "title": "Fehlerbeschreibung",
+      "description": "Touch ID defekt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.713Z",
+      "updatedAt": "2025-04-30T22:33:30.713Z"
+    },
+    {
+      "id": 31,
+      "title": "Fehlerbeschreibung",
+      "description": "SIM-Karte wird nicht erkannt",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.865Z",
+      "updatedAt": "2025-04-30T22:33:30.865Z"
+    },
+    {
+      "id": 32,
+      "title": "Fehlerbeschreibung",
+      "description": "Touch ID nicht verfügbar",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.866Z",
+      "updatedAt": "2025-04-30T22:33:30.866Z"
+    },
+    {
+      "id": 33,
+      "title": "Fehlerbeschreibung",
+      "description": "Face ID nicht verfügbar",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.866Z",
+      "updatedAt": "2025-04-30T22:33:30.866Z"
+    },
+    {
+      "id": 34,
+      "title": "Fehlerbeschreibung",
+      "description": "WLAN funktioniert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.872Z",
+      "updatedAt": "2025-04-30T22:33:30.872Z"
+    },
+    {
+      "id": 35,
+      "title": "Fehlerbeschreibung",
+      "description": "Bluetooth funktioniert nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:30.950Z",
+      "updatedAt": "2025-04-30T22:33:30.950Z"
+    },
+    {
+      "id": 36,
+      "title": "Fehlerbeschreibung",
+      "description": "WLAN-Verbindungsprobleme",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:31.028Z",
+      "updatedAt": "2025-04-30T22:33:31.028Z"
+    },
+    {
+      "id": 37,
+      "title": "Fehlerbeschreibung",
+      "description": "iPad startet nicht",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:31.181Z",
+      "updatedAt": "2025-04-30T22:33:31.181Z"
+    },
+    {
+      "id": 38,
+      "title": "Fehlerbeschreibung",
+      "description": "Bluetooth-Verbindungsprobleme",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:31.192Z",
+      "updatedAt": "2025-04-30T22:33:31.192Z"
+    },
+    {
+      "id": 39,
+      "title": "Fehlerbeschreibung",
+      "description": "Softwarefehler",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:31.239Z",
+      "updatedAt": "2025-04-30T22:33:31.239Z"
+    },
+    {
+      "id": 40,
+      "title": "Fehlerbeschreibung",
+      "description": "iPad hängt beim Apple-Logo",
+      "solution": null,
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-04-30T22:33:31.241Z",
+      "updatedAt": "2025-04-30T22:33:31.241Z"
+    },
+    {
+      "id": 41,
+      "title": "Topcase",
+      "description": "Automatisch importiert",
+      "solution": "",
+      "deviceType": "Laptop",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:11:39.963Z",
+      "updatedAt": "2025-05-05T10:11:39.963Z"
+    },
+    {
+      "id": 42,
+      "title": "Tastatur",
+      "description": "Automatisch importiert",
+      "solution": "",
+      "deviceType": "Laptop",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:12:03.655Z",
+      "updatedAt": "2025-05-05T10:12:03.655Z"
+    },
+    {
+      "id": 43,
+      "title": "Displaybruch",
+      "description": "Das Display ist gesprungen oder gesplittert, möglicherweise nach einem Sturz.",
+      "solution": "Display-Austausch erforderlich. Je nach Modell kann entweder nur das Glas oder die gesamte Display-Einheit getauscht werden.",
+      "deviceType": "Smartphone",
+      "severity": "high",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.404Z",
+      "updatedAt": "2025-05-05T10:41:52.404Z"
+    },
+    {
+      "id": 44,
+      "title": "Akku lädt nicht",
+      "description": "Gerät reagiert nicht auf Ladekabel oder lädt sehr langsam.",
+      "solution": "Prüfen Sie zunächst das Ladekabel und den Anschluss auf Beschädigungen. Bei Bedarf Akkuaustausch durchführen.",
+      "deviceType": "Smartphone",
+      "severity": "medium",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.468Z",
+      "updatedAt": "2025-05-05T10:41:52.468Z"
+    },
+    {
+      "id": 45,
+      "title": "Wasserschaden",
+      "description": "Gerät wurde mit Flüssigkeit in Kontakt gebracht, Funktionsstörungen treten auf.",
+      "solution": "Sofort ausschalten, nicht laden. Öffnen und trocknen lassen, Korrosion beseitigen.",
+      "deviceType": "Smartphone",
+      "severity": "critical",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.533Z",
+      "updatedAt": "2025-05-05T10:41:52.533Z"
+    },
+    {
+      "id": 46,
+      "title": "Kamera funktioniert nicht",
+      "description": "Die Kamera zeigt kein Bild oder macht unscharfe Aufnahmen.",
+      "solution": "Software-Reset versuchen. Bei Hardware-Defekt Kamera-Modul austauschen.",
+      "deviceType": "Smartphone",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:41:52.600Z",
+      "updatedAt": "2025-05-05T10:41:52.600Z"
+    },
+    {
+      "id": 47,
+      "title": "Displaybruch",
+      "description": "Das Display ist gesprungen oder gesplittert, möglicherweise nach einem Sturz.",
+      "solution": "Display-Austausch erforderlich. Je nach Modell kann entweder nur das Glas oder die gesamte Display-Einheit getauscht werden.",
+      "deviceType": "Tablet",
+      "severity": "high",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.669Z",
+      "updatedAt": "2025-05-05T10:41:52.669Z"
+    },
+    {
+      "id": 48,
+      "title": "Akku hält nicht lange",
+      "description": "Die Akkulaufzeit ist deutlich kürzer als üblich.",
+      "solution": "Akkuaustausch durchführen. Vorher Diagnose ausführen, um die Akkukapazität zu überprüfen.",
+      "deviceType": "Tablet",
+      "severity": "medium",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.729Z",
+      "updatedAt": "2025-05-05T10:41:52.729Z"
+    },
+    {
+      "id": 49,
+      "title": "Touchscreen reagiert nicht",
+      "description": "Touchscreen reagiert nicht oder nur teilweise auf Berührungen.",
+      "solution": "Display-Einheit austauschen, da der Touchscreen in der Regel mit dem Display verbunden ist.",
+      "deviceType": "Tablet",
+      "severity": "high",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:41:52.792Z",
+      "updatedAt": "2025-05-05T10:41:52.792Z"
+    },
+    {
+      "id": 50,
+      "title": "Startet nicht",
+      "description": "Gerät zeigt keine Reaktion beim Einschalten.",
+      "solution": "Netzteil und Akku prüfen. Wenn das nicht hilft, Mainboard-Diagnose durchführen.",
+      "deviceType": "Laptop",
+      "severity": "critical",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.875Z",
+      "updatedAt": "2025-05-05T10:41:52.875Z"
+    },
+    {
+      "id": 51,
+      "title": "Überhitzung",
+      "description": "Laptop wird sehr heiß und schaltet sich manchmal plötzlich ab.",
+      "solution": "Lüfter reinigen, Wärmeleitpaste erneuern. Bei Bedarf Lüfter austauschen.",
+      "deviceType": "Laptop",
+      "severity": "high",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:52.943Z",
+      "updatedAt": "2025-05-05T10:41:52.943Z"
+    },
+    {
+      "id": 52,
+      "title": "Tastatur defekt",
+      "description": "Einzelne oder mehrere Tasten funktionieren nicht mehr.",
+      "solution": "Je nach Modell einzelne Tasten oder die gesamte Tastatureinheit austauschen.",
+      "deviceType": "Laptop",
+      "severity": "medium",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:41:53.009Z",
+      "updatedAt": "2025-05-05T10:41:53.009Z"
+    },
+    {
+      "id": 53,
+      "title": "Displayschaden",
+      "description": "Risse oder tote Pixel im Display.",
+      "solution": "Display-Einheit austauschen.",
+      "deviceType": "Laptop",
+      "severity": "medium",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:53.068Z",
+      "updatedAt": "2025-05-05T10:41:53.068Z"
+    },
+    {
+      "id": 54,
+      "title": "Akku hält nicht lange",
+      "description": "Die Smartwatch entlädt sich ungewöhnlich schnell.",
+      "solution": "Akkuaustausch durchführen.",
+      "deviceType": "Watch",
+      "severity": "medium",
+      "isCommon": true,
+      "createdAt": "2025-05-05T10:41:53.131Z",
+      "updatedAt": "2025-05-05T10:41:53.131Z"
+    },
+    {
+      "id": 55,
+      "title": "Wasserschaden",
+      "description": "Smartwatch wurde mit zu viel Wasser in Kontakt gebracht, Beschlagung unter dem Glas.",
+      "solution": "Öffnen, trocknen und Dichtung erneuern.",
+      "deviceType": "Watch",
+      "severity": "high",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:41:53.208Z",
+      "updatedAt": "2025-05-05T10:41:53.208Z"
+    },
+    {
+      "id": 56,
+      "title": "Display reagiert nicht",
+      "description": "Touchscreen reagiert nicht auf Berührungen.",
+      "solution": "Display-Einheit austauschen.",
+      "deviceType": "Watch",
+      "severity": "high",
+      "isCommon": false,
+      "createdAt": "2025-05-05T10:41:53.269Z",
+      "updatedAt": "2025-05-05T10:41:53.269Z"
+    }
+  ],
+  "exportedAt": "2025-05-06T22:17:48.275Z",
+  "version": "1.0"
+}

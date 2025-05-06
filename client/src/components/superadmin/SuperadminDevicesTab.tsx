@@ -88,14 +88,16 @@ export default function SuperadminDevicesTab() {
   });
 
   // Daten abfragen
-  const { data: deviceIssues, isLoading: isLoadingIssues } = useQuery<DeviceIssue[]>({
+  const { data: deviceIssues, isLoading: isLoadingIssues, refetch: refetchDeviceIssues } = useQuery<DeviceIssue[]>({
     queryKey: ["/api/superadmin/device-issues"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
 
-  const { data: deviceTypes } = useQuery<string[]>({
+  const { data: deviceTypes, refetch: refetchDeviceTypes } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
 
   // Mutations für API-Anfragen
@@ -254,28 +256,32 @@ export default function SuperadminDevicesTab() {
   const [selectAllModels, setSelectAllModels] = useState(false);
   
   // API-Abfrage: Alle Gerätetypen abrufen
-  const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList } = useQuery<string[]>({
+  const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList, refetch: refetchDeviceTypesList } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
   
   // API-Abfrage: Alle Marken abrufen
-  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<Brand[]>({
+  const { data: brandsData, isLoading: isLoadingBrands, refetch: refetchBrands } = useQuery<Brand[]>({
     queryKey: ["/api/superadmin/brands"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
   
   // Da wir auch die IDs der Gerätetypen benötigen, müssen wir sie direkt abfragen
   // Wir verwenden die URL ohne "-" für die API-Anfrage
-  const { data: userDeviceTypes } = useQuery<UserDeviceType[]>({
+  const { data: userDeviceTypes, refetch: refetchUserDeviceTypes } = useQuery<UserDeviceType[]>({
     queryKey: ["/api/superadmin/device-types/all"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
   
   // API-Abfrage: Alle Modelle abrufen
-  const { data: modelsData, isLoading: isLoadingModels } = useQuery<Model[]>({
+  const { data: modelsData, isLoading: isLoadingModels, refetch: refetchModels } = useQuery<Model[]>({
     queryKey: ["/api/superadmin/models"],
     enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
   
   // Mutation zum Erstellen eines neuen Gerätetyps

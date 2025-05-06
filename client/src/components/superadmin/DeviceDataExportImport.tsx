@@ -1,19 +1,61 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Download, Upload, Check } from "lucide-react";
+import { Loader2, Download, Upload, Check, RefreshCw } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const DeviceDataExportImport: React.FC = () => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importProgress, setImportProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Funktion zum Aktualisieren aller Daten
+  const refreshAllData = async () => {
+    setIsRefreshing(true);
+    console.log("Manuelles Aktualisieren aller Daten...");
+    
+    try {
+      // Alle relevanten Abfragen invalidieren
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types/all"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] })
+      ]);
+      
+      // Alle Abfragen explizit neu laden
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ["/api/superadmin/device-types"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/superadmin/device-types/all"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/superadmin/brands"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/superadmin/models"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/superadmin/device-issues"] })
+      ]);
+      
+      console.log("Alle Daten wurden aktualisiert");
+      toast({
+        title: "Daten aktualisiert",
+        description: "Alle Gerätedaten wurden erfolgreich aktualisiert.",
+      });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Daten:", error);
+      toast({
+        title: "Aktualisierung fehlgeschlagen",
+        description: "Die Daten konnten nicht aktualisiert werden.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Mutation für den Export
   const exportMutation = useMutation({
@@ -113,13 +155,17 @@ const DeviceDataExportImport: React.FC = () => {
       }
     },
     onSuccess: (data) => {
-      // Invalidiere alle relevanten Daten
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
-      // Modellreihen gibt es nicht mehr
-      // queryClient.invalidateQueries({ queryKey: ["/api/superadmin/model-series"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      console.log("Import erfolgreich, invalidiere Caches...");
+      
+      // Forciertes Neuladen aller Daten nach dem Import
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] })
+      ]).then(() => {
+        console.log("Alle Caches wurden erfolgreich invalidiert.");
+      });
       
       // Hole total (neu + bereits existierend) und new (nur neu hinzugefügt) aus der Antwort
       const total = {
@@ -188,11 +234,26 @@ const DeviceDataExportImport: React.FC = () => {
 
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Gerätedaten exportieren/importieren</CardTitle>
-        <CardDescription>
-          Exportieren und importieren Sie alle Gerätetypen, Hersteller, Modelle und Fehlereinträge.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Gerätedaten exportieren/importieren</CardTitle>
+          <CardDescription>
+            Exportieren und importieren Sie alle Gerätetypen, Hersteller, Modelle und Fehlereinträge.
+          </CardDescription>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={refreshAllData}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          <span className="ml-2 hidden md:inline">Daten aktualisieren</span>
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
