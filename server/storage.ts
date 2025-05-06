@@ -2593,8 +2593,8 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserBrand(id: number, userId: number): Promise<boolean> {
     try {
-      // Zuerst alle zugehörigen Modellreihen löschen
-      await this.deleteAllUserModelSeriesForBrand(id, userId);
+      // Zuerst alle zugehörigen Modelle direkt löschen, ohne Modellreihen
+      await this.deleteAllUserModelsForBrand(id, userId);
 
       // Dann die Marke löschen
       await db
@@ -2767,29 +2767,12 @@ export class DatabaseStorage implements IStorage {
     userId: number,
   ): Promise<boolean> {
     try {
-      // Hole alle Modellreihen für diese Marke
-      const modelSeriesList = await this.getUserModelSeriesByBrandId(
-        brandId,
-        userId,
-      );
-
-      // Lösche alle zugehörigen Modelle für jede Modellreihe
-      for (const modelSeries of modelSeriesList) {
-        await this.deleteAllUserModelsForModelSeries(modelSeries.id, userId);
-      }
-
-      // Lösche alle Modellreihen für diese Marke
-      await db
-        .delete(userModelSeries)
-        .where(
-          and(
-            eq(userModelSeries.brandId, brandId),
-            eq(userModelSeries.userId, userId),
-          ),
-        );
-      return true;
+      console.log(`[VERALTET] deleteAllUserModelSeriesForBrand für Marke ${brandId} und Benutzer ${userId} - UMLEITUNG`);
+      
+      // Direkte Umleitung zur neuen Methode, die direkt mit Modellen arbeitet, ohne Modellreihen
+      return await this.deleteAllUserModelsForBrand(brandId, userId);
     } catch (error) {
-      console.error("Error deleting all user model series for brand:", error);
+      console.error("Error redirecting to deleteAllUserModelsForBrand:", error);
       return false;
     }
   }
