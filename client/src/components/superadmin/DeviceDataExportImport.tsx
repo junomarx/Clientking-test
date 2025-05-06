@@ -81,7 +81,19 @@ const DeviceDataExportImport: React.FC = () => {
         setImportProgress(50);
         
         // Daten an den Server senden
-        const response = await apiRequest("POST", "/api/superadmin/device-management/import", jsonData);
+        // Füge Debugging-Informationen hinzu
+        console.log('Import-Daten:', jsonData);
+        
+        // Achte darauf, dass der Content-Type korrekt gesetzt ist
+        const response = await fetch('/api/superadmin/device-management/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-ID': localStorage.getItem('userId') || ''
+          },
+          body: JSON.stringify(jsonData),
+          credentials: 'include'
+        });
         
         setImportProgress(80);
         
