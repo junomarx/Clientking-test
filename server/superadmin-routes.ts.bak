@@ -523,8 +523,8 @@ export function registerSuperadminRoutes(app: Express) {
       }
       
       // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
-      const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
+      const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu aktualisierende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
       if (capitalizedStandardTypes.includes(oldName)) {
@@ -569,8 +569,8 @@ export function registerSuperadminRoutes(app: Express) {
       const name = decodeURIComponent(req.params.name);
       
       // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
-      const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
+      const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu löschende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
       if (capitalizedStandardTypes.includes(name)) {
