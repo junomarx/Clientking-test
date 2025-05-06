@@ -304,6 +304,7 @@ function convertToUser(row: any): User {
     email: String(row.email),
     isActive: Boolean(row.is_active),
     isAdmin: Boolean(row.is_admin),
+    isSuperadmin: Boolean(row.is_superadmin),
     pricingPlan: row.pricing_plan ? String(row.pricing_plan) : null,
     shopId: row.shop_id ? Number(row.shop_id) : null,
     companyName: row.company_name ? String(row.company_name) : null,
@@ -361,7 +362,7 @@ export class DatabaseStorage implements IStorage {
       console.log("Verwende Fallback-Abfrage für Benutzer...");
 
       const result = await db.execute(sql`
-        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+        SELECT id, username, password, email, is_active, is_admin, is_superadmin, pricing_plan, 
                shop_id, company_name, company_address, company_vat_number,
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
@@ -391,7 +392,7 @@ export class DatabaseStorage implements IStorage {
       console.log("Verwende Fallback-Abfrage für Benutzer...");
 
       const result = await db.execute(sql`
-        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+        SELECT id, username, password, email, is_active, is_admin, is_superadmin, pricing_plan, 
                shop_id, company_name, company_address, company_vat_number,
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
@@ -417,7 +418,7 @@ export class DatabaseStorage implements IStorage {
       console.log("Verwende Fallback-Abfrage...");
 
       const result = await db.execute(sql`
-        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+        SELECT id, username, password, email, is_active, is_admin, is_superadmin, pricing_plan, 
                shop_id, company_name, company_address, company_vat_number,
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
@@ -444,7 +445,7 @@ export class DatabaseStorage implements IStorage {
       console.log("Verwende Fallback-Abfrage für Benutzer...");
 
       const result = await db.execute(sql`
-        SELECT id, username, password, email, is_active, is_admin, pricing_plan, 
+        SELECT id, username, password, email, is_active, is_admin, is_superadmin, pricing_plan, 
                shop_id, company_name, company_address, company_vat_number,
                company_phone, company_email, reset_token, reset_token_expires,
                created_at, feature_overrides, package_id
@@ -1505,7 +1506,8 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(businessSettings.userId, userId),
-            eq(businessSettings.shopId, shopId),
+            // Verwendung von sql für den direkten Vergleich mit der Spalte
+            sql`${businessSettings.shopId} = ${shopId}`,
           ),
         );
 
@@ -1520,7 +1522,7 @@ export class DatabaseStorage implements IStorage {
       const [shopSettings] = await db
         .select()
         .from(businessSettings)
-        .where(eq(businessSettings.shopId, shopId));
+        .where(sql`${businessSettings.shopId} = ${shopId}`);
 
       if (shopSettings) {
         console.log(
@@ -1595,7 +1597,7 @@ export class DatabaseStorage implements IStorage {
       );
       const conditions = and(
         eq(businessSettings.userId, userId),
-        eq(businessSettings.shopId, shopId),
+        sql`${businessSettings.shopId} = ${shopId}`,
       ) as SQL<unknown>;
 
       // Einstellungen für diesen Benutzer suchen
@@ -2881,30 +2883,51 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getUserModelsByBrand(
+    brandId: number,
+    userId: number,
+  ): Promise<UserModel[]> {
+    try {
+      console.log(`Suche Modelle für Marke ${brandId} und Benutzer ${userId}`);
+      
+      // Direkte Abfrage nach Modellen mit der angegebenen brandId
+      const models = await db
+        .select()
+        .from(userModels)
+        .where(
+          and(
+            eq(userModels.brandId, brandId),
+            eq(userModels.userId, userId)
+          )
+        );
+      
+      return models;
+    } catch (error) {
+      console.error("Error retrieving user models by brand:", error);
+      return [];
+    }
+  }
+
   async deleteAllUserModelsForBrand(
     brandId: number,
-    deviceTypeId: number,
     userId: number,
   ): Promise<boolean> {
     try {
-      // Da userModels kein direktes brandId-Feld hat, müssen wir einen Umweg gehen
-      // Wir holen zuerst alle Modellreihen für diese Marke
-      const modelSeriesList = await this.getUserModelSeriesByBrandId(
-        brandId,
-        userId,
-      );
-
-      // Lösche alle Modelle für diese Modellreihen
-      for (const modelSeries of modelSeriesList) {
-        await this.deleteAllUserModelsForModelSeries(modelSeries.id, userId);
-      }
-
+      console.log(`Lösche alle Modelle für Marke ${brandId} und Benutzer ${userId}`);
+      
+      // Direkte Löschung aller Modelle mit der angegebenen brandId
+      await db
+        .delete(userModels)
+        .where(
+          and(
+            eq(userModels.brandId, brandId),
+            eq(userModels.userId, userId)
+          )
+        );
+      
       return true;
     } catch (error) {
-      console.error(
-        "Error deleting all user models for brand and device type:",
-        error,
-      );
+      console.error("Error deleting all user models for brand:", error);
       return false;
     }
   }
