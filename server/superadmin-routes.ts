@@ -1244,4 +1244,361 @@ export function registerSuperadminRoutes(app: Express) {
       });
     }
   });
+
+  // Kompletten Export aller Gerätedaten (Gerätearten, Hersteller, Modelle, Fehlerkatalog)
+  app.get("/api/superadmin/device-management/export", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Export aller Gerätedaten gestartet...");
+      
+      // Alle Daten gleichzeitig laden
+      const [
+        deviceTypesList, 
+        brandsList, 
+        modelSeriesList, 
+        modelsList,
+        deviceIssuesList
+      ] = await Promise.all([
+        db.select().from(userDeviceTypes),
+        db.select().from(userBrands),
+        db.select().from(userModelSeries),
+        db.select().from(userModels),
+        db.select().from(deviceIssues)
+      ]);
+      
+      console.log(`Exportiere ${deviceTypesList.length} Gerätearten, ${brandsList.length} Hersteller, ${modelSeriesList.length} Modellreihen, ${modelsList.length} Modelle und ${deviceIssuesList.length} Fehlereinträge`);
+      
+      // Daten für Export zusammenstellen
+      const exportData = {
+        deviceTypes: deviceTypesList,
+        brands: brandsList,
+        modelSeries: modelSeriesList,
+        models: modelsList,
+        deviceIssues: deviceIssuesList,
+        exportedAt: new Date().toISOString(),
+        version: "1.0"
+      };
+      
+      res.json(exportData);
+    } catch (error) {
+      console.error("Fehler beim Exportieren der Gerätedaten:", error);
+      res.status(500).json({ message: "Fehler beim Exportieren der Gerätedaten" });
+    }
+  });
+
+  // Import aller Gerätedaten (Gerätearten, Hersteller, Modelle, Fehlerkatalog)
+  app.post("/api/superadmin/device-management/import", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const importData = req.body;
+      
+      if (!importData || typeof importData !== 'object') {
+        return res.status(400).json({ message: "Ungültige Import-Daten" });
+      }
+      
+      console.log("Import von Gerätedaten gestartet...");
+      console.log("Verfügbare Datentypen:", Object.keys(importData));
+      
+      // Statistik für den Import
+      const stats = {
+        deviceTypes: 0,
+        brands: 0,
+        modelSeries: 0,
+        models: 0,
+        deviceIssues: 0
+      };
+      
+      // Mappings für IDs (alte ID -> neue ID)
+      const idMappings = {
+        deviceTypes: new Map<number, number>(),
+        brands: new Map<number, number>(),
+        modelSeries: new Map<number, number>()
+      };
+      
+      // 1. Gerätearten importieren
+      if (importData.deviceTypes && Array.isArray(importData.deviceTypes)) {
+        console.log(`Import von ${importData.deviceTypes.length} Gerätearten...`);
+        
+        // Vorhandene Gerätearten abrufen
+        const existingDeviceTypes = await db.select().from(userDeviceTypes);
+        const existingDeviceTypesByName = new Map(
+          existingDeviceTypes.map(dt => [dt.name.toLowerCase(), dt])
+        );
+        
+        for (const deviceType of importData.deviceTypes) {
+          try {
+            const oldId = deviceType.id;
+            const name = deviceType.name;
+            
+            // Prüfen, ob bereits ein Gerätetyp mit diesem Namen existiert
+            const existingType = existingDeviceTypesByName.get(name.toLowerCase());
+            
+            if (existingType) {
+              // Vorhandenen Gerätetyp verwenden
+              idMappings.deviceTypes.set(oldId, existingType.id);
+              console.log(`Gerätetyp ${name} existiert bereits mit ID ${existingType.id}`);
+            } else {
+              // Neuen Gerätetyp anlegen
+              const [newDeviceType] = await db.insert(userDeviceTypes)
+                .values({
+                  name: name,
+                  userId: 0, // Globaler Gerätetyp
+                  shopId: 0, // Gehört zu keinem Shop
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+              
+              idMappings.deviceTypes.set(oldId, newDeviceType.id);
+              console.log(`Neuer Gerätetyp ${name} angelegt mit ID ${newDeviceType.id}`);
+              stats.deviceTypes++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Import des Gerätetyps ${deviceType.name}:`, error);
+            // Wir machen weiter mit dem nächsten Gerätetyp
+          }
+        }
+      }
+      
+      // 2. Hersteller importieren
+      if (importData.brands && Array.isArray(importData.brands)) {
+        console.log(`Import von ${importData.brands.length} Herstellern...`);
+        
+        // Vorhandene Hersteller abrufen
+        const existingBrands = await db.select().from(userBrands);
+        const existingBrandsByKey = new Map();
+        
+        existingBrands.forEach(brand => {
+          const key = `${brand.name.toLowerCase()}-${brand.deviceTypeId}`;
+          existingBrandsByKey.set(key, brand);
+        });
+        
+        for (const brand of importData.brands) {
+          try {
+            const oldId = brand.id;
+            const name = brand.name;
+            const oldDeviceTypeId = brand.deviceTypeId;
+            
+            // Neue deviceTypeId aus dem Mapping holen
+            const newDeviceTypeId = idMappings.deviceTypes.get(oldDeviceTypeId);
+            
+            if (!newDeviceTypeId) {
+              console.warn(`Keine neue ID für Gerätetyp mit ID ${oldDeviceTypeId} gefunden. Überspringe diesen Hersteller.`);
+              continue;
+            }
+            
+            // Prüfen, ob bereits ein Hersteller mit diesem Namen für diesen Gerätetyp existiert
+            const key = `${name.toLowerCase()}-${newDeviceTypeId}`;
+            const existingBrand = existingBrandsByKey.get(key);
+            
+            if (existingBrand) {
+              // Vorhandenen Hersteller verwenden
+              idMappings.brands.set(oldId, existingBrand.id);
+              console.log(`Hersteller ${name} für Gerätetyp ID ${newDeviceTypeId} existiert bereits mit ID ${existingBrand.id}`);
+            } else {
+              // Neuen Hersteller anlegen
+              const [newBrand] = await db.insert(userBrands)
+                .values({
+                  name: name,
+                  deviceTypeId: newDeviceTypeId,
+                  userId: 0, // Globaler Hersteller
+                  shopId: 0, // Gehört zu keinem Shop
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+              
+              idMappings.brands.set(oldId, newBrand.id);
+              console.log(`Neuer Hersteller ${name} für Gerätetyp ID ${newDeviceTypeId} angelegt mit ID ${newBrand.id}`);
+              stats.brands++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Import des Herstellers ${brand.name}:`, error);
+            // Wir machen weiter mit dem nächsten Hersteller
+          }
+        }
+      }
+      
+      // 3. Modellreihen importieren
+      if (importData.modelSeries && Array.isArray(importData.modelSeries)) {
+        console.log(`Import von ${importData.modelSeries.length} Modellreihen...`);
+        
+        // Vorhandene Modellreihen abrufen
+        const existingModelSeries = await db.select().from(userModelSeries);
+        const existingModelSeriesByKey = new Map();
+        
+        existingModelSeries.forEach(ms => {
+          const key = `${ms.name.toLowerCase()}-${ms.brandId}`;
+          existingModelSeriesByKey.set(key, ms);
+        });
+        
+        for (const modelSeries of importData.modelSeries) {
+          try {
+            const oldId = modelSeries.id;
+            const name = modelSeries.name;
+            const oldBrandId = modelSeries.brandId;
+            
+            // Neue brandId aus dem Mapping holen
+            const newBrandId = idMappings.brands.get(oldBrandId);
+            
+            if (!newBrandId) {
+              console.warn(`Keine neue ID für Hersteller mit ID ${oldBrandId} gefunden. Überspringe diese Modellreihe.`);
+              continue;
+            }
+            
+            // Prüfen, ob bereits eine Modellreihe mit diesem Namen für diesen Hersteller existiert
+            const key = `${name.toLowerCase()}-${newBrandId}`;
+            const existingModelSeries = existingModelSeriesByKey.get(key);
+            
+            if (existingModelSeries) {
+              // Vorhandene Modellreihe verwenden
+              idMappings.modelSeries.set(oldId, existingModelSeries.id);
+              console.log(`Modellreihe ${name} für Hersteller ID ${newBrandId} existiert bereits mit ID ${existingModelSeries.id}`);
+            } else {
+              // Neue Modellreihe anlegen
+              const [newModelSeries] = await db.insert(userModelSeries)
+                .values({
+                  name: name,
+                  brandId: newBrandId,
+                  userId: 0, // Globale Modellreihe
+                  shopId: 0, // Gehört zu keinem Shop
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+              
+              idMappings.modelSeries.set(oldId, newModelSeries.id);
+              console.log(`Neue Modellreihe ${name} für Hersteller ID ${newBrandId} angelegt mit ID ${newModelSeries.id}`);
+              stats.modelSeries++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Import der Modellreihe ${modelSeries.name}:`, error);
+            // Wir machen weiter mit der nächsten Modellreihe
+          }
+        }
+      }
+      
+      // 4. Modelle importieren
+      if (importData.models && Array.isArray(importData.models)) {
+        console.log(`Import von ${importData.models.length} Modellen...`);
+        
+        // Vorhandene Modelle abrufen
+        const existingModels = await db.select().from(userModels);
+        const existingModelsByKey = new Map();
+        
+        existingModels.forEach(model => {
+          // Modelle sind eindeutig durch Name + Modellreihe-ID
+          const key = `${model.name.toLowerCase()}-${model.modelSeriesId}`;
+          existingModelsByKey.set(key, model);
+        });
+        
+        for (const model of importData.models) {
+          try {
+            const name = model.name;
+            const oldModelSeriesId = model.modelSeriesId;
+            const oldBrandId = model.brandId;
+            
+            // Neue IDs aus den Mappings holen
+            const newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
+            const newBrandId = idMappings.brands.get(oldBrandId);
+            
+            if (!newModelSeriesId || !newBrandId) {
+              console.warn(`Keine neue ID für Modellreihe ${oldModelSeriesId} oder Hersteller ${oldBrandId} gefunden. Überspringe dieses Modell.`);
+              continue;
+            }
+            
+            // Prüfen, ob bereits ein Modell mit diesem Namen für diese Modellreihe existiert
+            const key = `${name.toLowerCase()}-${newModelSeriesId}`;
+            const existingModel = existingModelsByKey.get(key);
+            
+            if (existingModel) {
+              console.log(`Modell ${name} für Modellreihe ID ${newModelSeriesId} existiert bereits mit ID ${existingModel.id}`);
+            } else {
+              // Neues Modell anlegen
+              const [newModel] = await db.insert(userModels)
+                .values({
+                  name: name,
+                  modelSeriesId: newModelSeriesId,
+                  brandId: newBrandId,
+                  userId: 0, // Globales Modell
+                  shopId: 0, // Gehört zu keinem Shop
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+              
+              console.log(`Neues Modell ${name} für Modellreihe ID ${newModelSeriesId} angelegt mit ID ${newModel.id}`);
+              stats.models++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Import des Modells ${model.name}:`, error);
+            // Wir machen weiter mit dem nächsten Modell
+          }
+        }
+      }
+      
+      // 5. Fehlerkatalog importieren
+      if (importData.deviceIssues && Array.isArray(importData.deviceIssues)) {
+        console.log(`Import von ${importData.deviceIssues.length} Fehlereinträgen...`);
+        
+        // Vorhandene Fehlereinträge abrufen
+        const existingIssues = await db.select().from(deviceIssues);
+        const existingIssuesByKey = new Map();
+        
+        existingIssues.forEach(issue => {
+          // Fehlereinträge sind eindeutig durch Name + deviceType + Description
+          const key = `${issue.name.toLowerCase()}-${issue.deviceType}-${issue.description?.toLowerCase() || ''}`;
+          existingIssuesByKey.set(key, issue);
+        });
+        
+        for (const issue of importData.deviceIssues) {
+          try {
+            const name = issue.name;
+            const deviceType = issue.deviceType;
+            const description = issue.description || '';
+            
+            // Prüfen, ob bereits ein Fehlereintrag mit diesen Attributen existiert
+            const key = `${name.toLowerCase()}-${deviceType}-${description.toLowerCase()}`;
+            const existingIssue = existingIssuesByKey.get(key);
+            
+            if (existingIssue) {
+              console.log(`Fehlereintrag "${name}" für Gerätetyp "${deviceType}" existiert bereits mit ID ${existingIssue.id}`);
+            } else {
+              // Neuen Fehlereintrag anlegen
+              const [newIssue] = await db.insert(deviceIssues)
+                .values({
+                  name: name,
+                  deviceType: deviceType,
+                  description: description,
+                  title: issue.title || name,
+                  solution: issue.solution || '',
+                  severity: issue.severity || 'medium',
+                  isCommon: issue.isCommon || false,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                })
+                .returning();
+              
+              console.log(`Neuer Fehlereintrag "${name}" für Gerätetyp "${deviceType}" angelegt mit ID ${newIssue.id}`);
+              stats.deviceIssues++;
+            }
+          } catch (error) {
+            console.error(`Fehler beim Import des Fehlereintrags ${issue.name}:`, error);
+            // Wir machen weiter mit dem nächsten Fehlereintrag
+          }
+        }
+      }
+      
+      // Import-Statistik zurückgeben
+      res.json({
+        success: true,
+        message: "Import abgeschlossen",
+        stats
+      });
+    } catch (error) {
+      console.error("Fehler beim Importieren der Gerätedaten:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim Importieren der Gerätedaten" 
+      });
+    }
+  });
 }
