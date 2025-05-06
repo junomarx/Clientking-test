@@ -634,8 +634,9 @@ export default function SuperadminDevicesTab() {
       // Sonst alle auswählen (gefilterte Fehlereinträge)
       const filteredIssueIds = deviceIssues
         ?.filter(issue => {
-          // Filterung nach Fehlertyp
-          return !selectedDeviceType || issue.deviceType === selectedDeviceType;
+          // Filterung nach Fehlertyp (case-insensitive)
+          return !selectedDeviceType || 
+                 issue.deviceType.toLowerCase() === selectedDeviceType.toLowerCase();
         })
         .map(issue => issue.id) || [];
       
@@ -778,7 +779,8 @@ export default function SuperadminDevicesTab() {
           if (selectedModelDeviceType) {
             const brand = brandsData?.find(b => b.id === model.brandId);
             const deviceType = userDeviceTypes?.find(t => t.id === brand?.deviceTypeId);
-            typeMatches = deviceType?.name === selectedModelDeviceType;
+            // Case-insensitive Vergleich für Gerätetypen
+            typeMatches = deviceType?.name?.toLowerCase() === selectedModelDeviceType?.toLowerCase();
           }
           
           // Filterung nach Marke, falls ausgewählt
@@ -1314,7 +1316,8 @@ export default function SuperadminDevicesTab() {
                             // Filterung nach Gerätetyp, falls ausgewählt
                             let typeMatches = true;
                             if (selectedModelDeviceType) {
-                              typeMatches = model.deviceTypeName === selectedModelDeviceType;
+                              // Case-insensitive Vergleich für Gerätetypen
+                              typeMatches = model.deviceTypeName?.toLowerCase() === selectedModelDeviceType?.toLowerCase();
                             }
                             
                             // Filterung nach Marke, falls ausgewählt
@@ -1484,7 +1487,8 @@ export default function SuperadminDevicesTab() {
                     </TableHeader>
                     <TableBody>
                       {deviceIssues
-                        .filter(issue => !selectedDeviceType || issue.deviceType === selectedDeviceType)
+                        .filter(issue => !selectedDeviceType || 
+                                         issue.deviceType.toLowerCase() === selectedDeviceType.toLowerCase())
                         .map((issue) => (
                           <TableRow key={issue.id}>
                             <TableCell className="w-10">
