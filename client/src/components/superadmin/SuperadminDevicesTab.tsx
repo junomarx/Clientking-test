@@ -422,7 +422,7 @@ export default function SuperadminDevicesTab() {
       return <Laptop {...iconProps} />;
     } else if (normalizedType.includes("watch") || normalizedType.includes("uhr")) {
       return <Watch {...iconProps} />;
-    } else if (normalizedType.includes("spielekonsole") || normalizedType.includes("konsole") || normalizedType.includes("console") || normalizedType.includes("gaming")) {
+    } else if (normalizedType.includes("spielekonsole") || normalizedType.includes("konsole") || normalizedType.includes("console") || normalizedType.includes("gaming") || normalizedType.includes("spielekonsole")) {
       return <Gamepad2 {...iconProps} />;
     } else {
       return <Smartphone {...iconProps} />; // Default-Icon

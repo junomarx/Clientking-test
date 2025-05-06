@@ -527,7 +527,7 @@ export function registerSuperadminRoutes(app: Express) {
       const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
       
       // Prüfen, ob der zu aktualisierende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
-      if (capitalizedStandardTypes.includes(oldName)) {
+      if (standardDeviceTypes.includes(oldName)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht bearbeitet werden" });
       }
       
