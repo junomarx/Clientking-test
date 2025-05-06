@@ -1269,6 +1269,8 @@ export function registerSuperadminRoutes(app: Express) {
       const exportData = {
         deviceTypes: deviceTypesList,
         brands: brandsList,
+        // Leerer modelSeries Array für Abwärtskompatibilität hinzufügen
+        modelSeries: [],
         models: modelsList,
         deviceIssues: deviceIssuesList,
         exportedAt: new Date().toISOString(),
