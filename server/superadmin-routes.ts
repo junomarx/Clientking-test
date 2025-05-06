@@ -421,8 +421,9 @@ export function registerSuperadminRoutes(app: Express) {
   // Globale Geräteverwaltung - nur Namen der Gerätetypen
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // Standardgerätetypen (unabhängig von Benutzern) - immer kleingeschrieben
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
+      // Standardgerätetypen (unabhängig von Benutzern) - immer mit großem Anfangsbuchstaben
+      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
+      const standardDeviceTypesLower = standardDeviceTypes.map(type => type.toLowerCase());
       
       // Alle ausgeblendeten Standard-Gerätetypen abrufen
       const hiddenTypes = await db.select({
@@ -432,18 +433,38 @@ export function registerSuperadminRoutes(app: Express) {
       const hiddenTypeNames = hiddenTypes.map(ht => ht.name);
       
       // Filtere die ausgeblendeten Typen aus den Standardtypen heraus
-      const visibleStandardTypes = standardDeviceTypes.filter(type => !hiddenTypeNames.includes(type));
+      const visibleStandardTypes = standardDeviceTypes.filter(type => 
+        !hiddenTypeNames.includes(type) && !hiddenTypeNames.includes(type.toLowerCase())
+      );
       
       // Alle benutzerdefinierten Gerätetypen abrufen
       const customDeviceTypes = await db.select({
         name: userDeviceTypes.name
       }).from(userDeviceTypes);
       
-      // Kombiniere sichtbare Standard- und benutzerdefinierte Gerätetypen ohne Duplikate
-      const allTypes = [...visibleStandardTypes, ...customDeviceTypes.map(dt => dt.name)];
-      const uniqueTypes = Array.from(new Set(allTypes));
+      // Entferne benutzerdefinierte Typen, die bereits als Standard existieren (um Duplikate zu vermeiden)
+      const filteredCustomTypes = customDeviceTypes
+        .map(dt => dt.name)
+        .filter(name => 
+          !standardDeviceTypesLower.includes(name.toLowerCase()) &&
+          !standardDeviceTypes.includes(name)
+        );
       
-      console.log("Alle Gerätetypen:", uniqueTypes);
+      // Kombiniere sichtbare Standard- und benutzerdefinierte Gerätetypen
+      const allTypes = [...visibleStandardTypes, ...filteredCustomTypes];
+      
+      // Entferne Duplikate (unabhängig von Groß-/Kleinschreibung)
+      const uniqueMap = new Map();
+      allTypes.forEach(type => {
+        const lowerType = type.toLowerCase();
+        // Wenn diese Variante bereits existiert, bevorzuge die mit großem Anfangsbuchstaben
+        if (!uniqueMap.has(lowerType) || type[0] === type[0].toUpperCase()) {
+          uniqueMap.set(lowerType, type);
+        }
+      });
+      
+      const uniqueTypes = Array.from(uniqueMap.values());
+      console.log("Alle Gerätetypen (nach Duplikatentfernung):", uniqueTypes);
       
       res.json(uniqueTypes);
     } catch (error) {
@@ -787,10 +808,25 @@ export function registerSuperadminRoutes(app: Express) {
       
       // Prüfen, ob der Gerätetyp existiert
       // Erst in der Datenbank suchen für benutzerdefinierte Typen
-      const userDeviceType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceType));
+      // Wir prüfen case-insensitive, ob der Gerätetyp existiert
+      const userDeviceType = await db.select()
+        .from(userDeviceTypes)
+        .where(
+          or(
+            eq(userDeviceTypes.name, deviceType),
+            eq(userDeviceTypes.name, deviceType.toLowerCase()),
+            eq(userDeviceTypes.name, deviceType.charAt(0).toUpperCase() + deviceType.slice(1).toLowerCase())
+          )
+        );
+      
+      // Standard-Gerätetypen
+      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
+      const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
+      
+      // Prüfen, ob der Gerätetyp existiert (entweder als benutzerdefiniert oder Standard)
       const deviceTypeExists = userDeviceType.length > 0 || 
-                             ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole",
-                              "smartphone", "tablet", "laptop", "watch", "spielekonsole"].includes(deviceType);
+                             standardDeviceTypes.includes(deviceType) ||
+                             standardDeviceTypesLower.includes(deviceType.toLowerCase());
       
       if (!deviceTypeExists) {
         return res.status(400).json({ message: `Gerätetyp '${deviceType}' existiert nicht` });
