@@ -1276,7 +1276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Zuerst alle vorhandenen Modelle für diese Marke löschen
-      await storage.deleteAllUserModelsByBrandId(parseInt(brandId), userId);
+      await storage.deleteAllUserModelsForBrand(parseInt(brandId), userId);
       
       // Dann die neuen Modelle erstellen
       const createdModels = [];
@@ -1314,7 +1314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`DELETE /api/brands/${brandId}/models: Verwende Benutzer ${userId}`);
       
-      const success = await storage.deleteAllUserModelsByBrandId(brandId, userId);
+      const success = await storage.deleteAllUserModelsForBrand(brandId, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modelle konnten nicht gelöscht werden" });

@@ -242,6 +242,10 @@ export interface IStorage {
     modelSeriesId: number,
     userId: number,
   ): Promise<UserModel[]>;
+  getUserModelsByBrand(
+    brandId: number,
+    userId: number,
+  ): Promise<UserModel[]>;
   createUserModel(model: InsertUserModel, userId: number): Promise<UserModel>;
   updateUserModel(
     id: number,
@@ -255,7 +259,6 @@ export interface IStorage {
   ): Promise<boolean>;
   deleteAllUserModelsForBrand(
     brandId: number,
-    deviceTypeId: number,
     userId: number,
   ): Promise<boolean>;
 
