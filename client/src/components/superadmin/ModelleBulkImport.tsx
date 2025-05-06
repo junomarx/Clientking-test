@@ -73,8 +73,10 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
   const filteredBrands = brandsData ? brandsData.filter(brand => {
     if (!selectedDeviceType) return true;
     
-    // Finde die ID des ausgewählten Gerätetyps
-    const deviceType = userDeviceTypes?.find(dt => dt.name === selectedDeviceType);
+    // Finde die ID des ausgewählten Gerätetyps (case-insensitive)
+    const deviceType = userDeviceTypes?.find(dt => 
+      dt.name.toLowerCase() === selectedDeviceType.toLowerCase()
+    );
     if (!deviceType) return false;
     
     return brand.deviceTypeId === deviceType.id;
