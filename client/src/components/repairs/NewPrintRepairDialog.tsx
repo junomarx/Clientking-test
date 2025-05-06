@@ -185,42 +185,36 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
       
-      try {
-        // PDF als Blob erstellen
-        const blob = pdf.output('blob');
-        
-        // PDF zum Download anbieten
-        const fileName = `Bon_${repair?.orderCode || repair?.id || 'Auftrag'}.pdf`;
-        
-        // Methode 1: Verwende FileSaver oder einen direkten Download-Link
-        const blobUrl = URL.createObjectURL(blob);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = blobUrl;
-        downloadLink.download = fileName;
-        downloadLink.target = '_blank';
-        
-        // Element zur DOM hinzufügen, klicken und wieder entfernen
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        
-        // Async entfernen, um dem Browser Zeit zum Starten des Downloads zu geben
+      // Direktes Drucken wird über die print()-Methode des geöffneten Fensters realisiert
+      // PDF im Browser öffnen
+      const pdfOutput = pdf.output('dataurlstring');
+      
+      // Verwenden eines Blob-URLs für das PDF, um Content-Type korrekt zu setzen
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // PDF direkt in einem neuen Tab öffnen
+      const printWindow = window.open(blobUrl, "_blank");
+      
+      if (printWindow) {
+        // Warte kurz und öffne dann den Druckdialog
         setTimeout(() => {
-          document.body.removeChild(downloadLink);
-          URL.revokeObjectURL(blobUrl); // Blob-URL freigeben
-        }, 100);
+          printWindow.print();
+        }, 1000); // Längere Verzögerung für das Laden des PDFs
         
         // Dialog schließen nach erfolgreicher PDF-Erstellung
-        toast({
-          title: "PDF erstellt",
-          description: "Das PDF wurde erstellt und der Download sollte beginnen.",
-        });
-        
         onClose();
-      } catch (err) {
-        console.error('Fehler beim PDF-Download:', err);
+      }
+      
+      if (printWindow) {
         toast({
-          title: "Fehler beim PDF-Erstellen",
-          description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
+          title: "Druckdialog wird geöffnet",
+          description: "Der Druckdialog wird automatisch im Browser geöffnet.",
+        });
+      } else {
+        toast({
+          title: "Drucken fehlgeschlagen",
+          description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
           variant: "destructive"
         });
       }
