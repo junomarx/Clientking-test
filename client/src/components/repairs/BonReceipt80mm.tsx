@@ -67,14 +67,14 @@ export function BonReceipt80mm({
       </div>
 
       {/* Firmeninfo */}
-      <div style={{ textAlign: "center", marginBottom: "15px" }}>
+      <div style={{ marginBottom: "15px" }}>
         <strong>{firmenname}</strong><br />
         {firmenadresse}, {firmenplz} {firmenort}<br />
         {firmentelefon}
       </div>
 
       {/* Abholschein + Auftragsnummer */}
-      <div style={{ textAlign: "center", margin: "15px 0" }}>
+      <div style={{ margin: "15px 0" }}>
         <div style={{ fontWeight: "bold", fontSize: "16px", marginBottom: "3px" }}>Abholschein</div>
         <div style={{ fontWeight: "bold", fontSize: "14px" }}>{auftragsnummer}</div>
         <div>{datum_dropoff}</div>
@@ -115,7 +115,7 @@ export function BonReceipt80mm({
         marginBottom: "15px",
         backgroundColor: "#f9f9f9"
       }}>
-        <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "12px", marginBottom: "5px" }}>Reparaturbedingungen</div>
+        <div style={{ fontWeight: "bold", fontSize: "12px", marginBottom: "5px" }}>Reparaturbedingungen</div>
         <div>
           1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
           2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
@@ -128,12 +128,12 @@ export function BonReceipt80mm({
 
       {/* Unterschrift Abgabe */}
       {signatur_dropoff && (
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <div style={{ marginTop: "20px" }}>
           <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Reparaturauftrag erteilt</div>
           <img 
             src={signatur_dropoff} 
             alt="Unterschrift bei Abgabe" 
-            style={{ maxWidth: "80%", maxHeight: "30mm", margin: "0 auto 5px auto", display: "block" }}
+            style={{ maxWidth: "80%", maxHeight: "30mm", display: "block" }}
             onError={(e) => {
               console.error('Fehler beim Laden der Abgabe-Unterschrift in der 80mm Quittung:', e);
               e.currentTarget.style.display = 'none';
@@ -147,12 +147,12 @@ export function BonReceipt80mm({
 
       {/* Unterschrift Abholung */}
       {signatur_pickup && (
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <div style={{ marginTop: "20px" }}>
           <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Gerät abgeholt</div>
           <img 
             src={signatur_pickup} 
             alt="Unterschrift bei Abholung" 
-            style={{ maxWidth: "80%", maxHeight: "30mm", margin: "0 auto 5px auto", display: "block" }}
+            style={{ maxWidth: "80%", maxHeight: "30mm", display: "block" }}
             onError={(e) => {
               console.error('Fehler beim Laden der Abholungs-Unterschrift in der 80mm Quittung:', e);
               e.currentTarget.style.display = 'none';
