@@ -421,7 +421,7 @@ export function registerSuperadminRoutes(app: Express) {
   // Globale Geräteverwaltung - nur Namen der Gerätetypen
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      // Standardgerätetypen (unabhängig von Benutzern)
+      // Standardgerätetypen (unabhängig von Benutzern) - immer kleingeschrieben
       const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
       
       // Alle ausgeblendeten Standard-Gerätetypen abrufen

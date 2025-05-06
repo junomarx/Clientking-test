@@ -2,7 +2,7 @@
   "deviceTypes": [
     {
       "id": 1,
-      "name": "Spielekonsole",
+      "name": "spielekonsole",
       "userId": 0,
       "shopId": 0,
       "createdAt": "2025-05-06T10:00:00.000Z",
@@ -123,7 +123,7 @@
   "deviceIssues": [
     {
       "id": 1,
-      "deviceType": "Spielekonsole",
+      "deviceType": "spielekonsole",
       "title": "Überhitzung",
       "description": "Konsole schaltet sich aufgrund von Überhitzung aus oder lüftet sehr laut",
       "solution": "Reinigung der internen Komponenten und Lüfter, Wärmeleitpaste erneuern",
@@ -134,7 +134,7 @@
     },
     {
       "id": 2,
-      "deviceType": "Spielekonsole",
+      "deviceType": "spielekonsole",
       "title": "HDMI-Anschluss defekt",
       "description": "Kein Bild oder gestörtes Bild auf dem Fernseher",
       "solution": "HDMI-Anschluss austauschen",
@@ -145,7 +145,7 @@
     },
     {
       "id": 3,
-      "deviceType": "Spielekonsole",
+      "deviceType": "spielekonsole",
       "title": "Disc-Laufwerk funktioniert nicht",
       "description": "Konsole erkennt eingelegte Discs nicht oder gibt Geräusche beim Einlesen von sich",
       "solution": "Disc-Laufwerk reinigen oder austauschen",
@@ -156,7 +156,7 @@
     },
     {
       "id": 4,
-      "deviceType": "Spielekonsole",
+      "deviceType": "spielekonsole",
       "title": "Controller Drift",
       "description": "Analogstick registriert Bewegungen, obwohl er nicht berührt wird",
       "solution": "Austausch der Analogstick-Komponente oder Ersatz des Controllers",
