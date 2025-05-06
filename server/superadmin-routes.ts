@@ -1254,24 +1254,21 @@ export function registerSuperadminRoutes(app: Express) {
       const [
         deviceTypesList, 
         brandsList, 
-        modelSeriesList, 
         modelsList,
         deviceIssuesList
       ] = await Promise.all([
         db.select().from(userDeviceTypes),
         db.select().from(userBrands),
-        db.select().from(userModelSeries),
         db.select().from(userModels),
         db.select().from(deviceIssues)
       ]);
       
-      console.log(`Exportiere ${deviceTypesList.length} Gerätearten, ${brandsList.length} Hersteller, ${modelSeriesList.length} Modellreihen, ${modelsList.length} Modelle und ${deviceIssuesList.length} Fehlereinträge`);
+      console.log(`Exportiere ${deviceTypesList.length} Gerätearten, ${brandsList.length} Hersteller, ${modelsList.length} Modelle und ${deviceIssuesList.length} Fehlereinträge`);
       
       // Daten für Export zusammenstellen
       const exportData = {
         deviceTypes: deviceTypesList,
         brands: brandsList,
-        modelSeries: modelSeriesList,
         models: modelsList,
         deviceIssues: deviceIssuesList,
         exportedAt: new Date().toISOString(),
@@ -1301,7 +1298,6 @@ export function registerSuperadminRoutes(app: Express) {
       const stats = {
         deviceTypes: 0,
         brands: 0,
-        modelSeries: 0,
         models: 0,
         deviceIssues: 0
       };
@@ -1309,8 +1305,7 @@ export function registerSuperadminRoutes(app: Express) {
       // Mappings für IDs (alte ID -> neue ID)
       const idMappings = {
         deviceTypes: new Map<number, number>(),
-        brands: new Map<number, number>(),
-        modelSeries: new Map<number, number>()
+        brands: new Map<number, number>()
       };
       
       // 1. Gerätearten importieren
@@ -1417,63 +1412,9 @@ export function registerSuperadminRoutes(app: Express) {
         }
       }
       
-      // 3. Modellreihen importieren
+      // 3. Modellreihen werden nicht mehr verwendet
       if (importData.modelSeries && Array.isArray(importData.modelSeries)) {
-        console.log(`Import von ${importData.modelSeries.length} Modellreihen...`);
-        
-        // Vorhandene Modellreihen abrufen
-        const existingModelSeries = await db.select().from(userModelSeries);
-        const existingModelSeriesByKey = new Map();
-        
-        existingModelSeries.forEach(ms => {
-          const key = `${ms.name.toLowerCase()}-${ms.brandId}`;
-          existingModelSeriesByKey.set(key, ms);
-        });
-        
-        for (const modelSeries of importData.modelSeries) {
-          try {
-            const oldId = modelSeries.id;
-            const name = modelSeries.name;
-            const oldBrandId = modelSeries.brandId;
-            
-            // Neue brandId aus dem Mapping holen
-            const newBrandId = idMappings.brands.get(oldBrandId);
-            
-            if (!newBrandId) {
-              console.warn(`Keine neue ID für Hersteller mit ID ${oldBrandId} gefunden. Überspringe diese Modellreihe.`);
-              continue;
-            }
-            
-            // Prüfen, ob bereits eine Modellreihe mit diesem Namen für diesen Hersteller existiert
-            const key = `${name.toLowerCase()}-${newBrandId}`;
-            const existingModelSeries = existingModelSeriesByKey.get(key);
-            
-            if (existingModelSeries) {
-              // Vorhandene Modellreihe verwenden
-              idMappings.modelSeries.set(oldId, existingModelSeries.id);
-              console.log(`Modellreihe ${name} für Hersteller ID ${newBrandId} existiert bereits mit ID ${existingModelSeries.id}`);
-            } else {
-              // Neue Modellreihe anlegen
-              const [newModelSeries] = await db.insert(userModelSeries)
-                .values({
-                  name: name,
-                  brandId: newBrandId,
-                  userId: 0, // Globale Modellreihe
-                  shopId: 0, // Gehört zu keinem Shop
-                  createdAt: new Date(),
-                  updatedAt: new Date()
-                })
-                .returning();
-              
-              idMappings.modelSeries.set(oldId, newModelSeries.id);
-              console.log(`Neue Modellreihe ${name} für Hersteller ID ${newBrandId} angelegt mit ID ${newModelSeries.id}`);
-              stats.modelSeries++;
-            }
-          } catch (error) {
-            console.error(`Fehler beim Import der Modellreihe ${modelSeries.name}:`, error);
-            // Wir machen weiter mit der nächsten Modellreihe
-          }
-        }
+        console.log(`Modellreihen werden nicht mehr verwendet. ${importData.modelSeries.length} Modellreihen werden ignoriert.`);
       }
       
       // 4. Modelle importieren
@@ -1493,7 +1434,6 @@ export function registerSuperadminRoutes(app: Express) {
         for (const model of importData.models) {
           try {
             const name = model.name;
-            const oldModelSeriesId = model.modelSeriesId;
             const oldBrandId = model.brandId;
             const deviceType = model.deviceType;  // Einige Modelle haben ein deviceType-Feld
             
@@ -1503,12 +1443,6 @@ export function registerSuperadminRoutes(app: Express) {
             if (!newBrandId) {
               console.warn(`Keine neue ID für Hersteller ${oldBrandId} gefunden. Überspringe dieses Modell.`);
               continue;
-            }
-            
-            // Neue modelSeriesId aus dem Mapping holen (optional)
-            let newModelSeriesId = null;
-            if (oldModelSeriesId !== null) {
-              newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
             }
             
             // Schlüssel für die Eindeutigkeit basierend auf Name und Hersteller ID
@@ -1522,7 +1456,7 @@ export function registerSuperadminRoutes(app: Express) {
               const [newModel] = await db.insert(userModels)
                 .values({
                   name: name,
-                  modelSeriesId: newModelSeriesId,  // Kann null sein
+                  modelSeriesId: null,  // Keine Modellreihe verwenden
                   brandId: newBrandId,
                   userId: 0, // Globales Modell
                   shopId: 0, // Gehört zu keinem Shop
@@ -1596,7 +1530,6 @@ export function registerSuperadminRoutes(app: Express) {
       const total = {
         deviceTypes: importData.deviceTypes?.length || 0,
         brands: importData.brands?.length || 0,
-        modelSeries: importData.modelSeries?.length || 0,
         models: importData.models?.length || 0,
         deviceIssues: importData.deviceIssues?.length || 0
       };
