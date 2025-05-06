@@ -501,7 +501,7 @@ export function registerSuperadminRoutes(app: Express) {
       }
       
       // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
       const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu aktualisierende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
@@ -547,7 +547,7 @@ export function registerSuperadminRoutes(app: Express) {
       const name = decodeURIComponent(req.params.name);
       
       // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
       const capitalizedStandardTypes = standardDeviceTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1));
       
       // Prüfen, ob der zu löschende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
@@ -789,8 +789,8 @@ export function registerSuperadminRoutes(app: Express) {
       // Erst in der Datenbank suchen für benutzerdefinierte Typen
       const userDeviceType = await db.select().from(userDeviceTypes).where(eq(userDeviceTypes.name, deviceType));
       const deviceTypeExists = userDeviceType.length > 0 || 
-                             ["Smartphone", "Tablet", "Laptop", "Watch",
-                              "smartphone", "tablet", "laptop", "watch"].includes(deviceType);
+                             ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole",
+                              "smartphone", "tablet", "laptop", "watch", "spielekonsole"].includes(deviceType);
       
       if (!deviceTypeExists) {
         return res.status(400).json({ message: `Gerätetyp '${deviceType}' existiert nicht` });
