@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
 import FehlerkatalogBulkImport from "./FehlerkatalogBulkImport";
+import DeviceDataExportImport from "./DeviceDataExportImport";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {

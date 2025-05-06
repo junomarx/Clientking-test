@@ -9,7 +9,7 @@ import { storage } from "./storage";
 import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
-  customers, repairs, userDeviceTypes, userBrands, userModels, 
+  customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
   deviceIssues, insertDeviceIssueSchema, hiddenStandardDeviceTypes
 } from "@shared/schema";
 import { ZodError, z } from "zod";
