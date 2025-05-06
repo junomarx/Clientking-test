@@ -482,8 +482,9 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(400).json({ message: "Der Name des Gerätetyps ist erforderlich" });
       }
       
-      // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
+      // Standardgerätetypen abrufen - mit konsistenter Schreibweise
+      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
+      const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
       
       // Prüfen, ob der Gerätetyp bereits existiert (inklusive Standardtypen)
       if (standardDeviceTypes.includes(name.toLowerCase())) {
