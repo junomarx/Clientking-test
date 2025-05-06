@@ -1544,31 +1544,30 @@ export function registerSuperadminRoutes(app: Express) {
         const existingIssuesByKey = new Map();
         
         existingIssues.forEach(issue => {
-          // Fehlereinträge sind eindeutig durch Name + deviceType + Description
-          const key = `${issue.name.toLowerCase()}-${issue.deviceType}-${issue.description?.toLowerCase() || ''}`;
+          // Fehlereinträge sind eindeutig durch Title + deviceType + Description
+          const key = `${issue.title.toLowerCase()}-${issue.deviceType}-${issue.description?.toLowerCase() || ''}`;
           existingIssuesByKey.set(key, issue);
         });
         
         for (const issue of importData.deviceIssues) {
           try {
-            const name = issue.name;
+            const title = issue.title || issue.name; // Fallback auf name als Kompatibilität
             const deviceType = issue.deviceType;
             const description = issue.description || '';
             
             // Prüfen, ob bereits ein Fehlereintrag mit diesen Attributen existiert
-            const key = `${name.toLowerCase()}-${deviceType}-${description.toLowerCase()}`;
+            const key = `${title.toLowerCase()}-${deviceType}-${description.toLowerCase()}`;
             const existingIssue = existingIssuesByKey.get(key);
             
             if (existingIssue) {
-              console.log(`Fehlereintrag "${name}" für Gerätetyp "${deviceType}" existiert bereits mit ID ${existingIssue.id}`);
+              console.log(`Fehlereintrag "${title}" für Gerätetyp "${deviceType}" existiert bereits mit ID ${existingIssue.id}`);
             } else {
               // Neuen Fehlereintrag anlegen
               const [newIssue] = await db.insert(deviceIssues)
                 .values({
-                  name: name,
+                  title: title,
                   deviceType: deviceType,
                   description: description,
-                  title: issue.title || name,
                   solution: issue.solution || '',
                   severity: issue.severity || 'medium',
                   isCommon: issue.isCommon || false,
@@ -1577,11 +1576,11 @@ export function registerSuperadminRoutes(app: Express) {
                 })
                 .returning();
               
-              console.log(`Neuer Fehlereintrag "${name}" für Gerätetyp "${deviceType}" angelegt mit ID ${newIssue.id}`);
+              console.log(`Neuer Fehlereintrag "${title}" für Gerätetyp "${deviceType}" angelegt mit ID ${newIssue.id}`);
               stats.deviceIssues++;
             }
           } catch (error) {
-            console.error(`Fehler beim Import des Fehlereintrags ${issue.name}:`, error);
+            console.error(`Fehler beim Import des Fehlereintrags ${issue.title || issue.name || 'Unbekannt'}:`, error);
             // Wir machen weiter mit dem nächsten Fehlereintrag
           }
         }

@@ -865,6 +865,10 @@ export default function SuperadminDevicesTab() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Geräteverwaltung</h1>
+      
+      {/* Export/Import-Komponente am Anfang der Seite platzieren */}
+      <DeviceDataExportImport />
+      
       <Tabs defaultValue="types" className="w-full">
         <TabsList className="grid grid-cols-4">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
