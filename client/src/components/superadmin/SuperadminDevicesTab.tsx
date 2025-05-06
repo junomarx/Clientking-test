@@ -530,7 +530,9 @@ export default function SuperadminDevicesTab() {
           // Filterung nach Gerätetyp, falls ausgewählt
           const typeInfo = userDeviceTypes?.find(type => type.id === brand.deviceTypeId);
           const deviceTypeName = typeInfo?.name || 'Smartphone';
-          const typeMatches = !selectedBrandDeviceType || deviceTypeName === selectedBrandDeviceType;
+          // Case-insensitive Vergleich für Gerätetypen
+          const typeMatches = !selectedBrandDeviceType || 
+                             deviceTypeName.toLowerCase() === selectedBrandDeviceType.toLowerCase();
           
           return nameMatches && typeMatches;
         })
