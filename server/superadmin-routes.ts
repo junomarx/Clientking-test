@@ -1485,8 +1485,8 @@ export function registerSuperadminRoutes(app: Express) {
         const existingModelsByKey = new Map();
         
         existingModels.forEach(model => {
-          // Modelle sind eindeutig durch Name + Modellreihe-ID
-          const key = `${model.name.toLowerCase()}-${model.modelSeriesId}`;
+          // Modelle sind eindeutig durch Name + Hersteller-ID
+          const key = `${model.name.toLowerCase()}-${model.brandId}`;
           existingModelsByKey.set(key, model);
         });
         
@@ -1495,28 +1495,34 @@ export function registerSuperadminRoutes(app: Express) {
             const name = model.name;
             const oldModelSeriesId = model.modelSeriesId;
             const oldBrandId = model.brandId;
+            const deviceType = model.deviceType;  // Einige Modelle haben ein deviceType-Feld
             
-            // Neue IDs aus den Mappings holen
-            const newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
+            // Neue brandId aus dem Mapping holen (erforderlich)
             const newBrandId = idMappings.brands.get(oldBrandId);
             
-            if (!newModelSeriesId || !newBrandId) {
-              console.warn(`Keine neue ID für Modellreihe ${oldModelSeriesId} oder Hersteller ${oldBrandId} gefunden. Überspringe dieses Modell.`);
+            if (!newBrandId) {
+              console.warn(`Keine neue ID für Hersteller ${oldBrandId} gefunden. Überspringe dieses Modell.`);
               continue;
             }
             
-            // Prüfen, ob bereits ein Modell mit diesem Namen für diese Modellreihe existiert
-            const key = `${name.toLowerCase()}-${newModelSeriesId}`;
+            // Neue modelSeriesId aus dem Mapping holen (optional)
+            let newModelSeriesId = null;
+            if (oldModelSeriesId !== null) {
+              newModelSeriesId = idMappings.modelSeries.get(oldModelSeriesId);
+            }
+            
+            // Schlüssel für die Eindeutigkeit basierend auf Name und Hersteller ID
+            const key = `${name.toLowerCase()}-${newBrandId}`;
             const existingModel = existingModelsByKey.get(key);
             
             if (existingModel) {
-              console.log(`Modell ${name} für Modellreihe ID ${newModelSeriesId} existiert bereits mit ID ${existingModel.id}`);
+              console.log(`Modell ${name} für Hersteller ID ${newBrandId} existiert bereits mit ID ${existingModel.id}`);
             } else {
               // Neues Modell anlegen
               const [newModel] = await db.insert(userModels)
                 .values({
                   name: name,
-                  modelSeriesId: newModelSeriesId,
+                  modelSeriesId: newModelSeriesId,  // Kann null sein
                   brandId: newBrandId,
                   userId: 0, // Globales Modell
                   shopId: 0, // Gehört zu keinem Shop
@@ -1525,7 +1531,7 @@ export function registerSuperadminRoutes(app: Express) {
                 })
                 .returning();
               
-              console.log(`Neues Modell ${name} für Modellreihe ID ${newModelSeriesId} angelegt mit ID ${newModel.id}`);
+              console.log(`Neues Modell ${name} für Hersteller ID ${newBrandId} angelegt mit ID ${newModel.id}`);
               stats.models++;
             }
           } catch (error) {
