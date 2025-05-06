@@ -10,7 +10,6 @@ import {
   insertFeedbackSchema,
   insertUserDeviceTypeSchema,
   insertUserBrandSchema,
-  insertUserModelSeriesSchema,
   insertUserModelSchema,
   insertCostEstimateSchema,
   costEstimateItemSchema,
@@ -105,25 +104,7 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-// Hilfsfunktionen
-// Findet oder erstellt eine Standard-Modellreihe für eine bestimmte Marke
-async function findOrCreateDefaultModelSeries(brandId: number, userId: number): Promise<any> {
-  // Zuerst versuchen, eine existierende Standard-Modellreihe zu finden
-  let defaultModelSeries = await storage.getUserModelSeriesByNameAndBrand("_default", brandId, userId);
-  
-  if (!defaultModelSeries) {
-    // Wenn keine existiert, erstelle eine neue
-    defaultModelSeries = await storage.createUserModelSeries({
-      name: "_default",
-      brandId: brandId,
-      userId: userId
-    }, userId);
-    
-    console.log(`Default-Modellreihe für Marke ${brandId} erstellt`);
-  }
-  
-  return defaultModelSeries;
-}
+// Hilfsfunktionen entfernt (keine Modellreihen mehr)
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -1167,240 +1148,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // MODEL SERIES API
-  // Alle benutzerspezifischen Modellreihen abrufen (optional nach Marke gefiltert)
-  app.get("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`GET /api/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
-      
-      let modelSeries;
-      if (brandId) {
-        modelSeries = await storage.getUserModelSeriesByBrandId(brandId, userId);
-      } else {
-        modelSeries = await storage.getUserModelSeries(userId);
-      }
-      
-      res.json(modelSeries);
-    } catch (error) {
-      console.error("Error retrieving model series:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihen" });
-    }
-  });
-  
-  // Modellreihen für eine spezifische Gerätetyp-Marken-Kombination abrufen
-  app.get("/api/device-types/:deviceTypeId/brands/:brandId/model-series", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const deviceTypeId = parseInt(req.params.deviceTypeId);
-      const brandId = parseInt(req.params.brandId);
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`GET /api/device-types/${deviceTypeId}/brands/${brandId}/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      const modelSeries = await storage.getUserModelSeries_ByDeviceTypeAndBrand(deviceTypeId, brandId, userId);
-      
-      res.json(modelSeries);
-    } catch (error) {
-      console.error("Error retrieving model series for device type and brand:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihen für Gerätetyp und Marke" });
-    }
-  });
-  
-  // Benutzerspezifische Modellreihe nach ID abrufen
-  app.get("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`GET /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      // Diese Methode existiert nicht direkt, daher holen wir alle Modellreihen und filtern nach ID
-      const allModelSeries = await storage.getUserModelSeries(userId);
-      const modelSeries = allModelSeries.find(ms => ms.id === id);
-      
-      if (!modelSeries) {
-        return res.status(404).json({ message: "Modellreihe nicht gefunden" });
-      }
-      
-      res.json(modelSeries);
-    } catch (error) {
-      console.error("Error retrieving model series:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Modellreihe" });
-    }
-  });
-  
-  // Benutzerspezifische Modellreihe erstellen
-  app.post("/api/model-series", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`POST /api/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      console.log(`[Modellreihe] Eingangsdaten:`, req.body);
-      
-      // Manuelle, einfache Validierung
-      if (!req.body.name || req.body.name.trim() === '') {
-        console.log("[Modellreihe] Fehler: Name fehlt");
-        return res.status(400).json({ message: "Der Name der Modellreihe darf nicht leer sein" });
-      }
-      
-      if (req.body.brandId === undefined || req.body.brandId === null) {
-        console.log("[Modellreihe] Fehler: brandId fehlt");
-        return res.status(400).json({ message: "Die Marke-ID ist erforderlich" });
-      }
-      
-      // Validiere brandId als Zahl
-      const brandId = Number(req.body.brandId);
-      if (isNaN(brandId) || brandId <= 0) {
-        console.log(`[Modellreihe] Fehler: Ungültige brandId: ${req.body.brandId}`);
-        return res.status(400).json({ message: "Ungültige Marke-ID" });
-      }
-      
-      // Direkt ein neues Objekt erstellen, ohne Schema-Validierung
-      const modelSeriesData = {
-        name: req.body.name.trim(),
-        brandId: brandId,
-        userId: userId  // Aktuelle Benutzer-ID verwenden
-      };
-      
-      console.log(`[Modellreihe] Validierte Daten:`, modelSeriesData);
-      
-      try {
-        // In der Storage-Funktion wird die userId nochmals explizit übergeben
-        const modelSeries = await storage.createUserModelSeries(modelSeriesData, userId);
-        console.log(`[Modellreihe] Erfolgreich erstellt mit ID ${modelSeries.id}`);
-        return res.status(201).json(modelSeries);
-      } catch (storageError: any) {
-        console.error("[Modellreihe] Datenbank-Fehler:", storageError);
-        return res.status(500).json({ 
-          message: "Fehler beim Speichern der Modellreihe in der Datenbank", 
-          error: storageError.message 
-        });
-      }
-    } catch (error: any) {
-      console.error("[Modellreihe] Allgemeiner Fehler:", error);
-      return res.status(500).json({ 
-        message: "Fehler beim Erstellen der Modellreihe", 
-        error: error.message 
-      });
-    }
-  });
-  
-  // Benutzerspezifische Modellreihe aktualisieren
-  app.patch("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`PATCH /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      const modelSeriesData = insertUserModelSeriesSchema.partial().parse(req.body);
-      const updatedModelSeries = await storage.updateUserModelSeries(id, modelSeriesData, userId);
-      
-      if (!updatedModelSeries) {
-        return res.status(404).json({ message: "Modellreihe nicht gefunden" });
-      }
-      
-      res.json(updatedModelSeries);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Ungültige Modellreihe-Daten", errors: error.errors });
-      }
-      console.error("Error updating model series:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren der Modellreihe" });
-    }
-  });
-  
-  // Benutzerspezifische Modellreihe löschen
-  app.delete("/api/model-series/:id", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const id = parseInt(req.params.id);
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`DELETE /api/model-series/${id}: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      const success = await storage.deleteUserModelSeries(id, userId);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Modellreihe konnte nicht gelöscht werden" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting model series:", error);
-      res.status(500).json({ message: "Fehler beim Löschen der Modellreihe" });
-    }
-  });
-  
-  // Alle Modellreihen für eine bestimmte Marke löschen
-  app.delete("/api/brands/:brandId/model-series", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      const brandId = parseInt(req.params.brandId);
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`DELETE /api/brands/${brandId}/model-series: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
-      
-      const success = await storage.deleteAllUserModelSeriesForBrand(brandId, userId);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Modellreihen konnten nicht gelöscht werden" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting all model series for brand:", error);
-      res.status(500).json({ message: "Fehler beim Löschen aller Modellreihen für die Marke" });
-    }
-  });
+  // MODEL SERIES API entfernt (keine Modellreihen mehr)
   
   // MODELS API
   // Alle benutzerspezifischen Modelle abrufen 
-  // (optional nach Modellreihe, Gerätetyp oder Marke gefiltert)
+  // (optional nach Gerätetyp oder Marke gefiltert)
   app.get("/api/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
       console.log(`GET /api/models: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      const modelSeriesId = req.query.modelSeriesId ? parseInt(req.query.modelSeriesId as string) : undefined;
       const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : undefined;
       const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : undefined;
       
       let models: any[] = [];
       
-      if (deviceTypeId && brandId) {
-        // Standardmodellreihe finden oder erstellen
-        let defaultModelSeries = await findOrCreateDefaultModelSeries(brandId, userId);
-        
-        // Modelle für diese Modellreihe abrufen
-        models = await storage.getUserModelsByModelSeriesId(defaultModelSeries.id, userId);
-      } else if (modelSeriesId) {
-        // Nach Modellreihe filtern (bestehende Logik)
-        models = await storage.getUserModelsByModelSeriesId(modelSeriesId, userId);
+      if (brandId) {
+        // Modelle für diese Marke abrufen
+        models = await storage.getUserModelsByBrand(brandId, userId);
       } else {
-        // Alle Modelle holen (bestehende Logik)
+        // Alle Modelle holen
         models = await storage.getUserModels(userId);
       }
       
@@ -1496,8 +1264,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
       console.log(`POST /api/models/batch: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
       // Request Validierung
@@ -1509,11 +1275,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Standardmodellreihe finden oder erstellen
-      let defaultModelSeries = await findOrCreateDefaultModelSeries(parseInt(brandId), userId);
-      
-      // Zuerst alle vorhandenen Modelle für diese Modellreihe löschen
-      await storage.deleteAllUserModelsForModelSeries(defaultModelSeries.id, userId);
+      // Zuerst alle vorhandenen Modelle für diese Marke löschen
+      await storage.deleteAllUserModelsByBrandId(parseInt(brandId), userId);
       
       // Dann die neuen Modelle erstellen
       const createdModels = [];
@@ -1523,7 +1286,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const modelData = {
           name: modelName.trim(),
-          modelSeriesId: defaultModelSeries.id,
+          modelSeriesId: null, // Keine Modellreihe mehr
+          brandId: parseInt(brandId),
           userId: userId
         };
         
@@ -1541,18 +1305,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Alle Modelle für eine bestimmte Modellreihe löschen
-  app.delete("/api/model-series/:modelSeriesId/models", isAuthenticated, async (req: Request, res: Response) => {
+  // Alle Modelle für eine bestimmte Marke löschen
+  app.delete("/api/brands/:brandId/models", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      const modelSeriesId = parseInt(req.params.modelSeriesId);
+      const brandId = parseInt(req.params.brandId);
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Der alte Workaround mit bugisUserId (3) verletzt die Mandantentrennung/DSGVO-Konformität
-      // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
-      console.log(`DELETE /api/model-series/${modelSeriesId}/models: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
+      console.log(`DELETE /api/brands/${brandId}/models: Verwende Benutzer ${userId}`);
       
-      const success = await storage.deleteAllUserModelsForModelSeries(modelSeriesId, userId);
+      const success = await storage.deleteAllUserModelsByBrandId(brandId, userId);
       
       if (!success) {
         return res.status(500).json({ message: "Modelle konnten nicht gelöscht werden" });
@@ -1560,8 +1322,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting all models for model series:", error);
-      res.status(500).json({ message: "Fehler beim Löschen aller Modelle für die Modellreihe" });
+      console.error("Error deleting all models for brand:", error);
+      res.status(500).json({ message: "Fehler beim Löschen aller Modelle für die Marke" });
     }
   });
   
