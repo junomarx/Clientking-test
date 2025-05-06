@@ -46,7 +46,7 @@ const DeviceDataExportImport: React.FC = () => {
       // Statistik anzeigen
       toast({
         title: "Export erfolgreich",
-        description: `Es wurden ${data.deviceTypes.length} Gerätearten, ${data.brands.length} Hersteller, ${data.modelSeries.length} Modellreihen, ${data.models.length} Modelle und ${data.deviceIssues.length} Fehlereinträge exportiert.`
+        description: `Es wurden ${data.deviceTypes.length} Gerätearten, ${data.brands.length} Hersteller, ${data.models.length} Modelle und ${data.deviceIssues.length} Fehlereinträge exportiert.`
       });
     },
     onError: (error: Error) => {
@@ -116,7 +116,8 @@ const DeviceDataExportImport: React.FC = () => {
       // Invalidiere alle relevanten Daten
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/model-series"] });
+      // Modellreihen gibt es nicht mehr
+      // queryClient.invalidateQueries({ queryKey: ["/api/superadmin/model-series"] });
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
       
@@ -124,7 +125,6 @@ const DeviceDataExportImport: React.FC = () => {
       const total = {
         deviceTypes: (data.total?.deviceTypes || 0),
         brands: (data.total?.brands || 0),
-        modelSeries: (data.total?.modelSeries || 0),
         models: (data.total?.models || 0),
         deviceIssues: (data.total?.deviceIssues || 0)
       };
@@ -132,7 +132,6 @@ const DeviceDataExportImport: React.FC = () => {
       const newItems = {
         deviceTypes: (data.stats?.deviceTypes || 0),
         brands: (data.stats?.brands || 0),
-        modelSeries: (data.stats?.modelSeries || 0),
         models: (data.stats?.models || 0),
         deviceIssues: (data.stats?.deviceIssues || 0)
       };
@@ -141,7 +140,6 @@ const DeviceDataExportImport: React.FC = () => {
       const existing = {
         deviceTypes: total.deviceTypes - newItems.deviceTypes,
         brands: total.brands - newItems.brands,
-        modelSeries: total.modelSeries - newItems.modelSeries,
         models: total.models - newItems.models,
         deviceIssues: total.deviceIssues - newItems.deviceIssues
       };
@@ -149,7 +147,7 @@ const DeviceDataExportImport: React.FC = () => {
       // Statistik anzeigen mit Unterscheidung zwischen neu und bereits vorhanden
       toast({
         title: "Import erfolgreich",
-        description: `Es wurden ${total.deviceTypes} Gerätearten (${newItems.deviceTypes} neu), ${total.brands} Hersteller (${newItems.brands} neu), ${total.modelSeries} Modellreihen (${newItems.modelSeries} neu), ${total.models} Modelle (${newItems.models} neu) und ${total.deviceIssues} Fehlereinträge (${newItems.deviceIssues} neu) importiert.`
+        description: `Es wurden ${total.deviceTypes} Gerätearten (${newItems.deviceTypes} neu), ${total.brands} Hersteller (${newItems.brands} neu), ${total.models} Modelle (${newItems.models} neu) und ${total.deviceIssues} Fehlereinträge (${newItems.deviceIssues} neu) importiert.`
       });
       
       // Datei zurücksetzen
