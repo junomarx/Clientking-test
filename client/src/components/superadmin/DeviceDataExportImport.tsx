@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Download, Upload, Check, RefreshCw } from "lucide-react";
+import { Loader2, Download, Upload, Check, RefreshCw, Gamepad2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import ConsoleSampleData from "@/assets/console-sample-data.json";
 
 const DeviceDataExportImport: React.FC = () => {
   const { toast } = useToast();
@@ -232,6 +233,86 @@ const DeviceDataExportImport: React.FC = () => {
     }
   };
 
+  // Funktion zum Importieren der Beispieldaten für Spielekonsolen
+  const importConsoleSampleData = async () => {
+    setIsImporting(true);
+    setImportProgress(10);
+    
+    try {
+      console.log('Importiere Beispieldaten für Spielekonsolen...');
+      console.log('Beispieldaten:', ConsoleSampleData);
+      
+      setImportProgress(50);
+      
+      // Daten an den Server senden
+      const response = await fetch('/api/superadmin/device-management/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-ID': localStorage.getItem('userId') || ''
+        },
+        body: JSON.stringify(ConsoleSampleData),
+        credentials: 'include'
+      });
+      
+      setImportProgress(80);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Fehler beim Importieren der Spielekonsolen-Daten");
+      }
+      
+      setImportProgress(100);
+      
+      const data = await response.json();
+      
+      // Caches invalidieren und Daten neu laden
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-types/all"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] })
+      ]);
+      
+      // Statistik anzeigen
+      const total = {
+        deviceTypes: (data.total?.deviceTypes || 0),
+        brands: (data.total?.brands || 0),
+        models: (data.total?.models || 0),
+        deviceIssues: (data.total?.deviceIssues || 0)
+      };
+      
+      const newItems = {
+        deviceTypes: (data.stats?.deviceTypes || 0),
+        brands: (data.stats?.brands || 0),
+        models: (data.stats?.models || 0),
+        deviceIssues: (data.stats?.deviceIssues || 0)
+      };
+      
+      toast({
+        title: "Import erfolgreich",
+        description: `Spielekonsolen-Daten wurden erfolgreich importiert: ${newItems.brands} Hersteller, ${newItems.models} Modelle und ${newItems.deviceIssues} Fehlereinträge.`
+      });
+      
+      // Alle Daten aktualisieren
+      refreshAllData();
+      
+    } catch (error) {
+      console.error('Fehler beim Importieren der Spielekonsolen-Daten:', error);
+      toast({
+        title: "Import fehlgeschlagen",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Importieren der Spielekonsolen-Daten",
+        variant: "destructive"
+      });
+    } finally {
+      setTimeout(() => {
+        setIsImporting(false);
+        setImportProgress(0);
+      }, 1000);
+    }
+  };
+
   return (
     <Card className="mb-6">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -336,6 +417,35 @@ const DeviceDataExportImport: React.FC = () => {
               {isImporting && (
                 <Progress value={importProgress} className="h-2 w-full mt-2" />
               )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-6 border-t mt-6">
+          <h3 className="text-lg font-medium mb-2">Beispieldaten</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Button 
+                onClick={importConsoleSampleData}
+                disabled={isImporting}
+                className="w-full"
+                variant="outline"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importiere...
+                  </>
+                ) : (
+                  <>
+                    <Gamepad2 className="mr-2 h-4 w-4" />
+                    Spielekonsolen-Beispieldaten importieren
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Importiert Beispieldaten für Spielekonsolen (Sony, Microsoft, Nintendo) mit passenden Marken, Modellen und Fehlereinträgen.
+              </p>
             </div>
           </div>
         </div>
