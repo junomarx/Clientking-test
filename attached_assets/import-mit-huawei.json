@@ -1,0 +1,796 @@
+{
+  "deviceTypes": [
+    {
+      "id": 66,
+      "name": "Spielekonsole",
+      "userId": 10,
+      "shopId": null
+    },
+    {
+      "id": 67,
+      "name": "Smartphone",
+      "userId": 10,
+      "shopId": null
+    },
+    {
+      "id": 68,
+      "name": "Tablet",
+      "userId": 10,
+      "shopId": null
+    },
+    {
+      "id": 69,
+      "name": "Laptop",
+      "userId": 10,
+      "shopId": null
+    },
+    {
+      "id": 70,
+      "name": "Watch",
+      "userId": 10,
+      "shopId": null
+    }
+  ],
+  "brands": [
+    {
+      "id": 361,
+      "name": "Sony",
+      "deviceTypeId": 66,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 389,
+      "name": "Nintendo",
+      "deviceTypeId": 66,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 390,
+      "name": "Microsoft",
+      "deviceTypeId": 66,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1001,
+      "name": "Apple",
+      "deviceTypeId": 67,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1002,
+      "name": "Samsung",
+      "deviceTypeId": 67,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1003,
+      "name": "Xiaomi",
+      "deviceTypeId": 67,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1004,
+      "name": "Apple",
+      "deviceTypeId": 68,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1005,
+      "name": "Samsung",
+      "deviceTypeId": 68,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1006,
+      "name": "Lenovo",
+      "deviceTypeId": 68,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1007,
+      "name": "Apple",
+      "deviceTypeId": 69,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1008,
+      "name": "Dell",
+      "deviceTypeId": 69,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1009,
+      "name": "HP",
+      "deviceTypeId": 69,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1010,
+      "name": "Apple",
+      "deviceTypeId": 70,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1011,
+      "name": "Samsung",
+      "deviceTypeId": 70,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1012,
+      "name": "Garmin",
+      "deviceTypeId": 70,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 1013,
+      "name": "Huawei",
+      "deviceTypeId": 67,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "modelSeries": [],
+  "models": [
+    {
+      "id": 2000,
+      "name": "PlayStation 4",
+      "modelSeriesId": null,
+      "brandId": 361,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2001,
+      "name": "PlayStation 4 Pro",
+      "modelSeriesId": null,
+      "brandId": 361,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2002,
+      "name": "PlayStation 5",
+      "modelSeriesId": null,
+      "brandId": 361,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2003,
+      "name": "Nintendo Switch",
+      "modelSeriesId": null,
+      "brandId": 389,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2004,
+      "name": "Nintendo Switch OLED",
+      "modelSeriesId": null,
+      "brandId": 389,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2005,
+      "name": "Nintendo Switch Lite",
+      "modelSeriesId": null,
+      "brandId": 389,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2006,
+      "name": "Xbox One",
+      "modelSeriesId": null,
+      "brandId": 390,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2007,
+      "name": "Xbox Series S",
+      "modelSeriesId": null,
+      "brandId": 390,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2008,
+      "name": "Xbox Series X",
+      "modelSeriesId": null,
+      "brandId": 390,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2009,
+      "name": "iPhone 6",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2010,
+      "name": "iPhone 7",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2011,
+      "name": "iPhone 8",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2012,
+      "name": "iPhone 9",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2013,
+      "name": "iPhone 10",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2014,
+      "name": "iPhone 11",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2015,
+      "name": "iPhone 12",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2016,
+      "name": "iPhone 13",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2017,
+      "name": "iPhone 14",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2018,
+      "name": "iPhone 15",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2019,
+      "name": "Galaxy S10",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2020,
+      "name": "Galaxy S20",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2021,
+      "name": "Galaxy S21",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2022,
+      "name": "Galaxy S22",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2023,
+      "name": "Galaxy S23",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2024,
+      "name": "Galaxy S24",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2025,
+      "name": "Galaxy S25",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2026,
+      "name": "Redmi Note 9",
+      "modelSeriesId": null,
+      "brandId": 1003,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2027,
+      "name": "Redmi Note 10",
+      "modelSeriesId": null,
+      "brandId": 1003,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2028,
+      "name": "Redmi Note 11",
+      "modelSeriesId": null,
+      "brandId": 1003,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2029,
+      "name": "POCO X3",
+      "modelSeriesId": null,
+      "brandId": 1003,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2030,
+      "name": "POCO F4",
+      "modelSeriesId": null,
+      "brandId": 1003,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2031,
+      "name": "iPad Air",
+      "modelSeriesId": null,
+      "brandId": 1004,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2032,
+      "name": "iPad Pro",
+      "modelSeriesId": null,
+      "brandId": 1004,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2033,
+      "name": "iPad Mini",
+      "modelSeriesId": null,
+      "brandId": 1004,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2034,
+      "name": "Galaxy Tab S6",
+      "modelSeriesId": null,
+      "brandId": 1005,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2035,
+      "name": "Galaxy Tab S7",
+      "modelSeriesId": null,
+      "brandId": 1005,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2036,
+      "name": "Galaxy Tab S8",
+      "modelSeriesId": null,
+      "brandId": 1005,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2037,
+      "name": "Tab M10",
+      "modelSeriesId": null,
+      "brandId": 1006,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2038,
+      "name": "Tab P11",
+      "modelSeriesId": null,
+      "brandId": 1006,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2039,
+      "name": "MacBook Air M1",
+      "modelSeriesId": null,
+      "brandId": 1007,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2040,
+      "name": "MacBook Pro M2",
+      "modelSeriesId": null,
+      "brandId": 1007,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2041,
+      "name": "XPS 13",
+      "modelSeriesId": null,
+      "brandId": 1008,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2042,
+      "name": "XPS 15",
+      "modelSeriesId": null,
+      "brandId": 1008,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2043,
+      "name": "Spectre x360",
+      "modelSeriesId": null,
+      "brandId": 1009,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2044,
+      "name": "Pavilion 15",
+      "modelSeriesId": null,
+      "brandId": 1009,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2045,
+      "name": "Apple Watch Series 6",
+      "modelSeriesId": null,
+      "brandId": 1010,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2046,
+      "name": "Apple Watch Series 7",
+      "modelSeriesId": null,
+      "brandId": 1010,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2047,
+      "name": "Apple Watch Ultra",
+      "modelSeriesId": null,
+      "brandId": 1010,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2048,
+      "name": "Galaxy Watch 4",
+      "modelSeriesId": null,
+      "brandId": 1011,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2049,
+      "name": "Galaxy Watch 5",
+      "modelSeriesId": null,
+      "brandId": 1011,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2050,
+      "name": "Garmin Fenix 6",
+      "modelSeriesId": null,
+      "brandId": 1012,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2051,
+      "name": "Garmin Forerunner 945",
+      "modelSeriesId": null,
+      "brandId": 1012,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2052,
+      "name": "Huawei P20",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2053,
+      "name": "Huawei P30",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2054,
+      "name": "Huawei P40",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2055,
+      "name": "Huawei Mate 20",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2056,
+      "name": "Huawei Mate 30",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2057,
+      "name": "Huawei Mate 40",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2058,
+      "name": "Huawei Nova 5T",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2059,
+      "name": "Huawei Nova 9",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 2060,
+      "name": "Huawei Nova 11",
+      "modelSeriesId": null,
+      "brandId": 1013,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "deviceIssues": [],
+  "exportedAt": "2025-05-06T23:40:49.466588",
+  "version": "1.0"
+}
