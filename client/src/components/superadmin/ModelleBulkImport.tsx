@@ -77,8 +77,13 @@ export default function ModelleBulkImport({ deviceTypes }: ModelleBulkImportProp
     const deviceType = userDeviceTypes?.find(dt => 
       dt.name.toLowerCase() === selectedDeviceType.toLowerCase()
     );
-    if (!deviceType) return false;
+    if (!deviceType) {
+      console.log(`Gerätetyp nicht gefunden für "${selectedDeviceType}"`);
+      console.log("Verfügbare Gerätetypen:", userDeviceTypes?.map(dt => `${dt.name} (ID:${dt.id})`));
+      return false;
+    }
     
+    console.log(`Marke ${brand.name} hat deviceTypeId ${brand.deviceTypeId}, Gerätetyp ${deviceType.name} hat ID ${deviceType.id}`);
     return brand.deviceTypeId === deviceType.id;
   }) : [];
 
