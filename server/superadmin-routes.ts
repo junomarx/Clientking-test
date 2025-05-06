@@ -402,7 +402,15 @@ export function registerSuperadminRoutes(app: Express) {
   // Abrufen aller verfügbaren Gerätetypen (vollständige Objekte mit IDs)
   app.get("/api/superadmin/device-types/all", isSuperadmin, async (req: Request, res: Response) => {
     try {
+      // Gerätetypen auch wenn shopId=null ist erfassen
       const deviceTypes = await db.select().from(userDeviceTypes);
+      
+      // Prüfen ob Gerätetypen mit shopId=null vorhanden sind und loggen
+      const nullShopIdTypes = deviceTypes.filter(dt => dt.shopId === null);
+      if (nullShopIdTypes.length > 0) {
+        console.log("Gerätetypen mit shopId=null gefunden:", nullShopIdTypes);
+      }
+      
       res.json(deviceTypes);
     } catch (error) {
       console.error("Fehler beim Abrufen der vollständigen Gerätetypen:", error);
@@ -414,7 +422,7 @@ export function registerSuperadminRoutes(app: Express) {
   app.get("/api/superadmin/device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       // Standardgerätetypen (unabhängig von Benutzern)
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
       
       // Alle ausgeblendeten Standard-Gerätetypen abrufen
       const hiddenTypes = await db.select({
@@ -435,6 +443,8 @@ export function registerSuperadminRoutes(app: Express) {
       const allTypes = [...visibleStandardTypes, ...customDeviceTypes.map(dt => dt.name)];
       const uniqueTypes = Array.from(new Set(allTypes));
       
+      console.log("Alle Gerätetypen:", uniqueTypes);
+      
       res.json(uniqueTypes);
     } catch (error) {
       console.error("Fehler beim Abrufen der Gerätetypen:", error);
@@ -452,7 +462,7 @@ export function registerSuperadminRoutes(app: Express) {
       }
       
       // Standardgerätetypen abrufen
-      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch"];
+      const standardDeviceTypes = ["smartphone", "tablet", "laptop", "watch", "spielekonsole"];
       
       // Prüfen, ob der Gerätetyp bereits existiert (inklusive Standardtypen)
       if (standardDeviceTypes.includes(name.toLowerCase())) {
