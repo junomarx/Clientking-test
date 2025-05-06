@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, X } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
@@ -422,6 +422,8 @@ export default function SuperadminDevicesTab() {
       return <Laptop {...iconProps} />;
     } else if (normalizedType.includes("watch") || normalizedType.includes("uhr")) {
       return <Watch {...iconProps} />;
+    } else if (normalizedType.includes("spielekonsole") || normalizedType.includes("konsole") || normalizedType.includes("console") || normalizedType.includes("gaming")) {
+      return <Gamepad2 {...iconProps} />;
     } else {
       return <Smartphone {...iconProps} />; // Default-Icon
     }
@@ -947,8 +949,8 @@ export default function SuperadminDevicesTab() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEditDeviceType(type)}
-                                disabled={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type)}
-                                title={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) ? "Standardgerätetypen können nicht bearbeitet werden" : "Gerätetyp bearbeiten"}
+                                disabled={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type)}
+                                title={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type) ? "Standardgerätetypen können nicht bearbeitet werden" : "Gerätetyp bearbeiten"}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -956,8 +958,8 @@ export default function SuperadminDevicesTab() {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleDeleteDeviceType(type)}
-                                disabled={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type)}
-                                title={["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) ? "Standardgerätetypen können nicht gelöscht werden" : "Gerätetyp löschen"}
+                                disabled={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type)}
+                                title={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type) ? "Standardgerätetypen können nicht gelöscht werden" : "Gerätetyp löschen"}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
