@@ -101,14 +101,9 @@ export function PrintSettingsTab() {
   const pickupTemplates = templates?.filter(t => t.type === 'pickup') || [];
   const costEstimateTemplates = templates?.filter(t => t.type === 'cost-estimate') || [];
 
-  // Test-Druck-Funktion
+  // Leere Funktion als Platzhalter, falls noch Verweise dazu existieren
   const handlePrintTest = (templateId: number) => {
-    // Hier würde normalerweise ein API-Aufruf zum Testen des Drucks erfolgen
-    toast({
-      title: "Testdruck gestartet",
-      description: `Template ID: ${templateId} wird gedruckt.`,
-      duration: 2000,
-    });
+    // Testdruck wurde entfernt, da Vorlagen vom Superadmin verwaltet werden
   };
 
   if (isLoading) {
@@ -256,17 +251,9 @@ export function PrintSettingsTab() {
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
-                          <div className="flex justify-end space-x-2 mt-2 md:mt-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handlePrintTest(template.id)}
-                              className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3"
-                            >
-                              <Printer className="h-3 w-3 mr-1" />
-                              Testdruck
-                            </Button>
-                          </div>
+                          <p className="text-[10px] md:text-xs text-gray-500 italic mt-2">
+                            Wird automatisch im Reparaturablauf verwendet
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
@@ -280,11 +267,11 @@ export function PrintSettingsTab() {
         <TabsContent value="receipt">
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Vorlagen für Kassenbelege</CardTitle>
-                <CardDescription>Diese Vorlagen werden für Kassenbelege verwendet</CardDescription>
+              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">Vorlagen für Kassenbelege</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Diese Vorlagen werden für Kassenbelege verwendet</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 {receiptTemplates.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Printer className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -294,32 +281,24 @@ export function PrintSettingsTab() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {receiptTemplates.map((template) => (
                       <Card key={template.id} className={`overflow-hidden ${template.isDefault ? 'border-green-300 bg-green-50' : ''}`}>
-                        <CardHeader className="pb-2">
+                        <CardHeader className="p-3 md:p-4 pb-1 md:pb-2">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-md">{template.title}</CardTitle>
+                            <CardTitle className="text-sm md:text-md">{template.title}</CardTitle>
                             {template.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Standard</span>
+                              <span className="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Standard</span>
                             )}
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-[10px] md:text-xs">
                             Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleDateString()}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex justify-end space-x-2 mt-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handlePrintTest(template.id)}
-                              className="text-xs"
-                            >
-                              <Printer className="h-3 w-3 mr-1" />
-                              Testdruck
-                            </Button>
-                          </div>
+                        <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
+                          <p className="text-[10px] md:text-xs text-gray-500 italic mt-2">
+                            Wird automatisch im Reparaturablauf verwendet
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
@@ -333,11 +312,11 @@ export function PrintSettingsTab() {
         <TabsContent value="pickup">
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Vorlagen für Abholscheine</CardTitle>
-                <CardDescription>Diese Vorlagen werden für Abholscheine verwendet</CardDescription>
+              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">Vorlagen für Abholscheine</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Diese Vorlagen werden für Abholscheine verwendet</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 {pickupTemplates.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Printer className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -347,32 +326,24 @@ export function PrintSettingsTab() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {pickupTemplates.map((template) => (
                       <Card key={template.id} className={`overflow-hidden ${template.isDefault ? 'border-green-300 bg-green-50' : ''}`}>
-                        <CardHeader className="pb-2">
+                        <CardHeader className="p-3 md:p-4 pb-1 md:pb-2">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-md">{template.title}</CardTitle>
+                            <CardTitle className="text-sm md:text-md">{template.title}</CardTitle>
                             {template.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Standard</span>
+                              <span className="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Standard</span>
                             )}
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-[10px] md:text-xs">
                             Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleDateString()}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex justify-end space-x-2 mt-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handlePrintTest(template.id)}
-                              className="text-xs"
-                            >
-                              <Printer className="h-3 w-3 mr-1" />
-                              Testdruck
-                            </Button>
-                          </div>
+                        <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
+                          <p className="text-[10px] md:text-xs text-gray-500 italic mt-2">
+                            Wird automatisch im Reparaturablauf verwendet
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
@@ -386,11 +357,11 @@ export function PrintSettingsTab() {
         <TabsContent value="cost-estimate">
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Vorlagen für Kostenvoranschläge</CardTitle>
-                <CardDescription>Diese Vorlagen werden für Kostenvoranschläge verwendet</CardDescription>
+              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">Vorlagen für Kostenvoranschläge</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Diese Vorlagen werden für Kostenvoranschläge verwendet</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 {costEstimateTemplates.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -400,32 +371,24 @@ export function PrintSettingsTab() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {costEstimateTemplates.map((template) => (
                       <Card key={template.id} className={`overflow-hidden ${template.isDefault ? 'border-green-300 bg-green-50' : ''}`}>
-                        <CardHeader className="pb-2">
+                        <CardHeader className="p-3 md:p-4 pb-1 md:pb-2">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-md">{template.title}</CardTitle>
+                            <CardTitle className="text-sm md:text-md">{template.title}</CardTitle>
                             {template.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Standard</span>
+                              <span className="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Standard</span>
                             )}
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-[10px] md:text-xs">
                             Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleDateString()}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex justify-end space-x-2 mt-4">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handlePrintTest(template.id)}
-                              className="text-xs"
-                            >
-                              <Printer className="h-3 w-3 mr-1" />
-                              Testdruck
-                            </Button>
-                          </div>
+                        <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
+                          <p className="text-[10px] md:text-xs text-gray-500 italic mt-2">
+                            Wird automatisch im Reparaturablauf verwendet
+                          </p>
                         </CardContent>
                       </Card>
                     ))}
