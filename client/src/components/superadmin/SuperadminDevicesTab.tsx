@@ -13,10 +13,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X, Factory, Layers, RefreshCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import HerstellerBulkImport from "./HerstellerBulkImport";
-import ModelleBulkImport from "./ModelleBulkImport";
-import FehlerkatalogBulkImport from "./FehlerkatalogBulkImport";
-import DeviceDataExportImportWithCSV from "./DeviceDataExportImportWithCSV";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
 
 // Interfaces für den Fehlerkatalog
