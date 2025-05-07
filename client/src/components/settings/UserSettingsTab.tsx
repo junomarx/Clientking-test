@@ -161,30 +161,43 @@ export function UserSettingsTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex items-center mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Benutzereinstellungen</h1>
-          <p className="text-gray-500">Verwalten Sie Ihre persönlichen Einstellungen und Zugangsdaten</p>
+          <h1 className="text-xl md:text-2xl font-bold">Benutzereinstellungen</h1>
+          <p className="text-sm text-gray-500">Verwalten Sie Ihre persönlichen Daten</p>
         </div>
       </div>
 
+      {/* Mobile view: Select dropdown for sections */}
+      <div className="block md:hidden mb-4">
+        <select 
+          className="w-full p-2 border rounded-md text-sm" 
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value)}
+        >
+          <option value="profile">Profil</option>
+          <option value="security">Sicherheit</option>
+        </select>
+      </div>
+
       <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        {/* Desktop view: Tab list */}
+        <TabsList className="mb-6 hidden md:flex">
           <TabsTrigger value="profile">Profil</TabsTrigger>
           <TabsTrigger value="security">Sicherheit</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg font-semibold">
-                <UserCog className="h-5 w-5 mr-2" />
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-base md:text-lg font-semibold">
+                <UserCog className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
                 Profilinformationen
               </CardTitle>
-              <CardDescription>Aktualisieren Sie Ihre persönlichen Daten</CardDescription>
+              <CardDescription className="text-xs md:text-sm">Aktualisieren Sie Ihre persönlichen Daten</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <Form {...profileForm}>
                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -264,15 +277,15 @@ export function UserSettingsTab() {
             </CardContent>
           </Card>
           
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg font-semibold">
-                <Shield className="h-5 w-5 mr-2" />
+          <Card className="mt-4 md:mt-6">
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-base md:text-lg font-semibold">
+                <Shield className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
                 Kontostatus
               </CardTitle>
-              <CardDescription>Informationen über Ihren Kontozugriff</CardDescription>
+              <CardDescription className="text-xs md:text-sm">Informationen über Ihren Kontozugriff</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <div className="space-y-2">
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-gray-600">Status</span>
@@ -302,14 +315,14 @@ export function UserSettingsTab() {
 
         <TabsContent value="security">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg font-semibold">
-                <Key className="h-5 w-5 mr-2" />
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="flex items-center text-base md:text-lg font-semibold">
+                <Key className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
                 Passwort ändern
               </CardTitle>
-              <CardDescription>Aktualisieren Sie Ihr Passwort regelmäßig für mehr Sicherheit</CardDescription>
+              <CardDescription className="text-xs md:text-sm">Aktualisieren Sie Ihr Passwort regelmäßig für mehr Sicherheit</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <Form {...passwordForm}>
                 <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                   <FormField
