@@ -1292,6 +1292,151 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // CSV-Import für Gerätemodelle
+  app.post("/api/superadmin/device-management/import-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { deviceType, brandName, csvData } = req.body;
+      
+      if (!deviceType || !brandName || !csvData) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Gerätetyp, Markenname und CSV-Daten sind erforderlich" 
+        });
+      }
+      
+      console.log(`CSV-Import für Marke ${brandName} und Gerätetyp ${deviceType} gestartet`);
+      
+      // Superadmin-ID holen
+      const superadminUserId = (req.user as any).id;
+      console.log(`Import verwendet Superadmin-ID: ${superadminUserId}`);
+      
+      // Prüfen ob der Gerätetyp existiert, sonst erstellen
+      let deviceTypeId: number;
+      const [existingDeviceType] = await db.select().from(userDeviceTypes)
+        .where(sql`LOWER(${userDeviceTypes.name}) = ${deviceType.toLowerCase()}`);
+      
+      if (existingDeviceType) {
+        deviceTypeId = existingDeviceType.id;
+        console.log(`Verwende existierenden Gerätetyp ${deviceType} mit ID ${deviceTypeId}`);
+      } else {
+        // Neuen Gerätetyp anlegen
+        const [newDeviceType] = await db.insert(userDeviceTypes)
+          .values({
+            name: deviceType,
+            userId: superadminUserId,
+            shopId: null, // Globaler Gerätetyp
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        deviceTypeId = newDeviceType.id;
+        console.log(`Neuer Gerätetyp ${deviceType} angelegt mit ID ${deviceTypeId}`);
+      }
+      
+      // Prüfen ob die Marke existiert, sonst erstellen
+      let brandId: number;
+      const [existingBrand] = await db.select().from(userBrands)
+        .where(sql`LOWER(${userBrands.name}) = ${brandName.toLowerCase()} AND ${userBrands.deviceTypeId} = ${deviceTypeId}`);
+      
+      if (existingBrand) {
+        brandId = existingBrand.id;
+        console.log(`Verwende existierende Marke ${brandName} mit ID ${brandId}`);
+      } else {
+        // Neue Marke anlegen
+        const [newBrand] = await db.insert(userBrands)
+          .values({
+            name: brandName,
+            deviceTypeId: deviceTypeId,
+            userId: superadminUserId,
+            shopId: null, // Globale Marke
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        
+        brandId = newBrand.id;
+        console.log(`Neue Marke ${brandName} angelegt mit ID ${brandId}`);
+      }
+      
+      // CSV-Daten parsen
+      const { parse } = await import('csv-parse/sync');
+      const records = parse(csvData, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+      
+      console.log(`${records.length} Modelle in CSV-Datei gefunden`);
+      
+      // Vorhandene Modelle für diese Marke abrufen
+      const existingModels = await db.select().from(userModels).where(eq(userModels.brandId, brandId));
+      const existingModelsByName = new Map(
+        existingModels.map(model => [model.name.toLowerCase(), model])
+      );
+      
+      // Statistik für den Import
+      const stats = {
+        total: records.length,
+        added: 0,
+        skipped: 0,
+        errors: 0
+      };
+      
+      // Modelle importieren
+      for (const record of records) {
+        try {
+          const modelName = record.model || record.name || record.Model || record.Name;
+          
+          if (!modelName) {
+            console.warn("Überspringe Zeile ohne Modellnamen");
+            stats.skipped++;
+            continue;
+          }
+          
+          // Prüfen, ob das Modell bereits existiert
+          const existingModel = existingModelsByName.get(modelName.toLowerCase());
+          
+          if (existingModel) {
+            console.log(`Modell ${modelName} existiert bereits mit ID ${existingModel.id}`);
+            stats.skipped++;
+          } else {
+            // Neues Modell anlegen
+            const [newModel] = await db.insert(userModels)
+              .values({
+                name: modelName,
+                modelSeriesId: null, // Keine Modellreihe verwenden
+                brandId: brandId,
+                userId: superadminUserId,
+                shopId: null, // Globales Modell
+                createdAt: new Date(),
+                updatedAt: new Date()
+              })
+              .returning();
+            
+            console.log(`Neues Modell ${modelName} angelegt mit ID ${newModel.id}`);
+            stats.added++;
+          }
+        } catch (error) {
+          console.error(`Fehler beim Import des Modells:`, error);
+          stats.errors++;
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: "CSV-Import abgeschlossen",
+        stats
+      });
+    } catch (error) {
+      console.error("Fehler beim CSV-Import:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim CSV-Import" 
+      });
+    }
+  });
+  
   // Kompletten Export aller Gerätedaten (Gerätearten, Hersteller, Modelle, Fehlerkatalog)
   app.get("/api/superadmin/device-management/export", isSuperadmin, async (req: Request, res: Response) => {
     try {
