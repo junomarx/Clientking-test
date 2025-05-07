@@ -287,6 +287,26 @@ export default function SuperadminDevicesTab() {
     staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
   
+  // API-Abfrage: Gerätestatistiken abrufen
+  const { data: deviceStatistics, isLoading: isLoadingStatistics } = useQuery<{
+    totalDeviceTypes: number;
+    totalBrands: number;
+    totalModels: number;
+    deviceTypeStats: Array<{
+      name: string;
+      brandCount: number;
+      modelCount: number;
+      brands: Array<{
+        name: string;
+        modelCount: number;
+      }>;
+    }>;
+  }>({
+    queryKey: ["/api/superadmin/device-statistics"],
+    enabled: true,
+    staleTime: 0,
+  });
+  
   // Mutation zum Erstellen eines neuen Gerätetyps
   const createDeviceTypeMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
@@ -943,12 +963,13 @@ export default function SuperadminDevicesTab() {
       {/* Export/Import-Komponente entfernt */}
       
       <Tabs defaultValue="types" className="w-full">
-        <TabsList className="grid grid-cols-5">
+        <TabsList className="grid grid-cols-6">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
           <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
           <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
+          <TabsTrigger value="statistics">Statistik</TabsTrigger>
         </TabsList>
 
         <TabsContent value="types">
@@ -1621,6 +1642,144 @@ export default function SuperadminDevicesTab() {
 
         <TabsContent value="csv">
           <DeviceDataCSVImportExport />
+        </TabsContent>
+        
+        <TabsContent value="statistics">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Gerätestatistiken</CardTitle>
+                <CardDescription>
+                  Übersicht über alle Gerätetypen, Marken und Modelle im System
+                </CardDescription>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-statistics"] })}
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" /> Aktualisieren
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {isLoadingStatistics ? (
+                <div className="flex justify-center p-8">
+                  <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : deviceStatistics ? (
+                <div className="space-y-8">
+                  {/* Zusammenfassung */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-blue-50 dark:bg-blue-950">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Gerätetypen</p>
+                            <h3 className="text-3xl font-bold">{deviceStatistics.totalDeviceTypes}</h3>
+                          </div>
+                          <Smartphone className="h-12 w-12 text-blue-500" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-green-50 dark:bg-green-950">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Marken</p>
+                            <h3 className="text-3xl font-bold">{deviceStatistics.totalBrands}</h3>
+                          </div>
+                          <Factory className="h-12 w-12 text-green-500" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-purple-50 dark:bg-purple-950">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">Modelle</p>
+                            <h3 className="text-3xl font-bold">{deviceStatistics.totalModels}</h3>
+                          </div>
+                          <Layers className="h-12 w-12 text-purple-500" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {/* Details pro Gerätetyp */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Details pro Gerätetyp</h3>
+                    <div className="space-y-4">
+                      {deviceStatistics.deviceTypeStats.map(stat => (
+                        <Card key={stat.name} className="overflow-hidden">
+                          <CardHeader className="bg-muted/50 p-4">
+                            <div className="flex items-center">
+                              {getDeviceTypeIcon(stat.name)}
+                              <h4 className="ml-2 text-lg font-medium">{stat.name}</h4>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="flex items-center p-3 rounded-md bg-muted/30">
+                                <Factory className="h-5 w-5 mr-2 text-primary" />
+                                <span className="text-sm font-medium">Marken: {stat.brandCount}</span>
+                              </div>
+                              <div className="flex items-center p-3 rounded-md bg-muted/30">
+                                <Smartphone className="h-5 w-5 mr-2 text-primary" />
+                                <span className="text-sm font-medium">Modelle: {stat.modelCount}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Top-Marken anzeigen */}
+                            {stat.brands.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-medium mb-2">Top Marken:</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {stat.brands
+                                    .sort((a, b) => b.modelCount - a.modelCount)
+                                    .slice(0, 6)
+                                    .map(brand => (
+                                      <div 
+                                        key={brand.name} 
+                                        className="flex items-center justify-between p-2 rounded-md bg-muted/20"
+                                      >
+                                        <span className="text-sm font-medium">{brand.name}</span>
+                                        <Badge variant="outline">{brand.modelCount}</Badge>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                                
+                                {stat.brands.length > 6 && (
+                                  <p className="mt-2 text-xs text-muted-foreground">
+                                    +{stat.brands.length - 6} weitere Marken
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Keine Statistiken verfügbar</h3>
+                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                    Es konnten keine Statistiken geladen werden.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-statistics"] })}
+                  >
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Erneut versuchen
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
       
