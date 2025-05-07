@@ -547,9 +547,11 @@ export function registerSuperadminRoutes(app: Express) {
       }).from(userDeviceTypes);
       
       // Entferne benutzerdefinierte Typen, die bereits als Standard existieren (um Duplikate zu vermeiden)
+      // Entferne auch leere Gerätetypen
       const filteredCustomTypes = customDeviceTypes
         .map(dt => dt.name)
         .filter(name => 
+          name && name.trim() !== "" &&
           !standardDeviceTypesLower.includes(name.toLowerCase()) &&
           !standardDeviceTypes.includes(name)
         );
