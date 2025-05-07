@@ -214,42 +214,42 @@ export function BusinessSettingsTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex justify-between items-center mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Geschäftseinstellungen</h1>
-          <p className="text-gray-500">Verwalten Sie Ihre geschäftlichen Daten</p>
+          <h1 className="text-xl md:text-2xl font-bold">Geschäftseinstellungen</h1>
+          <p className="text-sm text-gray-500">Verwalten Sie Ihre geschäftlichen Daten</p>
         </div>
         <Button 
           onClick={form.handleSubmit(onSubmit)}
           disabled={updateMutation.isPending} 
           variant="default" 
           size="sm" 
-          className="flex items-center"
+          className="flex items-center h-8 text-xs px-3"
         >
-          <Save className="h-4 w-4 mr-2" /> Speichern
+          <Save className="h-3 w-3 mr-1" /> Speichern
         </Button>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Geschäftsinformationen</CardTitle>
-              <CardDescription>Grundlegende Informationen über Ihr Unternehmen</CardDescription>
+          <Card className="mb-4 md:mb-6">
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="text-base md:text-lg font-semibold">Geschäftsinformationen</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Grundlegende Informationen über Ihr Unternehmen</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3 space-y-3 md:space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="businessName"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unternehmensname*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Unternehmensname*</FormLabel>
                       <FormControl>
-                        <Input placeholder="z.B. Handyshop GmbH" {...field} />
+                        <Input placeholder="z.B. Handyshop GmbH" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -258,12 +258,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="taxId"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Steuernummer</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Steuernummer</FormLabel>
                       <FormControl>
-                        <Input placeholder="z.B. ATU12345678" {...field} />
+                        <Input placeholder="z.B. ATU12345678" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -272,12 +272,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="ownerFirstName"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vorname des Inhabers*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Vorname*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Max" {...field} />
+                        <Input placeholder="Max" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -286,12 +286,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="ownerLastName"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nachname des Inhabers*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Nachname*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Mustermann" {...field} />
+                        <Input placeholder="Mustermann" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -303,12 +303,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="streetAddress"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Straße und Hausnummer*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Straße und Hausnummer*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Hauptstraße 1" {...field} />
+                        <Input placeholder="Hauptstraße 1" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -317,12 +317,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="zipCode"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Postleitzahl*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">PLZ*</FormLabel>
                       <FormControl>
-                        <Input placeholder="1010" {...field} />
+                        <Input placeholder="1010" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -331,12 +331,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="city"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ort*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Ort*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Wien" {...field} />
+                        <Input placeholder="Wien" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -345,12 +345,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="country"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Land*</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Land*</FormLabel>
                       <FormControl>
-                        <Input placeholder="Österreich" {...field} />
+                        <Input placeholder="Österreich" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -362,12 +362,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="phone"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Telefon</FormLabel>
                       <FormControl>
-                        <Input placeholder="+43 1 234 5678" {...field} />
+                        <Input placeholder="+43 1 234 5678" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -376,12 +376,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-Mail</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">E-Mail</FormLabel>
                       <FormControl>
-                        <Input placeholder="info@handyshop.at" {...field} />
+                        <Input placeholder="info@handyshop.at" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -390,12 +390,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="website"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Website</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Website</FormLabel>
                       <FormControl>
-                        <Input placeholder="www.handyshop.at" {...field} />
+                        <Input placeholder="www.handyshop.at" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -404,12 +404,12 @@ export function BusinessSettingsTab() {
                   control={form.control}
                   name="reviewLink"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bewertungslink</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Bewertungslink</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://g.page/review/..." {...field} />
+                        <Input placeholder="https://g.page/review/..." {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -418,11 +418,12 @@ export function BusinessSettingsTab() {
               {/* Logo Upload */}
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-2">
-                  <FormLabel>Firmenlogo</FormLabel>
+                  <FormLabel className="text-sm mb-0">Firmenlogo</FormLabel>
                   <Button 
                     type="button" 
                     variant="outline" 
                     size="sm"
+                    className="h-8 text-xs px-3"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Logo hochladen
@@ -437,10 +438,10 @@ export function BusinessSettingsTab() {
                 </div>
                 
                 {logoError && (
-                  <div className="text-red-500 text-sm mb-2">{logoError}</div>
+                  <div className="text-red-500 text-xs mb-2">{logoError}</div>
                 )}
                 
-                <div className="border border-gray-200 rounded-md p-4 h-32 flex items-center justify-center bg-gray-50">
+                <div className="border border-gray-200 rounded-md p-3 h-24 md:h-32 flex items-center justify-center bg-gray-50">
                   {logoPreview ? (
                     <img 
                       src={logoPreview} 
@@ -448,11 +449,11 @@ export function BusinessSettingsTab() {
                       className="max-h-full max-w-full" 
                     />
                   ) : (
-                    <div className="text-gray-400 text-sm">Kein Logo hochgeladen</div>
+                    <div className="text-gray-400 text-xs">Kein Logo hochgeladen</div>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Empfohlene Größe: 300x100px. Maximale Dateigröße: 2MB. Erlaubte Formate: JPG, PNG, SVG.
+                <p className="text-xs text-gray-500 mt-1">
+                  Empfohlene Größe: 300x100px. Max: 2MB. Formate: JPG, PNG, SVG.
                 </p>
               </div>
             </CardContent>
@@ -460,24 +461,24 @@ export function BusinessSettingsTab() {
           
           {/* Bon-Einstellungen */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">Bon-Einstellungen</CardTitle>
-              <CardDescription>Konfigurieren Sie Ihre Bon-Ausgabe</CardDescription>
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="text-base md:text-lg font-semibold">Bon-Einstellungen</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihre Bon-Ausgabe</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <FormField
                 control={form.control}
                 name="receiptWidth"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bon-Breite</FormLabel>
+                  <FormItem className="w-full">
+                    <FormLabel className="text-sm">Bon-Breite</FormLabel>
                     <FormControl>
                       <Select 
                         onValueChange={field.onChange} 
                         value={field.value}
                         defaultValue={field.value}
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full h-9 text-sm">
                           <SelectValue placeholder="Bon-Breite wählen" />
                         </SelectTrigger>
                         <SelectContent>
@@ -486,7 +487,7 @@ export function BusinessSettingsTab() {
                         </SelectContent>
                       </Select>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
