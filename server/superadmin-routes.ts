@@ -12,6 +12,18 @@ import {
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
   deviceIssues, insertDeviceIssueSchema, hiddenStandardDeviceTypes
 } from "@shared/schema";
+import { UploadedFile } from "express-fileupload";
+import { inArray } from "drizzle-orm";
+
+// User-Interface erweitert um userId für TypeScript
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      userId: number;
+    }
+  }
+}
 import { ZodError, z } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
@@ -2176,6 +2188,412 @@ export function registerSuperadminRoutes(app: Express) {
         success: false,
         message: "Fehler beim Importieren der Gerätedaten" 
       });
+    }
+  });
+
+  // CSV-Export für Marken
+  app.get("/api/superadmin/brands/export-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const deviceType = req.query.deviceType as string | undefined;
+      let brands;
+      
+      // Falls ein Gerätetyp angegeben wurde, filtere die Marken nach diesem Typ
+      if (deviceType) {
+        // Finde zuerst die IDs der Gerätetypen, die dem Namen entsprechen
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.name, deviceType));
+        
+        if (deviceTypeResult.length === 0) {
+          return res.status(404).send(`Gerätetyp "${deviceType}" nicht gefunden.`);
+        }
+        
+        const deviceTypeId = deviceTypeResult[0].id;
+        
+        // Hole alle Marken mit diesem Gerätetyp
+        brands = await db.select()
+          .from(userBrands)
+          .where(eq(userBrands.deviceTypeId, deviceTypeId));
+      } else {
+        // Hole alle Marken
+        brands = await db.select().from(userBrands);
+      }
+      
+      // Wenn keine Marken gefunden wurden, gib eine leere CSV zurück
+      if (brands.length === 0) {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="marken${deviceType ? `-${deviceType.toLowerCase()}` : ''}.csv"`);
+        return res.send('name,deviceType\n');
+      }
+      
+      // Mappe die Marken zu einem Array von Objekten mit den relevanten Informationen
+      const mappedBrands = await Promise.all(brands.map(async (brand) => {
+        // Gerätetyp-Name anhand der deviceTypeId ermitteln
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.id, brand.deviceTypeId));
+        
+        const deviceTypeName = deviceTypeResult.length > 0 ? deviceTypeResult[0].name : 'Unbekannt';
+        
+        return {
+          name: brand.name,
+          deviceType: deviceTypeName
+        };
+      }));
+      
+      // CSV-Header
+      let csvContent = 'name,deviceType\n';
+      
+      // CSV-Inhalt generieren
+      mappedBrands.forEach(brand => {
+        csvContent += `${brand.name},${brand.deviceType}\n`;
+      });
+      
+      // CSV-Datei zurückgeben
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="marken${deviceType ? `-${deviceType.toLowerCase()}` : ''}.csv"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Fehler beim CSV-Export der Marken:", error);
+      res.status(500).send(`Fehler beim CSV-Export der Marken: ${error.message}`);
+    }
+  });
+  
+  // CSV-Export für Modelle
+  app.get("/api/superadmin/models/export-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const deviceType = req.query.deviceType as string | undefined;
+      let models;
+      
+      if (deviceType) {
+        // Finde zuerst die IDs der Gerätetypen, die dem Namen entsprechen
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.name, deviceType));
+        
+        if (deviceTypeResult.length === 0) {
+          return res.status(404).send(`Gerätetyp "${deviceType}" nicht gefunden.`);
+        }
+        
+        const deviceTypeId = deviceTypeResult[0].id;
+        
+        // Finde alle Marken mit diesem Gerätetyp
+        const brands = await db.select()
+          .from(userBrands)
+          .where(eq(userBrands.deviceTypeId, deviceTypeId));
+        
+        if (brands.length === 0) {
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', `attachment; filename="modelle${deviceType ? `-${deviceType.toLowerCase()}` : ''}.csv"`);
+          return res.send('name,brandName,deviceType\n');
+        }
+        
+        // Extrahiere die brandIds für die Abfrage
+        const brandIds = brands.map(brand => brand.id);
+        
+        // Hole alle Modelle dieser Marken
+        models = await db.select()
+          .from(userModels)
+          .where(inArray(userModels.brandId, brandIds));
+      } else {
+        // Hole alle Modelle
+        models = await db.select().from(userModels);
+      }
+      
+      // Wenn keine Modelle gefunden wurden, gib eine leere CSV zurück
+      if (models.length === 0) {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="modelle${deviceType ? `-${deviceType.toLowerCase()}` : ''}.csv"`);
+        return res.send('name,brandName,deviceType\n');
+      }
+      
+      // Mappe die Modelle zu einem Array von Objekten mit den relevanten Informationen
+      const mappedModels = await Promise.all(models.map(async (model) => {
+        // Markenname anhand der brandId ermitteln
+        const brandResult = await db.select()
+          .from(userBrands)
+          .where(eq(userBrands.id, model.brandId));
+        
+        if (brandResult.length === 0) {
+          return null; // Überspringe Modelle ohne gültige Marke
+        }
+        
+        const brand = brandResult[0];
+        
+        // Gerätetyp-Name anhand der deviceTypeId der Marke ermitteln
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.id, brand.deviceTypeId));
+        
+        const deviceTypeName = deviceTypeResult.length > 0 ? deviceTypeResult[0].name : 'Unbekannt';
+        
+        return {
+          name: model.name,
+          brandName: brand.name,
+          deviceType: deviceTypeName
+        };
+      })).then(models => models.filter(model => model !== null)); // Filtere Modelle ohne gültige Marke heraus
+      
+      // CSV-Header
+      let csvContent = 'name,brandName,deviceType\n';
+      
+      // CSV-Inhalt generieren
+      mappedModels.forEach(model => {
+        if (model) {
+          csvContent += `${model.name},${model.brandName},${model.deviceType}\n`;
+        }
+      });
+      
+      // CSV-Datei zurückgeben
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="modelle${deviceType ? `-${deviceType.toLowerCase()}` : ''}.csv"`);
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Fehler beim CSV-Export der Modelle:", error);
+      res.status(500).send(`Fehler beim CSV-Export der Modelle: ${error.message}`);
+    }
+  });
+  
+  // CSV-Import für Marken
+  app.post("/api/superadmin/brands/import-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      if (!req.files || !req.files.file) {
+        return res.status(400).send("Keine Datei hochgeladen");
+      }
+      
+      const csvFile = req.files.file as UploadedFile;
+      
+      if (csvFile.mimetype !== 'text/csv' && !csvFile.name.endsWith('.csv')) {
+        return res.status(400).send("Die hochgeladene Datei ist keine CSV-Datei");
+      }
+      
+      const csvContent = csvFile.data.toString('utf8');
+      const lines = csvContent.split('\n');
+      
+      // Überprüfe, ob die Datei einen Header hat
+      if (lines.length === 0) {
+        return res.status(400).send("Die CSV-Datei ist leer");
+      }
+      
+      // Überprüfe die Header-Zeile
+      const header = lines[0].trim().split(',');
+      if (!header.includes('name') || !header.includes('deviceType')) {
+        return res.status(400).send("Die CSV-Datei muss die Spalten 'name' und 'deviceType' enthalten");
+      }
+      
+      const nameIndex = header.indexOf('name');
+      const deviceTypeIndex = header.indexOf('deviceType');
+      
+      // Sammle alle Marken aus der CSV-Datei
+      const brands = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line) {
+          const values = line.split(',');
+          if (values.length >= Math.max(nameIndex, deviceTypeIndex) + 1) {
+            brands.push({
+              name: values[nameIndex],
+              deviceType: values[deviceTypeIndex]
+            });
+          }
+        }
+      }
+      
+      const { userId } = req.user as Express.User;
+      
+      // Importiere die Marken in die Datenbank
+      let importedCount = 0;
+      
+      for (const brand of brands) {
+        // Überprüfe, ob der Gerätetyp existiert
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.name, brand.deviceType));
+        
+        let deviceTypeId;
+        
+        if (deviceTypeResult.length === 0) {
+          // Erstelle den Gerätetyp, falls er noch nicht existiert
+          const [newDeviceType] = await db.insert(userDeviceTypes)
+            .values({
+              name: brand.deviceType,
+              userId,
+              shopId: null, // Global verfügbar machen
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+          
+          deviceTypeId = newDeviceType.id;
+        } else {
+          deviceTypeId = deviceTypeResult[0].id;
+        }
+        
+        // Überprüfe, ob die Marke bereits existiert
+        const existingBrand = await db.select()
+          .from(userBrands)
+          .where(and(
+            eq(userBrands.name, brand.name),
+            eq(userBrands.deviceTypeId, deviceTypeId)
+          ));
+        
+        if (existingBrand.length === 0) {
+          // Erstelle die Marke, falls sie noch nicht existiert
+          await db.insert(userBrands)
+            .values({
+              name: brand.name,
+              deviceTypeId,
+              userId,
+              shopId: null, // Global verfügbar machen
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          
+          importedCount++;
+        }
+      }
+      
+      res.json({ importedCount });
+    } catch (error) {
+      console.error("Fehler beim CSV-Import der Marken:", error);
+      res.status(500).send(`Fehler beim CSV-Import der Marken: ${error.message}`);
+    }
+  });
+  
+  // CSV-Import für Modelle
+  app.post("/api/superadmin/models/import-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      if (!req.files || !req.files.file) {
+        return res.status(400).send("Keine Datei hochgeladen");
+      }
+      
+      const csvFile = req.files.file as UploadedFile;
+      
+      if (csvFile.mimetype !== 'text/csv' && !csvFile.name.endsWith('.csv')) {
+        return res.status(400).send("Die hochgeladene Datei ist keine CSV-Datei");
+      }
+      
+      const csvContent = csvFile.data.toString('utf8');
+      const lines = csvContent.split('\n');
+      
+      // Überprüfe, ob die Datei einen Header hat
+      if (lines.length === 0) {
+        return res.status(400).send("Die CSV-Datei ist leer");
+      }
+      
+      // Überprüfe die Header-Zeile
+      const header = lines[0].trim().split(',');
+      if (!header.includes('name') || !header.includes('brandName') || !header.includes('deviceType')) {
+        return res.status(400).send("Die CSV-Datei muss die Spalten 'name', 'brandName' und 'deviceType' enthalten");
+      }
+      
+      const nameIndex = header.indexOf('name');
+      const brandNameIndex = header.indexOf('brandName');
+      const deviceTypeIndex = header.indexOf('deviceType');
+      
+      // Sammle alle Modelle aus der CSV-Datei
+      const models = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line) {
+          const values = line.split(',');
+          if (values.length >= Math.max(nameIndex, brandNameIndex, deviceTypeIndex) + 1) {
+            models.push({
+              name: values[nameIndex],
+              brandName: values[brandNameIndex],
+              deviceType: values[deviceTypeIndex]
+            });
+          }
+        }
+      }
+      
+      const { userId } = req.user as Express.User;
+      
+      // Importiere die Modelle in die Datenbank
+      let importedCount = 0;
+      
+      for (const model of models) {
+        // Überprüfe, ob der Gerätetyp existiert
+        const deviceTypeResult = await db.select()
+          .from(userDeviceTypes)
+          .where(eq(userDeviceTypes.name, model.deviceType));
+        
+        let deviceTypeId;
+        
+        if (deviceTypeResult.length === 0) {
+          // Erstelle den Gerätetyp, falls er noch nicht existiert
+          const [newDeviceType] = await db.insert(userDeviceTypes)
+            .values({
+              name: model.deviceType,
+              userId,
+              shopId: null, // Global verfügbar machen
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+          
+          deviceTypeId = newDeviceType.id;
+        } else {
+          deviceTypeId = deviceTypeResult[0].id;
+        }
+        
+        // Überprüfe, ob die Marke existiert
+        let brandResult = await db.select()
+          .from(userBrands)
+          .where(and(
+            eq(userBrands.name, model.brandName),
+            eq(userBrands.deviceTypeId, deviceTypeId)
+          ));
+        
+        let brandId;
+        
+        if (brandResult.length === 0) {
+          // Erstelle die Marke, falls sie noch nicht existiert
+          const [newBrand] = await db.insert(userBrands)
+            .values({
+              name: model.brandName,
+              deviceTypeId,
+              userId,
+              shopId: null, // Global verfügbar machen
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+          
+          brandId = newBrand.id;
+        } else {
+          brandId = brandResult[0].id;
+        }
+        
+        // Überprüfe, ob das Modell bereits existiert
+        const existingModel = await db.select()
+          .from(userModels)
+          .where(and(
+            eq(userModels.name, model.name),
+            eq(userModels.brandId, brandId)
+          ));
+        
+        if (existingModel.length === 0) {
+          // Erstelle das Modell, falls es noch nicht existiert
+          await db.insert(userModels)
+            .values({
+              name: model.name,
+              brandId,
+              modelSeriesId: null, // Keine Modellserie verwenden
+              userId,
+              shopId: null, // Global verfügbar machen
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          
+          importedCount++;
+        }
+      }
+      
+      res.json({ importedCount });
+    } catch (error) {
+      console.error("Fehler beim CSV-Import der Modelle:", error);
+      res.status(500).send(`Fehler beim CSV-Import der Modelle: ${error.message}`);
     }
   });
 }

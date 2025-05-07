@@ -13,12 +13,19 @@ import { addDeviceIssuesFields } from "./add-device-issues-fields";
 import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
 import { addBrandIdToModels } from "./add-brand-id-to-models";
 import { addPrintTemplatesTable } from "./add-print-templates-table";
+import fileUpload from "express-fileupload";
 
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
 app.use(express.json({ limit: '10mb' }));
 // Erhöhe die maximale Größe für URL-codierte Anfragen auf 10 MB
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+// Füge das File-Upload-Middleware hinzu
+app.use(fileUpload({
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB maximale Dateigröße
+  createParentPath: true, // Erstellt fehlende Verzeichnisse automatisch
+  useTempFiles: false // Benutze den Speicher für kleine Dateien
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
