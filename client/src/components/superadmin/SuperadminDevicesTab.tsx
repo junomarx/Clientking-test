@@ -257,6 +257,8 @@ export default function SuperadminDevicesTab() {
   const [selectedModelBrandId, setSelectedModelBrandId] = useState<number | null>(null);
   const [selectedModelIds, setSelectedModelIds] = useState<number[]>([]);
   const [selectAllModels, setSelectAllModels] = useState(false);
+  const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
+  const [modelForm, setModelForm] = useState({ name: "", brandId: 0 });
   
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList, refetch: refetchDeviceTypesList } = useQuery<string[]>({
@@ -810,6 +812,54 @@ export default function SuperadminDevicesTab() {
       });
     },
   });
+
+  // Mutation zum Erstellen eines neuen Modells
+  const createModelMutation = useMutation({
+    mutationFn: async (data: { name: string, brandId: number }) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-models/bulk', {
+        models: [{ name: data.name, brandId: data.brandId }]
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen des Modells');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      toast({
+        title: "Erfolg",
+        description: "Modell wurde erfolgreich erstellt.",
+      });
+      setIsCreateModelOpen(false);
+      setModelForm({ name: "", brandId: 0 });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler für Modell-Management
+  const handleCreateModel = () => {
+    setModelForm({ name: "", brandId: 0 });
+    setIsCreateModelOpen(true);
+  };
+
+  const handleSubmitCreateModel = () => {
+    if (!modelForm.name || !modelForm.brandId) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createModelMutation.mutate({ name: modelForm.name, brandId: modelForm.brandId });
+  };
   
   // Handler für Modell-Management
   const handleDeleteModel = (id: number) => {
@@ -1253,6 +1303,9 @@ export default function SuperadminDevicesTab() {
                   <CardTitle>Modelle</CardTitle>
                   <CardDescription>Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
                 </div>
+                <Button onClick={handleCreateModel}>
+                  <Plus className="mr-2 h-4 w-4" /> Modell hinzufügen
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
@@ -2128,6 +2181,65 @@ export default function SuperadminDevicesTab() {
               Abbrechen
             </Button>
             <Button onClick={handleSubmitCreateBrand} disabled={!brandForm.name || !brandForm.deviceTypeId}>
+              Erstellen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog zum Erstellen eines neuen Modells */}
+      <Dialog open={isCreateModelOpen} onOpenChange={setIsCreateModelOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Neues Modell erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie ein neues Modell zum System hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="modelName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="modelName"
+                value={modelForm.name}
+                onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
+                className="col-span-3"
+                placeholder="z.B. iPhone 14, Galaxy S23"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="modelBrand" className="text-right">
+                Marke
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={modelForm.brandId ? modelForm.brandId.toString() : ""}
+                  onValueChange={(value) => setModelForm({...modelForm, brandId: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Marke auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brandsData?.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          {getDeviceTypeIcon(userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || '')}
+                          <span>{brand.name} ({userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || 'Unbekannt'})</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateModelOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleSubmitCreateModel} disabled={!modelForm.name || !modelForm.brandId}>
               Erstellen
             </Button>
           </DialogFooter>
