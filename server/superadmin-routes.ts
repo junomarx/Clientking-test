@@ -2399,7 +2399,12 @@ export function registerSuperadminRoutes(app: Express) {
         }
       }
       
-      const { userId } = req.user as Express.User;
+      // Sicherstellen, dass wir eine gültige userId haben
+      const userId = (req.user as Express.User)?.id || (req.user as Express.User)?.userId;
+      
+      if (!userId) {
+        return res.status(400).send("Ungültige Benutzer-ID");
+      }
       
       // Importiere die Marken in die Datenbank
       let importedCount = 0;
@@ -2507,7 +2512,12 @@ export function registerSuperadminRoutes(app: Express) {
         }
       }
       
-      const { userId } = req.user as Express.User;
+      // Sicherstellen, dass wir eine gültige userId haben
+      const userId = (req.user as Express.User)?.id || (req.user as Express.User)?.userId;
+      
+      if (!userId) {
+        return res.status(400).send("Ungültige Benutzer-ID");
+      }
       
       // Importiere die Modelle in die Datenbank
       let importedCount = 0;
