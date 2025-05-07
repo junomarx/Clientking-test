@@ -248,6 +248,8 @@ export default function SuperadminDevicesTab() {
   const [selectedBrandDeviceType, setSelectedBrandDeviceType] = useState<string | null>(null);
   const [selectedBrandIds, setSelectedBrandIds] = useState<number[]>([]);
   const [selectAllBrands, setSelectAllBrands] = useState(false);
+  const [isCreateBrandOpen, setIsCreateBrandOpen] = useState(false);
+  const [brandForm, setBrandForm] = useState({ name: "", deviceTypeId: 0 });
   
   // State für Modellverwaltung
   const [modelSearchTerm, setModelSearchTerm] = useState("");
@@ -495,7 +497,54 @@ export default function SuperadminDevicesTab() {
     },
   });
   
+  // Mutation zum Erstellen einer neuen Marke
+  const createBrandMutation = useMutation({
+    mutationFn: async (data: { name: string, deviceTypeId: number }) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', {
+        brands: [{ name: data.name, deviceTypeId: data.deviceTypeId }]
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen der Marke');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
+      toast({
+        title: "Erfolg",
+        description: "Marke wurde erfolgreich erstellt.",
+      });
+      setIsCreateBrandOpen(false);
+      setBrandForm({ name: "", deviceTypeId: 0 });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handler für Marken-Management
+  const handleCreateBrand = () => {
+    setBrandForm({ name: "", deviceTypeId: 0 });
+    setIsCreateBrandOpen(true);
+  };
+
+  const handleSubmitCreateBrand = () => {
+    if (!brandForm.name || !brandForm.deviceTypeId) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createBrandMutation.mutate({ name: brandForm.name, deviceTypeId: brandForm.deviceTypeId });
+  };
+
   const handleDeleteBrand = (id: number) => {
     if (confirm('Sind Sie sicher, dass Sie diese Marke löschen möchten?')) {
       deleteBrandMutation.mutate(id);
@@ -1012,6 +1061,9 @@ export default function SuperadminDevicesTab() {
                   <CardTitle>Marken</CardTitle>
                   <CardDescription>Hier werden alle vorhandenen Marken angezeigt</CardDescription>
                 </div>
+                <Button onClick={handleCreateBrand}>
+                  <Plus className="mr-2 h-4 w-4" /> Marke hinzufügen
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
