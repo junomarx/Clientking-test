@@ -10,13 +10,8 @@ import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
 
-// Settings Pages
-import ShopSettingsPage from "@/pages/settings/ShopSettingsPage";
-import EmailSettingsPage from "@/pages/settings/EmailSettingsPage";
-import PrintSettingsPage from "@/pages/settings/PrintSettingsPage";
-import SubscriptionSettingsPage from "@/pages/settings/SubscriptionSettingsPage";
-import UserSettingsPage from "@/pages/settings/UserSettingsPage";
-
+// Design Preview Imports wurden entfernt
+import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -36,24 +31,8 @@ function Router() {
       <ProtectedRoute path="/app">
         <Home />
       </ProtectedRoute>
-      
-      {/* Neue Settings Routen */}
-      <ProtectedRoute path="/settings/shop">
-        <ShopSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/email">
-        <EmailSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/print">
-        <PrintSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/plan">
-        <SubscriptionSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/user">
-        <UserSettingsPage />
-      </ProtectedRoute>
-      
+      {/* Die /settings Route wird nicht mehr verwendet, stattdessen wird
+          der Settings-Tab in der Home-Komponente angezeigt */}
       <AdminProtectedRoute path="/admin">
         <AdminPage />
       </AdminProtectedRoute>
@@ -61,6 +40,7 @@ function Router() {
         <SuperadminPage />
       </SuperadminProtectedRoute>
 
+      {/* Design Preview Routen wurden entfernt */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />

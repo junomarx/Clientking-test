@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Link, useLocation } from 'wouter';
+import { Link } from 'wouter';
 import { 
   Menu,
   LayoutDashboard,
@@ -34,7 +34,6 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
-  const [location] = useLocation();
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -132,64 +131,59 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
       </div>
       <div className="space-y-1">
         <Button 
-          variant={location === '/settings/shop' ? 'default' : 'ghost'}
+          variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          asChild
-        >
-          <Link href="/settings/shop" onClick={() => {
+          onClick={() => {
+            onTabChange('business-settings');
             if (isMobile) closeMenu();
-          }}>
-            <Building className="h-5 w-5 mr-2" />
-            Geschäft
-          </Link>
+          }}
+        >
+          <Building className="h-5 w-5 mr-2" />
+          Geschäft
         </Button>
         <Button 
-          variant={location === '/settings/email' ? 'default' : 'ghost'}
+          variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          asChild
-        >
-          <Link href="/settings/email" onClick={() => {
+          onClick={() => {
+            onTabChange('email-settings');
             if (isMobile) closeMenu();
-          }}>
-            <Mail className="h-5 w-5 mr-2" />
-            E-Mail
-          </Link>
+          }}
+        >
+          <Mail className="h-5 w-5 mr-2" />
+          E-Mail
         </Button>
         <Button 
-          variant={location === '/settings/print' ? 'default' : 'ghost'}
+          variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          asChild
-        >
-          <Link href="/settings/print" onClick={() => {
+          onClick={() => {
+            onTabChange('print-settings');
             if (isMobile) closeMenu();
-          }}>
-            <Printer className="h-5 w-5 mr-2" />
-            Drucken
-          </Link>
+          }}
+        >
+          <Printer className="h-5 w-5 mr-2" />
+          Drucken
         </Button>
         <Button 
-          variant={location === '/settings/plan' ? 'default' : 'ghost'}
+          variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          asChild
-        >
-          <Link href="/settings/plan" onClick={() => {
+          onClick={() => {
+            onTabChange('subscription-settings');
             if (isMobile) closeMenu();
-          }}>
-            <CreditCard className="h-5 w-5 mr-2" />
-            Abonnement
-          </Link>
+          }}
+        >
+          <CreditCard className="h-5 w-5 mr-2" />
+          Abonnement
         </Button>
         <Button 
-          variant={location === '/settings/user' ? 'default' : 'ghost'}
+          variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          asChild
-        >
-          <Link href="/settings/user" onClick={() => {
+          onClick={() => {
+            onTabChange('user-settings');
             if (isMobile) closeMenu();
-          }}>
-            <UserCog className="h-5 w-5 mr-2" />
-            Benutzerdaten
-          </Link>
+          }}
+        >
+          <UserCog className="h-5 w-5 mr-2" />
+          Benutzerdaten
         </Button>
       </div>
     </>

@@ -7,11 +7,19 @@ import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates';
+// Import der Einstellungs-Komponenten
+import { BusinessSettingsTab } from '@/components/settings/BusinessSettingsTab';
+import { EmailSettingsTab } from '@/components/settings/EmailSettingsTab';
+import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
+import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
+import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
+
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 
+          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -27,7 +35,8 @@ export default function Home() {
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
       const validTabs = [
-        'dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates'
+        'dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates',
+        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings'
       ];
       if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam as Tab);
@@ -56,6 +65,12 @@ export default function Home() {
         }, 200);
       }
     };
+
+    // Event-Listener für das Öffnen des Einstellungstabs
+    const handleOpenSettingsDialog = () => {
+      console.log("Event für Öffnen der Einstellungen empfangen");
+      setActiveTab('business-settings');
+    };
     
     // Event-Listener für "Neuer Auftrag" Button
     const handleTriggerNewOrder = () => {
@@ -65,11 +80,13 @@ export default function Home() {
 
     // Event-Listener registrieren
     window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    window.addEventListener('open-settings-dialog', handleOpenSettingsDialog);
     window.addEventListener('trigger-new-order', handleTriggerNewOrder);
     
     // Event-Listener beim Unmount entfernen
     return () => {
       window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+      window.removeEventListener('open-settings-dialog', handleOpenSettingsDialog);
       window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
     };
   }, []);
@@ -95,12 +112,7 @@ export default function Home() {
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header mit Benutzerdaten */}
-        <Header 
-          variant="app"
-          activeTab={activeTab} 
-          onTabChange={(tab) => setActiveTab(tab as Tab)} 
-          canUseCostEstimates={canUseCostEstimates} 
-        />
+        <Header variant="app" activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} canUseCostEstimates={canUseCostEstimates} />
         
         {/* Main content */}
         <main className="flex-1 overflow-auto p-3 md:p-6">
@@ -127,6 +139,26 @@ export default function Home() {
               
               {activeTab === 'cost-estimates' && (
                 <CostEstimatesTab />
+              )}
+              
+              {activeTab === 'business-settings' && (
+                <BusinessSettingsTab />
+              )}
+              
+              {activeTab === 'email-settings' && (
+                <EmailSettingsTab />
+              )}
+              
+              {activeTab === 'print-settings' && (
+                <PrintSettingsTab />
+              )}
+              
+              {activeTab === 'subscription-settings' && (
+                <SubscriptionSettingsTab />
+              )}
+              
+              {activeTab === 'user-settings' && (
+                <UserSettingsTab />
               )}
             </div>
           </ScrollArea>
