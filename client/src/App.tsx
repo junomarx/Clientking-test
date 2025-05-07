@@ -1,31 +1,25 @@
-import React from "react";
-import { Switch, Route, Redirect } from "wouter";
+import React, { Suspense } from "react";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
-import ForgotPasswordPage from "@/pages/forgot-password-page";
-import ResetPasswordPage from "@/pages/reset-password-page";
-import LandingPage from "@/pages/landing/LandingPage";
 
-// Dedicated pages
-import DashboardPage from "@/pages/dashboard/DashboardPage";
-import RepairsPage from "@/pages/repairs/RepairsPage";
-import CustomersPage from "@/pages/customers/CustomersPage";
-import StatisticsPage from "@/pages/statistics/StatisticsPage";
-import CostEstimatesPage from "@/pages/cost-estimates/CostEstimatesPage";
-
-// Settings pages
+// Settings Pages
 import ShopSettingsPage from "@/pages/settings/ShopSettingsPage";
 import EmailSettingsPage from "@/pages/settings/EmailSettingsPage";
 import PrintSettingsPage from "@/pages/settings/PrintSettingsPage";
 import SubscriptionSettingsPage from "@/pages/settings/SubscriptionSettingsPage";
 import UserSettingsPage from "@/pages/settings/UserSettingsPage";
 
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
+import LandingPage from "@/pages/landing/LandingPage";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -35,39 +29,42 @@ import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
 
-function AppRouter() {
+function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/app">
+        <Home />
+      </ProtectedRoute>
       
-      {/* Main App Routes with new page structure */}
-      <ProtectedRoute path="/app/dashboard" component={DashboardPage} />
-      <ProtectedRoute path="/app/repairs" component={RepairsPage} />
-      <ProtectedRoute path="/app/customers" component={CustomersPage} />
-      <ProtectedRoute path="/app/statistics" component={StatisticsPage} />
-      <ProtectedRoute path="/app/cost-estimates" component={CostEstimatesPage} />
+      {/* Neue Settings Routen */}
+      <ProtectedRoute path="/settings/shop">
+        <ShopSettingsPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/settings/email">
+        <EmailSettingsPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/settings/print">
+        <PrintSettingsPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/settings/plan">
+        <SubscriptionSettingsPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/settings/user">
+        <UserSettingsPage />
+      </ProtectedRoute>
       
-      {/* Settings routes */}
-      <ProtectedRoute path="/app/settings/shop" component={ShopSettingsPage} />
-      <ProtectedRoute path="/app/settings/email" component={EmailSettingsPage} />
-      <ProtectedRoute path="/app/settings/print" component={PrintSettingsPage} />
-      <ProtectedRoute path="/app/settings/plan" component={SubscriptionSettingsPage} />
-      <ProtectedRoute path="/app/settings/user" component={UserSettingsPage} />
-      
-      {/* Redirect from /app to dashboard */}
-      <Route path="/app">
-        <Redirect to="/app/dashboard" />
-      </Route>
-      
-      {/* Admin and Superadmin routes */}
-      <AdminProtectedRoute path="/admin" component={AdminPage} />
-      <SuperadminProtectedRoute path="/superadmin" component={SuperadminPage} />
-      
-      {/* Auth routes */}
+      <AdminProtectedRoute path="/admin">
+        <AdminPage />
+      </AdminProtectedRoute>
+      <SuperadminProtectedRoute path="/superadmin">
+        <SuperadminPage />
+      </SuperadminProtectedRoute>
+
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
-      <Route component={NotFound} />
+      <Route path="*" component={NotFound} />
     </Switch>
   );
 }
@@ -158,7 +155,7 @@ function App() {
                 <TitleUpdater />
                 <CacheClearer />
                 <Toaster />
-                <AppRouter />
+                <Router />
               </TooltipProvider>
             </PrintManagerProvider>
           </ThemeProvider>

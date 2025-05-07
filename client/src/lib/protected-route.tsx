@@ -1,15 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route, RouteProps } from "wouter";
+import { Redirect, Route } from "wouter";
 
-interface ProtectedRouteProps {
-  path: string;
-  children?: React.ReactNode;
-  component?: React.ComponentType<any>;
-  exact?: boolean;
-}
-
-export function ProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
+export function ProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -30,14 +23,10 @@ export function ProtectedRoute({ path, children, component: Component, exact }: 
     );
   }
 
-  return (
-    <Route path={path}>
-      {Component ? <Component /> : children}
-    </Route>
-  );
+  return <Route path={path}>{children}</Route>;
 }
 
-export function AdminProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
+export function AdminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -66,14 +55,10 @@ export function AdminProtectedRoute({ path, children, component: Component, exac
     );
   }
 
-  return (
-    <Route path={path}>
-      {Component ? <Component /> : children}
-    </Route>
-  );
+  return <Route path={path}>{children}</Route>;
 }
 
-export function SuperadminProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
+export function SuperadminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -102,9 +87,5 @@ export function SuperadminProtectedRoute({ path, children, component: Component,
     );
   }
 
-  return (
-    <Route path={path}>
-      {Component ? <Component /> : children}
-    </Route>
-  );
+  return <Route path={path}>{children}</Route>;
 }
