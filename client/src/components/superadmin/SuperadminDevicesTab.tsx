@@ -1002,14 +1002,31 @@ export default function SuperadminDevicesTab() {
     return filteredBrands;
   };
 
+  // State für die aktive Tab-Navigation
+  const [activeTab, setActiveTab] = useState("types");
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Geräteverwaltung</h1>
+    <div className="space-y-4 md:space-y-6">
+      <h1 className="text-xl md:text-2xl font-bold">Geräteverwaltung</h1>
       
-      {/* Export/Import-Komponente entfernt */}
+      {/* Mobile view: Select dropdown für Tabs */}
+      <div className="block md:hidden mb-4">
+        <select 
+          className="w-full p-2 border rounded-md text-sm" 
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value)}
+        >
+          <option value="types">Gerätetypen</option>
+          <option value="brands">Marken</option>
+          <option value="models">Modelle</option>
+          <option value="issues">Fehlerkatalog</option>
+          <option value="csv">CSV Import/Export</option>
+          <option value="statistics">Statistik</option>
+        </select>
+      </div>
       
-      <Tabs defaultValue="types" className="w-full">
-        <TabsList className="grid grid-cols-6">
+      <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="hidden md:grid grid-cols-6">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
@@ -1020,18 +1037,18 @@ export default function SuperadminDevicesTab() {
 
         <TabsContent value="types">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
               <div>
-                <CardTitle>Gerätetypen</CardTitle>
-                <CardDescription>
-                  Verwalten Sie globale Gerätetypen, die von allen Shops verwendet werden können
+                <CardTitle className="text-base md:text-lg font-semibold">Gerätetypen</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Verwalten Sie globale Gerätetypen für alle Shops
                 </CardDescription>
               </div>
-              <Button onClick={handleCreateDeviceType}>
-                <Plus className="mr-2 h-4 w-4" /> Gerätetyp hinzufügen
+              <Button onClick={handleCreateDeviceType} className="text-xs md:text-sm h-8 md:h-10">
+                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Gerätetyp hinzufügen
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <div className="mb-4">
                 <div className="relative w-full md:w-72">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1123,16 +1140,16 @@ export default function SuperadminDevicesTab() {
           <div className="space-y-6">
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
                 <div>
-                  <CardTitle>Marken</CardTitle>
-                  <CardDescription>Hier werden alle vorhandenen Marken angezeigt</CardDescription>
+                  <CardTitle className="text-base md:text-lg font-semibold">Marken</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Hier werden alle vorhandenen Marken angezeigt</CardDescription>
                 </div>
-                <Button onClick={handleCreateBrand}>
-                  <Plus className="mr-2 h-4 w-4" /> Marke hinzufügen
+                <Button onClick={handleCreateBrand} className="text-xs md:text-sm h-8 md:h-10">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Marke hinzufügen
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
                   <div className="relative w-full md:w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1294,16 +1311,16 @@ export default function SuperadminDevicesTab() {
           <div className="space-y-6">
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
                 <div>
-                  <CardTitle>Modelle</CardTitle>
-                  <CardDescription>Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
+                  <CardTitle className="text-base md:text-lg font-semibold">Modelle</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
                 </div>
-                <Button onClick={handleCreateModel}>
-                  <Plus className="mr-2 h-4 w-4" /> Modell hinzufügen
+                <Button onClick={handleCreateModel} className="text-xs md:text-sm h-8 md:h-10">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Modell hinzufügen
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
                   <div className="relative w-full md:w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1510,18 +1527,18 @@ export default function SuperadminDevicesTab() {
           {/* Fehlerkatalog-Massenimport entfernt */}
           
           <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
               <div>
-                <CardTitle>Fehlerkatalog</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
                   Verwalten Sie häufige Geräteprobleme und Lösungen
                 </CardDescription>
               </div>
-              <Button onClick={handleCreateIssue}>
-                <Plus className="mr-2 h-4 w-4" /> Fehler hinzufügen
+              <Button onClick={handleCreateIssue} className="text-xs md:text-sm h-8 md:h-10">
+                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Fehler hinzufügen
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
                 {selectedIssueIds.length > 0 && (
                   <Button 
