@@ -20,7 +20,9 @@ import {
   Mail,
   Printer,
   Package,
-  UserCog
+  UserCog,
+  CreditCard,
+  User
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
