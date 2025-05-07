@@ -42,10 +42,10 @@ export function Header({ variant = "landing" }: HeaderProps) {
     return (
       <header className="flex justify-between items-center py-3 px-4 md:py-4 md:px-6 bg-background shadow-sm border-b">
         {/* Logo und Titel für Desktop */}
-        <div className="hidden md:flex items-center">
+        <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center cursor-pointer mr-6">
-              <img src={ClientKingLogo} alt="ClientKing Logo" className="h-10" />
+              <img src={ClientKingLogo} alt="ClientKing Logo" className="h-10 md:h-10 h-8" />
             </div>
           </Link>
           <h1 className="text-xl font-semibold" data-app-title>
@@ -53,61 +53,9 @@ export function Header({ variant = "landing" }: HeaderProps) {
           </h1>
         </div>
         
-        {/* Mobile Titel */}
-        <div className="flex items-center md:hidden">
-          <img src={ClientKingLogo} alt="ClientKing Logo" className="h-8 mr-2" />
-          <h1 className="text-lg font-medium" data-app-title>
-            Handyshop Verwaltung
-          </h1>
-        </div>
-        
-        {/* Benutzerinfo */}
-        <div className="flex items-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span className="hidden md:inline">{user.username}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Benutzermenü</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={() => {
-                const event = new CustomEvent('open-settings-dialog');
-                window.dispatchEvent(event);
-              }}>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Einstellungen</span>
-              </DropdownMenuItem>
-              
-              {user.isAdmin && (
-                <Link href="/admin">
-                  <DropdownMenuItem>
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Admin-Bereich</span>
-                  </DropdownMenuItem>
-                </Link>
-              )}
-              
-              {user.isSuperadmin && (
-                <Link href="/superadmin">
-                  <DropdownMenuItem>
-                    <Shield className="mr-2 h-4 w-4 text-red-500" />
-                    <span className="text-red-500 font-semibold">Superadmin-Bereich</span>
-                  </DropdownMenuItem>
-                </Link>
-              )}
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Abmelden</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Benutzer-Info als Text rechts */}
+        <div className="text-sm text-muted-foreground hidden md:block">
+          Angemeldet als: {user.username}
         </div>
       </header>
     );

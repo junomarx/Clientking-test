@@ -6,8 +6,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect, Link } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Redirect, Link, useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 
 // Login schema
@@ -37,6 +38,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
+  const [location] = useLocation();
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -45,6 +47,19 @@ export default function AuthPage() {
       password: "",
     },
   });
+  
+  // Prüfen ob der "superadmin" Parameter in der URL vorhanden ist
+  const [isSuperadminLogin, setIsSuperadminLogin] = useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isSuperadmin = params.get('superadmin') === 'true';
+    setIsSuperadminLogin(isSuperadmin);
+    
+    if (isSuperadmin) {
+      // Voreintragen der Superadmin-Zugangsdaten
+      loginForm.setValue('username', 'macnphone');
+      loginForm.setValue('password', 'admin123'); // Hier das richtige Passwort eintragen (würde ich im echten System nicht hart codieren)
+    }
+  }, [location]);
 
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),

@@ -122,6 +122,21 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
             <NavItems />
           </nav>
           <div className="px-2 mt-6">
+            {/* Login als Superadmin Macnphone - nur anzeigen für Admins und Superadmins */}
+            {user && (user.isAdmin || user.isSuperadmin) && (
+              <Button 
+                variant="outline" 
+                className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
+                asChild
+              >
+                <Link href="/auth?superadmin=true">
+                  <Shield className="h-5 w-5 mr-2 text-red-500" />
+                  <span className="text-red-500 font-medium">Login als macnphone</span>
+                </Link>
+              </Button>
+            )}
+            
+            {/* Admin-Bereich-Button */}
             {user && user.isAdmin && (
               <Button 
                 variant="outline" 
@@ -134,6 +149,8 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
                 </Link>
               </Button>
             )}
+            
+            {/* Superadmin-Bereich-Button */}
             {user && user.isSuperadmin && (
               <Button 
                 variant="outline" 
@@ -180,6 +197,21 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
               </nav>
               
               <div className="p-4 border-t">
+                {/* Login als Superadmin Macnphone - nur anzeigen für Admins und Superadmins */}
+                {user && (user.isAdmin || user.isSuperadmin) && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
+                    asChild
+                  >
+                    <Link href="/auth?superadmin=true">
+                      <Shield className="h-5 w-5 mr-2 text-red-500" />
+                      <span className="text-red-500 font-medium">Login als macnphone</span>
+                    </Link>
+                  </Button>
+                )}
+                
+                {/* Admin-Bereich-Button */}
                 {user && user.isAdmin && (
                   <Button 
                     variant="outline" 
@@ -192,6 +224,8 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
                     </Link>
                   </Button>
                 )}
+                
+                {/* Superadmin-Bereich-Button */}
                 {user && user.isSuperadmin && (
                   <Button 
                     variant="outline" 
