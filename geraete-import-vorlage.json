@@ -1,0 +1,103 @@
+{
+  "deviceTypes": [
+    {
+      "id": 55,
+      "name": "Smartphone",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 60,
+      "name": "Tablet",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 61,
+      "name": "Laptop",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 62,
+      "name": "Watch",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 66,
+      "name": "Spielekonsole",
+      "userId": 10,
+      "shopId": 0
+    }
+  ],
+  "brands": [
+    {
+      "id": 1001,
+      "name": "Neue Marke 1",
+      "deviceTypeId": 55,  // Smartphone
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z"
+    },
+    {
+      "id": 1002,
+      "name": "Neue Marke 2",
+      "deviceTypeId": 60,  // Tablet
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z"
+    }
+  ],
+  "modelSeries": [],
+  "models": [
+    {
+      "id": 2001,
+      "name": "Modell 1 für Neue Marke 1",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z"
+    },
+    {
+      "id": 2002,
+      "name": "Modell 2 für Neue Marke 1",
+      "modelSeriesId": null,
+      "brandId": 1001,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z"
+    },
+    {
+      "id": 2003,
+      "name": "Modell 1 für Neue Marke 2",
+      "modelSeriesId": null,
+      "brandId": 1002,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z"
+    }
+  ],
+  "deviceIssues": [
+    {
+      "id": 3001,
+      "name": "Neuer Fehler 1",
+      "deviceTypeId": 55,  // Smartphone
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-07T00:00:00.000Z",
+      "updatedAt": "2025-05-07T00:00:00.000Z",
+      "title": "Neuer Fehler 1",
+      "description": "Beschreibung des Fehlers 1",
+      "solution": "Lösungsansatz für Fehler 1",
+      "severity": "medium",
+      "is_common": true
+    }
+  ]
+}
