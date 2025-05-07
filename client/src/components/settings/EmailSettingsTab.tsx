@@ -164,42 +164,42 @@ export function EmailSettingsTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex justify-between items-center mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">E-Mail-Einstellungen</h1>
-          <p className="text-gray-500">Konfigurieren Sie Ihre E-Mail-Einstellungen und -Vorlagen</p>
+          <h1 className="text-xl md:text-2xl font-bold">E-Mail-Einstellungen</h1>
+          <p className="text-sm text-gray-500">Konfigurieren Sie Ihre E-Mail-Einstellungen</p>
         </div>
         <Button 
           onClick={form.handleSubmit(onSubmit)}
           disabled={updateMutation.isPending} 
           variant="default" 
           size="sm" 
-          className="flex items-center"
+          className="flex items-center h-8 text-xs px-3"
         >
-          <Save className="h-4 w-4 mr-2" /> Speichern
+          <Save className="h-3 w-3 mr-1" /> Speichern
         </Button>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">SMTP-Einstellungen</CardTitle>
-              <CardDescription>Konfigurieren Sie Ihren E-Mail-Versand</CardDescription>
+          <Card className="mb-4 md:mb-6">
+            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+              <CardTitle className="text-base md:text-lg font-semibold">SMTP-Einstellungen</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihren E-Mail-Versand</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3 space-y-3 md:space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="smtpSenderName"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Absendername</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Absendername</FormLabel>
                       <FormControl>
-                        <Input placeholder="Handyshop Team" {...field} />
+                        <Input placeholder="Handyshop Team" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -208,12 +208,12 @@ export function EmailSettingsTab() {
                   control={form.control}
                   name="smtpHost"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SMTP-Server</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">SMTP-Server</FormLabel>
                       <FormControl>
-                        <Input placeholder="smtp.beispiel.at" {...field} />
+                        <Input placeholder="smtp.beispiel.at" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -222,12 +222,12 @@ export function EmailSettingsTab() {
                   control={form.control}
                   name="smtpUser"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SMTP-Benutzername</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">SMTP-Benutzername</FormLabel>
                       <FormControl>
-                        <Input placeholder="user@beispiel.at" {...field} />
+                        <Input placeholder="user@beispiel.at" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -236,12 +236,12 @@ export function EmailSettingsTab() {
                   control={form.control}
                   name="smtpPassword"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SMTP-Passwort</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">SMTP-Passwort</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -250,12 +250,12 @@ export function EmailSettingsTab() {
                   control={form.control}
                   name="smtpPort"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SMTP-Port</FormLabel>
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">SMTP-Port</FormLabel>
                       <FormControl>
-                        <Input placeholder="587" {...field} />
+                        <Input placeholder="587" {...field} className="h-9 text-sm" />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
@@ -264,20 +264,20 @@ export function EmailSettingsTab() {
               <Separator className="my-4" />
               
               {/* Test-E-Mail senden */}
-              <div className="mt-6">
-                <h3 className="text-md font-medium mb-2">Test-E-Mail senden</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="mt-4 md:mt-6">
+                <h3 className="text-sm md:text-md font-medium mb-2">Test-E-Mail senden</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 items-end">
                   <div className="md:col-span-2">
                     <FormField
                       control={form.control}
                       name="testEmailRecipient"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Empfänger-E-Mail</FormLabel>
+                        <FormItem className="w-full">
+                          <FormLabel className="text-sm">Empfänger-E-Mail</FormLabel>
                           <FormControl>
-                            <Input placeholder="test@beispiel.at" {...field} />
+                            <Input placeholder="test@beispiel.at" {...field} className="h-9 text-sm" />
                           </FormControl>
-                          <FormMessage />
+                          <FormMessage className="text-xs" />
                         </FormItem>
                       )}
                     />
@@ -285,21 +285,21 @@ export function EmailSettingsTab() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-9 text-xs"
                     onClick={handleSendTestEmail}
                     disabled={sendTestEmailMutation.isPending || testEmailSent}
                   >
                     {sendTestEmailMutation.isPending ? (
-                      <Mail className="h-4 w-4 mr-2 animate-spin" />
+                      <Mail className="h-3 w-3 mr-1 animate-spin" />
                     ) : testEmailSent ? (
-                      <Send className="h-4 w-4 mr-2 text-green-500" />
+                      <Send className="h-3 w-3 mr-1 text-green-500" />
                     ) : (
-                      <Mail className="h-4 w-4 mr-2" />
+                      <Mail className="h-3 w-3 mr-1" />
                     )}
                     {testEmailSent ? "Gesendet!" : "Test-E-Mail senden"}
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 mt-1">
                   Senden Sie eine Test-E-Mail, um Ihre SMTP-Einstellungen zu überprüfen.
                 </p>
               </div>
@@ -309,7 +309,7 @@ export function EmailSettingsTab() {
       </Form>
 
       {/* E-Mail-Vorlagen */}
-      <div className="mt-8">
+      <div className="mt-6 md:mt-8">
         <EmailTemplateTab />
       </div>
     </div>
