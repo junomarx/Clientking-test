@@ -10,14 +10,13 @@ import { Loader2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-interface CSVModelImportProps {
+interface CSVBrandImportProps {
   deviceTypes: string[];
   onImportComplete?: () => void;
 }
 
-export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVModelImportProps) {
+export default function CSVBrandImport({ deviceTypes, onImportComplete }: CSVBrandImportProps) {
   const [deviceType, setDeviceType] = useState<string>('');
-  const [brandName, setBrandName] = useState<string>('');
   const [csvData, setCsvData] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [result, setResult] = useState<any>(null);
@@ -28,15 +27,6 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
       toast({
         title: 'Gerätetyp fehlt',
         description: 'Bitte wähle einen Gerätetyp aus.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!brandName) {
-      toast({
-        title: 'Markenname fehlt',
-        description: 'Bitte gib einen Markennamen ein.',
         variant: 'destructive',
       });
       return;
@@ -55,9 +45,8 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
     setResult(null);
 
     try {
-      const response = await apiRequest('POST', '/api/superadmin/device-management/import-csv', {
+      const response = await apiRequest('POST', '/api/superadmin/device-brands/import-csv', {
         deviceType,
-        brandName,
         csvData,
       });
 
@@ -67,7 +56,7 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
       if (result.success) {
         toast({
           title: 'Import erfolgreich',
-          description: `${result.stats.added} Modelle wurden importiert.`,
+          description: `${result.stats.added} Marken wurden importiert.`,
         });
         if (onImportComplete) {
           onImportComplete();
@@ -105,95 +94,60 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
 
   const handleReset = () => {
     setDeviceType('');
-    setBrandName('');
     setCsvData('');
     setResult(null);
   };
 
   const downloadCSVTemplate = () => {
-    const template = "model,name,Model,Name\niPhone 14\niPhone 14 Pro\niPhone 14 Pro Max";
+    const template = "brand,name,Brand,Name\nSamsung\nApple\nHuawei\nXiaomi";
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'modelle-vorlage.csv';
+    a.download = 'marken-vorlage.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const exportCurrentBrandModels = async () => {
-    if (!deviceType || !brandName) {
-      toast({
-        title: 'Gerätetyp und Marke erforderlich',
-        description: 'Bitte wähle einen Gerätetyp und gib einen Markennamen ein, bevor du exportieren kannst.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      // Öffne die CSV-Export-URL in einem neuen Tab
-      window.open(`/api/superadmin/device-management/export-csv?type=models&deviceType=${encodeURIComponent(deviceType)}&brandName=${encodeURIComponent(brandName)}`, '_blank');
-    } catch (error) {
-      toast({
-        title: 'Export fehlgeschlagen',
-        description: 'Fehler beim Exportieren der Modelle.',
-        variant: 'destructive',
-      });
-      console.error('CSV export error:', error);
-    }
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>CSV-Import für Modelle</CardTitle>
+        <CardTitle>CSV-Import für Marken</CardTitle>
         <CardDescription>
-          Importiere Modelle für eine bestimmte Marke und einen bestimmten Gerätetyp über CSV
+          Importiere Marken für einen bestimmten Gerätetyp über CSV
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="deviceType">Gerätetyp</Label>
-              <Select value={deviceType} onValueChange={setDeviceType}>
-                <SelectTrigger id="deviceType">
-                  <SelectValue placeholder="Wähle einen Gerätetyp" />
-                </SelectTrigger>
-                <SelectContent>
-                  {deviceTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brandName">Markenname</Label>
-              <Input
-                id="brandName"
-                placeholder="z.B. Apple, Samsung, Huawei"
-                value={brandName}
-                onChange={(e) => setBrandName(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="deviceType">Gerätetyp</Label>
+            <Select value={deviceType} onValueChange={setDeviceType}>
+              <SelectTrigger id="deviceType">
+                <SelectValue placeholder="Wähle einen Gerätetyp" />
+              </SelectTrigger>
+              <SelectContent>
+                {deviceTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="csvData">CSV-Daten</Label>
             <Textarea
               id="csvData"
-              placeholder="model,name,Model,Name&#10;iPhone 14&#10;iPhone 14 Pro&#10;iPhone 14 Pro Max"
+              placeholder="brand,name,Brand,Name&#10;Samsung&#10;Apple&#10;Huawei"
               value={csvData}
               onChange={(e) => setCsvData(e.target.value)}
               className="min-h-[150px] font-mono text-sm"
             />
             <p className="text-sm text-muted-foreground">
-              Die erste Zeile sollte Spaltenüberschriften enthalten (model, name, Model oder Name).
+              Die erste Zeile sollte Spaltenüberschriften enthalten (brand, name, Brand oder Name).
             </p>
           </div>
 
@@ -202,7 +156,7 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
             <Input id="csvFile" type="file" accept=".csv" onChange={handleFileChange} />
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <div className="flex justify-end">
             <Button
               type="button"
               variant="outline"
@@ -212,16 +166,6 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
             >
               CSV-Vorlage herunterladen
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={exportCurrentBrandModels}
-              className="text-xs"
-              disabled={!deviceType}
-            >
-              Aktuelle Modelle exportieren
-            </Button>
           </div>
 
           {result && (
@@ -230,10 +174,10 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
               <AlertDescription>
                 {result.success ? (
                   <div>
-                    <p>Insgesamt: {result.stats.total} Modelle</p>
-                    <p>Hinzugefügt: {result.stats.added} Modelle</p>
-                    <p>Übersprungen: {result.stats.skipped} Modelle (bereits vorhanden)</p>
-                    <p>Fehler: {result.stats.errors} Modelle</p>
+                    <p>Insgesamt: {result.stats.total} Marken</p>
+                    <p>Hinzugefügt: {result.stats.added} Marken</p>
+                    <p>Übersprungen: {result.stats.skipped} Marken (bereits vorhanden)</p>
+                    <p>Fehler: {result.stats.errors} Marken</p>
                   </div>
                 ) : (
                   result.message
@@ -249,7 +193,7 @@ export default function CSVModelImport({ deviceTypes, onImportComplete }: CSVMod
         </Button>
         <Button onClick={handleImport} disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Modelle importieren
+          Marken importieren
         </Button>
       </CardFooter>
     </Card>
