@@ -1,5 +1,5 @@
-import React, { Suspense } from "react";
-import { Switch, Route, useLocation, Redirect } from "wouter";
+import React from "react";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,25 +9,6 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
-
-// Layouts
-import { MainLayout } from "@/layouts/MainLayout";
-
-// Dashboard Komponenten
-import { DashboardTab } from "@/components/dashboard/DashboardTab";
-import { RepairsTab } from "@/components/repairs/RepairsTab";
-import { CustomersTab } from "@/components/customers/CustomersTab";
-import { StatisticsTabRebuilt as StatisticsTab } from "@/components/statistics/StatisticsTabRebuilt";
-import CostEstimatesTab from "@/components/cost-estimates/CostEstimatesTab";
-import { NewOrderModal } from "@/components/NewOrderModal";
-
-// Settings Komponenten
-import { BusinessSettingsTab } from "@/components/settings/BusinessSettingsTab";
-import { EmailSettingsTab } from "@/components/settings/EmailSettingsTab";
-import { PrintSettingsTab } from "@/components/settings/PrintSettingsTab";
-import { SubscriptionSettingsTab } from "@/components/settings/SubscriptionSettingsTab";
-import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
-
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
@@ -36,211 +17,21 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
 
-const AppDashboard = () => {
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
-  
-  const handleNewOrder = () => {
-    setIsNewOrderModalOpen(true);
-  };
-  
-  // Event-Listener für "Neuer Auftrag" Button
-  useEffect(() => {
-    const handleTriggerNewOrder = () => {
-      setIsNewOrderModalOpen(true);
-    };
-    
-    window.addEventListener('trigger-new-order', handleTriggerNewOrder);
-    
-    return () => {
-      window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
-    };
-  }, []);
-  
-  return (
-    <>
-      <DashboardTab onNewOrder={handleNewOrder} onTabChange={() => {}} />
-      <NewOrderModal 
-        open={isNewOrderModalOpen} 
-        onClose={() => setIsNewOrderModalOpen(false)}
-        customerId={selectedCustomerId}
-      />
-    </>
-  );
-};
-
-const AppRepairs = () => {
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  
-  // Event-Listener für das Öffnen der Reparaturdetails
-  useEffect(() => {
-    const handleOpenRepairDetails = (event: CustomEvent) => {
-      const { repairId } = event.detail;
-      if (repairId) {
-        // Event-Objekt erstellen und auslösen, um den Dialog zu öffnen
-        const openDetailsEvent = new CustomEvent('open-repair-details-dialog', { 
-          detail: { repairId }
-        });
-        window.dispatchEvent(openDetailsEvent);
-      }
-    };
-    
-    window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
-    
-    return () => {
-      window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
-    };
-  }, []);
-  
-  return (
-    <>
-      <RepairsTab onNewOrder={() => setIsNewOrderModalOpen(true)} />
-      <NewOrderModal 
-        open={isNewOrderModalOpen} 
-        onClose={() => setIsNewOrderModalOpen(false)}
-        customerId={null}
-      />
-    </>
-  );
-};
-
-const AppCustomers = () => {
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  
-  return (
-    <>
-      <CustomersTab onNewOrder={() => setIsNewOrderModalOpen(true)} />
-      <NewOrderModal 
-        open={isNewOrderModalOpen} 
-        onClose={() => setIsNewOrderModalOpen(false)}
-        customerId={null}
-      />
-    </>
-  );
-};
-
-// Komponenten mit den richtigen Props
-const StatisticsPage = () => <StatisticsTab onTabChange={() => {}} />;
-const CostEstimatesPage = () => <CostEstimatesTab />;
-
-// Redirect Komponente für Root-Pfad
-const AppIndexRedirect = () => <Redirect to="/app/dashboard" />;
-
-function Router() {
+function AppRouter() {
   return (
     <Switch>
-      <Route path="/">
-        {location => {
-          if (location === "/") return <LandingPage />;
-          return null;
-        }}
-      </Route>
-      
-      {/* Redirect /app to /app/dashboard */}
-      <Route path="/app">
-        {location => {
-          if (location === "/app") return <Redirect to="/app/dashboard" />;
-          return null;
-        }}
-      </Route>
-      
-      {/* App Routen mit MainLayout */}
-      <Route path="/app/dashboard">
-        <ProtectedRoute path="/app/dashboard">
-          <MainLayout>
-            <AppDashboard />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/repairs">
-        <ProtectedRoute path="/app/repairs">
-          <MainLayout>
-            <AppRepairs />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/customers">
-        <ProtectedRoute path="/app/customers">
-          <MainLayout>
-            <AppCustomers />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/statistics">
-        <ProtectedRoute path="/app/statistics">
-          <MainLayout>
-            <StatisticsPage />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/cost-estimates">
-        <ProtectedRoute path="/app/cost-estimates">
-          <MainLayout>
-            <CostEstimatesPage />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      {/* Einstellungsrouten */}
-      <Route path="/app/settings/shop">
-        <ProtectedRoute path="/app/settings/shop">
-          <MainLayout>
-            <BusinessSettingsTab />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/settings/email">
-        <ProtectedRoute path="/app/settings/email">
-          <MainLayout>
-            <EmailSettingsTab />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/settings/print">
-        <ProtectedRoute path="/app/settings/print">
-          <MainLayout>
-            <PrintSettingsTab />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/settings/plan">
-        <ProtectedRoute path="/app/settings/plan">
-          <MainLayout>
-            <SubscriptionSettingsTab />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/app/settings/user">
-        <ProtectedRoute path="/app/settings/user">
-          <MainLayout>
-            <UserSettingsTab />
-          </MainLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <AdminProtectedRoute path="/admin">
-        <AdminPage />
-      </AdminProtectedRoute>
-      <SuperadminProtectedRoute path="/superadmin">
-        <SuperadminPage />
-      </SuperadminProtectedRoute>
-
+      <Route path="/" component={LandingPage} />
+      <ProtectedRoute path="/app" component={Home} />
+      <AdminProtectedRoute path="/admin" component={AdminPage} />
+      <SuperadminProtectedRoute path="/superadmin" component={SuperadminPage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
-      <Route path="*" component={NotFound} />
+      <Route component={NotFound} />
     </Switch>
   );
 }
@@ -331,7 +122,7 @@ function App() {
                 <TitleUpdater />
                 <CacheClearer />
                 <Toaster />
-                <Router />
+                <AppRouter />
               </TooltipProvider>
             </PrintManagerProvider>
           </ThemeProvider>

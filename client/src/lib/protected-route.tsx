@@ -4,11 +4,12 @@ import { Redirect, Route, RouteProps } from "wouter";
 
 interface ProtectedRouteProps {
   path: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  component?: React.ComponentType<any>;
   exact?: boolean;
 }
 
-export function ProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
+export function ProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -29,10 +30,14 @@ export function ProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
     );
   }
 
-  return <Route path={path}>{children}</Route>;
+  return (
+    <Route path={path}>
+      {Component ? <Component /> : children}
+    </Route>
+  );
 }
 
-export function AdminProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
+export function AdminProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -61,10 +66,14 @@ export function AdminProtectedRoute({ path, children, exact }: ProtectedRoutePro
     );
   }
 
-  return <Route path={path}>{children}</Route>;
+  return (
+    <Route path={path}>
+      {Component ? <Component /> : children}
+    </Route>
+  );
 }
 
-export function SuperadminProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
+export function SuperadminProtectedRoute({ path, children, component: Component, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -93,5 +102,9 @@ export function SuperadminProtectedRoute({ path, children, exact }: ProtectedRou
     );
   }
 
-  return <Route path={path}>{children}</Route>;
+  return (
+    <Route path={path}>
+      {Component ? <Component /> : children}
+    </Route>
+  );
 }
