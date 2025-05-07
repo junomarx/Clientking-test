@@ -45,33 +45,29 @@ export function AnimatedRecentOrders({
   };
   return (
     <motion.div
-      className="bg-white rounded-lg shadow-sm overflow-hidden"
+      className="bg-white overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="font-semibold text-lg">Neueste Aufträge</h3>
-      </div>
-      
-      {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
+      {/* Moderne Tabelle mit Superadmin-Stil für Desktop */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full">
+        <table className="w-full">
           <thead>
-            <tr className="bg-primary text-white">
-              <th className="py-3 px-4 text-left">Nr</th>
-              <th className="py-3 px-4 text-left">Kunde</th>
-              <th className="py-3 px-4 text-left">Gerät</th>
-              <th className="py-3 px-4 text-left">Status</th>
-              <th className="py-3 px-4 text-left">Datum</th>
-              <th className="py-3 px-4 text-left">Aktionen</th>
+            <tr className="border-b">
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Auftrag</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Kunde</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Gerät</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Status</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Datum</th>
+              <th className="py-3 px-4 text-left font-medium text-muted-foreground">Aktionen</th>
             </tr>
           </thead>
           <tbody>
             <AnimatePresence>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">
+                  <td colSpan={6} className="py-4 text-center text-muted-foreground">
                     <motion.div 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -83,7 +79,7 @@ export function AnimatedRecentOrders({
                 </tr>
               ) : repairs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500">
+                  <td colSpan={6} className="py-4 text-center text-muted-foreground">
                     <motion.div 
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -97,22 +93,19 @@ export function AnimatedRecentOrders({
                 repairs.map((repair, index) => (
                   <motion.tr 
                     key={repair.id} 
-                    className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer"
+                    className="border-b hover:bg-muted/30 transition-all cursor-pointer"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ 
                       duration: 0.3,
-                      delay: index * 0.08,
+                      delay: index * 0.05,
                       ease: "easeOut"
-                    }}
-                    whileHover={{ 
-                      backgroundColor: "rgba(59, 130, 246, 0.1)" 
                     }}
                     onClick={() => openDetailsDialog(repair.id)}
                   >
-                    <td className="py-3 px-4">
-                      <motion.div whileHover={{ scale: 1.1 }}>
+                    <td className="py-3 px-4 font-medium">
+                      <motion.div whileHover={{ scale: 1.05 }}>
                         {repair.orderCode || `#${repair.id}`}
                       </motion.div>
                     </td>
@@ -127,29 +120,25 @@ export function AnimatedRecentOrders({
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
                         <motion.button 
-                          className="text-gray-600 hover:text-gray-800 p-1"
+                          className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-muted"
                           title="Druckoptionen anzeigen"
                           onClick={(e) => {
-                            e.stopPropagation(); // Verhindert, dass der Klick auf die TR öffnet
+                            e.stopPropagation();
                             onPrintClick(repair.id);
                           }}
-                          whileHover={{ 
-                            scale: 1.2 
-                          }}
+                          whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
                           <Printer className="h-4 w-4" />
                         </motion.button>
                         <motion.button 
-                          className="text-blue-600 hover:text-blue-800 p-1"
+                          className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
                           title="Details anzeigen"
                           onClick={(e) => {
-                            e.stopPropagation(); // Verhindert, dass der Klick auf die TR öffnet
+                            e.stopPropagation();
                             openDetailsDialog(repair.id);
                           }}
-                          whileHover={{ 
-                            scale: 1.2 
-                          }}
+                          whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                         >
                           <Info className="h-4 w-4" />
@@ -164,46 +153,48 @@ export function AnimatedRecentOrders({
         </table>
       </div>
       
-      {/* Mobile Karten-Ansicht (nur auf kleineren Bildschirmen anzeigen) */}
-      <div className="md:hidden space-y-4 px-4 py-2">
+      {/* Mobile Karten-Ansicht im Superadmin-Stil */}
+      <div className="md:hidden space-y-3 px-4 py-3">
         {isLoading ? (
-          <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Lädt Daten...</div>
+          <div className="py-4 text-center text-muted-foreground">Lädt Daten...</div>
         ) : repairs.length === 0 ? (
-          <div className="py-4 text-center text-gray-500 bg-white rounded-lg shadow-sm">Keine Reparaturen vorhanden</div>
+          <div className="py-4 text-center text-muted-foreground">Keine Reparaturen vorhanden</div>
         ) : (
           repairs.map((repair, index) => (
             <motion.div 
               key={repair.id} 
-              className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden cursor-pointer" 
+              className="border rounded-lg overflow-hidden cursor-pointer" 
               onClick={() => openDetailsDialog(repair.id)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ 
                 duration: 0.3,
-                delay: index * 0.08
+                delay: index * 0.05
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+              <div className="flex justify-between items-center p-3 border-b bg-muted/30">
                 <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
                 <div>{getStatusBadge(repair.status)}</div>
               </div>
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">Kunde:</div>
+              <div className="p-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <div className="text-muted-foreground">Kunde:</div>
                   <div className="font-medium">{repair.customerName}</div>
                 </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">Gerät:</div>
+                <div className="flex justify-between text-sm">
+                  <div className="text-muted-foreground">Gerät:</div>
                   <div>{repair.model}</div>
                 </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">Datum:</div>
+                <div className="flex justify-between text-sm">
+                  <div className="text-muted-foreground">Datum:</div>
                   <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
                 </div>
               </div>
-              <div className="flex justify-center gap-8 p-3 bg-gray-50 border-t border-gray-100">
+              <div className="flex justify-center gap-6 p-2 border-t">
                 <motion.button 
-                  className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors"
+                  className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
@@ -214,7 +205,7 @@ export function AnimatedRecentOrders({
                   <Printer className="h-5 w-5" />
                 </motion.button>
                 <motion.button 
-                  className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors"
+                  className="text-primary hover:text-primary/80 p-2 rounded-full hover:bg-muted"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {

@@ -153,27 +153,28 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
 
   return (
     <motion.div
-      className="p-4"
+      className="space-y-6"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       <motion.div 
-        className="flex justify-between items-center p-4 mb-4"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-semibold text-primary">
-          Dashboard
-        </h2>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Übersicht Ihrer Reparaturen und aktuellen Statistiken</p>
+        </div>
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <Button
             onClick={onNewOrder}
-            className="bg-primary text-white shadow-lg flex items-center gap-2 font-semibold"
+            className="bg-primary text-white shadow-md flex items-center gap-2 font-medium"
           >
             <motion.span 
               animate={{ rotate: [0, 0, 180, 180, 0], scale: [1, 1.3, 1.3, 1, 1] }}
@@ -186,52 +187,138 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         </motion.div>
       </motion.div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <AnimatedStatCard 
-          title="Gesamte Aufträge" 
-          value={statsLoading ? 0 : stats?.totalOrders || 0} 
-          type="primary" 
+      {/* Statistik-Karten im Superadmin-Stil */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
           onClick={() => navigateToFilteredRepairs('all')}
-          icon={<ShoppingBag size={24} />}
-        />
-        <AnimatedStatCard 
-          title="In Reparatur" 
-          value={statsLoading ? 0 : stats?.inRepair || 0} 
-          type="warning" 
+          className="cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="rounded-lg overflow-hidden shadow-sm border">
+            <div className="bg-blue-500 text-white rounded-t-lg px-4 py-2">
+              <h3 className="text-sm font-medium">Gesamte Aufträge</h3>
+            </div>
+            <div className="p-4 bg-white flex justify-between items-center">
+              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.totalOrders || 0}</p>
+              <div className="bg-blue-100 p-2 rounded-full text-blue-500">
+                <ShoppingBag size={20} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
           onClick={() => navigateToFilteredRepairs('in_reparatur')}
-          icon={<Tool size={24} />}
-        />
-        <AnimatedStatCard 
-          title="Fertig zur Abholung" 
-          value={statsLoading ? 0 : stats?.readyForPickup || 0} 
-          type="success" 
+          className="cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="rounded-lg overflow-hidden shadow-sm border">
+            <div className="bg-amber-500 text-white rounded-t-lg px-4 py-2">
+              <h3 className="text-sm font-medium">In Reparatur</h3>
+            </div>
+            <div className="p-4 bg-white flex justify-between items-center">
+              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.inRepair || 0}</p>
+              <div className="bg-amber-100 p-2 rounded-full text-amber-500">
+                <Tool size={20} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
           onClick={() => navigateToFilteredRepairs('fertig')}
-          icon={<Clock size={24} />}
-        />
-        <AnimatedStatCard 
-          title="Außer Haus" 
-          value={statsLoading ? 0 : stats?.outsourced || 0} 
-          type="info" 
+          className="cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="rounded-lg overflow-hidden shadow-sm border">
+            <div className="bg-green-500 text-white rounded-t-lg px-4 py-2">
+              <h3 className="text-sm font-medium">Fertig zur Abholung</h3>
+            </div>
+            <div className="p-4 bg-white flex justify-between items-center">
+              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.readyForPickup || 0}</p>
+              <div className="bg-green-100 p-2 rounded-full text-green-500">
+                <Clock size={20} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
           onClick={() => navigateToFilteredRepairs('ausser_haus')}
-          icon={<TrendingUp size={24} />}
-        />
+          className="cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="rounded-lg overflow-hidden shadow-sm border">
+            <div className="bg-purple-500 text-white rounded-t-lg px-4 py-2">
+              <h3 className="text-sm font-medium">Außer Haus</h3>
+            </div>
+            <div className="p-4 bg-white flex justify-between items-center">
+              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.outsourced || 0}</p>
+              <div className="bg-purple-100 p-2 rounded-full text-purple-500">
+                <TrendingUp size={20} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <AnimatedRecentOrders 
-            repairs={recentRepairs}
-            isLoading={repairsLoading || customersLoading}
-            onPrintClick={showPrintOptions}
-            onStatusChange={openStatusDialog}
-            onEdit={handleEdit}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="rounded-lg overflow-hidden shadow-sm border"
+          >
+            <div className="border-b px-4 py-3 bg-white">
+              <h2 className="font-semibold">Aktuelle Reparaturen</h2>
+              <p className="text-sm text-muted-foreground">Die neuesten Reparaturaufträge</p>
+            </div>
+            <div className="bg-white">
+              <AnimatedRecentOrders 
+                repairs={recentRepairs}
+                isLoading={repairsLoading || customersLoading}
+                onPrintClick={showPrintOptions}
+                onStatusChange={openStatusDialog}
+                onEdit={handleEdit}
+              />
+            </div>
+          </motion.div>
         </div>
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
+          className="rounded-lg overflow-hidden shadow-sm border bg-white"
+        >
           {!statsLoading && stats && (
-            <RepairStatusChart stats={stats} />
+            <div>
+              <div className="border-b px-4 py-3">
+                <h2 className="font-semibold">Reparaturstatistik</h2>
+                <p className="text-sm text-muted-foreground">Übersicht nach Status</p>
+              </div>
+              <div className="p-4">
+                <RepairStatusChart stats={stats} />
+              </div>
+            </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Status-Änderungsdialog */}
