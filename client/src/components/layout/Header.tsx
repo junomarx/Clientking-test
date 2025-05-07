@@ -13,7 +13,12 @@ import {
   Users,
   BarChart2,
   FileText,
-  PlusCircle
+  PlusCircle,
+  Building,
+  Mail,
+  Printer,
+  CreditCard,
+  UserCog
 } from "lucide-react";
 import { useRef, useState } from "react";
 import ClientKingLogo from "../../assets/ClientKing_Logo.png";
@@ -172,16 +177,66 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       <FileText className="h-5 w-5 mr-2" />
                       Kostenvoranschläge
                     </Button>
+                    {/* Einstellungskategorie mit Unterpunkten */}
+                    <div className="mt-2 mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                        Einstellungen
+                      </h3>
+                    </div>
                     <Button 
-                      variant={activeTab === 'settings' ? 'default' : 'ghost'}
+                      variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
                       className="w-full justify-start"
                       onClick={() => {
-                        if (onTabChange) onTabChange('settings');
+                        if (onTabChange) onTabChange('business-settings');
                         setMenuOpen(false);
                       }}
                     >
-                      <Settings className="h-5 w-5 mr-2" />
-                      Einstellungen
+                      <Building className="h-5 w-5 mr-2" />
+                      Geschäft
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('email-settings');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Mail className="h-5 w-5 mr-2" />
+                      E-Mail
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('print-settings');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Printer className="h-5 w-5 mr-2" />
+                      Drucken
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('subscription-settings');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      Abonnement
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('user-settings');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <UserCog className="h-5 w-5 mr-2" />
+                      Benutzerdaten
                     </Button>
                   </nav>
                   
