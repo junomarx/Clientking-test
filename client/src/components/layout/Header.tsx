@@ -122,60 +122,60 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('dashboard');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <LayoutDashboard className="h-5 w-5 mr-2" />
-                      Dashboard
+                      <Link href="/app/dashboard" onClick={() => setMenuOpen(false)}>
+                        <LayoutDashboard className="h-5 w-5 mr-2" />
+                        Dashboard
+                      </Link>
                     </Button>
                     <Button 
                       variant={activeTab === 'repairs' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('repairs');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <Wrench className="h-5 w-5 mr-2" />
-                      Reparaturen
+                      <Link href="/app/repairs" onClick={() => setMenuOpen(false)}>
+                        <Wrench className="h-5 w-5 mr-2" />
+                        Reparaturen
+                      </Link>
                     </Button>
                     <Button 
                       variant={activeTab === 'customers' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('customers');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <Users className="h-5 w-5 mr-2" />
-                      Kunden
+                      <Link href="/app/customers" onClick={() => setMenuOpen(false)}>
+                        <Users className="h-5 w-5 mr-2" />
+                        Kunden
+                      </Link>
                     </Button>
                     <Button 
                       variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('statistics');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <BarChart2 className="h-5 w-5 mr-2" />
-                      Statistiken
+                      <Link href="/app/statistics" onClick={() => setMenuOpen(false)}>
+                        <BarChart2 className="h-5 w-5 mr-2" />
+                        Statistiken
+                      </Link>
                     </Button>
                     <Button 
                       variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
                       className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => {
-                        if (canUseCostEstimates && onTabChange) {
-                          onTabChange('cost-estimates');
-                          setMenuOpen(false);
-                        }
-                      }}
+                      asChild={!!canUseCostEstimates}
                       disabled={!canUseCostEstimates}
                     >
-                      <FileText className="h-5 w-5 mr-2" />
-                      Kostenvoranschläge
+                      {canUseCostEstimates ? (
+                        <Link href="/app/cost-estimates" onClick={() => setMenuOpen(false)}>
+                          <FileText className="h-5 w-5 mr-2" />
+                          Kostenvoranschläge
+                        </Link>
+                      ) : (
+                        <span>
+                          <FileText className="h-5 w-5 mr-2" />
+                          Kostenvoranschläge
+                        </span>
+                      )}
                     </Button>
                     {/* Einstellungskategorie mit Unterpunkten */}
                     <div className="mt-2 mb-1">
@@ -188,7 +188,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href="/settings/shop" onClick={() => setMenuOpen(false)}>
+                      <Link href="/app/settings/shop" onClick={() => setMenuOpen(false)}>
                         <Building className="h-5 w-5 mr-2" />
                         Geschäft
                       </Link>
@@ -198,7 +198,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href="/settings/email" onClick={() => setMenuOpen(false)}>
+                      <Link href="/app/settings/email" onClick={() => setMenuOpen(false)}>
                         <Mail className="h-5 w-5 mr-2" />
                         E-Mail
                       </Link>
@@ -208,7 +208,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href="/settings/print" onClick={() => setMenuOpen(false)}>
+                      <Link href="/app/settings/print" onClick={() => setMenuOpen(false)}>
                         <Printer className="h-5 w-5 mr-2" />
                         Drucken
                       </Link>
@@ -218,7 +218,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href="/settings/plan" onClick={() => setMenuOpen(false)}>
+                      <Link href="/app/settings/plan" onClick={() => setMenuOpen(false)}>
                         <CreditCard className="h-5 w-5 mr-2" />
                         Abonnement
                       </Link>
@@ -228,7 +228,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       asChild
                     >
-                      <Link href="/settings/user" onClick={() => setMenuOpen(false)}>
+                      <Link href="/app/settings/user" onClick={() => setMenuOpen(false)}>
                         <UserCog className="h-5 w-5 mr-2" />
                         Benutzerdaten
                       </Link>

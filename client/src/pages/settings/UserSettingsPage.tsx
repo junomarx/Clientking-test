@@ -1,9 +1,9 @@
 import React from 'react';
-import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 import { useQuery } from '@tanstack/react-query';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function UserSettingsPage() {
   // Abfrage für Kostenvoranschläge-Berechtigung für Header/Sidebar
@@ -12,13 +12,13 @@ export default function UserSettingsPage() {
   });
   
   const canUseCostEstimates = costEstimatesAccess?.canUseCostEstimates || false;
-
+  
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
       {/* Sidebar komponente - nur auf Desktop sichtbar */}
       <div className="hidden md:block">
         <Sidebar 
-          activeTab="user-settings" 
+          activeTab="settings" 
           onTabChange={() => {}} 
           canUseCostEstimates={canUseCostEstimates} 
         />
@@ -29,7 +29,7 @@ export default function UserSettingsPage() {
         {/* Header mit Benutzerdaten */}
         <Header 
           variant="app" 
-          activeTab="user-settings" 
+          activeTab="settings" 
           onTabChange={() => {}} 
           canUseCostEstimates={canUseCostEstimates} 
         />
@@ -38,6 +38,7 @@ export default function UserSettingsPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             <div className="h-full">
+              <h1 className="text-2xl font-bold mb-6">Benutzerdaten</h1>
               <UserSettingsTab />
             </div>
           </ScrollArea>

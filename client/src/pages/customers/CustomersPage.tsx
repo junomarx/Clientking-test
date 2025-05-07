@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { CustomersTab } from '@/components/customers/CustomersTab';
-import { NewOrderModal } from '@/components/NewOrderModal';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function CustomersPage() {
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  
-  const handleNewOrder = () => {
-    setIsNewOrderModalOpen(true);
-  };
-  
   // Abfrage für Kostenvoranschläge-Berechtigung für Header/Sidebar
   const { data: costEstimatesAccess } = useQuery<{ canUseCostEstimates: boolean }>({
     queryKey: ['/api/can-use-cost-estimates']
@@ -45,18 +38,11 @@ export default function CustomersPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             <div className="h-full">
-              <CustomersTab onNewOrder={handleNewOrder} />
+              <CustomersTab />
             </div>
           </ScrollArea>
         </main>
       </div>
-      
-      {/* Modal für neuen Auftrag */}
-      <NewOrderModal
-        open={isNewOrderModalOpen}
-        onClose={() => setIsNewOrderModalOpen(false)}
-        customerId={null}
-      />
     </div>
   );
 }
