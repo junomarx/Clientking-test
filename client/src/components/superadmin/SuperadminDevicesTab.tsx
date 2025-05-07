@@ -1775,7 +1775,7 @@ export default function SuperadminDevicesTab() {
                   
                   {/* Details pro Gerätetyp */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Details pro Gerätetyp</h3>
+                    <h3 className="text-base md:text-lg font-semibold">Details pro Gerätetyp</h3>
                     <div className="space-y-4">
                       {deviceStatistics.deviceTypeStats.map(stat => (
                         <Card key={stat.name} className="overflow-hidden">
@@ -1800,7 +1800,7 @@ export default function SuperadminDevicesTab() {
                             {/* Top-Marken anzeigen */}
                             {stat.brands.length > 0 && (
                               <div>
-                                <h5 className="text-sm font-medium mb-2">Top Marken:</h5>
+                                <h5 className="text-xs md:text-sm font-medium mb-2">Top Marken:</h5>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                   {stat.brands
                                     .sort((a, b) => b.modelCount - a.modelCount)
@@ -1810,7 +1810,7 @@ export default function SuperadminDevicesTab() {
                                         key={brand.name} 
                                         className="flex items-center justify-between p-2 rounded-md bg-muted/20"
                                       >
-                                        <span className="text-sm font-medium">{brand.name}</span>
+                                        <span className="text-xs md:text-sm font-medium">{brand.name}</span>
                                         <Badge variant="outline">{brand.modelCount}</Badge>
                                       </div>
                                     ))
