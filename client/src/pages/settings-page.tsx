@@ -354,13 +354,13 @@ export default function SettingsPage() {
 
       <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
         <Tabs defaultValue="business" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex overflow-x-auto">
-            <TabsList className="bg-white border mb-6 md:flex md:flex-row flex-col w-full">
-              <TabsTrigger value="business" className="w-full md:w-auto">Geschäft</TabsTrigger>
-              <TabsTrigger value="emails" className="w-full md:w-auto">E-Mail</TabsTrigger>
-              <TabsTrigger value="appearance" className="w-full md:w-auto">Erscheinungsbild</TabsTrigger>
-              <TabsTrigger value="prints" className="w-full md:w-auto">Ausdrucke</TabsTrigger>
-              <TabsTrigger value="subscription" className="w-full md:w-auto">Abonnement</TabsTrigger>
+          <div className="block w-full">
+            <TabsList className="bg-white border mb-6 flex-col md:flex-row flex w-full">
+              <TabsTrigger value="business" className="w-full py-3">Geschäft</TabsTrigger>
+              <TabsTrigger value="emails" className="w-full py-3">E-Mail</TabsTrigger>
+              <TabsTrigger value="appearance" className="w-full py-3">Erscheinungsbild</TabsTrigger>
+              <TabsTrigger value="prints" className="w-full py-3">Ausdrucke</TabsTrigger>
+              <TabsTrigger value="subscription" className="w-full py-3">Abonnement</TabsTrigger>
             </TabsList>
           </div>
 
@@ -389,12 +389,12 @@ export default function SettingsPage() {
                         )}
                       />
                       
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-4">
                         <FormField
                           control={form.control}
                           name="ownerFirstName"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
+                            <FormItem className="flex-1 w-full">
                               <FormLabel>Vorname</FormLabel>
                               <FormControl>
                                 <Input {...field} />
@@ -407,7 +407,7 @@ export default function SettingsPage() {
                           control={form.control}
                           name="ownerLastName"
                           render={({ field }) => (
-                            <FormItem className="flex-1">
+                            <FormItem className="flex-1 w-full">
                               <FormLabel>Nachname</FormLabel>
                               <FormControl>
                                 <Input {...field} />
@@ -459,12 +459,12 @@ export default function SettingsPage() {
                       )}
                     />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="zipCode"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="w-full">
                             <FormLabel>PLZ</FormLabel>
                             <FormControl>
                               <Input {...field} />
@@ -477,7 +477,7 @@ export default function SettingsPage() {
                         control={form.control}
                         name="city"
                         render={({ field }) => (
-                          <FormItem className="md:col-span-2">
+                          <FormItem className="w-full sm:col-span-2">
                             <FormLabel>Ort</FormLabel>
                             <FormControl>
                               <Input {...field} />
@@ -514,12 +514,12 @@ export default function SettingsPage() {
               <CardContent className="space-y-4">
                 <Form {...form}>
                   <form className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="phone"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="w-full">
                             <FormLabel>Telefon</FormLabel>
                             <FormControl>
                               <Input {...field} />
@@ -532,7 +532,7 @@ export default function SettingsPage() {
                         control={form.control}
                         name="email"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="w-full">
                             <FormLabel>E-Mail</FormLabel>
                             <FormControl>
                               <Input {...field} type="email" />
@@ -545,7 +545,7 @@ export default function SettingsPage() {
                         control={form.control}
                         name="website"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="w-full sm:col-span-2 md:col-span-1">
                             <FormLabel>Website</FormLabel>
                             <FormControl>
                               <Input {...field} />
@@ -586,9 +586,9 @@ export default function SettingsPage() {
           {/* E-Mail-Einstellungen Tab */}
           <TabsContent value="emails" className="mt-4">
             <Tabs value={activeEmailTab} onValueChange={setActiveEmailTab} className="mb-6">
-              <TabsList className="bg-white border mb-6 w-full md:flex md:flex-row flex-col">
-                <TabsTrigger value="settings" className="w-full md:w-auto">SMTP-Einstellungen</TabsTrigger>
-                <TabsTrigger value="templates" className="w-full md:w-auto">E-Mail-Vorlagen</TabsTrigger>
+              <TabsList className="bg-white border mb-6 w-full flex-col md:flex-row flex">
+                <TabsTrigger value="settings" className="w-full py-3">SMTP-Einstellungen</TabsTrigger>
+                <TabsTrigger value="templates" className="w-full py-3">E-Mail-Vorlagen</TabsTrigger>
               </TabsList>
               
               <TabsContent value="settings" className="space-y-6">
@@ -600,12 +600,12 @@ export default function SettingsPage() {
                   <CardContent className="space-y-4">
                     <Form {...form}>
                       <form className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
                             name="smtpHost"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="w-full">
                                 <FormLabel>SMTP-Host</FormLabel>
                                 <FormControl>
                                   <Input {...field} placeholder="z.B. smtp.example.com" />
@@ -618,7 +618,7 @@ export default function SettingsPage() {
                             control={form.control}
                             name="smtpPort"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="w-full">
                                 <FormLabel>SMTP-Port</FormLabel>
                                 <FormControl>
                                   <Input {...field} placeholder="z.B. 587" />
@@ -629,12 +629,12 @@ export default function SettingsPage() {
                           />
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <FormField
                             control={form.control}
                             name="smtpUser"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="w-full">
                                 <FormLabel>SMTP-Benutzername</FormLabel>
                                 <FormControl>
                                   <Input {...field} />
@@ -647,7 +647,7 @@ export default function SettingsPage() {
                             control={form.control}
                             name="smtpPassword"
                             render={({ field }) => (
-                              <FormItem>
+                              <FormItem className="w-full">
                                 <FormLabel>SMTP-Passwort</FormLabel>
                                 <FormControl>
                                   <Input {...field} type="password" />
