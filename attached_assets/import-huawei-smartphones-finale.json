@@ -1,0 +1,151 @@
+{
+  "deviceTypes": [
+    {
+      "id": 55,
+      "name": "Smartphone",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 60,
+      "name": "Tablet",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 61,
+      "name": "Laptop",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 62,
+      "name": "Watch",
+      "userId": 10,
+      "shopId": 0
+    },
+    {
+      "id": 66,
+      "name": "Spielekonsole",
+      "userId": 10,
+      "shopId": 0
+    }
+  ],
+  "brands": [
+    {
+      "id": 222,
+      "name": "Huawei",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "modelSeries": [],
+  "models": [
+    {
+      "id": 4000,
+      "name": "Huawei P20",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4001,
+      "name": "Huawei P20 Pro",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4002,
+      "name": "Huawei P30",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4003,
+      "name": "Huawei P40",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4004,
+      "name": "Huawei P50",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4005,
+      "name": "Huawei P60",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4006,
+      "name": "Huawei Mate 20 Pro",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4007,
+      "name": "Huawei Mate 30 Pro",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4008,
+      "name": "Huawei Nova 11",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 4009,
+      "name": "Huawei Y9",
+      "modelSeriesId": null,
+      "brandId": 222,
+      "userId": 10,
+      "shopId": 0,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "deviceIssues": [],
+  "exportedAt": "2025-05-06T23:40:49.466588",
+  "version": "1.0"
+}
