@@ -138,15 +138,15 @@ export function SuperadminSidebar({
   return (
     <>
       {/* Desktop Sidebar - nur auf größeren Bildschirmen sichtbar */}
-      <div className="hidden md:flex md:w-64 md:flex-col bg-muted/20 border-r">
-        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
+      <div className="hidden md:flex md:w-64 md:h-screen md:flex-col bg-muted/20 border-r overflow-y-auto">
+        <div className="flex flex-col w-full pt-5 pb-4">
           <div className="flex items-center flex-shrink-0 px-4 mb-5">
             <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
           </div>
           <nav className="mt-2 flex-1 px-2 space-y-1">
             <NavItems />
           </nav>
-          <div className="px-2 mt-6">
+          <div className="px-2 mt-6 mb-4">
             <Button 
               variant="outline" 
               className="w-full justify-start"
