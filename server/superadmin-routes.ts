@@ -411,6 +411,98 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // Endpunkt für Gerätestatistiken
+  app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Superadmin-Bereich: Abrufen von Gerätestatistiken");
+
+      // 1. Alle Gerätetypen abrufen
+      const deviceTypesResult = await db.select({
+        id: userDeviceTypes.id,
+        name: userDeviceTypes.name
+      })
+      .from(userDeviceTypes)
+      .where(
+        or(
+          eq(userDeviceTypes.userId, req.user?.id || 0),
+          eq(userDeviceTypes.userId, 0),
+          sql`${userDeviceTypes.shopId} IS NULL`
+        )
+      );
+      
+      // Entferne Duplikate (basierend auf dem Namen)
+      const deviceTypesMap = new Map();
+      deviceTypesResult.forEach(type => {
+        deviceTypesMap.set(type.name.toLowerCase(), type);
+      });
+      const deviceTypes = Array.from(deviceTypesMap.values());
+
+      // 2. Alle Marken abrufen
+      const brands = await db.select({
+        id: userBrands.id,
+        name: userBrands.name,
+        deviceTypeId: userBrands.deviceTypeId
+      })
+      .from(userBrands);
+
+      // 3. Alle Modelle abrufen
+      const models = await db.select({
+        id: userModels.id,
+        name: userModels.name,
+        brandId: userModels.brandId
+      })
+      .from(userModels);
+
+      // Statistiken zusammenstellen
+      const statistics = {
+        totalDeviceTypes: deviceTypes.length,
+        totalBrands: brands.length,
+        totalModels: models.length,
+        deviceTypeStats: [] as Array<{
+          name: string;
+          brandCount: number;
+          modelCount: number;
+          brands: Array<{
+            name: string;
+            modelCount: number;
+          }>;
+        }>
+      };
+
+      // Statistiken für jeden Gerätetyp erstellen
+      for (const deviceType of deviceTypes) {
+        const deviceTypeBrands = brands.filter(brand => 
+          brand.deviceTypeId === deviceType.id
+        );
+        
+        const deviceTypeBrandIds = deviceTypeBrands.map(brand => brand.id);
+        const deviceTypeModels = models.filter(model => 
+          deviceTypeBrandIds.includes(model.brandId)
+        );
+
+        const brandStats = deviceTypeBrands.map(brand => {
+          const brandModels = models.filter(model => model.brandId === brand.id);
+          return {
+            name: brand.name,
+            modelCount: brandModels.length
+          };
+        });
+
+        statistics.deviceTypeStats.push({
+          name: deviceType.name,
+          brandCount: deviceTypeBrands.length,
+          modelCount: deviceTypeModels.length,
+          brands: brandStats
+        });
+      }
+
+      res.json(statistics);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Gerätestatistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätestatistiken" });
+    }
+  });
+
   // Abrufen aller verfügbaren Gerätetypen (vollständige Objekte mit IDs)
   app.get("/api/superadmin/device-types/all", isSuperadmin, async (req: Request, res: Response) => {
     try {
