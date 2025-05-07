@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Smartphone, Menu, X, Settings, User, LogOut, Shield } from "lucide-react";
+import { 
+  Smartphone, 
+  Menu, 
+  X, 
+  Settings, 
+  User, 
+  LogOut, 
+  Shield,
+  LayoutDashboard,
+  Wrench,
+  Users,
+  BarChart2,
+  FileText
+} from "lucide-react";
 import { useState } from "react";
 import ClientKingLogo from "../../assets/ClientKing_Logo.png";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,9 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 type HeaderProps = {
   variant?: "landing" | "auth" | "app";
+  activeTab?: string;
+  onTabChange?: (tab: any) => void;
+  canUseCostEstimates?: boolean;
 };
 
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -25,7 +42,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
   </Link>
 );
 
-export function Header({ variant = "landing" }: HeaderProps) {
+export function Header({ variant = "landing", activeTab, onTabChange, canUseCostEstimates }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
 
@@ -53,9 +70,140 @@ export function Header({ variant = "landing" }: HeaderProps) {
           </h1>
         </div>
         
-        {/* Benutzer-Info als Text rechts */}
-        <div className="text-sm text-muted-foreground hidden md:block">
-          Angemeldet als: {user.username}
+        <div className="flex items-center gap-3">
+          {/* Benutzer-Info als Text rechts - nur Desktop */}
+          <div className="text-sm text-muted-foreground hidden md:block">
+            Angemeldet als: {user.username}
+          </div>
+          
+          {/* Mobile Sidebar-Menü-Button - nur auf kleineren Bildschirmen */}
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[80%] sm:w-[350px] p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-4 border-b">
+                    <h2 className="text-lg font-semibold text-primary">Handyshop Verwaltung</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Angemeldet als {user?.username || ""}
+                    </p>
+                  </div>
+                  
+                  <nav className="flex-1 p-4 space-y-2">
+                    <Button 
+                      variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => onTabChange && onTabChange('dashboard')}
+                    >
+                      <LayoutDashboard className="h-5 w-5 mr-2" />
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'repairs' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => onTabChange && onTabChange('repairs')}
+                    >
+                      <Wrench className="h-5 w-5 mr-2" />
+                      Reparaturen
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'customers' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => onTabChange && onTabChange('customers')}
+                    >
+                      <Users className="h-5 w-5 mr-2" />
+                      Kunden
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'statistics' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => onTabChange && onTabChange('statistics')}
+                    >
+                      <BarChart2 className="h-5 w-5 mr-2" />
+                      Statistiken
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
+                      className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => {
+                        if (canUseCostEstimates && onTabChange) {
+                          onTabChange('cost-estimates');
+                        }
+                      }}
+                      disabled={!canUseCostEstimates}
+                    >
+                      <FileText className="h-5 w-5 mr-2" />
+                      Kostenvoranschläge
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'settings' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => onTabChange && onTabChange('settings')}
+                    >
+                      <Settings className="h-5 w-5 mr-2" />
+                      Einstellungen
+                    </Button>
+                  </nav>
+                  
+                  <div className="p-4 border-t">
+                    {/* Login als Superadmin Macnphone - nur anzeigen für Admins und Superadmins */}
+                    {user && (user.isAdmin || user.isSuperadmin) && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
+                        asChild
+                      >
+                        <Link href="/auth?superadmin=true">
+                          <Shield className="h-5 w-5 mr-2 text-red-500" />
+                          <span className="text-red-500 font-medium">Login als macnphone</span>
+                        </Link>
+                      </Button>
+                    )}
+                    
+                    {/* Admin-Bereich-Button */}
+                    {user && user.isAdmin && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start mb-2"
+                        asChild
+                      >
+                        <Link href="/admin">
+                          <Shield className="h-5 w-5 mr-2" />
+                          Admin-Bereich
+                        </Link>
+                      </Button>
+                    )}
+                    
+                    {/* Superadmin-Bereich-Button */}
+                    {user && user.isSuperadmin && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start mb-2"
+                        asChild
+                      >
+                        <Link href="/superadmin">
+                          <Shield className="h-5 w-5 mr-2 text-red-500" />
+                          <span className="text-red-500">Superadmin</span>
+                        </Link>
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="h-5 w-5 mr-2" />
+                      Ausloggen
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
     );

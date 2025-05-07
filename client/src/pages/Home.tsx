@@ -81,17 +81,19 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
-      {/* Sidebar komponente */}
-      <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={(tab) => setActiveTab(tab as Tab)} 
-        canUseCostEstimates={canUseCostEstimates} 
-      />
+      {/* Sidebar komponente - nur auf Desktop sichtbar */}
+      <div className="hidden md:block">
+        <Sidebar 
+          activeTab={activeTab} 
+          onTabChange={(tab) => setActiveTab(tab as Tab)} 
+          canUseCostEstimates={canUseCostEstimates} 
+        />
+      </div>
       
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header mit Benutzerdaten */}
-        <Header variant="app" />
+        <Header variant="app" activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} canUseCostEstimates={canUseCostEstimates} />
         
         {/* Main content */}
         <main className="flex-1 overflow-auto p-3 md:p-6">
