@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card, CardHeader, CardTitle, CardContent, CardDescription
 } from "@/components/ui/card";
 import {
-  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, BarChart, Bar
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, BarChart, Bar, PieChart, Pie, Cell
 } from 'recharts';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
+// Interface für die DSGVO-konformen Statistikdaten
 interface DsgvoStats {
   totalShops: number;
   activeShops: number;
   repairsLast30Days: { date: string; count: number }[];
   usersPerShop: { shopId: number; userCount: number }[];
   emailsSent: number;
-  lastEmailDate: string;
+  lastEmailDate: string | null;
   packageUsage: { packageName: string; userCount: number }[];
   dsgvoExports: number;
   dsgvoDeletes: number;
-  lastExport: string;
+  lastExport: string | null;
 }
 
 export default function SuperadminStatsOverview() {
@@ -29,7 +30,7 @@ export default function SuperadminStatsOverview() {
   });
 
   // Error-Handling mit useEffect, um zu vermeiden, dass toast bei jedem Render aufgerufen wird
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       toast({
         variant: "destructive",
@@ -38,6 +39,9 @@ export default function SuperadminStatsOverview() {
       });
     }
   }, [error, toast]);
+
+  // Farbpalette für Diagramme
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   // Lade-Zustand für die Karten
   if (isLoading) {
@@ -64,6 +68,12 @@ export default function SuperadminStatsOverview() {
 
   if (!data) return null;
 
+  // Daten für das Shops-Diagramm (aktiv vs. inaktiv)
+  const shopStatusData = [
+    { name: 'Aktiv', value: data.activeShops },
+    { name: 'Inaktiv', value: Math.max(0, data.totalShops - data.activeShops) }
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
       <Card>
@@ -80,6 +90,37 @@ export default function SuperadminStatsOverview() {
           <CardDescription>Shops mit Aktivität</CardDescription>
         </CardHeader>
         <CardContent className="text-2xl font-bold">{data.activeShops}</CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Shop-Status</CardTitle>
+          <CardDescription>Aktive vs. inaktive Shops (30 Tage)</CardDescription>
+        </CardHeader>
+        <CardContent className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={shopStatusData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => 
+                  window.innerWidth < 768 
+                    ? `${(percent * 100).toFixed(0)}%`
+                    : `${name}: ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {shopStatusData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
       </Card>
 
       <Card className="col-span-2">
