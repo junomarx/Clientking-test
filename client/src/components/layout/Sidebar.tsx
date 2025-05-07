@@ -66,60 +66,70 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
         <Button 
           variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('dashboard');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <LayoutDashboard className="h-5 w-5 mr-2" />
-          Dashboard
+          <Link href="/app/dashboard" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <LayoutDashboard className="h-5 w-5 mr-2" />
+            Dashboard
+          </Link>
         </Button>
         <Button 
           variant={activeTab === 'repairs' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('repairs');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <Wrench className="h-5 w-5 mr-2" />
-          Reparaturen
+          <Link href="/app/repairs" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <Wrench className="h-5 w-5 mr-2" />
+            Reparaturen
+          </Link>
         </Button>
         <Button 
           variant={activeTab === 'customers' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('customers');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <Users className="h-5 w-5 mr-2" />
-          Kunden
+          <Link href="/app/customers" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <Users className="h-5 w-5 mr-2" />
+            Kunden
+          </Link>
         </Button>
         <Button 
           variant={activeTab === 'statistics' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('statistics');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <BarChart2 className="h-5 w-5 mr-2" />
-          Statistiken
+          <Link href="/app/statistics" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <BarChart2 className="h-5 w-5 mr-2" />
+            Statistiken
+          </Link>
         </Button>
         <Button 
           variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
           className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={() => {
-            if (canUseCostEstimates) {
-              onTabChange('cost-estimates');
-              if (isMobile) closeMenu();
-            }
-          }}
+          asChild={canUseCostEstimates}
           disabled={!canUseCostEstimates}
         >
-          <FileText className="h-5 w-5 mr-2" />
-          Kostenvoranschläge
+          {canUseCostEstimates ? (
+            <Link href="/app/cost-estimates" onClick={() => {
+              if (isMobile) closeMenu();
+            }}>
+              <FileText className="h-5 w-5 mr-2" />
+              Kostenvoranschläge
+            </Link>
+          ) : (
+            <span>
+              <FileText className="h-5 w-5 mr-2" />
+              Kostenvoranschläge
+            </span>
+          )}
         </Button>
       </div>
       
@@ -132,11 +142,11 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
       </div>
       <div className="space-y-1">
         <Button 
-          variant={location === '/settings/shop' ? 'default' : 'ghost'}
+          variant={location === '/app/settings/shop' ? 'default' : 'ghost'}
           className="w-full justify-start"
           asChild
         >
-          <Link href="/settings/shop" onClick={() => {
+          <Link href="/app/settings/shop" onClick={() => {
             if (isMobile) closeMenu();
           }}>
             <Building className="h-5 w-5 mr-2" />
@@ -144,11 +154,11 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </Link>
         </Button>
         <Button 
-          variant={location === '/settings/email' ? 'default' : 'ghost'}
+          variant={location === '/app/settings/email' ? 'default' : 'ghost'}
           className="w-full justify-start"
           asChild
         >
-          <Link href="/settings/email" onClick={() => {
+          <Link href="/app/settings/email" onClick={() => {
             if (isMobile) closeMenu();
           }}>
             <Mail className="h-5 w-5 mr-2" />
@@ -156,11 +166,11 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </Link>
         </Button>
         <Button 
-          variant={location === '/settings/print' ? 'default' : 'ghost'}
+          variant={location === '/app/settings/print' ? 'default' : 'ghost'}
           className="w-full justify-start"
           asChild
         >
-          <Link href="/settings/print" onClick={() => {
+          <Link href="/app/settings/print" onClick={() => {
             if (isMobile) closeMenu();
           }}>
             <Printer className="h-5 w-5 mr-2" />
@@ -168,11 +178,11 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </Link>
         </Button>
         <Button 
-          variant={location === '/settings/plan' ? 'default' : 'ghost'}
+          variant={location === '/app/settings/plan' ? 'default' : 'ghost'}
           className="w-full justify-start"
           asChild
         >
-          <Link href="/settings/plan" onClick={() => {
+          <Link href="/app/settings/plan" onClick={() => {
             if (isMobile) closeMenu();
           }}>
             <CreditCard className="h-5 w-5 mr-2" />
@@ -180,11 +190,11 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </Link>
         </Button>
         <Button 
-          variant={location === '/settings/user' ? 'default' : 'ghost'}
+          variant={location === '/app/settings/user' ? 'default' : 'ghost'}
           className="w-full justify-start"
           asChild
         >
-          <Link href="/settings/user" onClick={() => {
+          <Link href="/app/settings/user" onClick={() => {
             if (isMobile) closeMenu();
           }}>
             <UserCog className="h-5 w-5 mr-2" />

@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,12 +10,23 @@ import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
 
-// Settings Pages
-import ShopSettingsPage from "@/pages/settings/ShopSettingsPage";
-import EmailSettingsPage from "@/pages/settings/EmailSettingsPage";
-import PrintSettingsPage from "@/pages/settings/PrintSettingsPage";
-import SubscriptionSettingsPage from "@/pages/settings/SubscriptionSettingsPage";
-import UserSettingsPage from "@/pages/settings/UserSettingsPage";
+// Layouts
+import { MainLayout } from "@/layouts/MainLayout";
+
+// Dashboard Komponenten
+import { DashboardTab } from "@/components/dashboard/DashboardTab";
+import { RepairsTab } from "@/components/repairs/RepairsTab";
+import { CustomersTab } from "@/components/customers/CustomersTab";
+import { StatisticsTabRebuilt as StatisticsTab } from "@/components/statistics/StatisticsTabRebuilt";
+import CostEstimatesTab from "@/components/cost-estimates/CostEstimatesTab";
+import { NewOrderModal } from "@/components/NewOrderModal";
+
+// Settings Komponenten
+import { BusinessSettingsTab } from "@/components/settings/BusinessSettingsTab";
+import { EmailSettingsTab } from "@/components/settings/EmailSettingsTab";
+import { PrintSettingsTab } from "@/components/settings/PrintSettingsTab";
+import { SubscriptionSettingsTab } from "@/components/settings/SubscriptionSettingsTab";
+import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
 
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
@@ -25,33 +36,124 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
+
+const AppDashboard = () => {
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  
+  const handleNewOrder = () => {
+    setIsNewOrderModalOpen(true);
+  };
+  
+  // Event-Listener für "Neuer Auftrag" Button
+  useEffect(() => {
+    const handleTriggerNewOrder = () => {
+      setIsNewOrderModalOpen(true);
+    };
+    
+    window.addEventListener('trigger-new-order', handleTriggerNewOrder);
+    
+    return () => {
+      window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
+    };
+  }, []);
+  
+  return (
+    <>
+      <DashboardTab onNewOrder={handleNewOrder} onTabChange={() => {}} />
+      <NewOrderModal 
+        open={isNewOrderModalOpen} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={selectedCustomerId}
+      />
+    </>
+  );
+};
+
+const AppRepairs = () => {
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  
+  // Event-Listener für das Öffnen der Reparaturdetails
+  useEffect(() => {
+    const handleOpenRepairDetails = (event: CustomEvent) => {
+      const { repairId } = event.detail;
+      if (repairId) {
+        // Event-Objekt erstellen und auslösen, um den Dialog zu öffnen
+        const openDetailsEvent = new CustomEvent('open-repair-details-dialog', { 
+          detail: { repairId }
+        });
+        window.dispatchEvent(openDetailsEvent);
+      }
+    };
+    
+    window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    
+    return () => {
+      window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    };
+  }, []);
+  
+  return (
+    <>
+      <RepairsTab onNewOrder={() => setIsNewOrderModalOpen(true)} />
+      <NewOrderModal 
+        open={isNewOrderModalOpen} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={null}
+      />
+    </>
+  );
+};
+
+const AppCustomers = () => {
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  
+  return (
+    <>
+      <CustomersTab onNewOrder={() => setIsNewOrderModalOpen(true)} />
+      <NewOrderModal 
+        open={isNewOrderModalOpen} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={null}
+      />
+    </>
+  );
+};
+
+// Komponenten mit den richtigen Props
+const StatisticsPage = () => <StatisticsTab onTabChange={() => {}} />;
+const CostEstimatesPage = () => <CostEstimatesTab />;
+
+// Redirect Komponente für Root-Pfad
+const AppIndexRedirect = () => <Redirect to="/app/dashboard" />;
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
-      <ProtectedRoute path="/app">
-        <Home />
-      </ProtectedRoute>
       
-      {/* Neue Settings Routen */}
-      <ProtectedRoute path="/settings/shop">
-        <ShopSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/email">
-        <EmailSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/print">
-        <PrintSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/plan">
-        <SubscriptionSettingsPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/settings/user">
-        <UserSettingsPage />
+      {/* App Routen mit MainLayout */}
+      <ProtectedRoute path="/app">
+        <MainLayout>
+          <Switch>
+            <Route path="/app" component={AppIndexRedirect} />
+            <Route path="/app/dashboard" component={AppDashboard} />
+            <Route path="/app/repairs" component={AppRepairs} />
+            <Route path="/app/customers" component={AppCustomers} />
+            <Route path="/app/statistics" component={StatisticsPage} />
+            <Route path="/app/cost-estimates" component={CostEstimatesPage} />
+            
+            {/* Einstellungsrouten */}
+            <Route path="/app/settings/shop" component={BusinessSettingsTab} />
+            <Route path="/app/settings/email" component={EmailSettingsTab} />
+            <Route path="/app/settings/print" component={PrintSettingsTab} />
+            <Route path="/app/settings/plan" component={SubscriptionSettingsTab} />
+            <Route path="/app/settings/user" component={UserSettingsTab} />
+          </Switch>
+        </MainLayout>
       </ProtectedRoute>
       
       <AdminProtectedRoute path="/admin">

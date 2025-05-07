@@ -1,8 +1,14 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
+import { Redirect, Route, RouteProps } from "wouter";
 
-export function ProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
+interface ProtectedRouteProps {
+  path: string;
+  children: React.ReactNode;
+  exact?: boolean;
+}
+
+export function ProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -26,7 +32,7 @@ export function ProtectedRoute({ path, children }: { path: string; children: Rea
   return <Route path={path}>{children}</Route>;
 }
 
-export function AdminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
+export function AdminProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -58,7 +64,7 @@ export function AdminProtectedRoute({ path, children }: { path: string; children
   return <Route path={path}>{children}</Route>;
 }
 
-export function SuperadminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
+export function SuperadminProtectedRoute({ path, children, exact }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
