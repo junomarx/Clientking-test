@@ -28,13 +28,16 @@ export default function SuperadminStatsOverview() {
     queryKey: ["/api/superadmin/stats-dsgvo"]
   });
 
-  if (error) {
-    toast({
-      variant: "destructive",
-      title: "Fehler beim Laden der Statistiken",
-      description: "Die DSGVO-konformen Statistikdaten konnten nicht geladen werden.",
-    });
-  }
+  // Error-Handling mit useEffect, um zu vermeiden, dass toast bei jedem Render aufgerufen wird
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Laden der Statistiken",
+        description: "Die DSGVO-konformen Statistikdaten konnten nicht geladen werden.",
+      });
+    }
+  }, [error, toast]);
 
   // Lade-Zustand für die Karten
   if (isLoading) {

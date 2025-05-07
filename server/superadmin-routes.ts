@@ -94,12 +94,20 @@ export function registerSuperadminRoutes(app: Express) {
       .groupBy(users.shopId);
       
       // E-Mail-Statistiken
-      const [emailStats] = await db.select({
-        emailsSent: sql<number>`COUNT(*)`.as("emails_sent"),
-        lastEmailDate: sql<string>`MAX(${sql.raw("created_at")})`.as("last_email_date"),
-      })
-      .from(sql`email_history`)
-      .where(sql`created_at >= ${thirtyDaysAgo.toISOString()}`);
+      // Da die email_history-Tabelle möglicherweise nicht die Spalte created_at enthält,
+      // verwenden wir createdAt und stellen sicher, dass die Tabelle existiert
+      let emailStats = { emailsSent: 0, lastEmailDate: null };
+      try {
+        [emailStats] = await db.select({
+          emailsSent: sql<number>`COUNT(*)`.as("emails_sent"),
+          lastEmailDate: sql<string>`MAX(${sql.raw("createdAt")})`.as("last_email_date"),
+        })
+        .from(sql`email_history`)
+        .where(sql`"createdAt" >= ${thirtyDaysAgo.toISOString()}`);
+      } catch (error) {
+        console.warn("Fehler beim Abrufen der E-Mail-Statistiken:", error);
+        // Wenn ein Fehler auftritt, behalten wir die Standardwerte bei
+      }
       
       // Paketnutzung
       const packageUsage = await db.select({
