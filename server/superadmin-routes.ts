@@ -1381,11 +1381,13 @@ export function registerSuperadminRoutes(app: Express) {
               console.log(`Gerätetyp ${name} existiert bereits mit ID ${existingType.id}`);
             } else {
               // Neuen Gerätetyp anlegen
+              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+              const superadminUserId = (req.user as any).id;
               const [newDeviceType] = await db.insert(userDeviceTypes)
                 .values({
                   name: name,
-                  userId: 0, // Globaler Gerätetyp
-                  shopId: 0, // Gehört zu keinem Shop
+                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
+                  shopId: null, // NULL für globale Einträge, nicht 0
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
@@ -1439,12 +1441,14 @@ export function registerSuperadminRoutes(app: Express) {
               console.log(`Hersteller ${name} für Gerätetyp ID ${newDeviceTypeId} existiert bereits mit ID ${existingBrand.id}`);
             } else {
               // Neuen Hersteller anlegen
+              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+              const superadminUserId = (req.user as any).id;
               const [newBrand] = await db.insert(userBrands)
                 .values({
                   name: name,
                   deviceTypeId: newDeviceTypeId,
-                  userId: 0, // Globaler Hersteller
-                  shopId: 0, // Gehört zu keinem Shop
+                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
+                  shopId: null, // NULL für globale Einträge, nicht 0
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
