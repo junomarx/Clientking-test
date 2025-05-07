@@ -159,7 +159,7 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           }}
         >
           <Printer className="h-5 w-5 mr-2" />
-          Ausdrucke
+          Drucken
         </Button>
         <Button 
           variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
@@ -169,7 +169,7 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
             if (isMobile) closeMenu();
           }}
         >
-          <Package className="h-5 w-5 mr-2" />
+          <CreditCard className="h-5 w-5 mr-2" />
           Abonnement
         </Button>
         <Button 
@@ -181,7 +181,7 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           }}
         >
           <UserCog className="h-5 w-5 mr-2" />
-          Benutzer
+          Benutzerdaten
         </Button>
       </div>
     </>

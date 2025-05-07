@@ -44,8 +44,8 @@ export function UserSettingsTab() {
     defaultValues: {
       username: user?.username || "",
       email: user?.email || "",
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
+      firstName: "", // Wird noch nicht vom API unterstützt
+      lastName: "",  // Wird noch nicht vom API unterstützt
     },
   });
   
@@ -65,8 +65,8 @@ export function UserSettingsTab() {
       profileForm.reset({
         username: user.username || "",
         email: user.email || "",
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
+        firstName: "", // Diese Felder existieren noch nicht im Schema
+        lastName: "",  // Diese Felder existieren noch nicht im Schema
       });
     }
   }, [user, profileForm]);
@@ -293,7 +293,7 @@ export function UserSettingsTab() {
                 </div>
                 <div className="flex justify-between py-2">
                   <span className="text-gray-600">Shop</span>
-                  <span className="font-medium">{user.shopName || "Standard-Shop"}</span>
+                  <span className="font-medium">{"Shop " + (user.shopId || "-")}</span>
                 </div>
               </div>
             </CardContent>
