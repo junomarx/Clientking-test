@@ -355,12 +355,12 @@ export default function SettingsPage() {
       <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
         <Tabs defaultValue="business" className="w-full" value={activeTab} onValueChange={setActiveTab}>
           <div className="flex overflow-x-auto">
-            <TabsList className="bg-white border mb-6">
-              <TabsTrigger value="business">Geschäft</TabsTrigger>
-              <TabsTrigger value="emails">E-Mail</TabsTrigger>
-              <TabsTrigger value="appearance">Erscheinungsbild</TabsTrigger>
-              <TabsTrigger value="prints">Ausdrucke</TabsTrigger>
-              <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+            <TabsList className="bg-white border mb-6 md:flex md:flex-row flex-col w-full">
+              <TabsTrigger value="business" className="w-full md:w-auto">Geschäft</TabsTrigger>
+              <TabsTrigger value="emails" className="w-full md:w-auto">E-Mail</TabsTrigger>
+              <TabsTrigger value="appearance" className="w-full md:w-auto">Erscheinungsbild</TabsTrigger>
+              <TabsTrigger value="prints" className="w-full md:w-auto">Ausdrucke</TabsTrigger>
+              <TabsTrigger value="subscription" className="w-full md:w-auto">Abonnement</TabsTrigger>
             </TabsList>
           </div>
 
@@ -586,9 +586,9 @@ export default function SettingsPage() {
           {/* E-Mail-Einstellungen Tab */}
           <TabsContent value="emails" className="mt-4">
             <Tabs value={activeEmailTab} onValueChange={setActiveEmailTab} className="mb-6">
-              <TabsList className="bg-white border mb-6 w-full justify-start">
-                <TabsTrigger value="settings">SMTP-Einstellungen</TabsTrigger>
-                <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
+              <TabsList className="bg-white border mb-6 w-full md:flex md:flex-row flex-col">
+                <TabsTrigger value="settings" className="w-full md:w-auto">SMTP-Einstellungen</TabsTrigger>
+                <TabsTrigger value="templates" className="w-full md:w-auto">E-Mail-Vorlagen</TabsTrigger>
               </TabsList>
               
               <TabsContent value="settings" className="space-y-6">
