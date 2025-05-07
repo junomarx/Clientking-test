@@ -973,10 +973,10 @@ export default function SuperadminDevicesTab() {
     }
   };
   
-  // Gefilterte Gerätetypen basierend auf dem Suchbegriff
+  // Gefilterte Gerätetypen basierend auf dem Suchbegriff, leere Strings ausfiltern
   const filteredDeviceTypes = deviceTypesList
     ? deviceTypesList.filter(type =>
-        type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
+        type && type.trim() !== "" && type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
       )
     : [];
   
@@ -1171,7 +1171,7 @@ export default function SuperadminDevicesTab() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Alle Typen</SelectItem>
-                        {deviceTypesList?.map((type) => (
+                        {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
                           </SelectItem>
@@ -1345,7 +1345,7 @@ export default function SuperadminDevicesTab() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Alle Typen</SelectItem>
-                        {deviceTypesList?.map((type) => (
+                        {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
                           <SelectItem key={type} value={type}>
                             <div className="flex items-center gap-2">
                               {getDeviceTypeIcon(type)}
@@ -2163,7 +2163,7 @@ export default function SuperadminDevicesTab() {
                     <SelectValue placeholder="Gerätetyp auswählen" />
                   </SelectTrigger>
                   <SelectContent>
-                    {userDeviceTypes?.map((type) => (
+                    {userDeviceTypes?.filter(type => type.name && type.name.trim() !== "").map((type) => (
                       <SelectItem key={type.id} value={type.id.toString()}>
                         <div className="flex items-center gap-2">
                           {getDeviceTypeIcon(type.name)}
