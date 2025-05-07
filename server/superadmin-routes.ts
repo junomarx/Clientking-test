@@ -573,7 +573,8 @@ export function registerSuperadminRoutes(app: Express) {
       const standardDeviceTypesLower = standardDeviceTypes.map(t => t.toLowerCase());
       
       // Prüfen, ob der zu löschende Gerätetyp ein zu schützender Standardtyp ist (mit Großbuchstaben)
-      if (capitalizedStandardTypes.includes(name)) {
+      const standardTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
+      if (standardTypes.includes(name)) {
         return res.status(400).json({ message: "Standardgerätetypen können nicht gelöscht werden" });
       }
       

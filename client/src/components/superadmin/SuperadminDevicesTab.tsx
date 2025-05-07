@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
 import FehlerkatalogBulkImport from "./FehlerkatalogBulkImport";
-import DeviceDataExportImport from "./DeviceDataExportImport";
+import DeviceDataExportImportWithCSV from "./DeviceDataExportImportWithCSV";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
@@ -891,7 +891,7 @@ export default function SuperadminDevicesTab() {
       <h1 className="text-2xl font-bold">Geräteverwaltung</h1>
       
       {/* Export/Import-Komponente am Anfang der Seite platzieren */}
-      <DeviceDataExportImport />
+      <DeviceDataExportImportWithCSV />
       
       <Tabs defaultValue="types" className="w-full">
         <TabsList className="grid grid-cols-4">
