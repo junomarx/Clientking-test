@@ -84,6 +84,13 @@ export default function RepairsPage() {
           </ScrollArea>
         </main>
       </div>
+      
+      {/* Modal für neue Aufträge */}
+      <NewOrderModal 
+        open={isNewOrderModalOpen} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={selectedCustomerId}
+      />
     </div>
   );
 }
