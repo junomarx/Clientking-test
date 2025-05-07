@@ -138,37 +138,35 @@ export function SuperadminSidebar({
   return (
     <>
       {/* Desktop Sidebar - nur auf größeren Bildschirmen sichtbar */}
-      <div className="hidden md:flex md:w-64 md:flex-col bg-muted/20 border-r">
-        <ScrollArea className="h-screen">
-          <div className="flex flex-col flex-grow pt-5 pb-4">
-            <div className="flex items-center flex-shrink-0 px-4 mb-5">
-              <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
-            </div>
-            <nav className="mt-2 flex-1 px-2 space-y-1">
-              <NavItems />
-            </nav>
-            <div className="px-2 mt-6">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5 mr-2" />
-                Ausloggen
-              </Button>
-              <Button 
-                variant="link" 
-                className="w-full justify-start mt-2"
-                asChild
-              >
-                <Link to="/app">
-                  <ChevronLeft className="h-5 w-5 mr-2" />
-                  Zurück zur App
-                </Link>
-              </Button>
-            </div>
+      <div className="hidden md:flex md:w-64 md:flex-col bg-muted/20 border-r overflow-y-auto">
+        <div className="flex flex-col min-h-screen pt-5 pb-20">
+          <div className="flex items-center flex-shrink-0 px-4 mb-5">
+            <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
           </div>
-        </ScrollArea>
+          <nav className="mt-2 flex-1 px-2 space-y-1">
+            <NavItems />
+          </nav>
+          <div className="px-2 mt-6">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Ausloggen
+            </Button>
+            <Button 
+              variant="link" 
+              className="w-full justify-start mt-2"
+              asChild
+            >
+              <Link to="/app">
+                <ChevronLeft className="h-5 w-5 mr-2" />
+                Zurück zur App
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Mobile Menü - nur auf kleineren Bildschirmen sichtbar */}
