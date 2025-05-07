@@ -60,15 +60,23 @@ export default function Home() {
       console.log("Event für Öffnen der Einstellungen empfangen");
       setActiveTab('settings');
     };
+    
+    // Event-Listener für "Neuer Auftrag" Button
+    const handleTriggerNewOrder = () => {
+      console.log("Event für Neuer Auftrag empfangen");
+      setIsNewOrderModalOpen(true);
+    };
 
     // Event-Listener registrieren
     window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
     window.addEventListener('open-settings-dialog', handleOpenSettingsDialog);
+    window.addEventListener('trigger-new-order', handleTriggerNewOrder);
     
     // Event-Listener beim Unmount entfernen
     return () => {
       window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
       window.removeEventListener('open-settings-dialog', handleOpenSettingsDialog);
+      window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
     };
   }, []);
 

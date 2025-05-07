@@ -84,7 +84,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[80%] sm:w-[350px] p-0">
+              <SheetContent side="top" className="h-[90%] p-0">
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b">
                     <h2 className="text-lg font-semibold text-primary">Handyshop Verwaltung</h2>
@@ -94,10 +94,31 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                   </div>
                   
                   <nav className="flex-1 p-4 space-y-2">
+                    {/* Neuer Auftrag Button */}
+                    <Button 
+                      variant="default"
+                      className="w-full justify-start mb-4 bg-gradient-to-r from-primary to-blue-600"
+                      onClick={() => {
+                        // Versuche die onNewOrder Funktion aus den Props zu bekommen
+                        if (window.dispatchEvent) {
+                          // Event senden, dass ein neuer Auftrag erstellt werden soll
+                          window.dispatchEvent(new CustomEvent('trigger-new-order'));
+                        }
+                        // Schließt das Menü
+                        document.body.click();
+                      }}
+                    >
+                      <FileText className="h-5 w-5 mr-2" />
+                      Neuer Auftrag
+                    </Button>
+                    
                     <Button 
                       variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => onTabChange && onTabChange('dashboard')}
+                      onClick={() => {
+                        if (onTabChange) onTabChange('dashboard');
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <LayoutDashboard className="h-5 w-5 mr-2" />
                       Dashboard
@@ -105,7 +126,10 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant={activeTab === 'repairs' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => onTabChange && onTabChange('repairs')}
+                      onClick={() => {
+                        if (onTabChange) onTabChange('repairs');
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <Wrench className="h-5 w-5 mr-2" />
                       Reparaturen
@@ -113,7 +137,10 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant={activeTab === 'customers' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => onTabChange && onTabChange('customers')}
+                      onClick={() => {
+                        if (onTabChange) onTabChange('customers');
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <Users className="h-5 w-5 mr-2" />
                       Kunden
@@ -121,7 +148,10 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => onTabChange && onTabChange('statistics')}
+                      onClick={() => {
+                        if (onTabChange) onTabChange('statistics');
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <BarChart2 className="h-5 w-5 mr-2" />
                       Statistiken
@@ -132,6 +162,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       onClick={() => {
                         if (canUseCostEstimates && onTabChange) {
                           onTabChange('cost-estimates');
+                          document.body.click(); // Schließt das Menü
                         }
                       }}
                       disabled={!canUseCostEstimates}
@@ -142,7 +173,10 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant={activeTab === 'settings' ? 'default' : 'ghost'}
                       className="w-full justify-start"
-                      onClick={() => onTabChange && onTabChange('settings')}
+                      onClick={() => {
+                        if (onTabChange) onTabChange('settings');
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <Settings className="h-5 w-5 mr-2" />
                       Einstellungen
@@ -156,6 +190,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
                         asChild
+                        onClick={() => document.body.click()} // Schließt das Menü
                       >
                         <Link href="/auth?superadmin=true">
                           <Shield className="h-5 w-5 mr-2 text-red-500" />
@@ -170,6 +205,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2"
                         asChild
+                        onClick={() => document.body.click()} // Schließt das Menü
                       >
                         <Link href="/admin">
                           <Shield className="h-5 w-5 mr-2" />
@@ -184,6 +220,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2"
                         asChild
+                        onClick={() => document.body.click()} // Schließt das Menü
                       >
                         <Link href="/superadmin">
                           <Shield className="h-5 w-5 mr-2 text-red-500" />
@@ -194,7 +231,10 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                     <Button 
                       variant="outline" 
                       className="w-full justify-start"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        handleLogout();
+                        document.body.click(); // Schließt das Menü
+                      }}
                     >
                       <LogOut className="h-5 w-5 mr-2" />
                       Ausloggen

@@ -14,7 +14,8 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
-  Shield
+  Shield,
+  PlusCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +39,21 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
 
   const NavItems = ({ isMobile = false, closeMenu = () => {} }: NavItemsProps) => (
     <>
+      {/* Neuer Auftrag Button */}
+      <Button 
+        variant="default"
+        className="w-full justify-start mb-4 bg-gradient-to-r from-primary to-blue-600"
+        onClick={() => {
+          // Event senden, dass ein neuer Auftrag erstellt werden soll
+          if (window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('trigger-new-order'));
+          }
+        }}
+      >
+        <PlusCircle className="h-5 w-5 mr-2" />
+        Neuer Auftrag
+      </Button>
+      
       <Button 
         variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
         className="w-full justify-start"
