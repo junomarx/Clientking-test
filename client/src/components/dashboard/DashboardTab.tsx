@@ -307,17 +307,26 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           transition={{ duration: 0.3, delay: 0.6 }}
           className="rounded-lg overflow-hidden shadow-sm border bg-white"
         >
-          {!statsLoading && stats && (
-            <div>
-              <div className="border-b px-4 py-3">
-                <h2 className="font-semibold">Reparaturstatistik</h2>
-                <p className="text-sm text-muted-foreground">Übersicht nach Status</p>
-              </div>
-              <div className="p-4">
-                <RepairStatusChart stats={stats} />
-              </div>
+          <div>
+            <div className="border-b px-4 py-3">
+              <h2 className="font-semibold">Reparaturstatistik</h2>
+              <p className="text-sm text-muted-foreground">Übersicht nach Status</p>
             </div>
-          )}
+            <div className="p-4">
+              {statsLoading ? (
+                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  Lade Statistiken...
+                </div>
+              ) : (
+                <RepairStatusChart stats={{
+                  inRepair: stats?.inRepair || 0,
+                  readyForPickup: stats?.readyForPickup || 0,
+                  outsourced: stats?.outsourced || 0,
+                  completed: stats?.completed || 0
+                }} />
+              )}
+            </div>
+          </div>
         </motion.div>
       </div>
 

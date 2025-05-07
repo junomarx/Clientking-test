@@ -23,11 +23,13 @@ const STATUS_LABELS = {
 };
 
 export function RepairStatusChart({ stats }: RepairStatusChartProps) {
+  // stats wird bereits validiert übergeben, keine weitere Sicherung nötig
+  
   const data = [
-    { name: STATUS_LABELS.inRepair, value: stats.inRepair },
-    { name: STATUS_LABELS.readyForPickup, value: stats.readyForPickup },
-    { name: STATUS_LABELS.outsourced, value: stats.outsourced },
-    { name: STATUS_LABELS.completed, value: stats.completed },
+    { name: STATUS_LABELS.inRepair, value: stats.inRepair || 0 },
+    { name: STATUS_LABELS.readyForPickup, value: stats.readyForPickup || 0 },
+    { name: STATUS_LABELS.outsourced, value: stats.outsourced || 0 },
+    { name: STATUS_LABELS.completed, value: stats.completed || 0 },
   ].filter(item => item.value > 0);
 
   const hasData = data.some(item => item.value > 0);
@@ -39,12 +41,11 @@ export function RepairStatusChart({ stats }: RepairStatusChartProps) {
 
   return (
     <motion.div 
-      className="bg-white rounded-lg shadow-sm p-5 h-[300px]"
+      className="h-[300px]"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <h3 className="text-gray-700 font-semibold mb-4">Auftragsverteilung</h3>
       
       {hasData ? (
         <ResponsiveContainer width="100%" height="100%">
