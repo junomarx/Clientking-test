@@ -9,7 +9,7 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
-import ShopsPage from "@/pages/superadmin/shops-page";
+
 // Design Preview Imports wurden entfernt
 import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
@@ -39,9 +39,7 @@ function Router() {
       <SuperadminProtectedRoute path="/superadmin">
         <SuperadminPage />
       </SuperadminProtectedRoute>
-      <SuperadminProtectedRoute path="/superadmin/shops">
-        <ShopsPage />
-      </SuperadminProtectedRoute>
+
       {/* Design Preview Routen wurden entfernt */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />

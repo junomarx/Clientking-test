@@ -432,85 +432,9 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Shop-Verwaltung
-  app.get("/api/superadmin/shops", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      // Distinct Shop-IDs abrufen und Informationen aggregieren
-      const shopData = await db.execute(sql`
-        SELECT 
-          s.id, 
-          s.name, 
-          COUNT(DISTINCT u.id) as user_count,
-          COUNT(DISTINCT c.id) as customer_count,
-          COUNT(DISTINCT r.id) as repair_count,
-          MIN(s.created_at) as created_at
-        FROM 
-          (SELECT DISTINCT shop_id as id, shop_id as name, created_at FROM users WHERE shop_id IS NOT NULL) s
-        LEFT JOIN users u ON s.id = u.shop_id
-        LEFT JOIN customers c ON s.id = c.shop_id
-        LEFT JOIN repairs r ON s.id = r.shop_id
-        GROUP BY s.id, s.name
-        ORDER BY s.id
-      `);
 
-      // Die Ergebnisse in ein sauberes Format bringen
-      const formattedShops = shopData.rows.map((row: any) => ({
-        id: Number(row.id),
-        name: `Shop ${row.id}`, // Da wir aktuell keine echten Shop-Namen haben, verwenden wir Shop ID
-        userCount: Number(row.user_count),
-        customerCount: Number(row.customer_count),
-        repairCount: Number(row.repair_count),
-        createdAt: row.created_at,
-      }));
 
-      res.json(formattedShops);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Shops:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Shops" });
-    }
-  });
 
-  // Details zu einem Shop
-  app.get("/api/superadmin/shops/:id", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const shopId = parseInt(req.params.id);
-      if (isNaN(shopId)) {
-        return res.status(400).json({ message: "Ungültige Shop-ID" });
-      }
-
-      // Benutzer dieses Shops abrufen
-      const shopUsers = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        isActive: users.isActive,
-        isAdmin: users.isAdmin,
-        createdAt: users.createdAt,
-      }).from(users).where(eq(users.shopId, shopId));
-
-      // Anzahl der Kunden und Reparaturen für diesen Shop
-      const [customerCount] = await db.select({
-        count: count().as("customer_count"),
-      }).from(customers).where(eq(customers.shopId, shopId));
-
-      const [repairCount] = await db.select({
-        count: count().as("repair_count"),
-      }).from(repairs).where(eq(repairs.shopId, shopId));
-
-      // Shop-Informationen zurückgeben
-      res.json({
-        id: shopId,
-        name: `Shop ${shopId}`,
-        users: shopUsers,
-        customerCount: customerCount.count,
-        repairCount: repairCount.count,
-        // Weitere Shop-Informationen können hier hinzugefügt werden
-      });
-    } catch (error) {
-      console.error("Fehler beim Abrufen des Shops:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen des Shops" });
-    }
-  });
 
   // Endpunkt für Gerätestatistiken
   app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {

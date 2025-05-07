@@ -134,19 +134,7 @@ export default function SuperadminPage() {
         <FileCode className="h-5 w-5 mr-2" />
         Vorlagen
       </Button>
-      <Button 
-        variant="ghost"
-        className="w-full justify-start"
-        asChild
-        onClick={() => {
-          if (isMobile) closeMenu();
-        }}
-      >
-        <Link to="/superadmin/shops">
-          <Building className="h-5 w-5 mr-2" />
-          Shops
-        </Link>
-      </Button>
+
     </>
   );
 
