@@ -17,6 +17,7 @@ import HerstellerBulkImport from "./HerstellerBulkImport";
 import ModelleBulkImport from "./ModelleBulkImport";
 import FehlerkatalogBulkImport from "./FehlerkatalogBulkImport";
 import DeviceDataExportImportWithCSV from "./DeviceDataExportImportWithCSV";
+import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
 
 // Interfaces für den Fehlerkatalog
 interface DeviceIssue {
@@ -894,11 +895,12 @@ export default function SuperadminDevicesTab() {
       <DeviceDataExportImportWithCSV />
       
       <Tabs defaultValue="types" className="w-full">
-        <TabsList className="grid grid-cols-4">
+        <TabsList className="grid grid-cols-5">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
           <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
+          <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
         </TabsList>
 
         <TabsContent value="types">
@@ -1569,6 +1571,10 @@ export default function SuperadminDevicesTab() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="csv">
+          <DeviceDataCSVImportExport />
         </TabsContent>
       </Tabs>
       
