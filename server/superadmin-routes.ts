@@ -1312,13 +1312,43 @@ export function registerSuperadminRoutes(app: Express) {
       
       console.log(`Exportiere ${deviceTypesList.length} Gerätearten, ${brandsList.length} Hersteller, ${modelsList.length} Modelle und ${deviceIssuesList.length} Fehlereinträge`);
       
+      // Bereite die Daten für den Export vor, entferne dabei userId und shopId, 
+      // da diese beim Import automatisch gesetzt werden sollen
+      
+      // Entferne userId und shopId aus den Gerätetypen
+      const cleanedDeviceTypes = deviceTypesList.map(({ id, name, createdAt, updatedAt }) => ({
+        id,
+        name,
+        createdAt,
+        updatedAt
+      }));
+      
+      // Entferne userId und shopId aus den Marken
+      const cleanedBrands = brandsList.map(({ id, name, deviceTypeId, createdAt, updatedAt }) => ({
+        id,
+        name,
+        deviceTypeId,
+        createdAt,
+        updatedAt
+      }));
+      
+      // Entferne userId und shopId aus den Modellen
+      const cleanedModels = modelsList.map(({ id, name, brandId, modelSeriesId, createdAt, updatedAt }) => ({
+        id,
+        name,
+        brandId,
+        modelSeriesId,
+        createdAt,
+        updatedAt
+      }));
+      
       // Daten für Export zusammenstellen
       const exportData = {
-        deviceTypes: deviceTypesList,
-        brands: brandsList,
+        deviceTypes: cleanedDeviceTypes,
+        brands: cleanedBrands,
         // Leerer modelSeries Array für Abwärtskompatibilität hinzufügen
         modelSeries: [],
-        models: modelsList,
+        models: cleanedModels,
         deviceIssues: deviceIssuesList,
         exportedAt: new Date().toISOString(),
         version: "1.0"
