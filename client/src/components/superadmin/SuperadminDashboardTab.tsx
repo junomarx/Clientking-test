@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart,
   Bar,
@@ -22,6 +23,7 @@ import {
   Cell,
   Legend
 } from 'recharts';
+import SuperadminStatsOverview from './SuperadminStatsOverview';
 
 // Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
@@ -77,85 +79,106 @@ export default function SuperadminDashboardTab() {
         <p className="text-sm md:text-base text-muted-foreground">Hier können Sie die globalen Statistiken aller Shops und Benutzer einsehen.</p>
       </div>
 
-      {isLoading ? (
-        <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
-                <Skeleton className="h-3 md:h-4 w-24 md:w-36" />
-              </CardHeader>
-              <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
-                <Skeleton className="h-6 md:h-8 w-14 md:w-16" />
-                <Skeleton className="h-2 md:h-3 w-20 md:w-32 mt-1" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : stats ? (
-        <div className="space-y-4 md:space-y-6">
-          {/* Übersichtskarten */}
-          <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-            <StatsCard
-              title="Benutzer"
-              value={stats.users.totalUsers}
-              description="Gesamtanzahl der Benutzer"
-            />
-            <StatsCard
-              title="Shops"
-              value={stats.shops.totalShops}
-              description="Anzahl der Shops"
-            />
-            <StatsCard
-              title="Reparaturen"
-              value={stats.repairs.totalRepairs}
-              description="Gesamtanzahl der Reparaturen"
-            />
-            <StatsCard
-              title="Pakete"
-              value={stats.packages.totalPackages}
-              description="Anzahl der Pakete"
-            />
-          </div>
+      <Tabs defaultValue="basic" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="basic">Basis-Statistiken</TabsTrigger>
+          <TabsTrigger value="dsgvo">DSGVO-Statistiken</TabsTrigger>
+        </TabsList>
 
-          {/* Diagramme */}
-          <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
-            {/* Benutzer-Status-Diagramm */}
-            <Card className="col-span-1">
-              <CardHeader className="py-3 md:py-4">
-                <CardTitle className="text-base md:text-lg">Benutzer-Status</CardTitle>
-                <CardDescription className="text-xs md:text-sm">Aktive vs. inaktive Benutzer</CardDescription>
-              </CardHeader>
-              <CardContent className="h-60 md:h-80 p-2 md:p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                    <Pie
-                      data={userStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => 
-                        window.innerWidth < 768 
-                          ? `${(percent * 100).toFixed(0)}%`
-                          : `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={window.innerWidth < 768 ? 60 : 80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {userStatusData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+        <TabsContent value="basic" className="space-y-4">
+          {isLoading ? (
+            <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
+                    <Skeleton className="h-3 md:h-4 w-24 md:w-36" />
+                  </CardHeader>
+                  <CardContent className="px-3 md:px-6 pb-3 md:pb-6">
+                    <Skeleton className="h-6 md:h-8 w-14 md:w-16" />
+                    <Skeleton className="h-2 md:h-3 w-20 md:w-32 mt-1" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : stats ? (
+            <div className="space-y-4 md:space-y-6">
+              {/* Übersichtskarten */}
+              <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+                <StatsCard
+                  title="Benutzer"
+                  value={stats.users.totalUsers}
+                  description="Gesamtanzahl der Benutzer"
+                />
+                <StatsCard
+                  title="Shops"
+                  value={stats.shops.totalShops}
+                  description="Anzahl der Shops"
+                />
+                <StatsCard
+                  title="Reparaturen"
+                  value={stats.repairs.totalRepairs}
+                  description="Gesamtanzahl der Reparaturen"
+                />
+                <StatsCard
+                  title="Pakete"
+                  value={stats.packages.totalPackages}
+                  description="Anzahl der Pakete"
+                />
+              </div>
+
+              {/* Diagramme */}
+              <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
+                {/* Benutzer-Status-Diagramm */}
+                <Card className="col-span-1">
+                  <CardHeader className="py-3 md:py-4">
+                    <CardTitle className="text-base md:text-lg">Benutzer-Status</CardTitle>
+                    <CardDescription className="text-xs md:text-sm">Aktive vs. inaktive Benutzer</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-60 md:h-80 p-2 md:p-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <Pie
+                          data={userStatusData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => 
+                            window.innerWidth < 768 
+                              ? `${(percent * 100).toFixed(0)}%`
+                              : `${name}: ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={window.innerWidth < 768 ? 60 : 80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {userStatusData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <p>Keine Daten verfügbar</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="dsgvo">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">DSGVO-konforme Systemstatistiken</h2>
+              <p className="text-sm text-muted-foreground">
+                Anonymisierte Metriken und Systemdaten, die den Datenschutzrichtlinien entsprechen.
+              </p>
+            </div>
+            <SuperadminStatsOverview />
           </div>
-        </div>
-      ) : (
-        <p>Keine Daten verfügbar</p>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

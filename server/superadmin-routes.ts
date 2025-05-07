@@ -49,6 +49,95 @@ export function registerSuperadminRoutes(app: Express) {
   
   // Druckvorlagen-Routen registrieren
   registerSuperadminPrintTemplatesRoutes(app);
+  
+  // DSGVO-konforme Statistiken
+  app.get("/api/superadmin/stats-dsgvo", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Gesamtanzahl der Shops (basierend auf einzigartigen Shop-IDs)
+      const [shopsResult] = await db.select({
+        totalShops: sql<number>`COUNT(DISTINCT ${users.shopId})`.as("total_shops"),
+      }).from(users);
+      
+      const totalShops = shopsResult.totalShops;
+      
+      // Aktive Shops in den letzten 30 Tagen
+      // Ein Shop gilt als aktiv, wenn ein Benutzer dieses Shops sich in den letzten 30 Tagen angemeldet hat
+      // oder eine Reparatur erstellt wurde
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      // Aktive Shops basierend auf Reparaturen der letzten 30 Tage
+      const [activeShopsResult] = await db.select({
+        activeShops: sql<number>`COUNT(DISTINCT ${repairs.shopId})`.as("active_shops"),
+      })
+      .from(repairs)
+      .where(sql`${repairs.createdAt} >= ${thirtyDaysAgo.toISOString()}`);
+      
+      const activeShops = activeShopsResult.activeShops;
+      
+      // Reparaturen der letzten 30 Tage gruppiert nach Datum
+      const repairsLast30Days = await db.select({
+        date: sql<string>`DATE(${repairs.createdAt})`.as("date"),
+        count: sql<number>`COUNT(*)`.as("count"),
+      })
+      .from(repairs)
+      .where(sql`${repairs.createdAt} >= ${thirtyDaysAgo.toISOString()}`)
+      .groupBy(sql`DATE(${repairs.createdAt})`)
+      .orderBy(sql`DATE(${repairs.createdAt})`);
+      
+      // Anzahl der Benutzer pro Shop (DSGVO-konform: nur Anzahl, keine Namen)
+      const usersPerShop = await db.select({
+        shopId: users.shopId,
+        userCount: sql<number>`COUNT(*)`.as("user_count"),
+      })
+      .from(users)
+      .groupBy(users.shopId);
+      
+      // E-Mail-Statistiken
+      const [emailStats] = await db.select({
+        emailsSent: sql<number>`COUNT(*)`.as("emails_sent"),
+        lastEmailDate: sql<string>`MAX(${sql.raw("created_at")})`.as("last_email_date"),
+      })
+      .from(sql`email_history`)
+      .where(sql`created_at >= ${thirtyDaysAgo.toISOString()}`);
+      
+      // Paketnutzung
+      const packageUsage = await db.select({
+        packageName: packages.name,
+        userCount: sql<number>`COUNT(${users.id})`.as("user_count"),
+      })
+      .from(users)
+      .leftJoin(packages, eq(users.packageId, packages.id))
+      .groupBy(packages.name);
+      
+      // DSGVO-Vorgänge (Platzhalter, da wir keine spezifische Tabelle dafür haben)
+      // In einer realen Implementierung würden wir diese Daten aus einer separaten Tabelle abrufen
+      const dsgvoStats = {
+        dsgvoExports: 0,
+        dsgvoDeletes: 0,
+        lastExport: null,
+      };
+      
+      // Antwort zusammenstellen
+      const response = {
+        totalShops,
+        activeShops,
+        repairsLast30Days,
+        usersPerShop,
+        emailsSent: emailStats.emailsSent || 0,
+        lastEmailDate: emailStats.lastEmailDate,
+        packageUsage,
+        dsgvoExports: dsgvoStats.dsgvoExports,
+        dsgvoDeletes: dsgvoStats.dsgvoDeletes,
+        lastExport: dsgvoStats.lastExport,
+      };
+      
+      res.json(response);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der DSGVO-Statistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der DSGVO-Statistiken" });
+    }
+  });
   // Superadmin Dashboard Statistiken
   app.get("/api/superadmin/stats", isSuperadmin, async (req: Request, res: Response) => {
     try {

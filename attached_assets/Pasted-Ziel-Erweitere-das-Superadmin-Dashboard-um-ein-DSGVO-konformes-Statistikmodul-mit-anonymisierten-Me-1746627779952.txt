@@ -1,0 +1,158 @@
+Ziel:
+Erweitere das Superadmin-Dashboard um ein DSGVO-konformes Statistikmodul mit anonymisierten Metriken und Systemdaten. Die Daten sollen in einer neuen Datei SuperadminStatsOverview.tsx visualisiert und im Dashboard eingebunden werden.
+
+📊 Funktionen & Metriken
+1. Allgemein (DSGVO-konform & aggregiert):
+
+Gesamtanzahl Shops
+
+Anzahl aktive Shops (innerhalb der letzten 30 Tage)
+
+Reparaturen der letzten 30 Tage (Liniendiagramm)
+
+Anzahl Benutzer pro Shop (nur Anzahl, keine Namen)
+
+Paketverteilung (Balkendiagramm)
+
+2. Datenschutz-Infos
+
+DSGVO-Vorgänge der letzten 30 Tage: Anzahl Exporte, Löschanfragen
+
+Letzter DSGVO-Export
+
+3. E-Mail & Aktivität
+
+Anzahl E-Mails gesendet (30 Tage)
+
+Letzter Versandzeitpunkt
+
+Migrationen/Systemänderungen (nur Titel und Zeitstempel)
+
+🧩 Technisches
+Neue Datei anlegen: client/src/components/superadmin/SuperadminStatsOverview.tsx
+
+Abrufen über neuen API-Endpunkt: GET /api/superadmin/stats-dsgvo
+
+Verwendung von @tanstack/react-query
+
+Visualisierung: Recharts (LineChart, BarChart)
+
+Komponente im Dashboard einbinden
+
+🧱 Beispielcode für SuperadminStatsOverview.tsx
+tsx
+Kopieren
+Bearbeiten
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Card, CardHeader, CardTitle, CardContent, CardDescription
+} from "@/components/ui/card";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar
+} from 'recharts';
+
+interface DsgvoStats {
+  totalShops: number;
+  activeShops: number;
+  repairsLast30Days: { date: string; count: number }[];
+  usersPerShop: { shopId: number; userCount: number }[];
+  emailsSent: number;
+  lastEmailDate: string;
+  packageUsage: { packageName: string; userCount: number }[];
+  dsgvoExports: number;
+  dsgvoDeletes: number;
+  lastExport: string;
+}
+
+export default function SuperadminStatsOverview() {
+  const { data, isLoading, error } = useQuery<DsgvoStats>({
+    queryKey: ["/api/superadmin/stats-dsgvo"]
+  });
+
+  if (isLoading) return <p>Lade Statistiken…</p>;
+  if (error || !data) return <p>Fehler beim Laden der Daten</p>;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Shops insgesamt</CardTitle>
+          <CardDescription>Alle registrierten Shops</CardDescription>
+        </CardHeader>
+        <CardContent>{data.totalShops}</CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Aktive Shops (30 Tage)</CardTitle>
+          <CardDescription>Shops mit Aktivität</CardDescription>
+        </CardHeader>
+        <CardContent>{data.activeShops}</CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Reparaturen (30 Tage)</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data.repairsLast30Days}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Line type="monotone" dataKey="count" stroke="#0079F2" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Paketverteilung</CardTitle>
+        </CardHeader>
+        <CardContent className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.packageUsage}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="packageName" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="userCount" fill="#00C49F" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>DSGVO Exporte</CardTitle>
+          <CardDescription>Letzter Export: {data.lastExport}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.dsgvoExports} Exporte<br />
+          {data.dsgvoDeletes} Löschanfragen
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>E-Mail Aktivität</CardTitle>
+          <CardDescription>Letzter Versand: {data.lastEmailDate}</CardDescription>
+        </CardHeader>
+        <CardContent>{data.emailsSent} E-Mails (30 Tage)</CardContent>
+      </Card>
+    </div>
+  );
+}
+📌 Integration
+Binde diese Komponente im SuperadminDashboardTab.tsx ein mit:
+
+tsx
+Kopieren
+Bearbeiten
+import SuperadminStatsOverview from "./SuperadminStatsOverview";
+...
+<SuperadminStatsOverview />
+Danke dir! 🙏 Lass mich wissen, wenn du eine stats-dsgvo.json Beispiel-Antwort brauchst oder Hilfe bei der API-Route!
