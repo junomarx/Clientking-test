@@ -38,7 +38,12 @@ export default function CustomersPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             <div className="h-full">
-              <CustomersTab />
+              <CustomersTab 
+                onNewOrder={() => {
+                  // Create and dispatch a custom event for creating a new order
+                  window.dispatchEvent(new CustomEvent('trigger-new-order'));
+                }}
+              />
             </div>
           </ScrollArea>
         </main>

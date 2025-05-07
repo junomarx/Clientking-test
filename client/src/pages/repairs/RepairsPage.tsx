@@ -2,43 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
-import { NewOrderModal } from '@/components/NewOrderModal';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NewOrderModal } from '@/components/NewOrderModal';
 
 export default function RepairsPage() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  
-  const handleNewOrder = () => {
-    setIsNewOrderModalOpen(true);
-  };
-  
-  // Event-Listener für das Öffnen der Reparaturdetails
-  useEffect(() => {
-    const handleOpenRepairDetails = (event: CustomEvent) => {
-      const { repairId } = event.detail;
-      if (repairId) {
-        // Event-Objekt erstellen und auslösen, um den Dialog zu öffnen
-        const openDetailsEvent = new CustomEvent('open-repair-details-dialog', { 
-          detail: { repairId }
-        });
-        window.dispatchEvent(openDetailsEvent);
-      }
-    };
-    
-    window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
-    
-    return () => {
-      window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
-    };
-  }, []);
-  
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+
   // Abfrage für Kostenvoranschläge-Berechtigung für Header/Sidebar
   const { data: costEstimatesAccess } = useQuery<{ canUseCostEstimates: boolean }>({
     queryKey: ['/api/can-use-cost-estimates']
   });
   
   const canUseCostEstimates = costEstimatesAccess?.canUseCostEstimates || false;
+
+  // Event-Listener für "Neuer Auftrag" Button
+  useEffect(() => {
+    const handleTriggerNewOrder = () => {
+      console.log("Event für Neuer Auftrag empfangen");
+      setIsNewOrderModalOpen(true);
+    };
+
+    // Event-Listener registrieren
+    window.addEventListener('trigger-new-order', handleTriggerNewOrder);
+    
+    // Event-Listener beim Unmount entfernen
+    return () => {
+      window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
+    };
+  }, []);
+  
+  // Event Handler für das Öffnen der Reparaturdetails
+  const handleOpenRepairDetails = (event: CustomEvent) => {
+    if (event.detail && event.detail.repairId) {
+      // Die RepairsTab-Komponente wird dies intern behandeln, da wir die repairId weitergeben
+      console.log('RepairPage handleOpenRepairDetails for ID:', event.detail.repairId);
+    }
+  };
+  
+  // Event Listener für Reparaturdetails
+  React.useEffect(() => {
+    window.addEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    return () => {
+      window.removeEventListener('open-repair-details', handleOpenRepairDetails as EventListener);
+    };
+  }, []);
   
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
@@ -65,18 +74,16 @@ export default function RepairsPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             <div className="h-full">
-              <RepairsTab onNewOrder={handleNewOrder} />
+              <RepairsTab 
+                onNewOrder={() => {
+                  // Create and dispatch a custom event for creating a new order
+                  window.dispatchEvent(new CustomEvent('trigger-new-order'));
+                }}
+              />
             </div>
           </ScrollArea>
         </main>
       </div>
-      
-      {/* Modal für neuen Auftrag */}
-      <NewOrderModal
-        open={isNewOrderModalOpen}
-        onClose={() => setIsNewOrderModalOpen(false)}
-        customerId={null}
-      />
     </div>
   );
 }

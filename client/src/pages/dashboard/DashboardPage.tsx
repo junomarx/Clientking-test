@@ -1,17 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NewOrderModal } from '@/components/NewOrderModal';
 
 export default function DashboardPage() {
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+
   // Abfrage für Kostenvoranschläge-Berechtigung für Header/Sidebar
   const { data: costEstimatesAccess } = useQuery<{ canUseCostEstimates: boolean }>({
     queryKey: ['/api/can-use-cost-estimates']
   });
   
   const canUseCostEstimates = costEstimatesAccess?.canUseCostEstimates || false;
+
+  // Event-Listener für "Neuer Auftrag" Button
+  useEffect(() => {
+    const handleTriggerNewOrder = () => {
+      console.log("Event für Neuer Auftrag empfangen");
+      setIsNewOrderModalOpen(true);
+    };
+
+    // Event-Listener registrieren
+    window.addEventListener('trigger-new-order', handleTriggerNewOrder);
+    
+    // Event-Listener beim Unmount entfernen
+    return () => {
+      window.removeEventListener('trigger-new-order', handleTriggerNewOrder);
+    };
+  }, []);
   
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
@@ -38,11 +58,31 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             <div className="h-full">
-              <DashboardTab />
+              <DashboardTab 
+                onNewOrder={() => {
+                  // Create and dispatch a custom event for creating a new order
+                  window.dispatchEvent(new CustomEvent('trigger-new-order'));
+                }}
+                onTabChange={(tab) => {
+                  // Navigate to the appropriate page based on the tab
+                  if (tab === 'repairs') {
+                    window.location.href = '/app/repairs';
+                  } else if (tab === 'customers') {
+                    window.location.href = '/app/customers';
+                  }
+                }}
+              />
             </div>
           </ScrollArea>
         </main>
       </div>
+      
+      {/* Modal für neue Aufträge */}
+      <NewOrderModal 
+        open={isNewOrderModalOpen} 
+        onClose={() => setIsNewOrderModalOpen(false)}
+        customerId={selectedCustomerId}
+      />
     </div>
   );
 }
