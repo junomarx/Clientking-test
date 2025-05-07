@@ -458,41 +458,6 @@ export function BusinessSettingsTab() {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Bon-Einstellungen */}
-          <Card>
-            <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
-              <CardTitle className="text-base md:text-lg font-semibold">Bon-Einstellungen</CardTitle>
-              <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihre Bon-Ausgabe</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-              <FormField
-                control={form.control}
-                name="receiptWidth"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel className="text-sm">Bon-Breite</FormLabel>
-                    <FormControl>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger className="w-full h-9 text-sm">
-                          <SelectValue placeholder="Bon-Breite wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="58mm">58mm (Thermo-Drucker)</SelectItem>
-                          <SelectItem value="80mm">80mm (Standard-Drucker)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
         </form>
       </Form>
     </div>

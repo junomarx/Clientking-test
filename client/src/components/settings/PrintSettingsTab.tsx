@@ -1,10 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Printer, FileText, AlertTriangle } from 'lucide-react';
+import { Printer, FileText, AlertTriangle, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 // Typ-Definition für Print-Templates
 interface PrintTemplate {
@@ -17,9 +24,71 @@ interface PrintTemplate {
   updatedAt: string;
 }
 
+// Schema für die Bon-Einstellungen
+const receiptSettingsSchema = z.object({
+  receiptWidth: z.enum(["58mm", "80mm"])
+});
+
+type ReceiptSettingsFormValues = z.infer<typeof receiptSettingsSchema>;
+
 export function PrintSettingsTab() {
   const { toast } = useToast();
   const [activeTemplateType, setActiveTemplateType] = React.useState<string>("repair-order");
+  const { settings, isLoading: isLoadingSettings } = useBusinessSettings();
+  
+  // Formular für Bon-Einstellungen
+  const receiptForm = useForm<ReceiptSettingsFormValues>({
+    resolver: zodResolver(receiptSettingsSchema),
+    defaultValues: {
+      receiptWidth: "80mm",
+    },
+  });
+
+  // Initialisieren der Formularwerte, wenn Einstellungen geladen werden
+  React.useEffect(() => {
+    if (settings) {
+      const receiptWidth = (settings.receiptWidth === "58mm" || settings.receiptWidth === "80mm") 
+        ? settings.receiptWidth as "58mm" | "80mm" 
+        : "80mm" as const;
+      
+      receiptForm.reset({ receiptWidth });
+    }
+  }, [settings, receiptForm]);
+  
+  // Mutation für die Aktualisierung der Bon-Einstellungen
+  const updateReceiptSettingsMutation = useMutation({
+    mutationFn: async (data: ReceiptSettingsFormValues) => {
+      const response = await apiRequest("POST", "/api/business-settings", {
+        ...settings,
+        ...data
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
+      toast({
+        title: "Erfolg!",
+        description: "Die Bon-Einstellungen wurden gespeichert.",
+        duration: 2000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler!",
+        description: `Die Bon-Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    },
+  });
+
+  // Formular absenden
+  function onSubmitReceiptSettings(data: ReceiptSettingsFormValues) {
+    updateReceiptSettingsMutation.mutate(data);
+  }
   
   // Abfrage für Print-Templates
   const { data: templates, isLoading, error } = useQuery<PrintTemplate[]>({
@@ -81,6 +150,56 @@ export function PrintSettingsTab() {
           <p className="text-sm text-gray-500">Verwalten Sie Ihre Druckvorlagen</p>
         </div>
       </div>
+
+      {/* Bon-Einstellungen */}
+      <Card className="mb-6">
+        <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+          <CardTitle className="text-base md:text-lg font-semibold">Bon-Einstellungen</CardTitle>
+          <CardDescription className="text-xs md:text-sm">Konfigurieren Sie Ihre Bon-Ausgabe</CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
+          <Form {...receiptForm}>
+            <form onSubmit={receiptForm.handleSubmit(onSubmitReceiptSettings)} className="space-y-4">
+              <FormField
+                control={receiptForm.control}
+                name="receiptWidth"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel className="text-sm">Bon-Breite</FormLabel>
+                    <FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger className="w-full h-9 text-sm">
+                          <SelectValue placeholder="Bon-Breite wählen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="58mm">58mm (Thermo-Drucker)</SelectItem>
+                          <SelectItem value="80mm">80mm (Standard-Drucker)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end">
+                <Button 
+                  type="submit"
+                  disabled={updateReceiptSettingsMutation.isPending} 
+                  variant="default" 
+                  size="sm" 
+                  className="flex items-center h-8 text-xs px-3"
+                >
+                  <Save className="h-3 w-3 mr-1" /> Speichern
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
 
       {/* Mobile view: Select dropdown for template types */}
       <div className="block md:hidden mb-4">
