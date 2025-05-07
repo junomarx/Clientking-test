@@ -23,25 +23,28 @@ import {
   Legend
 } from 'recharts';
 
+// Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
   users: {
-    totalUsers: number;
-    activeUsers: number;
-    inactiveUsers: number;
-    admins: number;
-    totalShops: number;
+    totalUsers: string;
+    activeUsers: string;
+    inactiveUsers: string;
+  };
+  shops: {
+    totalShops: string;
   };
   repairs: {
-    totalRepairs: number;
-    received: number;
-    inRepair: number;
-    readyForPickup: number;
-    completed: number;
+    totalRepairs: string;
   };
   packages: {
-    packageName: string;
-    userCount: number;
-  }[];
+    totalPackages: string;
+  };
+  orders: {
+    totalOrders: string;
+  };
+  revenue: {
+    totalRevenue: string;
+  };
 }
 
 export default function SuperadminDashboardTab() {
@@ -59,18 +62,10 @@ export default function SuperadminDashboardTab() {
     });
   }
 
-  const packageUsageData = Array.isArray(stats?.packages) ? stats.packages : [];
-
+  // Benutzer-Status für das Kreisdiagramm vorbereiten
   const userStatusData = stats ? [
-    { name: 'Aktiv', value: stats.users.activeUsers },
-    { name: 'Inaktiv', value: stats.users.inactiveUsers },
-  ] : [];
-
-  const repairStatusData = stats ? [
-    { name: 'Eingegangen', value: stats.repairs.received },
-    { name: 'In Reparatur', value: stats.repairs.inRepair },
-    { name: 'Fertig', value: stats.repairs.readyForPickup },
-    { name: 'Abgeholt', value: stats.repairs.completed },
+    { name: 'Aktiv', value: parseInt(stats.users.activeUsers) || 0 },
+    { name: 'Inaktiv', value: parseInt(stats.users.inactiveUsers) || 0 },
   ] : [];
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -107,7 +102,7 @@ export default function SuperadminDashboardTab() {
             />
             <StatsCard
               title="Shops"
-              value={stats.users.totalShops}
+              value={stats.shops.totalShops}
               description="Anzahl der Shops"
             />
             <StatsCard
@@ -116,37 +111,14 @@ export default function SuperadminDashboardTab() {
               description="Gesamtanzahl der Reparaturen"
             />
             <StatsCard
-              title="Admins"
-              value={stats.users.admins}
-              description="Anzahl der Admins"
+              title="Pakete"
+              value={stats.packages.totalPackages}
+              description="Anzahl der Pakete"
             />
           </div>
 
           {/* Diagramme */}
           <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
-            {/* Paket-Nutzung-Diagramm */}
-            <Card className="col-span-1">
-              <CardHeader className="py-3 md:py-4">
-                <CardTitle className="text-base md:text-lg">Paket-Nutzung</CardTitle>
-                <CardDescription className="text-xs md:text-sm">Verteilung der Benutzer nach Paketen</CardDescription>
-              </CardHeader>
-              <CardContent className="h-60 md:h-80 p-2 md:p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={packageUsageData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="packageName" fontSize={12} />
-                    <YAxis allowDecimals={false} fontSize={12} width={25} />
-                    <RechartsTooltip />
-                    <Bar dataKey="userCount" fill="#8884d8" name="Benutzer">
-                      {packageUsageData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
             {/* Benutzer-Status-Diagramm */}
             <Card className="col-span-1">
               <CardHeader className="py-3 md:py-4">
@@ -179,39 +151,6 @@ export default function SuperadminDashboardTab() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            {/* Reparatur-Status-Diagramm */}
-            <Card className="col-span-1">
-              <CardHeader className="py-3 md:py-4">
-                <CardTitle className="text-base md:text-lg">Reparatur-Status</CardTitle>
-                <CardDescription className="text-xs md:text-sm">Verteilung der Reparaturen nach Status</CardDescription>
-              </CardHeader>
-              <CardContent className="h-60 md:h-80 p-2 md:p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                    <Pie
-                      data={repairStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => 
-                        window.innerWidth < 768 
-                          ? `${(percent * 100).toFixed(0)}%`
-                          : `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={window.innerWidth < 768 ? 60 : 80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {repairStatusData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
           </div>
         </div>
       ) : (
@@ -221,7 +160,7 @@ export default function SuperadminDashboardTab() {
   );
 }
 
-function StatsCard({ title, value, description }: { title: string; value: number; description: string }) {
+function StatsCard({ title, value, description }: { title: string; value: string; description: string }) {
   return (
     <Card>
       <CardHeader className="pb-2 px-3 md:px-6 pt-3 md:pt-6">
