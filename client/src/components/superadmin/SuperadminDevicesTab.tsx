@@ -1916,6 +1916,64 @@ export default function SuperadminDevicesTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Dialog zum Erstellen einer neuen Marke */}
+      <Dialog open={isCreateBrandOpen} onOpenChange={setIsCreateBrandOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Neue Marke erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie eine neue Marke zum System hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="brandName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="brandName"
+                value={brandForm.name}
+                onChange={(e) => setBrandForm({...brandForm, name: e.target.value})}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="brandDeviceType" className="text-right">
+                Gerätetyp
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : ""}
+                  onValueChange={(value) => setBrandForm({...brandForm, deviceTypeId: parseInt(value)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Gerätetyp auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userDeviceTypes?.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        <div className="flex items-center gap-2">
+                          {getDeviceTypeIcon(type.name)}
+                          <span>{type.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateBrandOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleSubmitCreateBrand} disabled={!brandForm.name || !brandForm.deviceTypeId}>
+              Erstellen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
