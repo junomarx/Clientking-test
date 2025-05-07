@@ -81,38 +81,44 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-muted/10">
+      {/* Main content area */}
+      <div className="flex flex-col flex-1 overflow-hidden">
         <Header variant="app" />
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        
-        <div className="tab-content">
-          {activeTab === 'dashboard' && (
-            <DashboardTab 
-              onNewOrder={handleNewOrder} 
-              onTabChange={setActiveTab} 
-            />
-          )}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
           
-          {activeTab === 'repairs' && (
-            <RepairsTab onNewOrder={handleNewOrder} />
-          )}
-          
-          {activeTab === 'customers' && (
-            <CustomersTab onNewOrder={handleNewOrder} />
-          )}
-          
-          {activeTab === 'statistics' && (
-            <StatisticsTab onTabChange={setActiveTab} />
-          )}
-          
-          {activeTab === 'cost-estimates' && (
-            <CostEstimatesTab />
-          )}
-          
-          {activeTab === 'settings' && (
-            <SettingsPageContent />
-          )}
+          {/* Main content */}
+          <main className="flex-1 overflow-auto p-3 md:p-6">
+            <div className="h-full">
+              {activeTab === 'dashboard' && (
+                <DashboardTab 
+                  onNewOrder={handleNewOrder} 
+                  onTabChange={setActiveTab} 
+                />
+              )}
+              
+              {activeTab === 'repairs' && (
+                <RepairsTab onNewOrder={handleNewOrder} />
+              )}
+              
+              {activeTab === 'customers' && (
+                <CustomersTab onNewOrder={handleNewOrder} />
+              )}
+              
+              {activeTab === 'statistics' && (
+                <StatisticsTab onTabChange={setActiveTab} />
+              )}
+              
+              {activeTab === 'cost-estimates' && (
+                <CostEstimatesTab />
+              )}
+              
+              {activeTab === 'settings' && (
+                <SettingsPageContent />
+              )}
+            </div>
+          </main>
         </div>
       </div>
       

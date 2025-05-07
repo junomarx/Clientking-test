@@ -67,48 +67,149 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   };
 
   return (
-    <div className="bg-white border-b border-gray-200">
-      {/* Mobile Menü Button - nur auf kleinen Bildschirmen sichtbar */}
+    <div className="bg-background border-b">
+      {/* Desktop Navigation als Tabs im Superadmin-Stil */}
+      <div className="w-full overflow-x-auto hide-scrollbar">
+        <div className="border-b px-1 md:px-6">
+          <div className="flex space-x-1">
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'dashboard' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('dashboard')}
+            >
+              <span className="mr-2">📊</span> Dashboard
+            </button>
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'repairs' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('repairs')}
+            >
+              <span className="mr-2">🔧</span> Reparaturen
+            </button>
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'customers' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('customers')}
+            >
+              <span className="mr-2">👥</span> Kunden
+            </button>
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'statistics' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('statistics')}
+            >
+              <BarChart className="mr-2 inline h-4 w-4" /> Statistiken
+            </button>
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'cost-estimates' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : !canUseCostEstimates
+                    ? 'text-muted-foreground/50 cursor-not-allowed' 
+                    : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('cost-estimates')}
+              disabled={!canUseCostEstimates}
+            >
+              <FileText className="mr-2 inline h-4 w-4" />
+              {!canUseCostEstimates ? (
+                <span className="flex items-center">
+                  Kostenvoranschläge
+                  <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
+                </span>
+              ) : (
+                "Kostenvoranschläge"
+              )}
+            </button>
+            <button 
+              className={`px-3 py-3 text-sm font-medium transition-all rounded-t-md ${
+                activeTab === 'settings' 
+                  ? 'text-primary bg-primary/10 border-b-2 border-primary' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabChange('settings')}
+            >
+              <span className="mr-2">⚙️</span> Einstellungen
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Dropdown-Button bleibt für schmale Bildschirme, aber mit angepasstem Styling */}
       <div className="md:hidden flex justify-between items-center px-4 py-2">
         <div className="font-semibold text-primary">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</div>
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-md hover:bg-gray-100"
+          className="p-2 rounded-md hover:bg-muted"
           aria-label={mobileMenuOpen ? "Menü schließen" : "Menü öffnen"}
         >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Mobile Dropdown Menü */}
+      {/* Mobile Dropdown-Menü mit angepasstem Styling */}
       {mobileMenuOpen && (
-        <div className="md:hidden py-2 px-4 space-y-1 bg-white shadow-md">
+        <div className="md:hidden py-2 px-4 space-y-1 shadow-sm border-t">
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'dashboard' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'dashboard' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('dashboard')}
           >
             <span className="mr-2">📊</span> Dashboard
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'repairs' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'repairs' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('repairs')}
           >
             <span className="mr-2">🔧</span> Reparaturen
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'customers' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'customers' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('customers')}
           >
             <span className="mr-2">👥</span> Kunden
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'statistics' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'statistics' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('statistics')}
           >
             <BarChart className="mr-2 inline h-4 w-4" /> Statistiken
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'cost-estimates' ? 'bg-primary/10 text-primary font-medium' : !canUseCostEstimates ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'cost-estimates' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : !canUseCostEstimates 
+                  ? 'text-muted-foreground/50 cursor-not-allowed' 
+                  : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('cost-estimates')}
             disabled={!canUseCostEstimates}
           >
@@ -123,90 +224,17 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
             )}
           </button>
           <button 
-            className={`w-full py-3 px-4 text-left rounded-md ${activeTab === 'settings' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600'}`}
+            className={`w-full py-2 px-3 text-left rounded-md text-sm ${
+              activeTab === 'settings' 
+                ? 'bg-primary/10 text-primary font-medium' 
+                : 'text-muted-foreground'
+            }`}
             onClick={() => handleTabChange('settings')}
           >
             <span className="mr-2">⚙️</span> Einstellungen
           </button>
         </div>
       )}
-
-      {/* Desktop Navigation - nur auf mittelgroßen und größeren Bildschirmen sichtbar */}
-      <div className="hidden md:flex justify-between overflow-x-auto">
-        <div className="flex overflow-x-auto">
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'dashboard' 
-                ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('dashboard')}
-          >
-            <span className="mr-2">📊</span> Dashboard
-          </button>
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'repairs' 
-                ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('repairs')}
-          >
-            <span className="mr-2">🔧</span> Reparaturen
-          </button>
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'customers' 
-                ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('customers')}
-          >
-            <span className="mr-2">👥</span> Kunden
-          </button>
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'statistics' 
-                ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('statistics')}
-          >
-            <BarChart className="mr-2 h-4 w-4" /> Statistiken
-          </button>
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'cost-estimates' 
-                ? 'text-primary border-b-2 border-primary' 
-                : !canUseCostEstimates
-                  ? 'text-gray-400 hover:text-gray-400 border-b-2 border-transparent cursor-not-allowed' 
-                  : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('cost-estimates')}
-            disabled={!canUseCostEstimates}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            {!canUseCostEstimates ? (
-              <span className="flex items-center">
-                Kostenvoranschläge
-                <AlertCircle className="ml-1 h-3 w-3 text-amber-500" />
-              </span>
-            ) : (
-              "Kostenvoranschläge"
-            )}
-          </button>
-          <button 
-            className={`px-4 py-4 font-semibold ${
-              activeTab === 'settings' 
-                ? 'text-primary border-b-2 border-primary' 
-                : 'text-gray-500 hover:text-primary border-b-2 border-transparent'
-            } transition-all flex items-center`}
-            onClick={() => handleTabChange('settings')}
-          >
-            <span className="mr-2">⚙️</span> Einstellungen
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
