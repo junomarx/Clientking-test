@@ -397,3 +397,180 @@
 .status-badge.status-ausser-haus {
   @apply bg-indigo-100 text-indigo-800;
 }
+
+/* Mobile Optimierung */
+@media (max-width: 768px) {
+  /* Tabs untereinander als Buttons anzeigen */
+  .TabsList, 
+  [role="tablist"],
+  .tabs-list {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+  }
+
+  .TabsTrigger, 
+  [role="tab"],
+  .tab-trigger {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    font-size: 1rem !important;
+    text-align: center !important;
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.25rem !important;
+    display: block !important;
+  }
+
+  /* Formularfelder responsive gestalten */
+  input, 
+  select, 
+  textarea, 
+  .Input, 
+  .Select, 
+  .Textarea,
+  [class*="input"],
+  [class*="select"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 1rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Selects und deren Trigger responsive */
+  .SelectTrigger,
+  [class*="selectTrigger"],
+  .select-trigger {
+    width: 100% !important;
+  }
+
+  /* Row-Klassen vertikal anordnen */
+  .row,
+  .form-row,
+  .flex.space-x-2,
+  .flex.space-x-3,
+  .flex.space-x-4 {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Für grid-basierte Layouts in mobile umwandeln */
+  .grid,
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Form-Elemente besser ausrichten */
+  .FormItem,
+  [class*="formItem"],
+  .form-item,
+  .form-field {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Dialog/Modal Größe anpassen */
+  .Dialog, 
+  .Modal,
+  [role="dialog"],
+  .dialog-content,
+  [class*="dialogContent"] {
+    width: 95% !important;
+    max-width: 95vw !important;
+    margin: 0 auto !important;
+  }
+
+  /* Bessere Lesbarkeit durch größere Text-Abstände */
+  p, 
+  label, 
+  .FormLabel,
+  [class*="formLabel"],
+  .form-label {
+    margin-bottom: 0.5rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Buttons größer und besser tippbar */
+  button,
+  .Button,
+  [class*="button"],
+  .btn {
+    min-height: 2.75rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+    text-align: center !important;
+    display: block !important;
+  }
+
+  /* Cards mehr Platz geben */
+  .Card,
+  [class*="card"],
+  .card {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    width: 100% !important;
+  }
+
+  /* Card-Header und Content anpassen */
+  .CardHeader,
+  [class*="cardHeader"],
+  .card-header {
+    padding: 0.5rem !important;
+  }
+
+  .CardContent,
+  [class*="cardContent"],
+  .card-content {
+    padding: 0.5rem !important;
+  }
+
+  /* Wichtig für flex-basierte Layouts, die nebeneinander sind */
+  .flex-row,
+  .items-center {
+    flex-direction: column !important;
+  }
+
+  /* Tabellen horizontal scrollbar machen */
+  table,
+  .Table,
+  [class*="table"] {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    width: 100% !important;
+  }
+
+  /* Speziell für shadcn UI Komponenten */
+  .CalendarHeader,
+  .CalendarMonthSelector,
+  .ComboboxTrigger,
+  .CommandInput,
+  .DropdownMenuContent,
+  .MenubarContent,
+  .NavigationMenuContent,
+  .PopoverContent,
+  .ResizablePanelGroup,
+  .ScrollArea,
+  .SheetContent,
+  .ToastViewport {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Ausnahme für Buttons im horizontalen Layout */
+  .inline-flex button,
+  .flex.gap-2 button,
+  .flex.gap-3 button,
+  .flex.gap-4 button,
+  .actions button,
+  .action-buttons button {
+    width: auto !important;
+    display: inline-flex !important;
+  }
+}
+}
