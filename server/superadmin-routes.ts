@@ -2255,7 +2255,7 @@ export function registerSuperadminRoutes(app: Express) {
       res.send(csvContent);
     } catch (error) {
       console.error("Fehler beim CSV-Export der Marken:", error);
-      res.status(500).send(`Fehler beim CSV-Export der Marken: ${error.message}`);
+      res.status(500).send(`Fehler beim CSV-Export der Marken: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     }
   });
   
@@ -2350,7 +2350,7 @@ export function registerSuperadminRoutes(app: Express) {
       res.send(csvContent);
     } catch (error) {
       console.error("Fehler beim CSV-Export der Modelle:", error);
-      res.status(500).send(`Fehler beim CSV-Export der Modelle: ${error.message}`);
+      res.status(500).send(`Fehler beim CSV-Export der Modelle: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     }
   });
   
@@ -2456,7 +2456,7 @@ export function registerSuperadminRoutes(app: Express) {
       res.json({ importedCount });
     } catch (error) {
       console.error("Fehler beim CSV-Import der Marken:", error);
-      res.status(500).send(`Fehler beim CSV-Import der Marken: ${error.message}`);
+      res.status(500).send(`Fehler beim CSV-Import der Marken: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     }
   });
   
@@ -2593,7 +2593,7 @@ export function registerSuperadminRoutes(app: Express) {
       res.json({ importedCount });
     } catch (error) {
       console.error("Fehler beim CSV-Import der Modelle:", error);
-      res.status(500).send(`Fehler beim CSV-Import der Modelle: ${error.message}`);
+      res.status(500).send(`Fehler beim CSV-Import der Modelle: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     }
   });
 }

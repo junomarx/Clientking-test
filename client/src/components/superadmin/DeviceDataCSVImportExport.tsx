@@ -480,7 +480,7 @@ export default function DeviceDataCSVImportExport() {
       </CardContent>
       <CardFooter className="flex justify-between">
         <p className="text-sm text-muted-foreground">
-          Hinweis: Die CSV-Dateien sollten UTF-8 kodiert sein und Semikolon (;) als Trennzeichen verwenden.
+          Hinweis: Die CSV-Dateien sollten UTF-8 kodiert sein und Komma (,) als Trennzeichen verwenden.
         </p>
       </CardFooter>
     </Card>
