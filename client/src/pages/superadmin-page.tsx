@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail, FileCode, Store } from "lucide-react";
+import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail, FileCode, Layout } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -136,15 +136,15 @@ export default function SuperadminPage() {
         Vorlagen
       </Button>
       <Button 
-        variant={activeTab === "shops" ? "default" : "ghost"}
+        variant={activeTab === "design-preview" ? "default" : "ghost"}
         className="w-full justify-start"
         onClick={() => {
-          setActiveTab("shops");
+          setActiveTab("design-preview");
           if (isMobile) closeMenu();
         }}
       >
-        <Store className="h-5 w-5 mr-2" />
-        Shops
+        <Layout className="h-5 w-5 mr-2" />
+        Designvorschau
       </Button>
 
     </>
@@ -240,7 +240,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräte"}
               {activeTab === "email" && "E-Mail"}
               {activeTab === "print-templates" && "Vorlagen"}
-              {activeTab === "shops" && "Shops"}
+              {activeTab === "design-preview" && "Designvorschau"}
             </h1>
           </div>
           
@@ -253,7 +253,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräteverwaltung"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
-              {activeTab === "shops" && "Shop Vorschau"}
+              {activeTab === "design-preview" && "Benutzeroberfläche Vorschau"}
             </h1>
             <p className="text-sm text-muted-foreground">
               Angemeldet als {currentUser && currentUser.username || ""}
@@ -280,7 +280,7 @@ export default function SuperadminPage() {
             {activeTab === "devices" && <SuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
-            {activeTab === "shops" && <SuperadminShopsPreview />}
+            {activeTab === "design-preview" && <SuperadminShopsPreview />}
           </ScrollArea>
         </main>
       </div>
