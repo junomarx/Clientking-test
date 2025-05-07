@@ -1,0 +1,61 @@
+Bitte überarbeite das ClientKing-Frontend-Layout folgendermaßen:
+
+🔁 1. Entferne alle <Tabs>, <TabsList>, <TabsTrigger>, <TabsContent> Komponenten projektweit.
+➡️ 2. Ersetze jede Tab-Ansicht durch eine eigene Seite/Komponente mit eigener Route.
+
+📁 3. Gruppiere diese Seiten unter einem übergeordneten Menüpunkt „⚙️ Einstellungen“ in der Sidebar:
+   - Geschäft → /settings/shop
+   - E-Mail → /settings/email
+   - Drucken → /settings/print
+   - Abonnement → /settings/plan
+   - Benutzerkonto → /settings/user
+
+👤 4. Auch bei Benutzer-Bearbeitungsseiten:
+   - Benutzer-Einstellungen → /superadmin/users/:id/settings
+   - Berechtigungen → /superadmin/users/:id/permissions
+   - Unternehmensdaten → /superadmin/users/:id/company
+
+📱 5. Mach die Sidebar scrollbar, falls die Bildschirmhöhe zu klein ist:
+```css
+.sidebar {
+  overflow-y: auto;
+  max-height: 100vh;
+}
+✅ 6. Entferne alle alten Tab-Komponenten aus dem Projekt.
+
+📦 Beispiel-React-Code für eine Sidebar-Navigation mit Gruppierung:
+
+tsx
+Kopieren
+Bearbeiten
+import { NavLink } from "react-router-dom";
+
+export default function Sidebar() {
+  return (
+    <div className="sidebar w-64 bg-white border-r px-4 py-6 space-y-4 overflow-y-auto h-screen">
+      <h2 className="text-lg font-bold">ClientKing</h2>
+      
+      <div className="space-y-2">
+        <NavLink to="/dashboard" className="nav-link">📊 Dashboard</NavLink>
+        <NavLink to="/repairs" className="nav-link">🛠 Reparaturen</NavLink>
+        <NavLink to="/customers" className="nav-link">👥 Kunden</NavLink>
+        <NavLink to="/statistics" className="nav-link">📈 Statistiken</NavLink>
+        <NavLink to="/quotes" className="nav-link">📄 Kostenvoranschläge</NavLink>
+      </div>
+
+      <h3 className="text-sm mt-4 uppercase text-gray-500">Einstellungen</h3>
+      <div className="space-y-2">
+        <NavLink to="/settings/shop" className="nav-link">🏬 Geschäft</NavLink>
+        <NavLink to="/settings/email" className="nav-link">✉️ E-Mail</NavLink>
+        <NavLink to="/settings/print" className="nav-link">🖨 Drucken</NavLink>
+        <NavLink to="/settings/plan" className="nav-link">📦 Abonnement</NavLink>
+        <NavLink to="/settings/user" className="nav-link">🙍‍♂️ Benutzerdaten</NavLink>
+      </div>
+
+      <div className="mt-6">
+        <NavLink to="/logout" className="nav-link text-red-600">🚪 Ausloggen</NavLink>
+      </div>
+    </div>
+  );
+}
+📝 Bitte achte darauf, die alten Tabs-Komponenten vollständig aus dem Projekt zu entfernen und die neuen Seiten als eigenständige Komponenten im Routing zu integrieren.
