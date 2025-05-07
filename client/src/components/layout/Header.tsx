@@ -12,7 +12,8 @@ import {
   Wrench,
   Users,
   BarChart2,
-  FileText
+  FileText,
+  PlusCircle
 } from "lucide-react";
 import { useState } from "react";
 import ClientKingLogo from "../../assets/ClientKing_Logo.png";
@@ -99,16 +100,13 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       variant="default"
                       className="w-full justify-start mb-4 bg-gradient-to-r from-primary to-blue-600"
                       onClick={() => {
-                        // Versuche die onNewOrder Funktion aus den Props zu bekommen
-                        if (window.dispatchEvent) {
-                          // Event senden, dass ein neuer Auftrag erstellt werden soll
-                          window.dispatchEvent(new CustomEvent('trigger-new-order'));
-                        }
+                        // Event senden, dass ein neuer Auftrag erstellt werden soll
+                        window.dispatchEvent(new CustomEvent('trigger-new-order'));
                         // Schließt das Menü
                         document.body.click();
                       }}
                     >
-                      <FileText className="h-5 w-5 mr-2" />
+                      <PlusCircle className="h-5 w-5 mr-2" />
                       Neuer Auftrag
                     </Button>
                     
@@ -189,13 +187,13 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       <Button 
                         variant="outline" 
                         className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
-                        asChild
-                        onClick={() => document.body.click()} // Schließt das Menü
+                        onClick={() => {
+                          window.location.href = "/auth?superadmin=true";
+                          document.body.click(); // Schließt das Menü
+                        }}
                       >
-                        <Link href="/auth?superadmin=true">
-                          <Shield className="h-5 w-5 mr-2 text-red-500" />
-                          <span className="text-red-500 font-medium">Login als macnphone</span>
-                        </Link>
+                        <Shield className="h-5 w-5 mr-2 text-red-500" />
+                        <span className="text-red-500 font-medium">Login als macnphone</span>
                       </Button>
                     )}
                     
@@ -204,13 +202,13 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       <Button 
                         variant="outline" 
                         className="w-full justify-start mb-2"
-                        asChild
-                        onClick={() => document.body.click()} // Schließt das Menü
+                        onClick={() => {
+                          window.location.href = "/admin";
+                          document.body.click(); // Schließt das Menü
+                        }}
                       >
-                        <Link href="/admin">
-                          <Shield className="h-5 w-5 mr-2" />
-                          Admin-Bereich
-                        </Link>
+                        <Shield className="h-5 w-5 mr-2" />
+                        Admin-Bereich
                       </Button>
                     )}
                     
@@ -219,13 +217,13 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       <Button 
                         variant="outline" 
                         className="w-full justify-start mb-2"
-                        asChild
-                        onClick={() => document.body.click()} // Schließt das Menü
+                        onClick={() => {
+                          window.location.href = "/superadmin";
+                          document.body.click(); // Schließt das Menü
+                        }}
                       >
-                        <Link href="/superadmin">
-                          <Shield className="h-5 w-5 mr-2 text-red-500" />
-                          <span className="text-red-500">Superadmin</span>
-                        </Link>
+                        <Shield className="h-5 w-5 mr-2 text-red-500" />
+                        <span className="text-red-500">Superadmin</span>
                       </Button>
                     )}
                     <Button 
