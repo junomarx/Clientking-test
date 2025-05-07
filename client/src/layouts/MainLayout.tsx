@@ -14,7 +14,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   
   // Bestimme den aktiven Tab aus der URL-Route
   let activeTab = 'dashboard';
-  if (location.startsWith('/app/repairs')) activeTab = 'repairs';
+  if (location.startsWith('/app/dashboard')) activeTab = 'dashboard';
+  else if (location.startsWith('/app/repairs')) activeTab = 'repairs';
   else if (location.startsWith('/app/customers')) activeTab = 'customers';
   else if (location.startsWith('/app/statistics')) activeTab = 'statistics';
   else if (location.startsWith('/app/cost-estimates')) activeTab = 'cost-estimates';

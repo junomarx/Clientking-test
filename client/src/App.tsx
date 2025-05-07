@@ -133,28 +133,102 @@ const AppIndexRedirect = () => <Redirect to="/app/dashboard" />;
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
+      <Route path="/">
+        {location => {
+          if (location === "/") return <LandingPage />;
+          return null;
+        }}
+      </Route>
+      
+      {/* Redirect /app to /app/dashboard */}
+      <Route path="/app">
+        {location => {
+          if (location === "/app") return <Redirect to="/app/dashboard" />;
+          return null;
+        }}
+      </Route>
       
       {/* App Routen mit MainLayout */}
-      <ProtectedRoute path="/app">
-        <MainLayout>
-          <Switch>
-            <Route path="/app" component={AppIndexRedirect} />
-            <Route path="/app/dashboard" component={AppDashboard} />
-            <Route path="/app/repairs" component={AppRepairs} />
-            <Route path="/app/customers" component={AppCustomers} />
-            <Route path="/app/statistics" component={StatisticsPage} />
-            <Route path="/app/cost-estimates" component={CostEstimatesPage} />
-            
-            {/* Einstellungsrouten */}
-            <Route path="/app/settings/shop" component={BusinessSettingsTab} />
-            <Route path="/app/settings/email" component={EmailSettingsTab} />
-            <Route path="/app/settings/print" component={PrintSettingsTab} />
-            <Route path="/app/settings/plan" component={SubscriptionSettingsTab} />
-            <Route path="/app/settings/user" component={UserSettingsTab} />
-          </Switch>
-        </MainLayout>
-      </ProtectedRoute>
+      <Route path="/app/dashboard">
+        <ProtectedRoute path="/app/dashboard">
+          <MainLayout>
+            <AppDashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/repairs">
+        <ProtectedRoute path="/app/repairs">
+          <MainLayout>
+            <AppRepairs />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/customers">
+        <ProtectedRoute path="/app/customers">
+          <MainLayout>
+            <AppCustomers />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/statistics">
+        <ProtectedRoute path="/app/statistics">
+          <MainLayout>
+            <StatisticsPage />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/cost-estimates">
+        <ProtectedRoute path="/app/cost-estimates">
+          <MainLayout>
+            <CostEstimatesPage />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      {/* Einstellungsrouten */}
+      <Route path="/app/settings/shop">
+        <ProtectedRoute path="/app/settings/shop">
+          <MainLayout>
+            <BusinessSettingsTab />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/settings/email">
+        <ProtectedRoute path="/app/settings/email">
+          <MainLayout>
+            <EmailSettingsTab />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/settings/print">
+        <ProtectedRoute path="/app/settings/print">
+          <MainLayout>
+            <PrintSettingsTab />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/settings/plan">
+        <ProtectedRoute path="/app/settings/plan">
+          <MainLayout>
+            <SubscriptionSettingsTab />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/app/settings/user">
+        <ProtectedRoute path="/app/settings/user">
+          <MainLayout>
+            <UserSettingsTab />
+          </MainLayout>
+        </ProtectedRoute>
+      </Route>
       
       <AdminProtectedRoute path="/admin">
         <AdminPage />
