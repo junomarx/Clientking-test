@@ -2203,10 +2203,10 @@ export default function SuperadminDevicesTab() {
 
       {/* Dialog zum Erstellen eines neuen Modells */}
       <Dialog open={isCreateModelOpen} onOpenChange={setIsCreateModelOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Neues Modell erstellen</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Neues Modell erstellen</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Fügen Sie ein neues Modell zum System hinzu.
             </DialogDescription>
           </DialogHeader>
