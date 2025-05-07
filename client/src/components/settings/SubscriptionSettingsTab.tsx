@@ -77,15 +77,15 @@ export function SubscriptionSettingsTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex items-center mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Mein Abonnement</h1>
-          <p className="text-gray-500">Verwalten Sie Ihr Abonnement und erhalten Sie Informationen zu Ihrem aktuellen Plan</p>
+          <h1 className="text-xl md:text-2xl font-bold">Mein Abonnement</h1>
+          <p className="text-sm text-gray-500">Informationen zu Ihrem aktuellen Plan</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* Aktuelle Abo-Karte */}
         <div className="md:col-span-2">
           <Card className={`overflow-hidden border-2 ${
@@ -100,27 +100,27 @@ export function SubscriptionSettingsTab() {
             }`}>
               Aktives Abonnement
             </div>
-            <CardHeader className="pt-4">
+            <CardHeader className="pt-4 p-4 md:p-6">
               <CardTitle className="flex items-center">
-                <Package className="h-5 w-5 mr-2" />
-                <span className="text-xl">{quotaData.displayName}</span>
+                <Package className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                <span className="text-lg md:text-xl">{quotaData.displayName}</span>
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs md:text-sm">
                 <span className="block">Abrechnungszeitraum: {quotaData.currentMonth} {quotaData.currentYear}</span>
                 <span className="block mt-1">Nächste Abrechnung: 01.{quotaData.currentMonth === 'Dezember' ? 'Januar' : 'Juni'} {quotaData.currentMonth === 'Dezember' ? quotaData.currentYear + 1 : quotaData.currentYear}</span>
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
+            <CardContent className="p-4 md:p-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* Status-Anzeige */}
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-md">
+                <div className="flex items-center justify-between p-2 md:p-3 bg-green-50 rounded-md">
                   <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                    <span className="font-medium">Aktiv</span>
+                    <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-green-500 mr-1 md:mr-2" />
+                    <span className="font-medium text-sm md:text-base">Aktiv</span>
                   </div>
-                  <Button variant="link" size="sm" className="text-green-600 p-0 h-auto" asChild>
+                  <Button variant="link" size="sm" className="text-green-600 p-0 h-auto text-xs md:text-sm" asChild>
                     <a href="mailto:support@handyshop-verwaltung.at">
-                      Support kontaktieren <ArrowUpRight className="h-3 w-3 ml-1" />
+                      Support <span className="hidden md:inline">kontaktieren</span> <ArrowUpRight className="h-3 w-3 ml-1" />
                     </a>
                   </Button>
                 </div>

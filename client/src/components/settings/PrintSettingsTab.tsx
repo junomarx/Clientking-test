@@ -74,16 +74,31 @@ export function PrintSettingsTab() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex justify-between items-center mb-4 md:mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Druckeinstellungen</h1>
-          <p className="text-gray-500">Verwalten Sie Ihre Druckvorlagen</p>
+          <h1 className="text-xl md:text-2xl font-bold">Druckeinstellungen</h1>
+          <p className="text-sm text-gray-500">Verwalten Sie Ihre Druckvorlagen</p>
         </div>
       </div>
 
+      {/* Mobile view: Select dropdown for template types */}
+      <div className="block md:hidden mb-4">
+        <select 
+          className="w-full p-2 border rounded-md text-sm" 
+          value={activeTemplateType}
+          onChange={(e) => setActiveTemplateType(e.target.value)}
+        >
+          <option value="repair-order">Reparaturaufträge</option>
+          <option value="receipt">Kassenbelege</option>
+          <option value="pickup">Abholscheine</option>
+          <option value="cost-estimate">Kostenvoranschläge</option>
+        </select>
+      </div>
+
       <Tabs value={activeTemplateType} onValueChange={setActiveTemplateType}>
-        <TabsList className="mb-6">
+        {/* Desktop view: Tab list */}
+        <TabsList className="mb-6 hidden md:flex">
           <TabsTrigger value="repair-order">Reparaturaufträge</TabsTrigger>
           <TabsTrigger value="receipt">Kassenbelege</TabsTrigger>
           <TabsTrigger value="pickup">Abholscheine</TabsTrigger>
@@ -93,11 +108,11 @@ export function PrintSettingsTab() {
         <TabsContent value="repair-order">
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">Vorlagen für Reparaturaufträge</CardTitle>
-                <CardDescription>Diese Vorlagen werden für Reparaturaufträge verwendet</CardDescription>
+              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">Vorlagen für Reparaturaufträge</CardTitle>
+                <CardDescription className="text-xs md:text-sm">Diese Vorlagen werden für Reparaturaufträge verwendet</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 {repairOrderTemplates.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Printer className="h-12 w-12 mx-auto mb-3 text-gray-400" />
@@ -107,27 +122,27 @@ export function PrintSettingsTab() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     {repairOrderTemplates.map((template) => (
                       <Card key={template.id} className={`overflow-hidden ${template.isDefault ? 'border-green-300 bg-green-50' : ''}`}>
-                        <CardHeader className="pb-2">
+                        <CardHeader className="p-3 md:p-4 pb-1 md:pb-2">
                           <div className="flex justify-between items-center">
-                            <CardTitle className="text-md">{template.title}</CardTitle>
+                            <CardTitle className="text-sm md:text-md">{template.title}</CardTitle>
                             {template.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Standard</span>
+                              <span className="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Standard</span>
                             )}
                           </div>
-                          <CardDescription className="text-xs">
+                          <CardDescription className="text-[10px] md:text-xs">
                             Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleDateString()}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="flex justify-end space-x-2 mt-4">
+                        <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
+                          <div className="flex justify-end space-x-2 mt-2 md:mt-4">
                             <Button 
                               variant="outline" 
                               size="sm"
                               onClick={() => handlePrintTest(template.id)}
-                              className="text-xs"
+                              className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3"
                             >
                               <Printer className="h-3 w-3 mr-1" />
                               Testdruck
