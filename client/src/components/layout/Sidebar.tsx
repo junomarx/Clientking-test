@@ -15,8 +15,14 @@ import {
   LogOut,
   ChevronLeft,
   Shield,
-  PlusCircle
+  PlusCircle,
+  Building,
+  Mail,
+  Printer,
+  Package,
+  UserCog
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface SidebarProps {
   activeTab: string;
@@ -52,75 +58,132 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
         Neuer Auftrag
       </Button>
       
-      <Button 
-        variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
-        className="w-full justify-start"
-        onClick={() => {
-          onTabChange('dashboard');
-          if (isMobile) closeMenu();
-        }}
-      >
-        <LayoutDashboard className="h-5 w-5 mr-2" />
-        Dashboard
-      </Button>
-      <Button 
-        variant={activeTab === 'repairs' ? 'default' : 'ghost'}
-        className="w-full justify-start"
-        onClick={() => {
-          onTabChange('repairs');
-          if (isMobile) closeMenu();
-        }}
-      >
-        <Wrench className="h-5 w-5 mr-2" />
-        Reparaturen
-      </Button>
-      <Button 
-        variant={activeTab === 'customers' ? 'default' : 'ghost'}
-        className="w-full justify-start"
-        onClick={() => {
-          onTabChange('customers');
-          if (isMobile) closeMenu();
-        }}
-      >
-        <Users className="h-5 w-5 mr-2" />
-        Kunden
-      </Button>
-      <Button 
-        variant={activeTab === 'statistics' ? 'default' : 'ghost'}
-        className="w-full justify-start"
-        onClick={() => {
-          onTabChange('statistics');
-          if (isMobile) closeMenu();
-        }}
-      >
-        <BarChart2 className="h-5 w-5 mr-2" />
-        Statistiken
-      </Button>
-      <Button 
-        variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
-        className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => {
-          if (canUseCostEstimates) {
-            onTabChange('cost-estimates');
+      {/* Hauptnavigation */}
+      <div className="space-y-1">
+        <Button 
+          variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('dashboard');
             if (isMobile) closeMenu();
-          }
-        }}
-        disabled={!canUseCostEstimates}
-      >
-        <FileText className="h-5 w-5 mr-2" />
-        Kostenvoranschläge
-      </Button>
-      <Button 
-        variant={activeTab === 'settings' ? 'default' : 'ghost'}
-        className="w-full justify-start"
-        onClick={() => {
-          onTabChange('settings');
-          if (isMobile) closeMenu();
-        }}
-      >
-        <Settings className="h-5 w-5 mr-2" />
-        Einstellungen
-      </Button>
+          }}
+        >
+          <LayoutDashboard className="h-5 w-5 mr-2" />
+          Dashboard
+        </Button>
+        <Button 
+          variant={activeTab === 'repairs' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('repairs');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Wrench className="h-5 w-5 mr-2" />
+          Reparaturen
+        </Button>
+        <Button 
+          variant={activeTab === 'customers' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('customers');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Users className="h-5 w-5 mr-2" />
+          Kunden
+        </Button>
+        <Button 
+          variant={activeTab === 'statistics' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('statistics');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <BarChart2 className="h-5 w-5 mr-2" />
+          Statistiken
+        </Button>
+        <Button 
+          variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
+          className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
+          onClick={() => {
+            if (canUseCostEstimates) {
+              onTabChange('cost-estimates');
+              if (isMobile) closeMenu();
+            }
+          }}
+          disabled={!canUseCostEstimates}
+        >
+          <FileText className="h-5 w-5 mr-2" />
+          Kostenvoranschläge
+        </Button>
+      </div>
+      
+      {/* Einstellungen Kategorie */}
+      <div className="mt-6 mb-2">
+        <Separator className="mb-2" />
+        <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          Einstellungen
+        </h3>
+      </div>
+      <div className="space-y-1">
+        <Button 
+          variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('business-settings');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Building className="h-5 w-5 mr-2" />
+          Geschäft
+        </Button>
+        <Button 
+          variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('email-settings');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Mail className="h-5 w-5 mr-2" />
+          E-Mail
+        </Button>
+        <Button 
+          variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('print-settings');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Printer className="h-5 w-5 mr-2" />
+          Ausdrucke
+        </Button>
+        <Button 
+          variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('subscription-settings');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Package className="h-5 w-5 mr-2" />
+          Abonnement
+        </Button>
+        <Button 
+          variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('user-settings');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <UserCog className="h-5 w-5 mr-2" />
+          Benutzer
+        </Button>
+      </div>
     </>
   );
 
