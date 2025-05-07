@@ -1,0 +1,67 @@
+/* Responsive CSS für die mobile Ansicht */
+
+/* Alle Eingabefelder sollen sich an die Bildschirmbreite anpassen */
+input, 
+select, 
+textarea, 
+.select-trigger, 
+.select-content,
+.form-control,
+.input,
+.textarea,
+.select {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Gewährleisten, dass Formularelemente die volle Breite nutzen */
+.form-item,
+.form-field,
+.form-control,
+.select-trigger,
+.select-value {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Verhindern, dass Inhalte über den Bildschirmrand hinausragen */
+.card-content,
+.tabs-content,
+.form,
+form {
+  overflow-x: hidden !important;
+}
+
+/* Mobile-freundliche Abstände für Form-Labels und Elemente */
+@media (max-width: 768px) {
+  .form-label {
+    margin-bottom: 0.5rem !important;
+    display: block !important;
+  }
+  
+  .card {
+    padding: 1rem !important;
+  }
+  
+  .card-header {
+    padding: 1rem 1rem 0.5rem 1rem !important;
+  }
+  
+  .card-content {
+    padding: 0.5rem 1rem 1rem 1rem !important;
+  }
+  
+  /* Verbesserte Tap-Target-Größe für mobile Geräte */
+  button,
+  .select-trigger,
+  .tabs-trigger {
+    min-height: 44px !important;
+  }
+  
+  /* Sicherstellen, dass Dropdown-Menüs nicht vom Bildschirm abgeschnitten werden */
+  .select-content {
+    width: 100% !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}

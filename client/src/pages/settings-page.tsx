@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, Building, User, Palette, ChevronLeft, Package } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, Building, User, Palette, ChevronLeft, Package, ChevronDown } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -354,8 +354,27 @@ export default function SettingsPage() {
 
       <div className="bg-gray-50 p-4 md:p-6 rounded-lg">
         <Tabs defaultValue="business" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-          <div className="block w-full">
-            <TabsList className="bg-white border mb-6 flex-col md:flex-row flex w-full">
+          {/* Mobile: Dropdown-Menü für die Tabs (unter 768px) */}
+          <div className="block md:hidden w-full mb-6">
+            <div className="relative">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue placeholder="Wählen Sie eine Kategorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="business">Geschäft</SelectItem>
+                  <SelectItem value="emails">E-Mail</SelectItem>
+                  <SelectItem value="appearance">Erscheinungsbild</SelectItem>
+                  <SelectItem value="prints">Ausdrucke</SelectItem>
+                  <SelectItem value="subscription">Abonnement</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Desktop: Normale Tabs-Ansicht (ab 768px) */}
+          <div className="hidden md:block w-full">
+            <TabsList className="bg-white border mb-6 flex-row flex w-full">
               <TabsTrigger value="business" className="w-full py-3">Geschäft</TabsTrigger>
               <TabsTrigger value="emails" className="w-full py-3">E-Mail</TabsTrigger>
               <TabsTrigger value="appearance" className="w-full py-3">Erscheinungsbild</TabsTrigger>
@@ -586,10 +605,28 @@ export default function SettingsPage() {
           {/* E-Mail-Einstellungen Tab */}
           <TabsContent value="emails" className="mt-4">
             <Tabs value={activeEmailTab} onValueChange={setActiveEmailTab} className="mb-6">
-              <TabsList className="bg-white border mb-6 w-full flex-col md:flex-row flex">
-                <TabsTrigger value="settings" className="w-full py-3">SMTP-Einstellungen</TabsTrigger>
-                <TabsTrigger value="templates" className="w-full py-3">E-Mail-Vorlagen</TabsTrigger>
-              </TabsList>
+              {/* Mobile: Dropdown-Menü für E-Mail-Tabs (unter 768px) */}
+              <div className="block md:hidden w-full mb-6">
+                <div className="relative">
+                  <Select value={activeEmailTab} onValueChange={setActiveEmailTab}>
+                    <SelectTrigger className="w-full bg-white">
+                      <SelectValue placeholder="Wählen Sie eine Kategorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="settings">SMTP-Einstellungen</SelectItem>
+                      <SelectItem value="templates">E-Mail-Vorlagen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Desktop: Normale Tabs-Ansicht für E-Mail-Tabs (ab 768px) */}
+              <div className="hidden md:block w-full">
+                <TabsList className="bg-white border mb-6 w-full flex-row flex">
+                  <TabsTrigger value="settings" className="w-full py-3">SMTP-Einstellungen</TabsTrigger>
+                  <TabsTrigger value="templates" className="w-full py-3">E-Mail-Vorlagen</TabsTrigger>
+                </TabsList>
+              </div>
               
               <TabsContent value="settings" className="space-y-6">
                 <Card className="mb-6">
