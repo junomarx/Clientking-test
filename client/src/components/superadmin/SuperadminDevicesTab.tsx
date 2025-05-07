@@ -2225,7 +2225,7 @@ export default function SuperadminDevicesTab() {
                     {brandsData?.map((brand) => (
                       <SelectItem key={brand.id} value={brand.id.toString()}>
                         <div className="flex items-center gap-2">
-                          {getDeviceTypeIcon(userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || '')}
+                          {getDeviceTypeIcon(userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || 'Smartphone')}
                           <span>{brand.name} ({userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || 'Unbekannt'})</span>
                         </div>
                       </SelectItem>
