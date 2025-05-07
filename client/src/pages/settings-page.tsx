@@ -367,6 +367,7 @@ export default function SettingsPage() {
                   <SelectItem value="appearance">Erscheinungsbild</SelectItem>
                   <SelectItem value="prints">Ausdrucke</SelectItem>
                   <SelectItem value="subscription">Abonnement</SelectItem>
+                  <SelectItem value="user">Benutzer</SelectItem>
                 </SelectContent>
               </Select>
             </div>
