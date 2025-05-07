@@ -1,0 +1,64 @@
+{
+  "deviceTypes": [
+    {
+      "id": 55,
+      "name": "Smartphone"
+    }
+  ],
+  "brands": [
+    {
+      "id": 6001,
+      "name": "HuaweiTest",
+      "deviceTypeId": 55,
+      "userId": 10
+    }
+  ],
+  "modelSeries": [],
+  "models": [
+    {
+      "id": 7001,
+      "name": "Huawei P20",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    },
+    {
+      "id": 7002,
+      "name": "Huawei P30",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    },
+    {
+      "id": 7003,
+      "name": "Huawei P40",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    },
+    {
+      "id": 7004,
+      "name": "Huawei P50",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    },
+    {
+      "id": 7005,
+      "name": "Huawei P60",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    },
+    {
+      "id": 7006,
+      "name": "Huawei Nova 11",
+      "modelSeriesId": null,
+      "brandId": 6001,
+      "userId": 10
+    }
+  ],
+  "deviceIssues": [],
+  "exportedAt": "2025-05-07T00:14:00.000Z",
+  "version": "1.0"
+}

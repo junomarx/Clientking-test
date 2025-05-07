@@ -1,0 +1,174 @@
+{
+  "deviceTypes": [
+    {
+      "id": 55,
+      "name": "Smartphone",
+      "userId": 10,
+      "shopId": null
+    }
+  ],
+  "brands": [
+    {
+      "id": 5001,
+      "name": "HuaweiNeu",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 5002,
+      "name": "XiaomiNeu",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 5003,
+      "name": "SamsungTest",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 5004,
+      "name": "AppleExtra",
+      "deviceTypeId": 55,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "modelSeries": [],
+  "models": [
+    {
+      "id": 6000,
+      "name": "Huawei P60",
+      "modelSeriesId": null,
+      "brandId": 5001,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6001,
+      "name": "Huawei Nova 11",
+      "modelSeriesId": null,
+      "brandId": 5001,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6002,
+      "name": "Huawei Y9",
+      "modelSeriesId": null,
+      "brandId": 5001,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6003,
+      "name": "Redmi Note 11",
+      "modelSeriesId": null,
+      "brandId": 5002,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6004,
+      "name": "POCO X5",
+      "modelSeriesId": null,
+      "brandId": 5002,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6005,
+      "name": "Mi 11 Lite",
+      "modelSeriesId": null,
+      "brandId": 5002,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6006,
+      "name": "Galaxy S21 FE",
+      "modelSeriesId": null,
+      "brandId": 5003,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6007,
+      "name": "Galaxy A52",
+      "modelSeriesId": null,
+      "brandId": 5003,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6008,
+      "name": "Galaxy S24 Ultra",
+      "modelSeriesId": null,
+      "brandId": 5003,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6009,
+      "name": "iPhone 13",
+      "modelSeriesId": null,
+      "brandId": 5004,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6010,
+      "name": "iPhone 14",
+      "modelSeriesId": null,
+      "brandId": 5004,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    },
+    {
+      "id": 6011,
+      "name": "iPhone SE 2022",
+      "modelSeriesId": null,
+      "brandId": 5004,
+      "userId": 10,
+      "shopId": null,
+      "createdAt": "2025-05-06T23:40:49.466588",
+      "updatedAt": "2025-05-06T23:40:49.466588"
+    }
+  ],
+  "deviceIssues": [],
+  "exportedAt": "2025-05-06T23:40:49.466588",
+  "version": "1.0"
+}
