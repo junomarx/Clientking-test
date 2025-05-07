@@ -138,8 +138,8 @@ export function SuperadminSidebar({
   return (
     <>
       {/* Desktop Sidebar - nur auf größeren Bildschirmen sichtbar */}
-      <div className="hidden md:flex md:w-64 md:flex-col bg-muted/20 border-r overflow-y-auto">
-        <div className="flex flex-col min-h-screen pt-5 pb-20">
+      <div className="hidden md:flex md:w-64 md:flex-col bg-muted/20 border-r">
+        <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-4 mb-5">
             <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
           </div>
