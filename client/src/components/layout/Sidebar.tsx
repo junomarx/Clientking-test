@@ -251,6 +251,84 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </div>
         </div>
       </div>
+
+      {/* Mobile Menü - nur auf kleineren Bildschirmen sichtbar */}
+      <div className="md:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute top-4 right-4 md:hidden">
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Menü öffnen</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-left">Handyshop Menü</h2>
+            </div>
+            <nav className="flex flex-col space-y-2 px-1">
+              <NavItems isMobile={true} closeMenu={() => {
+                // Sheet schließen durch Klick auf den close-Button
+                document.querySelector('[data-radix-collection-item]')?.dispatchEvent(
+                  new MouseEvent('click', { bubbles: true })
+                );
+              }} />
+            </nav>
+            <Separator className="my-4" />
+            <div className="space-y-2 px-1">
+              {/* Login als Superadmin Macnphone - nur anzeigen für Admins und Superadmins */}
+              {user && (user.isAdmin || user.isSuperadmin) && (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
+                  asChild
+                >
+                  <Link href="/auth?superadmin=true">
+                    <Shield className="h-5 w-5 mr-2 text-red-500" />
+                    <span className="text-red-500 font-medium">Login als macnphone</span>
+                  </Link>
+                </Button>
+              )}
+              
+              {/* Admin-Bereich-Button */}
+              {user && user.isAdmin && (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start mb-2"
+                  asChild
+                >
+                  <Link href="/admin">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Admin-Bereich
+                  </Link>
+                </Button>
+              )}
+              
+              {/* Superadmin-Bereich-Button */}
+              {user && user.isSuperadmin && (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start mb-2"
+                  asChild
+                >
+                  <Link href="/superadmin">
+                    <Shield className="h-5 w-5 mr-2 text-red-500" />
+                    <span className="text-red-500">Superadmin</span>
+                  </Link>
+                </Button>
+              )}
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start text-red-600" 
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Ausloggen
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
     </>
   );
 }

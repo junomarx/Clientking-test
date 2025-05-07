@@ -1,228 +1,384 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChangePasswordDialog } from "@/components/auth/ChangePasswordDialog";
-import { useAuth } from "@/hooks/use-auth";
-import { User, Edit, Save, Loader2, AlertCircle } from "lucide-react";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { z } from "zod";
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserCog, Key, Save, Loader2, UserCheck, Shield, AlertTriangle } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
-const userProfileSchema = z.object({
-  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen lang sein"),
-  email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein")
+// Schemas für die Formulare
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Aktuelles Passwort ist erforderlich"),
+  newPassword: z.string().min(8, "Neues Passwort muss mindestens 8 Zeichen lang sein"),
+  confirmNewPassword: z.string().min(8, "Passwortbestätigung ist erforderlich"),
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+  message: "Passwörter stimmen nicht überein",
+  path: ["confirmNewPassword"],
 });
 
-type UserProfileFormValues = z.infer<typeof userProfileSchema>;
+const profileUpdateSchema = z.object({
+  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen lang sein"),
+  email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein"),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+});
 
+// Benutzer-Einstellungen Komponente
 export function UserSettingsTab() {
-  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  const form = useForm<UserProfileFormValues>({
-    resolver: zodResolver(userProfileSchema),
+  const [activeTab, setActiveTab] = useState("profile");
+  
+  // Formular für Profiländerungen
+  const profileForm = useForm<z.infer<typeof profileUpdateSchema>>({
+    resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       username: user?.username || "",
-      email: user?.email || ""
-    }
+      email: user?.email || "",
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+    },
   });
-
-  // Initialisiere das Formular mit den Benutzerdaten, wenn sie verfügbar sind
-  useEffect(() => {
+  
+  // Formular für Passwortänderungen
+  const passwordForm = useForm<z.infer<typeof passwordChangeSchema>>({
+    resolver: zodResolver(passwordChangeSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    },
+  });
+  
+  // Aktualisierung der Profilwerte, wenn sich der Benutzer ändert
+  React.useEffect(() => {
     if (user) {
-      form.reset({
-        username: user.username,
-        email: user.email
+      profileForm.reset({
+        username: user.username || "",
+        email: user.email || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
       });
     }
-  }, [user, form]);
-
+  }, [user, profileForm]);
+  
+  // Mutation für Profilupdates
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: UserProfileFormValues) => {
-      const response = await apiRequest("PATCH", "/api/user/profile", data);
-      
+    mutationFn: async (data: z.infer<typeof profileUpdateSchema>) => {
+      const response = await apiRequest("POST", "/api/update-profile", data);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Profil konnte nicht aktualisiert werden.");
+        throw new Error(await response.text());
       }
-      
       return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
-        title: "Erfolg!",
-        description: "Ihre Profildaten wurden erfolgreich aktualisiert.",
+        title: "Profil aktualisiert",
+        description: "Ihre Profilinformationen wurden erfolgreich aktualisiert.",
         duration: 3000,
       });
-      
-      // Aktualisiere den Benutzer im Auth-Kontext
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      setIsEditMode(false);
     },
-    onError: (error: Error) => {
-      setError(error.message);
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Beim Aktualisieren des Profils ist ein Fehler aufgetreten: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
     },
   });
-
-  function onSubmit(data: UserProfileFormValues) {
-    setError(null);
+  
+  // Mutation für Passwortänderungen
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof passwordChangeSchema>) => {
+      const response = await apiRequest("POST", "/api/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      passwordForm.reset({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+      toast({
+        title: "Passwort geändert",
+        description: "Ihr Passwort wurde erfolgreich geändert.",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: `Beim Ändern des Passworts ist ein Fehler aufgetreten: ${error.message}`,
+        variant: "destructive",
+        duration: 3000,
+      });
+    },
+  });
+  
+  // Profilformular absenden
+  function onProfileSubmit(data: z.infer<typeof profileUpdateSchema>) {
     updateProfileMutation.mutate(data);
   }
-
-  function toggleEditMode() {
-    if (isEditMode && form.formState.isDirty) {
-      // Wenn wir den Bearbeitungsmodus verlassen und Änderungen vorgenommen wurden,
-      // setzen wir das Formular zurück
-      form.reset({
-        username: user?.username || "",
-        email: user?.email || ""
-      });
-    }
-    setIsEditMode(!isEditMode);
-    setError(null);
+  
+  // Passwortformular absenden
+  function onPasswordSubmit(data: z.infer<typeof passwordChangeSchema>) {
+    changePasswordMutation.mutate(data);
+  }
+  
+  if (!user) {
+    return (
+      <div className="p-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center text-red-500 mb-2">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <h3 className="font-medium">Nicht angemeldet</h3>
+            </div>
+            <p className="text-sm text-red-600">
+              Bitte melden Sie sich an, um Ihre Benutzereinstellungen zu verwalten.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Benutzerprofil
-          </CardTitle>
-          <CardDescription>
-            Verwalten Sie Ihre persönlichen Benutzereinstellungen und Sicherheitsoptionen.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <Alert variant="destructive" className="mt-2">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="p-6">
+      <div className="flex items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Benutzereinstellungen</h1>
+          <p className="text-gray-500">Verwalten Sie Ihre persönlichen Einstellungen und Zugangsdaten</p>
+        </div>
+      </div>
 
-          {isEditMode ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Benutzername</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Benutzername" 
-                          autoComplete="username"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="security">Sicherheit</TabsTrigger>
+        </TabsList>
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-Mail-Adresse</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="E-Mail" 
-                          autoComplete="email"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex items-center gap-2 mt-4">
-                  <Button 
-                    type="submit" 
-                    disabled={updateProfileMutation.isPending}
-                    size="sm"
-                  >
-                    {updateProfileMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Wird gespeichert...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Speichern
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={toggleEditMode}
-                  >
-                    Abbrechen
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : (
-            <>
-              {/* Benutzerinformationen (Anzeigemodus) */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-2">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Benutzername</h3>
-                    <p className="mt-1">{user?.username}</p>
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <UserCog className="h-5 w-5 mr-2" />
+                Profilinformationen
+              </CardTitle>
+              <CardDescription>Aktualisieren Sie Ihre persönlichen Daten</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...profileForm}>
+                <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={profileForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Benutzername</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={profileForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-Mail-Adresse</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={profileForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Vorname</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={profileForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nachname</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">E-Mail-Adresse</h3>
-                    <p className="mt-1">{user?.email}</p>
+                  
+                  <div className="flex justify-end mt-6">
+                    <Button 
+                      type="submit" 
+                      disabled={updateProfileMutation.isPending}
+                      className="flex items-center"
+                    >
+                      {updateProfileMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                      )}
+                      Änderungen speichern
+                    </Button>
                   </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <Shield className="h-5 w-5 mr-2" />
+                Kontostatus
+              </CardTitle>
+              <CardDescription>Informationen über Ihren Kontozugriff</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-600">Status</span>
+                  <span className="font-medium flex items-center text-green-600">
+                    <UserCheck className="h-4 w-4 mr-1" />
+                    Aktiv
+                  </span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={toggleEditMode}
-                  className="mt-2"
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Bearbeiten
-                </Button>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-600">Rolle</span>
+                  <span className="font-medium">
+                    {user.isSuperadmin ? "Superadmin" : user.isAdmin ? "Administrator" : "Benutzer"}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <span className="text-gray-600">Letzter Login</span>
+                  <span className="font-medium">Heute, {new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="flex justify-between py-2">
+                  <span className="text-gray-600">Shop</span>
+                  <span className="font-medium">{user.shopName || "Standard-Shop"}</span>
+                </div>
               </div>
-            </>
-          )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Sicherheitsoptionen */}
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="text-base font-medium">Sicherheit</h3>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsChangePasswordDialogOpen(true)}
-            >
-              Passwort ändern
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <ChangePasswordDialog 
-        open={isChangePasswordDialogOpen}
-        onOpenChange={setIsChangePasswordDialogOpen}
-      />
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg font-semibold">
+                <Key className="h-5 w-5 mr-2" />
+                Passwort ändern
+              </CardTitle>
+              <CardDescription>Aktualisieren Sie Ihr Passwort regelmäßig für mehr Sicherheit</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...passwordForm}>
+                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                  <FormField
+                    control={passwordForm.control}
+                    name="currentPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Aktuelles Passwort</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Neues Passwort</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Mindestens 8 Zeichen
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmNewPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Passwort bestätigen</FormLabel>
+                          <FormControl>
+                            <Input type="password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-end mt-6">
+                    <Button 
+                      type="submit" 
+                      disabled={changePasswordMutation.isPending}
+                      className="flex items-center"
+                    >
+                      {changePasswordMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Key className="h-4 w-4 mr-2" />
+                      )}
+                      Passwort ändern
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

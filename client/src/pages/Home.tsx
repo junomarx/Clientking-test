@@ -8,11 +8,18 @@ import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/S
 import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
-import { SettingsPageContent } from '@/components/settings';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
+// Import der Einstellungs-Komponenten
+import { BusinessSettingsTab } from '@/components/settings/BusinessSettingsTab';
+import { EmailSettingsTab } from '@/components/settings/EmailSettingsTab';
+import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
+import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
+import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
+
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 
+          'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -27,7 +34,11 @@ export default function Home() {
     
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
-      if (['dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates', 'settings'].includes(tabParam as Tab)) {
+      const validTabs = [
+        'dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates',
+        'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings'
+      ];
+      if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam as Tab);
       }
     }
@@ -58,7 +69,7 @@ export default function Home() {
     // Event-Listener für das Öffnen des Einstellungstabs
     const handleOpenSettingsDialog = () => {
       console.log("Event für Öffnen der Einstellungen empfangen");
-      setActiveTab('settings');
+      setActiveTab('business-settings');
     };
     
     // Event-Listener für "Neuer Auftrag" Button
@@ -130,8 +141,24 @@ export default function Home() {
                 <CostEstimatesTab />
               )}
               
-              {activeTab === 'settings' && (
-                <SettingsPageContent />
+              {activeTab === 'business-settings' && (
+                <BusinessSettingsTab />
+              )}
+              
+              {activeTab === 'email-settings' && (
+                <EmailSettingsTab />
+              )}
+              
+              {activeTab === 'print-settings' && (
+                <PrintSettingsTab />
+              )}
+              
+              {activeTab === 'subscription-settings' && (
+                <SubscriptionSettingsTab />
+              )}
+              
+              {activeTab === 'user-settings' && (
+                <UserSettingsTab />
               )}
             </div>
           </ScrollArea>
