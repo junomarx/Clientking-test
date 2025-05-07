@@ -39,6 +39,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [location] = useLocation();
+  const [isSuperadminLogin, setIsSuperadminLogin] = useState(false);
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -49,7 +50,7 @@ export default function AuthPage() {
   });
   
   // Prüfen ob der "superadmin" Parameter in der URL vorhanden ist
-  const [isSuperadminLogin, setIsSuperadminLogin] = useEffect(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isSuperadmin = params.get('superadmin') === 'true';
     setIsSuperadminLogin(isSuperadmin);
@@ -57,9 +58,18 @@ export default function AuthPage() {
     if (isSuperadmin) {
       // Voreintragen der Superadmin-Zugangsdaten
       loginForm.setValue('username', 'macnphone');
-      loginForm.setValue('password', 'admin123'); // Hier das richtige Passwort eintragen (würde ich im echten System nicht hart codieren)
+      // Passwort hier absichtlich nicht vorausgefüllt - aus Sicherheitsgründen
+      // loginForm.setValue('password', '...'); 
+      
+      // Zeige Focus auf Passwortfeld
+      setTimeout(() => {
+        const passwordInput = document.querySelector('input[type="password"]');
+        if (passwordInput) {
+          (passwordInput as HTMLInputElement).focus();
+        }
+      }, 100);
     }
-  }, [location]);
+  }, [location, loginForm]);
 
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -154,10 +164,25 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    <h2 className="text-2xl font-semibold text-gray-800">Login Account</h2>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Melden Sie sich mit Ihren Zugangsdaten an, um auf Ihr Konto zuzugreifen.
-                    </p>
+                    {isSuperadminLogin ? (
+                      <>
+                        <div className="flex items-center justify-center mb-2">
+                          <ShieldAlert className="h-8 w-8 text-red-500 mr-2" />
+                          <h2 className="text-2xl font-semibold text-red-600">Superadmin Login</h2>
+                        </div>
+                        <p className="text-gray-500 text-sm mt-2">
+                          Anmeldung als globaler System-Administrator (macnphone).
+                          <br />Bitte geben Sie Ihr Passwort ein.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-2xl font-semibold text-gray-800">Login Account</h2>
+                        <p className="text-gray-500 text-sm mt-2">
+                          Melden Sie sich mit Ihren Zugangsdaten an, um auf Ihr Konto zuzugreifen.
+                        </p>
+                      </>
+                    )}
                   </div>
                   
                   <Form {...loginForm}>
@@ -207,7 +232,9 @@ export default function AuthPage() {
                       
                       <Button 
                         type="submit" 
-                        className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full mt-6"
+                        className={`w-full h-12 ${isSuperadminLogin 
+                          ? "bg-red-500 hover:bg-red-600" 
+                          : "bg-blue-500 hover:bg-blue-600"} text-white rounded-full mt-6`}
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -216,7 +243,10 @@ export default function AuthPage() {
                             Wird angemeldet...
                           </>
                         ) : (
-                          "Anmelden"
+                          <>
+                            {isSuperadminLogin && <ShieldAlert className="mr-2 h-4 w-4" />}
+                            {isSuperadminLogin ? "Als Superadmin anmelden" : "Anmelden"}
+                          </>
                         )}
                       </Button>
                     </form>
