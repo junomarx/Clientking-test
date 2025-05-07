@@ -1397,10 +1397,19 @@ export function registerSuperadminRoutes(app: Express) {
           existingDeviceTypes.map(dt => [dt.name.toLowerCase(), dt])
         );
         
+        // ID des aktuellen Superadmin-Benutzers für alle Einfügungen verwenden
+        const superadminUserId = (req.user as any).id;
+        console.log(`Import verwendet Superadmin-ID: ${superadminUserId}`);
+        
         for (const deviceType of importData.deviceTypes) {
           try {
             const oldId = deviceType.id;
             const name = deviceType.name;
+            
+            // Überprüfe, ob userId oder shopId im Importdatensatz vorhanden sind
+            if ('userId' in deviceType || 'shopId' in deviceType) {
+              console.log(`Ignoriere userId/shopId Werte aus dem JSON für Gerätetyp ${name}`);
+            }
             
             // Prüfen, ob bereits ein Gerätetyp mit diesem Namen existiert
             const existingType = existingDeviceTypesByName.get(name.toLowerCase());
@@ -1410,14 +1419,13 @@ export function registerSuperadminRoutes(app: Express) {
               idMappings.deviceTypes.set(oldId, existingType.id);
               console.log(`Gerätetyp ${name} existiert bereits mit ID ${existingType.id}`);
             } else {
-              // Neuen Gerätetyp anlegen
-              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
-              const superadminUserId = (req.user as any).id;
+              // Neuen Gerätetyp anlegen, nur mit explizit definierten Feldern
+              // IGNORIERE alle userId und shopId Werte aus der JSON-Datei
               const [newDeviceType] = await db.insert(userDeviceTypes)
                 .values({
                   name: name,
-                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
-                  shopId: null, // NULL für globale Einträge, nicht 0
+                  userId: superadminUserId, // Verwende ausschließlich die ID des aktuellen Superadmins
+                  shopId: null, // Immer NULL für globale Einträge
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
@@ -1461,6 +1469,11 @@ export function registerSuperadminRoutes(app: Express) {
               continue;
             }
             
+            // Überprüfe, ob userId oder shopId im Importdatensatz vorhanden sind
+            if ('userId' in brand || 'shopId' in brand) {
+              console.log(`Ignoriere userId/shopId Werte aus dem JSON für Marke ${name}`);
+            }
+          
             // Prüfen, ob bereits ein Hersteller mit diesem Namen für diesen Gerätetyp existiert
             const key = `${name.toLowerCase()}-${newDeviceTypeId}`;
             const existingBrand = existingBrandsByKey.get(key);
@@ -1470,15 +1483,15 @@ export function registerSuperadminRoutes(app: Express) {
               idMappings.brands.set(oldId, existingBrand.id);
               console.log(`Hersteller ${name} für Gerätetyp ID ${newDeviceTypeId} existiert bereits mit ID ${existingBrand.id}`);
             } else {
-              // Neuen Hersteller anlegen
-              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+              // Neuen Hersteller anlegen, nur mit explizit definierten Feldern
+              // IGNORIERE alle userId und shopId Werte aus der JSON-Datei
               const superadminUserId = (req.user as any).id;
               const [newBrand] = await db.insert(userBrands)
                 .values({
                   name: name,
                   deviceTypeId: newDeviceTypeId,
-                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
-                  shopId: null, // NULL für globale Einträge, nicht 0
+                  userId: superadminUserId, // Verwende ausschließlich die ID des aktuellen Superadmins
+                  shopId: null, // Immer NULL für globale Einträge
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
@@ -1528,6 +1541,11 @@ export function registerSuperadminRoutes(app: Express) {
               continue;
             }
             
+            // Überprüfe, ob userId oder shopId im Importdatensatz vorhanden sind
+            if ('userId' in model || 'shopId' in model) {
+              console.log(`Ignoriere userId/shopId Werte aus dem JSON für Modell ${name}`);
+            }
+            
             // Schlüssel für die Eindeutigkeit basierend auf Name und Hersteller ID
             const key = `${name.toLowerCase()}-${newBrandId}`;
             const existingModel = existingModelsByKey.get(key);
@@ -1535,16 +1553,16 @@ export function registerSuperadminRoutes(app: Express) {
             if (existingModel) {
               console.log(`Modell ${name} für Hersteller ID ${newBrandId} existiert bereits mit ID ${existingModel.id}`);
             } else {
-              // Neues Modell anlegen
-              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+              // Neues Modell anlegen, nur mit explizit definierten Feldern
+              // IGNORIERE alle userId und shopId Werte aus der JSON-Datei
               const superadminUserId = (req.user as any).id;
               const [newModel] = await db.insert(userModels)
                 .values({
                   name: name,
                   modelSeriesId: null,  // Keine Modellreihe verwenden
                   brandId: newBrandId,
-                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
-                  shopId: null, // NULL für globale Einträge, nicht 0
+                  userId: superadminUserId, // Verwende ausschließlich die ID des aktuellen Superadmins
+                  shopId: null, // Immer NULL für globale Einträge
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
