@@ -381,6 +381,7 @@ export default function SettingsPage() {
               <TabsTrigger value="appearance" className="w-full py-3">Erscheinungsbild</TabsTrigger>
               <TabsTrigger value="prints" className="w-full py-3">Ausdrucke</TabsTrigger>
               <TabsTrigger value="subscription" className="w-full py-3">Abonnement</TabsTrigger>
+              <TabsTrigger value="user" className="w-full py-3">Benutzer</TabsTrigger>
             </TabsList>
           </div>
 
@@ -834,6 +835,11 @@ export default function SettingsPage() {
           {/* Abonnement Tab */}
           <TabsContent value="subscription" className="mt-4">
             <PricingPlanDisplay />
+          </TabsContent>
+
+          {/* Benutzer Tab */}
+          <TabsContent value="user" className="mt-4">
+            <UserSettingsTab />
           </TabsContent>
         </Tabs>
       </div>
