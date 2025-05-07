@@ -184,59 +184,54 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       </h3>
                     </div>
                     <Button 
-                      variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
+                      variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('business-settings');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <Building className="h-5 w-5 mr-2" />
-                      Geschäft
+                      <Link href="/settings/shop" onClick={() => setMenuOpen(false)}>
+                        <Building className="h-5 w-5 mr-2" />
+                        Geschäft
+                      </Link>
                     </Button>
                     <Button 
-                      variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
+                      variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('email-settings');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <Mail className="h-5 w-5 mr-2" />
-                      E-Mail
+                      <Link href="/settings/email" onClick={() => setMenuOpen(false)}>
+                        <Mail className="h-5 w-5 mr-2" />
+                        E-Mail
+                      </Link>
                     </Button>
                     <Button 
-                      variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
+                      variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('print-settings');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <Printer className="h-5 w-5 mr-2" />
-                      Drucken
+                      <Link href="/settings/print" onClick={() => setMenuOpen(false)}>
+                        <Printer className="h-5 w-5 mr-2" />
+                        Drucken
+                      </Link>
                     </Button>
                     <Button 
-                      variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+                      variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('subscription-settings');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Abonnement
+                      <Link href="/settings/plan" onClick={() => setMenuOpen(false)}>
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        Abonnement
+                      </Link>
                     </Button>
                     <Button 
-                      variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
+                      variant="ghost"
                       className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('user-settings');
-                        setMenuOpen(false);
-                      }}
+                      asChild
                     >
-                      <UserCog className="h-5 w-5 mr-2" />
-                      Benutzerdaten
+                      <Link href="/settings/user" onClick={() => setMenuOpen(false)}>
+                        <UserCog className="h-5 w-5 mr-2" />
+                        Benutzerdaten
+                      </Link>
                     </Button>
                   </nav>
                   

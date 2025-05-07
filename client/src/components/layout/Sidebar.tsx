@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { 
   Menu,
   LayoutDashboard,
@@ -34,6 +34,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
+  const [location] = useLocation();
   
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -131,59 +132,64 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
       </div>
       <div className="space-y-1">
         <Button 
-          variant={activeTab === 'business-settings' ? 'default' : 'ghost'}
+          variant={location === '/settings/shop' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('business-settings');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <Building className="h-5 w-5 mr-2" />
-          Geschäft
+          <Link href="/settings/shop" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <Building className="h-5 w-5 mr-2" />
+            Geschäft
+          </Link>
         </Button>
         <Button 
-          variant={activeTab === 'email-settings' ? 'default' : 'ghost'}
+          variant={location === '/settings/email' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('email-settings');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <Mail className="h-5 w-5 mr-2" />
-          E-Mail
+          <Link href="/settings/email" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <Mail className="h-5 w-5 mr-2" />
+            E-Mail
+          </Link>
         </Button>
         <Button 
-          variant={activeTab === 'print-settings' ? 'default' : 'ghost'}
+          variant={location === '/settings/print' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('print-settings');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <Printer className="h-5 w-5 mr-2" />
-          Drucken
+          <Link href="/settings/print" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <Printer className="h-5 w-5 mr-2" />
+            Drucken
+          </Link>
         </Button>
         <Button 
-          variant={activeTab === 'subscription-settings' ? 'default' : 'ghost'}
+          variant={location === '/settings/plan' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('subscription-settings');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <CreditCard className="h-5 w-5 mr-2" />
-          Abonnement
+          <Link href="/settings/plan" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <CreditCard className="h-5 w-5 mr-2" />
+            Abonnement
+          </Link>
         </Button>
         <Button 
-          variant={activeTab === 'user-settings' ? 'default' : 'ghost'}
+          variant={location === '/settings/user' ? 'default' : 'ghost'}
           className="w-full justify-start"
-          onClick={() => {
-            onTabChange('user-settings');
-            if (isMobile) closeMenu();
-          }}
+          asChild
         >
-          <UserCog className="h-5 w-5 mr-2" />
-          Benutzerdaten
+          <Link href="/settings/user" onClick={() => {
+            if (isMobile) closeMenu();
+          }}>
+            <UserCog className="h-5 w-5 mr-2" />
+            Benutzerdaten
+          </Link>
         </Button>
       </div>
     </>
