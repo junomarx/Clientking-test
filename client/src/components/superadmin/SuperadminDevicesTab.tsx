@@ -891,8 +891,7 @@ export default function SuperadminDevicesTab() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Geräteverwaltung</h1>
       
-      {/* Export/Import-Komponente am Anfang der Seite platzieren */}
-      <DeviceDataExportImportWithCSV />
+      {/* Export/Import-Komponente entfernt */}
       
       <Tabs defaultValue="types" className="w-full">
         <TabsList className="grid grid-cols-5">
@@ -1006,8 +1005,6 @@ export default function SuperadminDevicesTab() {
 
         <TabsContent value="brands">
           <div className="space-y-6">
-            {/* Komponente für den Marken-Massenimport */}
-            <HerstellerBulkImport deviceTypes={deviceTypes} />
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1176,8 +1173,6 @@ export default function SuperadminDevicesTab() {
 
         <TabsContent value="models">
           <div className="space-y-6">
-            {/* Komponente für den Modell-Massenimport */}
-            <ModelleBulkImport deviceTypes={deviceTypes || []} />
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1390,8 +1385,7 @@ export default function SuperadminDevicesTab() {
         
         {/* Fehlerkatalog Tab */}
         <TabsContent value="issues">
-          {/* Komponente für den Fehlerkatalog-Massenimport */}
-          <FehlerkatalogBulkImport deviceTypes={deviceTypes} />
+          {/* Fehlerkatalog-Massenimport entfernt */}
           
           <Card className="mt-6">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
