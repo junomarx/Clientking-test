@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail, FileCode } from "lucide-react";
+import { ChevronLeft, GaugeCircle, Users, Package, Laptop, LogOut, Building, Menu, X, Mail, FileCode, Store } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab
 import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
+import SuperadminShopsPreview from "@/components/superadmin/SuperadminShopsPreview";
 
 export default function SuperadminPage() {
   const [_, setLocation] = useLocation();
@@ -134,6 +135,17 @@ export default function SuperadminPage() {
         <FileCode className="h-5 w-5 mr-2" />
         Vorlagen
       </Button>
+      <Button 
+        variant={activeTab === "shops" ? "default" : "ghost"}
+        className="w-full justify-start"
+        onClick={() => {
+          setActiveTab("shops");
+          if (isMobile) closeMenu();
+        }}
+      >
+        <Store className="h-5 w-5 mr-2" />
+        Shops
+      </Button>
 
     </>
   );
@@ -228,6 +240,7 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräte"}
               {activeTab === "email" && "E-Mail"}
               {activeTab === "print-templates" && "Vorlagen"}
+              {activeTab === "shops" && "Shops"}
             </h1>
           </div>
           
@@ -238,6 +251,9 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzerverwaltung"}
               {activeTab === "packages" && "Paketverwaltung"}
               {activeTab === "devices" && "Geräteverwaltung"}
+              {activeTab === "email" && "E-Mail-Konfiguration"}
+              {activeTab === "print-templates" && "Vorlagenverwaltung"}
+              {activeTab === "shops" && "Shop Vorschau"}
             </h1>
             <p className="text-sm text-muted-foreground">
               Angemeldet als {currentUser && currentUser.username || ""}
@@ -264,6 +280,7 @@ export default function SuperadminPage() {
             {activeTab === "devices" && <SuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
+            {activeTab === "shops" && <SuperadminShopsPreview />}
           </ScrollArea>
         </main>
       </div>

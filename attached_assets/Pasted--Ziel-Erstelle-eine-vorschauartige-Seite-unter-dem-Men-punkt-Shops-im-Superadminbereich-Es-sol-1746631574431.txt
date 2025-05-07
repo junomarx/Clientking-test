@@ -1,0 +1,91 @@
+⚙️ Ziel:
+Erstelle eine vorschauartige Seite unter dem Menüpunkt „Shops“ im Superadminbereich. Es soll sich um eine visuelle Vorschau handeln, die die endgültige Gestaltung und Navigation zeigt – aber ohne funktionierende API oder Interaktionen. Alle Navigationspunkte müssen klickbar bleiben.
+
+✅ Anforderungen:
+Neuen Menüpunkt Shops in der Sidebar (falls nicht bereits vorhanden).
+
+Neue Datei: SuperadminShopsPreview.tsx
+
+Platzhalterdaten anzeigen: z. B. Shop-ID, Name, Benutzeranzahl, Status
+
+Verwende das Design vom Dashboard (Card, Table, Header etc.)
+
+Keine API-Abfragen, nur Mock-Daten verwenden
+
+Seite soll eingebettet sein und sofort gerendert werden
+
+Optional: Buttons „Bearbeiten“, „Deaktivieren“ (ohne Funktion)
+
+🧩 Code: SuperadminShopsPreview.tsx
+tsx
+Kopieren
+Bearbeiten
+import React from "react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+const mockShops = [
+  { id: 1, name: "Handyshop Berlin", users: 4, active: true },
+  { id: 2, name: "Reparatur Pro Wien", users: 2, active: false },
+  { id: 3, name: "MobileFix Zürich", users: 7, active: true },
+];
+
+export default function SuperadminShopsPreview() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight">Shops (Vorschau)</h1>
+      <p className="text-muted-foreground">Dies ist eine nicht-funktionale Vorschau zur späteren Shop-Verwaltung.</p>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Alle Shops (Demo)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Benutzer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Aktionen</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockShops.map((shop) => (
+                <TableRow key={shop.id}>
+                  <TableCell>{shop.id}</TableCell>
+                  <TableCell>{shop.name}</TableCell>
+                  <TableCell>{shop.users}</TableCell>
+                  <TableCell>
+                    {shop.active ? (
+                      <Badge variant="outline" className="bg-green-100 text-green-700">Aktiv</Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-red-100 text-red-700">Inaktiv</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button size="sm" variant="outline" disabled>Bearbeiten</Button>
+                    <Button size="sm" variant="secondary" disabled>Deaktivieren</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+🔗 Integration im Router
+Falls du React Router oder wouter verwendest, ergänze den Pfad z. B. so:
+
+tsx
+Kopieren
+Bearbeiten
+<Route path="/superadmin/shops" component={SuperadminShopsPreview} />
+📌 Zusammenfassung
+💬 Dieser Prompt erstellt eine visuelle Vorschau zur „Shops“-Verwaltung. Sie verwendet Mock-Daten, zeigt das Design, ohne echte Backend-Logik. Perfekt für Review und Layout-Abstimmung.
+
