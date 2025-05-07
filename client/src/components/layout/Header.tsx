@@ -85,7 +85,8 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="top" className="h-[90%] p-0">
+              {/* Diese Komponente wird programmatisch in den Klick-Funktionen geschlossen */}
+              <SheetContent side="top" className="h-[90%] p-0" id="mobile-menu">
                 <div className="flex flex-col h-full">
                   <div className="p-4 border-b">
                     <h2 className="text-lg font-semibold text-primary">Handyshop Verwaltung</h2>
@@ -102,8 +103,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       onClick={() => {
                         // Event senden, dass ein neuer Auftrag erstellt werden soll
                         window.dispatchEvent(new CustomEvent('trigger-new-order'));
-                        // Schließt das Menü
-                        document.body.click();
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den nächsten Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <PlusCircle className="h-5 w-5 mr-2" />
@@ -115,7 +123,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       onClick={() => {
                         if (onTabChange) onTabChange('dashboard');
-                        document.body.click(); // Schließt das Menü
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <LayoutDashboard className="h-5 w-5 mr-2" />
@@ -126,7 +142,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       onClick={() => {
                         if (onTabChange) onTabChange('repairs');
-                        document.body.click(); // Schließt das Menü
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <Wrench className="h-5 w-5 mr-2" />
@@ -137,7 +161,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       onClick={() => {
                         if (onTabChange) onTabChange('customers');
-                        document.body.click(); // Schließt das Menü
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <Users className="h-5 w-5 mr-2" />
@@ -148,7 +180,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       onClick={() => {
                         if (onTabChange) onTabChange('statistics');
-                        document.body.click(); // Schließt das Menü
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <BarChart2 className="h-5 w-5 mr-2" />
@@ -160,7 +200,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       onClick={() => {
                         if (canUseCostEstimates && onTabChange) {
                           onTabChange('cost-estimates');
-                          document.body.click(); // Schließt das Menü
+                          // Menü schließen
+                          const closeEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                          });
+                          // Sende das Click-Event direkt an den Escape-Button im Menü
+                          const button = document.querySelector('[data-radix-collection-item]');
+                          if (button) button.dispatchEvent(closeEvent);
                         }
                       }}
                       disabled={!canUseCostEstimates}
@@ -173,7 +221,15 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       className="w-full justify-start"
                       onClick={() => {
                         if (onTabChange) onTabChange('settings');
-                        document.body.click(); // Schließt das Menü
+                        // Menü schließen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                       }}
                     >
                       <Settings className="h-5 w-5 mr-2" />
@@ -188,8 +244,19 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
                         onClick={() => {
-                          window.location.href = "/auth?superadmin=true";
-                          document.body.click(); // Schließt das Menü
+                          // Menü schließen und zur Seite navigieren
+                          const closeEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                          });
+                          // Sende das Click-Event direkt an den Escape-Button im Menü
+                          const button = document.querySelector('[data-radix-collection-item]');
+                          if (button) button.dispatchEvent(closeEvent);
+                          // Kurze Verzögerung für die Menüschließung
+                          setTimeout(() => {
+                            window.location.href = "/auth?superadmin=true";
+                          }, 100);
                         }}
                       >
                         <Shield className="h-5 w-5 mr-2 text-red-500" />
@@ -203,8 +270,19 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2"
                         onClick={() => {
-                          window.location.href = "/admin";
-                          document.body.click(); // Schließt das Menü
+                          // Menü schließen und zur Seite navigieren
+                          const closeEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                          });
+                          // Sende das Click-Event direkt an den Escape-Button im Menü
+                          const button = document.querySelector('[data-radix-collection-item]');
+                          if (button) button.dispatchEvent(closeEvent);
+                          // Kurze Verzögerung für die Menüschließung
+                          setTimeout(() => {
+                            window.location.href = "/admin";
+                          }, 100);
                         }}
                       >
                         <Shield className="h-5 w-5 mr-2" />
@@ -218,8 +296,19 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         variant="outline" 
                         className="w-full justify-start mb-2"
                         onClick={() => {
-                          window.location.href = "/superadmin";
-                          document.body.click(); // Schließt das Menü
+                          // Menü schließen und zur Seite navigieren
+                          const closeEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                          });
+                          // Sende das Click-Event direkt an den Escape-Button im Menü
+                          const button = document.querySelector('[data-radix-collection-item]');
+                          if (button) button.dispatchEvent(closeEvent);
+                          // Kurze Verzögerung für die Menüschließung
+                          setTimeout(() => {
+                            window.location.href = "/superadmin";
+                          }, 100);
                         }}
                       >
                         <Shield className="h-5 w-5 mr-2 text-red-500" />
@@ -230,8 +319,16 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => {
+                        // Menü schließen und ausloggen
+                        const closeEvent = new MouseEvent('click', {
+                          bubbles: true,
+                          cancelable: true,
+                          view: window
+                        });
+                        // Sende das Click-Event direkt an den Escape-Button im Menü
+                        const button = document.querySelector('[data-radix-collection-item]');
+                        if (button) button.dispatchEvent(closeEvent);
                         handleLogout();
-                        document.body.click(); // Schließt das Menü
                       }}
                     >
                       <LogOut className="h-5 w-5 mr-2" />
