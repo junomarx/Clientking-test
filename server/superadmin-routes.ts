@@ -94,16 +94,15 @@ export function registerSuperadminRoutes(app: Express) {
       .groupBy(users.shopId);
       
       // E-Mail-Statistiken
-      // Da die email_history-Tabelle möglicherweise nicht die Spalte created_at enthält,
-      // verwenden wir createdAt und stellen sicher, dass die Tabelle existiert
+      // Wir verwenden die sentAt-Spalte in der email_history-Tabelle
       let emailStats: { emailsSent: number, lastEmailDate: string | null } = { emailsSent: 0, lastEmailDate: null };
       try {
         const results = await db.select({
           emailsSent: sql<number>`COUNT(*)`.as("emails_sent"),
-          lastEmailDate: sql<string | null>`MAX(${sql.raw("\"createdAt\"")})`.as("last_email_date"),
+          lastEmailDate: sql<string | null>`MAX(${sql.raw("\"sentAt\"")})`.as("last_email_date"),
         })
         .from(sql`email_history`)
-        .where(sql`"createdAt" >= ${thirtyDaysAgo.toISOString()}`);
+        .where(sql`"sentAt" >= ${thirtyDaysAgo.toISOString()}`);
         
         if (results.length > 0) {
           emailStats = results[0];
