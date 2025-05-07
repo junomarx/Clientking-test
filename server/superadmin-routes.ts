@@ -1506,13 +1506,15 @@ export function registerSuperadminRoutes(app: Express) {
               console.log(`Modell ${name} für Hersteller ID ${newBrandId} existiert bereits mit ID ${existingModel.id}`);
             } else {
               // Neues Modell anlegen
+              // Verwende die ID des aktuellen Superadmin-Benutzers statt einer nicht existierenden ID 0
+              const superadminUserId = (req.user as any).id;
               const [newModel] = await db.insert(userModels)
                 .values({
                   name: name,
                   modelSeriesId: null,  // Keine Modellreihe verwenden
                   brandId: newBrandId,
-                  userId: 0, // Globales Modell
-                  shopId: 0, // Gehört zu keinem Shop
+                  userId: superadminUserId, // Verwende die ID des aktuellen Superadmins
+                  shopId: null, // NULL für globale Einträge, nicht 0
                   createdAt: new Date(),
                   updatedAt: new Date()
                 })
