@@ -101,11 +101,6 @@ export function PrintSettingsTab() {
   const pickupTemplates = templates?.filter(t => t.type === 'pickup') || [];
   const costEstimateTemplates = templates?.filter(t => t.type === 'cost-estimate') || [];
 
-  // Leere Funktion als Platzhalter, falls noch Verweise dazu existieren
-  const handlePrintTest = (templateId: number) => {
-    // Testdruck wurde entfernt, da Vorlagen vom Superadmin verwaltet werden
-  };
-
   if (isLoading) {
     return (
       <div className="container py-6">
