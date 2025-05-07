@@ -19,7 +19,7 @@ import {
 
 interface SidebarProps {
   activeTab: string;
-  onTabChange: (tab: string) => void;
+  onTabChange: (tab: any) => void;
   canUseCostEstimates: boolean;
 }
 

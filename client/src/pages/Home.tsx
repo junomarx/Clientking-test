@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
@@ -10,7 +10,7 @@ import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
 import { SettingsPageContent } from '@/components/settings';
 import { useQuery } from '@tanstack/react-query';
-
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
 
@@ -18,15 +18,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
-
-  const [searchParam, setSearchParam] = useState<string>('');
   const [location] = useLocation();
   
-  // URL Parameter auswerten für Tab und Suchbegriff
+  // URL Parameter auswerten für Tab
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    const searchValue = params.get('search');
     
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
@@ -34,15 +31,9 @@ export default function Home() {
         setActiveTab(tabParam as Tab);
       }
     }
-    
-    // Suchbegriff aus URL setzen
-    if (searchValue) {
-      setSearchParam(searchValue);
-    }
   }, [location]);
   
   const handleNewOrder = () => {
-    // Wir benötigen keine Parameter mehr, da wir die Kundendaten im localStorage speichern
     console.log("Home: handleNewOrder aufgerufen ohne Parameter");
     setIsNewOrderModalOpen(true);
   };
@@ -93,16 +84,18 @@ export default function Home() {
       {/* Sidebar komponente */}
       <Sidebar 
         activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+        onTabChange={(tab) => setActiveTab(tab as Tab)} 
         canUseCostEstimates={canUseCostEstimates} 
       />
       
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Header mit Benutzerdaten */}
         <Header variant="app" />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Main content */}
-          <main className="flex-1 overflow-auto p-3 md:p-6">
+        
+        {/* Main content */}
+        <main className="flex-1 overflow-auto p-3 md:p-6">
+          <ScrollArea className="h-full">
             <div className="h-full">
               {activeTab === 'dashboard' && (
                 <DashboardTab 
@@ -131,10 +124,11 @@ export default function Home() {
                 <SettingsPageContent />
               )}
             </div>
-          </main>
-        </div>
+          </ScrollArea>
+        </main>
       </div>
       
+      {/* Modal für neue Aufträge */}
       <NewOrderModal 
         open={isNewOrderModalOpen} 
         onClose={() => setIsNewOrderModalOpen(false)}
