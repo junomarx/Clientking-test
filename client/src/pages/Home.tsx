@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
-import { TabNavigation } from '@/components/layout/TabNavigation';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
@@ -9,6 +9,7 @@ import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
 import { SettingsPageContent } from '@/components/settings';
+import { useQuery } from '@tanstack/react-query';
 
 
 type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 'settings';
@@ -80,14 +81,26 @@ export default function Home() {
     };
   }, []);
 
+  // Abfrage für Kostenvoranschläge-Berechtigung
+  const { data: costEstimatesAccess } = useQuery<{ canUseCostEstimates: boolean }>({
+    queryKey: ['/api/can-use-cost-estimates']
+  });
+  
+  const canUseCostEstimates = costEstimatesAccess?.canUseCostEstimates || false;
+
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
+      {/* Sidebar komponente */}
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        canUseCostEstimates={canUseCostEstimates} 
+      />
+      
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header variant="app" />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-          
           {/* Main content */}
           <main className="flex-1 overflow-auto p-3 md:p-6">
             <div className="h-full">
