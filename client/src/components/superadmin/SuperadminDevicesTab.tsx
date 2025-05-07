@@ -1712,21 +1712,22 @@ export default function SuperadminDevicesTab() {
         
         <TabsContent value="statistics">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
               <div>
-                <CardTitle>Gerätestatistiken</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base md:text-lg font-semibold">Gerätestatistiken</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
                   Übersicht über alle Gerätetypen, Marken und Modelle im System
                 </CardDescription>
               </div>
               <Button 
-                variant="outline" 
+                variant="outline"
+                className="text-xs md:text-sm h-8 md:h-10"
                 onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-statistics"] })}
               >
-                <RefreshCcw className="mr-2 h-4 w-4" /> Aktualisieren
+                <RefreshCcw className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Aktualisieren
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               {isLoadingStatistics ? (
                 <div className="flex justify-center p-8">
                   <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -1736,37 +1737,37 @@ export default function SuperadminDevicesTab() {
                   {/* Zusammenfassung */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-blue-50 dark:bg-blue-950">
-                      <CardContent className="p-6">
+                      <CardContent className="p-3 md:p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">Gerätetypen</p>
-                            <h3 className="text-3xl font-bold">{deviceStatistics.totalDeviceTypes}</h3>
+                            <p className="text-xs md:text-sm font-medium">Gerätetypen</p>
+                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalDeviceTypes}</h3>
                           </div>
-                          <Smartphone className="h-12 w-12 text-blue-500" />
+                          <Smartphone className="h-8 w-8 md:h-12 md:w-12 text-blue-500" />
                         </div>
                       </CardContent>
                     </Card>
                     
                     <Card className="bg-green-50 dark:bg-green-950">
-                      <CardContent className="p-6">
+                      <CardContent className="p-3 md:p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">Marken</p>
-                            <h3 className="text-3xl font-bold">{deviceStatistics.totalBrands}</h3>
+                            <p className="text-xs md:text-sm font-medium">Marken</p>
+                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalBrands}</h3>
                           </div>
-                          <Factory className="h-12 w-12 text-green-500" />
+                          <Factory className="h-8 w-8 md:h-12 md:w-12 text-green-500" />
                         </div>
                       </CardContent>
                     </Card>
                     
                     <Card className="bg-purple-50 dark:bg-purple-950">
-                      <CardContent className="p-6">
+                      <CardContent className="p-3 md:p-6">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium">Modelle</p>
-                            <h3 className="text-3xl font-bold">{deviceStatistics.totalModels}</h3>
+                            <p className="text-xs md:text-sm font-medium">Modelle</p>
+                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalModels}</h3>
                           </div>
-                          <Layers className="h-12 w-12 text-purple-500" />
+                          <Layers className="h-8 w-8 md:h-12 md:w-12 text-purple-500" />
                         </div>
                       </CardContent>
                     </Card>
@@ -1778,13 +1779,13 @@ export default function SuperadminDevicesTab() {
                     <div className="space-y-4">
                       {deviceStatistics.deviceTypeStats.map(stat => (
                         <Card key={stat.name} className="overflow-hidden">
-                          <CardHeader className="bg-muted/50 p-4">
+                          <CardHeader className="bg-muted/50 p-3 md:p-4">
                             <div className="flex items-center">
                               {getDeviceTypeIcon(stat.name)}
-                              <h4 className="ml-2 text-lg font-medium">{stat.name}</h4>
+                              <h4 className="ml-2 text-base md:text-lg font-medium">{stat.name}</h4>
                             </div>
                           </CardHeader>
-                          <CardContent className="p-4">
+                          <CardContent className="p-3 md:p-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                               <div className="flex items-center p-3 rounded-md bg-muted/30">
                                 <Factory className="h-5 w-5 mr-2 text-primary" />
@@ -1851,10 +1852,10 @@ export default function SuperadminDevicesTab() {
       
       {/* Dialog zum Erstellen eines neuen Fehlereintrags */}
       <Dialog open={isCreateIssueOpen} onOpenChange={setIsCreateIssueOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Neuen Fehlereintrag erstellen</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Neuen Fehlereintrag erstellen</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Fügen Sie einen neuen Eintrag zum Fehlerkatalog hinzu.
             </DialogDescription>
           </DialogHeader>
@@ -1964,10 +1965,10 @@ export default function SuperadminDevicesTab() {
 
       {/* Dialog zum Bearbeiten eines Fehlereintrags */}
       <Dialog open={isEditIssueOpen} onOpenChange={setIsEditIssueOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Fehlereintrag bearbeiten</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Fehlereintrag bearbeiten</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Aktualisieren Sie die Informationen des Fehlereintrags.
             </DialogDescription>
           </DialogHeader>
@@ -2077,10 +2078,10 @@ export default function SuperadminDevicesTab() {
 
       {/* Dialog zum Erstellen eines neuen Gerätetyps */}
       <Dialog open={isCreateDeviceTypeOpen} onOpenChange={setIsCreateDeviceTypeOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Neuen Gerätetyp erstellen</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Neuen Gerätetyp erstellen</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Fügen Sie einen neuen Gerätetyp zum System hinzu.
             </DialogDescription>
           </DialogHeader>
@@ -2111,10 +2112,10 @@ export default function SuperadminDevicesTab() {
 
       {/* Dialog zum Bearbeiten eines Gerätetyps */}
       <Dialog open={isEditDeviceTypeOpen} onOpenChange={setIsEditDeviceTypeOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Gerätetyp bearbeiten</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Gerätetyp bearbeiten</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Ändern Sie den Namen des Gerätetyps.
             </DialogDescription>
           </DialogHeader>
@@ -2144,10 +2145,10 @@ export default function SuperadminDevicesTab() {
       
       {/* Dialog zum Erstellen einer neuen Marke */}
       <Dialog open={isCreateBrandOpen} onOpenChange={setIsCreateBrandOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Neue Marke erstellen</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
+          <DialogHeader className="p-0 md:p-0 mb-4">
+            <DialogTitle className="text-lg md:text-xl">Neue Marke erstellen</DialogTitle>
+            <DialogDescription className="text-xs md:text-sm">
               Fügen Sie eine neue Marke zum System hinzu.
             </DialogDescription>
           </DialogHeader>
