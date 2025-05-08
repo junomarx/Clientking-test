@@ -1,13 +1,4 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 
 interface DeviceType {
   id: number;
@@ -29,169 +20,312 @@ interface Model {
 
 export default function ApiTest() {
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
+  const [selectedDeviceType, setSelectedDeviceType] = useState<number | null>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<number | null>(null);
   const [models, setModels] = useState<Model[]>([]);
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string>("");
-  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // Lade Gerätetypen beim Seitenaufruf
+    // Lade alle Gerätetypen beim Seitenaufruf
+    setLoading(true);
     fetch("/api/global/device-types")
-      .then(res => res.json())
-      .then(data => setDeviceTypes(data))
-      .catch(err => console.error("Fehler beim Laden der Gerätetypen:", err));
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        setDeviceTypes(data);
+        setLoading(false);
+        console.log("Gerätetypen geladen:", data.length);
+      })
+      .catch(err => {
+        console.error("Fehler beim Laden der Gerätetypen:", err);
+        setError(`Fehler beim Laden der Gerätetypen: ${err.message}`);
+        setLoading(false);
+      });
   }, []);
   
-  useEffect(() => {
-    // Lade Marken wenn ein Gerätetyp ausgewählt wurde
-    if (selectedDeviceType) {
-      const deviceTypeId = parseInt(selectedDeviceType);
-      fetch(`/api/global/brands?deviceTypeId=${deviceTypeId}`)
-        .then(res => res.json())
-        .then(data => {
-          console.log(`${data.length} Marken für Gerätetyp ${deviceTypeId} geladen`);
-          setBrands(data);
-          setSelectedBrand("");
-          setModels([]);
-        })
-        .catch(err => console.error("Fehler beim Laden der Marken:", err));
-    } else {
-      setBrands([]);
-      setSelectedBrand("");
-      setModels([]);
-    }
-  }, [selectedDeviceType]);
+  // Lade Marken wenn ein Gerätetyp ausgewählt wurde
+  const loadBrands = (deviceTypeId: number) => {
+    setLoading(true);
+    fetch(`/api/global/brands?deviceTypeId=${deviceTypeId}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        setBrands(data);
+        setLoading(false);
+        console.log(`${data.length} Marken für Gerätetyp ${deviceTypeId} geladen`);
+      })
+      .catch(err => {
+        console.error(`Fehler beim Laden der Marken für Gerätetyp ${deviceTypeId}:`, err);
+        setError(`Fehler beim Laden der Marken: ${err.message}`);
+        setLoading(false);
+      });
+  };
   
-  useEffect(() => {
-    // Lade Modelle wenn eine Marke ausgewählt wurde
-    if (selectedBrand && selectedDeviceType) {
-      const brandId = parseInt(selectedBrand);
-      const deviceTypeId = parseInt(selectedDeviceType);
-      fetch(`/api/global/models?brandId=${brandId}&deviceTypeId=${deviceTypeId}`)
-        .then(res => res.json())
-        .then(data => {
-          console.log(`${data.length} Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId} geladen`);
-          setModels(data);
-        })
-        .catch(err => console.error("Fehler beim Laden der Modelle:", err));
-    } else {
-      setModels([]);
-    }
-  }, [selectedBrand, selectedDeviceType]);
+  // Lade Modelle wenn eine Marke ausgewählt wurde
+  const loadModels = (brandId: number, deviceTypeId: number) => {
+    setLoading(true);
+    fetch(`/api/global/models?brandId=${brandId}&deviceTypeId=${deviceTypeId}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        setModels(data);
+        setLoading(false);
+        console.log(`${data.length} Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId} geladen`);
+      })
+      .catch(err => {
+        console.error(`Fehler beim Laden der Modelle für Marke ${brandId}:`, err);
+        setError(`Fehler beim Laden der Modelle: ${err.message}`);
+        setLoading(false);
+      });
+  };
+  
+  // Funktion zum Testen aller API-Endpunkte auf einmal
+  const testAllApis = () => {
+    setError(null);
+    
+    // Test: Alle Gerätetypen abrufen
+    fetch("/api/global/device-types")
+      .then(res => res.json())
+      .then(data => {
+        console.log("TEST Gerätetypen:", data.length);
+        document.getElementById("deviceTypesResult")!.textContent = 
+          `Erfolgreich: ${data.length} Gerätetypen geladen`;
+        
+        if (data.length > 0) {
+          const typeId = data[0].id;
+          
+          // Test: Marken für den ersten Gerätetyp abrufen
+          fetch(`/api/global/brands?deviceTypeId=${typeId}`)
+            .then(res => res.json())
+            .then(brandData => {
+              console.log(`TEST Marken für Typ ${typeId}:`, brandData.length);
+              document.getElementById("brandsResult")!.textContent = 
+                `Erfolgreich: ${brandData.length} Marken für Typ ${typeId} geladen`;
+              
+              if (brandData.length > 0) {
+                const brandId = brandData[0].id;
+                
+                // Test: Modelle für die erste Marke abrufen
+                fetch(`/api/global/models?brandId=${brandId}&deviceTypeId=${typeId}`)
+                  .then(res => res.json())
+                  .then(modelData => {
+                    console.log(`TEST Modelle für Marke ${brandId}:`, modelData.length);
+                    document.getElementById("modelsResult")!.textContent = 
+                      `Erfolgreich: ${modelData.length} Modelle für Marke ${brandId} und Typ ${typeId} geladen`;
+                  })
+                  .catch(err => {
+                    document.getElementById("modelsResult")!.textContent = 
+                      `Fehler: ${err.message}`;
+                  });
+              } else {
+                document.getElementById("modelsResult")!.textContent = 
+                  "Keine Marken gefunden, kann Modelle nicht testen";
+              }
+            })
+            .catch(err => {
+              document.getElementById("brandsResult")!.textContent = 
+                `Fehler: ${err.message}`;
+            });
+        } else {
+          document.getElementById("brandsResult")!.textContent = 
+            "Keine Gerätetypen gefunden, kann Marken nicht testen";
+          document.getElementById("modelsResult")!.textContent = 
+            "Keine Gerätetypen gefunden, kann Modelle nicht testen";
+        }
+      })
+      .catch(err => {
+        document.getElementById("deviceTypesResult")!.textContent = 
+          `Fehler: ${err.message}`;
+      });
+  };
   
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">API Test: Geräteauswahl</h1>
+    <div style={{ 
+      padding: "20px", 
+      maxWidth: "900px",
+      margin: "0 auto",
+      fontFamily: "Arial, sans-serif"
+    }}>
+      <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>API Test: Globale Gerätedaten</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Gerätetyp auswählen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select 
-              value={selectedDeviceType} 
-              onValueChange={setSelectedDeviceType}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Gerätetyp auswählen" />
-              </SelectTrigger>
-              <SelectContent>
-                {deviceTypes.map(deviceType => (
-                  <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
-                    {deviceType.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="mt-2 text-sm">
-              {selectedDeviceType && (
-                <span>Gerätetyp ID: {selectedDeviceType}</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Marke auswählen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select 
-              value={selectedBrand} 
-              onValueChange={setSelectedBrand}
-              disabled={!selectedDeviceType || brands.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={brands.length === 0 ? "Keine Marken verfügbar" : "Marke auswählen"} />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map(brand => (
-                  <SelectItem key={brand.id} value={brand.id.toString()}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="mt-2 text-sm">
-              {brands.length > 0 && (
-                <span>{brands.length} Marken verfügbar</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Modell auswählen</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select 
-              disabled={!selectedBrand || models.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={models.length === 0 ? "Keine Modelle verfügbar" : "Modell auswählen"} />
-              </SelectTrigger>
-              <SelectContent>
-                {models.map(model => (
-                  <SelectItem key={model.id} value={model.id.toString()}>
-                    {model.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <div className="mt-2 text-sm">
-              {models.length > 0 && (
-                <span>{models.length} Modelle verfügbar</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {error && (
+        <div style={{ 
+          padding: "10px", 
+          backgroundColor: "#ffebee", 
+          color: "#c62828",
+          borderRadius: "4px",
+          marginBottom: "20px" 
+        }}>
+          <strong>Fehler:</strong> {error}
+        </div>
+      )}
+      
+      <div style={{ marginBottom: "30px" }}>
+        <button 
+          onClick={testAllApis}
+          style={{
+            padding: "10px 15px",
+            backgroundColor: "#4caf50",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
+        >
+          Alle API-Endpunkte testen
+        </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>API Response: Brands</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs bg-gray-100 p-2 rounded max-h-60 overflow-auto">
-              {JSON.stringify(brands, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "1fr 1fr 1fr", 
+        gap: "15px",
+        marginBottom: "20px" 
+      }}>
+        <div style={{ 
+          padding: "15px", 
+          border: "1px solid #e0e0e0", 
+          borderRadius: "4px" 
+        }}>
+          <h3 style={{ marginTop: 0 }}>Gerätetypen</h3>
+          <p id="deviceTypesResult">Noch nicht getestet</p>
+          <div style={{ 
+            marginTop: "15px", 
+            maxHeight: "200px", 
+            overflow: "auto" 
+          }}>
+            <ul>
+              {deviceTypes.map(type => (
+                <li key={type.id} style={{ marginBottom: "5px" }}>
+                  <button 
+                    onClick={() => {
+                      setSelectedDeviceType(type.id);
+                      loadBrands(type.id);
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: selectedDeviceType === type.id ? "#2196f3" : "#e0e0e0",
+                      color: selectedDeviceType === type.id ? "white" : "black",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      width: "100%"
+                    }}
+                  >
+                    {type.name} (ID: {type.id})
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>API Response: Models</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs bg-gray-100 p-2 rounded max-h-60 overflow-auto">
-              {JSON.stringify(models, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
+        <div style={{ 
+          padding: "15px", 
+          border: "1px solid #e0e0e0", 
+          borderRadius: "4px" 
+        }}>
+          <h3 style={{ marginTop: 0 }}>Marken</h3>
+          <p id="brandsResult">Noch nicht getestet</p>
+          <div style={{ 
+            marginTop: "15px", 
+            maxHeight: "200px", 
+            overflow: "auto" 
+          }}>
+            <ul>
+              {brands.map(brand => (
+                <li key={brand.id} style={{ marginBottom: "5px" }}>
+                  <button 
+                    onClick={() => {
+                      if (selectedDeviceType) {
+                        setSelectedBrand(brand.id);
+                        loadModels(brand.id, selectedDeviceType);
+                      }
+                    }}
+                    style={{
+                      padding: "5px 10px",
+                      backgroundColor: selectedBrand === brand.id ? "#2196f3" : "#e0e0e0",
+                      color: selectedBrand === brand.id ? "white" : "black",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      width: "100%"
+                    }}
+                  >
+                    {brand.name} (ID: {brand.id})
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {brands.length === 0 && selectedDeviceType && (
+              <p style={{ color: "#9e9e9e", fontStyle: "italic" }}>
+                Keine Marken für diesen Gerätetyp verfügbar
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div style={{ 
+          padding: "15px", 
+          border: "1px solid #e0e0e0", 
+          borderRadius: "4px" 
+        }}>
+          <h3 style={{ marginTop: 0 }}>Modelle</h3>
+          <p id="modelsResult">Noch nicht getestet</p>
+          <div style={{ 
+            marginTop: "15px", 
+            maxHeight: "200px", 
+            overflow: "auto" 
+          }}>
+            <ul>
+              {models.map(model => (
+                <li key={model.id} style={{ marginBottom: "5px" }}>
+                  <div style={{
+                    padding: "5px 10px",
+                    backgroundColor: "#e0e0e0",
+                    borderRadius: "4px",
+                  }}>
+                    {model.name} (ID: {model.id})
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {models.length === 0 && selectedBrand && (
+              <p style={{ color: "#9e9e9e", fontStyle: "italic" }}>
+                Keine Modelle für diese Marke verfügbar
+              </p>
+            )}
+          </div>
+        </div>
       </div>
+      
+      {loading && (
+        <div style={{
+          padding: "10px",
+          backgroundColor: "#e3f2fd",
+          color: "#1565c0",
+          borderRadius: "4px",
+          marginTop: "20px"
+        }}>
+          Daten werden geladen...
+        </div>
+      )}
     </div>
   );
 }
