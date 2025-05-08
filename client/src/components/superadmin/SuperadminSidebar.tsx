@@ -140,8 +140,9 @@ export function SuperadminSidebar({
       {/* Desktop Sidebar - nur auf größeren Bildschirmen sichtbar */}
       <div className="hidden md:flex md:w-64 md:h-screen md:flex-col bg-muted/20 border-r overflow-y-auto">
         <div className="flex flex-col w-full pt-5 pb-4">
-          <div className="flex items-center flex-shrink-0 px-4 mb-5">
+          <div className="flex flex-col flex-shrink-0 px-4 mb-5">
             <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
+            <p className="text-sm text-muted-foreground">{currentUser?.username || ""}</p>
           </div>
           <nav className="mt-2 flex-1 px-2 space-y-1">
             <NavItems />
@@ -182,7 +183,7 @@ export function SuperadminSidebar({
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-left">Superadmin Menü</h2>
               <p className="text-sm text-muted-foreground">
-                {businessSettings?.businessName || "Handyshop Verwaltung"}
+                {currentUser?.username || ""}
               </p>
             </div>
             <nav className="flex flex-col space-y-2 px-1">
