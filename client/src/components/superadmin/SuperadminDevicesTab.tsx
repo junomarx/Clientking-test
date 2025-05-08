@@ -2354,6 +2354,106 @@ export default function SuperadminDevicesTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Import Modelle Dialog */}
+      <Dialog open={isBulkImportModelsOpen} onOpenChange={setIsBulkImportModelsOpen}>
+        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg md:text-xl">Bulk-Import von Modellen</DialogTitle>
+            <DialogDescription className="text-sm md:text-base">
+              Fügen Sie mehrere Modelle für eine bestimmte Marke hinzu, ein Modell pro Zeile
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="device-type-select-bulk" className="text-right">
+                Gerätetyp
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={selectedModelDeviceType || ""}
+                  onValueChange={(value) => {
+                    setSelectedModelDeviceType(value || null);
+                    setSelectedBrandForBulk(null);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Gerätetyp auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {deviceTypesList?.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        <div className="flex items-center gap-2">
+                          {getDeviceTypeIcon(type)}
+                          <span>{type}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="brand-select-bulk" className="text-right">
+                Marke
+              </Label>
+              <div className="col-span-3">
+                <Select 
+                  value={selectedBrandForBulk ? selectedBrandForBulk.toString() : ""}
+                  onValueChange={(value) => {
+                    setSelectedBrandForBulk(parseInt(value));
+                  }}
+                  disabled={!selectedModelDeviceType}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Marke auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getFilteredBrands(selectedModelDeviceType).map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id.toString()}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              <Label htmlFor="bulk-models" className="text-right">
+                Modelle
+              </Label>
+              <div className="col-span-3">
+                <textarea
+                  id="bulk-models"
+                  className="w-full min-h-[150px] p-2 border rounded-md"
+                  placeholder="iPhone SE 2020&#10;iPhone 13&#10;iPhone 13 Pro&#10;iPhone 14&#10;iPhone 14 Pro&#10;..."
+                  value={bulkModelsText}
+                  onChange={(e) => setBulkModelsText(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Ein Modell pro Zeile eingeben</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsBulkImportModelsOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              onClick={handleSubmitBulkImportModels}
+              disabled={bulkImportModelsMutation.isPending}
+            >
+              {bulkImportModelsMutation.isPending ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                  Importiere...
+                </>
+              ) : (
+                "Importieren"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
