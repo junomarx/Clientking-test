@@ -979,6 +979,23 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Geräteinformationen</h3>
                 
+                {/* GlobalDeviceSelector Komponente */}
+                <GlobalDeviceSelector 
+                  onDeviceTypeSelect={(deviceType, deviceTypeId) => {
+                    form.setValue('deviceType', deviceType);
+                    setSelectedDeviceTypeId(deviceTypeId);
+                  }}
+                  onBrandSelect={(brand, brandId) => {
+                    form.setValue('brand', brand);
+                    setSelectedBrandId(brandId);
+                  }}
+                  onModelSelect={(model, modelId) => {
+                    form.setValue('model', model);
+                    setSelectedModelId(modelId);
+                  }}
+                  className="mb-4"
+                />
+                
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Versteckte Felder für die Formvalidierung */}
                   <input type="hidden" {...form.register("deviceType")} />
