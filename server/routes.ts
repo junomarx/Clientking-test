@@ -32,6 +32,7 @@ import { ZodError } from "zod";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
+import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { db } from "./db";

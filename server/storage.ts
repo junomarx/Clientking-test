@@ -78,6 +78,13 @@ export interface IStorage {
   updateUserPassword(id: number, newPassword: string): Promise<boolean>;
   deleteUser(id: number): Promise<boolean>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Global device data methods for public access
+  getGlobalDeviceTypes(): Promise<UserDeviceType[]>;
+  getGlobalBrands(): Promise<UserBrand[]>;
+  getGlobalBrandsByDeviceType(deviceTypeId: number): Promise<UserBrand[]>;
+  getGlobalModels(): Promise<UserModel[]>;
+  getGlobalModelsByBrand(brandId: number): Promise<UserModel[]>;
 
   // Customer methods
   getAllCustomers(): Promise<Customer[]>;
@@ -3398,6 +3405,119 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error converting cost estimate to repair:", error);
       return undefined;
+    }
+  }
+
+  // Global device data methods for public access
+  async getGlobalDeviceTypes(): Promise<UserDeviceType[]> {
+    try {
+      // Holen nur globale Gerätetypen (shopId=null) vom Superadmin (ID=10)
+      const results = await db
+        .select()
+        .from(userDeviceTypes)
+        .where(
+          and(
+            eq(userDeviceTypes.userId, 10), // Superadmin-ID
+            isNull(userDeviceTypes.shopId)
+          )
+        )
+        .orderBy(userDeviceTypes.name);
+      
+      console.log(`Globale Gerätetypen: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Gerätetypen:', error);
+      return [];
+    }
+  }
+
+  async getGlobalBrands(): Promise<UserBrand[]> {
+    try {
+      // Holen nur globale Marken (shopId=null) vom Superadmin (ID=10)
+      const results = await db
+        .select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.userId, 10), // Superadmin-ID
+            isNull(userBrands.shopId)
+          )
+        )
+        .orderBy(userBrands.name);
+      
+      console.log(`Globale Marken: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Marken:', error);
+      return [];
+    }
+  }
+
+  async getGlobalBrandsByDeviceType(deviceTypeId: number): Promise<UserBrand[]> {
+    try {
+      // Holen nur globale Marken (shopId=null) für einen bestimmten Gerätetyp
+      const results = await db
+        .select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.deviceTypeId, deviceTypeId),
+            eq(userBrands.userId, 10), // Superadmin-ID
+            isNull(userBrands.shopId)
+          )
+        )
+        .orderBy(userBrands.name);
+      
+      console.log(`Globale Marken für Gerätetyp ${deviceTypeId}: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Marken nach Gerätetyp:', error);
+      return [];
+    }
+  }
+
+  async getGlobalModels(): Promise<UserModel[]> {
+    try {
+      // Holen nur globale Modelle (shopId=null) vom Superadmin (ID=10)
+      const results = await db
+        .select()
+        .from(userModels)
+        .where(
+          and(
+            eq(userModels.userId, 10), // Superadmin-ID
+            isNull(userModels.shopId)
+          )
+        )
+        .orderBy(userModels.name);
+      
+      console.log(`Globale Modelle: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Modelle:', error);
+      return [];
+    }
+  }
+
+  async getGlobalModelsByBrand(brandId: number): Promise<UserModel[]> {
+    try {
+      // Holen nur globale Modelle (shopId=null) für eine bestimmte Marke
+      const results = await db
+        .select()
+        .from(userModels)
+        .where(
+          and(
+            eq(userModels.brandId, brandId),
+            eq(userModels.userId, 10), // Superadmin-ID
+            isNull(userModels.shopId)
+          )
+        )
+        .orderBy(userModels.name);
+      
+      console.log(`Globale Modelle für Marke ${brandId}: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Modelle nach Marke:', error);
+      return [];
     }
   }
 

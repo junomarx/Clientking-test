@@ -259,7 +259,7 @@ export default function DeviceSelector({
                 disabled={!selectedDeviceType}
               />
               <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon className={`h-5 w-5 ${selectedDeviceType ? 'text-gray-400' : 'text-gray-300'}`} aria-hidden="true" />
+                <ChevronsUpDown className={`h-5 w-5 ${selectedDeviceType ? 'text-gray-400' : 'text-gray-300'}`} aria-hidden="true" />
               </Combobox.Button>
             </div>
             {selectedDeviceType && (
