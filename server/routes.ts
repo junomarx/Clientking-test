@@ -33,6 +33,7 @@ import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
+import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
@@ -118,6 +119,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up superadmin print templates routes
   registerSuperadminPrintTemplatesRoutes(app);
+  
+  // Set up global device data routes
+  registerGlobalDeviceRoutes(app);
   
   // CUSTOMERS API
   app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
