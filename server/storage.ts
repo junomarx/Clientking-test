@@ -51,6 +51,7 @@ import {
   gt,
   count,
   isNotNull,
+  isNull,
   like,
   SQL,
 } from "drizzle-orm";
@@ -2387,16 +2388,29 @@ export class DatabaseStorage implements IStorage {
     // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
     const shopId = user.shopId || 1;
 
-    return await db
+    // Holen sowohl benutzerspezifische Gerätetypen als auch globale Gerätetypen (shopId=null)
+    // Globale Gerätetypen sind solche, die vom Superadmin (ID=10) erstellt wurden
+    const results = await db
       .select()
       .from(userDeviceTypes)
       .where(
-        and(
-          eq(userDeviceTypes.userId, userId),
-          eq(userDeviceTypes.shopId, shopId),
+        or(
+          // Benutzerspezifische Gerätetypen (für diesen Benutzer und Shop)
+          and(
+            eq(userDeviceTypes.userId, userId),
+            eq(userDeviceTypes.shopId, shopId),
+          ),
+          // ODER globale Gerätetypen vom Superadmin (shopId=null)
+          and(
+            eq(userDeviceTypes.userId, 10), // Superadmin-ID
+            isNull(userDeviceTypes.shopId)
+          )
         ),
       )
       .orderBy(userDeviceTypes.name);
+    
+    console.log(`Gerätetypen für Benutzer ${userId}: ${results.length} gefunden (inkl. globaler Typen)`);
+    return results;
   }
 
   async getUserDeviceType(
@@ -2524,11 +2538,35 @@ export class DatabaseStorage implements IStorage {
 
   // User brands methods
   async getUserBrands(userId: number): Promise<UserBrand[]> {
-    return await db
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+
+    // Holen sowohl benutzerspezifische Marken als auch globale Marken (shopId=null)
+    const results = await db
       .select()
       .from(userBrands)
-      .where(eq(userBrands.userId, userId))
+      .where(
+        or(
+          // Benutzerspezifische Marken (für diesen Benutzer und Shop)
+          and(
+            eq(userBrands.userId, userId),
+            eq(userBrands.shopId, shopId),
+          ),
+          // ODER globale Marken vom Superadmin (shopId=null)
+          and(
+            eq(userBrands.userId, 10), // Superadmin-ID
+            isNull(userBrands.shopId)
+          )
+        ),
+      )
       .orderBy(userBrands.name);
+    
+    console.log(`Marken für Benutzer ${userId}: ${results.length} gefunden (inkl. globaler Marken)`);
+    return results;
   }
 
   async getUserBrand(
