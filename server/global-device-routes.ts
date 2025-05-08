@@ -14,11 +14,21 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
     }
   });
 
-  // Endpoint: Alle Marken abrufen
+  // Endpoint: Alle Marken abrufen, mit optionalem Filter nach deviceTypeId
   app.get('/api/global/brands', async (req, res) => {
     try {
-      const brands = await storage.getGlobalBrands();
-      res.json(brands);
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : null;
+      
+      if (deviceTypeId) {
+        console.log(`Marken für Gerätetyp ${deviceTypeId} über Query-Parameter angefordert`);
+        const brands = await storage.getGlobalBrandsByDeviceType(deviceTypeId);
+        console.log(`${brands.length} Marken für Gerätetyp ${deviceTypeId} gefunden`);
+        return res.json(brands);
+      } else {
+        const brands = await storage.getGlobalBrands();
+        console.log(`Alle ${brands.length} globalen Marken abgerufen`);
+        return res.json(brands);
+      }
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Marken:', error);
       res.status(500).json({ message: 'Fehler beim Abrufen der globalen Marken' });
@@ -42,26 +52,7 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
     }
   });
   
-  // Endpoint: Marken nach deviceTypeId über Query-Parameter abfragen
-  app.get('/api/global/brands', async (req, res) => {
-    try {
-      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : null;
-      
-      if (deviceTypeId) {
-        console.log(`Marken für Gerätetyp ${deviceTypeId} über Query-Parameter angefordert`);
-        const brands = await storage.getGlobalBrandsByDeviceType(deviceTypeId);
-        console.log(`${brands.length} Marken für Gerätetyp ${deviceTypeId} gefunden`);
-        return res.json(brands);
-      } else {
-        const brands = await storage.getGlobalBrands();
-        console.log(`Alle ${brands.length} globalen Marken abgerufen`);
-        return res.json(brands);
-      }
-    } catch (error) {
-      console.error('Fehler beim Abrufen der Marken:', error);
-      res.status(500).json({ message: 'Fehler beim Abrufen der Marken' });
-    }
-  });
+  // Der obere Endpunkt '/api/global/brands' übernimmt bereits die Funktionalität mit Query-Parametern
 
   // Endpoint: Alle Modelle abrufen
   app.get('/api/global/models', async (req, res) => {
