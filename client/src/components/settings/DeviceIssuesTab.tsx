@@ -28,22 +28,13 @@ type DeviceIssue = {
   isCommon: boolean;
 };
 
-// Icon-Mapping für Gerätetypen
-const deviceTypeIcons: Record<string, JSX.Element> = {
-  'smartphone': <Smartphone className="h-5 w-5" />,
-  'tablet': <Tablet className="h-5 w-5" />,
-  'laptop': <Laptop className="h-5 w-5" />,
-  'watch': <Watch className="h-5 w-5" />,
-  'spielekonsole': <Gamepad2 className="h-5 w-5" />
-};
-
-// Liste der unterstützten Gerätetypen
-const supportedDeviceTypes = [
-  { id: 'smartphone', name: 'Smartphone' },
-  { id: 'tablet', name: 'Tablet' },
-  { id: 'laptop', name: 'Laptop' },
-  { id: 'watch', name: 'Smartwatch' },
-  { id: 'spielekonsole', name: 'Spielekonsole' }
+// Gerätekategorien mit Icons und Namen als Tooltip - nur tatsächlich vorhandene Gerätetypen
+const deviceCategories = [
+  { id: 'smartphone', name: 'Smartphone', icon: <Smartphone className="h-5 w-5" /> },
+  { id: 'tablet', name: 'Tablet', icon: <Tablet className="h-5 w-5" /> },
+  { id: 'laptop', name: 'Laptop', icon: <Laptop className="h-5 w-5" /> },
+  { id: 'watch', name: 'Smartwatch', icon: <Watch className="h-5 w-5" /> },
+  { id: 'spielekonsole', name: 'Spielekonsole', icon: <Gamepad2 className="h-5 w-5" /> }
 ];
 
 export function DeviceIssuesTab() {
