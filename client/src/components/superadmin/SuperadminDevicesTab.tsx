@@ -1375,7 +1375,11 @@ export default function SuperadminDevicesTab() {
                     <Label htmlFor="modelBrandFilter" className="whitespace-nowrap">Marke:</Label>
                     <Select
                       value={selectedModelBrandId?.toString() || "all"}
-                      onValueChange={(value) => setSelectedModelBrandId(value === "all" ? null : parseInt(value))}
+                      onValueChange={(value) => {
+                        const brandId = value === "all" ? null : parseInt(value);
+                        setSelectedModelBrandId(brandId);
+                        console.log(`Markenfilter geändert zu: ${brandId} (${value})`);
+                      }}
                       disabled={!selectedModelDeviceType}
                     >
                       <SelectTrigger className="w-full md:w-40">
@@ -1459,8 +1463,9 @@ export default function SuperadminDevicesTab() {
                             
                             // Filterung nach Marke, falls ausgewählt
                             let brandMatches = true;
-                            if (selectedModelBrandId !== null) {
+                            if (selectedModelBrandId !== null && selectedModelBrandId !== 0) {
                               brandMatches = model.brandId === selectedModelBrandId;
+                              console.log(`Filterung nach Marke ${selectedModelBrandId}: Modell ${model.name} (brandId=${model.brandId}) -> Match: ${brandMatches}`);
                             }
                             
                             return nameMatches && typeMatches && brandMatches;
