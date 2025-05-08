@@ -3412,16 +3412,19 @@ export class DatabaseStorage implements IStorage {
   // Global device data methods for public access
   async getGlobalDeviceTypes(): Promise<UserDeviceType[]> {
     try {
-      // Holen alle Gerätetypen vom Superadmin (ID=10) unabhängig von der Shop-ID
+      // Holen alle Gerätetypen vom Superadmin mit Shop-ID 1682
       const results = await db
         .select()
         .from(userDeviceTypes)
         .where(
-          eq(userDeviceTypes.userId, 10) // Superadmin-ID
+          and(
+            eq(userDeviceTypes.userId, 10), // Superadmin-ID
+            eq(userDeviceTypes.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
+          )
         )
         .orderBy(userDeviceTypes.name);
       
-      console.log(`Globale Gerätetypen: ${results.length} gefunden`);
+      console.log(`Globale Gerätetypen (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Gerätetypen:', error);
@@ -3431,16 +3434,19 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalBrands(): Promise<UserBrand[]> {
     try {
-      // Holen alle Marken vom Superadmin (ID=10) unabhängig von der Shop-ID
+      // Holen alle Marken vom Superadmin mit Shop-ID 1682
       const results = await db
         .select()
         .from(userBrands)
         .where(
-          eq(userBrands.userId, 10) // Superadmin-ID
+          and(
+            eq(userBrands.userId, 10), // Superadmin-ID
+            eq(userBrands.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
+          )
         )
         .orderBy(userBrands.name);
       
-      console.log(`Globale Marken: ${results.length} gefunden`);
+      console.log(`Globale Marken (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Marken:', error);
@@ -3450,19 +3456,20 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalBrandsByDeviceType(deviceTypeId: number): Promise<UserBrand[]> {
     try {
-      // Holen alle Marken vom Superadmin (ID=10) für einen bestimmten Gerätetyp
+      // Holen alle Marken vom Superadmin mit Shop-ID 1682 für einen bestimmten Gerätetyp
       const results = await db
         .select()
         .from(userBrands)
         .where(
           and(
             eq(userBrands.deviceTypeId, deviceTypeId),
-            eq(userBrands.userId, 10) // Superadmin-ID
+            eq(userBrands.userId, 10), // Superadmin-ID
+            eq(userBrands.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
           )
         )
         .orderBy(userBrands.name);
       
-      console.log(`Globale Marken für Gerätetyp ${deviceTypeId}: ${results.length} gefunden`);
+      console.log(`Globale Marken für Gerätetyp ${deviceTypeId} (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Marken nach Gerätetyp:', error);
@@ -3472,16 +3479,19 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalModels(): Promise<UserModel[]> {
     try {
-      // Holen alle Modelle vom Superadmin (ID=10) unabhängig von der Shop-ID
+      // Holen alle Modelle vom Superadmin mit Shop-ID 1682
       const results = await db
         .select()
         .from(userModels)
         .where(
-          eq(userModels.userId, 10) // Superadmin-ID
+          and(
+            eq(userModels.userId, 10), // Superadmin-ID
+            eq(userModels.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
+          )
         )
         .orderBy(userModels.name);
       
-      console.log(`Globale Modelle: ${results.length} gefunden`);
+      console.log(`Globale Modelle (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle:', error);
@@ -3491,19 +3501,20 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalModelsByBrand(brandId: number): Promise<UserModel[]> {
     try {
-      // Holen alle Modelle vom Superadmin (ID=10) für eine bestimmte Marke
+      // Holen alle Modelle vom Superadmin mit Shop-ID 1682 für eine bestimmte Marke
       const results = await db
         .select()
         .from(userModels)
         .where(
           and(
             eq(userModels.brandId, brandId),
-            eq(userModels.userId, 10) // Superadmin-ID
+            eq(userModels.userId, 10), // Superadmin-ID
+            eq(userModels.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
           )
         )
         .orderBy(userModels.name);
       
-      console.log(`Globale Modelle für Marke ${brandId}: ${results.length} gefunden`);
+      console.log(`Globale Modelle für Marke ${brandId} (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle nach Marke:', error);
@@ -3521,17 +3532,18 @@ export class DatabaseStorage implements IStorage {
           and(
             eq(userBrands.id, brandId),
             eq(userBrands.deviceTypeId, deviceTypeId),
-            eq(userBrands.userId, 10) // Superadmin-ID
+            eq(userBrands.userId, 10), // Superadmin-ID
+            eq(userBrands.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
           )
         )
         .limit(1);
       
       if (brand.length === 0) {
-        console.log(`Keine Marke mit ID ${brandId} für Gerätetyp ${deviceTypeId} gefunden`);
+        console.log(`Keine Marke mit ID ${brandId} für Gerätetyp ${deviceTypeId} in Shop 1682 gefunden`);
         return [];
       }
       
-      // Alle Modelle vom Superadmin (ID=10) für die angegebene Marke abrufen
+      // Alle Modelle vom Superadmin mit Shop-ID 1682 für die angegebene Marke abrufen
       // Da die Marke bereits auf den Gerätetyp gefiltert wurde, müssen wir bei den Modellen
       // nicht noch einmal nach dem Gerätetyp filtern
       const results = await db
@@ -3540,12 +3552,13 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(userModels.brandId, brandId),
-            eq(userModels.userId, 10) // Superadmin-ID
+            eq(userModels.userId, 10), // Superadmin-ID
+            eq(userModels.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
           )
         )
         .orderBy(userModels.name);
       
-      console.log(`Globale Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId}: ${results.length} gefunden`);
+      console.log(`Globale Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId} (Shop 1682): ${results.length} gefunden`);
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle nach Marke und Gerätetyp:', error);
