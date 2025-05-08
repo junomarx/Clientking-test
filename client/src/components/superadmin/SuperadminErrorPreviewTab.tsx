@@ -6,11 +6,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Smartphone, Tablet, Laptop, Watch } from 'lucide-react';
 
 export function SuperadminErrorPreviewTab() {
   const [bulkInput, setBulkInput] = useState<string>('');
   const [errorTable, setErrorTable] = useState<string[]>([]);
-  const deviceTypes = ['Smartphone', 'Tablet', 'Laptop', 'Smartwatch'];
+  
+  // Gerätekategorien mit Icons und Namen als Tooltip
+  const deviceCategories = [
+    { id: 'smartphone', name: 'Smartphone', icon: <Smartphone className="h-5 w-5" /> },
+    { id: 'tablet', name: 'Tablet', icon: <Tablet className="h-5 w-5" /> },
+    { id: 'laptop', name: 'Laptop', icon: <Laptop className="h-5 w-5" /> },
+    { id: 'watch', name: 'Smartwatch', icon: <Watch className="h-5 w-5" /> }
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setBulkInput(e.target.value);
@@ -85,9 +93,13 @@ export function SuperadminErrorPreviewTab() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-muted">
-                        <th className="p-2 text-left font-medium border">Fehler</th>
-                        {deviceTypes.map(type => (
-                          <th key={type} className="p-2 text-center font-medium border">{type}</th>
+                        <th className="p-2 text-left font-medium border w-full">Fehler</th>
+                        {deviceCategories.map(category => (
+                          <th key={category.id} className="p-2 text-center font-medium border" title={category.name}>
+                            <div className="flex justify-center">
+                              {category.icon}
+                            </div>
+                          </th>
                         ))}
                       </tr>
                     </thead>
@@ -95,8 +107,8 @@ export function SuperadminErrorPreviewTab() {
                       {errorTable.map((error, index) => (
                         <tr key={index} className={index % 2 === 0 ? 'bg-muted/30' : 'bg-background'}>
                           <td className="p-2 border">{error}</td>
-                          {deviceTypes.map(type => (
-                            <td key={`${error}-${type}`} className="p-2 text-center border">
+                          {deviceCategories.map(category => (
+                            <td key={`${error}-${category.id}`} className="p-2 text-center border">
                               <Checkbox />
                             </td>
                           ))}
