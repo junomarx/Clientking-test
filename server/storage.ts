@@ -2584,16 +2584,38 @@ export class DatabaseStorage implements IStorage {
     deviceTypeId: number,
     userId: number,
   ): Promise<UserBrand[]> {
-    return await db
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+
+    // Holen sowohl benutzerspezifische Marken als auch globale Marken (shopId=null)
+    const results = await db
       .select()
       .from(userBrands)
       .where(
         and(
           eq(userBrands.deviceTypeId, deviceTypeId),
-          eq(userBrands.userId, userId),
-        ),
+          or(
+            // Benutzerspezifische Marken (für diesen Benutzer und Shop)
+            and(
+              eq(userBrands.userId, userId),
+              eq(userBrands.shopId, shopId),
+            ),
+            // ODER globale Marken vom Superadmin (shopId=null)
+            and(
+              eq(userBrands.userId, 10), // Superadmin-ID
+              isNull(userBrands.shopId)
+            )
+          )
+        )
       )
       .orderBy(userBrands.name);
+    
+    console.log(`Marken für Gerätetyp ${deviceTypeId} und Benutzer ${userId}: ${results.length} gefunden (inkl. globaler Marken)`);
+    return results;
   }
 
   async createUserBrand(
@@ -2817,24 +2839,67 @@ export class DatabaseStorage implements IStorage {
 
   // User models methods
   async getUserModels(userId: number): Promise<UserModel[]> {
-    return await db
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+
+    // Holen sowohl benutzerspezifische Modelle als auch globale Modelle (shopId=null)
+    const results = await db
       .select()
       .from(userModels)
-      .where(eq(userModels.userId, userId))
+      .where(
+        or(
+          // Benutzerspezifische Modelle (für diesen Benutzer und Shop)
+          and(
+            eq(userModels.userId, userId),
+            eq(userModels.shopId, shopId),
+          ),
+          // ODER globale Modelle vom Superadmin (shopId=null)
+          and(
+            eq(userModels.userId, 10), // Superadmin-ID
+            isNull(userModels.shopId)
+          )
+        ),
+      )
       .orderBy(userModels.name);
+    
+    console.log(`Modelle für Benutzer ${userId}: ${results.length} gefunden (inkl. globaler Modelle)`);
+    return results;
   }
 
   async getUserModelsByModelSeriesId(
     modelSeriesId: number,
     userId: number,
   ): Promise<UserModel[]> {
+    // Benutzer abrufen, um Shop-ID zu erhalten
+    const user = await this.getUser(userId);
+    if (!user) return [];
+
+    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+    const shopId = user.shopId || 1;
+
+    // Holen sowohl benutzerspezifische Modelle als auch globale Modelle (shopId=null)
     return await db
       .select()
       .from(userModels)
       .where(
         and(
           eq(userModels.modelSeriesId, modelSeriesId),
-          eq(userModels.userId, userId),
+          or(
+            // Benutzerspezifische Modelle (für diesen Benutzer und Shop)
+            and(
+              eq(userModels.userId, userId),
+              eq(userModels.shopId, shopId),
+            ),
+            // ODER globale Modelle vom Superadmin (shopId=null)
+            and(
+              eq(userModels.userId, 10), // Superadmin-ID
+              isNull(userModels.shopId)
+            )
+          )
         ),
       )
       .orderBy(userModels.name);
@@ -2911,17 +2976,38 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`Suche Modelle für Marke ${brandId} und Benutzer ${userId}`);
       
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId || 1;
+      
       // Direkte Abfrage nach Modellen mit der angegebenen brandId
+      // Holen sowohl benutzerspezifische Modelle als auch globale Modelle (shopId=null)
       const models = await db
         .select()
         .from(userModels)
         .where(
           and(
             eq(userModels.brandId, brandId),
-            eq(userModels.userId, userId)
+            or(
+              // Benutzerspezifische Modelle (für diesen Benutzer und Shop)
+              and(
+                eq(userModels.userId, userId),
+                eq(userModels.shopId, shopId),
+              ),
+              // ODER globale Modelle vom Superadmin (shopId=null)
+              and(
+                eq(userModels.userId, 10), // Superadmin-ID
+                isNull(userModels.shopId)
+              )
+            )
           )
-        );
+        )
+        .orderBy(userModels.name);
       
+      console.log(`Gefundene Modelle für Marke ${brandId}: ${models.length} (inkl. globaler Modelle)`);
       return models;
     } catch (error) {
       console.error("Error retrieving user models by brand:", error);
