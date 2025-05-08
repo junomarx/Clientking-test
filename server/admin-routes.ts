@@ -259,12 +259,13 @@ export function registerAdminRoutes(app: Express) {
   app.delete("/api/device-issues/all", async (req: Request, res: Response) => {
     try {
       const userId = req.user?.id;
+      const shopId = req.user?.shopId || 1;
       
       if (!userId) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      // Alle Fehlerbeschreibungen löschen
+      // Alle Fehlerbeschreibungen des Benutzers löschen
       await db.delete(deviceIssues).where(eq(deviceIssues.userId, userId));
       
       res.status(200).json({ 
@@ -292,8 +293,7 @@ export function registerAdminRoutes(app: Express) {
         .where(
           and(
             eq(deviceIssues.deviceType, deviceType),
-            eq(deviceIssues.userId, 10), // Superadmin-ID
-            eq(deviceIssues.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
+            eq(deviceIssues.userId, 10) // Superadmin-ID
           )
         );
       

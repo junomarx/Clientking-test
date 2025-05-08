@@ -374,7 +374,8 @@ export const deviceIssues = pgTable("device_issues", {
   isCommon: boolean("is_common").default(false),  // Ist dieser Fehler häufig?
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  // Von Superadmin verwaltet, kein userId hier
+  userId: integer("user_id").references(() => users.id), // Benutzer, der die Fehlerbeschreibung erstellt hat
+  shopId: integer("shop_id").default(1), // Shop, zu dem die Fehlerbeschreibung gehört (für Multi-Tenant-Isolation)
 });
 
 export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
