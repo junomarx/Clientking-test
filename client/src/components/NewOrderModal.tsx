@@ -980,38 +980,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                 <h3 className="text-lg font-semibold">Geräteinformationen</h3>
                 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <div className="text-base font-medium mb-3 block">Gerätedaten</div>
-                    <div className="mb-6">
-                      <GlobalDeviceSelector
-                        onDeviceTypeSelect={(deviceType, deviceTypeId) => {
-                          console.log(`Gerätetyp ausgewählt: ${deviceType} (ID: ${deviceTypeId})`);
-                          form.setValue('deviceType', deviceType);
-                          setSelectedDeviceTypeId(deviceTypeId);
-                          // Reset abhängige Felder
-                          form.setValue('brand', '');
-                          form.setValue('modelSeries', '');
-                          form.setValue('model', '');
-                        }}
-                        onBrandSelect={(brand, brandId) => {
-                          console.log(`Hersteller ausgewählt: ${brand} (ID: ${brandId})`);
-                          form.setValue('brand', brand);
-                          setSelectedBrandId(brandId);
-                          // Reset abhängige Felder
-                          form.setValue('modelSeries', '');
-                          form.setValue('model', '');
-                        }}
-                        onModelSelect={(model, modelId) => {
-                          console.log(`Modell ausgewählt: ${model} (ID: ${modelId})`);
-                          form.setValue('model', model);
-                          setSelectedModelId(modelId);
-                          setIsModelChanged(true);
-                        }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Versteckte Felder für die Formvalidierung - die Werte werden über GlobalDeviceSelector gesetzt */}
+                  {/* Versteckte Felder für die Formvalidierung */}
                   <input type="hidden" {...form.register("deviceType")} />
                   <input type="hidden" {...form.register("brand")} />
                   <input type="hidden" {...form.register("modelSeries")} />

@@ -8,7 +8,7 @@ import {
   type GlobalModel 
 } from '@/hooks/useGlobalDeviceData';
 import { Combobox } from '@headlessui/react';
-import { CheckIcon, ChevronUpDownIcon } from 'lucide-react';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
 
 interface GlobalDeviceSelectorProps {
   onDeviceTypeSelect: (deviceType: string, deviceTypeId: number | null) => void;
