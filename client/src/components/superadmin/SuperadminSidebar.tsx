@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Link } from 'wouter';
 import { 
   Menu,
-  GaugeCircle,
+  LayoutDashboard,
   Users,
   Package,
   Laptop,
@@ -14,6 +14,10 @@ import {
   Mail,
   FileCode,
   Layout,
+  Building,
+  Printer,
+  CreditCard,
+  UserCog,
   X
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -43,6 +47,7 @@ export function SuperadminSidebar({
 
   const NavItems = ({ isMobile = false, closeMenu = () => {} }: NavItemsProps) => (
     <>
+      {/* Hauptnavigation */}
       <div className="space-y-1">
         <Button 
           variant={activeTab === "dashboard" ? "default" : "ghost"}
@@ -52,7 +57,7 @@ export function SuperadminSidebar({
             if (isMobile) closeMenu();
           }}
         >
-          <GaugeCircle className="h-5 w-5 mr-2" />
+          <LayoutDashboard className="h-5 w-5 mr-2" />
           Dashboard
         </Button>
         <Button 
@@ -90,7 +95,7 @@ export function SuperadminSidebar({
         </Button>
       </div>
       
-      {/* Weitere Kategorien */}
+      {/* Einstellungen Kategorie */}
       <div className="mt-6 mb-2">
         <Separator className="mb-2" />
         <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -98,6 +103,17 @@ export function SuperadminSidebar({
         </h3>
       </div>
       <div className="space-y-1">
+        <Button 
+          variant={activeTab === "business-settings" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("business-settings");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Building className="h-5 w-5 mr-2" />
+          Geschäft
+        </Button>
         <Button 
           variant={activeTab === "email" ? "default" : "ghost"}
           className="w-full justify-start"
@@ -117,8 +133,30 @@ export function SuperadminSidebar({
             if (isMobile) closeMenu();
           }}
         >
-          <FileCode className="h-5 w-5 mr-2" />
-          Vorlagen
+          <Printer className="h-5 w-5 mr-2" />
+          Drucken
+        </Button>
+        <Button 
+          variant={activeTab === "subscription-settings" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("subscription-settings");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <CreditCard className="h-5 w-5 mr-2" />
+          Abonnement
+        </Button>
+        <Button 
+          variant={activeTab === "user-settings" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("user-settings");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <UserCog className="h-5 w-5 mr-2" />
+          Benutzerdaten
         </Button>
         <Button 
           variant={activeTab === "design-preview" ? "default" : "ghost"}
@@ -141,8 +179,9 @@ export function SuperadminSidebar({
       <div className="hidden md:flex md:w-64 md:h-screen md:flex-col bg-muted/20 border-r overflow-y-auto">
         <div className="flex flex-col w-full pt-5 pb-4">
           <div className="flex flex-col flex-shrink-0 px-4 mb-5">
-            <h1 className="text-xl font-semibold text-primary">Superadmin</h1>
-            <p className="text-sm text-muted-foreground">{currentUser?.username || ""}</p>
+            <h1 className="text-xl font-semibold text-primary">
+              {currentUser ? currentUser.username : 'Superadmin'}
+            </h1>
           </div>
           <nav className="mt-2 flex-1 px-2 space-y-1">
             <NavItems />

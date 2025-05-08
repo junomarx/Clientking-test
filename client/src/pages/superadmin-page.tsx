@@ -78,8 +78,11 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzer"}
               {activeTab === "packages" && "Pakete"}
               {activeTab === "devices" && "Geräte"}
+              {activeTab === "business-settings" && "Geschäft"}
               {activeTab === "email" && "E-Mail"}
-              {activeTab === "print-templates" && "Vorlagen"}
+              {activeTab === "print-templates" && "Drucken"}
+              {activeTab === "subscription-settings" && "Abonnement"}
+              {activeTab === "user-settings" && "Benutzerdaten"}
               {activeTab === "design-preview" && "Designvorschau"}
             </h1>
           </div>
@@ -91,11 +94,13 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzerverwaltung"}
               {activeTab === "packages" && "Paketverwaltung"}
               {activeTab === "devices" && "Geräteverwaltung"}
+              {activeTab === "business-settings" && "Geschäftseinstellungen"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
-              {activeTab === "print-templates" && "Vorlagenverwaltung"}
+              {activeTab === "print-templates" && "Druckeinstellungen"}
+              {activeTab === "subscription-settings" && "Abonnementverwaltung"}
+              {activeTab === "user-settings" && "Benutzereinstellungen"}
               {activeTab === "design-preview" && "Benutzeroberfläche Vorschau"}
             </h1>
-            {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
           </div>
           
           {/* Geschäftsname rechts (Desktop) */}
