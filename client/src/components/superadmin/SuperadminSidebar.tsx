@@ -126,10 +126,10 @@ export function SuperadminSidebar({
           E-Mail
         </Button>
         <Button 
-          variant={activeTab === "print-templates" ? "default" : "ghost"}
+          variant={activeTab === "print-settings" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("print-templates");
+            setActiveTab("print-settings");
             if (isMobile) closeMenu();
           }}
         >
