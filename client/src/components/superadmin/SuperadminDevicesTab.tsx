@@ -465,9 +465,6 @@ export default function SuperadminDevicesTab() {
         title: "Erfolg",
         description: "Marke wurde erfolgreich gelöscht.",
       });
-      // Auswahl zurücksetzen
-      setSelectedBrandIds([]);
-      setSelectAllBrands(false);
     },
     onError: (error: Error) => {
       toast({
@@ -478,31 +475,24 @@ export default function SuperadminDevicesTab() {
     },
   });
   
-  // Mutation zum Löschen mehrerer Marken
-  const deleteBulkBrandsMutation = useMutation({
+  // Mutation zum Löschen ausgewählter Marken
+  const deleteSelectedBrandsMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
-      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
-      
-      console.log('Sende folgende Marken-IDs zum Löschen:', numericIds);
-      
-      const response = await apiRequest('POST', '/api/superadmin/brands/bulk-delete', { 
-        ids: numericIds 
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Löschen der Marken');
+      // Sequentielles Löschen, um Probleme mit gleichzeitigen Anfragen zu vermeiden
+      for (const id of ids) {
+        const response = await apiRequest('DELETE', `/api/superadmin/brands/${id}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Fehler beim Löschen der Marke mit ID ${id}: ${errorData.message || 'Unbekannter Fehler'}`);
+        }
       }
-      return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/brands"] });
       toast({
         title: "Erfolg",
-        description: `${data.deletedCount} Marken wurden erfolgreich gelöscht.`,
+        description: `${selectedBrandIds.length} Marke(n) wurden erfolgreich gelöscht.`,
       });
-      // Auswahl zurücksetzen
       setSelectedBrandIds([]);
       setSelectAllBrands(false);
     },
@@ -515,12 +505,25 @@ export default function SuperadminDevicesTab() {
     },
   });
   
+  // Handler für Marken-Management
+  const handleDeleteBrand = (id: number) => {
+    if (confirm('Sind Sie sicher, dass Sie diese Marke löschen möchten? Alle zugehörigen Modelle werden ebenfalls gelöscht.')) {
+      deleteBrandMutation.mutate(id);
+    }
+  };
+  
+  const handleDeleteSelectedBrands = () => {
+    if (selectedBrandIds.length === 0) return;
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedBrandIds.length} ausgewählte Marke(n) löschen möchten? Alle zugehörigen Modelle werden ebenfalls gelöscht.`)) {
+      deleteSelectedBrandsMutation.mutate(selectedBrandIds);
+    }
+  };
+  
   // Mutation zum Erstellen einer neuen Marke
   const createBrandMutation = useMutation({
-    mutationFn: async (data: { name: string, deviceTypeId: number }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', {
-        brands: [{ name: data.name, deviceTypeId: data.deviceTypeId }]
-      });
+    mutationFn: async (data: { name: string; deviceTypeId: number }) => {
+      const response = await apiRequest('POST', '/api/superadmin/brands', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Fehler beim Erstellen der Marke');
@@ -544,13 +547,12 @@ export default function SuperadminDevicesTab() {
       });
     },
   });
-
-  // Handler für Marken-Management
+  
   const handleCreateBrand = () => {
     setBrandForm({ name: "", deviceTypeId: 0 });
     setIsCreateBrandOpen(true);
   };
-
+  
   const handleSubmitCreateBrand = () => {
     if (!brandForm.name || !brandForm.deviceTypeId) {
       toast({
@@ -560,188 +562,8 @@ export default function SuperadminDevicesTab() {
       });
       return;
     }
-    createBrandMutation.mutate({ name: brandForm.name, deviceTypeId: brandForm.deviceTypeId });
-  };
-
-  const handleDeleteBrand = (id: number) => {
-    if (confirm('Sind Sie sicher, dass Sie diese Marke löschen möchten?')) {
-      deleteBrandMutation.mutate(id);
-    }
-  };
-  
-  // Handler für Mehrfachauswahl von Marken
-  const handleToggleBrandSelection = (id: number) => {
-    setSelectedBrandIds(prev => {
-      if (prev.includes(id)) {
-        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
-        return prev.filter(brandId => brandId !== id);
-      } else {
-        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
-        return [...prev, id];
-      }
-    });
-  };
-  
-  // Handler für "Alle auswählen"-Checkbox bei Marken
-  const handleToggleSelectAllBrands = () => {
-    if (selectAllBrands) {
-      // Wenn alle ausgewählt sind, Auswahl aufheben
-      setSelectedBrandIds([]);
-      setSelectAllBrands(false);
-    } else {
-      // Sonst alle auswählen (gefilterte Marken)
-      const filteredBrandIds = brandsData
-        ?.filter(brand => {
-          // Filterung nach Markennamen
-          const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
-          
-          // Filterung nach Gerätetyp, falls ausgewählt
-          const typeInfo = userDeviceTypes?.find(type => type.id === brand.deviceTypeId);
-          const deviceTypeName = typeInfo?.name || 'Smartphone';
-          // Case-insensitive Vergleich für Gerätetypen
-          const typeMatches = !selectedBrandDeviceType || 
-                             deviceTypeName.toLowerCase() === selectedBrandDeviceType.toLowerCase();
-          
-          return nameMatches && typeMatches;
-        })
-        .map(brand => brand.id) || [];
-      
-      setSelectedBrandIds(filteredBrandIds);
-      setSelectAllBrands(true);
-    }
-  };
-  
-  // Handler für das Löschen ausgewählter Marken
-  const handleDeleteSelectedBrands = async () => {
-    if (selectedBrandIds.length === 0) {
-      toast({
-        title: "Hinweis",
-        description: "Bitte wählen Sie mindestens eine Marke aus."
-      });
-      return;
-    }
     
-    if (confirm(`Sind Sie sicher, dass Sie ${selectedBrandIds.length} ausgewählte Marken löschen möchten?`)) {
-      try {
-        // Toast anzeigen, dass der Löschvorgang läuft
-        toast({
-          title: "Löschvorgang läuft",
-          description: `${selectedBrandIds.length} Marken werden gelöscht...`
-        });
-        
-        // Statt einzelner Löschvorgänge verwenden wir den Bulk-Endpoint
-        await deleteBulkBrandsMutation.mutateAsync(selectedBrandIds);
-      } catch (error) {
-        console.error("Fehler beim Löschen von Marken:", error);
-        toast({
-          title: "Fehler",
-          description: "Beim Löschen der Marken ist ein Fehler aufgetreten.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-  
-  // Mutation zum Löschen mehrerer Fehlereinträge
-  const deleteBulkIssuesMutation = useMutation({
-    mutationFn: async (ids: number[]) => {
-      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
-      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
-      
-      console.log('Sende folgende Fehlereinträge-IDs zum Löschen:', numericIds);
-      
-      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk-delete', { 
-        ids: numericIds 
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Löschen der Fehlereinträge');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
-      toast({
-        title: "Erfolg",
-        description: `${data.deletedCount} Fehlereinträge wurden erfolgreich gelöscht.`,
-      });
-      // Auswahl zurücksetzen
-      setSelectedIssueIds([]);
-      setSelectAllIssues(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Handler für Mehrfachauswahl von Fehlereinträgen
-  const handleToggleIssueSelection = (id: number) => {
-    setSelectedIssueIds(prev => {
-      if (prev.includes(id)) {
-        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
-        return prev.filter(issueId => issueId !== id);
-      } else {
-        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
-        return [...prev, id];
-      }
-    });
-  };
-  
-  // Handler für "Alle auswählen"-Checkbox bei Fehlereinträgen
-  const handleToggleSelectAllIssues = () => {
-    if (selectAllIssues) {
-      // Wenn alle ausgewählt sind, Auswahl aufheben
-      setSelectedIssueIds([]);
-      setSelectAllIssues(false);
-    } else {
-      // Sonst alle auswählen (gefilterte Fehlereinträge)
-      const filteredIssueIds = deviceIssues
-        ?.filter(issue => {
-          // Filterung nach Fehlertyp (case-insensitive)
-          return !selectedDeviceType || 
-                 issue.deviceType.toLowerCase() === selectedDeviceType.toLowerCase();
-        })
-        .map(issue => issue.id) || [];
-      
-      setSelectedIssueIds(filteredIssueIds);
-      setSelectAllIssues(true);
-    }
-  };
-  
-  // Handler für das Löschen ausgewählter Fehlereinträge
-  const handleDeleteSelectedIssues = async () => {
-    if (selectedIssueIds.length === 0) {
-      toast({
-        title: "Hinweis",
-        description: "Bitte wählen Sie mindestens einen Fehlereintrag aus."
-      });
-      return;
-    }
-    
-    if (confirm(`Sind Sie sicher, dass Sie ${selectedIssueIds.length} ausgewählte Fehlereinträge löschen möchten?`)) {
-      try {
-        // Toast anzeigen, dass der Löschvorgang läuft
-        toast({
-          title: "Löschvorgang läuft",
-          description: `${selectedIssueIds.length} Fehlereinträge werden gelöscht...`
-        });
-        
-        // Bulk-Endpoint für das Löschen verwenden
-        await deleteBulkIssuesMutation.mutateAsync(selectedIssueIds);
-      } catch (error) {
-        console.error("Fehler beim Löschen von Fehlereinträgen:", error);
-        toast({
-          title: "Fehler",
-          description: "Beim Löschen der Fehlereinträge ist ein Fehler aufgetreten.",
-          variant: "destructive"
-        });
-      }
-    }
+    createBrandMutation.mutate(brandForm);
   };
   
   // Mutation zum Löschen eines Modells
@@ -759,7 +581,34 @@ export default function SuperadminDevicesTab() {
         title: "Erfolg",
         description: "Modell wurde erfolgreich gelöscht.",
       });
-      // Auswahl zurücksetzen
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Löschen ausgewählter Modelle
+  const deleteSelectedModelsMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Sequentielles Löschen, um Probleme mit gleichzeitigen Anfragen zu vermeiden
+      for (const id of ids) {
+        const response = await apiRequest('DELETE', `/api/superadmin/models/${id}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Fehler beim Löschen des Modells mit ID ${id}: ${errorData.message || 'Unbekannter Fehler'}`);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      toast({
+        title: "Erfolg",
+        description: `${selectedModelIds.length} Modell(e) wurden erfolgreich gelöscht.`,
+      });
       setSelectedModelIds([]);
       setSelectAllModels(false);
     },
@@ -772,49 +621,25 @@ export default function SuperadminDevicesTab() {
     },
   });
   
-  // Mutation zum Löschen mehrerer Modelle
-  const deleteBulkModelsMutation = useMutation({
-    mutationFn: async (ids: number[]) => {
-      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
-      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
-      
-      console.log('Sende folgende Modell-IDs zum Löschen:', numericIds);
-      
-      const response = await apiRequest('POST', '/api/superadmin/models/bulk-delete', { 
-        ids: numericIds 
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Löschen der Modelle');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
-      toast({
-        title: "Erfolg",
-        description: `${data.deletedCount} Modelle wurden erfolgreich gelöscht.`,
-      });
-      // Auswahl zurücksetzen
-      setSelectedModelIds([]);
-      setSelectAllModels(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
+  // Handler für Modell-Management
+  const handleDeleteModel = (id: number) => {
+    if (confirm('Sind Sie sicher, dass Sie dieses Modell löschen möchten?')) {
+      deleteModelMutation.mutate(id);
+    }
+  };
+  
+  const handleDeleteSelectedModels = () => {
+    if (selectedModelIds.length === 0) return;
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedModelIds.length} ausgewählte Modell(e) löschen möchten?`)) {
+      deleteSelectedModelsMutation.mutate(selectedModelIds);
+    }
+  };
+  
   // Mutation zum Erstellen eines neuen Modells
   const createModelMutation = useMutation({
-    mutationFn: async (data: { name: string, brandId: number }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-models/bulk', {
-        models: [{ name: data.name, brandId: data.brandId }]
-      });
+    mutationFn: async (data: { name: string; brandId: number }) => {
+      const response = await apiRequest('POST', '/api/superadmin/models', data);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Fehler beim Erstellen des Modells');
@@ -839,12 +664,11 @@ export default function SuperadminDevicesTab() {
     },
   });
   
-  // Handler für Modell-Management
   const handleCreateModel = () => {
     setModelForm({ name: "", brandId: 0 });
     setIsCreateModelOpen(true);
   };
-
+  
   const handleSubmitCreateModel = () => {
     if (!modelForm.name || !modelForm.brandId) {
       toast({
@@ -854,1071 +678,244 @@ export default function SuperadminDevicesTab() {
       });
       return;
     }
-    createModelMutation.mutate({ name: modelForm.name, brandId: modelForm.brandId });
+    
+    createModelMutation.mutate(modelForm);
   };
   
-  // Bulk-Import für Modelle
-  const [isBulkImportModelsOpen, setIsBulkImportModelsOpen] = useState(false);
-  const [bulkModelsText, setBulkModelsText] = useState("");
-  const [selectedBrandForBulk, setSelectedBrandForBulk] = useState<number | null>(null);
-  
-  // Mutation für Bulk-Import von Modellen
-  const bulkImportModelsMutation = useMutation({
-    mutationFn: async (data: { models: { name: string; brandId: number }[] }) => {
-      const response = await apiRequest("POST", "/api/superadmin/models/bulk-import", data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Massenimport von Modellen');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
-      toast({
-        title: "Erfolg",
-        description: data.message || `${data.importedCount} Modelle wurden erfolgreich importiert.`,
-      });
-      setIsBulkImportModelsOpen(false);
-      setBulkModelsText("");
-      setSelectedBrandForBulk(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const handleBulkImportModels = () => {
-    setIsBulkImportModelsOpen(true);
-    setSelectedBrandForBulk(null);
-    setBulkModelsText("");
+  // Hilfsfunktion zum Filtern der Marken nach Gerätetyp
+  const getFilteredBrands = () => {
+    if (!brandsData) return [];
+    
+    return brandsData
+      .filter(brand => !selectedBrandDeviceType || userDeviceTypes?.find(dt => dt.id === brand.deviceTypeId)?.name === selectedBrandDeviceType)
+      .filter(brand => !brandSearchTerm || brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase()));
   };
   
-  const handleSubmitBulkImportModels = () => {
-    if (!selectedBrandForBulk) {
-      toast({
-        title: "Fehler",
-        description: "Bitte wählen Sie eine Marke aus.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Hilfsfunktion zum Filtern der Modelle nach Gerätetyp und/oder Marke
+  const getFilteredModels = () => {
+    if (!modelsData || !brandsData) return [];
     
-    if (!bulkModelsText.trim()) {
-      toast({
-        title: "Fehler",
-        description: "Bitte geben Sie mindestens ein Modell ein.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Modellnamen aus Text extrahieren (ein Modell pro Zeile)
-    const modelNames = bulkModelsText
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-    
-    if (modelNames.length === 0) {
-      toast({
-        title: "Fehler",
-        description: "Keine gültigen Modellnamen gefunden.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Modelle für den Import vorbereiten
-    const models = modelNames.map(name => ({
-      name,
-      brandId: selectedBrandForBulk
-    }));
-    
-    // API-Aufruf durchführen
-    bulkImportModelsMutation.mutate({ models });
-  };
-  
-  // Handler für Modell-Management
-  const handleDeleteModel = (id: number) => {
-    if (confirm('Sind Sie sicher, dass Sie dieses Modell löschen möchten?')) {
-      deleteModelMutation.mutate(id);
-    }
-  };
-  
-  // Handler für Mehrfachauswahl von Modellen
-  const handleToggleModelSelection = (id: number) => {
-    setSelectedModelIds(prev => {
-      if (prev.includes(id)) {
-        // Wenn ID bereits in der Auswahl ist, entfernen wir sie
-        return prev.filter(modelId => modelId !== id);
-      } else {
-        // Wenn ID noch nicht in der Auswahl ist, fügen wir sie hinzu
-        return [...prev, id];
-      }
-    });
-  };
-  
-  // Handler für "Alle auswählen"-Checkbox
-  const handleToggleSelectAll = () => {
-    if (selectAllModels) {
-      // Wenn alle ausgewählt sind, Auswahl aufheben
-      setSelectedModelIds([]);
-      setSelectAllModels(false);
-    } else {
-      // Sonst alle auswählen (gefilterte Modelle)
-      const filteredModelIds = modelsData
-        ?.filter(model => {
-          // Filterung nach Modellnamen
-          const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
+    return modelsData
+      .filter(model => {
+        if (selectedModelDeviceType) {
+          const brand = brandsData.find(b => b.id === model.brandId);
+          if (!brand) return false;
           
-          // Filterung nach Gerätetyp, falls ausgewählt
-          let typeMatches = true;
-          if (selectedModelDeviceType) {
-            const brand = brandsData?.find(b => b.id === model.brandId);
-            const deviceType = userDeviceTypes?.find(t => t.id === brand?.deviceTypeId);
-            // Case-insensitive Vergleich für Gerätetypen
-            typeMatches = deviceType?.name?.toLowerCase() === selectedModelDeviceType?.toLowerCase();
-          }
+          const deviceType = userDeviceTypes?.find(dt => dt.id === brand.deviceTypeId);
+          if (!deviceType) return false;
           
-          // Filterung nach Marke, falls ausgewählt
-          let brandMatches = true;
-          if (selectedModelBrandId !== null && selectedModelBrandId !== 0) {
-            brandMatches = model.brandId === selectedModelBrandId;
-            console.log(`Filterung nach Marke ${selectedModelBrandId}: Modell ${model.name} (brandId=${model.brandId}) -> Match: ${brandMatches}`);
-          }
-          
-          return nameMatches && typeMatches && brandMatches;
-        })
-        .map(model => model.id) || [];
-      
-      setSelectedModelIds(filteredModelIds);
-      setSelectAllModels(true);
-    }
-  };
-  
-  // Handler für das Löschen ausgewählter Modelle
-  const handleDeleteSelectedModels = async () => {
-    if (selectedModelIds.length === 0) {
-      toast({
-        title: "Hinweis",
-        description: "Bitte wählen Sie mindestens ein Modell aus."
-      });
-      return;
-    }
-    
-    if (confirm(`Sind Sie sicher, dass Sie ${selectedModelIds.length} ausgewählte Modelle löschen möchten?`)) {
-      // Statt des Bulk-Endpoints verwenden wir einzelne Löschvorgänge
-      let successCount = 0;
-      
-      try {
-        // Toast anzeigen, dass der Löschvorgang läuft
-        toast({
-          title: "Löschvorgang läuft",
-          description: `${selectedModelIds.length} Modelle werden gelöscht...`
-        });
-        
-        // Modelle nacheinander löschen
-        for (const id of selectedModelIds) {
-          try {
-            const response = await apiRequest('DELETE', `/api/superadmin/models/${id}`);
-            if (response.ok) {
-              successCount++;
-            }
-          } catch (error) {
-            console.error(`Fehler beim Löschen des Modells ${id}:`, error);
-          }
+          if (deviceType.name !== selectedModelDeviceType) return false;
         }
         
-        // Daten aktualisieren
-        queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+        if (selectedModelBrandId && model.brandId !== selectedModelBrandId) return false;
         
-        // Erfolgs-Toast anzeigen
-        toast({
-          title: "Erfolg",
-          description: `${successCount} von ${selectedModelIds.length} Modellen wurden erfolgreich gelöscht.`
-        });
+        if (modelSearchTerm && !model.name.toLowerCase().includes(modelSearchTerm.toLowerCase())) return false;
         
-        // Auswahl zurücksetzen
-        setSelectedModelIds([]);
-        setSelectAllModels(false);
-      } catch (error) {
-        toast({
-          title: "Fehler",
-          description: 'Beim Löschen ist ein Fehler aufgetreten.',
-          variant: "destructive"
+        return true;
+      })
+      .map(model => {
+        const brand = brandsData.find(b => b.id === model.brandId);
+        if (!brand) return model;
+        
+        const deviceType = userDeviceTypes?.find(dt => dt.id === brand.deviceTypeId);
+        
+        return {
+          ...model,
+          brandName: brand.name,
+          deviceTypeName: deviceType?.name
+        };
+      });
+  };
+  
+  // Hilfsfunktion zur Massenbearbeitung von Fehlern
+  const handleDeleteSelectedIssues = () => {
+    if (selectedIssueIds.length === 0) return;
+    
+    if (confirm(`Sind Sie sicher, dass Sie ${selectedIssueIds.length} ausgewählte Fehlereinträge löschen möchten?`)) {
+      Promise.all(selectedIssueIds.map(id => deleteIssueMutation.mutateAsync(id)))
+        .then(() => {
+          toast({
+            title: "Erfolg",
+            description: `${selectedIssueIds.length} Fehlereinträge wurden erfolgreich gelöscht.`,
+          });
+          setSelectedIssueIds([]);
+          setSelectAllIssues(false);
+        })
+        .catch((error) => {
+          toast({
+            title: "Fehler",
+            description: `Fehler beim Löschen einiger Einträge: ${error.message}`,
+            variant: "destructive",
+          });
         });
-      }
     }
   };
   
-  // Gefilterte Gerätetypen basierend auf dem Suchbegriff, leere Strings ausfiltern
-  const filteredDeviceTypes = deviceTypesList
-    ? deviceTypesList.filter(type =>
-        type && type.trim() !== "" && type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
+  // Hilfsvariablen für Statusanzeigen und Filterung
+  const filteredBrands = getFilteredBrands();
+  const filteredModels = getFilteredModels();
+  
+  // Berechne, ob alle sichtbaren Einträge ausgewählt sind
+  const isAllIssuesSelected = 
+    deviceIssues &&
+    deviceIssues
+      .filter(issue => 
+        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
+        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
       )
-    : [];
+      .every(issue => selectedIssueIds.includes(issue.id)) &&
+    deviceIssues
+      .filter(issue => 
+        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
+        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
+      ).length > 0;
   
-  // Hilfsfunktion zum Filtern von Marken basierend auf dem ausgewählten Gerätetyp
-  const getFilteredBrands = (deviceType: string | null) => {
-    if (!brandsData || !userDeviceTypes) return [];
-    
-    if (!deviceType) return brandsData;
-    
-    // Gerätetyp-ID ermitteln - Groß-/Kleinschreibung ignorieren
-    const deviceTypeObj = userDeviceTypes.find(dt => 
-      dt.name.toLowerCase() === deviceType.toLowerCase()
-    );
-    
-    if (!deviceTypeObj) {
-      console.log(`Kein Gerätetyp gefunden für: "${deviceType}"`);
-      console.log("Verfügbare Gerätetypen:", userDeviceTypes.map(dt => dt.name));
-      return [];
-    }
-    
-    console.log(`Gefilterte Marken für Gerätetyp: "${deviceType}" (ID: ${deviceTypeObj.id})`);
-    
-    // Marken nach Gerätetyp-ID filtern
-    const filteredBrands = brandsData.filter(brand => brand.deviceTypeId === deviceTypeObj.id);
-    console.log(`Gefunden: ${filteredBrands.length} Marken:`, filteredBrands.map(b => b.name));
-    
-    return filteredBrands;
-  };
-
-  // State für die aktive Tab-Navigation
-  const [activeTab, setActiveTab] = useState("types");
-
+  // Suchfilter für Fehler
+  const [issueSearchTerm, setIssueSearchTerm] = useState('');
+  const [issueFilterDeviceType, setIssueFilterDeviceType] = useState<string | null>(null);
+  const [issueFilterSeverity, setIssueFilterSeverity] = useState<"low" | "medium" | "high" | "critical" | null>(null);
+  const [isDeleteMultipleIssuesDialogOpen, setIsDeleteMultipleIssuesDialogOpen] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState("statistics");
+  
   return (
-    <div className="space-y-4 md:space-y-6">
-      <h1 className="text-xl md:text-2xl font-bold">Geräteverwaltung</h1>
-      
-      {/* Mobile view: Select dropdown für Tabs */}
-      <div className="block md:hidden mb-4">
-        <select 
-          className="w-full p-2 border rounded-md text-sm" 
-          value={activeTab}
-          onChange={(e) => setActiveTab(e.target.value)}
-        >
-          <option value="types">Gerätetypen</option>
-          <option value="brands">Marken</option>
-          <option value="models">Modelle</option>
-          <option value="issues">Fehlerkatalog</option>
-          <option value="csv">CSV Import/Export</option>
-          <option value="statistics">Statistik</option>
-        </select>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Geräte-Verwaltung</h2>
+          <p className="text-muted-foreground">
+            Verwalten Sie Gerätetypen, Marken und Modelle im System
+          </p>
+        </div>
+        <div className="hidden md:block">
+          <select
+            className="bg-background border-input h-10 rounded-md border px-3 py-2 text-sm"
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+          >
+            <option value="statistics">Gerätestatistik</option>
+            <option value="device-types">Gerätearten</option>
+            <option value="brands">Marken</option>
+            <option value="models">Modelle</option>
+            <option value="issues">Fehlerkatalog</option>
+            <option value="csv">CSV Im-/Export</option>
+          </select>
+        </div>
       </div>
       
-      <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="hidden md:grid grid-cols-6">
-          <TabsTrigger value="types">Gerätetypen</TabsTrigger>
-          <TabsTrigger value="brands">Marken</TabsTrigger>
-          <TabsTrigger value="models">Modelle</TabsTrigger>
-          <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
-          <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
-          <TabsTrigger value="statistics">Statistik</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="types">
-          <Card>
-            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
-              <div>
-                <CardTitle className="text-base md:text-lg font-semibold">Gerätetypen</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Verwalten Sie globale Gerätetypen für alle Shops
-                </CardDescription>
-              </div>
-              <Button onClick={handleCreateDeviceType} className="text-xs md:text-sm h-8 md:h-10">
-                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Gerätetyp hinzufügen
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-              <div className="mb-4">
-                <div className="relative w-full md:w-72">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Gerätetypen suchen..." 
-                    className="pl-8" 
-                    value={deviceTypeSearchTerm}
-                    onChange={(e) => setDeviceTypeSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              {isLoadingDeviceTypesList ? (
-                <div className="flex justify-center p-4">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                </div>
-              ) : filteredDeviceTypes.length > 0 ? (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">Icon</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredDeviceTypes.map((type) => (
-                        <TableRow key={type}>
-                          <TableCell>
-                            <div className="flex items-center justify-center">
-                              {getDeviceTypeIcon(type)}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center space-x-2">
-                              <span>{type}</span>
-                              {["Smartphone", "Tablet", "Laptop", "Watch"].includes(type) && (
-                                <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                                  Standard
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditDeviceType(type)}
-                                disabled={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type)}
-                                title={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type) ? "Standardgerätetypen können nicht bearbeitet werden" : "Gerätetyp bearbeiten"}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteDeviceType(type)}
-                                disabled={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type)}
-                                title={["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"].includes(type) ? "Standardgerätetypen können nicht gelöscht werden" : "Gerätetyp löschen"}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">Keine Gerätetypen gefunden</h3>
-                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                    {deviceTypeSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Gerätetypen gefunden. Fügen Sie neue Gerätetypen hinzu.'}
-                  </p>
-                  <Button onClick={handleCreateDeviceType}>
-                    <Plus className="mr-2 h-4 w-4" /> Gerätetyp hinzufügen
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="brands">
-          <div className="space-y-6">
-            
-            <Card>
-              <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
-                <div>
-                  <CardTitle className="text-base md:text-lg font-semibold">Marken</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">Hier werden alle vorhandenen Marken angezeigt</CardDescription>
-                </div>
-                <Button onClick={handleCreateBrand} className="text-xs md:text-sm h-8 md:h-10">
-                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Marke hinzufügen
-                </Button>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-                <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                  <div className="relative w-full md:w-72">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Marken suchen..." 
-                      className="pl-8" 
-                      value={brandSearchTerm}
-                      onChange={(e) => setBrandSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  {selectedBrandIds.length > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={handleDeleteSelectedBrands}
-                      className="flex items-center space-x-1"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      <span>{selectedBrandIds.length} Marke{selectedBrandIds.length > 1 ? 'n' : ''} löschen</span>
-                    </Button>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="deviceTypeFilter" className="whitespace-nowrap">Nach Gerätetyp filtern:</Label>
-                    <Select 
-                      value={selectedBrandDeviceType || "all"}
-                      onValueChange={(value) => setSelectedBrandDeviceType(value === "all" ? null : value)}
-                    >
-                      <SelectTrigger className="w-full md:w-40">
-                        <SelectValue placeholder="Alle Typen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle Typen</SelectItem>
-                        {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
-                  {(selectedBrandDeviceType || brandSearchTerm) && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBrandDeviceType(null);
-                        setBrandSearchTerm("");
-                      }}
-                      className="flex items-center space-x-1"
-                    >
-                      <X className="h-4 w-4" />
-                      <span>Filter zurücksetzen</span>
-                    </Button>
-                  )}
-                </div>
-                
-                {isLoadingBrands ? (
-                  <div className="flex justify-center p-4">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  </div>
-                ) : brandsData && brandsData.length > 0 ? (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-10">
-                            <Checkbox
-                              checked={selectAllBrands}
-                              onCheckedChange={handleToggleSelectAllBrands}
-                              aria-label="Alle Marken auswählen"
-                            />
-                          </TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Gerätetyp</TableHead>
-                          <TableHead>Shop</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {brandsData
-                          ?.map(brand => {
-                            // Für jede Marke den entsprechenden Gerätetyp anhand der deviceTypeId ermitteln
-                            const typeInfo = userDeviceTypes?.find(type => type.id === brand.deviceTypeId);
-                            return {
-                              ...brand,
-                              deviceTypeName: typeInfo?.name || 'Smartphone' // Fallback auf Smartphone, wenn kein Match gefunden wird
-                            };
-                          })
-                          .filter(brand => {
-                            // Filterung nach Markennamen
-                            const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
-                            
-                            // Filterung nach Gerätetyp, falls ausgewählt
-                            const typeMatches = !selectedBrandDeviceType || 
-                                               brand.deviceTypeName === selectedBrandDeviceType;
-                            
-                            return nameMatches && typeMatches;
-                          })
-                          .map((brand) => (
-                            <TableRow key={brand.id}>
-                              <TableCell className="w-10">
-                                <Checkbox
-                                  checked={selectedBrandIds.includes(brand.id)}
-                                  onCheckedChange={() => handleToggleBrandSelection(brand.id)}
-                                  aria-label={`Marke ${brand.name} auswählen`}
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">{brand.name}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  {getDeviceTypeIcon(brand.deviceTypeName || 'Smartphone')}
-                                  <span>{brand.deviceTypeName || 'Smartphone'}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Shop {brand.shopId}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    title="Marke löschen"
-                                    onClick={() => handleDeleteBrand(brand.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        }
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Keine Marken gefunden</h3>
-                    <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                      {selectedBrandDeviceType && brandSearchTerm
-                        ? `Keine Ergebnisse für "${brandSearchTerm}" mit Gerätetyp "${selectedBrandDeviceType}".` 
-                        : selectedBrandDeviceType 
-                          ? `Keine Marken für Gerätetyp "${selectedBrandDeviceType}" gefunden.`
-                          : brandSearchTerm 
-                            ? `Keine Ergebnisse für "${brandSearchTerm}".` 
-                            : 'Es wurden keine Marken gefunden. Importieren Sie Marken über den Massenimport.'}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="models">
-          <div className="space-y-6">
-            
-            <Card>
-              <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
-                <div>
-                  <CardTitle className="text-base md:text-lg font-semibold">Modelle</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
-                </div>
-                <div className="flex space-x-2">
-                  <Button onClick={handleCreateModel} className="text-xs md:text-sm h-8 md:h-10">
-                    <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Modell hinzufügen
-                  </Button>
-                  <Button onClick={handleBulkImportModels} variant="outline" className="text-xs md:text-sm h-8 md:h-10">
-                    <Upload className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Bulk-Import
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-                <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                  <div className="relative w-full md:w-72">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Modelle suchen..." 
-                      className="pl-8" 
-                      value={modelSearchTerm}
-                      onChange={(e) => setModelSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  
-                  {selectedModelIds.length > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={handleDeleteSelectedModels}
-                      className="flex items-center space-x-1"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      <span>{selectedModelIds.length} Modell{selectedModelIds.length > 1 ? 'e' : ''} löschen</span>
-                    </Button>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="modelDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
-                    <Select 
-                      value={selectedModelDeviceType || "all"}
-                      onValueChange={(value) => {
-                        setSelectedModelDeviceType(value === "all" ? null : value);
-                        setSelectedModelBrandId(null); // Brand zurücksetzen bei Änderung des Gerätetyps
-                      }}
-                    >
-                      <SelectTrigger className="w-full md:w-40">
-                        <SelectValue placeholder="Alle Typen" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle Typen</SelectItem>
-                        {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
-                          <SelectItem key={type} value={type}>
-                            <div className="flex items-center gap-2">
-                              {getDeviceTypeIcon(type)}
-                              <span>{type}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="modelBrandFilter" className="whitespace-nowrap">Marke:</Label>
-                    <Select
-                      value={selectedModelBrandId?.toString() || "all"}
-                      onValueChange={(value) => {
-                        const brandId = value === "all" ? null : parseInt(value);
-                        setSelectedModelBrandId(brandId);
-                        console.log(`Markenfilter geändert zu: ${brandId} (${value})`);
-                      }}
-                      disabled={!selectedModelDeviceType}
-                    >
-                      <SelectTrigger className="w-full md:w-40">
-                        <SelectValue placeholder="Alle Marken" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle Marken</SelectItem>
-                        {getFilteredBrands(selectedModelDeviceType).map((brand) => (
-                          <SelectItem key={brand.id} value={brand.id.toString()}>
-                            {brand.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
-                  {(selectedModelDeviceType || selectedModelBrandId || modelSearchTerm) && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedModelDeviceType(null);
-                        setSelectedModelBrandId(null);
-                        setModelSearchTerm("");
-                      }}
-                      className="flex items-center space-x-1"
-                    >
-                      <X className="h-4 w-4" />
-                      <span>Filter zurücksetzen</span>
-                    </Button>
-                  )}
-                </div>
-                
-                {isLoadingModels ? (
-                  <div className="flex justify-center p-4">
-                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  </div>
-                ) : modelsData && modelsData.length > 0 ? (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-10">
-                            <Checkbox 
-                              checked={selectAllModels} 
-                              onCheckedChange={handleToggleSelectAll}
-                              aria-label="Alle Modelle auswählen" 
-                            />
-                          </TableHead>
-                          <TableHead>Modell</TableHead>
-                          <TableHead>Marke</TableHead>
-                          <TableHead>Gerätetyp</TableHead>
-                          <TableHead>Shop</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {modelsData
-                          // Virtuelle Eigenschaften hinzufügen
-                          .map(model => {
-                            const brand = brandsData?.find(b => b.id === model.brandId);
-                            const deviceType = userDeviceTypes?.find(t => t.id === brand?.deviceTypeId);
-                            return {
-                              ...model,
-                              brandName: brand?.name || 'Unbekannt',
-                              deviceTypeName: deviceType?.name || 'Smartphone'
-                            };
-                          })
-                          // Filterfunktionen anwenden
-                          .filter(model => {
-                            // Filterung nach Modellnamen
-                            const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
-                            
-                            // Filterung nach Gerätetyp, falls ausgewählt
-                            let typeMatches = true;
-                            if (selectedModelDeviceType) {
-                              // Case-insensitive Vergleich für Gerätetypen
-                              typeMatches = model.deviceTypeName?.toLowerCase() === selectedModelDeviceType?.toLowerCase();
-                            }
-                            
-                            // Filterung nach Marke, falls ausgewählt
-                            let brandMatches = true;
-                            if (selectedModelBrandId !== null && selectedModelBrandId !== 0) {
-                              brandMatches = model.brandId === selectedModelBrandId;
-                              console.log(`Filterung nach Marke ${selectedModelBrandId}: Modell ${model.name} (brandId=${model.brandId}) -> Match: ${brandMatches}`);
-                            }
-                            
-                            return nameMatches && typeMatches && brandMatches;
-                          })
-                          .map((model) => (
-                            <TableRow key={model.id}>
-                              <TableCell className="p-0 text-center">
-                                <Checkbox 
-                                  checked={selectedModelIds.includes(model.id)} 
-                                  onCheckedChange={() => handleToggleModelSelection(model.id)}
-                                  aria-label={`Modell ${model.name} auswählen`} 
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">{model.name}</TableCell>
-                              <TableCell>{model.brandName}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center space-x-2">
-                                  {getDeviceTypeIcon(model.deviceTypeName || 'Smartphone')}
-                                  <span>{model.deviceTypeName}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>Shop {model.shopId}</TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDeleteModel(model.id)}
-                                    title="Modell löschen"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        }
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">Keine Modelle gefunden</h3>
-                    <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                      {selectedModelDeviceType && selectedModelBrandId
-                        ? `Keine Modelle für ${getFilteredBrands(selectedModelDeviceType).find(b => b.id === selectedModelBrandId)?.name || ''} (${selectedModelDeviceType}) gefunden.`
-                        : selectedModelDeviceType
-                          ? `Keine Modelle für Gerätetyp "${selectedModelDeviceType}" gefunden.`
-                          : selectedModelBrandId
-                            ? `Keine Modelle für die ausgewählte Marke gefunden.`
-                            : modelSearchTerm
-                              ? `Keine Ergebnisse für "${modelSearchTerm}".`
-                              : 'Es wurden keine Modelle gefunden. Importieren Sie Modelle über den Massenimport.'}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="md:hidden">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="statistics">Statistik</TabsTrigger>
+            <TabsTrigger value="device-types">Gerätearten</TabsTrigger>
+            <TabsTrigger value="brands">Marken</TabsTrigger>
+          </TabsList>
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="models">Modelle</TabsTrigger>
+            <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
+            <TabsTrigger value="csv">CSV</TabsTrigger>
+          </TabsList>
+        </div>
         
-        {/* Fehlerkatalog Tab */}
-        <TabsContent value="issues">
-          {/* Fehlerkatalog-Massenimport entfernt */}
-          
-          <Card className="mt-6">
-            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
-              <div>
-                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Verwalten Sie häufige Geräteprobleme und Lösungen
-                </CardDescription>
-              </div>
-              <Button onClick={handleCreateIssue} className="text-xs md:text-sm h-8 md:h-10">
-                <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Fehler hinzufügen
-              </Button>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                {selectedIssueIds.length > 0 && (
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={handleDeleteSelectedIssues}
-                    className="flex items-center space-x-1"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    <span>{selectedIssueIds.length} Eintrag{selectedIssueIds.length > 1 ? 'e' : ''} löschen</span>
-                  </Button>
-                )}
-                
-                <div className="relative w-full md:w-72">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Fehler suchen..." 
-                    className="pl-8" 
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="issueDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
-                  <Select 
-                    value={selectedDeviceType || "all"}
-                    onValueChange={(value) => setSelectedDeviceType(value === "all" ? null : value)}
-                  >
-                    <SelectTrigger className="w-full md:w-40">
-                      <SelectValue placeholder="Alle Typen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Alle Typen</SelectItem>
-                      {deviceTypes?.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          <div className="flex items-center gap-2">
-                            {getDeviceTypeIcon(type)}
-                            <span>{type}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Nur anzeigen, wenn ein Filter aktiv ist */}
-                {selectedDeviceType && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setSelectedDeviceType(null)}
-                    className="flex items-center space-x-1"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Filter zurücksetzen</span>
-                  </Button>
-                )}
-              </div>
-              
-              {isLoadingIssues ? (
-                <div className="flex justify-center p-4">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                </div>
-              ) : deviceIssues && deviceIssues.length > 0 ? (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">
-                          <Checkbox
-                            checked={selectAllIssues}
-                            onCheckedChange={handleToggleSelectAllIssues}
-                            aria-label="Alle Fehlereinträge auswählen"
-                          />
-                        </TableHead>
-                        <TableHead>Gerätetyp</TableHead>
-                        <TableHead>Titel</TableHead>
-                        <TableHead>Schweregrad</TableHead>
-                        <TableHead>Häufig</TableHead>
-                        <TableHead>Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {deviceIssues
-                        .filter(issue => !selectedDeviceType || 
-                                         issue.deviceType.toLowerCase() === selectedDeviceType.toLowerCase())
-                        .map((issue) => (
-                          <TableRow key={issue.id}>
-                            <TableCell className="w-10">
-                              <Checkbox
-                                checked={selectedIssueIds.includes(issue.id)}
-                                onCheckedChange={() => handleToggleIssueSelection(issue.id)}
-                                aria-label={`Fehlereintrag ${issue.title} auswählen`}
-                              />
-                            </TableCell>
-                            <TableCell>{issue.deviceType}</TableCell>
-                            <TableCell>
-                              <div className="font-medium">{issue.title}</div>
-                              <div className="text-sm text-muted-foreground line-clamp-1">
-                                {issue.description}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={`
-                                  ${issue.severity === 'low' ? 'bg-blue-100 text-blue-800' : ''}
-                                  ${issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' : ''}
-                                  ${issue.severity === 'high' ? 'bg-orange-100 text-orange-800' : ''}
-                                  ${issue.severity === 'critical' ? 'bg-red-100 text-red-800' : ''}
-                                `}
-                              >
-                                {issue.severity === 'low' ? 'Niedrig' : ''}
-                                {issue.severity === 'medium' ? 'Mittel' : ''}
-                                {issue.severity === 'high' ? 'Hoch' : ''}
-                                {issue.severity === 'critical' ? 'Kritisch' : ''}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {issue.isCommon ? (
-                                <Badge variant="default" className="bg-green-500">
-                                  Häufig
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">
-                                  Selten
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditIssue(issue)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => handleDeleteIssue(issue.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">Keine Einträge gefunden</h3>
-                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                    Es wurden keine Fehlereinträge gefunden. Fügen Sie neue Einträge hinzu, um den Katalog zu füllen.
-                  </p>
-                  <Button onClick={handleCreateIssue}>
-                    <Plus className="mr-2 h-4 w-4" /> Fehler hinzufügen
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="csv">
-          <DeviceDataCSVImportExport />
-        </TabsContent>
+        <div className="hidden md:block">
+          <TabsList className="grid grid-cols-6">
+            <TabsTrigger value="statistics">Statistik</TabsTrigger>
+            <TabsTrigger value="device-types">Gerätearten</TabsTrigger>
+            <TabsTrigger value="brands">Marken</TabsTrigger>
+            <TabsTrigger value="models">Modelle</TabsTrigger>
+            <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
+            <TabsTrigger value="csv">CSV Im-/Export</TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="statistics">
           <Card>
-            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
-              <div>
-                <CardTitle className="text-base md:text-lg font-semibold">Gerätestatistiken</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Übersicht über alle Gerätetypen, Marken und Modelle im System
-                </CardDescription>
-              </div>
-              <Button 
-                variant="outline"
-                className="text-xs md:text-sm h-8 md:h-10"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-statistics"] })}
-              >
-                <RefreshCcw className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Aktualisieren
-              </Button>
+            <CardHeader>
+              <CardTitle>Geräteübersicht</CardTitle>
+              <CardDescription>
+                Statistiken zu Gerätetypen, Marken und Modellen
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
+            <CardContent>
               {isLoadingStatistics ? (
-                <div className="flex justify-center p-8">
-                  <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                 </div>
               ) : deviceStatistics ? (
                 <div className="space-y-8">
-                  {/* Zusammenfassung */}
+                  {/* Zusammenfassungskarten */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-blue-50 dark:bg-blue-950">
-                      <CardContent className="p-3 md:p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs md:text-sm font-medium">Gerätetypen</p>
-                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalDeviceTypes}</h3>
-                          </div>
-                          <Smartphone className="h-8 w-8 md:h-12 md:w-12 text-blue-500" />
-                        </div>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Gerätetypen</CardTitle>
+                        <Smartphone className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{deviceStatistics.totalDeviceTypes}</div>
                       </CardContent>
                     </Card>
-                    
-                    <Card className="bg-green-50 dark:bg-green-950">
-                      <CardContent className="p-3 md:p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs md:text-sm font-medium">Marken</p>
-                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalBrands}</h3>
-                          </div>
-                          <Factory className="h-8 w-8 md:h-12 md:w-12 text-green-500" />
-                        </div>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Marken</CardTitle>
+                        <Factory className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{deviceStatistics.totalBrands}</div>
                       </CardContent>
                     </Card>
-                    
-                    <Card className="bg-purple-50 dark:bg-purple-950">
-                      <CardContent className="p-3 md:p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs md:text-sm font-medium">Modelle</p>
-                            <h3 className="text-xl md:text-3xl font-bold">{deviceStatistics.totalModels}</h3>
-                          </div>
-                          <Layers className="h-8 w-8 md:h-12 md:w-12 text-purple-500" />
-                        </div>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Modelle</CardTitle>
+                        <Layers className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{deviceStatistics.totalModels}</div>
                       </CardContent>
                     </Card>
                   </div>
                   
-                  {/* Details pro Gerätetyp */}
+                  {/* Detaillierte Statistiken nach Gerätetyp */}
                   <div className="space-y-4">
-                    <h3 className="text-base md:text-lg font-semibold">Details pro Gerätetyp</h3>
-                    <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Details nach Gerätetyp</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {deviceStatistics.deviceTypeStats.map(stat => (
-                        <Card key={stat.name} className="overflow-hidden">
-                          <CardHeader className="bg-muted/50 p-3 md:p-4">
-                            <div className="flex items-center">
+                        <Card key={stat.name}>
+                          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium flex items-center">
                               {getDeviceTypeIcon(stat.name)}
-                              <h4 className="ml-2 text-base md:text-lg font-medium">{stat.name}</h4>
-                            </div>
+                              <span className="ml-2">{stat.name}</span>
+                            </CardTitle>
                           </CardHeader>
-                          <CardContent className="p-3 md:p-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="flex items-center p-3 rounded-md bg-muted/30">
-                                <Factory className="h-5 w-5 mr-2 text-primary" />
-                                <span className="text-sm font-medium">Marken: {stat.brandCount}</span>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Marken:</span>
+                                <span className="font-semibold">{stat.brandCount}</span>
                               </div>
-                              <div className="flex items-center p-3 rounded-md bg-muted/30">
-                                <Smartphone className="h-5 w-5 mr-2 text-primary" />
-                                <span className="text-sm font-medium">Modelle: {stat.modelCount}</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Modelle:</span>
+                                <span className="font-semibold">{stat.modelCount}</span>
                               </div>
-                            </div>
-                            
-                            {/* Top-Marken anzeigen */}
-                            {stat.brands.length > 0 && (
-                              <div>
-                                <h5 className="text-xs md:text-sm font-medium mb-2">Top Marken:</h5>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                  {stat.brands
-                                    .sort((a, b) => b.modelCount - a.modelCount)
-                                    .slice(0, 6)
-                                    .map(brand => (
-                                      <div 
-                                        key={brand.name} 
-                                        className="flex items-center justify-between p-2 rounded-md bg-muted/20"
-                                      >
-                                        <span className="text-xs md:text-sm font-medium">{brand.name}</span>
-                                        <Badge variant="outline">{brand.modelCount}</Badge>
+                              
+                              {stat.brands.length > 0 && (
+                                <div className="pt-2 mt-2 border-t">
+                                  <p className="text-xs text-muted-foreground mb-1">Top Marken:</p>
+                                  <div className="space-y-1">
+                                    {stat.brands.slice(0, 5).map(brand => (
+                                      <div key={brand.name} className="flex justify-between items-center">
+                                        <span className="text-xs truncate max-w-[150px]">{brand.name}</span>
+                                        <span className="text-xs font-medium">{brand.modelCount} Modelle</span>
                                       </div>
-                                    ))
-                                  }
+                                    ))}
+                                    {stat.brands.length > 5 && (
+                                      <div className="text-xs text-muted-foreground text-right">
+                                        + {stat.brands.length - 5} weitere
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                
-                                {stat.brands.length > 6 && (
-                                  <p className="mt-2 text-xs text-muted-foreground">
-                                    +{stat.brands.length - 6} weitere Marken
-                                  </p>
-                                )}
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       ))}
@@ -1926,530 +923,858 @@ export default function SuperadminDevicesTab() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-semibold">Keine Statistiken verfügbar</h3>
-                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
-                    Es konnten keine Statistiken geladen werden.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-statistics"] })}
-                  >
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Erneut versuchen
-                  </Button>
+                <div className="text-center py-8 text-muted-foreground">
+                  Keine Statistikdaten verfügbar.
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <TabsContent value="device-types">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
+              <div>
+                <CardTitle>Gerätetypen</CardTitle>
+                <CardDescription>
+                  Verwalten Sie die Gerätetypen im System
+                </CardDescription>
+              </div>
+              <Button onClick={handleCreateDeviceType}>
+                <Plus className="mr-2 h-4 w-4" /> Gerätetyp hinzufügen
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {isLoadingDeviceTypesList ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                </div>
+              ) : deviceTypesList && deviceTypesList.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex mb-4">
+                    <div className="relative w-full max-w-sm">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Gerätetyp suchen..."
+                        className="pl-8 pr-4"
+                        value={deviceTypeSearchTerm}
+                        onChange={(e) => setDeviceTypeSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Icon</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Marken</TableHead>
+                          <TableHead>Modelle</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deviceTypesList
+                          .filter(type => !deviceTypeSearchTerm || type.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase()))
+                          .map(type => {
+                            const stats = deviceStatistics?.deviceTypeStats.find(stat => stat.name === type);
+                            
+                            return (
+                              <TableRow key={type}>
+                                <TableCell>
+                                  {getDeviceTypeIcon(type)}
+                                </TableCell>
+                                <TableCell className="font-medium">{type}</TableCell>
+                                <TableCell>{stats ? stats.brandCount : 0}</TableCell>
+                                <TableCell>{stats ? stats.modelCount : 0}</TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end space-x-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      onClick={() => handleEditDeviceType(type)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="text-destructive"
+                                      onClick={() => handleDeleteDeviceType(type)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Keine Gerätetypen vorhanden. Erstellen Sie Ihren ersten Gerätetyp.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="brands">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
+              <div>
+                <CardTitle>Marken</CardTitle>
+                <CardDescription>
+                  Verwalten Sie die Gerätemarken im System
+                </CardDescription>
+              </div>
+              <Button onClick={handleCreateBrand}>
+                <Plus className="mr-2 h-4 w-4" /> Marke hinzufügen
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {isLoadingBrands ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                </div>
+              ) : brandsData && brandsData.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row gap-2 md:items-center mb-4">
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Marke suchen..."
+                        className="pl-8 pr-4"
+                        value={brandSearchTerm}
+                        onChange={(e) => setBrandSearchTerm(e.target.value)}
+                      />
+                    </div>
+                    
+                    <Select 
+                      value={selectedBrandDeviceType || "all"} 
+                      onValueChange={(value) => setSelectedBrandDeviceType(value === "all" ? null : value)}
+                    >
+                      <SelectTrigger className="w-full md:w-[180px]">
+                        <SelectValue placeholder="Alle Gerätetypen" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle Gerätetypen</SelectItem>
+                        {deviceTypesList && deviceTypesList.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex items-center ml-auto space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setBrandSearchTerm('');
+                          setSelectedBrandDeviceType(null);
+                          setSelectedBrandIds([]);
+                          setSelectAllBrands(false);
+                        }}
+                      >
+                        <RefreshCcw className="mr-2 h-4 w-4" /> Zurücksetzen
+                      </Button>
+                      
+                      {selectedBrandIds.length > 0 && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={handleDeleteSelectedBrands}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> {selectedBrandIds.length} löschen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead style={{ width: 40 }}>
+                            <Checkbox 
+                              checked={
+                                filteredBrands.length > 0 && 
+                                filteredBrands.every(brand => selectedBrandIds.includes(brand.id))
+                              } 
+                              onCheckedChange={(checked) => {
+                                setSelectAllBrands(!!checked);
+                                if (checked) {
+                                  setSelectedBrandIds(filteredBrands.map(brand => brand.id));
+                                } else {
+                                  setSelectedBrandIds([]);
+                                }
+                              }}
+                              aria-label="Alle auswählen"
+                            />
+                          </TableHead>
+                          <TableHead>Gerätetyp</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Modelle</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredBrands.length > 0 ? (
+                          filteredBrands.map(brand => {
+                            const deviceType = userDeviceTypes?.find(dt => dt.id === brand.deviceTypeId);
+                            const modelCount = modelsData?.filter(model => model.brandId === brand.id).length || 0;
+                            
+                            return (
+                              <TableRow key={brand.id}>
+                                <TableCell>
+                                  <Checkbox 
+                                    checked={selectedBrandIds.includes(brand.id)} 
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedBrandIds([...selectedBrandIds, brand.id]);
+                                      } else {
+                                        setSelectedBrandIds(selectedBrandIds.filter(id => id !== brand.id));
+                                        setSelectAllBrands(false);
+                                      }
+                                    }}
+                                    aria-label={`${brand.name} auswählen`}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    {deviceType && getDeviceTypeIcon(deviceType.name)}
+                                    <span className="ml-2">{deviceType?.name || 'Unbekannt'}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="font-medium">{brand.name}</TableCell>
+                                <TableCell>{modelCount}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteBrand(brand.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={5} className="h-24 text-center">
+                              {brandSearchTerm || selectedBrandDeviceType ? (
+                                <div>Keine Marken für die aktuelle Suche gefunden.</div>
+                              ) : (
+                                <div>Keine Marken vorhanden.</div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Keine Marken vorhanden. Erstellen Sie Ihre erste Marke.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="models">
+          <div className="space-y-6">
+            <div className="flex">
+              <Button onClick={handleCreateModel} className="ml-auto">
+                <Plus className="mr-2 h-4 w-4" /> Modell hinzufügen
+              </Button>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Modelle</CardTitle>
+                <CardDescription>
+                  Verwalten Sie die Gerätemodelle im System
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingModels ? (
+                  <div className="flex justify-center items-center h-40">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : modelsData && modelsData.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col md:flex-row gap-2 md:items-center mb-4">
+                      <div className="relative w-full md:w-64">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Modell suchen..."
+                          className="pl-8 pr-4"
+                          value={modelSearchTerm}
+                          onChange={(e) => setModelSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      
+                      <Select 
+                        value={selectedModelDeviceType || "all"} 
+                        onValueChange={(value) => {
+                          setSelectedModelDeviceType(value === "all" ? null : value);
+                          setSelectedModelBrandId(null); // Reset brand when device type changes
+                        }}
+                      >
+                        <SelectTrigger className="w-full md:w-[180px]">
+                          <SelectValue placeholder="Alle Gerätetypen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Alle Gerätetypen</SelectItem>
+                          {deviceTypesList && deviceTypesList.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select 
+                        value={selectedModelBrandId?.toString() || "all"} 
+                        onValueChange={(value) => setSelectedModelBrandId(value === "all" ? null : parseInt(value, 10))}
+                        disabled={!selectedModelDeviceType}
+                      >
+                        <SelectTrigger className="w-full md:w-[180px]">
+                          <SelectValue placeholder="Alle Marken" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Alle Marken</SelectItem>
+                          {brandsData && userDeviceTypes && selectedModelDeviceType && brandsData
+                            .filter(brand => {
+                              const deviceType = userDeviceTypes.find(dt => dt.id === brand.deviceTypeId);
+                              return deviceType && deviceType.name === selectedModelDeviceType;
+                            })
+                            .map(brand => (
+                              <SelectItem key={brand.id} value={brand.id.toString()}>{brand.name}</SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="flex items-center ml-auto space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setModelSearchTerm('');
+                            setSelectedModelDeviceType(null);
+                            setSelectedModelBrandId(null);
+                            setSelectedModelIds([]);
+                            setSelectAllModels(false);
+                          }}
+                        >
+                          <RefreshCcw className="mr-2 h-4 w-4" /> Zurücksetzen
+                        </Button>
+                        
+                        {selectedModelIds.length > 0 && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={handleDeleteSelectedModels}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> {selectedModelIds.length} löschen
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead style={{ width: 40 }}>
+                              <Checkbox 
+                                checked={
+                                  filteredModels.length > 0 && 
+                                  filteredModels.every(model => selectedModelIds.includes(model.id))
+                                } 
+                                onCheckedChange={(checked) => {
+                                  setSelectAllModels(!!checked);
+                                  if (checked) {
+                                    setSelectedModelIds(filteredModels.map(model => model.id));
+                                  } else {
+                                    setSelectedModelIds([]);
+                                  }
+                                }}
+                                aria-label="Alle auswählen"
+                              />
+                            </TableHead>
+                            <TableHead>Gerätetyp</TableHead>
+                            <TableHead>Marke</TableHead>
+                            <TableHead>Modell</TableHead>
+                            <TableHead className="text-right">Aktionen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredModels.length > 0 ? (
+                            filteredModels.map(model => {
+                              return (
+                                <TableRow key={model.id}>
+                                  <TableCell>
+                                    <Checkbox 
+                                      checked={selectedModelIds.includes(model.id)} 
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          setSelectedModelIds([...selectedModelIds, model.id]);
+                                        } else {
+                                          setSelectedModelIds(selectedModelIds.filter(id => id !== model.id));
+                                          setSelectAllModels(false);
+                                        }
+                                      }}
+                                      aria-label={`${model.name} auswählen`}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center">
+                                      {model.deviceTypeName && getDeviceTypeIcon(model.deviceTypeName)}
+                                      <span className="ml-2">{model.deviceTypeName || 'Unbekannt'}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{model.brandName || 'Unbekannt'}</TableCell>
+                                  <TableCell className="font-medium">{model.name}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="text-destructive"
+                                      onClick={() => handleDeleteModel(model.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={5} className="h-24 text-center">
+                                {modelSearchTerm || selectedModelDeviceType || selectedModelBrandId ? (
+                                  <div>Keine Modelle für die aktuelle Suche gefunden.</div>
+                                ) : (
+                                  <div>Keine Modelle vorhanden.</div>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Keine Modelle vorhanden. Erstellen Sie Ihr erstes Modell.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        {/* Fehlerkatalog Tab - ersetzt durch verbesserten Fehlerkatalog */}
+        <TabsContent value="issues">
+          <div className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Der Fehlerkatalog wurde durch eine neue, verbesserte Version mit Gerätetyp-Icons ersetzt.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="p-6 text-center">
+                  <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Hinweis: Verbesserte Version verfügbar</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Der Fehlerkatalog wurde durch die "Fehler-Vorschau" ersetzt, die eine verbesserte Darstellung mit 
+                    Gerätetyp-Icons statt Namen bietet und mehr Platz für Fehlerbeschreibungen lässt.
+                  </p>
+                  <Button 
+                    onClick={() => window.location.href = '/superadmin?tab=error-preview'}
+                  >
+                    Zur neuen Fehler-Vorschau wechseln
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="csv">
+          <DeviceDataCSVImportExport />
+        </TabsContent>
+        
+        <TabsContent value="statistics">
+          {/* Mobile-Ansicht für Statistik (dupliziert für einfacheren Zugriff) */}
+        </TabsContent>
       </Tabs>
       
-      {/* Dialog zum Erstellen eines neuen Fehlereintrags */}
-      <Dialog open={isCreateIssueOpen} onOpenChange={setIsCreateIssueOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Neuen Fehlereintrag erstellen</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              Fügen Sie einen neuen Eintrag zum Fehlerkatalog hinzu.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="deviceType" className="text-right">
-                Gerätetyp
-              </Label>
-              <Select
-                value={issueForm.deviceType}
-                onValueChange={(value) => setIssueForm({...issueForm, deviceType: value})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Gerätetyp auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {deviceTypes?.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Titel
-              </Label>
-              <Input
-                id="title"
-                value={issueForm.title}
-                onChange={(e) => setIssueForm({...issueForm, title: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="severity" className="text-right">
-                Schweregrad
-              </Label>
-              <Select
-                value={issueForm.severity}
-                onValueChange={(value) => setIssueForm({...issueForm, severity: value as "low" | "medium" | "high" | "critical"})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Niedrig</SelectItem>
-                  <SelectItem value="medium">Mittel</SelectItem>
-                  <SelectItem value="high">Hoch</SelectItem>
-                  <SelectItem value="critical">Kritisch</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isCommon" className="text-right">
-                Häufig vorkommend
-              </Label>
-              <div className="flex items-center space-x-2 col-span-3">
-                <input
-                  type="checkbox"
-                  id="isCommon"
-                  checked={issueForm.isCommon}
-                  onChange={(e) => setIssueForm({...issueForm, isCommon: e.target.checked})}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm">Dieser Fehler tritt häufig auf</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="description" className="text-right pt-2">
-                Beschreibung
-              </Label>
-              <div className="col-span-3">
-                <textarea
-                  id="description"
-                  value={issueForm.description}
-                  onChange={(e) => setIssueForm({...issueForm, description: e.target.value})}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Beschreibung des Problems"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="solution" className="text-right pt-2">
-                Lösung
-              </Label>
-              <div className="col-span-3">
-                <textarea
-                  id="solution"
-                  value={issueForm.solution}
-                  onChange={(e) => setIssueForm({...issueForm, solution: e.target.value})}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Lösungsvorschlag für das Problem"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateIssueOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={() => handleSubmitCreateIssue()} disabled={!issueForm.title || !issueForm.deviceType}>
-              Erstellen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog zum Bearbeiten eines Fehlereintrags */}
-      <Dialog open={isEditIssueOpen} onOpenChange={setIsEditIssueOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Fehlereintrag bearbeiten</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              Aktualisieren Sie die Informationen des Fehlereintrags.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="deviceType" className="text-right">
-                Gerätetyp
-              </Label>
-              <Select
-                value={issueForm.deviceType}
-                onValueChange={(value) => setIssueForm({...issueForm, deviceType: value})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Gerätetyp auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {deviceTypes?.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Titel
-              </Label>
-              <Input
-                id="title"
-                value={issueForm.title}
-                onChange={(e) => setIssueForm({...issueForm, title: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="severity" className="text-right">
-                Schweregrad
-              </Label>
-              <Select
-                value={issueForm.severity}
-                onValueChange={(value) => setIssueForm({...issueForm, severity: value as "low" | "medium" | "high" | "critical"})}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Niedrig</SelectItem>
-                  <SelectItem value="medium">Mittel</SelectItem>
-                  <SelectItem value="high">Hoch</SelectItem>
-                  <SelectItem value="critical">Kritisch</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="isCommon" className="text-right">
-                Häufig vorkommend
-              </Label>
-              <div className="flex items-center space-x-2 col-span-3">
-                <input
-                  type="checkbox"
-                  id="isCommon"
-                  checked={issueForm.isCommon}
-                  onChange={(e) => setIssueForm({...issueForm, isCommon: e.target.checked})}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm">Dieser Fehler tritt häufig auf</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="description" className="text-right pt-2">
-                Beschreibung
-              </Label>
-              <div className="col-span-3">
-                <textarea
-                  id="description"
-                  value={issueForm.description}
-                  onChange={(e) => setIssueForm({...issueForm, description: e.target.value})}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Beschreibung des Problems"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="solution" className="text-right pt-2">
-                Lösung
-              </Label>
-              <div className="col-span-3">
-                <textarea
-                  id="solution"
-                  value={issueForm.solution}
-                  onChange={(e) => setIssueForm({...issueForm, solution: e.target.value})}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Lösungsvorschlag für das Problem"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditIssueOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={() => handleSubmitEditIssue()} disabled={!issueForm.title || !issueForm.deviceType}>
-              Aktualisieren
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog zum Erstellen eines neuen Gerätetyps */}
+      {/* Gerätetyp-Dialoge */}
       <Dialog open={isCreateDeviceTypeOpen} onOpenChange={setIsCreateDeviceTypeOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Neuen Gerätetyp erstellen</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neuen Gerätetyp erstellen</DialogTitle>
+            <DialogDescription>
               Fügen Sie einen neuen Gerätetyp zum System hinzu.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="deviceTypeName" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="deviceTypeName"
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="deviceTypeName">Name</Label>
+              <Input 
+                id="deviceTypeName" 
+                placeholder="z.B. Smartphone, Tablet, etc." 
                 value={deviceTypeForm.name}
-                onChange={(e) => setDeviceTypeForm({...deviceTypeForm, name: e.target.value})}
-                className="col-span-3"
-                placeholder="z.B. Smartphone, Tablet, Laptop"
+                onChange={(e) => setDeviceTypeForm({ ...deviceTypeForm, name: e.target.value })}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDeviceTypeOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={handleSubmitCreateDeviceType} disabled={!deviceTypeForm.name}>
-              Erstellen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog zum Bearbeiten eines Gerätetyps */}
-      <Dialog open={isEditDeviceTypeOpen} onOpenChange={setIsEditDeviceTypeOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Gerätetyp bearbeiten</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              Ändern Sie den Namen des Gerätetyps.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="editDeviceTypeName" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="editDeviceTypeName"
-                value={deviceTypeForm.name}
-                onChange={(e) => setDeviceTypeForm({...deviceTypeForm, name: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDeviceTypeOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={handleSubmitEditDeviceType} disabled={!deviceTypeForm.name}>
-              Aktualisieren
-            </Button>
+            <Button variant="outline" onClick={() => setIsCreateDeviceTypeOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitCreateDeviceType}>Erstellen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      {/* Dialog zum Erstellen einer neuen Marke */}
-      <Dialog open={isCreateBrandOpen} onOpenChange={setIsCreateBrandOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Neue Marke erstellen</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              Fügen Sie eine neue Marke zum System hinzu.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brandName" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="brandName"
-                value={brandForm.name}
-                onChange={(e) => setBrandForm({...brandForm, name: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brandDeviceType" className="text-right">
-                Gerätetyp
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : ""}
-                  onValueChange={(value) => setBrandForm({...brandForm, deviceTypeId: parseInt(value)})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Gerätetyp auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {userDeviceTypes?.filter(type => type.name && type.name.trim() !== "").map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          {getDeviceTypeIcon(type.name)}
-                          <span>{type.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateBrandOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={handleSubmitCreateBrand} disabled={!brandForm.name || !brandForm.deviceTypeId}>
-              Erstellen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog zum Erstellen eines neuen Modells */}
-      <Dialog open={isCreateModelOpen} onOpenChange={setIsCreateModelOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[425px] p-4 md:p-6">
-          <DialogHeader className="p-0 md:p-0 mb-4">
-            <DialogTitle className="text-lg md:text-xl">Neues Modell erstellen</DialogTitle>
-            <DialogDescription className="text-xs md:text-sm">
-              Fügen Sie ein neues Modell zum System hinzu.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="modelName" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="modelName"
-                value={modelForm.name}
-                onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
-                className="col-span-3"
-                placeholder="z.B. iPhone 14, Galaxy S23"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="modelBrand" className="text-right">
-                Marke
-              </Label>
-              <div className="col-span-3">
-                <Select
-                  value={modelForm.brandId ? modelForm.brandId.toString() : ""}
-                  onValueChange={(value) => setModelForm({...modelForm, brandId: parseInt(value)})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Marke auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brandsData?.map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id.toString()}>
-                        <div className="flex items-center gap-2">
-                          {getDeviceTypeIcon(userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || 'Smartphone')}
-                          <span>{brand.name} ({userDeviceTypes?.find(t => t.id === brand.deviceTypeId)?.name || 'Unbekannt'})</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModelOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={handleSubmitCreateModel} disabled={!modelForm.name || !modelForm.brandId}>
-              Erstellen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Bulk Import Modelle Dialog */}
-      <Dialog open={isBulkImportModelsOpen} onOpenChange={setIsBulkImportModelsOpen}>
-        <DialogContent className="w-[95vw] max-w-[95vw] md:w-auto md:max-w-[525px] p-4 md:p-6">
+      <Dialog open={isEditDeviceTypeOpen} onOpenChange={setIsEditDeviceTypeOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-lg md:text-xl">Bulk-Import von Modellen</DialogTitle>
-            <DialogDescription className="text-sm md:text-base">
-              Fügen Sie mehrere Modelle für eine bestimmte Marke hinzu, ein Modell pro Zeile
+            <DialogTitle>Gerätetyp bearbeiten</DialogTitle>
+            <DialogDescription>
+              Aktualisieren Sie den Namen des Gerätetyps.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="device-type-select-bulk" className="text-right">
-                Gerätetyp
-              </Label>
-              <div className="col-span-3">
-                <Select 
-                  value={selectedModelDeviceType || ""}
-                  onValueChange={(value) => {
-                    setSelectedModelDeviceType(value || null);
-                    setSelectedBrandForBulk(null);
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Gerätetyp auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {deviceTypesList?.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        <div className="flex items-center gap-2">
-                          {getDeviceTypeIcon(type)}
-                          <span>{type}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brand-select-bulk" className="text-right">
-                Marke
-              </Label>
-              <div className="col-span-3">
-                <Select 
-                  value={selectedBrandForBulk ? selectedBrandForBulk.toString() : ""}
-                  onValueChange={(value) => {
-                    setSelectedBrandForBulk(parseInt(value));
-                  }}
-                  disabled={!selectedModelDeviceType}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Marke auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getFilteredBrands(selectedModelDeviceType).map((brand) => (
-                      <SelectItem key={brand.id} value={brand.id.toString()}>
-                        {brand.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-              <Label htmlFor="bulk-models" className="text-right">
-                Modelle
-              </Label>
-              <div className="col-span-3">
-                <textarea
-                  id="bulk-models"
-                  className="w-full min-h-[150px] p-2 border rounded-md"
-                  placeholder="iPhone SE 2020&#10;iPhone 13&#10;iPhone 13 Pro&#10;iPhone 14&#10;iPhone 14 Pro&#10;..."
-                  value={bulkModelsText}
-                  onChange={(e) => setBulkModelsText(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">Ein Modell pro Zeile eingeben</p>
-              </div>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="editDeviceTypeName">Name</Label>
+              <Input 
+                id="editDeviceTypeName" 
+                value={deviceTypeForm.name}
+                onChange={(e) => setDeviceTypeForm({ ...deviceTypeForm, name: e.target.value })}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBulkImportModelsOpen(false)}>
-              Abbrechen
-            </Button>
+            <Button variant="outline" onClick={() => setIsEditDeviceTypeOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitEditDeviceType}>Aktualisieren</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Marken-Dialoge */}
+      <Dialog open={isCreateBrandOpen} onOpenChange={setIsCreateBrandOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neue Marke erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie eine neue Gerätemarke zum System hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="brandName">Name</Label>
+              <Input 
+                id="brandName" 
+                placeholder="z.B. Apple, Samsung, etc." 
+                value={brandForm.name}
+                onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="brandDeviceType">Gerätetyp</Label>
+              <Select 
+                value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : ""} 
+                onValueChange={(value) => setBrandForm({ ...brandForm, deviceTypeId: parseInt(value, 10) })}
+              >
+                <SelectTrigger id="brandDeviceType">
+                  <SelectValue placeholder="Gerätetyp auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userDeviceTypes && userDeviceTypes.map(deviceType => (
+                    <SelectItem key={deviceType.id} value={deviceType.id.toString()}>
+                      {deviceType.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateBrandOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitCreateBrand}>Erstellen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Modell-Dialoge */}
+      <Dialog open={isCreateModelOpen} onOpenChange={setIsCreateModelOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neues Modell erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie ein neues Gerätemodell zum System hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="modelName">Name</Label>
+              <Input 
+                id="modelName" 
+                placeholder="z.B. iPhone 13, Galaxy S21, etc." 
+                value={modelForm.name}
+                onChange={(e) => setModelForm({ ...modelForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modelDeviceType">Gerätetyp</Label>
+              <Select 
+                value={selectedModelDeviceType || ""} 
+                onValueChange={(value) => {
+                  setSelectedModelDeviceType(value);
+                  setModelForm({ ...modelForm, brandId: 0 }); // Reset brand when device type changes
+                }}
+              >
+                <SelectTrigger id="modelDeviceType">
+                  <SelectValue placeholder="Gerätetyp auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {deviceTypesList && deviceTypesList.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modelBrand">Marke</Label>
+              <Select 
+                value={modelForm.brandId ? modelForm.brandId.toString() : ""} 
+                onValueChange={(value) => setModelForm({ ...modelForm, brandId: parseInt(value, 10) })}
+                disabled={!selectedModelDeviceType}
+              >
+                <SelectTrigger id="modelBrand">
+                  <SelectValue placeholder="Marke auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brandsData && userDeviceTypes && selectedModelDeviceType && brandsData
+                    .filter(brand => {
+                      const deviceType = userDeviceTypes.find(dt => dt.id === brand.deviceTypeId);
+                      return deviceType && deviceType.name === selectedModelDeviceType;
+                    })
+                    .map(brand => (
+                      <SelectItem key={brand.id} value={brand.id.toString()}>{brand.name}</SelectItem>
+                    ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateModelOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitCreateModel} disabled={!modelForm.brandId}>Erstellen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Fehlerkatalog-Dialoge */}
+      <Dialog open={isCreateIssueOpen} onOpenChange={setIsCreateIssueOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Neuen Fehlereintrag erstellen</DialogTitle>
+            <DialogDescription>
+              Fügen Sie einen neuen Eintrag zum Fehlerkatalog hinzu.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="issueDeviceType">Gerätetyp</Label>
+              <Select 
+                value={issueForm.deviceType || ""} 
+                onValueChange={(value) => setIssueForm({ ...issueForm, deviceType: value })}
+              >
+                <SelectTrigger id="issueDeviceType">
+                  <SelectValue placeholder="Gerätetyp auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {deviceTypes && deviceTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="issueTitle">Titel</Label>
+              <Input 
+                id="issueTitle" 
+                placeholder="z.B. Displaybruch, Wasserschaden, etc." 
+                value={issueForm.title}
+                onChange={(e) => setIssueForm({ ...issueForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="issueDescription">Beschreibung</Label>
+              <Textarea 
+                id="issueDescription" 
+                placeholder="Detaillierte Beschreibung des Problems" 
+                value={issueForm.description}
+                onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="issueSolution">Lösung</Label>
+              <Textarea 
+                id="issueSolution" 
+                placeholder="Mögliche Lösungsansätze" 
+                value={issueForm.solution}
+                onChange={(e) => setIssueForm({ ...issueForm, solution: e.target.value })}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="issueSeverity">Schweregrad</Label>
+              <Select 
+                value={issueForm.severity} 
+                onValueChange={(value) => setIssueForm({ ...issueForm, severity: value as "low" | "medium" | "high" | "critical" })}
+              >
+                <SelectTrigger id="issueSeverity">
+                  <SelectValue placeholder="Schweregrad auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Niedrig</SelectItem>
+                  <SelectItem value="medium">Mittel</SelectItem>
+                  <SelectItem value="high">Hoch</SelectItem>
+                  <SelectItem value="critical">Kritisch</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="issueIsCommon" 
+                checked={issueForm.isCommon}
+                onCheckedChange={(checked) => setIssueForm({ ...issueForm, isCommon: !!checked })}
+              />
+              <Label htmlFor="issueIsCommon">Häufiges Problem</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateIssueOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitCreateIssue}>Erstellen</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isEditIssueOpen} onOpenChange={setIsEditIssueOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fehlereintrag bearbeiten</DialogTitle>
+            <DialogDescription>
+              Aktualisieren Sie den Fehlereintrag im Katalog.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="editIssueDeviceType">Gerätetyp</Label>
+              <Select 
+                value={issueForm.deviceType} 
+                onValueChange={(value) => setIssueForm({ ...issueForm, deviceType: value })}
+              >
+                <SelectTrigger id="editIssueDeviceType">
+                  <SelectValue placeholder="Gerätetyp auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {deviceTypes && deviceTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editIssueTitle">Titel</Label>
+              <Input 
+                id="editIssueTitle" 
+                value={issueForm.title}
+                onChange={(e) => setIssueForm({ ...issueForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editIssueDescription">Beschreibung</Label>
+              <Textarea 
+                id="editIssueDescription" 
+                value={issueForm.description}
+                onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editIssueSolution">Lösung</Label>
+              <Textarea 
+                id="editIssueSolution" 
+                value={issueForm.solution}
+                onChange={(e) => setIssueForm({ ...issueForm, solution: e.target.value })}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editIssueSeverity">Schweregrad</Label>
+              <Select 
+                value={issueForm.severity} 
+                onValueChange={(value) => setIssueForm({ ...issueForm, severity: value as "low" | "medium" | "high" | "critical" })}
+              >
+                <SelectTrigger id="editIssueSeverity">
+                  <SelectValue placeholder="Schweregrad auswählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Niedrig</SelectItem>
+                  <SelectItem value="medium">Mittel</SelectItem>
+                  <SelectItem value="high">Hoch</SelectItem>
+                  <SelectItem value="critical">Kritisch</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="editIssueIsCommon" 
+                checked={issueForm.isCommon}
+                onCheckedChange={(checked) => setIssueForm({ ...issueForm, isCommon: !!checked })}
+              />
+              <Label htmlFor="editIssueIsCommon">Häufiges Problem</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditIssueOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSubmitEditIssue}>Aktualisieren</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isDeleteMultipleIssuesDialogOpen} onOpenChange={setIsDeleteMultipleIssuesDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mehrere Fehlereinträge löschen</DialogTitle>
+            <DialogDescription>
+              Möchten Sie wirklich {selectedIssueIds.length} Fehlereinträge löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteMultipleIssuesDialogOpen(false)}>Abbrechen</Button>
             <Button 
-              onClick={handleSubmitBulkImportModels}
-              disabled={bulkImportModelsMutation.isPending}
+              variant="destructive" 
+              onClick={() => {
+                handleDeleteSelectedIssues();
+                setIsDeleteMultipleIssuesDialogOpen(false);
+              }}
             >
-              {bulkImportModelsMutation.isPending ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
-                  Importiere...
-                </>
-              ) : (
-                "Importieren"
-              )}
+              Löschen
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2457,5 +1782,3 @@ export default function SuperadminDevicesTab() {
     </div>
   );
 }
-
-
