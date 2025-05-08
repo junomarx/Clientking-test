@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { apiRequest } from '@/lib/queryClient';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -365,10 +364,10 @@ export function DeviceIssuesTab() {
                     <thead>
                       <tr className="bg-muted">
                         <th className="p-2 text-left font-medium border w-full">Fehler</th>
-                        {supportedDeviceTypes.map(category => (
+                        {deviceCategories.map(category => (
                           <th key={category.id} className="p-2 text-center font-medium border" title={category.name}>
                             <div className="flex justify-center">
-                              {deviceTypeIcons[category.id.toLowerCase()] || category.name.charAt(0)}
+                              {category.icon}
                             </div>
                           </th>
                         ))}
@@ -395,7 +394,7 @@ export function DeviceIssuesTab() {
                               )}
                             </td>
                             
-                            {supportedDeviceTypes.map(deviceType => {
+                            {deviceCategories.map(deviceType => {
                               const hasIssue = issuesWithTitle.some(issue => 
                                 issue.deviceType.toLowerCase() === deviceType.id.toLowerCase()
                               );
@@ -403,7 +402,7 @@ export function DeviceIssuesTab() {
                               return (
                                 <td key={`${title}-${deviceType.id}`} className="p-2 text-center border">
                                   {hasIssue ? (
-                                    <Checkbox defaultChecked disabled />
+                                    <Checkbox checked={true} disabled />
                                   ) : (
                                     <Checkbox disabled />
                                   )}
@@ -412,43 +411,47 @@ export function DeviceIssuesTab() {
                             })}
                             
                             <td className="p-2 text-center border">
-                              {editingIssue?.title === title ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={handleSaveEdit}
-                                    disabled={updateIssueMutation.isPending}
-                                  >
-                                    <Save className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setEditingIssue(null)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="flex items-center justify-center space-x-2">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleEditClick(issuesWithTitle[0])}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleDeleteClick(issuesWithTitle[0])}
-                                    className="text-destructive"
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
+                              <div className="flex items-center justify-center space-x-2">
+                                {editingIssue?.title === title ? (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={handleSaveEdit}
+                                      className="h-8 px-2"
+                                    >
+                                      <Save className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setEditingIssue(null)}
+                                      className="h-8 px-2"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleEditClick(issuesWithTitle[0])}
+                                      className="h-8 px-2"
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDeleteClick(issuesWithTitle[0])}
+                                      className="h-8 px-2 text-destructive"
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -458,31 +461,33 @@ export function DeviceIssuesTab() {
                 </div>
               </ScrollArea>
             ) : (
-              <div className="text-center py-6 bg-muted rounded-md">
-                <p className="text-muted-foreground">
-                  Keine Fehlereinträge vorhanden.
+              <div className="text-center p-8">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-lg font-medium">Keine Fehlerbeschreibungen gefunden</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Beginnen Sie mit dem Import von Fehlerbeschreibungen über das Formular oben.
                 </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-      
-      {/* Löschen-Dialog */}
+
+      {/* Löschdialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Fehlerbeschreibung löschen</AlertDialogTitle>
             <AlertDialogDescription>
-              Möchten Sie die Fehlerbeschreibung "{issueToDelete?.title}" wirklich löschen?
-              Diese Aktion kann nicht rückgängig gemacht werden.
+              Sind Sie sicher, dass Sie die Fehlerbeschreibung "{issueToDelete?.title}" löschen möchten?
+              Dies kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="bg-destructive hover:bg-destructive/90"
+              className="bg-red-600 hover:bg-red-700"
             >
               Löschen
             </AlertDialogAction>
