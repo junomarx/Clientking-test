@@ -259,6 +259,7 @@ export function registerAdminRoutes(app: Express) {
   app.get("/api/device-issues/:deviceType", async (req: Request, res: Response) => {
     try {
       const deviceType = req.params.deviceType;
+      const format = req.query.format as string || 'full'; // 'full' oder 'simple'
       
       // Wir verwenden jetzt die globalen Fehlerbeschreibungen vom Superadmin (Shop-ID 1682)
       // Diese stehen allen Benutzern zur Verfügung
@@ -271,16 +272,24 @@ export function registerAdminRoutes(app: Express) {
           )
         );
       
-      // Fehlerbeschreibungen abrufen und nach Beschreibung sortieren
+      // Fehlerbeschreibungen abrufen und nach Titel sortieren
       const issues = await query;
-      issues.sort((a, b) => a.description.localeCompare(b.description));
       
-      // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
-      const uniqueDescriptions = [...new Set(issues.map(issue => issue.description))];
+      // Für Abwärtskompatibilität: wenn format=simple, geben wir nur die Titel zurück
+      if (format === 'simple') {
+        // Nach Titel sortieren
+        issues.sort((a, b) => a.title.localeCompare(b.title));
+        // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
+        const uniqueTitles = [...new Set(issues.map(issue => issue.title))];
+        console.log(`Fehlerkatalog (simple): ${uniqueTitles.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
+        return res.json(uniqueTitles);
+      }
       
-      console.log(`Fehlerkatalog: ${uniqueDescriptions.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
+      // Standardmäßig vollständige Informationen zurückgeben
+      issues.sort((a, b) => a.title.localeCompare(b.title));
+      console.log(`Fehlerkatalog (full): ${issues.length} Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
       
-      res.json(uniqueDescriptions);
+      res.json(issues);
     } catch (error) {
       console.error("Error retrieving device issues for type:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });

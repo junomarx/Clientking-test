@@ -106,7 +106,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const { user } = useAuth();
   
   // States für die Formularfelder und UI
-  const [availableIssues, setAvailableIssues] = useState<string[]>([]);
+  const [availableIssues, setAvailableIssues] = useState<Array<{id: number; title: string; description: string; deviceType: string; severity: string; isCommon: boolean;}>>([]);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
   const [savedModels, setSavedModels] = useState<string[]>([]);
@@ -277,10 +277,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // da wir jetzt den GlobalDeviceSelector verwenden und Geräte nur vom Superadmin erstellt werden
   
   // Funktion zum Hinzufügen einer neuen Fehlerbeschreibung
-  const addIssueToField = (issue: string, index: number = 0) => {
+  const addIssueToField = (issue: {id: number; title: string; description: string; deviceType: string; severity: string; isCommon: boolean;} | string, index: number = 0) => {
     // Aktualisiere das entsprechende Feld im Array
     const newIssueFields = [...issueFields];
-    newIssueFields[index] = issue;
+    
+    // Prüfe, ob issue ein Objekt oder string ist
+    if (typeof issue === 'object') {
+      newIssueFields[index] = issue.title; // Den Titel verwenden (vorher: description)
+    } else {
+      newIssueFields[index] = issue;
+    }
     
     // Füge ein neues leeres Feld hinzu
     newIssueFields.push('');
