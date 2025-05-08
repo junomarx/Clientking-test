@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   useGlobalDeviceTypes, 
   useGlobalBrandsByDeviceType, 
@@ -7,9 +7,8 @@ import {
   type GlobalBrand, 
   type GlobalModel 
 } from '@/hooks/useGlobalDeviceData';
-import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
-import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Combobox } from '@headlessui/react';
+import { CheckIcon, ChevronUpDownIcon } from 'lucide-react';
 
 interface GlobalDeviceSelectorProps {
   onDeviceTypeSelect: (deviceType: string, deviceTypeId: number | null) => void;
@@ -25,161 +24,245 @@ export function GlobalDeviceSelector({
   className
 }: GlobalDeviceSelectorProps) {
   // State für die ausgewählten Werte
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string>('');
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedDeviceType, setSelectedDeviceType] = useState<GlobalDeviceType | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<GlobalBrand | null>(null);
+  const [selectedModel, setSelectedModel] = useState<GlobalModel | null>(null);
+
+  // State für die Suche
+  const [queryDeviceType, setQueryDeviceType] = useState('');
+  const [queryBrand, setQueryBrand] = useState('');
+  const [queryModel, setQueryModel] = useState('');
 
   // Datenabfragen mit React Query
   const deviceTypesQuery = useGlobalDeviceTypes();
-  const brandsQuery = useGlobalBrandsByDeviceType(selectedDeviceTypeId);
-  const modelsQuery = useGlobalModelsByBrand(selectedDeviceTypeId, selectedBrandId);
+  const brandsQuery = useGlobalBrandsByDeviceType(selectedDeviceType?.id || null);
+  const modelsQuery = useGlobalModelsByBrand(selectedDeviceType?.id || null, selectedBrand?.id || null);
 
-  // Optionen für die Comboboxen formatieren
-  const deviceTypeOptions: ComboboxOption[] = deviceTypesQuery.data 
-    ? deviceTypesQuery.data.map((deviceType: GlobalDeviceType) => ({
-        value: deviceType.id.toString(),
-        label: deviceType.name
-      }))
-    : [];
+  // Gefilterte Optionen
+  const filteredDeviceTypes = useMemo(() => {
+    return deviceTypesQuery.data 
+      ? deviceTypesQuery.data.filter((deviceType) => 
+          deviceType.name.toLowerCase().includes(queryDeviceType.toLowerCase())
+        )
+      : [];
+  }, [deviceTypesQuery.data, queryDeviceType]);
 
-  const brandOptions: ComboboxOption[] = brandsQuery.data 
-    ? brandsQuery.data.map((brand: GlobalBrand) => ({
-        value: brand.id.toString(),
-        label: brand.name
-      }))
-    : [];
+  const filteredBrands = useMemo(() => {
+    return brandsQuery.data 
+      ? brandsQuery.data.filter((brand) => 
+          brand.name.toLowerCase().includes(queryBrand.toLowerCase())
+        )
+      : [];
+  }, [brandsQuery.data, queryBrand]);
 
-  const modelOptions: ComboboxOption[] = modelsQuery.data 
-    ? modelsQuery.data.map((model: GlobalModel) => ({
-        value: model.id.toString(),
-        label: model.name
-      }))
-    : [];
+  const filteredModels = useMemo(() => {
+    return modelsQuery.data 
+      ? modelsQuery.data.filter((model) => 
+          model.name.toLowerCase().includes(queryModel.toLowerCase())
+        )
+      : [];
+  }, [modelsQuery.data, queryModel]);
 
-  // Handler für Gerätetyp-Änderung
-  const handleDeviceTypeChange = (value: string) => {
-    const deviceTypeId = value ? parseInt(value, 10) : null;
-    setSelectedDeviceTypeId(deviceTypeId);
+  // Handler für Auswahl-Änderungen
+  const handleDeviceTypeChange = (deviceType: GlobalDeviceType | null) => {
+    setSelectedDeviceType(deviceType);
+    setSelectedBrand(null);
+    setSelectedModel(null);
     
-    // Den Namen des Gerätetyps finden
-    const deviceType = deviceTypesQuery.data?.find(
-      (dt: GlobalDeviceType) => dt.id === deviceTypeId
-    );
-    const deviceTypeName = deviceType?.name || '';
-    setSelectedDeviceType(deviceTypeName);
-    
-    // Callback aufrufen
-    onDeviceTypeSelect(deviceTypeName, deviceTypeId);
-    
-    // Zurücksetzen der abhängigen Felder
-    setSelectedBrandId(null);
-    setSelectedBrand('');
+    onDeviceTypeSelect(deviceType?.name || '', deviceType?.id || null);
     onBrandSelect('', null);
-    setSelectedModelId(null);
-    setSelectedModel('');
     onModelSelect('', null);
   };
 
-  // Handler für Marken-Änderung
-  const handleBrandChange = (value: string) => {
-    const brandId = value ? parseInt(value, 10) : null;
-    setSelectedBrandId(brandId);
+  const handleBrandChange = (brand: GlobalBrand | null) => {
+    setSelectedBrand(brand);
+    setSelectedModel(null);
     
-    // Den Namen der Marke finden
-    const brand = brandsQuery.data?.find(
-      (b: GlobalBrand) => b.id === brandId
-    );
-    const brandName = brand?.name || '';
-    setSelectedBrand(brandName);
-    
-    // Callback aufrufen
-    onBrandSelect(brandName, brandId);
-    
-    // Zurücksetzen der abhängigen Felder
-    setSelectedModelId(null);
-    setSelectedModel('');
+    onBrandSelect(brand?.name || '', brand?.id || null);
     onModelSelect('', null);
   };
 
-  // Handler für Modell-Änderung
-  const handleModelChange = (value: string) => {
-    const modelId = value ? parseInt(value, 10) : null;
-    setSelectedModelId(modelId);
-    
-    // Den Namen des Modells finden
-    const model = modelsQuery.data?.find(
-      (m: GlobalModel) => m.id === modelId
-    );
-    const modelName = model?.name || '';
-    setSelectedModel(modelName);
-    
-    // Callback aufrufen
-    onModelSelect(modelName, modelId);
+  const handleModelChange = (model: GlobalModel | null) => {
+    setSelectedModel(model);
+    onModelSelect(model?.name || '', model?.id || null);
   };
 
   return (
     <div className={className}>
-      <div className="grid gap-4">
-        {/* Gerätetyp-Auswahl */}
-        <div className="space-y-2">
-          <Label htmlFor="deviceType">Geräteart</Label>
-          {deviceTypesQuery.isLoading ? (
-            <Skeleton className="h-10 w-full" />
-          ) : (
-            <Combobox
-              options={deviceTypeOptions}
-              value={selectedDeviceTypeId?.toString() || ''}
-              onChange={handleDeviceTypeChange}
-              placeholder="Geräteart auswählen..."
-              searchPlaceholder="Nach Geräteart suchen..."
-              emptyText="Keine Gerätearten gefunden"
-              loading={deviceTypesQuery.isLoading}
-            />
-          )}
+      <div className="space-y-4">
+        {/* Zeile: Geräteart und Hersteller */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Geräteart */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Geräteart</label>
+            <Combobox value={selectedDeviceType} onChange={handleDeviceTypeChange}>
+              <div className="relative">
+                <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-input shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                  <Combobox.Input
+                    className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                    onChange={(e) => setQueryDeviceType(e.target.value)}
+                    displayValue={(deviceType: GlobalDeviceType) => deviceType?.name || ''}
+                    placeholder="Geräteart auswählen"
+                  />
+                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </Combobox.Button>
+                </div>
+                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  {filteredDeviceTypes.length === 0 && queryDeviceType !== '' ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      Keine Gerätearten gefunden.
+                    </div>
+                  ) : (
+                    filteredDeviceTypes.map((deviceType) => (
+                      <Combobox.Option
+                        key={deviceType.id}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? 'bg-primary text-white' : 'text-gray-900'
+                          }`
+                        }
+                        value={deviceType}
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                              {deviceType.name}
+                            </span>
+                            {selected ? (
+                              <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-primary'}`}>
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Combobox.Option>
+                    ))
+                  )}
+                </Combobox.Options>
+              </div>
+            </Combobox>
+            {deviceTypesQuery.isLoading && (
+              <div className="mt-1 h-10 w-full animate-pulse rounded bg-gray-200"></div>
+            )}
+          </div>
+
+          {/* Hersteller */}
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hersteller</label>
+            <Combobox value={selectedBrand} onChange={handleBrandChange} disabled={!selectedDeviceType}>
+              <div className="relative">
+                <div className={`relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-input shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!selectedDeviceType ? 'opacity-50' : ''}`}>
+                  <Combobox.Input
+                    className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                    onChange={(e) => setQueryBrand(e.target.value)}
+                    displayValue={(brand: GlobalBrand) => brand?.name || ''}
+                    placeholder="Hersteller auswählen"
+                    disabled={!selectedDeviceType}
+                  />
+                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </Combobox.Button>
+                </div>
+                {selectedDeviceType && (
+                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    {filteredBrands.length === 0 && queryBrand !== '' ? (
+                      <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                        Keine Hersteller gefunden.
+                      </div>
+                    ) : (
+                      filteredBrands.map((brand) => (
+                        <Combobox.Option
+                          key={brand.id}
+                          className={({ active }) =>
+                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                              active ? 'bg-primary text-white' : 'text-gray-900'
+                            }`
+                          }
+                          value={brand}
+                        >
+                          {({ selected, active }) => (
+                            <>
+                              <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                                {brand.name}
+                              </span>
+                              {selected ? (
+                                <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-primary'}`}>
+                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Combobox.Option>
+                      ))
+                    )}
+                  </Combobox.Options>
+                )}
+              </div>
+            </Combobox>
+            {brandsQuery.isLoading && selectedDeviceType && (
+              <div className="mt-1 h-10 w-full animate-pulse rounded bg-gray-200"></div>
+            )}
+          </div>
         </div>
 
-        {/* Marken-Auswahl (nur anzeigen, wenn Gerätetyp ausgewählt ist) */}
-        {selectedDeviceTypeId && (
-          <div className="space-y-2">
-            <Label htmlFor="brand">Hersteller</Label>
-            {brandsQuery.isLoading ? (
-              <Skeleton className="h-10 w-full" />
-            ) : (
-              <Combobox
-                options={brandOptions}
-                value={selectedBrandId?.toString() || ''}
-                onChange={handleBrandChange}
-                placeholder="Hersteller auswählen..."
-                searchPlaceholder="Nach Hersteller suchen..."
-                emptyText="Keine Hersteller für diese Geräteart gefunden"
-                loading={brandsQuery.isLoading}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Modell-Auswahl (nur anzeigen, wenn Marke ausgewählt ist) */}
-        {selectedBrandId && (
-          <div className="space-y-2">
-            <Label htmlFor="model">Modell</Label>
-            {modelsQuery.isLoading ? (
-              <Skeleton className="h-10 w-full" />
-            ) : (
-              <Combobox
-                options={modelOptions}
-                value={selectedModelId?.toString() || ''}
-                onChange={handleModelChange}
-                placeholder="Modell auswählen..."
-                searchPlaceholder="Nach Modell suchen..."
-                emptyText="Keine Modelle für diesen Hersteller gefunden"
-                loading={modelsQuery.isLoading}
-              />
-            )}
-          </div>
-        )}
+        {/* Modell */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Modell</label>
+          <Combobox value={selectedModel} onChange={handleModelChange} disabled={!selectedBrand}>
+            <div className="relative">
+              <div className={`relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-input shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${!selectedBrand ? 'opacity-50' : ''}`}>
+                <Combobox.Input
+                  className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                  onChange={(e) => setQueryModel(e.target.value)}
+                  displayValue={(model: GlobalModel) => model?.name || ''}
+                  placeholder="Modell auswählen"
+                  disabled={!selectedBrand}
+                />
+                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </Combobox.Button>
+              </div>
+              {selectedBrand && (
+                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  {filteredModels.length === 0 && queryModel !== '' ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      Keine Modelle gefunden.
+                    </div>
+                  ) : (
+                    filteredModels.map((model) => (
+                      <Combobox.Option
+                        key={model.id}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? 'bg-primary text-white' : 'text-gray-900'
+                          }`
+                        }
+                        value={model}
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>
+                              {model.name}
+                            </span>
+                            {selected ? (
+                              <span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-primary'}`}>
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Combobox.Option>
+                    ))
+                  )}
+                </Combobox.Options>
+              )}
+            </div>
+          </Combobox>
+          {modelsQuery.isLoading && selectedBrand && (
+            <div className="mt-1 h-10 w-full animate-pulse rounded bg-gray-200"></div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,0 +1,73 @@
+import { useState } from 'react';
+import { Combobox } from '@headlessui/react';
+
+export default function DeviceSelectorSkeleton() {
+  const [selectedDeviceType, setSelectedDeviceType] = useState(null);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedModel, setSelectedModel] = useState(null);
+
+  const [queryDeviceType, setQueryDeviceType] = useState('');
+  const [queryBrand, setQueryBrand] = useState('');
+  const [queryModel, setQueryModel] = useState('');
+
+  return (
+    <div className="space-y-4">
+      {/* Zeile: Geräteart und Hersteller */}
+      <div className="flex gap-4">
+        {/* Geräteart */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Geräteart</label>
+          <Combobox value={selectedDeviceType} onChange={setSelectedDeviceType}>
+            <div className="relative mt-1">
+              <Combobox.Input
+                className="w-full border border-gray-300 rounded-md p-2"
+                onChange={(e) => setQueryDeviceType(e.target.value)}
+                displayValue={(item: any) => item?.name || ''}
+                placeholder="Geräteart auswählen"
+              />
+              <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-md max-h-60 overflow-auto rounded-md">
+                {/* Options kommen hier rein */}
+              </Combobox.Options>
+            </div>
+          </Combobox>
+        </div>
+
+        {/* Hersteller */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Hersteller</label>
+          <Combobox value={selectedBrand} onChange={setSelectedBrand} disabled={!selectedDeviceType}>
+            <div className="relative mt-1">
+              <Combobox.Input
+                className="w-full border border-gray-300 rounded-md p-2"
+                onChange={(e) => setQueryBrand(e.target.value)}
+                displayValue={(item: any) => item?.name || ''}
+                placeholder="Hersteller auswählen"
+              />
+              <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-md max-h-60 overflow-auto rounded-md">
+                {/* Options kommen hier rein */}
+              </Combobox.Options>
+            </div>
+          </Combobox>
+        </div>
+      </div>
+
+      {/* Modell */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Modell</label>
+        <Combobox value={selectedModel} onChange={setSelectedModel} disabled={!selectedDeviceType}>
+          <div className="relative mt-1">
+            <Combobox.Input
+              className="w-full border border-gray-300 rounded-md p-2"
+              onChange={(e) => setQueryModel(e.target.value)}
+              displayValue={(item: any) => item?.name || ''}
+              placeholder="Modell auswählen"
+            />
+            <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-md max-h-60 overflow-auto rounded-md">
+              {/* Options kommen hier rein */}
+            </Combobox.Options>
+          </div>
+        </Combobox>
+      </div>
+    </div>
+  );
+}
