@@ -3411,18 +3411,12 @@ export class DatabaseStorage implements IStorage {
   // Global device data methods for public access
   async getGlobalDeviceTypes(): Promise<UserDeviceType[]> {
     try {
-      // Holen globale Gerätetypen vom Superadmin (ID=10) mit shopId=NULL oder shopId=0
+      // Holen alle Gerätetypen vom Superadmin (ID=10) unabhängig von der Shop-ID
       const results = await db
         .select()
         .from(userDeviceTypes)
         .where(
-          and(
-            eq(userDeviceTypes.userId, 10), // Superadmin-ID
-            or(
-              isNull(userDeviceTypes.shopId),
-              eq(userDeviceTypes.shopId, 0)
-            )
-          )
+          eq(userDeviceTypes.userId, 10) // Superadmin-ID
         )
         .orderBy(userDeviceTypes.name);
       
@@ -3436,18 +3430,12 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalBrands(): Promise<UserBrand[]> {
     try {
-      // Holen globale Marken vom Superadmin (ID=10) mit shopId=NULL oder shopId=0
+      // Holen alle Marken vom Superadmin (ID=10) unabhängig von der Shop-ID
       const results = await db
         .select()
         .from(userBrands)
         .where(
-          and(
-            eq(userBrands.userId, 10), // Superadmin-ID
-            or(
-              isNull(userBrands.shopId),
-              eq(userBrands.shopId, 0)
-            )
-          )
+          eq(userBrands.userId, 10) // Superadmin-ID
         )
         .orderBy(userBrands.name);
       
@@ -3461,18 +3449,14 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalBrandsByDeviceType(deviceTypeId: number): Promise<UserBrand[]> {
     try {
-      // Holen globale Marken für einen bestimmten Gerätetyp mit shopId=NULL oder shopId=0
+      // Holen alle Marken vom Superadmin (ID=10) für einen bestimmten Gerätetyp
       const results = await db
         .select()
         .from(userBrands)
         .where(
           and(
             eq(userBrands.deviceTypeId, deviceTypeId),
-            eq(userBrands.userId, 10), // Superadmin-ID
-            or(
-              isNull(userBrands.shopId),
-              eq(userBrands.shopId, 0)
-            )
+            eq(userBrands.userId, 10) // Superadmin-ID
           )
         )
         .orderBy(userBrands.name);
@@ -3487,18 +3471,12 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalModels(): Promise<UserModel[]> {
     try {
-      // Holen globale Modelle vom Superadmin (ID=10) mit shopId=NULL oder shopId=0
+      // Holen alle Modelle vom Superadmin (ID=10) unabhängig von der Shop-ID
       const results = await db
         .select()
         .from(userModels)
         .where(
-          and(
-            eq(userModels.userId, 10), // Superadmin-ID
-            or(
-              isNull(userModels.shopId),
-              eq(userModels.shopId, 0)
-            )
-          )
+          eq(userModels.userId, 10) // Superadmin-ID
         )
         .orderBy(userModels.name);
       
@@ -3512,18 +3490,14 @@ export class DatabaseStorage implements IStorage {
 
   async getGlobalModelsByBrand(brandId: number): Promise<UserModel[]> {
     try {
-      // Holen globale Modelle für eine bestimmte Marke mit shopId=NULL oder shopId=0
+      // Holen alle Modelle vom Superadmin (ID=10) für eine bestimmte Marke
       const results = await db
         .select()
         .from(userModels)
         .where(
           and(
             eq(userModels.brandId, brandId),
-            eq(userModels.userId, 10), // Superadmin-ID
-            or(
-              isNull(userModels.shopId),
-              eq(userModels.shopId, 0)
-            )
+            eq(userModels.userId, 10) // Superadmin-ID
           )
         )
         .orderBy(userModels.name);
