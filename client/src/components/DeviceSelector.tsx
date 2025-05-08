@@ -86,15 +86,16 @@ export default function DeviceSelector({
     ? brands.filter(b => b.deviceTypeId === selectedDeviceType.id)
     : [];
 
-  const filteredModels = selectedDeviceType
-    ? models.filter(m => {
-        const brand = brands.find(b => b.id === m.brandId);
-        return (
-          brand?.deviceTypeId === selectedDeviceType.id &&
-          (!selectedBrand || m.brandId === selectedBrand.id)
-        );
-      })
-    : [];
+  // Direkter Filter nach brandId für bessere Performance
+  const filteredModels = selectedBrand
+    ? models.filter(m => m.brandId === selectedBrand.id)
+    : selectedDeviceType
+      ? models.filter(m => {
+          // Finde die zugehörige Marke
+          const brand = brands.find(b => b.id === m.brandId);
+          return brand && brand.deviceTypeId === selectedDeviceType.id;
+        })
+      : [];
 
   return (
     <div className={`space-y-4 ${className}`}>
