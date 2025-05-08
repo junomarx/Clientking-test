@@ -12,6 +12,7 @@ import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab
 import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
+import { SuperadminErrorPreviewTab } from "@/components/superadmin/SuperadminErrorPreviewTab";
 
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
