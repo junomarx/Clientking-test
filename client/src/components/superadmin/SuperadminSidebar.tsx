@@ -174,17 +174,16 @@ export function SuperadminSidebar({
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="mr-2">
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="absolute top-4 right-4 md:hidden">
+              <Menu className="h-6 w-6" />
               <span className="sr-only">Menü öffnen</span>
             </Button>
           </SheetTrigger>
           <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-left">Superadmin Menü</h2>
-              <p className="text-sm text-muted-foreground">
-                {currentUser?.username || ""}
-              </p>
+              <h2 className="text-xl font-semibold text-left">
+                {currentUser ? `${currentUser.username} Menü` : 'Superadmin Menü'}
+              </h2>
             </div>
             <nav className="flex flex-col space-y-2 px-1">
               <NavItems isMobile={true} closeMenu={() => {
@@ -195,7 +194,7 @@ export function SuperadminSidebar({
               }} />
             </nav>
             <Separator className="my-4" />
-            <div className="space-y-2 px-1">              
+            <div className="space-y-2 px-1">
               <Button 
                 variant="outline" 
                 className="w-full justify-start mb-2"
