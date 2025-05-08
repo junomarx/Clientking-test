@@ -7,9 +7,8 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import type { Customer } from '@/lib/types';
-import { useDeviceTypes } from '@/hooks/useDeviceTypes';
-import { useBrands } from '@/hooks/useBrands';
-import { useModels } from '@/hooks/useModels';
+// Alte Geräteauswahl-Hooks werden nicht mehr verwendet
+// Stattdessen wird die GlobalDeviceSelector-Komponente verwendet
 import { useModelSeries, type CreateModelSeriesDTO } from '@/hooks/useModelSeries';
 // Import für die neue GlobalDeviceSelector-Komponente
 import { GlobalDeviceSelector } from '@/components/GlobalDeviceSelector';
@@ -138,21 +137,17 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
   const isAdmin = user?.id === 3;
   
-  // Hooks für API-Anfragen
-  const deviceTypes = useDeviceTypes();
-  const brands = useBrands();
+  // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
-  const models = useModels();
   
-  // Query-Hooks aufrufen
-  const deviceTypesQuery = deviceTypes.getAllDeviceTypes();
-  const createDeviceTypeMutation = deviceTypes.createDeviceType();
-  const brandMutation = brands.createBrand();
+  // Query-Hooks aufrufen (nur noch die notwendigen Mutations)
+  const createDeviceTypeMutation = modelSeries.getCreateDeviceTypeMutation();
+  const brandMutation = modelSeries.getCreateBrandMutation();
   const modelSeriesMutation = modelSeries.createModelSeries();
-  const modelsMutation = models.createModels();
+  const modelsMutation = modelSeries.getCreateModelsMutation();
   
-  // API Device Types
-  const apiDeviceTypes = deviceTypesQuery.data;
+  // API Device Types (nicht mehr benötigt, GlobalDeviceSelector übernimmt die Auswahl)
+  const apiDeviceTypes = null;
   
   // Formular erstellen
   const form = useForm<OrderFormValues>({
@@ -492,7 +487,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         estimatedCost: formData.estimatedCost === "" ? null : formData.estimatedCost,
         depositAmount: formData.depositAmount === "" ? null : formData.depositAmount,
         status: formData.status || 'eingegangen', // Standardwert
-        notes: formData.notes
+        notes: formData.notes,
+        // Neue ID-Felder von der GlobalDeviceSelector
+        deviceTypeId: selectedDeviceTypeId,
+        brandId: selectedBrandId,
+        modelId: selectedModelId
       };
       
       // Hier speichern wir das Modell, den Gerätetyp und die Hersteller, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
@@ -671,7 +670,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         estimatedCost: data.estimatedCost === "" ? null : data.estimatedCost,
         depositAmount: data.depositAmount === "" ? null : data.depositAmount,
         status: data.status || 'eingegangen',
-        notes: data.notes || null
+        notes: data.notes || null,
+        // Neue ID-Felder von der GlobalDeviceSelector
+        deviceTypeId: selectedDeviceTypeId,
+        brandId: selectedBrandId,
+        modelId: selectedModelId
       };
       
       console.log("Sende Reparaturdaten mit Kunden-ID:", repairData.customerId);
