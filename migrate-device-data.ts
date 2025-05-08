@@ -8,7 +8,7 @@ import { userDeviceTypes, userBrands, userModels, deviceIssues } from "./shared/
 import { and, eq, isNull, or } from "drizzle-orm";
 
 const SUPERADMIN_ID = 10; // macnphone
-const SUPERADMIN_SHOP_ID = null; // Shop-ID von macnphone ist laut Tabelle nicht gesetzt
+const SUPERADMIN_SHOP_ID = 1682; // Shop-ID 1682 für macnphone
 
 async function main() {
   console.log("Starte optimierte Migration der Gerätedaten zum Superadmin (ID=10)...");
