@@ -255,6 +255,31 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
+  // Alle Fehlerbeschreibungen löschen
+  app.delete("/api/device-issues/all", async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      // Alle Fehlerbeschreibungen löschen
+      await db.delete(deviceIssues).where(eq(deviceIssues.userId, userId));
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Alle Fehlerbeschreibungen wurden erfolgreich gelöscht" 
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen aller Fehlerbeschreibungen:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Fehler beim Löschen aller Fehlerbeschreibungen" 
+      });
+    }
+  });
+  
   // Öffentlicher Endpunkt für alle Benutzer, um Fehlerbeschreibungen für einen bestimmten Gerätetyp abzurufen
   app.get("/api/device-issues/:deviceType", async (req: Request, res: Response) => {
     try {

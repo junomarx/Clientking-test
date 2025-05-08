@@ -154,7 +154,12 @@ export function ErrorCatalogTab() {
   // Mutation zum Löschen aller vorhandenen Fehlerbeschreibungen
   const deleteAllIssuesMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('DELETE', '/api/device-issues/all');
+      const response = await apiRequest('DELETE', '/api/device-issues/all');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Fehler beim Löschen aller Fehlerbeschreibungen');
+      }
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/device-issues'] });
@@ -166,7 +171,7 @@ export function ErrorCatalogTab() {
     onError: (error) => {
       toast({
         title: 'Fehler',
-        description: `Fehler beim Löschen der Fehlerbeschreibungen: ${error}`,
+        description: error instanceof Error ? error.message : 'Fehler beim Löschen der Fehlerbeschreibungen',
         variant: 'destructive',
       });
     }
