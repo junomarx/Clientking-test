@@ -981,7 +981,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
-                    <Label className="text-base font-medium mb-3 block">Gerätedaten</Label>
+                    <div className="text-base font-medium mb-3 block">Gerätedaten</div>
                     <div className="mb-6">
                       <GlobalDeviceSelector
                         onDeviceTypeSelect={(deviceType, deviceTypeId) => {

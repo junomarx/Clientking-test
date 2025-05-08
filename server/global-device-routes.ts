@@ -34,18 +34,50 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
       }
       
       const brands = await storage.getGlobalBrandsByDeviceType(deviceTypeId);
+      console.log(`Marken für Gerätetyp ${deviceTypeId} abgerufen:`, brands.length);
       res.json(brands);
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Marken nach Gerätetyp:', error);
       res.status(500).json({ message: 'Fehler beim Abrufen der globalen Marken nach Gerätetyp' });
     }
   });
+  
+  // Endpoint: Marken nach deviceTypeId über Query-Parameter abfragen
+  app.get('/api/global/brands', async (req, res) => {
+    try {
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : null;
+      
+      if (deviceTypeId) {
+        console.log(`Marken für Gerätetyp ${deviceTypeId} über Query-Parameter angefordert`);
+        const brands = await storage.getGlobalBrandsByDeviceType(deviceTypeId);
+        console.log(`${brands.length} Marken für Gerätetyp ${deviceTypeId} gefunden`);
+        return res.json(brands);
+      } else {
+        const brands = await storage.getGlobalBrands();
+        console.log(`Alle ${brands.length} globalen Marken abgerufen`);
+        return res.json(brands);
+      }
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Marken:', error);
+      res.status(500).json({ message: 'Fehler beim Abrufen der Marken' });
+    }
+  });
 
   // Endpoint: Alle Modelle abrufen
   app.get('/api/global/models', async (req, res) => {
     try {
-      const models = await storage.getGlobalModels();
-      res.json(models);
+      const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : null;
+      
+      if (brandId) {
+        console.log(`Modelle für Marke ${brandId} über Query-Parameter angefordert`);
+        const models = await storage.getGlobalModelsByBrand(brandId);
+        console.log(`${models.length} Modelle für Marke ${brandId} gefunden`);
+        return res.json(models);
+      } else {
+        const models = await storage.getGlobalModels();
+        console.log(`Alle ${models.length} globalen Modelle abgerufen`);
+        return res.json(models);
+      }
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle:', error);
       res.status(500).json({ message: 'Fehler beim Abrufen der globalen Modelle' });
