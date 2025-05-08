@@ -19,7 +19,7 @@ import {
   clearAllModels,
   deleteModelLegacy
 } from '@/lib/deviceHelpers';
-import { saveModelDb } from '@/utils/modelUtils';
+// Import für saveModelDb entfernt - nicht mehr benötigt mit GlobalDeviceSelector
 import { X } from 'lucide-react';
 
 import {
@@ -140,11 +140,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
   
-  // Query-Hooks aufrufen (nur noch die notwendigen Mutations)
-  const createDeviceTypeMutation = modelSeries.getCreateDeviceTypeMutation();
-  const brandMutation = modelSeries.getCreateBrandMutation();
-  const modelSeriesMutation = modelSeries.createModelSeries();
-  const modelsMutation = modelSeries.getCreateModelsMutation();
+  // In der neuen Version werden die Mutations für Gerätetypen, Hersteller und Modelle 
+  // nicht mehr benötigt, da diese jetzt vom Superadmin verwaltet werden
+  // und über den GlobalDeviceSelector ausgewählt werden
   
   // API Device Types (nicht mehr benötigt, GlobalDeviceSelector übernimmt die Auswahl)
   const apiDeviceTypes = null;
@@ -275,13 +273,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // Die alte Modellreihen- und Modellabfrage wurde entfernt, da sie durch GlobalDeviceSelector ersetzt wurde
   
-  // Funktion zum Speichern eines Gerätetyps, wenn er nicht existiert
-  const saveDeviceType = (deviceType: string) => {
-    if (!deviceType) return;
-    
-    // API aufrufen, um den Gerätetyp zu speichern
-    createDeviceTypeMutation.mutate({ name: deviceType });
-  };
+  // Funktion zum Speichern eines Gerätetyps ist nicht mehr erforderlich,
+  // da wir jetzt den GlobalDeviceSelector verwenden und Geräte nur vom Superadmin erstellt werden
   
   // Funktion zum Hinzufügen einer neuen Fehlerbeschreibung
   const addIssueToField = (issue: string, index: number = 0) => {
@@ -391,25 +384,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
         // Da wir jetzt den GlobalDeviceSelector verwenden, wird keine automatische Speicherung mehr benötigt
         // Die Geräte werden vom Superadmin verwaltet
-        
-        // Hersteller und Modell jetzt in der Datenbank speichern
-        const success = saveModelDb(
-          repairData.deviceType, 
-          repairData.brand, 
-          repairData.modelSeries, 
-          repairData.model,
-          selectedDeviceTypeId,
-          selectedBrandId,
-          createDeviceTypeMutation,
-          brandMutation,
-          modelSeriesMutation,
-          modelsMutation,
-          user
-        );
-        
-        if (!success) {
-          console.log("Keine Berechtigung zum Erstellen neuer Modelle - nur vorhandene Modelle können genutzt werden");
-        }
+        console.log("Repair wird mit globalen Gerätedaten erstellt:", {
+          deviceType: repairData.deviceType,
+          brand: repairData.brand,
+          model: repairData.model,
+          deviceTypeId: selectedDeviceTypeId,
+          brandId: selectedBrandId,
+          modelId: selectedModelId
+        });
       }
       
       console.log("Sending repair data:", repairData);
@@ -573,25 +555,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
         // Da wir jetzt den GlobalDeviceSelector verwenden, wird keine automatische Speicherung mehr benötigt
         // Die Geräte werden vom Superadmin verwaltet
-        
-        // Hersteller und Modell jetzt in der Datenbank speichern
-        const success = saveModelDb(
-          repairData.deviceType, 
-          repairData.brand, 
-          repairData.modelSeries, 
-          repairData.model,
-          selectedDeviceTypeId,
-          selectedBrandId,
-          createDeviceTypeMutation,
-          brandMutation,
-          modelSeriesMutation,
-          modelsMutation,
-          user
-        );
-        
-        if (!success) {
-          console.log("Keine Berechtigung zum Erstellen neuer Modelle - nur vorhandene Modelle können genutzt werden");
-        }
+        console.log("Repair wird mit globalen Gerätedaten erstellt:", {
+          deviceType: repairData.deviceType,
+          brand: repairData.brand,
+          model: repairData.model,
+          deviceTypeId: selectedDeviceTypeId,
+          brandId: selectedBrandId,
+          modelId: selectedModelId
+        });
       }
       
       // Auftrag erstellen
