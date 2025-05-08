@@ -67,8 +67,14 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
   app.get('/api/global/models', async (req, res) => {
     try {
       const brandId = req.query.brandId ? parseInt(req.query.brandId as string) : null;
+      const deviceTypeId = req.query.deviceTypeId ? parseInt(req.query.deviceTypeId as string) : null;
       
-      if (brandId) {
+      if (brandId && deviceTypeId) {
+        console.log(`Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId} über Query-Parameter angefordert`);
+        const models = await storage.getGlobalModelsByBrandAndDeviceType(brandId, deviceTypeId);
+        console.log(`${models.length} Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId} gefunden`);
+        return res.json(models);
+      } else if (brandId) {
         console.log(`Modelle für Marke ${brandId} über Query-Parameter angefordert`);
         const models = await storage.getGlobalModelsByBrand(brandId);
         console.log(`${models.length} Modelle für Marke ${brandId} gefunden`);

@@ -68,11 +68,12 @@ export function useGlobalModelsByBrand(deviceTypeId: number | null, brandId: num
   return useQuery<GlobalModel[]>({
     queryKey: ['/api/global/models', { deviceTypeId, brandId }],
     queryFn: async () => {
-      if (!brandId) return [];
-      const res = await apiRequest('GET', `/api/global/models?brandId=${brandId}`);
+      if (!brandId || !deviceTypeId) return [];
+      // Senden beide Parameter: deviceTypeId und brandId
+      const res = await apiRequest('GET', `/api/global/models?brandId=${brandId}&deviceTypeId=${deviceTypeId}`);
       return await res.json();
     },
-    enabled: !!brandId,
+    enabled: !!brandId && !!deviceTypeId,
     staleTime: 60000, // 1 Minute Cache
   });
 }

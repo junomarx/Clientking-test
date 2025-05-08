@@ -85,6 +85,7 @@ export interface IStorage {
   getGlobalBrandsByDeviceType(deviceTypeId: number): Promise<UserBrand[]>;
   getGlobalModels(): Promise<UserModel[]>;
   getGlobalModelsByBrand(brandId: number): Promise<UserModel[]>;
+  getGlobalModelsByBrandAndDeviceType(brandId: number, deviceTypeId: number): Promise<UserModel[]>;
 
   // Customer methods
   getAllCustomers(): Promise<Customer[]>;
@@ -3506,6 +3507,48 @@ export class DatabaseStorage implements IStorage {
       return results;
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle nach Marke:', error);
+      return [];
+    }
+  }
+  
+  async getGlobalModelsByBrandAndDeviceType(brandId: number, deviceTypeId: number): Promise<UserModel[]> {
+    try {
+      // Zuerst die Marke abrufen, um zu überprüfen, ob sie zum Gerätetyp passt
+      const brand = await db
+        .select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.id, brandId),
+            eq(userBrands.deviceTypeId, deviceTypeId),
+            eq(userBrands.userId, 10) // Superadmin-ID
+          )
+        )
+        .limit(1);
+      
+      if (brand.length === 0) {
+        console.log(`Keine Marke mit ID ${brandId} für Gerätetyp ${deviceTypeId} gefunden`);
+        return [];
+      }
+      
+      // Alle Modelle vom Superadmin (ID=10) für die angegebene Marke abrufen
+      // Da die Marke bereits auf den Gerätetyp gefiltert wurde, müssen wir bei den Modellen
+      // nicht noch einmal nach dem Gerätetyp filtern
+      const results = await db
+        .select()
+        .from(userModels)
+        .where(
+          and(
+            eq(userModels.brandId, brandId),
+            eq(userModels.userId, 10) // Superadmin-ID
+          )
+        )
+        .orderBy(userModels.name);
+      
+      console.log(`Globale Modelle für Marke ${brandId} und Gerätetyp ${deviceTypeId}: ${results.length} gefunden`);
+      return results;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der globalen Modelle nach Marke und Gerätetyp:', error);
       return [];
     }
   }
