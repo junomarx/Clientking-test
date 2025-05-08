@@ -260,21 +260,16 @@ export function registerAdminRoutes(app: Express) {
     try {
       const deviceType = req.params.deviceType;
       
-      // Default userId ist der aktuelle Benutzer (falls angemeldet)
-      let userId = req.user ? (req.user as any).id : undefined;
-      let shopId = null;
-      
-      // Wenn ein Benutzer angemeldet ist, holen wir seine Shop-ID für die Shop-Isolation
-      if (userId) {
-        const user = await storage.getUser(userId);
-        if (user) {
-          shopId = user.shopId || 1;
-        }
-      }
-      
-      // Alle Fehlerbeschreibungen für diesen Gerätetyp abrufen
-      let query = db.select().from(deviceIssues)
-        .where(eq(deviceIssues.deviceType, deviceType));
+      // Wir verwenden jetzt die globalen Fehlerbeschreibungen vom Superadmin (Shop-ID 1682)
+      // Diese stehen allen Benutzern zur Verfügung
+      const query = db.select().from(deviceIssues)
+        .where(
+          and(
+            eq(deviceIssues.deviceType, deviceType),
+            eq(deviceIssues.userId, 10), // Superadmin-ID
+            eq(deviceIssues.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
+          )
+        );
       
       // Fehlerbeschreibungen abrufen und nach Beschreibung sortieren
       const issues = await query;
@@ -283,7 +278,7 @@ export function registerAdminRoutes(app: Express) {
       // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
       const uniqueDescriptions = [...new Set(issues.map(issue => issue.description))];
       
-      console.log(`Fehlerkatalog: ${uniqueDescriptions.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden`);
+      console.log(`Fehlerkatalog: ${uniqueDescriptions.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
       
       res.json(uniqueDescriptions);
     } catch (error) {
