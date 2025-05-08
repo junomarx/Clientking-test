@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X, Factory, Layers, RefreshCcw } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X, Factory, Layers, RefreshCcw, Upload } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
 
@@ -855,6 +855,90 @@ export default function SuperadminDevicesTab() {
       return;
     }
     createModelMutation.mutate({ name: modelForm.name, brandId: modelForm.brandId });
+  };
+  
+  // Bulk-Import für Modelle
+  const [isBulkImportModelsOpen, setIsBulkImportModelsOpen] = useState(false);
+  const [bulkModelsText, setBulkModelsText] = useState("");
+  const [selectedBrandForBulk, setSelectedBrandForBulk] = useState<number | null>(null);
+  
+  // Mutation für Bulk-Import von Modellen
+  const bulkImportModelsMutation = useMutation({
+    mutationFn: async (data: { models: { name: string; brandId: number }[] }) => {
+      const response = await apiRequest("POST", "/api/superadmin/models/bulk-import", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Massenimport von Modellen');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/models"] });
+      toast({
+        title: "Erfolg",
+        description: data.message || `${data.importedCount} Modelle wurden erfolgreich importiert.`,
+      });
+      setIsBulkImportModelsOpen(false);
+      setBulkModelsText("");
+      setSelectedBrandForBulk(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleBulkImportModels = () => {
+    setIsBulkImportModelsOpen(true);
+    setSelectedBrandForBulk(null);
+    setBulkModelsText("");
+  };
+  
+  const handleSubmitBulkImportModels = () => {
+    if (!selectedBrandForBulk) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie eine Marke aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!bulkModelsText.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie mindestens ein Modell ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Modellnamen aus Text extrahieren (ein Modell pro Zeile)
+    const modelNames = bulkModelsText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    if (modelNames.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Keine gültigen Modellnamen gefunden.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Modelle für den Import vorbereiten
+    const models = modelNames.map(name => ({
+      name,
+      brandId: selectedBrandForBulk
+    }));
+    
+    // API-Aufruf durchführen
+    bulkImportModelsMutation.mutate({ models });
   };
   
   // Handler für Modell-Management
