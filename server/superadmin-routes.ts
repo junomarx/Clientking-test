@@ -916,6 +916,105 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
   
+  // Bulk-Import für Modelle
+  app.post("/api/superadmin/models/bulk-import", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { models } = req.body;
+      
+      if (!models || !Array.isArray(models) || models.length === 0) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Keine gültigen Modelldaten gefunden" 
+        });
+      }
+      
+      console.log(`Versuche ${models.length} Modelle zu importieren:`, models);
+      
+      // Zähler für erfolgreiche und bereits existierende Einträge
+      let importedCount = 0;
+      let existingCount = 0;
+      
+      // Aktueller Superadmin-User-ID und Shop-ID abrufen
+      const superadminUserId = (req.user as Express.User).id;
+      const superadminShopId = (req.user as Express.User).shopId || 1682; // Fallback auf 1682, wenn keine shopId vorhanden
+      
+      // Alle vorhandenen Marken abrufen, um Marken-IDs zu finden
+      const existingBrands = await db.select().from(userBrands);
+      
+      // Alle Modelle importieren
+      for (const model of models) {
+        try {
+          // Validiere Daten
+          if (!model.name || !model.brandId) {
+            console.log("Ungültiges Modell, überspringe:", model);
+            continue;
+          }
+          
+          // Prüfe, ob die Marke existiert
+          const brandExists = existingBrands.some(brand => brand.id === model.brandId);
+          if (!brandExists) {
+            console.log(`Marke mit ID ${model.brandId} existiert nicht, überspringe Modell:`, model);
+            continue;
+          }
+          
+          // Prüfe, ob das Modell bereits existiert
+          const [existingModel] = await db.select()
+            .from(userModels)
+            .where(and(
+              eq(userModels.name, model.name),
+              eq(userModels.brandId, model.brandId)
+            ));
+          
+          if (existingModel) {
+            console.log(`Modell "${model.name}" existiert bereits, überspringe.`);
+            existingCount++;
+            continue;
+          }
+          
+          // Neues Modell einfügen
+          await db.insert(userModels).values({
+            name: model.name,
+            brandId: model.brandId,
+            userId: superadminUserId,
+            shopId: superadminShopId,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          
+          importedCount++;
+          console.log(`Modell "${model.name}" für Marke ${model.brandId} importiert.`);
+        } catch (modelError) {
+          console.error(`Fehler beim Importieren des Modells:`, model, modelError);
+          // Wir machen mit dem nächsten Modell weiter
+        }
+      }
+      
+      res.json({
+        success: true,
+        importedCount,
+        existingCount,
+        totalCount: models.length,
+        message: `${importedCount} Modelle wurden importiert, ${existingCount} existieren bereits.`
+      });
+    } catch (error) {
+      console.error("Fehler beim Bulk-Import von Modellen:", error);
+      
+      if (error instanceof ZodError) {
+        console.log("Zod-Validierungsfehler:", error.errors);
+        return res.status(400).json({
+          success: false,
+          message: "Ungültige Daten für den Massenimport",
+          errors: error.errors
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler beim Massenimport von Modellen" 
+      });
+    }
+  });
+  
   app.get("/api/superadmin/user-device-types", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const deviceTypes = await db.select().from(userDeviceTypes);

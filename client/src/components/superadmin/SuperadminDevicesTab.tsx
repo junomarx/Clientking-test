@@ -1317,9 +1317,14 @@ export default function SuperadminDevicesTab() {
                   <CardTitle className="text-base md:text-lg font-semibold">Modelle</CardTitle>
                   <CardDescription className="text-xs md:text-sm">Hier werden alle vorhandenen Modelle angezeigt</CardDescription>
                 </div>
-                <Button onClick={handleCreateModel} className="text-xs md:text-sm h-8 md:h-10">
-                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Modell hinzufügen
-                </Button>
+                <div className="flex space-x-2">
+                  <Button onClick={handleCreateModel} className="text-xs md:text-sm h-8 md:h-10">
+                    <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Modell hinzufügen
+                  </Button>
+                  <Button onClick={handleBulkImportModels} variant="outline" className="text-xs md:text-sm h-8 md:h-10">
+                    <Upload className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Bulk-Import
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
                 <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
