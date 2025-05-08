@@ -728,7 +728,34 @@ export default function SuperadminDevicesTab() {
       });
   };
   
-  // Hilfsfunktion zur Massenbearbeitung von Fehlern
+  // Hilfsfunktion zur Massenbearbeitung von Fehlern (HINWEIS: Die Implementierung wurde unten verschoben)
+  
+  // Suchfilter für Fehler
+  const [issueSearchTerm, setIssueSearchTerm] = useState('');
+  
+  // Hilfsvariablen für Statusanzeigen und Filterung
+  const filteredBrands = getFilteredBrands();
+  const filteredModels = getFilteredModels();
+  
+  // Berechne, ob alle sichtbaren Einträge ausgewählt sind
+  const isAllIssuesSelected = 
+    deviceIssues &&
+    deviceIssues
+      .filter(issue => 
+        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
+        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
+      )
+      .every(issue => selectedIssueIds.includes(issue.id)) &&
+    deviceIssues
+      .filter(issue => 
+        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
+        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
+      ).length > 0;
+  const [issueFilterDeviceType, setIssueFilterDeviceType] = useState<string | null>(null);
+  const [issueFilterSeverity, setIssueFilterSeverity] = useState<"low" | "medium" | "high" | "critical" | null>(null);
+  const [isDeleteMultipleIssuesDialogOpen, setIsDeleteMultipleIssuesDialogOpen] = useState(false);
+  
+  // Hilfsfunktion zum Löschen mehrerer ausgewählter Fehlereinträge
   const handleDeleteSelectedIssues = () => {
     if (selectedIssueIds.length === 0) return;
     
@@ -751,31 +778,6 @@ export default function SuperadminDevicesTab() {
         });
     }
   };
-  
-  // Hilfsvariablen für Statusanzeigen und Filterung
-  const filteredBrands = getFilteredBrands();
-  const filteredModels = getFilteredModels();
-  
-  // Berechne, ob alle sichtbaren Einträge ausgewählt sind
-  const isAllIssuesSelected = 
-    deviceIssues &&
-    deviceIssues
-      .filter(issue => 
-        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
-        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
-      )
-      .every(issue => selectedIssueIds.includes(issue.id)) &&
-    deviceIssues
-      .filter(issue => 
-        (!selectedDeviceType || issue.deviceType === selectedDeviceType) &&
-        (!issueSearchTerm || issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()))
-      ).length > 0;
-  
-  // Suchfilter für Fehler
-  const [issueSearchTerm, setIssueSearchTerm] = useState('');
-  const [issueFilterDeviceType, setIssueFilterDeviceType] = useState<string | null>(null);
-  const [issueFilterSeverity, setIssueFilterSeverity] = useState<"low" | "medium" | "high" | "critical" | null>(null);
-  const [isDeleteMultipleIssuesDialogOpen, setIsDeleteMultipleIssuesDialogOpen] = useState(false);
   
   const [activeTab, setActiveTab] = useState("statistics");
   
