@@ -16,6 +16,7 @@ import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
 import DeviceSelectorDemo from "@/pages/device-selector-demo";
+import ApiTest from "@/pages/api-test";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/device-selector-demo" component={DeviceSelectorDemo} />
+      <Route path="/api-test" component={ApiTest} />
       <Route path="*" component={NotFound} />
     </Switch>
   );
