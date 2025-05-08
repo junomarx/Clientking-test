@@ -15,12 +15,6 @@ import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrint
 import SuperadminShopsPreview from "@/components/superadmin/SuperadminShopsPreview";
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
-// Settings Komponenten
-import { BusinessSettingsTab } from "@/components/settings/BusinessSettingsTab";
-import { PrintSettingsTab } from "@/components/settings/PrintSettingsTab";
-import { SubscriptionSettingsTab } from "@/components/settings/SubscriptionSettingsTab";
-import { UserSettingsTab } from "@/components/settings/UserSettingsTab";
-
 export default function SuperadminPage() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
@@ -84,11 +78,8 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzer"}
               {activeTab === "packages" && "Pakete"}
               {activeTab === "devices" && "Geräte"}
-              {activeTab === "business-settings" && "Geschäft"}
               {activeTab === "email" && "E-Mail"}
-              {activeTab === "print-settings" && "Drucken"}
-              {activeTab === "subscription-settings" && "Abonnement"}
-              {activeTab === "user-settings" && "Benutzerdaten"}
+              {activeTab === "print-templates" && "Vorlagen"}
               {activeTab === "design-preview" && "Designvorschau"}
             </h1>
           </div>
@@ -100,13 +91,11 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzerverwaltung"}
               {activeTab === "packages" && "Paketverwaltung"}
               {activeTab === "devices" && "Geräteverwaltung"}
-              {activeTab === "business-settings" && "Geschäftseinstellungen"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
-              {activeTab === "print-settings" && "Druckeinstellungen"}
-              {activeTab === "subscription-settings" && "Abonnementverwaltung"}
-              {activeTab === "user-settings" && "Benutzereinstellungen"}
+              {activeTab === "print-templates" && "Vorlagenverwaltung"}
               {activeTab === "design-preview" && "Benutzeroberfläche Vorschau"}
             </h1>
+            {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
           </div>
           
           {/* Geschäftsname rechts (Desktop) */}
@@ -127,12 +116,6 @@ export default function SuperadminPage() {
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
             {activeTab === "design-preview" && <SuperadminShopsPreview />}
-            
-            {/* Einstellungs-Tabs */}
-            {activeTab === "business-settings" && <BusinessSettingsTab />}
-            {activeTab === "print-settings" && <PrintSettingsTab />}
-            {activeTab === "subscription-settings" && <SubscriptionSettingsTab />}
-            {activeTab === "user-settings" && <UserSettingsTab />}
           </ScrollArea>
         </main>
       </div>
