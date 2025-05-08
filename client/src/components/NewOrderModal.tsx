@@ -238,22 +238,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const watchModel = form.watch('model');
   const watchIssue = form.watch('issue');
   
-  // Setze device type id basierend auf watchDeviceType
-  useEffect(() => {
-    if (watchDeviceType && apiDeviceTypes) {
-      const deviceType = apiDeviceTypes.find(dt => dt.name === watchDeviceType);
-      if (deviceType) {
-        setSelectedDeviceTypeId(deviceType.id);
-      } else {
-        setSelectedDeviceTypeId(null);
-      }
-    } else {
-      setSelectedDeviceTypeId(null);
-    }
-  }, [watchDeviceType, deviceTypesQuery.data]);
+  // Setze device type id basierend auf watchDeviceType - nicht mehr benötigt, da GlobalDeviceSelector es bereits handhabt
+  // useEffect für die Geräteauswahl entfernt, da GlobalDeviceSelector diese Funktion jetzt übernimmt
   
-  // Abfrage für Herstellern basierend auf DeviceType
-  const brandsQuery = brands.getBrandsByDeviceTypeId(selectedDeviceTypeId);
+  // Fehlerbeschreibungen direkt von der API laden
   
   // Fehlerbeschreibungen von der Datenbank laden
   const { data: deviceIssues, isLoading: isLoadingIssues } = useQuery({
@@ -283,105 +271,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   }, [deviceIssues]);
   
-  // Update availableBrands wenn brandsQuery sich ändert
-  useEffect(() => {
-    if (brandsQuery.data) {
-      const brandNames = brandsQuery.data.map(brand => brand.name);
-      setAvailableBrands(brandNames);
-    } else {
-      setAvailableBrands([]);
-    }
-  }, [brandsQuery.data]);
+  // Die Hooks für Brands und deviceTypes wurden entfernt, da wir jetzt GlobalDeviceSelector verwenden
   
-  // Setze selectedBrandId basierend auf watchBrand
-  useEffect(() => {
-    if (watchBrand && brandsQuery.data) {
-      const brand = brandsQuery.data.find(b => b.name === watchBrand);
-      if (brand) {
-        setSelectedBrandId(brand.id);
-      } else {
-        setSelectedBrandId(null);
-      }
-    } else {
-      setSelectedBrandId(null);
-    }
-  }, [watchBrand, brandsQuery.data]);
-  
-  // Abfrage für Modellreihen basierend auf Brand
-  const { data: modelSeriesData, isLoading: isLoadingModelSeries } = useQuery({
-    queryKey: ['/api/model-series', { brandId: selectedBrandId }],
-    enabled: !!selectedBrandId,
-    queryFn: async () => {
-      const res = await apiRequest('GET', `/api/model-series?brandId=${selectedBrandId}`);
-      return await res.json();
-    },
-    staleTime: 30000, // 30 Sekunden Caching
-  });
-  
-  // Lade gespeicherte Modellreihen, wenn sich Geräteart oder Hersteller ändert
-  useEffect(() => {
-    if (modelSeriesData) {
-      // Extrahiere die Namen der Modellreihen
-      const modelSeriesNames = modelSeriesData.map((ms: any) => ms.name);
-      setSavedModelSeries(modelSeriesNames);
-      
-      // Bei Apple Smartphones keine Modellreihen anzeigen
-      if (watchDeviceType?.toLowerCase() === 'smartphone' && watchBrand?.toLowerCase() === 'apple') {
-        setSavedModelSeries([]);
-      }
-      
-      // Wenn nur eine Modellreihe existiert, wähle diese automatisch aus
-      if (modelSeriesNames.length === 1) {
-        form.setValue('modelSeries', modelSeriesNames[0]);
-      } else {
-        // Zurücksetzen der Modellreihe, wenn mehr als eine existiert
-        form.setValue('modelSeries', '');
-      }
-    } else {
-      setSavedModelSeries([]);
-      form.setValue('modelSeries', '');
-    }
-    
-    // Modell zurücksetzen, wenn sich Geräteart oder Hersteller ändert
-    form.setValue('model', '');
-    setSelectedModelSeriesId(null);
-  }, [watchDeviceType, watchBrand, modelSeriesData, form]);
-  
-  // Setze selectedModelSeriesId basierend auf watchModelSeries
-  useEffect(() => {
-    if (watchModelSeries && modelSeriesData) {
-      const modelSeries = modelSeriesData.find((ms: any) => ms.name === watchModelSeries);
-      if (modelSeries) {
-        setSelectedModelSeriesId(modelSeries.id);
-      } else {
-        setSelectedModelSeriesId(null);
-      }
-    } else {
-      setSelectedModelSeriesId(null);
-    }
-  }, [watchModelSeries, modelSeriesData]);
-  
-  // Abfrage für Modelle basierend auf Modellreihe
-  const { data: modelsData, isLoading: isLoadingModels } = useQuery({
-    queryKey: ['/api/models', { modelSeriesId: selectedModelSeriesId }],
-    enabled: !!selectedModelSeriesId,
-    queryFn: async () => {
-      const res = await apiRequest('GET', `/api/models?modelSeriesId=${selectedModelSeriesId}`);
-      return await res.json();
-    },
-    staleTime: 30000, // 30 Sekunden Caching
-  });
-  
-  // Lade gespeicherte Modelle, wenn sich Modellreihe ändert
-  useEffect(() => {
-    if (modelsData) {
-      // Extrahiere die Namen der Modelle
-      const modelNames = modelsData.map((model: any) => model.name);
-      setSavedModels(modelNames);
-    } else {
-      setSavedModels([]);
-    }
-  }, [modelsData]);
+  // Die alte Modellreihen- und Modellabfrage wurde entfernt, da sie durch GlobalDeviceSelector ersetzt wurde
   
   // Funktion zum Speichern eines Gerätetyps, wenn er nicht existiert
   const saveDeviceType = (deviceType: string) => {
@@ -497,11 +389,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Hier speichern wir das Modell, den Gerätetyp und die Hersteller, wenn sie Werte haben - aber nur wenn der Auftrag gespeichert wird
       // und nur wenn der Benutzer Admin ist (Bugi, ID 3)
       if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
-        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
-        if (!exists) {
-          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
-        }
+        // Da wir jetzt den GlobalDeviceSelector verwenden, wird keine automatische Speicherung mehr benötigt
+        // Die Geräte werden vom Superadmin verwaltet
         
         // Hersteller und Modell jetzt in der Datenbank speichern
         const success = saveModelDb(
@@ -682,11 +571,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Speichern des Gerätehierarchie mit der Datenbank-API
       // aber nur wenn der Benutzer Admin ist (Bugi, ID 3)
       if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
-        // Gerätetyp in der Datenbank speichern, wenn er noch nicht existiert
-        const exists = apiDeviceTypes?.some(dt => dt.name.toLowerCase() === repairData.deviceType.toLowerCase());
-        if (!exists) {
-          createDeviceTypeMutation.mutate({ name: repairData.deviceType });
-        }
+        // Da wir jetzt den GlobalDeviceSelector verwenden, wird keine automatische Speicherung mehr benötigt
+        // Die Geräte werden vom Superadmin verwaltet
         
         // Hersteller und Modell jetzt in der Datenbank speichern
         const success = saveModelDb(
