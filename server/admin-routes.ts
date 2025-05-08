@@ -260,17 +260,32 @@ export function registerAdminRoutes(app: Express) {
     try {
       const deviceType = req.params.deviceType;
       
+      // Default userId ist der aktuelle Benutzer (falls angemeldet)
+      let userId = req.user ? (req.user as any).id : undefined;
+      let shopId = null;
+      
+      // Wenn ein Benutzer angemeldet ist, holen wir seine Shop-ID für die Shop-Isolation
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user) {
+          shopId = user.shopId || 1;
+        }
+      }
+      
       // Alle Fehlerbeschreibungen für diesen Gerätetyp abrufen
-      const issues = await db.select().from(deviceIssues)
+      let query = db.select().from(deviceIssues)
         .where(eq(deviceIssues.deviceType, deviceType));
       
-      // Sortieren nach Beschreibung
+      // Fehlerbeschreibungen abrufen und nach Beschreibung sortieren
+      const issues = await query;
       issues.sort((a, b) => a.description.localeCompare(b.description));
       
-      // Nur die description zurückgeben für einfache Verwendung
-      const issueDescriptions = issues.map(issue => issue.description);
+      // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
+      const uniqueDescriptions = [...new Set(issues.map(issue => issue.description))];
       
-      res.json(issueDescriptions);
+      console.log(`Fehlerkatalog: ${uniqueDescriptions.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden`);
+      
+      res.json(uniqueDescriptions);
     } catch (error) {
       console.error("Error retrieving device issues for type:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });
