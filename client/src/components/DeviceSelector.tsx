@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Combobox } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -58,12 +58,47 @@ export default function DeviceSelector({
     queryFn: async () => (await apiRequest('GET', '/api/global/models')).json(),
   });
 
+  // Vorgefilterte Listen
+  const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
+  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
+
+  // Aktualisiere filteredBrands, wenn sich deviceType oder brands ändert
+  useEffect(() => {
+    if (selectedDeviceType && brands.length > 0) {
+      const brandsForType = brands.filter(b => b.deviceTypeId === selectedDeviceType.id);
+      console.log(`Gefundene Marken für Gerätetyp ${selectedDeviceType.name}: ${brandsForType.length}`);
+      setFilteredBrands(brandsForType);
+    } else {
+      setFilteredBrands([]);
+    }
+  }, [selectedDeviceType, brands]);
+
+  // Aktualisiere filteredModels, wenn sich brand oder models ändert
+  useEffect(() => {
+    if (selectedBrand && models.length > 0) {
+      const modelsForBrand = models.filter(m => m.brandId === selectedBrand.id);
+      console.log(`Gefundene Modelle für Marke ${selectedBrand.name}: ${modelsForBrand.length}`);
+      setFilteredModels(modelsForBrand);
+    } else if (selectedDeviceType && brands.length > 0 && models.length > 0) {
+      // Wenn kein brand ausgewählt, aber ein deviceType, dann zeige alle Modelle
+      // die zu einer Marke gehören, die wiederum zu diesem deviceType gehört
+      const brandsForType = brands.filter(b => b.deviceTypeId === selectedDeviceType.id);
+      const brandIds = brandsForType.map(b => b.id);
+      const modelsForDeviceType = models.filter(m => brandIds.includes(m.brandId));
+      console.log(`Gefundene Modelle für Gerätetyp ${selectedDeviceType.name}: ${modelsForDeviceType.length}`);
+      setFilteredModels(modelsForDeviceType);
+    } else {
+      setFilteredModels([]);
+    }
+  }, [selectedBrand, selectedDeviceType, brands, models]);
+
   // Filterfunktion für die Dropdown-Suche
   const filter = (items: any[], query: string) =>
     items.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
 
   // Handlers für Auswahländerungen
   const handleDeviceTypeChange = (deviceType: DeviceType | null) => {
+    console.log(`Gerätetyp ausgewählt: ${deviceType?.name || 'keiner'}`);
     setSelectedDeviceType(deviceType);
     setSelectedBrand(null); // Zurücksetzen der Markenauswahl
     setSelectedModel(null); // Zurücksetzen der Modellauswahl
@@ -71,31 +106,17 @@ export default function DeviceSelector({
   };
 
   const handleBrandChange = (brand: Brand | null) => {
+    console.log(`Marke ausgewählt: ${brand?.name || 'keine'}`);
     setSelectedBrand(brand);
     setSelectedModel(null); // Zurücksetzen der Modellauswahl
     if (onBrandSelect) onBrandSelect(brand);
   };
 
   const handleModelChange = (model: Model | null) => {
+    console.log(`Modell ausgewählt: ${model?.name || 'keins'}`);
     setSelectedModel(model);
     if (onModelSelect) onModelSelect(model);
   };
-
-  // Filtere die relevanten Marken und Modelle abhängig von der vorherigen Auswahl
-  const filteredBrands = selectedDeviceType
-    ? brands.filter(b => b.deviceTypeId === selectedDeviceType.id)
-    : [];
-
-  // Direkter Filter nach brandId für bessere Performance
-  const filteredModels = selectedBrand
-    ? models.filter(m => m.brandId === selectedBrand.id)
-    : selectedDeviceType
-      ? models.filter(m => {
-          // Finde die zugehörige Marke
-          const brand = brands.find(b => b.id === m.brandId);
-          return brand && brand.deviceTypeId === selectedDeviceType.id;
-        })
-      : [];
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -120,6 +141,10 @@ export default function DeviceSelector({
                 {isLoadingDeviceTypes ? (
                   <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                     Lädt Gerätetypen...
+                  </div>
+                ) : deviceTypes.length === 0 ? (
+                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                    Keine Gerätetypen gefunden.
                   </div>
                 ) : filter(deviceTypes, queryDeviceType).length === 0 ? (
                   <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
@@ -273,7 +298,7 @@ export default function DeviceSelector({
                   <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
                     {selectedBrand 
                       ? `Keine Modelle für ${selectedBrand.name} gefunden.` 
-                      : 'Bitte wählen Sie zuerst einen Hersteller aus.'}
+                      : 'Keine Modelle für diesen Gerätetyp gefunden.'}
                   </div>
                 ) : (
                   filter(filteredModels, queryModel).map((model) => (
