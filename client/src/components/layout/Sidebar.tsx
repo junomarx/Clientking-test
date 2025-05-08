@@ -195,7 +195,9 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
       <div className="hidden md:flex md:w-64 md:h-screen md:flex-col bg-muted/20 border-r overflow-y-auto">
         <div className="flex flex-col w-full pt-5 pb-4">
           <div className="flex items-center flex-shrink-0 px-4 mb-5">
-            <h1 className="text-xl font-semibold text-primary">Handyshop</h1>
+            <h1 className="text-xl font-semibold text-primary">
+              {user ? user.username : 'Handyshop'}
+            </h1>
           </div>
           <nav className="mt-2 flex-1 px-2 space-y-1">
             <NavItems />
@@ -265,7 +267,9 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           </SheetTrigger>
           <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-left">Handyshop Menü</h2>
+              <h2 className="text-xl font-semibold text-left">
+                {user ? `${user.username} Menü` : 'Handyshop Menü'}
+              </h2>
             </div>
             <nav className="flex flex-col space-y-2 px-1">
               <NavItems isMobile={true} closeMenu={() => {
