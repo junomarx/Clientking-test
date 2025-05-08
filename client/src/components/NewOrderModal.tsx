@@ -654,6 +654,12 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         return;
       }
       
+      // Log der ausgewählten Geräte-Daten
+      console.log("GlobalDeviceSelector ausgewählte Werte:");
+      console.log("- deviceType:", data.deviceType, "ID:", selectedDeviceTypeId);
+      console.log("- brand:", data.brand, "ID:", selectedBrandId);
+      console.log("- model:", data.model, "ID:", selectedModelId);
+      
       const repairData = {
         customerId: customerId,
         deviceType: data.deviceType,
@@ -973,10 +979,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Geräteinformationen</h3>
                 
-                {/* Neue globale Geräteauswahl mit der GlobalDeviceSelector-Komponente */}
+                {/* Globale Geräteauswahl mit der GlobalDeviceSelector-Komponente */}
                 <div className="mb-4">
                   <GlobalDeviceSelector
                     onDeviceTypeSelect={(deviceType, deviceTypeId) => {
+                      console.log(`Gerätetyp ausgewählt: ${deviceType} (ID: ${deviceTypeId})`);
                       form.setValue('deviceType', deviceType);
                       setSelectedDeviceTypeId(deviceTypeId);
                       // Reset abhängige Felder
@@ -985,6 +992,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       form.setValue('model', '');
                     }}
                     onBrandSelect={(brand, brandId) => {
+                      console.log(`Hersteller ausgewählt: ${brand} (ID: ${brandId})`);
                       form.setValue('brand', brand);
                       setSelectedBrandId(brandId);
                       // Reset abhängige Felder
@@ -992,23 +1000,19 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                       form.setValue('model', '');
                     }}
                     onModelSelect={(model, modelId) => {
+                      console.log(`Modell ausgewählt: ${model} (ID: ${modelId})`);
                       form.setValue('model', model);
                       setIsModelChanged(true);
                     }}
                   />
                 </div>
                 
-                {/* Bestehende Formularfelder für zusätzliche Informationen */}
+                {/* Formularfelder für zusätzliche Informationen */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Versteckte Felder für die Formvalidierung - die Werte werden über GlobalDeviceSelector gesetzt */}
                   <input type="hidden" {...form.register("deviceType")} />
-                  {/* Verstecktes Feld für Marke - wird durch GlobalDeviceSelector gesteuert */}
                   <input type="hidden" {...form.register("brand")} />
-                  
-                  {/* Verstecktes Feld für Modellreihe - wird durch GlobalDeviceSelector gesteuert */}
                   <input type="hidden" {...form.register("modelSeries")} />
-                  
-                  {/* Verstecktes Feld für Modell - wird durch GlobalDeviceSelector gesteuert */}
                   <input type="hidden" {...form.register("model")} />
                   
                   <FormField
