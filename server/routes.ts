@@ -34,7 +34,6 @@ import { registerAdminRoutes } from "./admin-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
-import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";

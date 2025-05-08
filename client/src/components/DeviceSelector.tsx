@@ -42,20 +42,20 @@ export default function DeviceSelector({
   const [queryBrand, setQueryBrand] = useState('');
   const [queryModel, setQueryModel] = useState('');
 
-  // Daten von den Superadmin-Endpunkten abrufen
+  // Daten von den globalen Endpunkten abrufen (ohne Authentifizierung)
   const { data: deviceTypes = [], isLoading: isLoadingDeviceTypes } = useQuery<DeviceType[]>({
-    queryKey: ['/api/superadmin/device-types/all'],
-    queryFn: async () => (await apiRequest('GET', '/api/superadmin/device-types/all')).json(),
+    queryKey: ['/api/global/device-types'],
+    queryFn: async () => (await apiRequest('GET', '/api/global/device-types')).json(),
   });
 
   const { data: brands = [], isLoading: isLoadingBrands } = useQuery<Brand[]>({
-    queryKey: ['/api/superadmin/brands'],
-    queryFn: async () => (await apiRequest('GET', '/api/superadmin/brands')).json(),
+    queryKey: ['/api/global/brands'],
+    queryFn: async () => (await apiRequest('GET', '/api/global/brands')).json(),
   });
 
   const { data: models = [], isLoading: isLoadingModels } = useQuery<Model[]>({
-    queryKey: ['/api/superadmin/models'],
-    queryFn: async () => (await apiRequest('GET', '/api/superadmin/models')).json(),
+    queryKey: ['/api/global/models'],
+    queryFn: async () => (await apiRequest('GET', '/api/global/models')).json(),
   });
 
   // Filterfunktion für die Dropdown-Suche
