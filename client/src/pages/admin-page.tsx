@@ -39,7 +39,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
-import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
+
 import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";

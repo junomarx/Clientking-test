@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button';
 import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
 import { ModelManagementTab } from './ModelManagementTab';
-import { DeviceIssuesTab } from './DeviceIssuesTab';
-import { Smartphone, Layers, Tag, AlertCircle, Download, Upload, Database } from 'lucide-react';
+import { Smartphone, Layers, Tag, Download, Upload, Database } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -212,20 +211,13 @@ export function DeviceManagementTab() {
             <Layers className="h-4 w-4 mr-2" /> Modelle
           </Button>
           
-          <Button
-            variant={activeTab === "issues" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "issues" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("issues")}
-          >
-            <AlertCircle className="h-4 w-4 mr-2" /> Fehlerbeschreibungen
-          </Button>
+
         </div>
         
         <div className="bg-white rounded-md shadow-sm border p-4">
           {activeTab === "deviceTypes" && <DeviceTypeSettings />}
           {activeTab === "brands" && <BrandSettings />}
           {activeTab === "models" && <ModelManagementTab />}
-          {activeTab === "issues" && <DeviceIssuesTab />}
         </div>
       </div>
     </div>
