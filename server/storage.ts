@@ -364,6 +364,12 @@ export class DatabaseStorage implements IStorage {
     try {
       // Versuche zuerst, mit dem vollen Schema zu holen
       const [user] = await db.select().from(users).where(eq(users.id, id));
+      
+      // Debugging-Ausgabe für den Superadmin
+      if (user && user.isSuperadmin) {
+        console.log(`Superadmin-Benutzer gefunden: ID=${user.id}, username=${user.username}, shopId=${user.shopId}`);
+      }
+      
       return user;
     } catch (error) {
       // Wenn ein Fehler auftritt (z.B. fehlende Spalte), versuche es mit einer Raw-Abfrage
@@ -380,9 +386,16 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (result.rows.length === 0) return undefined;
-
+      
       // Verwende die Hilfsfunktion zur Konvertierung
-      return convertToUser(result.rows[0]);
+      const user = convertToUser(result.rows[0]);
+      
+      // Debugging-Ausgabe für den Superadmin
+      if (user.isSuperadmin) {
+        console.log(`Superadmin-Benutzer gefunden (Fallback): ID=${user.id}, username=${user.username}, shopId=${user.shopId}`);
+      }
+      
+      return user;
     }
   }
 
