@@ -1,0 +1,177 @@
+Bitte führe folgende Aufgaben durch:
+
+Ziel: Erstelle eine Geräteauswahl mit drei Dropdown-Feldern:
+
+Geräteart (z. B. Smartphone, Tablet …)
+
+Hersteller (abhängig von Geräteart)
+
+Modell (abhängig von Geräteart & Hersteller)
+
+Quelle der Daten:
+
+Verwende globale Daten vom Superadmin über die folgenden Endpoints:
+
+/api/superadmin/device-types/all
+
+/api/superadmin/brands
+
+/api/superadmin/models
+
+Technik:
+
+Nutze @headlessui/react für Comboboxes
+
+Die Liste soll live gefiltert werden (Autofill)
+
+Felder immer sichtbar, aber nur bedienbar wenn vorherige Auswahl erfolgt ist
+
+Einfügeort:
+
+Füge den folgenden Code als neue Komponente ein (z. B. DeviceSelector.tsx) oder ersetze den Canvas-Inhalt:
+
+tsx
+Kopieren
+Bearbeiten
+import { useState } from 'react';
+import { Combobox } from '@headlessui/react';
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+
+interface DeviceType {
+  id: number;
+  name: string;
+}
+interface Brand {
+  id: number;
+  name: string;
+  deviceTypeId: number;
+}
+interface Model {
+  id: number;
+  name: string;
+  brandId: number;
+}
+
+export default function DeviceSelector() {
+  const [selectedDeviceType, setSelectedDeviceType] = useState<DeviceType | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+
+  const [queryDeviceType, setQueryDeviceType] = useState('');
+  const [queryBrand, setQueryBrand] = useState('');
+  const [queryModel, setQueryModel] = useState('');
+
+  const { data: deviceTypes = [] } = useQuery<DeviceType[]>({
+    queryKey: ['/api/superadmin/device-types/all'],
+    queryFn: async () => (await apiRequest('GET', '/api/superadmin/device-types/all')).json(),
+  });
+
+  const { data: brands = [] } = useQuery<Brand[]>({
+    queryKey: ['/api/superadmin/brands'],
+    queryFn: async () => (await apiRequest('GET', '/api/superadmin/brands')).json(),
+  });
+
+  const { data: models = [] } = useQuery<Model[]>({
+    queryKey: ['/api/superadmin/models'],
+    queryFn: async () => (await apiRequest('GET', '/api/superadmin/models')).json(),
+  });
+
+  const filter = (items: any[], query: string) =>
+    items.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-4">
+        {/* Geräteart */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Geräteart</label>
+          <Combobox value={selectedDeviceType} onChange={setSelectedDeviceType}>
+            <div className="relative mt-1">
+              <Combobox.Input
+                className="w-full border border-gray-300 rounded-md p-2"
+                onChange={(e) => setQueryDeviceType(e.target.value)}
+                displayValue={(item: DeviceType) => item?.name || ''}
+                placeholder="z. B. Smartphone"
+              />
+              <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 overflow-auto rounded-md">
+                {filter(deviceTypes, queryDeviceType).map((type) => (
+                  <Combobox.Option key={type.id} value={type} className={({ active }) =>
+                    `cursor-pointer select-none relative p-2 ${active ? 'bg-blue-600 text-white' : ''}`
+                  }>
+                    {type.name}
+                  </Combobox.Option>
+                ))}
+              </Combobox.Options>
+            </div>
+          </Combobox>
+        </div>
+
+        {/* Hersteller */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700">Hersteller</label>
+          <Combobox
+            value={selectedBrand}
+            onChange={setSelectedBrand}
+            disabled={!selectedDeviceType}
+          >
+            <div className="relative mt-1">
+              <Combobox.Input
+                className="w-full border border-gray-300 rounded-md p-2"
+                onChange={(e) => setQueryBrand(e.target.value)}
+                displayValue={(item: Brand) => item?.name || ''}
+                placeholder="z. B. Apple"
+              />
+              <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 overflow-auto rounded-md">
+                {filter(brands.filter(b => b.deviceTypeId === selectedDeviceType?.id), queryBrand).map((brand) => (
+                  <Combobox.Option key={brand.id} value={brand} className={({ active }) =>
+                    `cursor-pointer select-none relative p-2 ${active ? 'bg-blue-600 text-white' : ''}`
+                  }>
+                    {brand.name}
+                  </Combobox.Option>
+                ))}
+              </Combobox.Options>
+            </div>
+          </Combobox>
+        </div>
+      </div>
+
+      {/* Modell */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Modell</label>
+        <Combobox
+          value={selectedModel}
+          onChange={setSelectedModel}
+          disabled={!selectedDeviceType}
+        >
+          <div className="relative mt-1">
+            <Combobox.Input
+              className="w-full border border-gray-300 rounded-md p-2"
+              onChange={(e) => setQueryModel(e.target.value)}
+              displayValue={(item: Model) => item?.name || ''}
+              placeholder="z. B. iPhone 13"
+            />
+            <Combobox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 overflow-auto rounded-md">
+              {filter(
+                models.filter(m => {
+                  const brand = brands.find(b => b.id === m.brandId);
+                  return (
+                    brand?.deviceTypeId === selectedDeviceType?.id &&
+                    (!selectedBrand || brand.id === selectedBrand.id)
+                  );
+                }),
+                queryModel
+              ).map((model) => (
+                <Combobox.Option key={model.id} value={model} className={({ active }) =>
+                  `cursor-pointer select-none relative p-2 ${active ? 'bg-blue-600 text-white' : ''}`
+                }>
+                  {model.name}
+                </Combobox.Option>
+              ))}
+            </Combobox.Options>
+          </div>
+        </Combobox>
+      </div>
+    </div>
+  );
+}
