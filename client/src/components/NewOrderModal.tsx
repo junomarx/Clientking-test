@@ -609,9 +609,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         const currentValue = issueFields[index];
         
         // Filter basierend auf aktueller Eingabe
-        const filtered = availableIssues.filter(issue => 
-          !currentValue || issue.toLowerCase().includes(currentValue.toLowerCase())
-        );
+        const filtered = availableIssues.filter(issue => {
+          if (!currentValue) return true;
+          if (issue.title && typeof issue.title === 'string') {
+            return issue.title.toLowerCase().includes(currentValue.toLowerCase());
+          }
+          return false;
+        });
         
         if (e.key === 'ArrowDown') {
           e.preventDefault();
@@ -941,7 +945,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   {showIssueDropdown && availableIssues.length > 0 && index === issueFields.length - 1 && (
                                     <div className="absolute z-10 w-full left-0 top-full bg-white rounded-md border shadow-lg max-h-60 overflow-y-auto mt-1">
                                       {availableIssues
-                                        .filter(issue => !issueText || issue.toLowerCase().includes(issueText.toLowerCase()))
+                                        .filter(issue => {
+                                          if (!issueText) return true;
+                                          if (issue.title && typeof issue.title === 'string') {
+                                            return issue.title.toLowerCase().includes(issueText.toLowerCase());
+                                          }
+                                          return false; // Wenn title nicht vorhanden oder kein String ist
+                                        })
                                         .map((issue, idx) => (
                                           <div 
                                             key={idx}
@@ -951,7 +961,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                               setSelectedIssueIndex(-1);
                                             }}
                                           >
-                                            <span>{issue}</span>
+                                            <span>{issue.title || ''}</span>
                                           </div>
                                         ))}
                                     </div>
