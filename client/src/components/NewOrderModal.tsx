@@ -112,9 +112,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
   const [savedModels, setSavedModels] = useState<string[]>([]);
   const [issueFields, setIssueFields] = useState<string[]>(['']); // Array für mehrere Fehlerbeschreibungsfelder
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(customerId || null);
   const [filterText, setFilterText] = useState<string>('');  
   const [selectedIssueIndex, setSelectedIssueIndex] = useState<number>(-1);  
@@ -124,18 +121,19 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
-  // Dropdown-Menüs States
+  // GlobalDeviceSelector States (für die neue Geräteauswahl)
+  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null); 
+  const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  
+  // Alte Dropdown-Menüs States (werden durch GlobalDeviceSelector ersetzt, aber für Kompatibilität noch behalten)
   const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
   const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
   const [brandDropdown, setBrandDropdown] = useState<string[]>([]);
   const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
   const [modelDropdown, setModelDropdown] = useState<string[]>([]);
   const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
-  
-  // State für die ausgewählten IDs aus dem GlobalDeviceSelector
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   
   // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
   const isAdmin = user?.id === 3;
