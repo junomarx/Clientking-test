@@ -6,25 +6,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Smartphone, Tablet, Laptop, Watch, Gamepad2, MonitorSmartphone, Printer, Headphones, Speaker, Camera, Webcam, Tv, Tv2, HardDrive, Monitor } from 'lucide-react';
+import { Smartphone, Tablet, Laptop, Watch, Gamepad2 } from 'lucide-react';
 
 export function SuperadminErrorPreviewTab() {
   const [bulkInput, setBulkInput] = useState<string>('');
   const [errorTable, setErrorTable] = useState<string[]>([]);
   
-  // Gerätekategorien mit Icons und Namen als Tooltip
+  // Gerätekategorien mit Icons und Namen als Tooltip - nur tatsächlich vorhandene Gerätetypen
   const deviceCategories = [
     { id: 'smartphone', name: 'Smartphone', icon: <Smartphone className="h-5 w-5" /> },
     { id: 'tablet', name: 'Tablet', icon: <Tablet className="h-5 w-5" /> },
     { id: 'laptop', name: 'Laptop', icon: <Laptop className="h-5 w-5" /> },
     { id: 'watch', name: 'Smartwatch', icon: <Watch className="h-5 w-5" /> },
-    { id: 'spielekonsole', name: 'Spielekonsole', icon: <Gamepad2 className="h-5 w-5" /> },
-    { id: 'drucker', name: 'Drucker', icon: <Printer className="h-5 w-5" /> },
-    { id: 'pc', name: 'PC/Desktop', icon: <Monitor className="h-5 w-5" /> },
-    { id: 'tv', name: 'Fernseher', icon: <Tv2 className="h-5 w-5" /> },
-    { id: 'audio', name: 'Audio-Geräte', icon: <Speaker className="h-5 w-5" /> },
-    { id: 'camera', name: 'Kamera', icon: <Camera className="h-5 w-5" /> },
-    { id: 'festplatte', name: 'Festplatte/Speicher', icon: <HardDrive className="h-5 w-5" /> }
+    { id: 'spielekonsole', name: 'Spielekonsole', icon: <Gamepad2 className="h-5 w-5" /> }
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
