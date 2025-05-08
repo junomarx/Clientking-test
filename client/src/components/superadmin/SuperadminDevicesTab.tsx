@@ -901,8 +901,9 @@ export default function SuperadminDevicesTab() {
           
           // Filterung nach Marke, falls ausgewählt
           let brandMatches = true;
-          if (selectedModelBrandId !== null) {
+          if (selectedModelBrandId !== null && selectedModelBrandId !== 0) {
             brandMatches = model.brandId === selectedModelBrandId;
+            console.log(`Filterung nach Marke ${selectedModelBrandId}: Modell ${model.name} (brandId=${model.brandId}) -> Match: ${brandMatches}`);
           }
           
           return nameMatches && typeMatches && brandMatches;
