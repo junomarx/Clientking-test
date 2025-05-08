@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
-// Typendefinitionen für die Gerätedaten
 export interface GlobalDeviceType {
   id: number;
   name: string;
@@ -37,14 +36,12 @@ export interface GlobalModel {
  */
 export function useGlobalDeviceTypes() {
   return useQuery<GlobalDeviceType[]>({
-    queryKey: ['/api/public/global/device-types'],
+    queryKey: ['/api/global/device-types'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/public/global/device-types');
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der globalen Gerätetypen');
-      }
-      return response.json();
+      const res = await apiRequest('GET', '/api/global/device-types');
+      return await res.json();
     },
+    staleTime: 60000, // 1 Minute Cache
   });
 }
 
@@ -53,17 +50,14 @@ export function useGlobalDeviceTypes() {
  */
 export function useGlobalBrandsByDeviceType(deviceTypeId: number | null) {
   return useQuery<GlobalBrand[]>({
-    queryKey: ['/api/public/global/device-types', deviceTypeId, 'brands'],
+    queryKey: ['/api/global/brands', { deviceTypeId }],
     queryFn: async () => {
       if (!deviceTypeId) return [];
-      
-      const response = await apiRequest('GET', `/api/public/global/device-types/${deviceTypeId}/brands`);
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der globalen Marken');
-      }
-      return response.json();
+      const res = await apiRequest('GET', `/api/global/brands?deviceTypeId=${deviceTypeId}`);
+      return await res.json();
     },
-    enabled: !!deviceTypeId, // Query nur ausführen, wenn deviceTypeId vorhanden ist
+    enabled: !!deviceTypeId,
+    staleTime: 60000, // 1 Minute Cache
   });
 }
 
@@ -72,16 +66,13 @@ export function useGlobalBrandsByDeviceType(deviceTypeId: number | null) {
  */
 export function useGlobalModelsByBrand(deviceTypeId: number | null, brandId: number | null) {
   return useQuery<GlobalModel[]>({
-    queryKey: ['/api/public/global/device-types', deviceTypeId, 'brands', brandId, 'models'],
+    queryKey: ['/api/global/models', { deviceTypeId, brandId }],
     queryFn: async () => {
-      if (!deviceTypeId || !brandId) return [];
-      
-      const response = await apiRequest('GET', `/api/public/global/device-types/${deviceTypeId}/brands/${brandId}/models`);
-      if (!response.ok) {
-        throw new Error('Fehler beim Laden der globalen Modelle');
-      }
-      return response.json();
+      if (!brandId) return [];
+      const res = await apiRequest('GET', `/api/global/models?brandId=${brandId}`);
+      return await res.json();
     },
-    enabled: !!deviceTypeId && !!brandId, // Query nur ausführen, wenn deviceTypeId und brandId vorhanden sind
+    enabled: !!brandId,
+    staleTime: 60000, // 1 Minute Cache
   });
 }

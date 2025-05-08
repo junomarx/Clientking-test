@@ -11,6 +11,8 @@ import { useDeviceTypes } from '@/hooks/useDeviceTypes';
 import { useBrands } from '@/hooks/useBrands';
 import { useModels } from '@/hooks/useModels';
 import { useModelSeries, type CreateModelSeriesDTO } from '@/hooks/useModelSeries';
+// Import für die neue GlobalDeviceSelector-Komponente
+import { GlobalDeviceSelector } from '@/components/GlobalDeviceSelector';
 // Die lokalen Fehlerbeschreibungen werden nicht mehr verwendet
 // Stattdessen werden die Fehlerbeschreibungen aus der Datenbank geladen
 import { 
