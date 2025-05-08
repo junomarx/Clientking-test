@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Loader2, PlusCircle, Trash, Pencil, Save, X, Smartphone, Tablet, Laptop, Watch, Gamepad2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Smartphone, Tablet, Laptop, Watch, Gamepad2, AlertCircle, Loader2, PlusCircle, Trash, Pencil, Save, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 type DeviceType = {
   id: number;
@@ -41,18 +41,18 @@ export function DeviceIssuesTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
-  const [bulkInput, setBulkInput] = useState('');
-  const [editingIssue, setEditingIssue] = useState<DeviceIssue | null>(null);
-  const [editedTitle, setEditedTitle] = useState('');
+  const [selectedDeviceType, setSelectedDeviceType] = useState<string>("");
+  const [bulkInput, setBulkInput] = useState<string>('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [issueToDelete, setIssueToDelete] = useState<DeviceIssue | null>(null);
+  const [editingIssue, setEditingIssue] = useState<DeviceIssue | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
   
   const isAdmin = user?.isAdmin || false;
   const isSuperadmin = user?.isSuperadmin || false;
   
   // Query für Gerätetypen
-  const deviceTypesQuery = useQuery<DeviceType[]>({
+  const { data: deviceTypes, isLoading: isLoadingDeviceTypes } = useQuery({
     queryKey: ['/api/global/device-types'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/global/device-types');
@@ -60,126 +60,111 @@ export function DeviceIssuesTab() {
         throw new Error('Fehler beim Laden der Gerätetypen');
       }
       return response.json();
-    },
+    }
   });
   
-  // Query für alle Fehlerbeschreibungen (für die Superadmin-Tabelle)
-  const allIssuesQuery = useQuery<DeviceIssue[]>({
+  // Query für alle Fehlerbeschreibungen
+  const { data: allIssues, isLoading: isLoadingIssues } = useQuery({
     queryKey: ['/api/superadmin/device-issues'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/superadmin/device-issues');
       if (!response.ok) {
-        throw new Error('Fehler beim Laden aller Fehlerbeschreibungen');
+        throw new Error('Fehler beim Laden der Fehlerbeschreibungen');
       }
       return response.json();
     },
-    enabled: isSuperadmin,
+    enabled: isAdmin || isSuperadmin
   });
   
-  // Query für Fehlerbeschreibungen des ausgewählten Gerätetyps
-  const deviceIssuesQuery = useQuery<DeviceIssue[]>({
-    queryKey: ['/api/superadmin/device-issues', selectedDeviceType],
-    queryFn: async () => {
-      if (!selectedDeviceType) return [];
-      
-      const response = await apiRequest('GET', `/api/superadmin/device-issues/${selectedDeviceType}`);
-      if (!response.ok) {
-        throw new Error(`Fehler beim Laden der Fehlerbeschreibungen für ${selectedDeviceType}`);
-      }
-      return response.json();
-    },
-    enabled: !!selectedDeviceType,
-  });
-  
-  // Mutation zum Hinzufügen von Fehlerbeschreibungen
+  // Mutation zum Importieren von Fehlern
   const bulkImportMutation = useMutation({
     mutationFn: async ({ deviceType, errors }: { deviceType: string, errors: string[] }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk', { deviceType, errors });
+      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk', { 
+        deviceType, 
+        errors 
+      });
       if (!response.ok) {
-        throw new Error('Fehler beim Massenimport von Fehlerbeschreibungen');
+        throw new Error('Fehler beim Importieren der Fehler');
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues', selectedDeviceType] });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
       setBulkInput('');
       toast({
-        title: 'Fehlerbeschreibungen importiert',
-        description: 'Die Fehlerbeschreibungen wurden erfolgreich importiert.',
+        title: 'Fehler importiert',
+        description: 'Die Fehler wurden erfolgreich importiert.'
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
         description: error.message,
-        variant: 'destructive',
+        variant: 'destructive'
       });
-    },
+    }
   });
   
-  // Mutation zum Aktualisieren einer Fehlerbeschreibung
-  const updateIssueMutation = useMutation({
-    mutationFn: async ({ id, title }: { id: number, title: string }) => {
-      const response = await apiRequest('PATCH', `/api/superadmin/device-issues/${id}`, { title });
-      if (!response.ok) {
-        throw new Error('Fehler beim Aktualisieren der Fehlerbeschreibung');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues', selectedDeviceType] });
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
-      setEditingIssue(null);
-      setEditedTitle('');
-      toast({
-        title: 'Fehlerbeschreibung aktualisiert',
-        description: 'Die Fehlerbeschreibung wurde erfolgreich aktualisiert.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-  
-  // Mutation zum Löschen einer Fehlerbeschreibung
+  // Mutation zum Löschen eines Fehlers
   const deleteIssueMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await apiRequest('DELETE', `/api/superadmin/device-issues/${id}`);
       if (!response.ok) {
-        throw new Error('Fehler beim Löschen der Fehlerbeschreibung');
+        throw new Error('Fehler beim Löschen des Fehlers');
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues', selectedDeviceType] });
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
       setDeleteDialogOpen(false);
       setIssueToDelete(null);
       toast({
-        title: 'Fehlerbeschreibung gelöscht',
-        description: 'Die Fehlerbeschreibung wurde erfolgreich gelöscht.',
+        title: 'Fehler gelöscht',
+        description: 'Der Fehler wurde erfolgreich gelöscht.'
       });
     },
     onError: (error: Error) => {
       toast({
         title: 'Fehler',
         description: error.message,
-        variant: 'destructive',
+        variant: 'destructive'
       });
-    },
+    }
   });
   
-  // Handler zum Importieren mehrerer Fehlerbeschreibungen
+  // Mutation zum Aktualisieren eines Fehlers
+  const updateIssueMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: number, title: string }) => {
+      const response = await apiRequest('PATCH', `/api/superadmin/device-issues/${id}`, { title });
+      if (!response.ok) {
+        throw new Error('Fehler beim Aktualisieren des Fehlers');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/device-issues'] });
+      setEditingIssue(null);
+      setEditedTitle('');
+      toast({
+        title: 'Fehler aktualisiert',
+        description: 'Der Fehler wurde erfolgreich aktualisiert.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Fehler',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+  
+  // Handler für Import-Button
   const handleImport = () => {
     if (!selectedDeviceType) {
       toast({
         title: 'Fehler',
         description: 'Bitte wählen Sie einen Gerätetyp aus.',
-        variant: 'destructive',
+        variant: 'destructive'
       });
       return;
     }
@@ -189,11 +174,11 @@ export function DeviceIssuesTab() {
       .split('\n')
       .map(line => line.trim())
       .filter(line => line.length > 0);
-      
+    
     if (errors.length === 0) {
       toast({
         title: 'Fehler',
-        description: 'Bitte geben Sie mindestens eine Fehlerbeschreibung ein.',
+        description: 'Bitte geben Sie mindestens einen Fehler ein.',
         variant: 'destructive'
       });
       return;
@@ -201,17 +186,17 @@ export function DeviceIssuesTab() {
     
     bulkImportMutation.mutate({
       deviceType: selectedDeviceType,
-      errors: errors
+      errors
     });
   };
   
-  // Handler zum Bearbeiten einer Fehlerbeschreibung
+  // Handler zum Bearbeiten eines Fehlers
   const handleEditClick = (issue: DeviceIssue) => {
     setEditingIssue(issue);
     setEditedTitle(issue.title);
   };
   
-  // Handler zum Speichern der bearbeiteten Fehlerbeschreibung
+  // Handler zum Speichern der Bearbeitung
   const handleSaveEdit = () => {
     if (editingIssue && editedTitle.trim()) {
       updateIssueMutation.mutate({
@@ -221,7 +206,7 @@ export function DeviceIssuesTab() {
     }
   };
   
-  // Handler zum Löschen einer Fehlerbeschreibung
+  // Handler zum Öffnen des Löschdialogs
   const handleDeleteClick = (issue: DeviceIssue) => {
     setIssueToDelete(issue);
     setDeleteDialogOpen(true);
@@ -233,8 +218,8 @@ export function DeviceIssuesTab() {
       deleteIssueMutation.mutate(issueToDelete.id);
     }
   };
-
-  // Wenn der Benutzer kein Admin und kein Superadmin ist, zeige eine Informationsmeldung
+  
+  // Wenn der Benutzer kein Admin und kein Superadmin ist, zeige die Info-Meldung
   if (!isAdmin && !isSuperadmin) {
     return (
       <Card>
@@ -258,7 +243,7 @@ export function DeviceIssuesTab() {
       </Card>
     );
   }
-
+  
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
@@ -269,12 +254,12 @@ export function DeviceIssuesTab() {
           </p>
         </div>
       </div>
-
+      
       <div className="grid grid-cols-1 gap-6">
-        {/* Gerätetyp-Auswahl und Bulk-Import */}
+        {/* Import-Formular */}
         <Card>
           <CardHeader>
-            <CardTitle>Fehlerkatalog Bulk-Import</CardTitle>
+            <CardTitle>Fehlerkatalog-Import</CardTitle>
             <CardDescription>
               Wählen Sie einen Gerätetyp und fügen Sie eine Liste von Fehlern ein (einer pro Zeile)
             </CardDescription>
@@ -282,34 +267,32 @@ export function DeviceIssuesTab() {
           <CardContent>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="deviceType" className="mb-2 block">Gerätetyp auswählen</Label>
-                <div className="md:w-1/2 w-full">
-                  <Select
-                    value={selectedDeviceType || ""}
-                    onValueChange={setSelectedDeviceType}
-                  >
-                    <SelectTrigger id="deviceType" className="w-full">
-                      <SelectValue placeholder="Gerätetyp" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {deviceTypesQuery.isLoading ? (
-                        <SelectItem value="loading" disabled>
-                          Wird geladen...
+                <Label htmlFor="deviceType">Gerätetyp</Label>
+                <Select 
+                  value={selectedDeviceType} 
+                  onValueChange={setSelectedDeviceType}
+                >
+                  <SelectTrigger id="deviceType" className="w-full">
+                    <SelectValue placeholder="Gerätetyp auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoadingDeviceTypes ? (
+                      <SelectItem value="loading" disabled>
+                        Wird geladen...
+                      </SelectItem>
+                    ) : deviceTypes && deviceTypes.length > 0 ? (
+                      deviceTypes.map((type: any) => (
+                        <SelectItem key={type.name} value={type.name}>
+                          {type.name}
                         </SelectItem>
-                      ) : deviceTypesQuery.data && deviceTypesQuery.data.length > 0 ? (
-                        deviceTypesQuery.data.map((type) => (
-                          <SelectItem key={type.name} value={type.name}>
-                            {type.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="none" disabled>
-                          Keine Gerätetypen verfügbar
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>
+                        Keine Gerätetypen verfügbar
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
@@ -343,21 +326,21 @@ export function DeviceIssuesTab() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Tabellarische Anzeige aller Fehler */}
+        
+        {/* Fehlerkatalog-Tabelle */}
         <Card>
           <CardHeader>
-            <CardTitle>Fehlerkatalog</CardTitle>
+            <CardTitle>Fehlerkatalog-Übersicht</CardTitle>
             <CardDescription>
-              Kategorisierte Übersicht aller Fehler nach Gerätetyp
+              Fehler nach Gerätetyp kategorisiert
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {allIssuesQuery.isLoading ? (
+            {isLoadingIssues ? (
               <div className="flex justify-center p-4">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : allIssuesQuery.data && allIssuesQuery.data.length > 0 ? (
+            ) : allIssues && allIssues.length > 0 ? (
               <ScrollArea className="h-[500px] w-full rounded-md border">
                 <div className="p-4">
                   <table className="w-full border-collapse">
@@ -375,9 +358,9 @@ export function DeviceIssuesTab() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Gruppiere Fehler nach Titel und zeige für jeden Gerätetyp an, ob dieser Fehler existiert */}
-                      {Array.from(new Set(allIssuesQuery.data.map(issue => issue.title))).map((title, index) => {
-                        const issuesWithTitle = allIssuesQuery.data.filter(issue => issue.title === title);
+                      {/* Gruppiere Fehler nach Titel */}
+                      {Array.from(new Set(allIssues.map((issue: DeviceIssue) => issue.title))).map((title, index) => {
+                        const issuesWithTitle = allIssues.filter((issue: DeviceIssue) => issue.title === title);
                         
                         return (
                           <tr key={index} className={index % 2 === 0 ? 'bg-muted/30' : 'bg-background'}>
@@ -394,22 +377,20 @@ export function DeviceIssuesTab() {
                               )}
                             </td>
                             
-                            {deviceCategories.map(deviceType => {
-                              const hasIssue = issuesWithTitle.some(issue => 
-                                issue.deviceType.toLowerCase() === deviceType.id.toLowerCase()
+                            {/* Checkbox für jeden Gerätetyp */}
+                            {deviceCategories.map(category => {
+                              const hasIssue = issuesWithTitle.some(
+                                (issue: DeviceIssue) => issue.deviceType.toLowerCase() === category.id.toLowerCase()
                               );
                               
                               return (
-                                <td key={`${title}-${deviceType.id}`} className="p-2 text-center border">
-                                  {hasIssue ? (
-                                    <Checkbox checked={true} disabled />
-                                  ) : (
-                                    <Checkbox disabled />
-                                  )}
+                                <td key={`${title}-${category.id}`} className="p-2 text-center border">
+                                  <Checkbox checked={hasIssue} disabled />
                                 </td>
                               );
                             })}
                             
+                            {/* Aktionen */}
                             <td className="p-2 text-center border">
                               <div className="flex items-center justify-center space-x-2">
                                 {editingIssue?.title === title ? (
@@ -463,23 +444,23 @@ export function DeviceIssuesTab() {
             ) : (
               <div className="text-center p-8">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-lg font-medium">Keine Fehlerbeschreibungen gefunden</p>
+                <p className="text-lg font-medium">Keine Fehler gefunden</p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Beginnen Sie mit dem Import von Fehlerbeschreibungen über das Formular oben.
+                  Beginnen Sie mit dem Import von Fehlern über das Formular oben.
                 </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Löschdialog */}
+      
+      {/* Lösch-Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Fehlerbeschreibung löschen</AlertDialogTitle>
+            <AlertDialogTitle>Fehler löschen</AlertDialogTitle>
             <AlertDialogDescription>
-              Sind Sie sicher, dass Sie die Fehlerbeschreibung "{issueToDelete?.title}" löschen möchten?
+              Sind Sie sicher, dass Sie den Fehler "{issueToDelete?.title}" löschen möchten?
               Dies kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
