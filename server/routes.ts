@@ -2411,8 +2411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Registriere die globalen Gerätedata-Routen
-  registerGlobalDeviceRoutes(app);
+  // Die globalen Gerätedata-Routen wurden bereits oben registriert
 
   const httpServer = createServer(app);
 
