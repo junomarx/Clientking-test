@@ -77,10 +77,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
         </div>
         
         <div className="flex items-center gap-3">
-          {/* Benutzer-Info als Text rechts - nur Desktop */}
-          <div className="text-sm text-muted-foreground hidden md:block">
-            Angemeldet als: {user.username}
-          </div>
+          {/* Desktop - keine Benutzerinfo mehr hier, da jetzt in der Sidebar */}
           
           {/* Mobile Menü Button - zeigt das Dropdown Menü an */}
           <div className="md:hidden">
@@ -99,9 +96,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                         <X className="h-5 w-5" />
                       </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Angemeldet als {user?.username || ""}
-                    </p>
+                    {/* Die Benutzerinfo wurde entfernt, da sie jetzt in der Sidebar angezeigt wird */}
                   </div>
                   
                   <nav className="flex-1 p-4 space-y-2">

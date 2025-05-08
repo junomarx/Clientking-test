@@ -95,16 +95,11 @@ export default function SuperadminPage() {
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
               {activeTab === "design-preview" && "Benutzeroberfläche Vorschau"}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Angemeldet als {currentUser?.username || ""}
-            </p>
+            {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
           </div>
           
-          {/* Benutzerinfo (Desktop rechts, Mobile ganz) */}
+          {/* Geschäftsname rechts (Desktop) */}
           <div className="flex items-center text-right">
-            <p className="text-sm text-muted-foreground md:hidden">
-              {currentUser?.username || ""}
-            </p>
             <p className="text-sm text-muted-foreground hidden md:block">
               {businessSettings?.businessName || "Handyshop Verwaltung"}
             </p>
