@@ -629,14 +629,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
             // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
-            addIssueToField(filtered[selectedIssueIndex], index);
+            const selectedIssue = filtered[selectedIssueIndex];
+            addIssueToField(selectedIssue, index);
             setSelectedIssueIndex(-1);
           }
         } else if (e.key === 'Tab' && selectedIssueIndex >= 0) {
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
             // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
-            addIssueToField(filtered[selectedIssueIndex], index);
+            const selectedIssue = filtered[selectedIssueIndex];
+            addIssueToField(selectedIssue, index);
             
             // Fokus auf das nächste Feld setzen
             setTimeout(() => {
