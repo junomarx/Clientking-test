@@ -15,18 +15,7 @@ import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, 
 import { Checkbox } from "@/components/ui/checkbox";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
 
-// Interfaces für den Fehlerkatalog
-interface DeviceIssue {
-  id: number;
-  deviceType: string;
-  title: string;
-  description: string;
-  solution: string;
-  severity: "low" | "medium" | "high" | "critical";
-  isCommon: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+// Interfaces für Geräte
 
 interface Brand {
   id: number;
@@ -66,172 +55,11 @@ interface UserDeviceType {
 export default function SuperadminDevicesTab() {
   const { toast } = useToast();
 
-  // State für den Fehlerkatalog
-  const [selectedIssue, setSelectedIssue] = useState<DeviceIssue | null>(null);
-  const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
-  const [isEditIssueOpen, setIsEditIssueOpen] = useState(false);
-  const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);
-  const [selectedIssueIds, setSelectedIssueIds] = useState<number[]>([]);
-  const [selectAllIssues, setSelectAllIssues] = useState(false);
-  
-  // Formular-State für Fehler
-  const [issueForm, setIssueForm] = useState({
-    deviceType: "",
-    title: "",
-    description: "",
-    solution: "",
-    severity: "medium" as "low" | "medium" | "high" | "critical",
-    isCommon: false
-  });
-
-  // Daten abfragen
-  const { data: deviceIssues, isLoading: isLoadingIssues, refetch: refetchDeviceIssues } = useQuery<DeviceIssue[]>({
-    queryKey: ["/api/superadmin/device-issues"],
-    enabled: true,
-    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
-  });
-
-  const { data: deviceTypes, refetch: refetchDeviceTypes } = useQuery<string[]>({
+  const { data: deviceTypes } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
     enabled: true,
     staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
-
-  // Mutations für API-Anfragen
-  const createIssueMutation = useMutation({
-    mutationFn: async (data: typeof issueForm) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-issues', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Erstellen des Eintrags');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
-      toast({
-        title: "Erfolg",
-        description: "Fehlereintrag wurde erfolgreich erstellt.",
-      });
-      setIsCreateIssueOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateIssueMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: typeof issueForm }) => {
-      const response = await apiRequest('PATCH', `/api/superadmin/device-issues/${id}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Aktualisieren des Eintrags');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
-      toast({
-        title: "Erfolg",
-        description: "Fehlereintrag wurde erfolgreich aktualisiert.",
-      });
-      setIsEditIssueOpen(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteIssueMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/superadmin/device-issues/${id}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Fehler beim Löschen des Eintrags');
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
-      toast({
-        title: "Erfolg",
-        description: "Fehlereintrag wurde erfolgreich gelöscht.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Dialog-Handler
-  const handleCreateIssue = () => {
-    setIssueForm({
-      deviceType: "",
-      title: "",
-      description: "",
-      solution: "",
-      severity: "medium",
-      isCommon: false
-    });
-    setIsCreateIssueOpen(true);
-  };
-
-  const handleEditIssue = (issue: DeviceIssue) => {
-    setSelectedIssue(issue);
-    setIssueForm({
-      deviceType: issue.deviceType,
-      title: issue.title,
-      description: issue.description,
-      solution: issue.solution,
-      severity: issue.severity,
-      isCommon: issue.isCommon
-    });
-    setIsEditIssueOpen(true);
-  };
-  
-  const handleDeleteIssue = (id: number) => {
-    if (confirm('Sind Sie sicher, dass Sie diesen Fehlereintrag löschen möchten?')) {
-      deleteIssueMutation.mutate(id);
-    }
-  };
-  
-  const handleSubmitCreateIssue = () => {
-    if (!issueForm.title || !issueForm.deviceType || !issueForm.description) {
-      toast({
-        title: "Fehler",
-        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
-        variant: "destructive",
-      });
-      return;
-    }
-    createIssueMutation.mutate(issueForm);
-  };
-  
-  const handleSubmitEditIssue = () => {
-    if (!selectedIssue) return;
-    
-    if (!issueForm.title || !issueForm.deviceType || !issueForm.description) {
-      toast({
-        title: "Fehler",
-        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    updateIssueMutation.mutate({ id: selectedIssue.id, data: issueForm });
-  };
 
   // State für Gerätetypen-Verwaltung
   const [deviceTypeSearchTerm, setDeviceTypeSearchTerm] = useState("");
