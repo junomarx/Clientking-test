@@ -1161,7 +1161,7 @@ export default function ResponsiveSuperadminDevicesTab() {
               >
                 <FileUp className="mr-2 h-4 w-4" /> Bulk Import
               </Button>
-              <DeviceDataCSVImportExport type="brands" />
+              <DeviceDataCSVImportExport type={"brands"} />
             </div>
           </div>
           
@@ -1313,7 +1313,7 @@ export default function ResponsiveSuperadminDevicesTab() {
               >
                 <FileUp className="mr-2 h-4 w-4" /> Bulk Import
               </Button>
-              <DeviceDataCSVImportExport type="models" />
+              <DeviceDataCSVImportExport type={"models"} />
             </div>
           </div>
           
