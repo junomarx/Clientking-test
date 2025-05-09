@@ -41,9 +41,18 @@ export function ErrorCatalogTab() {
   const { data: deviceIssues, isLoading } = useQuery({
     queryKey: ['/api/device-issues'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/device-issues');
-      const issues = await response.json();
-      return issues as DeviceIssue[];
+      // Da wir keinen Endpunkt für alle Gerätearten haben, rufen wir die Fehlerbeschreibungen 
+      // für jede Geräteart einzeln ab und kombinieren sie
+      const allIssues: DeviceIssue[] = [];
+      
+      // Für jede Gerätekategorie Fehlerbeschreibungen abrufen
+      for (const category of deviceCategories) {
+        const response = await apiRequest('GET', `/api/device-issues/${category.id}?format=full`);
+        const issues = await response.json();
+        allIssues.push(...issues);
+      }
+      
+      return allIssues;
     }
   });
 

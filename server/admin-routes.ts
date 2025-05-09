@@ -167,15 +167,20 @@ export function registerAdminRoutes(app: Express) {
       const existingIssue = await db.select().from(deviceIssues)
         .where(and(
           eq(deviceIssues.description, issueData.description),
-          eq(deviceIssues.deviceType, issueData.deviceType)
+          eq(deviceIssues.deviceType, issueData.deviceType),
+          eq(deviceIssues.userId, req.user.id)
         ));
       
       if (existingIssue.length > 0) {
         return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
       }
       
-      // Fehlerbeschreibung in der Datenbank speichern
-      const [newIssue] = await db.insert(deviceIssues).values(issueData).returning();
+      // Fehlerbeschreibung in der Datenbank speichern mit userId und shopId
+      const [newIssue] = await db.insert(deviceIssues).values({
+        ...issueData,
+        userId: req.user.id,
+        shopId: req.user.shopId || 1682 // macnphone's shopId für globale Daten
+      }).returning();
       
       res.status(201).json(newIssue);
     } catch (error) {
@@ -278,6 +283,46 @@ export function registerAdminRoutes(app: Express) {
         success: false, 
         message: "Fehler beim Löschen aller Fehlerbeschreibungen" 
       });
+    }
+  });
+  
+  // Fehlerbeschreibung erstellen - öffentlicher Endpunkt für alle authentifizierten Benutzer
+  app.post("/api/device-issues", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const issueData = insertDeviceIssueSchema.parse(req.body);
+      
+      // Prüfen, ob die Fehlerbeschreibung bereits existiert
+      const existingIssue = await db.select().from(deviceIssues)
+        .where(and(
+          eq(deviceIssues.title, issueData.title),
+          eq(deviceIssues.deviceType, issueData.deviceType),
+          eq(deviceIssues.userId, req.user.id)
+        ));
+      
+      if (existingIssue.length > 0) {
+        return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
+      }
+      
+      // Fehlerbeschreibung in der Datenbank speichern mit userId und shopId
+      const [newIssue] = await db.insert(deviceIssues).values({
+        ...issueData,
+        userId: req.user.id,
+        shopId: req.user.shopId || 1
+      }).returning();
+      
+      res.status(201).json(newIssue);
+    } catch (error) {
+      console.error("Error creating device issue:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ message: "Ungültige Fehlerbeschreibungsdaten", errors: error.errors });
+      }
+      
+      res.status(500).json({ message: "Fehler beim Erstellen der Fehlerbeschreibung" });
     }
   });
   
