@@ -2275,6 +2275,151 @@ export default function SuperadminDevicesTab() {
           </Dialog>
         </TabsContent>
 
+        <TabsContent value="error-catalog">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
+              <div>
+                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Verwalten Sie häufige Fehler für Gerätetypen
+                </CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setIsCreateErrorCatalogEntryOpen(true)} 
+                  className="text-xs md:text-sm h-8 md:h-10"
+                >
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Fehler hinzufügen
+                </Button>
+                <Button 
+                  onClick={() => setIsBulkImportErrorCatalogOpen(true)} 
+                  className="text-xs md:text-sm h-8 md:h-10" 
+                  variant="outline"
+                >
+                  <Upload className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Import
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
+              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Fehler suchen..." 
+                    className="pl-8" 
+                    value={errorCatalogSearchTerm}
+                    onChange={(e) => setErrorCatalogSearchTerm(e.target.value)}
+                  />
+                </div>
+                
+                {selectedErrorCatalogIds.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleDeleteSelectedErrorCatalogEntries}
+                    className="flex items-center space-x-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    <span>{selectedErrorCatalogIds.length} Fehler{selectedErrorCatalogIds.length > 1 ? '' : ''} löschen</span>
+                  </Button>
+                )}
+                
+                {/* Nur anzeigen, wenn ein Filter aktiv ist */}
+                {errorCatalogSearchTerm && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setErrorCatalogSearchTerm("");
+                    }}
+                    className="flex items-center space-x-1"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Filter zurücksetzen</span>
+                  </Button>
+                )}
+              </div>
+              
+              {isLoadingErrorCatalog ? (
+                <div className="flex justify-center p-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : errorCatalogData && errorCatalogData.length > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={selectAllErrorCatalog}
+                            onCheckedChange={handleToggleSelectAllErrorCatalog}
+                            aria-label="Alle Fehler auswählen"
+                          />
+                        </TableHead>
+                        <TableHead>Fehlertext</TableHead>
+                        <TableHead className="text-center">Smartphone</TableHead>
+                        <TableHead className="text-center">Tablet</TableHead>
+                        <TableHead className="text-center">Laptop</TableHead>
+                        <TableHead className="text-center">Smartwatch</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {errorCatalogData
+                        ?.filter(entry => entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase()))
+                        .map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="py-2">
+                              <Checkbox
+                                checked={selectedErrorCatalogIds.includes(entry.id)}
+                                onCheckedChange={() => handleToggleErrorCatalogSelection(entry.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="py-2 max-w-xl truncate">{entry.errorText}</TableCell>
+                            <TableCell className="py-2 text-center">
+                              {entry.forSmartphone ? <Smartphone className="h-4 w-4 mx-auto text-green-600" /> : <X className="h-4 w-4 mx-auto text-muted-foreground" />}
+                            </TableCell>
+                            <TableCell className="py-2 text-center">
+                              {entry.forTablet ? <Tablet className="h-4 w-4 mx-auto text-green-600" /> : <X className="h-4 w-4 mx-auto text-muted-foreground" />}
+                            </TableCell>
+                            <TableCell className="py-2 text-center">
+                              {entry.forLaptop ? <Laptop className="h-4 w-4 mx-auto text-green-600" /> : <X className="h-4 w-4 mx-auto text-muted-foreground" />}
+                            </TableCell>
+                            <TableCell className="py-2 text-center">
+                              {entry.forSmartwatch ? <Watch className="h-4 w-4 mx-auto text-green-600" /> : <X className="h-4 w-4 mx-auto text-muted-foreground" />}
+                            </TableCell>
+                            <TableCell className="py-2 text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteErrorCatalogEntry(entry.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Keine Fehlereinträge gefunden</h3>
+                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                    {errorCatalogSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Fehlereinträge gefunden. Fügen Sie neue Fehler hinzu.'}
+                  </p>
+                  <Button onClick={() => setIsCreateErrorCatalogEntryOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Fehler hinzufügen
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="csv">
           <DeviceDataCSVImportExport />
         </TabsContent>
