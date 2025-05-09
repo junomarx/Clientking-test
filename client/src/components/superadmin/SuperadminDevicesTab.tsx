@@ -637,6 +637,7 @@ export default function SuperadminDevicesTab() {
       forTablet: boolean;
       forLaptop: boolean;
       forSmartwatch: boolean;
+      forGameconsole: boolean;
     }) => {
       const response = await apiRequest('POST', '/api/superadmin/error-catalog', data);
       if (!response.ok) {
@@ -696,6 +697,41 @@ export default function SuperadminDevicesTab() {
     },
   });
 
+  const updateErrorCatalogEntryMutation = useMutation({
+    mutationFn: async (data: {
+      id: number;
+      errorText: string;
+      forSmartphone: boolean;
+      forTablet: boolean;
+      forLaptop: boolean;
+      forSmartwatch: boolean;
+      forGameconsole: boolean;
+    }) => {
+      const { id, ...updateData } = data;
+      const response = await apiRequest('PUT', `/api/superadmin/error-catalog/${id}`, updateData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Aktualisieren des Fehlereintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich aktualisiert.",
+      });
+      setIsEditErrorCatalogEntryOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
   const bulkDeleteErrorCatalogEntriesMutation = useMutation({
     mutationFn: async (ids: number[]) => {
       // Sicherstellen, dass wir ein Array mit Zahlen übermitteln
@@ -807,7 +843,7 @@ export default function SuperadminDevicesTab() {
       return <Laptop {...iconProps} />;
     } else if (typeName.toLowerCase() === "watch" || typeName.toLowerCase() === "smartwatch") {
       return <Watch {...iconProps} />;
-    } else if (typeName.toLowerCase() === "spielekonsole" || typeName.toLowerCase() === "konsole" || typeName.toLowerCase() === "game console") {
+    } else if (typeName.toLowerCase() === "spielekonsole" || typeName.toLowerCase() === "konsole" || typeName.toLowerCase() === "game console" || typeName.toLowerCase() === "gameconsole") {
       return <Gamepad2 {...iconProps} />;
     } else {
       return <Smartphone {...iconProps} />; // Default-Icon
@@ -1981,16 +2017,26 @@ export default function SuperadminDevicesTab() {
                                 {entry.forTablet && <div title="Tablet">{getDeviceTypeIcon("Tablet")}</div>}
                                 {entry.forLaptop && <div title="Laptop">{getDeviceTypeIcon("Laptop")}</div>}
                                 {entry.forSmartwatch && <div title="Smartwatch">{getDeviceTypeIcon("Watch")}</div>}
+                                {entry.forGameconsole && <div title="Spielekonsole">{getDeviceTypeIcon("GameConsole")}</div>}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDeleteErrorCatalogEntry(entry.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditErrorCatalogEntry(entry)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteErrorCatalogEntry(entry.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
