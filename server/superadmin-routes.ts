@@ -2565,6 +2565,7 @@ export function registerSuperadminRoutes(app: Express) {
             title: issueTitle.trim(),
             description: issueTitle.trim(), // Wir verwenden den Titel auch als Beschreibung
             deviceType,
+            solution: "", // Leere Lösung als Standardwert
             isGlobal: true,
             severity: 'medium',
             isCommon: false,
