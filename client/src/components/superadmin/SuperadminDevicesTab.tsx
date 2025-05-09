@@ -2600,21 +2600,21 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-error-text" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-error-text" className="md:text-right">
                 Fehlertext
               </Label>
               <Textarea
                 id="edit-error-text"
                 placeholder="z.B. Display gebrochen"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={errorCatalogEntryForm.errorText}
                 onChange={(e) => setErrorCatalogEntryForm({...errorCatalogEntryForm, errorText: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gilt für</Label>
-              <div className="col-span-3 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start gap-4">
+              <Label className="md:text-right mt-1">Gilt für</Label>
+              <div className="col-span-1 md:col-span-3 space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="edit-smartphone"
@@ -2720,14 +2720,14 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 gap-4">
-              <Label htmlFor="bulk-errors" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Label htmlFor="bulk-errors" className="md:text-right">
                 Fehlereinträge
               </Label>
               <Textarea
                 id="bulk-errors"
                 placeholder="Display gebrochen&#10;Akku defekt&#10;Kamera funktioniert nicht"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 rows={8}
                 value={bulkErrorCatalogText}
                 onChange={(e) => setBulkErrorCatalogText(e.target.value)}
