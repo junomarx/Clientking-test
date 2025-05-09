@@ -1648,8 +1648,345 @@ export default function SuperadminDevicesTab() {
             </Card>
           </div>
         </TabsContent>
-        
 
+        <TabsContent value="issues">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
+              <div>
+                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Verwalten Sie den globalen Fehlerkatalog für alle Gerätetypen
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleBulkImportIssues} className="text-xs md:text-sm h-8 md:h-10">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Fehler hinzufügen
+                </Button>
+                <Button onClick={handleCreateIssue} className="text-xs md:text-sm h-8 md:h-10">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Einzelner Fehler
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
+              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Fehler suchen..." 
+                    className="pl-8" 
+                    value={issueSearchTerm}
+                    onChange={(e) => setIssueSearchTerm(e.target.value)}
+                  />
+                </div>
+                
+                {selectedIssueIds.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleDeleteSelectedIssues}
+                    className="flex items-center space-x-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    <span>{selectedIssueIds.length} Fehlereintrag{selectedIssueIds.length > 1 ? 'e' : ''} löschen</span>
+                  </Button>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="issueDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
+                  <Select 
+                    value={selectedIssueDeviceType || "all"}
+                    onValueChange={(value) => setSelectedIssueDeviceType(value === "all" ? null : value)}
+                  >
+                    <SelectTrigger className="w-full md:w-40">
+                      <SelectValue placeholder="Alle Typen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle Typen</SelectItem>
+                      {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
+                        <SelectItem key={type} value={type}>
+                          <div className="flex items-center gap-2">
+                            {getDeviceTypeIcon(type)}
+                            <span>{type}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Filter zurücksetzen */}
+                {(selectedIssueDeviceType || issueSearchTerm) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedIssueDeviceType(null);
+                      setIssueSearchTerm("");
+                    }}
+                    className="flex items-center space-x-1"
+                  >
+                    <X className="h-4 w-4" />
+                    <span>Filter zurücksetzen</span>
+                  </Button>
+                )}
+              </div>
+              
+              {isLoadingIssues ? (
+                <div className="flex justify-center p-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : issuesData && issuesData.length > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={selectAllIssues}
+                            onCheckedChange={handleToggleSelectAllIssues}
+                            aria-label="Alle Fehlereinträge auswählen"
+                          />
+                        </TableHead>
+                        <TableHead className="w-12">Typ</TableHead>
+                        <TableHead>Titel</TableHead>
+                        <TableHead className="hidden md:table-cell">Beschreibung</TableHead>
+                        <TableHead className="hidden md:table-cell">Lösung</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {issuesData
+                        ?.filter(issue => {
+                          // Filterung nach Titel oder Beschreibung
+                          const textMatches = 
+                            issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()) ||
+                            issue.description.toLowerCase().includes(issueSearchTerm.toLowerCase());
+                          
+                          // Filterung nach Gerätetyp, falls ausgewählt
+                          const typeMatches = !selectedIssueDeviceType || 
+                                            issue.deviceType.toLowerCase() === selectedIssueDeviceType.toLowerCase();
+                          
+                          return textMatches && typeMatches;
+                        })
+                        .map(issue => (
+                          <TableRow key={issue.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedIssueIds.includes(issue.id)}
+                                onCheckedChange={() => handleToggleIssueSelection(issue.id)}
+                                aria-label={`Fehlereintrag ${issue.title} auswählen`}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-center">
+                                {getDeviceTypeIcon(issue.deviceType)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {issue.title}
+                              {issue.isCommon && (
+                                <Badge className="ml-2 bg-blue-100 text-blue-800 border-blue-200">
+                                  Häufig
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell max-w-xs truncate">
+                              {issue.description}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell max-w-xs truncate">
+                              {issue.solution || "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteIssue(issue.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Keine Fehlereinträge gefunden</h3>
+                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                    {issueSearchTerm || selectedIssueDeviceType ? 
+                      'Keine Ergebnisse für diese Filtereinstellungen.' : 
+                      'Es wurden keine Fehlereinträge gefunden. Fügen Sie neue Fehlereinträge hinzu.'}
+                  </p>
+                  <Button onClick={handleBulkImportIssues}>
+                    <Plus className="mr-2 h-4 w-4" /> Fehler hinzufügen
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {/* Dialog für das Erstellen eines einzelnen Fehlereintrags */}
+          <Dialog open={isCreateIssueOpen} onOpenChange={setIsCreateIssueOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Neuen Fehlereintrag erstellen</DialogTitle>
+                <DialogDescription>
+                  Fügen Sie einen neuen Fehlereintrag zum Katalog hinzu.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Titel</Label>
+                  <Input 
+                    id="title" 
+                    value={issueForm.title}
+                    onChange={(e) => setIssueForm({...issueForm, title: e.target.value})}
+                    placeholder="z.B. Display gebrochen"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Beschreibung</Label>
+                  <Input 
+                    id="description" 
+                    value={issueForm.description}
+                    onChange={(e) => setIssueForm({...issueForm, description: e.target.value})}
+                    placeholder="Detaillierte Beschreibung des Fehlers"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="deviceType">Gerätetyp</Label>
+                  <Select
+                    value={issueForm.deviceType}
+                    onValueChange={(value) => setIssueForm({...issueForm, deviceType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Gerätetyp auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deviceTypesList?.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          <div className="flex items-center gap-2">
+                            {getDeviceTypeIcon(type)}
+                            <span>{type}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="solution">Lösung (optional)</Label>
+                  <Input 
+                    id="solution" 
+                    value={issueForm.solution || ""}
+                    onChange={(e) => setIssueForm({...issueForm, solution: e.target.value})}
+                    placeholder="Mögliche Lösung für diesen Fehler"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="isCommon" 
+                    checked={issueForm.isCommon}
+                    onCheckedChange={(checked) => 
+                      setIssueForm({...issueForm, isCommon: checked === true})
+                    }
+                  />
+                  <Label 
+                    htmlFor="isCommon"
+                    className="text-sm font-normal"
+                  >
+                    Als häufigen Fehler markieren
+                  </Label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateIssueOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleSubmitCreateIssue}
+                  disabled={createIssueMutation.isPending}
+                >
+                  {createIssueMutation.isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                      Erstelle...
+                    </>
+                  ) : (
+                    "Erstellen"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Dialog für den Bulk-Import von Fehlereinträgen */}
+          <Dialog open={isBulkImportIssuesOpen} onOpenChange={setIsBulkImportIssuesOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Mehrere Fehlereinträge importieren</DialogTitle>
+                <DialogDescription>
+                  Fügen Sie mehrere Fehlereinträge gleichzeitig hinzu, einen pro Zeile.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="deviceTypeForBulk">Gerätetyp</Label>
+                  <Select
+                    value={selectedDeviceTypeForBulkIssues}
+                    onValueChange={setSelectedDeviceTypeForBulkIssues}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Gerätetyp auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deviceTypesList?.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          <div className="flex items-center gap-2">
+                            {getDeviceTypeIcon(type)}
+                            <span>{type}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="bulkIssues">Fehlereinträge (ein Eintrag pro Zeile)</Label>
+                  <textarea
+                    id="bulkIssues"
+                    value={bulkIssueText}
+                    onChange={(e) => setBulkIssueText(e.target.value)}
+                    placeholder="Display gebrochen&#10;Akku defekt&#10;Lautsprecher funktioniert nicht"
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsBulkImportIssuesOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleSubmitBulkImportIssues}
+                  disabled={bulkImportIssuesMutation.isPending}
+                >
+                  {bulkImportIssuesMutation.isPending ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
+                      Importiere...
+                    </>
+                  ) : (
+                    "Importieren"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
 
         <TabsContent value="csv">
           <DeviceDataCSVImportExport />
