@@ -1660,10 +1660,10 @@ export default function SuperadminDevicesTab() {
                               aria-label="Alle Marken auswählen"
                             />
                           </TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Gerätetyp</TableHead>
-                          <TableHead>Shop</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
+                          <TableHead className="min-w-[150px]">Name</TableHead>
+                          <TableHead className="min-w-[120px]">Gerätetyp</TableHead>
+                          <TableHead className="min-w-[80px]">Shop</TableHead>
+                          <TableHead className="text-right w-[80px]">Aktionen</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1863,11 +1863,11 @@ export default function SuperadminDevicesTab() {
                             aria-label="Alle Modelle auswählen"
                           />
                         </TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Marke</TableHead>
-                        <TableHead>Gerätetyp</TableHead>
-                        <TableHead>Shop</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
+                        <TableHead className="min-w-[150px]">Name</TableHead>
+                        <TableHead className="min-w-[120px]">Marke</TableHead>
+                        <TableHead className="min-w-[120px]">Gerätetyp</TableHead>
+                        <TableHead className="min-w-[80px]">Shop</TableHead>
+                        <TableHead className="text-right w-[80px]">Aktionen</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
