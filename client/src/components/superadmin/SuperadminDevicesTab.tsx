@@ -111,7 +111,7 @@ export default function SuperadminDevicesTab() {
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [modelForm, setModelForm] = useState({ name: "", brandId: 0 });
   
-  // State für Fehlerkatalog-Verwaltung
+  // State für Fehlerkatalog-Verwaltung (Alt)
   const [issueSearchTerm, setIssueSearchTerm] = useState("");
   const [selectedIssueDeviceType, setSelectedIssueDeviceType] = useState<string | null>(null);
   const [selectedIssueIds, setSelectedIssueIds] = useState<number[]>([]);
@@ -129,7 +129,7 @@ export default function SuperadminDevicesTab() {
   const [selectedDeviceTypeForBulkIssues, setSelectedDeviceTypeForBulkIssues] = useState("");
   const [bulkIssueText, setBulkIssueText] = useState("");
   
-  // State für den NEUEN Fehlerkatalog
+  // State für den neuen Fehlerkatalog
   const [errorCatalogSearchTerm, setErrorCatalogSearchTerm] = useState("");
   const [selectedErrorCatalogIds, setSelectedErrorCatalogIds] = useState<number[]>([]);
   const [selectAllErrorCatalog, setSelectAllErrorCatalog] = useState(false);
@@ -1403,6 +1403,248 @@ export default function SuperadminDevicesTab() {
     console.log(`Gefunden: ${filteredBrands.length} Marken:`, filteredBrands.map(b => b.name));
     
     return filteredBrands;
+  };
+  
+  // MUTATIONEN UND HANDLER FÜR DEN NEUEN FEHLERKATALOG
+  
+  // Mutation zum Erstellen eines Fehlereintrags
+  const createErrorCatalogEntryMutation = useMutation({
+    mutationFn: async (data: { 
+      errorText: string;
+      forSmartphone: boolean;
+      forTablet: boolean;
+      forLaptop: boolean;
+      forSmartwatch: boolean;
+    }) => {
+      const response = await apiRequest("POST", "/api/superadmin/error-catalog", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen des Fehlereintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+      setIsCreateErrorCatalogEntryOpen(false);
+      setErrorCatalogEntryForm({
+        errorText: "",
+        forSmartphone: false,
+        forTablet: false,
+        forLaptop: false,
+        forSmartwatch: false
+      });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich erstellt.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Erstellen des Fehlereintrags.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation zum Löschen eines Fehlereintrags
+  const deleteErrorCatalogEntryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/superadmin/error-catalog/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen des Fehlereintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich gelöscht.",
+      });
+      // Auswahl zurücksetzen, falls der gelöschte Eintrag ausgewählt war
+      setSelectedErrorCatalogIds([]);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Löschen des Fehlereintrags.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation für Bulk-Löschen von Fehlereinträgen
+  const bulkDeleteErrorCatalogEntriesMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const response = await apiRequest("POST", "/api/superadmin/error-catalog/bulk-delete", { ids });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Fehlereinträge');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+      setSelectedErrorCatalogIds([]);
+      setSelectAllErrorCatalog(false);
+      toast({
+        title: "Erfolg",
+        description: "Fehlereinträge wurden erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Löschen der Fehlereinträge.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation für Bulk-Import von Fehlereinträgen
+  const bulkImportErrorCatalogMutation = useMutation({
+    mutationFn: async (data: { entries: { errorText: string; forSmartphone: boolean; forTablet: boolean; forLaptop: boolean; forSmartwatch: boolean; }[] }) => {
+      const response = await apiRequest("POST", "/api/superadmin/error-catalog/bulk", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Massenimport von Fehlereinträgen');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+      setIsBulkImportErrorCatalogOpen(false);
+      setBulkErrorCatalogText("");
+      toast({
+        title: "Erfolg",
+        description: "Fehlereinträge wurden erfolgreich importiert.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Fehler beim Massenimport von Fehlereinträgen.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handler-Funktionen für den neuen Fehlerkatalog
+  
+  // Fehlerkatalogeintrag hinzufügen
+  const handleCreateErrorCatalogEntry = () => {
+    setIsCreateErrorCatalogEntryOpen(true);
+  };
+
+  const handleSubmitCreateErrorCatalogEntry = () => {
+    if (!errorCatalogEntryForm.errorText.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie einen Fehlertext ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Wenn kein Gerätetyp ausgewählt wurde, wenigstens einen auswählen
+    const anyDeviceSelected = 
+      errorCatalogEntryForm.forSmartphone || 
+      errorCatalogEntryForm.forTablet || 
+      errorCatalogEntryForm.forLaptop || 
+      errorCatalogEntryForm.forSmartwatch;
+    
+    if (!anyDeviceSelected) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie mindestens einen Gerätetyp aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createErrorCatalogEntryMutation.mutate(errorCatalogEntryForm);
+  };
+
+  // Fehlerkatalogeintrag löschen
+  const handleDeleteErrorCatalogEntry = (id: number) => {
+    deleteErrorCatalogEntryMutation.mutate(id);
+  };
+
+  // Fehlerkatalogeintrag Auswahl umschalten
+  const handleToggleErrorCatalogSelection = (id: number) => {
+    setSelectedErrorCatalogIds(prevSelected => {
+      if (prevSelected.includes(id)) {
+        return prevSelected.filter(selectedId => selectedId !== id);
+      } else {
+        return [...prevSelected, id];
+      }
+    });
+  };
+
+  // Alle Fehlerkatalogeintrag auswählen/abwählen
+  const handleToggleSelectAllErrorCatalog = (checked: boolean | "indeterminate") => {
+    if (checked === "indeterminate") return;
+    
+    setSelectAllErrorCatalog(checked);
+    
+    if (checked && errorCatalogData) {
+      // Alle IDs auswählen
+      const allIds = errorCatalogData
+        .filter(entry => entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase()))
+        .map(entry => entry.id);
+      setSelectedErrorCatalogIds(allIds);
+    } else {
+      // Keine IDs auswählen
+      setSelectedErrorCatalogIds([]);
+    }
+  };
+
+  // Ausgewählte Fehlerkatalogeintrag löschen
+  const handleDeleteSelectedErrorCatalogEntries = () => {
+    if (selectedErrorCatalogIds.length === 0) return;
+    
+    bulkDeleteErrorCatalogEntriesMutation.mutate(selectedErrorCatalogIds);
+  };
+
+  // Fehlerkatalogeintrag per Bulk-Import hinzufügen
+  const handleBulkImportErrorCatalog = () => {
+    setIsBulkImportErrorCatalogOpen(true);
+  };
+
+  const handleSubmitBulkImportErrorCatalog = () => {
+    if (!bulkErrorCatalogText.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte fügen Sie mindestens einen Fehlereintrag hinzu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const entries = bulkErrorCatalogText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line) // Leere Zeilen entfernen
+      .map(errorText => ({ 
+        errorText, 
+        forSmartphone: true, 
+        forTablet: true, 
+        forLaptop: true, 
+        forSmartwatch: true 
+      }));
+
+    if (entries.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Bitte fügen Sie gültige Fehlereinträge hinzu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkImportErrorCatalogMutation.mutate({ entries });
   };
 
   // State für die aktive Tab-Navigation
