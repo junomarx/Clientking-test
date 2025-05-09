@@ -44,6 +44,18 @@ interface DeviceIssue {
   updatedAt: string;
 }
 
+interface ErrorCatalogEntry {
+  id: number;
+  errorText: string;
+  forSmartphone: boolean;
+  forTablet: boolean;
+  forLaptop: boolean;
+  forSmartwatch: boolean;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Model {
   id: number;
   name: string;
@@ -117,6 +129,21 @@ export default function SuperadminDevicesTab() {
   const [selectedDeviceTypeForBulkIssues, setSelectedDeviceTypeForBulkIssues] = useState("");
   const [bulkIssueText, setBulkIssueText] = useState("");
   
+  // State für den NEUEN Fehlerkatalog
+  const [errorCatalogSearchTerm, setErrorCatalogSearchTerm] = useState("");
+  const [selectedErrorCatalogIds, setSelectedErrorCatalogIds] = useState<number[]>([]);
+  const [selectAllErrorCatalog, setSelectAllErrorCatalog] = useState(false);
+  const [isCreateErrorCatalogEntryOpen, setIsCreateErrorCatalogEntryOpen] = useState(false);
+  const [errorCatalogEntryForm, setErrorCatalogEntryForm] = useState({
+    errorText: "",
+    forSmartphone: false,
+    forTablet: false,
+    forLaptop: false,
+    forSmartwatch: false
+  });
+  const [isBulkImportErrorCatalogOpen, setIsBulkImportErrorCatalogOpen] = useState(false);
+  const [bulkErrorCatalogText, setBulkErrorCatalogText] = useState("");
+  
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList, refetch: refetchDeviceTypesList } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
@@ -149,6 +176,13 @@ export default function SuperadminDevicesTab() {
   // API-Abfrage: Alle Fehler im Fehlerkatalog abrufen
   const { data: issuesData, isLoading: isLoadingIssues, refetch: refetchIssues } = useQuery<DeviceIssue[]>({
     queryKey: ["/api/superadmin/device-issues"],
+    enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
+  });
+  
+  // API-Abfrage: Alle Einträge im NEUEN Fehlerkatalog abrufen
+  const { data: errorCatalogData, isLoading: isLoadingErrorCatalog, refetch: refetchErrorCatalog } = useQuery<ErrorCatalogEntry[]>({
+    queryKey: ["/api/superadmin/error-catalog"],
     enabled: true,
     staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });

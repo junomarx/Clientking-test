@@ -2640,4 +2640,188 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Löschen mehrerer Fehlereinträge" });
     }
   });
+  
+  // NEUER FEHLERKATALOG ROUTES
+  
+  // Alle Einträge im neuen Fehlerkatalog abrufen
+  app.get("/api/superadmin/error-catalog", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const entries = await db
+        .select()
+        .from(errorCatalogEntries)
+        .orderBy(errorCatalogEntries.errorText);
+        
+      res.json(entries);
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Fehlerkatalogs:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Fehlerkatalogs" });
+    }
+  });
+  
+  // Neuen Eintrag zum Fehlerkatalog hinzufügen
+  app.post("/api/superadmin/error-catalog", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch } = req.body;
+      
+      if (!errorText) {
+        return res.status(400).json({ message: "Fehlertext ist erforderlich" });
+      }
+      
+      const [newEntry] = await db.insert(errorCatalogEntries).values({
+        errorText,
+        forSmartphone: forSmartphone || false,
+        forTablet: forTablet || false,
+        forLaptop: forLaptop || false,
+        forSmartwatch: forSmartwatch || false,
+        shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      
+      res.status(201).json(newEntry);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Fehlerkatalogeintrags:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Fehlerkatalogeintrags" });
+    }
+  });
+  
+  // Eintrag im neuen Fehlerkatalog aktualisieren
+  app.put("/api/superadmin/error-catalog/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const entryId = parseInt(req.params.id);
+      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch } = req.body;
+      
+      if (isNaN(entryId)) {
+        return res.status(400).json({ message: "Ungültige Eintrags-ID" });
+      }
+      
+      if (!errorText) {
+        return res.status(400).json({ message: "Fehlertext ist erforderlich" });
+      }
+      
+      const [updatedEntry] = await db
+        .update(errorCatalogEntries)
+        .set({
+          errorText,
+          forSmartphone: forSmartphone || false,
+          forTablet: forTablet || false,
+          forLaptop: forLaptop || false,
+          forSmartwatch: forSmartwatch || false,
+          updatedAt: new Date(),
+        })
+        .where(eq(errorCatalogEntries.id, entryId))
+        .returning();
+      
+      if (!updatedEntry) {
+        return res.status(404).json({ message: "Eintrag nicht gefunden" });
+      }
+      
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Fehlerkatalogeintrags:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Fehlerkatalogeintrags" });
+    }
+  });
+  
+  // Eintrag aus dem neuen Fehlerkatalog löschen
+  app.delete("/api/superadmin/error-catalog/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const entryId = parseInt(req.params.id);
+      
+      if (isNaN(entryId)) {
+        return res.status(400).json({ message: "Ungültige Eintrags-ID" });
+      }
+      
+      const [deletedEntry] = await db
+        .delete(errorCatalogEntries)
+        .where(eq(errorCatalogEntries.id, entryId))
+        .returning();
+      
+      if (!deletedEntry) {
+        return res.status(404).json({ message: "Eintrag nicht gefunden" });
+      }
+      
+      res.json({ message: "Eintrag erfolgreich gelöscht", id: entryId });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Fehlerkatalogeintrags:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Fehlerkatalogeintrags" });
+    }
+  });
+  
+  // Mehrere Einträge auf einmal zum neuen Fehlerkatalog hinzufügen (Bulk-Import)
+  app.post("/api/superadmin/error-catalog/bulk", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { entries } = req.body;
+      
+      if (!Array.isArray(entries) || entries.length === 0) {
+        return res.status(400).json({ 
+          message: "Eine Liste von Fehlereinträgen ist erforderlich" 
+        });
+      }
+      
+      const results = {
+        success: 0,
+        errors: [] as string[],
+      };
+      
+      for (const entry of entries) {
+        const errorText = entry.errorText || entry; // Unterstützt sowohl Objekte als auch Strings
+        
+        if (!errorText || typeof errorText !== 'string' || !errorText.trim()) {
+          results.errors.push(`Leerer Fehlereintrag übersprungen`);
+          continue;
+        }
+        
+        try {
+          await db.insert(errorCatalogEntries).values({
+            errorText: errorText.trim(),
+            forSmartphone: entry.forSmartphone || false,
+            forTablet: entry.forTablet || false,
+            forLaptop: entry.forLaptop || false,
+            forSmartwatch: entry.forSmartwatch || false,
+            shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          
+          results.success++;
+        } catch (error) {
+          console.error(`Fehler beim Importieren von "${errorText}":`, error);
+          results.errors.push(`Fehler beim Importieren von "${errorText}"`);
+        }
+      }
+      
+      res.status(200).json({
+        message: `Import abgeschlossen. ${results.success} Fehlereinträge importiert. ${results.errors.length} Fehler.`,
+        results,
+      });
+    } catch (error) {
+      console.error("Fehler beim Bulk-Import von Fehlereinträgen:", error);
+      res.status(500).json({ message: "Fehler beim Bulk-Import von Fehlereinträgen" });
+    }
+  });
+  
+  // Mehrere Einträge aus dem neuen Fehlerkatalog auf einmal löschen
+  app.post("/api/superadmin/error-catalog/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Keine gültigen IDs angegeben" });
+      }
+      
+      const deletedEntries = await db
+        .delete(errorCatalogEntries)
+        .where(inArray(errorCatalogEntries.id, ids))
+        .returning({ id: errorCatalogEntries.id });
+      
+      res.json({ 
+        message: `${deletedEntries.length} Fehlereinträge erfolgreich gelöscht`,
+        deletedIds: deletedEntries.map(entry => entry.id)
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen mehrerer Fehlereinträge:", error);
+      res.status(500).json({ message: "Fehler beim Löschen mehrerer Fehlereinträge" });
+    }
+  });
 }

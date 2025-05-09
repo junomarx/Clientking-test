@@ -48,7 +48,26 @@ export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 // Repair statuses enum
 export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
 
-// Device issues table (Fehlerkatalog)
+// Error catalog table (Fehlerkatalog) - Neue Implementierung
+export const errorCatalogEntries = pgTable("error_catalog_entries", {
+  id: serial("id").primaryKey(),
+  errorText: text("error_text").notNull(),
+  forSmartphone: boolean("for_smartphone").default(false),
+  forTablet: boolean("for_tablet").default(false),
+  forLaptop: boolean("for_laptop").default(false),
+  forSmartwatch: boolean("for_smartwatch").default(false),
+  shopId: integer("shop_id").default(1682), // Default ist die superadmin shopId
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertErrorCatalogEntrySchema = createInsertSchema(errorCatalogEntries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Behalte das alte deviceIssues für Kompatibilität, wird später entfernt
 export const deviceIssues = pgTable("device_issues", {
   id: serial("id").primaryKey(),
   title: text("title").notNull().default("Fehlerbeschreibung"),
@@ -72,6 +91,9 @@ export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
 
 export type DeviceIssue = typeof deviceIssues.$inferSelect;
 export type InsertDeviceIssue = z.infer<typeof insertDeviceIssueSchema>;
+
+export type ErrorCatalogEntry = typeof errorCatalogEntries.$inferSelect;
+export type InsertErrorCatalogEntry = z.infer<typeof insertErrorCatalogEntrySchema>;
 
 // Repair orders table
 export const repairs = pgTable("repairs", {
