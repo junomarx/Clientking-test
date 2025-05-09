@@ -132,12 +132,15 @@ export default function SuperadminDevicesTab() {
   // States für neuen Fehlerkatalog
   const [errorCatalogSearchTerm, setErrorCatalogSearchTerm] = useState("");
   const [isCreateErrorCatalogEntryOpen, setIsCreateErrorCatalogEntryOpen] = useState(false);
+  const [isEditErrorCatalogEntryOpen, setIsEditErrorCatalogEntryOpen] = useState(false);
   const [errorCatalogEntryForm, setErrorCatalogEntryForm] = useState({ 
+    id: 0,
     errorText: "", 
     forSmartphone: true, 
     forTablet: true, 
     forLaptop: true, 
-    forSmartwatch: true 
+    forSmartwatch: true,
+    forGameconsole: true
   });
   const [selectedErrorCatalogIds, setSelectedErrorCatalogIds] = useState<number[]>([]);
   const [selectAllErrorCatalog, setSelectAllErrorCatalog] = useState(false);
@@ -1274,6 +1277,19 @@ export default function SuperadminDevicesTab() {
     if (confirm('Möchten Sie diesen Fehlereintrag wirklich löschen?')) {
       deleteErrorCatalogEntryMutation.mutate(id);
     }
+  };
+  
+  const handleEditErrorCatalogEntry = (entry: any) => {
+    setIsEditErrorCatalogEntryOpen(true);
+    setErrorCatalogEntryForm({
+      id: entry.id,
+      errorText: entry.errorText,
+      forSmartphone: entry.forSmartphone,
+      forTablet: entry.forTablet,
+      forLaptop: entry.forLaptop,
+      forSmartwatch: entry.forSmartwatch,
+      forGameconsole: entry.forGameconsole || false
+    });
   };
   
   const handleToggleErrorCatalogSelection = (id: number) => {
