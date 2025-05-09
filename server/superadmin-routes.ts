@@ -10,7 +10,7 @@ import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
-  hiddenStandardDeviceTypes, deviceIssues
+  hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries
 } from "@shared/schema";
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
