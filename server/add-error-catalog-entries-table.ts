@@ -26,6 +26,7 @@ export async function addErrorCatalogEntriesTable() {
         for_tablet BOOLEAN DEFAULT false,
         for_laptop BOOLEAN DEFAULT false,
         for_smartwatch BOOLEAN DEFAULT false,
+        for_gameconsole BOOLEAN DEFAULT false,
         shop_id INTEGER DEFAULT 1682,
         created_at TIMESTAMP DEFAULT NOW() NOT NULL,
         updated_at TIMESTAMP DEFAULT NOW() NOT NULL

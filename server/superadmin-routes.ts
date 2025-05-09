@@ -2661,7 +2661,7 @@ export function registerSuperadminRoutes(app: Express) {
   // Neuen Eintrag zum Fehlerkatalog hinzufügen
   app.post("/api/superadmin/error-catalog", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch } = req.body;
+      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch, forGameconsole } = req.body;
       
       if (!errorText) {
         return res.status(400).json({ message: "Fehlertext ist erforderlich" });
@@ -2673,6 +2673,7 @@ export function registerSuperadminRoutes(app: Express) {
         forTablet: forTablet || false,
         forLaptop: forLaptop || false,
         forSmartwatch: forSmartwatch || false,
+        forGameconsole: forGameconsole || false,
         shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -2689,7 +2690,7 @@ export function registerSuperadminRoutes(app: Express) {
   app.put("/api/superadmin/error-catalog/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const entryId = parseInt(req.params.id);
-      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch } = req.body;
+      const { errorText, forSmartphone, forTablet, forLaptop, forSmartwatch, forGameconsole } = req.body;
       
       if (isNaN(entryId)) {
         return res.status(400).json({ message: "Ungültige Eintrags-ID" });
@@ -2707,6 +2708,7 @@ export function registerSuperadminRoutes(app: Express) {
           forTablet: forTablet || false,
           forLaptop: forLaptop || false,
           forSmartwatch: forSmartwatch || false,
+          forGameconsole: forGameconsole || false,
           updatedAt: new Date(),
         })
         .where(eq(errorCatalogEntries.id, entryId))
@@ -2779,6 +2781,7 @@ export function registerSuperadminRoutes(app: Express) {
             forTablet: entry.forTablet || false,
             forLaptop: entry.forLaptop || false,
             forSmartwatch: entry.forSmartwatch || false,
+            forGameconsole: entry.forGameconsole || false,
             shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
             createdAt: new Date(),
             updatedAt: new Date(),

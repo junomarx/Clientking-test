@@ -56,6 +56,7 @@ export const errorCatalogEntries = pgTable("error_catalog_entries", {
   forTablet: boolean("for_tablet").default(false),
   forLaptop: boolean("for_laptop").default(false),
   forSmartwatch: boolean("for_smartwatch").default(false),
+  forGameconsole: boolean("for_gameconsole").default(false), // Für Spielekonsole
   shopId: integer("shop_id").default(1682), // Default ist die superadmin shopId
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
