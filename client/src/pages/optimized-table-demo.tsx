@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import OptimizedDevicesTable from '@/components/superadmin/OptimizedDevicesTable';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Interfaces für die Datentypen
 interface DeviceType {
@@ -32,7 +32,7 @@ interface Model {
 }
 
 export default function OptimizedTableDemo() {
-  const { toast } = useToast();
+  // Direkt toast API nutzen
   
   // Status für Filterung und Auswahl
   const [deviceTypeSearchTerm, setDeviceTypeSearchTerm] = useState('');
