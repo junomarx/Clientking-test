@@ -2201,14 +2201,14 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="md:text-right">
                 Name
               </Label>
               <Input
                 id="name"
                 placeholder="z.B. Spielekonsole"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={deviceTypeForm.name}
                 onChange={(e) => setDeviceTypeForm({ ...deviceTypeForm, name: e.target.value })}
               />
@@ -2234,13 +2234,13 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="md:text-right">
                 Name
               </Label>
               <Input
                 id="edit-name"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={deviceTypeForm.name}
                 onChange={(e) => setDeviceTypeForm({ ...deviceTypeForm, name: e.target.value })}
               />
@@ -2267,11 +2267,11 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="deviceType" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="deviceType" className="md:text-right">
                 Gerätetyp
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-1 md:col-span-3">
                 <Select 
                   value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : ""}
                   onValueChange={(value) => setBrandForm({...brandForm, deviceTypeId: parseInt(value)})}
@@ -2289,14 +2289,14 @@ export default function SuperadminDevicesTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brand-name" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="brand-name" className="md:text-right">
                 Markenname
               </Label>
               <Input
                 id="brand-name"
                 placeholder="z.B. Apple"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={brandForm.name}
                 onChange={(e) => setBrandForm({...brandForm, name: e.target.value})}
               />
@@ -2323,11 +2323,11 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="device-type-select" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="device-type-select" className="md:text-right">
                 Gerätetyp
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-1 md:col-span-3">
                 <Select 
                   value={selectedModelDeviceType || ""}
                   onValueChange={(value) => {
@@ -2349,11 +2349,11 @@ export default function SuperadminDevicesTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brand-select" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="brand-select" className="md:text-right">
                 Marke
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-1 md:col-span-3">
                 <Select 
                   value={modelForm.brandId ? modelForm.brandId.toString() : ""}
                   onValueChange={(value) => setModelForm({...modelForm, brandId: parseInt(value)})}
@@ -2372,14 +2372,14 @@ export default function SuperadminDevicesTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="model-name" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="model-name" className="md:text-right">
                 Modellname
               </Label>
               <Input
                 id="model-name"
                 placeholder="z.B. iPhone 13"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={modelForm.name}
                 onChange={(e) => setModelForm({...modelForm, name: e.target.value})}
               />
@@ -2407,11 +2407,11 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="device-type-select-bulk" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="device-type-select-bulk" className="md:text-right">
                 Gerätetyp
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-1 md:col-span-3">
                 <Select 
                   value={selectedModelDeviceType || ""}
                   onValueChange={(value) => {
@@ -2433,11 +2433,11 @@ export default function SuperadminDevicesTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="brand-select-bulk" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="brand-select-bulk" className="md:text-right">
                 Marke
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-1 md:col-span-3">
                 <Select 
                   value={selectedBrandForBulk ? selectedBrandForBulk.toString() : ""}
                   onValueChange={(value) => {
@@ -2458,14 +2458,14 @@ export default function SuperadminDevicesTab() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              <Label htmlFor="bulk-models" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Label htmlFor="bulk-models" className="md:text-right">
                 Modelle
               </Label>
               <Textarea
                 id="bulk-models"
                 placeholder="iPhone 13&#10;iPhone 13 Pro&#10;iPhone 13 Pro Max"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 rows={8}
                 value={bulkModelText}
                 onChange={(e) => setBulkModelText(e.target.value)}
@@ -2497,21 +2497,21 @@ export default function SuperadminDevicesTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="error-text" className="text-right">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-4">
+              <Label htmlFor="error-text" className="md:text-right">
                 Fehlertext
               </Label>
               <Textarea
                 id="error-text"
                 placeholder="z.B. Display gebrochen"
-                className="col-span-3"
+                className="col-span-1 md:col-span-3"
                 value={errorCatalogEntryForm.errorText}
                 onChange={(e) => setErrorCatalogEntryForm({...errorCatalogEntryForm, errorText: e.target.value})}
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Gilt für</Label>
-              <div className="col-span-3 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start gap-4">
+              <Label className="md:text-right mt-1">Gilt für</Label>
+              <div className="col-span-1 md:col-span-3 space-y-2">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="smartphone"
