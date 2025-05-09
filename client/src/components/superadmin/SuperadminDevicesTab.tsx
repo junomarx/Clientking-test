@@ -1401,6 +1401,33 @@ export default function SuperadminDevicesTab() {
     
     bulkImportErrorCatalogMutation.mutate(entries);
   };
+  
+  const handleSubmitUpdateErrorCatalogEntry = () => {
+    if (!errorCatalogEntryForm.errorText.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie einen Fehlertext ein.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Mindestens ein Gerätetyp muss ausgewählt sein
+    if (!errorCatalogEntryForm.forSmartphone && 
+        !errorCatalogEntryForm.forTablet && 
+        !errorCatalogEntryForm.forLaptop && 
+        !errorCatalogEntryForm.forSmartwatch &&
+        !errorCatalogEntryForm.forGameconsole) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie mindestens einen Gerätetyp aus.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    updateErrorCatalogEntryMutation.mutate(errorCatalogEntryForm);
+  };
 
   return (
     <div className="space-y-4 md:space-y-6">
