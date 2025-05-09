@@ -111,16 +111,17 @@ export default function DeviceSelector({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className={`space-y-6 ${className}`}>
+      {/* Geräteauswahl-Formular für mobile und Desktop-Ansicht */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Geräteart */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Geräteart</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Geräteart</label>
           <Combobox value={selectedDeviceType} onChange={handleDeviceTypeChange} nullable>
             <div className="relative">
               <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 <Combobox.Input
-                  className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                  className="w-full border-none py-3 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                   onChange={(e) => setQueryDeviceType(e.target.value)}
                   displayValue={(item: DeviceType) => item?.name || ''}
                   placeholder="z. B. Smartphone"
@@ -129,17 +130,17 @@ export default function DeviceSelector({
                   <ChevronsUpDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </Combobox.Button>
               </div>
-              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              <Combobox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                 {isLoadingDeviceTypes ? (
-                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                     Lädt Gerätetypen...
                   </div>
                 ) : deviceTypes.length === 0 ? (
-                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                     Keine Gerätetypen gefunden.
                   </div>
                 ) : filter(deviceTypes, queryDeviceType).length === 0 ? (
-                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                     Nichts gefunden.
                   </div>
                 ) : (
@@ -147,7 +148,7 @@ export default function DeviceSelector({
                     <Combobox.Option
                       key={type.id}
                       className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                        `relative cursor-default select-none py-3 pl-10 pr-4 ${
                           active ? 'bg-blue-600 text-white' : 'text-gray-900'
                         }`
                       }
@@ -179,7 +180,7 @@ export default function DeviceSelector({
 
         {/* Hersteller */}
         <div>
-          <label className={`block text-sm font-medium mb-1 ${selectedDeviceType ? 'text-gray-700' : 'text-gray-400'}`}>
+          <label className={`block text-sm font-medium mb-2 ${selectedDeviceType ? 'text-gray-700' : 'text-gray-400'}`}>
             Hersteller
           </label>
           <Combobox
@@ -193,7 +194,7 @@ export default function DeviceSelector({
                 selectedDeviceType ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
               }`}>
                 <Combobox.Input
-                  className={`w-full border-none py-2 pl-3 pr-10 text-sm leading-5 focus:ring-0 ${
+                  className={`w-full border-none py-3 pl-3 pr-10 text-sm leading-5 focus:ring-0 ${
                     selectedDeviceType ? 'text-gray-900' : 'text-gray-400'
                   }`}
                   onChange={(e) => setQueryBrand(e.target.value)}
@@ -206,13 +207,13 @@ export default function DeviceSelector({
                 </Combobox.Button>
               </div>
               {selectedDeviceType && (
-                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                <Combobox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                   {isLoadingBrands ? (
-                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                    <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                       Lädt Hersteller...
                     </div>
                   ) : filteredBrands.length === 0 ? (
-                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                    <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                       Keine Hersteller für diese Geräteart gefunden.
                     </div>
                   ) : (
@@ -220,7 +221,7 @@ export default function DeviceSelector({
                       <Combobox.Option
                         key={brand.id}
                         className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                          `relative cursor-default select-none py-3 pl-10 pr-4 ${
                             active ? 'bg-blue-600 text-white' : 'text-gray-900'
                           }`
                         }
@@ -254,7 +255,7 @@ export default function DeviceSelector({
 
       {/* Modell */}
       <div>
-        <label className={`block text-sm font-medium mb-1 ${selectedDeviceType ? 'text-gray-700' : 'text-gray-400'}`}>
+        <label className={`block text-sm font-medium mb-2 ${selectedDeviceType ? 'text-gray-700' : 'text-gray-400'}`}>
           Modell
         </label>
         <Combobox
@@ -268,7 +269,7 @@ export default function DeviceSelector({
               selectedDeviceType ? 'border-gray-300' : 'border-gray-200 bg-gray-50'
             }`}>
               <Combobox.Input
-                className={`w-full border-none py-2 pl-3 pr-10 text-sm leading-5 focus:ring-0 ${
+                className={`w-full border-none py-3 pl-3 pr-10 text-sm leading-5 focus:ring-0 ${
                   selectedDeviceType ? 'text-gray-900' : 'text-gray-400'
                 }`}
                 onChange={(e) => setQueryModel(e.target.value)}
@@ -281,13 +282,13 @@ export default function DeviceSelector({
               </Combobox.Button>
             </div>
             {selectedDeviceType && (
-              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              <Combobox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                 {isLoadingModels ? (
-                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                     Lädt Modelle...
                   </div>
                 ) : filteredModels.length === 0 ? (
-                  <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  <div className="relative cursor-default select-none py-3 px-4 text-gray-700">
                     {selectedBrand 
                       ? `Keine Modelle für ${selectedBrand.name} gefunden.` 
                       : 'Keine Modelle für diesen Gerätetyp gefunden.'}
@@ -297,7 +298,7 @@ export default function DeviceSelector({
                     <Combobox.Option
                       key={model.id}
                       className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                        `relative cursor-default select-none py-3 pl-10 pr-4 ${
                           active ? 'bg-blue-600 text-white' : 'text-gray-900'
                         }`
                       }
