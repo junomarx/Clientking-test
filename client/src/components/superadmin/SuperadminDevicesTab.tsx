@@ -932,18 +932,16 @@ export default function SuperadminDevicesTab() {
           <option value="types">Gerätetypen</option>
           <option value="brands">Marken</option>
           <option value="models">Modelle</option>
-          <option value="issues">Fehlerkatalog</option>
           <option value="csv">CSV Import/Export</option>
           <option value="statistics">Statistik</option>
         </select>
       </div>
       
       <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="hidden md:grid grid-cols-6">
+        <TabsList className="hidden md:grid grid-cols-5">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
-          <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
           <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
           <TabsTrigger value="statistics">Statistik</TabsTrigger>
         </TabsList>
