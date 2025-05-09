@@ -1433,7 +1433,8 @@ export default function SuperadminDevicesTab() {
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
-          <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
+          <TabsTrigger value="issues">Fehlerkatalog (Alt)</TabsTrigger>
+          <TabsTrigger value="error-catalog">Fehlerkatalog (Neu)</TabsTrigger>
           <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
           <TabsTrigger value="statistics">Statistik</TabsTrigger>
         </TabsList>
