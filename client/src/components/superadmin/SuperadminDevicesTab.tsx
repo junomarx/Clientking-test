@@ -1664,14 +1664,15 @@ export default function SuperadminDevicesTab() {
           <option value="types">Gerätetypen</option>
           <option value="brands">Marken</option>
           <option value="models">Modelle</option>
-          <option value="issues">Fehlerkatalog</option>
+          <option value="issues">Fehlerkatalog (Alt)</option>
+          <option value="error-catalog">Fehlerkatalog (Neu)</option>
           <option value="csv">CSV Import/Export</option>
           <option value="statistics">Statistik</option>
         </select>
       </div>
       
       <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="hidden md:grid grid-cols-6">
+        <TabsList className="hidden md:grid grid-cols-7">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
@@ -2660,6 +2661,278 @@ export default function SuperadminDevicesTab() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="error-catalog">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0 p-4 md:p-6 pb-2 md:pb-3">
+              <div>
+                <CardTitle className="text-base md:text-lg font-semibold">Fehlerkatalog (Neu)</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Verwalten Sie Fehlereinträge für verschiedene Gerätetypen
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleCreateErrorCatalogEntry} className="text-xs md:text-sm h-8 md:h-10">
+                  <Plus className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Eintrag hinzufügen
+                </Button>
+                <Button onClick={handleBulkImportErrorCatalog} variant="outline" className="text-xs md:text-sm h-8 md:h-10">
+                  <FileUp className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> Mehrere hinzufügen
+                </Button>
+                {selectedErrorCatalogIds.length > 0 && (
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteSelectedErrorCatalogEntries}
+                    className="text-xs md:text-sm h-8 md:h-10"
+                  >
+                    <Trash2 className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" /> {selectedErrorCatalogIds.length} löschen
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
+              <div className="mb-4">
+                <div className="relative w-full md:w-72">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Fehlereinträge suchen..." 
+                    className="pl-8" 
+                    value={errorCatalogSearchTerm}
+                    onChange={(e) => setErrorCatalogSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              {isLoadingErrorCatalog ? (
+                <div className="flex justify-center p-4">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : errorCatalogData && errorCatalogData.length > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={selectAllErrorCatalog}
+                            onCheckedChange={handleToggleSelectAllErrorCatalog}
+                            aria-label="Alle Fehlereinträge auswählen"
+                          />
+                        </TableHead>
+                        <TableHead>Fehlertext</TableHead>
+                        <TableHead className="w-32 text-center">Gerätetypen</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {errorCatalogData
+                        .filter(entry => entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase()))
+                        .map(entry => (
+                          <TableRow key={entry.id}>
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedErrorCatalogIds.includes(entry.id)}
+                                onCheckedChange={() => handleToggleErrorCatalogSelection(entry.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium max-w-lg truncate">
+                              {entry.errorText}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex justify-center space-x-2">
+                                {entry.forSmartphone && (
+                                  <Smartphone className="h-5 w-5 text-gray-700" title="Smartphone" />
+                                )}
+                                {entry.forTablet && (
+                                  <Tablet className="h-5 w-5 text-gray-700" title="Tablet" />
+                                )}
+                                {entry.forLaptop && (
+                                  <Laptop className="h-5 w-5 text-gray-700" title="Laptop" />
+                                )}
+                                {entry.forSmartwatch && (
+                                  <Watch className="h-5 w-5 text-gray-700" title="Smartwatch" />
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteErrorCatalogEntry(entry.id)}
+                                title="Fehlereintrag löschen"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">Keine Fehlereinträge gefunden</h3>
+                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                    {errorCatalogSearchTerm ? 'Keine Ergebnisse für Ihre Suche.' : 'Es wurden keine Fehlereinträge gefunden.'}
+                  </p>
+                  <Button onClick={handleCreateErrorCatalogEntry}>
+                    <Plus className="mr-2 h-4 w-4" /> Fehlereintrag hinzufügen
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Dialog zum Erstellen eines neuen Fehlereintrags */}
+          <Dialog open={isCreateErrorCatalogEntryOpen} onOpenChange={setIsCreateErrorCatalogEntryOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Neuen Fehlereintrag erstellen</DialogTitle>
+                <DialogDescription>
+                  Fügen Sie einen neuen Fehlereintrag zum Katalog hinzu.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="errorText">Fehlertext</Label>
+                  <Input 
+                    id="errorText" 
+                    value={errorCatalogEntryForm.errorText}
+                    onChange={(e) => setErrorCatalogEntryForm({...errorCatalogEntryForm, errorText: e.target.value})}
+                    placeholder="z.B. Display gebrochen"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Gilt für folgende Gerätetypen</Label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="forSmartphone" 
+                        checked={errorCatalogEntryForm.forSmartphone}
+                        onCheckedChange={(checked) => 
+                          setErrorCatalogEntryForm({
+                            ...errorCatalogEntryForm, 
+                            forSmartphone: checked === true
+                          })
+                        }
+                      />
+                      <Label htmlFor="forSmartphone" className="flex items-center gap-2">
+                        <Smartphone className="h-4 w-4" /> Smartphone
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="forTablet" 
+                        checked={errorCatalogEntryForm.forTablet}
+                        onCheckedChange={(checked) => 
+                          setErrorCatalogEntryForm({
+                            ...errorCatalogEntryForm, 
+                            forTablet: checked === true
+                          })
+                        }
+                      />
+                      <Label htmlFor="forTablet" className="flex items-center gap-2">
+                        <Tablet className="h-4 w-4" /> Tablet
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="forLaptop" 
+                        checked={errorCatalogEntryForm.forLaptop}
+                        onCheckedChange={(checked) => 
+                          setErrorCatalogEntryForm({
+                            ...errorCatalogEntryForm, 
+                            forLaptop: checked === true
+                          })
+                        }
+                      />
+                      <Label htmlFor="forLaptop" className="flex items-center gap-2">
+                        <Laptop className="h-4 w-4" /> Laptop
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="forSmartwatch" 
+                        checked={errorCatalogEntryForm.forSmartwatch}
+                        onCheckedChange={(checked) => 
+                          setErrorCatalogEntryForm({
+                            ...errorCatalogEntryForm, 
+                            forSmartwatch: checked === true
+                          })
+                        }
+                      />
+                      <Label htmlFor="forSmartwatch" className="flex items-center gap-2">
+                        <Watch className="h-4 w-4" /> Smartwatch
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateErrorCatalogEntryOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleSubmitCreateErrorCatalogEntry}
+                  disabled={createErrorCatalogEntryMutation.isPending}
+                >
+                  {createErrorCatalogEntryMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Erstelle...
+                    </>
+                  ) : (
+                    <>Erstellen</>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Dialog für Massenimport von Fehlereinträgen */}
+          <Dialog open={isBulkImportErrorCatalogOpen} onOpenChange={setIsBulkImportErrorCatalogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Mehrere Fehlereinträge importieren</DialogTitle>
+                <DialogDescription>
+                  Fügen Sie mehrere Fehlereinträge gleichzeitig hinzu. Geben Sie jeden Eintrag in eine neue Zeile ein.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="bulkErrorCatalogText">Fehlereinträge (einer pro Zeile)</Label>
+                  <Textarea 
+                    id="bulkErrorCatalogText"
+                    rows={12}
+                    value={bulkErrorCatalogText}
+                    onChange={(e) => setBulkErrorCatalogText(e.target.value)}
+                    placeholder="Display gebrochen&#10;Akku defekt&#10;Lautsprecher defekt&#10;Mikrofon funktioniert nicht&#10;..."
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Alle importierten Fehler werden standardmäßig für alle Gerätetypen aktiviert.
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsBulkImportErrorCatalogOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button 
+                  onClick={handleSubmitBulkImportErrorCatalog}
+                  disabled={bulkImportErrorCatalogMutation.isPending}
+                >
+                  {bulkImportErrorCatalogMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importiere...
+                    </>
+                  ) : (
+                    <>Importieren</>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="csv">
