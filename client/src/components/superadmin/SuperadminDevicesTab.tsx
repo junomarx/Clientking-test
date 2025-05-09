@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X, Factory, Layers, RefreshCcw, Upload } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, Filter, AlertCircle, Smartphone, Tablet, Laptop, Watch, Gamepad2, X, Factory, Layers, RefreshCcw, Upload, FileUp, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
 
 // Interfaces für Geräte
@@ -136,10 +137,10 @@ export default function SuperadminDevicesTab() {
   const [isCreateErrorCatalogEntryOpen, setIsCreateErrorCatalogEntryOpen] = useState(false);
   const [errorCatalogEntryForm, setErrorCatalogEntryForm] = useState({
     errorText: "",
-    forSmartphone: false,
-    forTablet: false,
-    forLaptop: false,
-    forSmartwatch: false
+    forSmartphone: true,
+    forTablet: true,
+    forLaptop: true,
+    forSmartwatch: true
   });
   const [isBulkImportErrorCatalogOpen, setIsBulkImportErrorCatalogOpen] = useState(false);
   const [bulkErrorCatalogText, setBulkErrorCatalogText] = useState("");
@@ -2741,16 +2742,16 @@ export default function SuperadminDevicesTab() {
                             <TableCell className="text-center">
                               <div className="flex justify-center space-x-2">
                                 {entry.forSmartphone && (
-                                  <Smartphone className="h-5 w-5 text-gray-700" title="Smartphone" />
+                                  <div title="Smartphone"><Smartphone className="h-5 w-5 text-gray-700" /></div>
                                 )}
                                 {entry.forTablet && (
-                                  <Tablet className="h-5 w-5 text-gray-700" title="Tablet" />
+                                  <div title="Tablet"><Tablet className="h-5 w-5 text-gray-700" /></div>
                                 )}
                                 {entry.forLaptop && (
-                                  <Laptop className="h-5 w-5 text-gray-700" title="Laptop" />
+                                  <div title="Laptop"><Laptop className="h-5 w-5 text-gray-700" /></div>
                                 )}
                                 {entry.forSmartwatch && (
-                                  <Watch className="h-5 w-5 text-gray-700" title="Smartwatch" />
+                                  <div title="Smartwatch"><Watch className="h-5 w-5 text-gray-700" /></div>
                                 )}
                               </div>
                             </TableCell>
@@ -3079,7 +3080,255 @@ export default function SuperadminDevicesTab() {
         </TabsContent>
       </Tabs>
       
-
+      {/* Mutations für den neuen Fehlerkatalog */}
+      
+      {/* Mutation zum Erstellen eines Fehlereintrags im neuen Fehlerkatalog */}
+      const createErrorCatalogEntryMutation = useMutation({
+        mutationFn: async (data: {
+          errorText: string;
+          forSmartphone: boolean;
+          forTablet: boolean;
+          forLaptop: boolean;
+          forSmartwatch: boolean;
+        }) => {
+          const response = await apiRequest('POST', '/api/superadmin/error-catalog', data);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fehler beim Erstellen des Fehlereintrags');
+          }
+          return response.json();
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+          toast({
+            title: "Erfolg",
+            description: "Fehlereintrag wurde erfolgreich erstellt.",
+          });
+          setIsCreateErrorCatalogEntryOpen(false);
+          setErrorCatalogEntryForm({
+            errorText: "",
+            forSmartphone: true,
+            forTablet: true,
+            forLaptop: true,
+            forSmartwatch: true
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      });
+      
+      // Mutation zum Löschen eines Fehlereintrags im neuen Fehlerkatalog
+      const deleteErrorCatalogEntryMutation = useMutation({
+        mutationFn: async (id: number) => {
+          const response = await apiRequest('DELETE', `/api/superadmin/error-catalog/${id}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fehler beim Löschen des Fehlereintrags');
+          }
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+          toast({
+            title: "Erfolg",
+            description: "Fehlereintrag wurde erfolgreich gelöscht.",
+          });
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      });
+      
+      // Mutation zum Bulk-Löschen von Fehlereinträgen im neuen Fehlerkatalog
+      const bulkDeleteErrorCatalogEntriesMutation = useMutation({
+        mutationFn: async (ids: number[]) => {
+          const response = await apiRequest('POST', '/api/superadmin/error-catalog/bulk-delete', { ids });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fehler beim Löschen der Fehlereinträge');
+          }
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+          toast({
+            title: "Erfolg",
+            description: "Fehlereinträge wurden erfolgreich gelöscht.",
+          });
+          setSelectedErrorCatalogIds([]);
+          setSelectAllErrorCatalog(false);
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      });
+      
+      // Mutation zum Bulk-Import von Fehlereinträgen im neuen Fehlerkatalog
+      const bulkImportErrorCatalogMutation = useMutation({
+        mutationFn: async (entries: string[]) => {
+          const response = await apiRequest('POST', '/api/superadmin/error-catalog/bulk', { entries });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Fehler beim Importieren der Fehlereinträge');
+          }
+          return response.json();
+        },
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["/api/superadmin/error-catalog"] });
+          toast({
+            title: "Erfolg",
+            description: "Fehlereinträge wurden erfolgreich importiert.",
+          });
+          setIsBulkImportErrorCatalogOpen(false);
+          setBulkErrorCatalogText("");
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      });
+      
+      // Handler für den neuen Fehlerkatalog
+      const handleCreateErrorCatalogEntry = () => {
+        setErrorCatalogEntryForm({
+          errorText: "",
+          forSmartphone: true,
+          forTablet: true,
+          forLaptop: true,
+          forSmartwatch: true
+        });
+        setIsCreateErrorCatalogEntryOpen(true);
+      };
+      
+      const handleDeleteErrorCatalogEntry = (id: number) => {
+        if (confirm('Möchten Sie diesen Fehlereintrag wirklich löschen?')) {
+          deleteErrorCatalogEntryMutation.mutate(id);
+        }
+      };
+      
+      const handleToggleErrorCatalogSelection = (id: number) => {
+        if (selectedErrorCatalogIds.includes(id)) {
+          setSelectedErrorCatalogIds(selectedErrorCatalogIds.filter(entryId => entryId !== id));
+        } else {
+          setSelectedErrorCatalogIds([...selectedErrorCatalogIds, id]);
+        }
+      };
+      
+      const handleToggleSelectAllErrorCatalog = () => {
+        if (selectAllErrorCatalog) {
+          setSelectedErrorCatalogIds([]);
+          setSelectAllErrorCatalog(false);
+        } else {
+          if (errorCatalogData && errorCatalogData.length > 0) {
+            const filteredIds = errorCatalogData
+              .filter(entry => entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase()))
+              .map(entry => entry.id);
+            setSelectedErrorCatalogIds(filteredIds);
+            setSelectAllErrorCatalog(true);
+          }
+        }
+      };
+      
+      const handleDeleteSelectedErrorCatalogEntries = async () => {
+        if (selectedErrorCatalogIds.length === 0) {
+          toast({
+            title: "Hinweis",
+            description: "Bitte wählen Sie mindestens einen Fehlereintrag aus."
+          });
+          return;
+        }
+        
+        if (confirm(`Sind Sie sicher, dass Sie ${selectedErrorCatalogIds.length} ausgewählte Fehlereinträge löschen möchten?`)) {
+          try {
+            toast({
+              title: "Löschvorgang läuft",
+              description: `${selectedErrorCatalogIds.length} Fehlereinträge werden gelöscht...`
+            });
+            
+            await bulkDeleteErrorCatalogEntriesMutation.mutateAsync(selectedErrorCatalogIds);
+          } catch (error) {
+            console.error("Fehler beim Löschen von Fehlereinträgen:", error);
+            toast({
+              title: "Fehler",
+              description: "Beim Löschen der Fehlereinträge ist ein Fehler aufgetreten.",
+              variant: "destructive"
+            });
+          }
+        }
+      };
+      
+      const handleBulkImportErrorCatalog = () => {
+        setBulkErrorCatalogText("");
+        setIsBulkImportErrorCatalogOpen(true);
+      };
+      
+      const handleSubmitCreateErrorCatalogEntry = () => {
+        if (!errorCatalogEntryForm.errorText.trim()) {
+          toast({
+            title: "Fehler",
+            description: "Bitte geben Sie einen Fehlertext ein.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Mindestens ein Gerätetyp muss ausgewählt sein
+        if (!errorCatalogEntryForm.forSmartphone && 
+            !errorCatalogEntryForm.forTablet && 
+            !errorCatalogEntryForm.forLaptop && 
+            !errorCatalogEntryForm.forSmartwatch) {
+          toast({
+            title: "Fehler",
+            description: "Bitte wählen Sie mindestens einen Gerätetyp aus.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        createErrorCatalogEntryMutation.mutate(errorCatalogEntryForm);
+      };
+      
+      const handleSubmitBulkImportErrorCatalog = () => {
+        if (!bulkErrorCatalogText.trim()) {
+          toast({
+            title: "Fehler",
+            description: "Bitte geben Sie mindestens einen Fehlertext ein.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Zeilen in Array aufteilen und leere Zeilen entfernen
+        const entries = bulkErrorCatalogText
+          .split('\n')
+          .map(entry => entry.trim())
+          .filter(entry => entry.length > 0);
+        
+        if (entries.length === 0) {
+          toast({
+            title: "Fehler",
+            description: "Bitte geben Sie mindestens einen gültigen Fehlertext ein.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        bulkImportErrorCatalogMutation.mutate(entries);
+      };
 
       {/* Dialog zum Erstellen eines neuen Gerätetyps */}
       <Dialog open={isCreateDeviceTypeOpen} onOpenChange={setIsCreateDeviceTypeOpen}>
