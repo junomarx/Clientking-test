@@ -1496,11 +1496,11 @@ export default function SuperadminDevicesTab() {
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               ) : filteredDeviceTypes.length > 0 ? (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-16">Icon</TableHead>
+                        <TableHead className="w-12 lg:w-16">Icon</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead className="text-right">Aktionen</TableHead>
                       </TableRow>
@@ -1649,7 +1649,7 @@ export default function SuperadminDevicesTab() {
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   </div>
                 ) : brandsData && brandsData.length > 0 ? (
-                  <div className="rounded-md border">
+                  <div className="rounded-md border overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1852,7 +1852,7 @@ export default function SuperadminDevicesTab() {
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               ) : modelsData && modelsData.length > 0 ? (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -2005,8 +2005,8 @@ export default function SuperadminDevicesTab() {
               </div>
             </CardHeader>
             <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                <div className="relative w-full md:w-96">
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Fehlereinträge suchen..." 
@@ -2016,17 +2016,19 @@ export default function SuperadminDevicesTab() {
                   />
                 </div>
                 
-                {selectedErrorCatalogIds.length > 0 && (
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={handleDeleteSelectedErrorCatalogEntries}
-                    className="flex items-center space-x-1"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    <span>{selectedErrorCatalogIds.length} Einträge löschen</span>
-                  </Button>
-                )}
+                <div className="flex items-center">
+                  {selectedErrorCatalogIds.length > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleDeleteSelectedErrorCatalogEntries}
+                      className="flex items-center space-x-1 w-full justify-center"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span>{selectedErrorCatalogIds.length} Einträge löschen</span>
+                    </Button>
+                  )}
+                </div>
               </div>
               
               {isLoadingErrorCatalog ? (
@@ -2034,7 +2036,7 @@ export default function SuperadminDevicesTab() {
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               ) : errorCatalogData && errorCatalogData.length > 0 ? (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -2045,9 +2047,9 @@ export default function SuperadminDevicesTab() {
                             aria-label="Alle Fehlereinträge auswählen"
                           />
                         </TableHead>
-                        <TableHead>Fehlertext</TableHead>
-                        <TableHead>Gilt für Gerätetyp</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
+                        <TableHead className="min-w-[200px]">Fehlertext</TableHead>
+                        <TableHead className="min-w-[120px]">Gilt für Gerätetyp</TableHead>
+                        <TableHead className="text-right w-[100px]">Aktionen</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
