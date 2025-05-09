@@ -363,28 +363,7 @@ export const userDeviceTypes = pgTable("user_device_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Fehlerbeschreibungen (DeviceIssues) - zentral verwaltet von Admin/Superadmin
-export const deviceIssues = pgTable("device_issues", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),                 // Titel der Fehlerbeschreibung
-  description: text("description").notNull(),      // Ausführliche Beschreibung des Problems
-  solution: text("solution"),                     // Lösungsvorschlag für das Problem
-  deviceType: text("device_type").notNull(),       // Für welche Geräteart ist die Fehlerbeschreibung
-  severity: text("severity").default("medium"),     // Schweregrad: low, medium, high, critical
-  isCommon: boolean("is_common").default(false),  // Ist dieser Fehler häufig?
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  // Von Superadmin verwaltet, kein userId hier
-});
-
-export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type DeviceIssue = typeof deviceIssues.$inferSelect;
-export type InsertDeviceIssue = z.infer<typeof insertDeviceIssueSchema>;
+// Fehlerkatalog wurde entfernt
 
 // Beziehungen definieren - userDeviceTypes zu userBrands
 export const userDeviceTypesRelations = relations(userDeviceTypes, ({ one, many }) => ({
