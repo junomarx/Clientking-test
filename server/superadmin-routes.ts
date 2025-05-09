@@ -1851,8 +1851,7 @@ export function registerSuperadminRoutes(app: Express) {
       const stats = {
         deviceTypes: 0,
         brands: 0,
-        models: 0,
-        deviceIssues: 0
+        models: 0
       };
       
       // Mappings für IDs (alte ID -> neue ID)
@@ -2052,63 +2051,16 @@ export function registerSuperadminRoutes(app: Express) {
         }
       }
       
-      // 5. Fehlerkatalog importieren
+      // 5. Fehlerkatalog wird nicht mehr importiert
       if (importData.deviceIssues && Array.isArray(importData.deviceIssues)) {
-        console.log(`Import von ${importData.deviceIssues.length} Fehlereinträgen...`);
-        
-        // Vorhandene Fehlereinträge abrufen
-        const existingIssues = await db.select().from(deviceIssues);
-        const existingIssuesByKey = new Map();
-        
-        existingIssues.forEach(issue => {
-          // Fehlereinträge sind eindeutig durch Title + deviceType + Description
-          const key = `${issue.title.toLowerCase()}-${issue.deviceType}-${issue.description?.toLowerCase() || ''}`;
-          existingIssuesByKey.set(key, issue);
-        });
-        
-        for (const issue of importData.deviceIssues) {
-          try {
-            const title = issue.title || issue.name; // Fallback auf name als Kompatibilität
-            const deviceType = issue.deviceType;
-            const description = issue.description || '';
-            
-            // Prüfen, ob bereits ein Fehlereintrag mit diesen Attributen existiert
-            const key = `${title.toLowerCase()}-${deviceType}-${description.toLowerCase()}`;
-            const existingIssue = existingIssuesByKey.get(key);
-            
-            if (existingIssue) {
-              console.log(`Fehlereintrag "${title}" für Gerätetyp "${deviceType}" existiert bereits mit ID ${existingIssue.id}`);
-            } else {
-              // Neuen Fehlereintrag anlegen
-              const [newIssue] = await db.insert(deviceIssues)
-                .values({
-                  title: title,
-                  deviceType: deviceType,
-                  description: description,
-                  solution: issue.solution || '',
-                  severity: issue.severity || 'medium',
-                  isCommon: issue.isCommon || false,
-                  createdAt: new Date(),
-                  updatedAt: new Date()
-                })
-                .returning();
-              
-              console.log(`Neuer Fehlereintrag "${title}" für Gerätetyp "${deviceType}" angelegt mit ID ${newIssue.id}`);
-              stats.deviceIssues++;
-            }
-          } catch (error) {
-            console.error(`Fehler beim Import des Fehlereintrags ${issue.title || issue.name || 'Unbekannt'}:`, error);
-            // Wir machen weiter mit dem nächsten Fehlereintrag
-          }
-        }
+        console.log(`Fehlerkatalog wurde entfernt. ${importData.deviceIssues.length} Fehlereinträge werden ignoriert.`);
       }
       
       // Gesamtzahl aller Elemente (existierende + neu hinzugefügte)
       const total = {
         deviceTypes: importData.deviceTypes?.length || 0,
         brands: importData.brands?.length || 0,
-        models: importData.models?.length || 0,
-        deviceIssues: importData.deviceIssues?.length || 0
+        models: importData.models?.length || 0
       };
       
       // Import-Statistik zurückgeben
