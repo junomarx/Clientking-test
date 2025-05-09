@@ -113,6 +113,9 @@ export default function SuperadminDevicesTab() {
     severity: "medium",
     isCommon: false 
   });
+  const [isBulkImportIssuesOpen, setIsBulkImportIssuesOpen] = useState(false);
+  const [selectedDeviceTypeForBulkIssues, setSelectedDeviceTypeForBulkIssues] = useState("");
+  const [bulkIssueText, setBulkIssueText] = useState("");
   
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList, refetch: refetchDeviceTypesList } = useQuery<string[]>({
@@ -507,10 +510,259 @@ export default function SuperadminDevicesTab() {
     }
   };
   
-  // Mutation zum Löschen mehrerer Fehlereinträge
-  // Hier wurden Funktionen für den Fehlerkatalog entfernt
+  // Mutation zum Erstellen eines Fehlereintrags
+  const createIssueMutation = useMutation({
+    mutationFn: async (data: { 
+      title: string; 
+      description: string; 
+      deviceType: string;
+      solution?: string;
+      severity?: string;
+      isCommon?: boolean;
+    }) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-issues', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Erstellen des Fehlereintrags');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich erstellt.",
+      });
+      setIsCreateIssueOpen(false);
+      setIssueForm({ 
+        title: "", 
+        description: "", 
+        deviceType: "",
+        solution: "",
+        severity: "medium",
+        isCommon: false
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
   
-  // Entfernte Funktionen für Fehlerkatalog
+  // Mutation zum Löschen eines Fehlereintrags
+  const deleteIssueMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/superadmin/device-issues/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen des Fehlereintrags');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: "Fehlereintrag wurde erfolgreich gelöscht.",
+      });
+      // Auswahl zurücksetzen
+      setSelectedIssueIds([]);
+      setSelectAllIssues(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Löschen mehrerer Fehlereinträge
+  const deleteBulkIssuesMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Sicherstellen, dass wir ein Array mit Zahlen übermmitteln
+      const numericIds = ids.map(id => Number(id)).filter(id => !isNaN(id));
+      
+      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk-delete', { 
+        ids: numericIds 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Löschen der Fehlereinträge');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: `${data.deletedIds?.length || 0} Fehlereinträge wurden erfolgreich gelöscht.`,
+      });
+      // Auswahl zurücksetzen
+      setSelectedIssueIds([]);
+      setSelectAllIssues(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation zum Bulk-Import von Fehlereinträgen
+  const bulkImportIssuesMutation = useMutation({
+    mutationFn: async (data: { deviceType: string; issues: string[] }) => {
+      const response = await apiRequest('POST', '/api/superadmin/device-issues/bulk', data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Fehler beim Importieren der Fehlereinträge');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/device-issues"] });
+      toast({
+        title: "Erfolg",
+        description: `${data.results?.success || 0} Fehlereinträge wurden erfolgreich importiert.`,
+      });
+      setIsBulkImportIssuesOpen(false);
+      setBulkIssueText("");
+      setSelectedDeviceTypeForBulkIssues("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Handler-Funktionen für Fehlerkatalog
+  const handleCreateIssue = () => {
+    setIssueForm({ 
+      title: "", 
+      description: "", 
+      deviceType: "",
+      solution: "",
+      severity: "medium",
+      isCommon: false 
+    });
+    setIsCreateIssueOpen(true);
+  };
+  
+  const handleDeleteIssue = (id: number) => {
+    if (confirm("Möchten Sie diesen Fehlereintrag wirklich löschen?")) {
+      deleteIssueMutation.mutate(id);
+    }
+  };
+  
+  const handleToggleIssueSelection = (id: number) => {
+    setSelectedIssueIds(prevIds => {
+      if (prevIds.includes(id)) {
+        return prevIds.filter(item => item !== id);
+      } else {
+        return [...prevIds, id];
+      }
+    });
+  };
+  
+  const handleToggleSelectAllIssues = (checked: boolean | "indeterminate") => {
+    setSelectAllIssues(checked === true);
+    if (checked === true && issuesData) {
+      const filteredIssueIds = issuesData
+        .filter(issue => {
+          const textMatches = issue.title.toLowerCase().includes(issueSearchTerm.toLowerCase()) || 
+                            issue.description.toLowerCase().includes(issueSearchTerm.toLowerCase());
+          const typeMatches = !selectedIssueDeviceType || 
+                             issue.deviceType.toLowerCase() === selectedIssueDeviceType.toLowerCase();
+          return textMatches && typeMatches;
+        })
+        .map(issue => issue.id);
+      setSelectedIssueIds(filteredIssueIds);
+    } else {
+      setSelectedIssueIds([]);
+    }
+  };
+  
+  const handleDeleteSelectedIssues = () => {
+    if (selectedIssueIds.length === 0) {
+      toast({
+        title: "Hinweis",
+        description: "Bitte wählen Sie mindestens einen Fehlereintrag aus."
+      });
+      return;
+    }
+    
+    if (confirm(`Möchten Sie die ausgewählten ${selectedIssueIds.length} Fehlereinträge wirklich löschen?`)) {
+      deleteBulkIssuesMutation.mutate(selectedIssueIds);
+    }
+  };
+  
+  const handleBulkImportIssues = () => {
+    setBulkIssueText("");
+    setSelectedDeviceTypeForBulkIssues("");
+    setIsBulkImportIssuesOpen(true);
+  };
+  
+  const handleSubmitCreateIssue = () => {
+    if (!issueForm.title || !issueForm.description || !issueForm.deviceType) {
+      toast({
+        title: "Fehler",
+        description: "Bitte füllen Sie alle erforderlichen Felder aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createIssueMutation.mutate(issueForm);
+  };
+  
+  const handleSubmitBulkImportIssues = () => {
+    if (!selectedDeviceTypeForBulkIssues) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie einen Gerätetyp aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!bulkIssueText.trim()) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie mindestens einen Fehlereintrag ein.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Text in Zeilen aufteilen und leere Zeilen filtern
+    const issues = bulkIssueText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    if (issues.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Keine gültigen Fehlereinträge gefunden.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    bulkImportIssuesMutation.mutate({
+      deviceType: selectedDeviceTypeForBulkIssues,
+      issues
+    });
+  };
   
   // Mutation zum Löschen eines Modells
   const deleteModelMutation = useMutation({

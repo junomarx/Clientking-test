@@ -2494,4 +2494,149 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).send(`Fehler beim CSV-Import der Modelle: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
     }
   });
+  
+  // Fehlerkatalog-Routen
+  
+  // Alle Fehlereinträge abrufen
+  app.get("/api/superadmin/device-issues", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const issues = await db.select().from(deviceIssues);
+      res.json(issues);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Fehlereinträge:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Fehlereinträge" });
+    }
+  });
+  
+  // Einzelnen Fehlereintrag erstellen
+  app.post("/api/superadmin/device-issues", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { title, description, deviceType, solution, severity = 'medium', isCommon = false } = req.body;
+      
+      if (!title || !description || !deviceType) {
+        return res.status(400).json({ message: "Titel, Beschreibung und Gerätetyp sind erforderlich" });
+      }
+      
+      const [newIssue] = await db.insert(deviceIssues).values({
+        title,
+        description,
+        deviceType,
+        solution: solution || "",
+        severity,
+        isCommon,
+        isGlobal: true, // Alle vom Superadmin erstellten Einträge sind global
+        userId: req.user?.id || 0,
+        shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }).returning();
+      
+      res.status(201).json(newIssue);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Fehlereintrags:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Fehlereintrags" });
+    }
+  });
+  
+  // Mehrere Fehlereinträge auf einmal importieren (Bulk-Import)
+  app.post("/api/superadmin/device-issues/bulk", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { deviceType, issues } = req.body;
+      
+      if (!deviceType || !Array.isArray(issues) || issues.length === 0) {
+        return res.status(400).json({ 
+          message: "Gerätetyp und eine Liste von Fehlereinträgen sind erforderlich" 
+        });
+      }
+      
+      const results = {
+        success: 0,
+        errors: [] as string[],
+      };
+      
+      for (const issueTitle of issues) {
+        if (!issueTitle.trim()) {
+          results.errors.push(`Leerer Fehlereintrag übersprungen`);
+          continue;
+        }
+        
+        try {
+          await db.insert(deviceIssues).values({
+            title: issueTitle.trim(),
+            description: issueTitle.trim(), // Wir verwenden den Titel auch als Beschreibung
+            deviceType,
+            isGlobal: true,
+            severity: 'medium',
+            isCommon: false,
+            userId: req.user?.id || 0,
+            shopId: 1682, // Feste Shop-ID (1682) für den Superadmin
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          
+          results.success++;
+        } catch (error) {
+          console.error(`Fehler beim Importieren von "${issueTitle}":`, error);
+          results.errors.push(`Fehler beim Importieren von "${issueTitle}"`);
+        }
+      }
+      
+      res.status(200).json({
+        message: `Import abgeschlossen. ${results.success} Fehlereinträge importiert. ${results.errors.length} Fehler.`,
+        results,
+      });
+    } catch (error) {
+      console.error("Fehler beim Bulk-Import von Fehlereinträgen:", error);
+      res.status(500).json({ message: "Fehler beim Bulk-Import von Fehlereinträgen" });
+    }
+  });
+  
+  // Fehlereintrag löschen
+  app.delete("/api/superadmin/device-issues/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const issueId = parseInt(req.params.id);
+      
+      if (isNaN(issueId)) {
+        return res.status(400).json({ message: "Ungültige Fehlereintrag-ID" });
+      }
+      
+      const [deletedIssue] = await db
+        .delete(deviceIssues)
+        .where(eq(deviceIssues.id, issueId))
+        .returning();
+      
+      if (!deletedIssue) {
+        return res.status(404).json({ message: "Fehlereintrag nicht gefunden" });
+      }
+      
+      res.json({ message: "Fehlereintrag erfolgreich gelöscht", id: issueId });
+    } catch (error) {
+      console.error("Fehler beim Löschen des Fehlereintrags:", error);
+      res.status(500).json({ message: "Fehler beim Löschen des Fehlereintrags" });
+    }
+  });
+  
+  // Mehrere Fehlereinträge auf einmal löschen
+  app.post("/api/superadmin/device-issues/bulk-delete", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Keine gültigen IDs angegeben" });
+      }
+      
+      const deletedIssues = await db
+        .delete(deviceIssues)
+        .where(inArray(deviceIssues.id, ids))
+        .returning({ id: deviceIssues.id });
+      
+      res.json({ 
+        message: `${deletedIssues.length} Fehlereinträge erfolgreich gelöscht`,
+        deletedIds: deletedIssues.map(issue => issue.id)
+      });
+    } catch (error) {
+      console.error("Fehler beim Löschen mehrerer Fehlereinträge:", error);
+      res.status(500).json({ message: "Fehler beim Löschen mehrerer Fehlereinträge" });
+    }
+  });
 }
