@@ -106,7 +106,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const { user } = useAuth();
   
   // States für die Formularfelder und UI
-  const [availableIssues, setAvailableIssues] = useState<Array<{id: number; title: string; description: string; deviceType: string; severity: string; isCommon: boolean;}>>([]);
+  const [availableIssues, setAvailableIssues] = useState<string[]>([]);
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
   const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
   const [savedModels, setSavedModels] = useState<string[]>([]);
@@ -277,16 +277,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // da wir jetzt den GlobalDeviceSelector verwenden und Geräte nur vom Superadmin erstellt werden
   
   // Funktion zum Hinzufügen einer neuen Fehlerbeschreibung
-  const addIssueToField = (issue: {id: number; title: string; description: string; deviceType: string; severity: string; isCommon: boolean;} | string, index: number = 0) => {
+  const addIssueToField = (issue: string, index: number = 0) => {
     // Aktualisiere das entsprechende Feld im Array
     const newIssueFields = [...issueFields];
-    
-    // Prüfe, ob issue ein Objekt oder string ist
-    if (typeof issue === 'object') {
-      newIssueFields[index] = issue.title; // Den Titel verwenden (vorher: description)
-    } else {
-      newIssueFields[index] = issue;
-    }
+    newIssueFields[index] = issue;
     
     // Füge ein neues leeres Feld hinzu
     newIssueFields.push('');
@@ -609,13 +603,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         const currentValue = issueFields[index];
         
         // Filter basierend auf aktueller Eingabe
-        const filtered = availableIssues.filter(issue => {
-          if (!currentValue) return true;
-          if (issue.title && typeof issue.title === 'string') {
-            return issue.title.toLowerCase().includes(currentValue.toLowerCase());
-          }
-          return false;
-        });
+        const filtered = availableIssues.filter(issue => 
+          !currentValue || issue.toLowerCase().includes(currentValue.toLowerCase())
+        );
         
         if (e.key === 'ArrowDown') {
           e.preventDefault();
@@ -629,16 +619,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
             // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
-            const selectedIssue = filtered[selectedIssueIndex];
-            addIssueToField(selectedIssue, index);
+            addIssueToField(filtered[selectedIssueIndex], index);
             setSelectedIssueIndex(-1);
           }
         } else if (e.key === 'Tab' && selectedIssueIndex >= 0) {
           e.preventDefault();
           if (filtered[selectedIssueIndex]) {
             // Ausgewählte Fehlerbeschreibung hinzufügen und neues Feld erstellen
-            const selectedIssue = filtered[selectedIssueIndex];
-            addIssueToField(selectedIssue, index);
+            addIssueToField(filtered[selectedIssueIndex], index);
             
             // Fokus auf das nächste Feld setzen
             setTimeout(() => {
@@ -947,13 +935,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                   {showIssueDropdown && availableIssues.length > 0 && index === issueFields.length - 1 && (
                                     <div className="absolute z-10 w-full left-0 top-full bg-white rounded-md border shadow-lg max-h-60 overflow-y-auto mt-1">
                                       {availableIssues
-                                        .filter(issue => {
-                                          if (!issueText) return true;
-                                          if (issue.title && typeof issue.title === 'string') {
-                                            return issue.title.toLowerCase().includes(issueText.toLowerCase());
-                                          }
-                                          return false; // Wenn title nicht vorhanden oder kein String ist
-                                        })
+                                        .filter(issue => !issueText || issue.toLowerCase().includes(issueText.toLowerCase()))
                                         .map((issue, idx) => (
                                           <div 
                                             key={idx}
@@ -963,7 +945,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
                                               setSelectedIssueIndex(-1);
                                             }}
                                           >
-                                            <span>{issue.title || ''}</span>
+                                            <span>{issue}</span>
                                           </div>
                                         ))}
                                     </div>

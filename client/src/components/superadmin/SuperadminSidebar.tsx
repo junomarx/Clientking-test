@@ -14,8 +14,7 @@ import {
   Mail,
   FileCode,
   Layout,
-  X,
-  AlertTriangle
+  X
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User, BusinessSettings } from "@shared/schema";
@@ -121,17 +120,7 @@ export function SuperadminSidebar({
           <FileCode className="h-5 w-5 mr-2" />
           Vorlagen
         </Button>
-        <Button 
-          variant={activeTab === "error-preview" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            setActiveTab("error-preview");
-            if (isMobile) closeMenu();
-          }}
-        >
-          <AlertTriangle className="h-5 w-5 mr-2" />
-          Fehler-Vorschau
-        </Button>
+
       </div>
     </>
   );

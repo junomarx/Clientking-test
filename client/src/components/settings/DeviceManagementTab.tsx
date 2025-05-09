@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { DeviceTypeSettings } from './DeviceTypeSettings';
 import { BrandSettings } from './BrandSettings';
 import { ModelManagementTab } from './ModelManagementTab';
-import { ErrorCatalogTab } from './ErrorCatalogTab';
-import { Smartphone, Layers, Tag, Download, Upload, AlertCircle } from 'lucide-react';
+import { DeviceIssuesTab } from './DeviceIssuesTab';
+import { Smartphone, Layers, Tag, AlertCircle, Download, Upload, Database } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -142,7 +142,7 @@ export function DeviceManagementTab() {
       <div className="bg-white rounded-md shadow-sm p-4 mb-6">
         <h3 className="text-xl font-semibold mb-2">Globale Geräteverwaltung</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Zentrale Verwaltung für alle Gerätetypen, Herstellern, Modellen und Fehler
+          Zentrale Verwaltung für alle Gerätetypen, Herstellern und Modellreihen
         </p>
         
         {canManageDevices && (
@@ -213,11 +213,11 @@ export function DeviceManagementTab() {
           </Button>
           
           <Button
-            variant={activeTab === "errors" ? "default" : "outline"}
-            className={`p-3 h-auto justify-start ${activeTab === "errors" ? "bg-primary text-white" : "bg-secondary/10"}`}
-            onClick={() => setActiveTab("errors")}
+            variant={activeTab === "issues" ? "default" : "outline"}
+            className={`p-3 h-auto justify-start ${activeTab === "issues" ? "bg-primary text-white" : "bg-secondary/10"}`}
+            onClick={() => setActiveTab("issues")}
           >
-            <AlertCircle className="h-4 w-4 mr-2" /> Fehlerkatalog
+            <AlertCircle className="h-4 w-4 mr-2" /> Fehlerbeschreibungen
           </Button>
         </div>
         
@@ -225,7 +225,7 @@ export function DeviceManagementTab() {
           {activeTab === "deviceTypes" && <DeviceTypeSettings />}
           {activeTab === "brands" && <BrandSettings />}
           {activeTab === "models" && <ModelManagementTab />}
-          {activeTab === "errors" && <ErrorCatalogTab />}
+          {activeTab === "issues" && <DeviceIssuesTab />}
         </div>
       </div>
     </div>

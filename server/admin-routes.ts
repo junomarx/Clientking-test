@@ -167,20 +167,15 @@ export function registerAdminRoutes(app: Express) {
       const existingIssue = await db.select().from(deviceIssues)
         .where(and(
           eq(deviceIssues.description, issueData.description),
-          eq(deviceIssues.deviceType, issueData.deviceType),
-          eq(deviceIssues.userId, req.user.id)
+          eq(deviceIssues.deviceType, issueData.deviceType)
         ));
       
       if (existingIssue.length > 0) {
         return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
       }
       
-      // Fehlerbeschreibung in der Datenbank speichern mit userId und shopId
-      const [newIssue] = await db.insert(deviceIssues).values({
-        ...issueData,
-        userId: req.user.id,
-        shopId: req.user.shopId || 1682 // macnphone's shopId für globale Daten
-      }).returning();
+      // Fehlerbeschreibung in der Datenbank speichern
+      const [newIssue] = await db.insert(deviceIssues).values(issueData).returning();
       
       res.status(201).json(newIssue);
     } catch (error) {
@@ -260,107 +255,10 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
-  // Alle Fehlerbeschreibungen löschen
-  app.delete("/api/device-issues/all", async (req: Request, res: Response) => {
-    try {
-      const userId = req.user?.id;
-      const shopId = req.user?.shopId || 1;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
-      
-      // Alle Fehlerbeschreibungen des Benutzers löschen
-      await db.delete(deviceIssues).where(eq(deviceIssues.userId, userId));
-      
-      res.status(200).json({ 
-        success: true, 
-        message: "Alle Fehlerbeschreibungen wurden erfolgreich gelöscht" 
-      });
-    } catch (error) {
-      console.error("Fehler beim Löschen aller Fehlerbeschreibungen:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Fehler beim Löschen aller Fehlerbeschreibungen" 
-      });
-    }
-  });
-  
-  // Fehlerbeschreibung erstellen - öffentlicher Endpunkt für alle authentifizierten Benutzer
-  app.post("/api/device-issues", async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
-      
-      const issueData = insertDeviceIssueSchema.parse(req.body);
-      
-      // Prüfen, ob die Fehlerbeschreibung bereits existiert
-      const existingIssue = await db.select().from(deviceIssues)
-        .where(and(
-          eq(deviceIssues.title, issueData.title),
-          eq(deviceIssues.deviceType, issueData.deviceType),
-          eq(deviceIssues.userId, req.user.id)
-        ));
-      
-      if (existingIssue.length > 0) {
-        return res.status(400).json({ message: "Diese Fehlerbeschreibung existiert bereits für diesen Gerätetyp" });
-      }
-      
-      // Fehlerbeschreibung in der Datenbank speichern mit userId und shopId
-      const [newIssue] = await db.insert(deviceIssues).values({
-        ...issueData,
-        userId: req.user.id,
-        shopId: req.user.shopId || 1
-      }).returning();
-      
-      res.status(201).json(newIssue);
-    } catch (error) {
-      console.error("Error creating device issue:", error);
-      
-      if (error instanceof ZodError) {
-        return res.status(400).json({ message: "Ungültige Fehlerbeschreibungsdaten", errors: error.errors });
-      }
-      
-      res.status(500).json({ message: "Fehler beim Erstellen der Fehlerbeschreibung" });
-    }
-  });
-  
-  // Fehlerbeschreibung löschen - öffentlicher Endpunkt für alle authentifizierten Benutzer
-  app.delete("/api/device-issues/:id", async (req: Request, res: Response) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Nicht authentifiziert" });
-      }
-      
-      const id = parseInt(req.params.id);
-      
-      // Prüfen, ob die Fehlerbeschreibung existiert und dem Benutzer gehört
-      const [existingIssue] = await db.select().from(deviceIssues)
-        .where(and(
-          eq(deviceIssues.id, id),
-          eq(deviceIssues.userId, req.user.id)
-        ));
-      
-      if (!existingIssue) {
-        return res.status(404).json({ message: "Fehlerbeschreibung nicht gefunden oder keine Berechtigung" });
-      }
-      
-      // Fehlerbeschreibung löschen
-      await db.delete(deviceIssues).where(eq(deviceIssues.id, id));
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting device issue:", error);
-      res.status(500).json({ message: "Fehler beim Löschen der Fehlerbeschreibung" });
-    }
-  });
-  
   // Öffentlicher Endpunkt für alle Benutzer, um Fehlerbeschreibungen für einen bestimmten Gerätetyp abzurufen
   app.get("/api/device-issues/:deviceType", async (req: Request, res: Response) => {
     try {
       const deviceType = req.params.deviceType;
-      const format = req.query.format as string || 'full'; // 'full' oder 'simple'
       
       // Wir verwenden jetzt die globalen Fehlerbeschreibungen vom Superadmin (Shop-ID 1682)
       // Diese stehen allen Benutzern zur Verfügung
@@ -368,28 +266,21 @@ export function registerAdminRoutes(app: Express) {
         .where(
           and(
             eq(deviceIssues.deviceType, deviceType),
-            eq(deviceIssues.userId, 10) // Superadmin-ID
+            eq(deviceIssues.userId, 10), // Superadmin-ID
+            eq(deviceIssues.shopId, 1682) // Feste Shop-ID für globale Gerätedaten
           )
         );
       
-      // Fehlerbeschreibungen abrufen und nach Titel sortieren
+      // Fehlerbeschreibungen abrufen und nach Beschreibung sortieren
       const issues = await query;
+      issues.sort((a, b) => a.description.localeCompare(b.description));
       
-      // Für Abwärtskompatibilität: wenn format=simple, geben wir nur die Titel zurück
-      if (format === 'simple') {
-        // Nach Titel sortieren
-        issues.sort((a, b) => a.title.localeCompare(b.title));
-        // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
-        const uniqueTitles = [...new Set(issues.map(issue => issue.title))];
-        console.log(`Fehlerkatalog (simple): ${uniqueTitles.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
-        return res.json(uniqueTitles);
-      }
+      // Doppelte Einträge entfernen (falls es überlappende Fehlerbeschreibungen gibt)
+      const uniqueDescriptions = [...new Set(issues.map(issue => issue.description))];
       
-      // Standardmäßig vollständige Informationen zurückgeben
-      issues.sort((a, b) => a.title.localeCompare(b.title));
-      console.log(`Fehlerkatalog (full): ${issues.length} Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
+      console.log(`Fehlerkatalog: ${uniqueDescriptions.length} einzigartige Fehlerbeschreibungen für Gerätetyp '${deviceType}' gefunden (Shop 1682)`);
       
-      res.json(issues);
+      res.json(uniqueDescriptions);
     } catch (error) {
       console.error("Error retrieving device issues for type:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Fehlerbeschreibungen" });

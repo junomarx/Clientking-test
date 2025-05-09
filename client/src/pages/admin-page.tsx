@@ -39,7 +39,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { DeviceManagementTab } from "@/components/settings/DeviceManagementTab";
 import { DeviceTypeSettings } from "@/components/settings/DeviceTypeSettings";
-
+import { DeviceIssuesTab } from "@/components/settings/DeviceIssuesTab";
 import { BrandSettings } from "@/components/settings/BrandSettings";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";
@@ -880,7 +880,12 @@ export default function AdminPage() {
                     >
                       <span className="text-sm">Hersteller</span>
                     </div>
-
+                    <div 
+                      className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceIssues" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                      onClick={() => setActiveTab("deviceIssues")}
+                    >
+                      <span className="text-sm">Problemkatalog</span>
+                    </div>
                     <div 
                       className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "deviceImport" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
                       onClick={() => setActiveTab("deviceImport")}
@@ -954,6 +959,7 @@ export default function AdminPage() {
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
+            {activeTab === "deviceIssues" && <DeviceIssuesTab />}
             {activeTab === "deviceImport" && (
               <div className="p-4">
                 <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>
@@ -1065,6 +1071,7 @@ export default function AdminPage() {
             {activeTab === "devices" && <DeviceManagementTab />}
             {activeTab === "deviceTypes" && <DeviceTypeSettings />}
             {activeTab === "deviceBrands" && <BrandSettings />}
+            {activeTab === "deviceIssues" && <DeviceIssuesTab />}
             {activeTab === "deviceImport" && (
               <div className="p-4">
                 <h3 className="text-lg font-semibold mb-4">Gerätedaten importieren</h3>

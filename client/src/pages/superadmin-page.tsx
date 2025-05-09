@@ -12,7 +12,6 @@ import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab
 import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
-import { SuperadminErrorPreviewTab } from "@/components/superadmin/SuperadminErrorPreviewTab";
 
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
@@ -81,7 +80,6 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräte"}
               {activeTab === "email" && "E-Mail"}
               {activeTab === "print-templates" && "Vorlagen"}
-              {activeTab === "error-preview" && "Fehler-Vorschau"}
 
             </h1>
           </div>
@@ -95,7 +93,6 @@ export default function SuperadminPage() {
               {activeTab === "devices" && "Geräteverwaltung"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
-              {activeTab === "error-preview" && "Fehlerkatalog Vorschau"}
 
             </h1>
             {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
@@ -118,7 +115,6 @@ export default function SuperadminPage() {
             {activeTab === "devices" && <SuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
-            {activeTab === "error-preview" && <SuperadminErrorPreviewTab />}
 
           </ScrollArea>
         </main>
