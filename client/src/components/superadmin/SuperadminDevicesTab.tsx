@@ -1454,14 +1454,14 @@ export default function SuperadminDevicesTab() {
       </div>
       
       <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="hidden md:grid grid-cols-7">
-          <TabsTrigger value="types">Gerätetypen</TabsTrigger>
-          <TabsTrigger value="brands">Marken</TabsTrigger>
-          <TabsTrigger value="models">Modelle</TabsTrigger>
-          <TabsTrigger value="issues">Fehlerkatalog (Alt)</TabsTrigger>
-          <TabsTrigger value="error-catalog">Fehlerkatalog (Neu)</TabsTrigger>
-          <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
-          <TabsTrigger value="statistics">Statistik</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="types" className="text-xs md:text-sm">Gerätetypen</TabsTrigger>
+          <TabsTrigger value="brands" className="text-xs md:text-sm">Marken</TabsTrigger>
+          <TabsTrigger value="models" className="text-xs md:text-sm">Modelle</TabsTrigger>
+          <TabsTrigger value="issues" className="text-xs md:text-sm">Fehler (Alt)</TabsTrigger>
+          <TabsTrigger value="error-catalog" className="text-xs md:text-sm">Fehler (Neu)</TabsTrigger>
+          <TabsTrigger value="csv" className="text-xs md:text-sm">CSV Import</TabsTrigger>
+          <TabsTrigger value="statistics" className="text-xs md:text-sm">Statistik</TabsTrigger>
         </TabsList>
 
         {/* Gerätetypen Tab */}
@@ -1580,8 +1580,8 @@ export default function SuperadminDevicesTab() {
                 </Button>
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-                <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                  <div className="relative w-full md:w-72">
+                <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="relative">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
                       placeholder="Marken suchen..." 
@@ -1591,25 +1591,13 @@ export default function SuperadminDevicesTab() {
                     />
                   </div>
                   
-                  {selectedBrandIds.length > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={handleDeleteSelectedBrands}
-                      className="flex items-center space-x-1"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      <span>{selectedBrandIds.length} Marke{selectedBrandIds.length > 1 ? 'n' : ''} löschen</span>
-                    </Button>
-                  )}
-                  
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="deviceTypeFilter" className="whitespace-nowrap">Nach Gerätetyp filtern:</Label>
+                  <div className="flex flex-col space-y-2">
+                    <Label htmlFor="deviceTypeFilter" className="text-xs text-muted-foreground">Nach Gerätetyp filtern:</Label>
                     <Select 
                       value={selectedBrandDeviceType || "all"}
                       onValueChange={(value) => setSelectedBrandDeviceType(value === "all" ? null : value)}
                     >
-                      <SelectTrigger className="w-full md:w-40">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Alle Typen" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1623,21 +1611,37 @@ export default function SuperadminDevicesTab() {
                     </Select>
                   </div>
                   
-                  {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
-                  {(selectedBrandDeviceType || brandSearchTerm) && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBrandDeviceType(null);
-                        setBrandSearchTerm("");
-                      }}
-                      className="flex items-center space-x-1"
-                    >
-                      <X className="h-4 w-4" />
-                      <span>Filter zurücksetzen</span>
-                    </Button>
-                  )}
+                  <div className="flex items-center">
+                    {selectedBrandIds.length > 0 && (
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={handleDeleteSelectedBrands}
+                        className="flex items-center space-x-1 w-full justify-center"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        <span>{selectedBrandIds.length} Marke{selectedBrandIds.length > 1 ? 'n' : ''} löschen</span>
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center">
+                    {/* Nur anzeigen, wenn mindestens ein Filter aktiv ist */}
+                    {(selectedBrandDeviceType || brandSearchTerm) && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedBrandDeviceType(null);
+                          setBrandSearchTerm("");
+                        }}
+                        className="flex items-center space-x-1 w-full justify-center"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        <span>Filter zurücksetzen</span>
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 {isLoadingBrands ? (
@@ -1755,8 +1759,8 @@ export default function SuperadminDevicesTab() {
               </div>
             </CardHeader>
             <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-              <div className="mb-4 flex flex-col space-y-4 md:flex-row md:items-center md:space-x-4 md:space-y-0">
-                <div className="relative w-full md:w-72">
+              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Modelle suchen..." 
@@ -1766,20 +1770,8 @@ export default function SuperadminDevicesTab() {
                   />
                 </div>
                 
-                {selectedModelIds.length > 0 && (
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={handleDeleteSelectedModels}
-                    className="flex items-center space-x-1"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    <span>{selectedModelIds.length} Modell{selectedModelIds.length > 1 ? 'e' : ''} löschen</span>
-                  </Button>
-                )}
-                
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="modelDeviceTypeFilter" className="whitespace-nowrap">Gerätetyp:</Label>
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="modelDeviceTypeFilter" className="text-xs text-muted-foreground">Gerätetyp:</Label>
                   <Select 
                     value={selectedModelDeviceType || "all"}
                     onValueChange={(value) => {
@@ -1788,7 +1780,7 @@ export default function SuperadminDevicesTab() {
                       setSelectedModelsBrandId(null); // Markenfilter zurücksetzen
                     }}
                   >
-                    <SelectTrigger className="w-full md:w-40">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Alle Typen" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1802,14 +1794,14 @@ export default function SuperadminDevicesTab() {
                   </Select>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="brandFilter" className="whitespace-nowrap">Marke:</Label>
+                <div className="flex flex-col space-y-2">
+                  <Label htmlFor="brandFilter" className="text-xs text-muted-foreground">Marke:</Label>
                   <Select 
                     value={selectedModelsBrandId ? selectedModelsBrandId.toString() : "all"}
                     onValueChange={(value) => setSelectedModelsBrandId(value === "all" ? null : parseInt(value))}
                     disabled={!brandsData || brandsData.length === 0}
                   >
-                    <SelectTrigger className="w-full md:w-40">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Alle Marken" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1823,22 +1815,36 @@ export default function SuperadminDevicesTab() {
                   </Select>
                 </div>
                 
-                {/* Filter zurücksetzen Button */}
-                {(selectedModelDeviceType || selectedModelsBrandId || modelSearchTerm) && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setSelectedModelDeviceType(null);
-                      setSelectedModelsBrandId(null);
-                      setModelSearchTerm("");
-                    }}
-                    className="flex items-center space-x-1"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Filter zurücksetzen</span>
-                  </Button>
-                )}
+                <div className="grid grid-cols-1 gap-2">
+                  {selectedModelIds.length > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleDeleteSelectedModels}
+                      className="flex items-center space-x-1 w-full justify-center"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      <span>{selectedModelIds.length} Modell{selectedModelIds.length > 1 ? 'e' : ''} löschen</span>
+                    </Button>
+                  )}
+                
+                  {/* Filter zurücksetzen Button */}
+                  {(selectedModelDeviceType || selectedModelsBrandId || modelSearchTerm) && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedModelDeviceType(null);
+                        setSelectedModelsBrandId(null);
+                        setModelSearchTerm("");
+                      }}
+                      className="flex items-center space-x-1 w-full justify-center"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      <span>Filter zurücksetzen</span>
+                    </Button>
+                  )}
+                </div>
               </div>
               
               {isLoadingModels || isLoadingBrands || isLoadingUserDeviceTypes ? (
