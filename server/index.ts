@@ -13,6 +13,7 @@ import { addDeviceIssuesFields } from "./add-device-issues-fields";
 import { addHiddenDeviceTypesTable } from "./add-hidden-device-types-table";
 import { addBrandIdToModels } from "./add-brand-id-to-models";
 import { addPrintTemplatesTable } from "./add-print-templates-table";
+import { addErrorCatalogEntriesTable } from "./add-error-catalog-entries-table";
 import fileUpload from "express-fileupload";
 
 const app = express();
@@ -71,6 +72,7 @@ app.use((req, res, next) => {
     await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
     await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
     await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
+    await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
     
     const server = await registerRoutes(app);
 
