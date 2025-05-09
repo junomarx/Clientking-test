@@ -163,16 +163,18 @@ export default function ResponsiveSuperadminDevicesTab() {
 
   // Filtern der Daten basierend auf den Suchbegriffen und ausgewählten Filtern
   const filteredDeviceTypes = deviceTypesList.filter((type: DeviceType) => 
-    type.name.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
+    type && type.name && type.name.toLowerCase().includes(deviceTypeSearchTerm.toLowerCase())
   );
 
   const filteredBrands = brandsData.filter((brand: Brand) => {
+    if (!brand || !brand.name) return false;
     const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
     const typeMatches = !selectedBrandDeviceType || brand.deviceTypeName === selectedBrandDeviceType;
     return nameMatches && typeMatches;
   });
 
   const filteredModels = modelsData.filter((model: Model) => {
+    if (!model || !model.name) return false;
     const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
     const typeMatches = !selectedModelDeviceType || model.deviceTypeName === selectedModelDeviceType;
     const brandMatches = !selectedModelsBrandId || model.brandId === selectedModelsBrandId;
@@ -180,7 +182,7 @@ export default function ResponsiveSuperadminDevicesTab() {
   });
 
   const filteredErrorCatalog = errorCatalogData.filter((entry: ErrorCatalogEntry) => 
-    entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase())
+    entry && entry.errorText && entry.errorText.toLowerCase().includes(errorCatalogSearchTerm.toLowerCase())
   );
 
   // Mutations für Gerätetypen
