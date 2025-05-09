@@ -24,7 +24,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Download, Upload, RefreshCw, FileText, Database } from "lucide-react";
 
-export default function DeviceDataCSVImportExport() {
+interface DeviceDataCSVImportExportProps {
+  type?: 'brands' | 'models';
+}
+
+export default function DeviceDataCSVImportExport({ type = 'brands' }: DeviceDataCSVImportExportProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedDeviceType, setSelectedDeviceType] = useState<string | null>(null);

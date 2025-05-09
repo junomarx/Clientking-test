@@ -9,7 +9,7 @@ import { User, BusinessSettings } from "@shared/schema";
 import SuperadminDashboardTab from "@/components/superadmin/SuperadminDashboardTab";
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
-import SuperadminDevicesTab from "@/components/superadmin/SuperadminDevicesTab";
+import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 
@@ -112,7 +112,7 @@ export default function SuperadminPage() {
             {activeTab === "dashboard" && <SuperadminDashboardTab />}
             {activeTab === "users" && <SuperadminUsersTab />}
             {activeTab === "packages" && <SuperadminPackagesTab />}
-            {activeTab === "devices" && <SuperadminDevicesTab />}
+            {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
 
