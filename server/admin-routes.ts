@@ -326,6 +326,36 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
+  // Fehlerbeschreibung löschen - öffentlicher Endpunkt für alle authentifizierten Benutzer
+  app.delete("/api/device-issues/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+      
+      const id = parseInt(req.params.id);
+      
+      // Prüfen, ob die Fehlerbeschreibung existiert und dem Benutzer gehört
+      const [existingIssue] = await db.select().from(deviceIssues)
+        .where(and(
+          eq(deviceIssues.id, id),
+          eq(deviceIssues.userId, req.user.id)
+        ));
+      
+      if (!existingIssue) {
+        return res.status(404).json({ message: "Fehlerbeschreibung nicht gefunden oder keine Berechtigung" });
+      }
+      
+      // Fehlerbeschreibung löschen
+      await db.delete(deviceIssues).where(eq(deviceIssues.id, id));
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting device issue:", error);
+      res.status(500).json({ message: "Fehler beim Löschen der Fehlerbeschreibung" });
+    }
+  });
+  
   // Öffentlicher Endpunkt für alle Benutzer, um Fehlerbeschreibungen für einen bestimmten Gerätetyp abzurufen
   app.get("/api/device-issues/:deviceType", async (req: Request, res: Response) => {
     try {
