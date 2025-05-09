@@ -48,6 +48,31 @@ export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 // Repair statuses enum
 export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
 
+// Device issues table (Fehlerkatalog)
+export const deviceIssues = pgTable("device_issues", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull().default("Fehlerbeschreibung"),
+  description: text("description").notNull(),
+  deviceType: text("device_type"),
+  solution: text("solution"),
+  severity: text("severity").default("medium"),
+  isCommon: boolean("is_common").default(false),
+  isGlobal: boolean("is_global").default(true),
+  userId: integer("user_id"),
+  shopId: integer("shop_id").default(1682), // Default ist die superadmin shopId
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDeviceIssueSchema = createInsertSchema(deviceIssues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DeviceIssue = typeof deviceIssues.$inferSelect;
+export type InsertDeviceIssue = z.infer<typeof insertDeviceIssueSchema>;
+
 // Repair orders table
 export const repairs = pgTable("repairs", {
   id: serial("id").primaryKey(),

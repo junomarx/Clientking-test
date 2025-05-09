@@ -29,6 +29,21 @@ interface Brand {
   deviceTypeName?: string;
 }
 
+interface DeviceIssue {
+  id: number;
+  title: string;
+  description: string;
+  deviceType: string;
+  solution?: string;
+  severity: string;
+  isCommon: boolean;
+  isGlobal: boolean;
+  userId: number;
+  shopId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Model {
   id: number;
   name: string;
@@ -84,6 +99,21 @@ export default function SuperadminDevicesTab() {
   const [isCreateModelOpen, setIsCreateModelOpen] = useState(false);
   const [modelForm, setModelForm] = useState({ name: "", brandId: 0 });
   
+  // State für Fehlerkatalog-Verwaltung
+  const [issueSearchTerm, setIssueSearchTerm] = useState("");
+  const [selectedIssueDeviceType, setSelectedIssueDeviceType] = useState<string | null>(null);
+  const [selectedIssueIds, setSelectedIssueIds] = useState<number[]>([]);
+  const [selectAllIssues, setSelectAllIssues] = useState(false);
+  const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
+  const [issueForm, setIssueForm] = useState({ 
+    title: "", 
+    description: "", 
+    deviceType: "",
+    solution: "",
+    severity: "medium",
+    isCommon: false 
+  });
+  
   // API-Abfrage: Alle Gerätetypen abrufen
   const { data: deviceTypesList, isLoading: isLoadingDeviceTypesList, refetch: refetchDeviceTypesList } = useQuery<string[]>({
     queryKey: ["/api/superadmin/device-types"],
@@ -109,6 +139,13 @@ export default function SuperadminDevicesTab() {
   // API-Abfrage: Alle Modelle abrufen
   const { data: modelsData, isLoading: isLoadingModels, refetch: refetchModels } = useQuery<Model[]>({
     queryKey: ["/api/superadmin/models"],
+    enabled: true,
+    staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
+  });
+  
+  // API-Abfrage: Alle Fehler im Fehlerkatalog abrufen
+  const { data: issuesData, isLoading: isLoadingIssues, refetch: refetchIssues } = useQuery<DeviceIssue[]>({
+    queryKey: ["/api/superadmin/device-issues"],
     enabled: true,
     staleTime: 0, // Immer als veraltet betrachten, um aktuelle Daten zu garantieren
   });
@@ -835,16 +872,18 @@ export default function SuperadminDevicesTab() {
           <option value="types">Gerätetypen</option>
           <option value="brands">Marken</option>
           <option value="models">Modelle</option>
+          <option value="issues">Fehlerkatalog</option>
           <option value="csv">CSV Import/Export</option>
           <option value="statistics">Statistik</option>
         </select>
       </div>
       
       <Tabs defaultValue="types" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="hidden md:grid grid-cols-5">
+        <TabsList className="hidden md:grid grid-cols-6">
           <TabsTrigger value="types">Gerätetypen</TabsTrigger>
           <TabsTrigger value="brands">Marken</TabsTrigger>
           <TabsTrigger value="models">Modelle</TabsTrigger>
+          <TabsTrigger value="issues">Fehlerkatalog</TabsTrigger>
           <TabsTrigger value="csv">CSV Import/Export</TabsTrigger>
           <TabsTrigger value="statistics">Statistik</TabsTrigger>
         </TabsList>
