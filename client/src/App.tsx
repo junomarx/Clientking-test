@@ -17,6 +17,7 @@ import ResetPasswordPage from "@/pages/reset-password-page";
 import LandingPage from "@/pages/landing/LandingPage";
 import DeviceSelectorDemo from "@/pages/device-selector-demo";
 import DeviceFinderDemo from "@/pages/device-finder-demo";
+import OptimizedTableDemo from "@/pages/optimized-table-demo";
 import ApiTest from "@/pages/api-test";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
@@ -49,6 +50,7 @@ function Router() {
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
       <Route path="/device-selector-demo" component={DeviceSelectorDemo} />
       <Route path="/device-finder-demo" component={DeviceFinderDemo} />
+      <Route path="/optimized-table-demo" component={OptimizedTableDemo} />
       <Route path="/api-test" component={ApiTest} />
       <Route path="*" component={NotFound} />
     </Switch>
