@@ -1264,11 +1264,13 @@ export default function SuperadminDevicesTab() {
   // Handler-Funktionen für den neuen Fehlerkatalog
   const handleCreateErrorCatalogEntry = () => {
     setErrorCatalogEntryForm({
+      id: 0,
       errorText: "",
       forSmartphone: true,
       forTablet: true,
       forLaptop: true,
-      forSmartwatch: true
+      forSmartwatch: true,
+      forGameconsole: true
     });
     setIsCreateErrorCatalogEntryOpen(true);
   };
@@ -1362,7 +1364,8 @@ export default function SuperadminDevicesTab() {
     if (!errorCatalogEntryForm.forSmartphone && 
         !errorCatalogEntryForm.forTablet && 
         !errorCatalogEntryForm.forLaptop && 
-        !errorCatalogEntryForm.forSmartwatch) {
+        !errorCatalogEntryForm.forSmartwatch &&
+        !errorCatalogEntryForm.forGameconsole) {
       toast({
         title: "Fehler",
         description: "Bitte wählen Sie mindestens einen Gerätetyp aus.",
@@ -2582,6 +2585,125 @@ export default function SuperadminDevicesTab() {
             </Button>
             <Button type="button" onClick={handleSubmitCreateErrorCatalogEntry}>
               Hinzufügen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog für Bearbeitung eines Fehlereintrags */}
+      <Dialog open={isEditErrorCatalogEntryOpen} onOpenChange={setIsEditErrorCatalogEntryOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fehlereintrag bearbeiten</DialogTitle>
+            <DialogDescription>
+              Bearbeiten Sie den ausgewählten Fehlereintrag.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-error-text" className="text-right">
+                Fehlertext
+              </Label>
+              <Textarea
+                id="edit-error-text"
+                placeholder="z.B. Display gebrochen"
+                className="col-span-3"
+                value={errorCatalogEntryForm.errorText}
+                onChange={(e) => setErrorCatalogEntryForm({...errorCatalogEntryForm, errorText: e.target.value})}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Gilt für</Label>
+              <div className="col-span-3 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-smartphone"
+                    checked={errorCatalogEntryForm.forSmartphone}
+                    onCheckedChange={(checked) => 
+                      setErrorCatalogEntryForm({
+                        ...errorCatalogEntryForm, 
+                        forSmartphone: checked === true
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-smartphone" className="flex items-center space-x-2">
+                    {getDeviceTypeIcon("Smartphone")}
+                    <span>Smartphone</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-tablet"
+                    checked={errorCatalogEntryForm.forTablet}
+                    onCheckedChange={(checked) => 
+                      setErrorCatalogEntryForm({
+                        ...errorCatalogEntryForm, 
+                        forTablet: checked === true
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-tablet" className="flex items-center space-x-2">
+                    {getDeviceTypeIcon("Tablet")}
+                    <span>Tablet</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-laptop"
+                    checked={errorCatalogEntryForm.forLaptop}
+                    onCheckedChange={(checked) => 
+                      setErrorCatalogEntryForm({
+                        ...errorCatalogEntryForm, 
+                        forLaptop: checked === true
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-laptop" className="flex items-center space-x-2">
+                    {getDeviceTypeIcon("Laptop")}
+                    <span>Laptop</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-smartwatch"
+                    checked={errorCatalogEntryForm.forSmartwatch}
+                    onCheckedChange={(checked) => 
+                      setErrorCatalogEntryForm({
+                        ...errorCatalogEntryForm, 
+                        forSmartwatch: checked === true
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-smartwatch" className="flex items-center space-x-2">
+                    {getDeviceTypeIcon("Watch")}
+                    <span>Smartwatch</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-gameconsole"
+                    checked={errorCatalogEntryForm.forGameconsole}
+                    onCheckedChange={(checked) => 
+                      setErrorCatalogEntryForm({
+                        ...errorCatalogEntryForm, 
+                        forGameconsole: checked === true
+                      })
+                    }
+                  />
+                  <Label htmlFor="edit-gameconsole" className="flex items-center space-x-2">
+                    {getDeviceTypeIcon("GameConsole")}
+                    <span>Spielekonsole</span>
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsEditErrorCatalogEntryOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button type="button" onClick={handleSubmitUpdateErrorCatalogEntry}>
+              Aktualisieren
             </Button>
           </DialogFooter>
         </DialogContent>
