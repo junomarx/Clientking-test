@@ -1,5 +1,7 @@
 import express from 'express';
 import { storage } from './storage';
+import { db } from './db';
+import { errorCatalogEntries } from '@shared/schema';
 
 // Registrierung der globalen Gerätedata-Routen, die öffentlich zugänglich sind
 export function registerGlobalDeviceRoutes(app: express.Express) {
@@ -94,6 +96,66 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
     } catch (error) {
       console.error('Fehler beim Abrufen der globalen Modelle nach Marke:', error);
       res.status(500).json({ message: 'Fehler beim Abrufen der globalen Modelle nach Marke' });
+    }
+  });
+
+  // Endpoint: Alle Einträge im Fehlerkatalog abrufen
+  app.get('/api/global/error-catalog', async (req, res) => {
+    try {
+      console.log('Abrufen des globalen Fehlerkatalogs');
+      
+      // Alle Fehlereinträge vom Superadmin (shopId = 1682) abrufen
+      const entries = await db
+        .select()
+        .from(errorCatalogEntries)
+        .orderBy(errorCatalogEntries.errorText);
+      
+      console.log(`${entries.length} Einträge im globalen Fehlerkatalog gefunden`);
+      res.json(entries);
+    } catch (error) {
+      console.error('Fehler beim Abrufen des globalen Fehlerkatalogs:', error);
+      res.status(500).json({ message: 'Fehler beim Abrufen des globalen Fehlerkatalogs' });
+    }
+  });
+  
+  // Endpoint: Fehlereinträge für einen bestimmten Gerätetyp abrufen
+  app.get('/api/global/error-catalog/:deviceType', async (req, res) => {
+    try {
+      const deviceType = req.params.deviceType;
+      
+      if (!deviceType) {
+        return res.status(400).json({ message: 'Ungültiger Gerätetyp' });
+      }
+      
+      // Bestimmung der Spalte basierend auf dem Gerätetyp
+      const deviceTypeColumnMap: { [key: string]: string } = {
+        'smartphone': 'forSmartphone',
+        'tablet': 'forTablet',
+        'laptop': 'forLaptop',
+        'watch': 'forSmartwatch',
+        'smartwatch': 'forSmartwatch',
+        'spielekonsole': 'forGameconsole',
+        'gameconsole': 'forGameconsole'
+      };
+      
+      const columnName = deviceTypeColumnMap[deviceType.toLowerCase()];
+      
+      if (!columnName) {
+        return res.status(400).json({ message: 'Unbekannter Gerätetyp' });
+      }
+      
+      // Dynamisches Filtern basierend auf dem Gerätetyp
+      const entries = await db
+        .select()
+        .from(errorCatalogEntries)
+        .where(errorCatalogEntries[columnName as keyof typeof errorCatalogEntries], true)
+        .orderBy(errorCatalogEntries.errorText);
+      
+      console.log(`${entries.length} Fehlereinträge für Gerätetyp ${deviceType} gefunden`);
+      res.json(entries);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der Fehlereinträge für Gerätetyp:`, error);
+      res.status(500).json({ message: 'Fehler beim Abrufen der Fehlereinträge für Gerätetyp' });
     }
   });
 }
