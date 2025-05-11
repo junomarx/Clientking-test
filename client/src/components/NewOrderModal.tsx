@@ -250,9 +250,12 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // useEffect für die Geräteauswahl entfernt, da GlobalDeviceSelector diese Funktion jetzt übernimmt
   
   // Fehlerbeschreibungen aus dem globalen Fehlerkatalog laden
-  const { data: deviceIssues, isLoading: isLoadingIssues } = useQuery({
+  const { data: deviceIssues, isLoading: isLoadingIssues, refetch: refetchErrorCatalog } = useQuery({
     queryKey: ['/api/global/error-catalog', watchDeviceType],
     enabled: !!watchDeviceType,
+    staleTime: 0, // Sorgt dafür, dass die Daten immer neu geladen werden
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
     queryFn: async () => {
       if (!watchDeviceType) return [];
       
@@ -290,8 +293,12 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     if (watchDeviceType) {
       // Zurücksetzen der Hersteller
       form.setValue('brand', '');
+      
+      // Neu laden des Fehlerkatalogs bei Änderung des Gerätetyps
+      console.log("Gerätetyp geändert, lade Fehlerkatalog neu");
+      refetchErrorCatalog();
     }
-  }, [watchDeviceType, form]);
+  }, [watchDeviceType, form, refetchErrorCatalog]);
   
   // Aktualisiere die verfügbaren Fehlerbeschreibungen, wenn die API-Abfrage abgeschlossen ist
   useEffect(() => {
