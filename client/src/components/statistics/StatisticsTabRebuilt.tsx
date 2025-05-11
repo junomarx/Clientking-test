@@ -546,7 +546,7 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {detailedStats && Object.entries(detailedStats.byDeviceType)
+                    {detailedStats && detailedStats.byDeviceType && Object.entries(detailedStats.byDeviceType)
                       .sort((a, b) => b[1] - a[1])
                       .map(([type, count], index) => (
                         <div key={index} className="flex items-center justify-between">
@@ -577,7 +577,7 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {detailedStats && Object.entries(detailedStats.byBrand)
+                  {detailedStats && detailedStats.byBrand && Object.entries(detailedStats.byBrand)
                     .sort((a, b) => b[1] - a[1])
                     .map(([brand, count], index) => (
                       <div key={index} className="flex items-center justify-between">
@@ -608,7 +608,7 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {detailedStats && Object.entries(detailedStats.byIssue)
+                  {detailedStats && detailedStats.byIssue && Object.entries(detailedStats.byIssue)
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 10)
                     .map(([issue, count], index) => (
@@ -655,10 +655,10 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold pb-4">
-                    {detailedStats.revenue.total.toFixed(2)} €
+                    {detailedStats && detailedStats.revenue && detailedStats.revenue.total ? detailedStats.revenue.total.toFixed(2) : "0.00"} €
                   </div>
                   <div className="space-y-4">
-                    {Object.entries(detailedStats.revenue.byStatus)
+                    {detailedStats && detailedStats.revenue && detailedStats.revenue.byStatus && Object.entries(detailedStats.revenue.byStatus)
                       .sort((a, b) => b[1] - a[1])
                       .map(([status, amount], index) => (
                         <div key={index}>
