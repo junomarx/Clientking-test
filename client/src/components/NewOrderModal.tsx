@@ -147,6 +147,16 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // API Device Types (nicht mehr benötigt, GlobalDeviceSelector übernimmt die Auswahl)
   const apiDeviceTypes = null;
   
+  // Fehlerkatalog-Einträge aus dem globalen Fehlerkatalog des Superadmins
+  const { data: errorCatalogData = [], isLoading: isLoadingErrorCatalog } = useQuery({
+    queryKey: ['/api/global/error-catalog'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/global/error-catalog');
+      return response.json();
+    },
+    enabled: true,
+  });
+  
   // Formular erstellen
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),

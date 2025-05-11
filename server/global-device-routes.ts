@@ -2,6 +2,7 @@ import express from 'express';
 import { storage } from './storage';
 import { db } from './db';
 import { errorCatalogEntries } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 // Registrierung der globalen Gerätedata-Routen, die öffentlich zugänglich sind
 export function registerGlobalDeviceRoutes(app: express.Express) {
@@ -145,10 +146,11 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
       }
       
       // Dynamisches Filtern basierend auf dem Gerätetyp
+      const columnKey = columnName as keyof typeof errorCatalogEntries;
       const entries = await db
         .select()
         .from(errorCatalogEntries)
-        .where(errorCatalogEntries[columnName as keyof typeof errorCatalogEntries], true)
+        .where(eq(errorCatalogEntries[columnKey], true))
         .orderBy(errorCatalogEntries.errorText);
       
       console.log(`${entries.length} Fehlereinträge für Gerätetyp ${deviceType} gefunden`);
