@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -129,6 +129,13 @@ export default function ResponsiveSuperadminDevicesTab() {
       return data;
     }
   });
+  
+  // Debugging-Ausgabe der Daten nach dem Laden
+  useEffect(() => {
+    console.log("DeviceTypes List wurde aktualisiert:", deviceTypesList);
+    console.log("UserDeviceTypes wurde aktualisiert:", userDeviceTypes);
+    console.log("Brands List wurde aktualisiert:", brandsData);
+  }, [deviceTypesList, userDeviceTypes, brandsData]);
 
   const { data: userDeviceTypes = [], isLoading: isLoadingUserDeviceTypes } = useQuery({
     queryKey: ["/api/superadmin/user-device-types"],
@@ -1060,8 +1067,9 @@ export default function ResponsiveSuperadminDevicesTab() {
             </div>
           </div>
           
+          {/* Debug: Anzahl der gefilterten Gerätetypen = {filteredDeviceTypes.length} */}
           <OptimizedDevicesTable
-            data={filteredDeviceTypes}
+            data={Array.isArray(userDeviceTypes) ? userDeviceTypes : []}
             type="deviceType"
             selectedIds={selectedDeviceTypeIds}
             onSelect={handleDeviceTypeSelect}
@@ -1172,8 +1180,9 @@ export default function ResponsiveSuperadminDevicesTab() {
             </div>
           </div>
           
+          {/* Debug: Anzahl der gefilterten Marken = {filteredBrands.length} */}
           <OptimizedDevicesTable
-            data={filteredBrands}
+            data={Array.isArray(brandsData) ? brandsData : []}
             type="brand"
             selectedIds={selectedBrandIds}
             onSelect={handleBrandSelect}
