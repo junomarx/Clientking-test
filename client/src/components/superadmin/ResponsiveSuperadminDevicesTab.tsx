@@ -125,6 +125,7 @@ export default function ResponsiveSuperadminDevicesTab() {
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/superadmin/device-types');
       const data = await response.json();
+      console.log("Geladene Gerätetypen:", data);
       return data;
     }
   });
@@ -133,7 +134,9 @@ export default function ResponsiveSuperadminDevicesTab() {
     queryKey: ["/api/superadmin/user-device-types"],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/superadmin/user-device-types');
-      return response.json();
+      const data = await response.json();
+      console.log("Geladene Benutzer-Gerätetypen:", data);
+      return data;
     }
   });
 
@@ -141,7 +144,9 @@ export default function ResponsiveSuperadminDevicesTab() {
     queryKey: ["/api/superadmin/brands"],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/superadmin/brands');
-      return response.json();
+      const data = await response.json();
+      console.log("Geladene Marken:", data);
+      return data;
     }
   });
 
