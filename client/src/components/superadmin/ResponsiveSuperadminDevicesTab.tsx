@@ -129,13 +129,6 @@ export default function ResponsiveSuperadminDevicesTab() {
       return data;
     }
   });
-  
-  // Debugging-Ausgabe der Daten nach dem Laden
-  useEffect(() => {
-    console.log("DeviceTypes List wurde aktualisiert:", deviceTypesList);
-    console.log("UserDeviceTypes wurde aktualisiert:", userDeviceTypes);
-    console.log("Brands List wurde aktualisiert:", brandsData);
-  }, [deviceTypesList, userDeviceTypes, brandsData]);
 
   const { data: userDeviceTypes = [], isLoading: isLoadingUserDeviceTypes } = useQuery({
     queryKey: ["/api/superadmin/user-device-types"],
@@ -161,7 +154,9 @@ export default function ResponsiveSuperadminDevicesTab() {
     queryKey: ["/api/superadmin/models"],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/superadmin/models');
-      return response.json();
+      const data = await response.json();
+      console.log("Geladene Modelle:", data);
+      return data;
     }
   });
 
