@@ -77,18 +77,24 @@ export default function OptimizedDevicesTable({
   const [selectAll, setSelectAll] = useState(false);
   
   // Hilfsfunktion zum Anzeigen von Icons für Gerätetypen
-  const getDeviceTypeIcon = (typeName: string) => {
+  const getDeviceTypeIcon = (typeName?: string) => {
     const iconProps = { className: "h-5 w-5 text-primary" };
     
-    if (typeName.toLowerCase() === "smartphone") {
+    if (!typeName) {
       return <Smartphone {...iconProps} />;
-    } else if (typeName.toLowerCase() === "tablet") {
+    }
+    
+    const type = typeName.toLowerCase();
+    
+    if (type === "smartphone") {
+      return <Smartphone {...iconProps} />;
+    } else if (type === "tablet") {
       return <Tablet {...iconProps} />;
-    } else if (typeName.toLowerCase() === "laptop") {
+    } else if (type === "laptop") {
       return <Laptop {...iconProps} />;
-    } else if (typeName.toLowerCase() === "watch" || typeName.toLowerCase() === "smartwatch") {
+    } else if (type === "watch" || type === "smartwatch") {
       return <Watch {...iconProps} />;
-    } else if (typeName.toLowerCase() === "spielekonsole" || typeName.toLowerCase() === "konsole" || typeName.toLowerCase() === "game console" || typeName.toLowerCase() === "gameconsole") {
+    } else if (type === "spielekonsole" || type === "konsole" || type === "game console" || type === "gameconsole") {
       return <GamepadIcon {...iconProps} />;
     } else {
       return <Smartphone {...iconProps} />;
@@ -117,7 +123,7 @@ export default function OptimizedDevicesTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Gerätetypen</SelectItem>
-              {deviceTypes.map((type) => (
+              {deviceTypes.filter(type => type && type.id !== undefined && type.name).map((type) => (
                 <SelectItem key={type.id} value={type.name}>
                   <div className="flex items-center">
                     {getDeviceTypeIcon(type.name)}
