@@ -146,12 +146,24 @@ export function registerGlobalDeviceRoutes(app: express.Express) {
       }
       
       // Dynamisches Filtern basierend auf dem Gerätetyp
-      const columnKey = columnName as keyof typeof errorCatalogEntries;
-      const entries = await db
-        .select()
-        .from(errorCatalogEntries)
-        .where(eq(errorCatalogEntries[columnKey], true))
-        .orderBy(errorCatalogEntries.errorText);
+      const entries = await db.query.errorCatalogEntries.findMany({
+        where: (entries, { eq }) => {
+          if (columnName === 'forSmartphone') {
+            return eq(entries.forSmartphone, true);
+          } else if (columnName === 'forTablet') {
+            return eq(entries.forTablet, true);
+          } else if (columnName === 'forLaptop') {
+            return eq(entries.forLaptop, true);
+          } else if (columnName === 'forSmartwatch') {
+            return eq(entries.forSmartwatch, true);
+          } else if (columnName === 'forGameconsole') {
+            return eq(entries.forGameconsole, true);
+          }
+          // Fallback auf Smartphone
+          return eq(entries.forSmartphone, true);
+        },
+        orderBy: (entries, { asc }) => [asc(entries.errorText)]
+      });
       
       console.log(`${entries.length} Fehlereinträge für Gerätetyp ${deviceType} gefunden`);
       res.json(entries);

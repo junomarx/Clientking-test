@@ -249,20 +249,43 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Setze device type id basierend auf watchDeviceType - nicht mehr benötigt, da GlobalDeviceSelector es bereits handhabt
   // useEffect für die Geräteauswahl entfernt, da GlobalDeviceSelector diese Funktion jetzt übernimmt
   
-  // Fehlerbeschreibungen direkt von der API laden
-  
-  // Fehlerbeschreibungen von der Datenbank laden
+  // Fehlerbeschreibungen aus dem globalen Fehlerkatalog laden
   const { data: deviceIssues, isLoading: isLoadingIssues } = useQuery({
-    queryKey: ['/api/device-issues', watchDeviceType],
+    queryKey: ['/api/global/error-catalog', watchDeviceType],
     enabled: !!watchDeviceType,
     queryFn: async () => {
       if (!watchDeviceType) return [];
-      const response = await apiRequest('GET', `/api/device-issues/${watchDeviceType}`);
-      return await response.json();
+      
+      // Entsprechenden Gerätetyp für API-Anfrage bestimmen
+      let deviceTypeParam = watchDeviceType.toLowerCase();
+      
+      // Normalisiere auf bekannte API-Werte
+      if (deviceTypeParam === 'smartphone' || deviceTypeParam === 'tablet' || 
+          deviceTypeParam === 'laptop' || deviceTypeParam === 'spielekonsole') {
+        // Diese Werte werden direkt unterstützt
+      } else if (deviceTypeParam === 'watch' || deviceTypeParam === 'smartwatch') {
+        deviceTypeParam = 'smartwatch';
+      } else if (deviceTypeParam === 'game console' || deviceTypeParam === 'konsole') {
+        deviceTypeParam = 'spielekonsole';
+      } else {
+        console.log(`Unbekannter Gerätetyp für Fehlerkatalog: ${deviceTypeParam}, verwende "smartphone"`);
+        deviceTypeParam = 'smartphone'; // Fallback zu Smartphone
+      }
+      
+      console.log(`Lade Fehlereinträge für Gerätetyp: ${deviceTypeParam}`);
+      try {
+        const response = await apiRequest('GET', `/api/global/error-catalog/${deviceTypeParam}`);
+        const data = await response.json();
+        console.log(`${data.length} Fehlereinträge für ${deviceTypeParam} geladen`);
+        return data;
+      } catch (error) {
+        console.error(`Fehler beim Laden der Fehlereinträge für ${deviceTypeParam}:`, error);
+        return [];
+      }
     },
   });
 
-  // Update Herstellern und Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
+  // Update Fehlerbeschreibungen basierend auf ausgewähltem Gerätetyp
   useEffect(() => {
     if (watchDeviceType) {
       // Zurücksetzen der Hersteller
@@ -272,10 +295,28 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // Aktualisiere die verfügbaren Fehlerbeschreibungen, wenn die API-Abfrage abgeschlossen ist
   useEffect(() => {
-    if (deviceIssues) {
-      setAvailableIssues(deviceIssues);
+    if (deviceIssues && deviceIssues.length > 0) {
+      // Extrahiere nur die Fehlertexte aus dem Fehlerkatalog
+      const errorTexts = deviceIssues.map((issue: any) => issue.errorText);
+      console.log(`${errorTexts.length} Fehlereinträge für Dropdown geladen`);
+      setAvailableIssues(errorTexts);
     } else {
-      setAvailableIssues([]);
+      // Fallback für den Fall, dass keine passenden Fehlereinträge gefunden wurden
+      console.log("Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste");
+      setAvailableIssues([
+        'Display defekt',
+        'Akku schwach',
+        'Mikrofon defekt',
+        'Lautsprecher defekt',
+        'Ladebuchse defekt',
+        'Kamera defekt',
+        'Wasserschaden',
+        'Software-Probleme',
+        'Tastatur defekt',
+        'Touchscreen reagiert nicht',
+        'WLAN-Probleme',
+        'Bluetooth-Probleme'
+      ]);
     }
   }, [deviceIssues]);
   
