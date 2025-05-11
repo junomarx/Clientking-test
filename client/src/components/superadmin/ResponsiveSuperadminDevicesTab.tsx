@@ -17,6 +17,7 @@ import OptimizedDevicesTable from "./OptimizedDevicesTable";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
+import ErrorCatalogCSVImportExport from "./ErrorCatalogCSVImportExport";
 
 // Interfaces für Geräte
 interface DeviceType {

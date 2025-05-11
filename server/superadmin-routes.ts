@@ -2827,4 +2827,161 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Löschen mehrerer Fehlereinträge" });
     }
   });
+  
+  // CSV-Export für Fehlerkatalog
+  app.get("/api/superadmin/error-catalog/export-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Fehlerkatalog aus der Datenbank abrufen
+      const entries = await db.select().from(errorCatalogEntries).orderBy(errorCatalogEntries.errorText);
+      
+      // CSV-Header
+      const csvHeader = 'errorText,forSmartphone,forTablet,forLaptop,forSmartwatch,forGameconsole\n';
+      
+      // CSV-Daten generieren
+      const csvRows = entries.map(entry => {
+        return `"${entry.errorText.replace(/"/g, '""')}",${entry.forSmartphone},${entry.forTablet},${entry.forLaptop},${entry.forSmartwatch},${entry.forGameconsole}`;
+      });
+      
+      const csvContent = csvHeader + csvRows.join('\n');
+      
+      // CSV-Datei zurückgeben
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=error-catalog.csv');
+      res.send(csvContent);
+    } catch (error) {
+      console.error('Fehler beim CSV-Export des Fehlerkatalogs:', error);
+      res.status(500).json({ message: 'Fehler beim Export des Fehlerkatalogs' });
+    }
+  });
+
+  // CSV-Import für Fehlerkatalog
+  app.post("/api/superadmin/error-catalog/import-csv", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      let csvData: string;
+      
+      if (req.files && req.files.file) {
+        // Datei wurde hochgeladen
+        const file = req.files.file as UploadedFile;
+        csvData = file.data.toString('utf8');
+      } else if (req.body.csvData) {
+        // CSV-Daten wurden im Body gesendet
+        csvData = req.body.csvData;
+      } else {
+        return res.status(400).json({ message: 'Keine CSV-Daten gefunden' });
+      }
+      
+      // CSV parsen
+      const { parse } = await import('csv-parse/sync');
+      let records;
+      
+      try {
+        records = parse(csvData, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true
+        });
+      } catch (parseError) {
+        console.error("Fehler beim Parsen der CSV-Datei:", parseError);
+        return res.status(400).json({ 
+          success: false,
+          message: "Die CSV-Datei konnte nicht korrekt verarbeitet werden. Bitte überprüfen Sie das Format."
+        });
+      }
+      
+      // Superadmin-User-ID abrufen
+      const superadminUserId = (req.user as Express.User).id;
+      const globalShopId = 1682; // Shop-ID für globale Einträge
+      
+      // Statistik für den Import
+      const stats = {
+        total: records.length,
+        added: 0,
+        updated: 0,
+        errors: 0
+      };
+      
+      for (const record of records) {
+        try {
+          // Normalisiere Spaltennamen (alle kleinschreiben)
+          const normalizedRecord: Record<string, any> = {};
+          Object.keys(record).forEach(key => {
+            normalizedRecord[key.toLowerCase()] = record[key];
+          });
+          
+          // Extrahiere die Daten aus dem normalisierten Record
+          const errorText = normalizedRecord.errortext || 
+                          normalizedRecord.fehlertext || 
+                          normalizedRecord.error || 
+                          normalizedRecord.fehler;
+          
+          if (!errorText) {
+            console.warn("Überspringe Zeile ohne Fehlertext");
+            continue;
+          }
+          
+          // Konvertiere String-Werte zu Boolean
+          const parseBoolean = (value: any): boolean => {
+            if (typeof value === 'boolean') return value;
+            if (typeof value === 'string') {
+              const lowercased = value.toLowerCase();
+              return lowercased === 'true' || lowercased === 'ja' || lowercased === '1' || lowercased === 'yes';
+            }
+            return !!value;
+          };
+          
+          const errorEntry = {
+            errorText,
+            forSmartphone: parseBoolean(normalizedRecord.forsmartphone),
+            forTablet: parseBoolean(normalizedRecord.fortable),
+            forLaptop: parseBoolean(normalizedRecord.forlaptop),
+            forSmartwatch: parseBoolean(normalizedRecord.forsmartwatch),
+            forGameconsole: parseBoolean(normalizedRecord.forgameconsole),
+            shopId: globalShopId,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          
+          // Prüfen, ob der Eintrag bereits existiert
+          const existingEntry = await db.select()
+            .from(errorCatalogEntries)
+            .where(eq(errorCatalogEntries.errorText, errorEntry.errorText));
+          
+          if (existingEntry.length > 0) {
+            // Eintrag aktualisieren
+            await db.update(errorCatalogEntries)
+              .set({
+                forSmartphone: errorEntry.forSmartphone,
+                forTablet: errorEntry.forTablet,
+                forLaptop: errorEntry.forLaptop,
+                forSmartwatch: errorEntry.forSmartwatch,
+                forGameconsole: errorEntry.forGameconsole,
+                updatedAt: new Date()
+              })
+              .where(eq(errorCatalogEntries.id, existingEntry[0].id));
+            
+            stats.updated++;
+          } else {
+            // Neuen Eintrag erstellen
+            await db.insert(errorCatalogEntries).values(errorEntry);
+            stats.added++;
+          }
+        } catch (error) {
+          console.error(`Fehler beim Import:`, error);
+          stats.errors++;
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: 'CSV-Import abgeschlossen',
+        stats
+      });
+    } catch (error) {
+      console.error('Fehler beim CSV-Import des Fehlerkatalogs:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Fehler beim Import des Fehlerkatalogs'
+      });
+    }
+  });
 }
