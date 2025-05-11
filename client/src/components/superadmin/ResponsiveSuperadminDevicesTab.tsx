@@ -1211,8 +1211,8 @@ export default function ResponsiveSuperadminDevicesTab() {
                       <SelectValue placeholder="Bitte wählen Sie einen Gerätetyp" />
                     </SelectTrigger>
                     <SelectContent>
-                      {deviceTypesList.map((type: DeviceType) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                      {deviceTypesList.filter(type => type && type.id !== undefined).map((type: DeviceType) => (
+                        <SelectItem key={type.id} value={String(type.id)}>
                           {type.name}
                         </SelectItem>
                       ))}
@@ -1258,7 +1258,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                       <SelectValue placeholder="Bitte wählen Sie einen Gerätetyp" />
                     </SelectTrigger>
                     <SelectContent>
-                      {deviceTypesList.map((type: DeviceType) => (
+                      {deviceTypesList.filter(type => type && type.id !== undefined).map((type: DeviceType) => (
                         <SelectItem key={type.id} value={type.id.toString()}>
                           {type.name}
                         </SelectItem>
