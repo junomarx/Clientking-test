@@ -1259,7 +1259,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                     </SelectTrigger>
                     <SelectContent>
                       {deviceTypesList.filter(type => type && type.id !== undefined).map((type: DeviceType) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem key={type.id} value={String(type.id)}>
                           {type.name}
                         </SelectItem>
                       ))}
