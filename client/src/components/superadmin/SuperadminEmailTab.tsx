@@ -287,7 +287,8 @@ export default function SuperadminEmailTab() {
         name: selectedTemplate.name,
         subject: selectedTemplate.subject,
         body: selectedTemplate.body,
-        variables: selectedTemplate.variables
+        variables: selectedTemplate.variables,
+        type: selectedTemplate.type || 'customer' // Stelle sicher, dass der Typ übermittelt wird
       }
     });
   };
