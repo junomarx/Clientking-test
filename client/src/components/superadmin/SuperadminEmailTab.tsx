@@ -59,7 +59,8 @@ export default function SuperadminEmailTab() {
     name: '',
     subject: '',
     body: '',
-    variables: [] as string[]
+    variables: [] as string[],
+    type: 'customer' as 'app' | 'customer' // Standardmäßig eine Kunden-Vorlage
   });
   
   // SMTP-Konfiguration abrufen
