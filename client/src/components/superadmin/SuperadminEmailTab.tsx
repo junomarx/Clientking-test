@@ -783,6 +783,40 @@ export default function SuperadminEmailTab() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="templateType">Typ der Vorlage</Label>
+                  <div className="flex flex-col space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="editTypeApp"
+                        name="editTemplateType"
+                        value="app"
+                        checked={selectedTemplate.type === 'app'}
+                        onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'app' })}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="editTypeApp" className="font-normal">System-Vorlage (für App-Benachrichtigungen)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="editTypeCustomer"
+                        name="editTemplateType"
+                        value="customer"
+                        checked={selectedTemplate.type === 'customer' || !selectedTemplate.type}
+                        onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'customer' })}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="editTypeCustomer" className="font-normal">Kunden-Vorlage (für Kundenkommunikation)</Label>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      System-Vorlagen werden für interne App-Benachrichtigungen verwendet, während 
+                      Kunden-Vorlagen für die direkte Kommunikation mit Kunden gedacht sind.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="editTemplateName">Name der Vorlage</Label>
                   <Input
                     id="editTemplateName"
