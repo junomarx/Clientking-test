@@ -488,6 +488,44 @@ export function registerSuperadminEmailRoutes(app: Express) {
   });
   
   /**
+   * Standard-Kundenvorlagen für einen Benutzer erstellen/wiederherstellen
+   * (für reguläre Benutzer und Admins)
+   */
+  app.post("/api/email/restore-customer-templates", async (req: Request, res: Response) => {
+    try {
+      // Überprüfen, ob der Benutzer angemeldet ist
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Sie müssen angemeldet sein, um diese Aktion auszuführen" 
+        });
+      }
+      
+      const userId = req.user!.id;
+      const shopId = req.user!.shopId;
+      
+      const success = await createCustomerEmailTemplates(userId, shopId);
+      
+      if (success) {
+        res.status(201).json({ 
+          success: true, 
+          message: "Standard-Kundenkommunikationsvorlagen wurden erfolgreich erstellt"
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: "Fehler beim Erstellen der Standard-Kundenkommunikationsvorlagen" 
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ 
+        success: false, 
+        message: `Fehler beim Erstellen der Standard-Kundenkommunikationsvorlagen: ${error.message}` 
+      });
+    }
+  });
+  
+  /**
    * SMTP-Konfiguration abrufen
    */
   app.get("/api/superadmin/email/config", isSuperadmin, async (req: Request, res: Response) => {

@@ -152,6 +152,28 @@ export function EmailTemplateTab() {
       });
     }
   });
+  
+  // Mutation zum Wiederherstellen der Standard-Kundenvorlagen
+  const restoreCustomerTemplatesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/email/restore-customer-templates');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      toast({
+        title: 'Standardvorlagen wiederhergestellt',
+        description: 'Die Standard-Kundenkommunikationsvorlagen wurden erfolgreich erstellt.'
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: `Fehler beim Wiederherstellen der Standardvorlagen: ${error.message}`
+      });
+    }
+  });
 
   const handleCreateTemplate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
