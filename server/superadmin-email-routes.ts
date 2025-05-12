@@ -736,14 +736,26 @@ export function registerSuperadminEmailRoutes(app: Express) {
     try {
       const typeFilter = req.query.type as string | undefined;
       
+      // Nur globale Vorlagen (userId = null, shopId = 0) plus Typ-Filter
       let queryBuilder = db
         .select()
-        .from(emailTemplates);
+        .from(emailTemplates)
+        .where(and(
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0)
+        ));
       
       // Filter-Optionen
       if (typeFilter) {
         // Nach Typ filtern (app oder customer)
-        queryBuilder = queryBuilder.where(eq(emailTemplates.type, typeFilter));
+        queryBuilder = db
+          .select()
+          .from(emailTemplates)
+          .where(and(
+            isNull(emailTemplates.userId),
+            eq(emailTemplates.shopId, 0),
+            eq(emailTemplates.type, typeFilter)
+          ));
       }
       
       // Sortieren nach Update-Datum (neueste zuerst)
@@ -766,6 +778,21 @@ export function registerSuperadminEmailRoutes(app: Express) {
       if (!templateData.name || !templateData.subject || !templateData.body) {
         return res.status(400).json({
           message: "Ungültige Vorlagendaten. Name, Betreff und Inhalt sind erforderlich."
+        });
+      }
+      
+      // Prüfe, ob eine Vorlage mit diesem Namen bereits existiert
+      const existingTemplates = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          isNull(emailTemplates.userId),
+          eq(emailTemplates.shopId, 0),
+          eq(emailTemplates.name, templateData.name)
+        ));
+      
+      if (existingTemplates.length > 0) {
+        return res.status(400).json({
+          message: `Eine Vorlage mit dem Namen '${templateData.name}' existiert bereits im System. Bitte wählen Sie einen anderen Namen.`
         });
       }
       
