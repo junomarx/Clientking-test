@@ -63,6 +63,9 @@ export default function SuperadminEmailTab() {
     type: 'customer' as 'app' | 'customer' // Standardmäßig eine Kunden-Vorlage
   });
   
+  // Aktiver Tab für E-Mail-Vorlagentypen (app oder customer)
+  const [templateType, setTemplateType] = useState<'app' | 'customer'>('app');
+  
   // SMTP-Konfiguration abrufen
   const { data: smtpConfig, isLoading: isLoadingConfig } = useQuery<GlobalEmailSettings>({
     queryKey: ['/api/superadmin/email/config']
@@ -75,7 +78,6 @@ export default function SuperadminEmailTab() {
     }
   }, [smtpConfig]);
   
-  // E-Mail-Vorlagen abrufen
   // Standard-App-Vorlagen erstellen
   const createDefaultTemplatesMutation = useMutation({
     mutationFn: async () => {
@@ -100,8 +102,13 @@ export default function SuperadminEmailTab() {
     }
   });
 
+  // E-Mail-Vorlagen abrufen mit Typ-Filter
   const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError, refetch: refetchTemplates } = useQuery<EmailTemplate[]>({
-    queryKey: ['/api/superadmin/email/templates']
+    queryKey: ['/api/superadmin/email/templates', templateType],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/superadmin/email/templates?type=${templateType}`);
+      return await response.json();
+    }
   });
   
   // Fehlerbehandlung für E-Mail-Vorlagen
@@ -498,271 +505,196 @@ export default function SuperadminEmailTab() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingTemplates ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : emailTemplates && emailTemplates.length > 0 ? (
-                <Tabs defaultValue="app" className="mt-4">
-                  <TabsList>
-                    <TabsTrigger value="app">System-Vorlagen</TabsTrigger>
-                    <TabsTrigger value="customer">Kunden-Vorlagen</TabsTrigger>
-                  </TabsList>
-                  
-                  {/* System-Vorlagen Tab */}
-                  <TabsContent value="app">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Betreff</TableHead>
-                          <TableHead>Variablen</TableHead>
-                          <TableHead>Zuletzt aktualisiert</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {emailTemplates
-                          .filter(template => !template.type || template.type === 'app')
-                          .map((template) => (
-                            <TableRow key={template.id}>
-                              <TableCell className="font-medium">{template.name}</TableCell>
-                              <TableCell>{template.subject}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {template.variables && template.variables.map((variable, index) => (
-                                    <Badge key={index} variant="outline">{variable}</Badge>
-                                  ))}
-                                  {(!template.variables || template.variables.length === 0) && 
-                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                                  }
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleEditTemplate(template)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="text-destructive"
-                                    onClick={() => handleDeleteTemplate(template.id)}
-                                    disabled={deleteTemplateMutation.isPending}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        {emailTemplates.filter(template => !template.type || template.type === 'app').length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-4">
-                              Keine System-Vorlagen gefunden
+              {/* Vorlagetypen-Tabs */}
+              <Tabs defaultValue={templateType} className="mt-4" onValueChange={(value) => setTemplateType(value as 'app' | 'customer')}>
+                <TabsList>
+                  <TabsTrigger value="app">System-Vorlagen</TabsTrigger>
+                  <TabsTrigger value="customer">Kunden-Vorlagen</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              {/* Vorlagentabelle */}
+              <div className="mt-4">
+                {isLoadingTemplates ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : emailTemplates && emailTemplates.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Betreff</TableHead>
+                        <TableHead>Variablen</TableHead>
+                        <TableHead>Zuletzt aktualisiert</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {emailTemplates
+                        .filter(template => templateType === 'app' ? 
+                          (!template.type || template.type === 'app') : 
+                          template.type === 'customer'
+                        )
+                        .map((template) => (
+                          <TableRow key={template.id}>
+                            <TableCell className="font-medium">{template.name}</TableCell>
+                            <TableCell>{template.subject}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {template.variables && template.variables.map((variable, index) => (
+                                  <Badge key={index} variant="outline">{variable}</Badge>
+                                ))}
+                                {(!template.variables || template.variables.length === 0) && 
+                                  <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                                }
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditTemplate(template)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteTemplate(template.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TabsContent>
-                  
-                  {/* Kunden-Vorlagen Tab */}
-                  <TabsContent value="customer">
-                    <Table>
-                      <TableHeader>
+                        ))}
+                      {emailTemplates.filter(template => templateType === 'app' ? 
+                        (!template.type || template.type === 'app') : 
+                        template.type === 'customer'
+                      ).length === 0 && (
                         <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Betreff</TableHead>
-                          <TableHead>Variablen</TableHead>
-                          <TableHead>Zuletzt aktualisiert</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
+                          <TableCell colSpan={5} className="text-center py-4">
+                            Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {emailTemplates
-                          .filter(template => template.type === 'customer')
-                          .map((template) => (
-                            <TableRow key={template.id}>
-                              <TableCell className="font-medium">{template.name}</TableCell>
-                              <TableCell>{template.subject}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {template.variables && template.variables.map((variable, index) => (
-                                    <Badge key={index} variant="outline">{variable}</Badge>
-                                  ))}
-                                  {(!template.variables || template.variables.length === 0) && 
-                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                                  }
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => handleEditTemplate(template)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="text-destructive"
-                                    onClick={() => handleDeleteTemplate(template.id)}
-                                    disabled={deleteTemplateMutation.isPending}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        {emailTemplates.filter(template => template.type === 'customer').length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-4">
-                              Keine Kunden-Vorlagen gefunden
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <div className="text-center py-8">
-                  <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium">Keine Vorlagen gefunden</h3>
-                  <p className="text-muted-foreground mt-2 mb-4">
-                    Es wurden noch keine E-Mail-Vorlagen erstellt. 
-                    Erstellen Sie jetzt Ihre erste Vorlage.
-                  </p>
-                  <Button onClick={() => setIsCreateTemplateOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Vorlage erstellen
-                  </Button>
-                </div>
-              )}
+                      )}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-muted-foreground">
+                      Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden.
+                    </p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
-      {/* Dialog: Neue E-Mail-Vorlage erstellen */}
+      {/* Dialog zum Erstellen einer neuen Vorlage */}
       <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
             <DialogTitle>Neue E-Mail-Vorlage erstellen</DialogTitle>
             <DialogDescription>
-              Erstellen Sie eine neue E-Mail-Vorlage, die von allen Benutzern verwendet werden kann.
+              Erstellen Sie eine neue E-Mail-Vorlage für das System. Diese Vorlage wird allen Benutzern zur Verfügung stehen.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="templateType">Typ der Vorlage</Label>
-                <div className="flex flex-col space-y-1.5">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="templateName" className="text-right">
+                Vorlagenname
+              </Label>
+              <Input
+                id="templateName"
+                value={newTemplate.name}
+                onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="templateSubject" className="text-right">
+                Betreff
+              </Label>
+              <Input
+                id="templateSubject"
+                value={newTemplate.subject}
+                onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label htmlFor="templateBody" className="text-right pt-2">
+                Inhalt
+              </Label>
+              <Textarea
+                id="templateBody"
+                value={newTemplate.body}
+                onChange={(e) => setNewTemplate({ ...newTemplate, body: e.target.value })}
+                className="col-span-3 min-h-[250px]"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Typ</Label>
+              <div className="col-span-3">
+                <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
                       id="typeApp"
-                      name="templateType"
-                      value="app"
                       checked={newTemplate.type === 'app'}
                       onChange={() => setNewTemplate({ ...newTemplate, type: 'app' })}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      className="w-4 h-4"
                     />
-                    <Label htmlFor="typeApp" className="font-normal">System-Vorlage (für App-Benachrichtigungen)</Label>
+                    <Label htmlFor="typeApp" className="cursor-pointer">System-Vorlage</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
                       id="typeCustomer"
-                      name="templateType"
-                      value="customer"
                       checked={newTemplate.type === 'customer'}
                       onChange={() => setNewTemplate({ ...newTemplate, type: 'customer' })}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      className="w-4 h-4"
                     />
-                    <Label htmlFor="typeCustomer" className="font-normal">Kunden-Vorlage (für Kundenkommunikation)</Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    System-Vorlagen werden für interne App-Benachrichtigungen verwendet, während 
-                    Kunden-Vorlagen für die direkte Kommunikation mit Kunden gedacht sind.
-                  </p>
-                </div>
-              </div>
-            
-              <div className="space-y-2">
-                <Label htmlFor="templateName">Name der Vorlage</Label>
-                <Input
-                  id="templateName"
-                  placeholder="z.B. Reparatur abgeschlossen"
-                  value={newTemplate.name}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="templateSubject">Betreff</Label>
-                <Input
-                  id="templateSubject"
-                  placeholder="z.B. Ihre Reparatur ist abgeschlossen"
-                  value={newTemplate.subject}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="templateBody">E-Mail-Inhalt (HTML)</Label>
-                <Textarea
-                  id="templateBody"
-                  rows={10}
-                  placeholder="<p>Sehr geehrte(r) {`{{kundenname}}`},</p><p>Ihre Reparatur ist abgeschlossen...</p>"
-                  value={newTemplate.body}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, body: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{kundenname}}`}, {`{{auftragsnummer}}`}, etc.
-                </p>
-              </div>
-              
-              {newTemplate.variables.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Erkannte Variablen</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {newTemplate.variables.map((variable, index) => (
-                      <Badge key={index} variant="secondary">
-                        {variable}
-                      </Badge>
-                    ))}
+                    <Label htmlFor="typeCustomer" className="cursor-pointer">Kunden-Vorlage</Label>
                   </div>
                 </div>
-              )}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-start gap-4">
+              <Label className="text-right pt-2">
+                Erkannte Variablen
+              </Label>
+              <div className="col-span-3 flex flex-wrap gap-2">
+                {newTemplate.variables.length > 0 ? (
+                  newTemplate.variables.map((variable, index) => (
+                    <Badge key={index} variant="outline">{variable}</Badge>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground text-sm">Keine Variablen erkannt</span>
+                )}
+              </div>
             </div>
           </div>
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateTemplateOpen(false)}>Abbrechen</Button>
+            <Button variant="outline" onClick={() => setIsCreateTemplateOpen(false)}>
+              Abbrechen
+            </Button>
             <Button 
               onClick={handleCreateTemplate}
-              disabled={createTemplateMutation.isPending}
+              disabled={createTemplateMutation.isPending || !newTemplate.name || !newTemplate.subject || !newTemplate.body}
             >
               {createTemplateMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Plus className="h-4 w-4 mr-2" />
+                <Check className="h-4 w-4 mr-2" />
               )}
               Vorlage erstellen
             </Button>
@@ -770,105 +702,100 @@ export default function SuperadminEmailTab() {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog: E-Mail-Vorlage bearbeiten */}
+      {/* Dialog zum Bearbeiten einer Vorlage */}
       <Dialog open={isEditTemplateOpen} onOpenChange={setIsEditTemplateOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="sm:max-w-[625px]">
           <DialogHeader>
             <DialogTitle>E-Mail-Vorlage bearbeiten</DialogTitle>
             <DialogDescription>
-              Ändern Sie die Vorlage nach Ihren Wünschen. Variablen werden automatisch erkannt.
+              Bearbeiten Sie die ausgewählte E-Mail-Vorlage.
             </DialogDescription>
           </DialogHeader>
-          
           {selectedTemplate && (
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="templateType">Typ der Vorlage</Label>
-                  <div className="flex flex-col space-y-1.5">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editTemplateName" className="text-right">
+                  Vorlagenname
+                </Label>
+                <Input
+                  id="editTemplateName"
+                  value={selectedTemplate.name}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="editTemplateSubject" className="text-right">
+                  Betreff
+                </Label>
+                <Input
+                  id="editTemplateSubject"
+                  value={selectedTemplate.subject}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label htmlFor="editTemplateBody" className="text-right pt-2">
+                  Inhalt
+                </Label>
+                <Textarea
+                  id="editTemplateBody"
+                  value={selectedTemplate.body}
+                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, body: e.target.value })}
+                  className="col-span-3 min-h-[250px]"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Typ</Label>
+                <div className="col-span-3">
+                  <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
                         id="editTypeApp"
-                        name="editTemplateType"
-                        value="app"
                         checked={selectedTemplate.type === 'app'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'app' })}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        className="w-4 h-4"
                       />
-                      <Label htmlFor="editTypeApp" className="font-normal">System-Vorlage (für App-Benachrichtigungen)</Label>
+                      <Label htmlFor="editTypeApp" className="cursor-pointer">System-Vorlage</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
                         id="editTypeCustomer"
-                        name="editTemplateType"
-                        value="customer"
-                        checked={selectedTemplate.type === 'customer' || !selectedTemplate.type}
+                        checked={selectedTemplate.type === 'customer'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'customer' })}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        className="w-4 h-4"
                       />
-                      <Label htmlFor="editTypeCustomer" className="font-normal">Kunden-Vorlage (für Kundenkommunikation)</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      System-Vorlagen werden für interne App-Benachrichtigungen verwendet, während 
-                      Kunden-Vorlagen für die direkte Kommunikation mit Kunden gedacht sind.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="editTemplateName">Name der Vorlage</Label>
-                  <Input
-                    id="editTemplateName"
-                    value={selectedTemplate.name}
-                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="editTemplateSubject">Betreff</Label>
-                  <Input
-                    id="editTemplateSubject"
-                    value={selectedTemplate.subject}
-                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="editTemplateBody">E-Mail-Inhalt (HTML)</Label>
-                  <Textarea
-                    id="editTemplateBody"
-                    rows={10}
-                    value={selectedTemplate.body}
-                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, body: e.target.value })}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{kundenname}}`}, {`{{auftragsnummer}}`}, etc.
-                  </p>
-                </div>
-                
-                {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Erkannte Variablen</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTemplate.variables.map((variable, index) => (
-                        <Badge key={index} variant="secondary">
-                          {variable}
-                        </Badge>
-                      ))}
+                      <Label htmlFor="editTypeCustomer" className="cursor-pointer">Kunden-Vorlage</Label>
                     </div>
                   </div>
-                )}
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2">
+                  Erkannte Variablen
+                </Label>
+                <div className="col-span-3 flex flex-wrap gap-2">
+                  {selectedTemplate.variables.length > 0 ? (
+                    selectedTemplate.variables.map((variable, index) => (
+                      <Badge key={index} variant="outline">{variable}</Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Keine Variablen erkannt</span>
+                  )}
+                </div>
               </div>
             </div>
           )}
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>Abbrechen</Button>
+            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>
+              Abbrechen
+            </Button>
             <Button 
               onClick={handleUpdateTemplate}
-              disabled={updateTemplateMutation.isPending}
+              disabled={updateTemplateMutation.isPending || !selectedTemplate?.name || !selectedTemplate?.subject || !selectedTemplate?.body}
             >
               {updateTemplateMutation.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
