@@ -7,10 +7,21 @@ import { eq, desc, isNull, or } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
 
+// E-Mail-Vorlagen Typen
+type EmailTemplateType = 'app' | 'customer';
+
+interface DefaultEmailTemplate {
+  name: string;
+  subject: string;
+  body: string;
+  variables: string[];
+  type: EmailTemplateType;
+}
+
 /**
- * Standard E-Mail-Vorlagen für die App
+ * Standard E-Mail-Vorlagen für die App (Systemvorlagen)
  */
-const defaultAppEmailTemplates = [
+const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
   {
     name: "Registrierungsbestätigung",
     subject: "Ihre Registrierung bei Handyshop Verwaltung",
@@ -36,7 +47,8 @@ const defaultAppEmailTemplates = [
         </div>
       </div>
     `,
-    variables: ["benutzername"]
+    variables: ["benutzername"],
+    type: 'app'
   },
   {
     name: "Konto freigeschaltet",
@@ -68,7 +80,8 @@ const defaultAppEmailTemplates = [
         </div>
       </div>
     `,
-    variables: ["benutzername", "loginLink"]
+    variables: ["benutzername", "loginLink"],
+    type: 'app'
   },
   {
     name: "Passwort zurücksetzen",
@@ -99,55 +112,322 @@ const defaultAppEmailTemplates = [
         </div>
       </div>
     `,
-    variables: ["benutzername", "resetLink"]
+    variables: ["benutzername", "resetLink"],
+    type: 'app'
+  }
+];
+
+/**
+ * Standard E-Mail-Vorlagen für Kundenkommunikation
+ */
+const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
+  {
+    name: "Bewertungen anfragen",
+    subject: "Feedback zu Ihrer Reparatur",
+    body: `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerten Sie unsere Reparaturleistung</title>
+    <style>
+        body, p, h1, h2, h3, h4, h5, h6, table, td, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f7f7f7;
+            color: #333333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .header {
+            padding: 25px 20px;
+            text-align: center;
+            background-color: #f0f7ff;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #2c5aa0;
+            font-size: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            font-size: 15px;
+            text-align: left;
+        }
+        
+        .button-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2c5aa0;
+            color: white;
+            text-decoration: none;
+            font-weight: normal;
+            font-size: 15px;
+            border-radius: 4px;
+        }
+        
+        .thank-you {
+            margin-top: 30px;
+            font-style: italic;
+            color: #555;
+            text-align: center;
+        }
+        
+        .contact-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo}}" alt="{{geschaeftsname}}" class="logo">
+        </div>
+        
+        <div class="content">
+            <h1>Feedback zu Ihrer Reparatur</h1>
+            
+            <p>Sehr geehrte(r) {{kundenname}},</p>
+            
+            <p>wir hoffen, dass Ihr {{geraet}} von {{hersteller}} nach der Reparatur wieder einwandfrei funktioniert und Sie mit unserem Service zufrieden sind.</p>
+            
+            <p>Um unsere Leistungen kontinuierlich zu verbessern, würden wir uns sehr über Ihre Bewertung freuen. Ihre Meinung hilft uns und anderen Kunden.</p>
+            
+            <div class="button-container">
+                <a href="{{bewertungslink}}" class="button">Bewertung abgeben</a>
+            </div>
+            
+            <p>Sollten Sie Fragen oder Anregungen haben, können Sie uns jederzeit kontaktieren.</p>
+            
+            <div class="divider"></div>
+            
+            <div class="contact-info">
+                <p><strong>{{geschaeftsname}}</strong><br>
+                {{adresse}}<br>
+                Telefon: <a href="tel:{{telefon}}">{{telefon}}</a><br>
+                E-Mail: <a href="mailto:{{email}}">{{email}}</a><br>
+                <a href="{{website}}">{{website}}</a></p>
+            </div>
+            
+            <p class="thank-you">Vielen Dank für Ihr Vertrauen!</p>
+        </div>
+        
+        <div class="footer">
+            <p>Sie erhalten diese E-Mail, weil Sie unseren Service in Anspruch genommen haben.<br>
+            © {{geschaeftsname}} {{aktuellesJahr}} | <a href="{{datenschutzlink}}">Datenschutz</a></p>
+        </div>
+    </div>
+</body>
+</html>
+    `,
+    variables: ["kundenname", "geraet", "hersteller", "bewertungslink", "geschaeftsname", "adresse", "telefon", "email", "website", "aktuellesJahr", "datenschutzlink", "logo"],
+    type: 'customer'
+  },
+  {
+    name: "Reparatur abgeschlossen",
+    subject: "Ihre Reparatur wurde abgeschlossen",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #10b981;">Ihre Reparatur ist abgeschlossen!</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>wir freuen uns, Ihnen mitteilen zu können, dass die Reparatur Ihres Geräts erfolgreich abgeschlossen wurde.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Reparatur:</strong> {{reparaturarbeit}}</p>
+        </div>
+        
+        <p>Sie können Ihr Gerät zu unseren Öffnungszeiten abholen:</p>
+        <p style="text-align: center; font-weight: bold;">{{oeffnungszeiten}}</p>
+        
+        <p>Bitte bringen Sie zum Abholen Ihren Abholschein oder einen Ausweis mit.</p>
+        
+        <p>Falls Sie Fragen haben, zögern Sie nicht, uns zu kontaktieren.</p>
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <p style="margin: 5px 0;"><strong>{{geschaeftsname}}</strong></p>
+          <p style="margin: 5px 0;">{{adresse}}</p>
+          <p style="margin: 5px 0;">Telefon: {{telefon}}</p>
+          <p style="margin: 5px 0;">E-Mail: {{email}}</p>
+        </div>
+        
+        <p style="margin-top: 20px; font-style: italic; text-align: center;">Vielen Dank für Ihr Vertrauen!</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "reparaturarbeit", "oeffnungszeiten", "geschaeftsname", "adresse", "telefon", "email"],
+    type: 'customer'
+  },
+  {
+    name: "Ersatzteil eingetroffen",
+    subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
+        </div>
+        
+        <p>Sehr geehrte(r) {{kundenname}},</p>
+        
+        <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für Ihre Reparatur eingetroffen ist.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+          <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
+        </div>
+        
+        <p>Wir werden nun umgehend mit der Reparatur fortfahren und Sie informieren, sobald Ihr Gerät wieder abholbereit ist.</p>
+        
+        <p>Falls Sie Fragen haben, können Sie uns gerne kontaktieren.</p>
+        
+        <p>Mit freundlichen Grüßen,<br>
+        Ihr Team von {{geschaeftsname}}</p>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+          <p>Diese E-Mail wurde automatisch von {{geschaeftsname}} gesendet.</p>
+        </div>
+      </div>
+    `,
+    variables: ["kundenname", "hersteller", "geraet", "auftragsnummer", "fehler", "geschaeftsname"],
+    type: 'customer'
   }
 ];
 
 /**
  * Erstellt die Standard-App-E-Mail-Vorlagen
  */
-async function createDefaultAppEmailTemplates(): Promise<boolean> {
+/**
+ * Erstellt Standard-E-Mail-Vorlagen basierend auf dem übergebenen Vorlagentyp
+ * @param templates Die zu erstellenden Vorlagen
+ * @param type Vorlagentyp (app oder customer)
+ * @param userId Für Kundenvorlagen: Die Benutzer-ID; null für systemweite Vorlagen
+ * @param shopId Für Kundenvorlagen: Die Shop-ID; 0 für systemweite Vorlagen
+ */
+async function createEmailTemplates(
+  templates: DefaultEmailTemplate[],
+  type: EmailTemplateType,
+  userId: number | null = null,
+  shopId: number = 0
+): Promise<boolean> {
   try {
+    // Bei userId=null die globalen Vorlagen suchen, sonst die des Benutzers
+    const whereCondition = userId === null 
+      ? isNull(emailTemplates.userId)
+      : eq(emailTemplates.userId, userId);
+    
     // Prüfen, welche Vorlagen bereits existieren, um Duplikate zu vermeiden
     const existingTemplates = await db.select({ name: emailTemplates.name })
       .from(emailTemplates)
-      .where(isNull(emailTemplates.userId));
+      .where(whereCondition);
     
     const existingTemplateNames = existingTemplates.map(t => t.name);
     
-    // Nur Vorlagen hinzufügen, die noch nicht existieren
-    const templatesToAdd = defaultAppEmailTemplates.filter(
-      template => !existingTemplateNames.includes(template.name)
-    );
+    // Nur Vorlagen vom angegebenen Typ hinzufügen, die noch nicht existieren
+    const templatesToAdd = templates
+      .filter(template => template.type === type)
+      .filter(template => !existingTemplateNames.includes(template.name));
     
     if (templatesToAdd.length === 0) {
-      console.log('Alle Standard-App-E-Mail-Vorlagen existieren bereits');
+      console.log(`Alle ${type === 'app' ? 'System' : 'Kunden'}-E-Mail-Vorlagen existieren bereits`);
       return true;
     }
     
     const now = new Date();
     
-    // Vorlagen als globale Vorlagen (userId = null) hinzufügen
+    // Vorlagen hinzufügen
     for (const template of templatesToAdd) {
       await db.insert(emailTemplates).values({
         name: template.name,
         subject: template.subject,
         body: template.body,
         variables: template.variables,
-        userId: null,
-        shopId: 0, // Global für alle Shops
+        userId,
+        shopId,
         createdAt: now,
         updatedAt: now
       });
       
-      console.log(`Standard-E-Mail-Vorlage '${template.name}' wurde erstellt`);
+      console.log(`E-Mail-Vorlage '${template.name}' (Typ: ${type}) wurde erstellt für ${userId === null ? 'System' : `Benutzer ${userId}`}`);
     }
     
     return true;
   } catch (error) {
-    console.error('Fehler beim Erstellen der Standard-App-E-Mail-Vorlagen:', error);
+    console.error(`Fehler beim Erstellen der ${type}-E-Mail-Vorlagen:`, error);
     return false;
   }
+}
+
+/**
+ * Erstellt die Standard-App-E-Mail-Vorlagen (Systemvorlagen)
+ */
+async function createDefaultAppEmailTemplates(): Promise<boolean> {
+  return await createEmailTemplates(defaultAppEmailTemplates, 'app');
+}
+
+/**
+ * Erstellt Standardvorlagen für Kundenkommunikation für einen bestimmten Benutzer
+ */
+async function createCustomerEmailTemplates(userId: number, shopId: number): Promise<boolean> {
+  return await createEmailTemplates(defaultCustomerEmailTemplates, 'customer', userId, shopId);
 }
 
 /**
