@@ -824,19 +824,38 @@ export function registerSuperadminEmailRoutes(app: Express) {
       }
       
       // Prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
-      const emailHistoryEntries = await db.select()
+      const [{ count }] = await db
+        .select({ count: sql`count(*)` })
         .from(emailHistory)
-        .where(eq(emailHistory.emailTemplateId, id));
+        .where(eq(emailHistory.emailTemplateId, id)) as [{ count: number }];
       
-      const usageCount = emailHistoryEntries.length;
+      const usageCount = Number(count);
       
       if (usageCount > 0) {
-        return res.status(409).json({ 
-          message: `Diese E-Mail-Vorlage wird in ${usageCount} E-Mails verwendet und kann nicht gelöscht werden. Sie können jedoch die Vorlage bearbeiten, um den Inhalt zu ändern.`
+        // Statt die Vorlage zu löschen, können wir den Inhalt mit einem Vermerk überschreiben
+        // und optional einen "gelöscht"-Flag setzen
+        const archiveName = `[ARCHIVIERT] ${existingTemplate.name}`;
+        const archiveNote = `<p><strong>Diese Vorlage wurde archiviert, da sie nicht gelöscht werden kann.</strong></p>
+<p>Sie wird von ${usageCount} E-Mail(s) in der Historie verwendet.</p>
+<p>Originaler Inhalt:</p>
+${existingTemplate.body}`;
+
+        await db
+          .update(emailTemplates)
+          .set({ 
+            name: archiveName,
+            body: archiveNote,
+            type: 'archived' // Spezielle Markierung für archivierte Vorlagen
+          })
+          .where(eq(emailTemplates.id, id));
+        
+        return res.status(200).json({ 
+          message: `Die E-Mail-Vorlage wurde archiviert, da sie in ${usageCount} E-Mails verwendet wird und nicht gelöscht werden kann.`,
+          archived: true
         });
       }
       
-      // Lösche die Vorlage
+      // Lösche die Vorlage, wenn sie nicht verwendet wird
       await db
         .delete(emailTemplates)
         .where(eq(emailTemplates.id, id));
