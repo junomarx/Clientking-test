@@ -374,42 +374,59 @@ async function createEmailTemplates(
       ? isNull(emailTemplates.userId)
       : eq(emailTemplates.userId, userId);
     
-    // Prüfen, welche Vorlagen bereits existieren, um Duplikate zu vermeiden
-    const existingTemplates = await db.select({ name: emailTemplates.name })
+    // Alle relevanten Vorlagen dieses Typs filtern
+    const relevantTemplates = templates.filter(template => template.type === type);
+    
+    // Alle existierenden Vorlagen des Benutzers abrufen
+    const existingTemplates = await db.select()
       .from(emailTemplates)
       .where(whereCondition);
     
-    const existingTemplateNames = existingTemplates.map(t => t.name);
-    
-    // Nur Vorlagen vom angegebenen Typ hinzufügen, die noch nicht existieren
-    const templatesToAdd = templates
-      .filter(template => template.type === type)
-      .filter(template => !existingTemplateNames.includes(template.name));
-    
-    if (templatesToAdd.length === 0) {
-      console.log(`Alle ${type === 'app' ? 'System' : 'Kunden'}-E-Mail-Vorlagen existieren bereits`);
-      return true;
-    }
+    // Vorlagen in existierende und neue aufteilen
+    const existingTemplateMap = new Map();
+    existingTemplates.forEach(template => {
+      existingTemplateMap.set(template.name, template);
+    });
     
     const now = new Date();
     
-    // Vorlagen hinzufügen
-    for (const template of templatesToAdd) {
-      await db.insert(emailTemplates).values({
-        name: template.name,
-        subject: template.subject,
-        body: template.body,
-        variables: template.variables,
-        userId,
-        shopId,
-        createdAt: now,
-        updatedAt: now
-      });
+    // Alle Vorlagen durchgehen, entweder aktualisieren oder neu erstellen
+    let templatesProcessed = 0;
+    for (const template of relevantTemplates) {
+      const existingTemplate = existingTemplateMap.get(template.name);
       
-      console.log(`E-Mail-Vorlage '${template.name}' (Typ: ${type}) wurde erstellt für ${userId === null ? 'System' : `Benutzer ${userId}`}`);
+      if (existingTemplate) {
+        // Vorlage aktualisieren
+        await db.update(emailTemplates)
+          .set({
+            subject: template.subject,
+            body: template.body,
+            variables: template.variables,
+            updatedAt: now
+          })
+          .where(eq(emailTemplates.id, existingTemplate.id));
+        
+        console.log(`E-Mail-Vorlage '${template.name}' (Typ: ${type}) wurde aktualisiert für ${userId === null ? 'System' : `Benutzer ${userId}`}`);
+      } else {
+        // Neue Vorlage erstellen
+        await db.insert(emailTemplates).values({
+          name: template.name,
+          subject: template.subject,
+          body: template.body,
+          variables: template.variables,
+          userId,
+          shopId,
+          createdAt: now,
+          updatedAt: now
+        });
+        
+        console.log(`E-Mail-Vorlage '${template.name}' (Typ: ${type}) wurde erstellt für ${userId === null ? 'System' : `Benutzer ${userId}`}`);
+      }
+      templatesProcessed++;
     }
     
-    return true;
+    console.log(`${templatesProcessed} ${type === 'app' ? 'System' : 'Kunden'}-E-Mail-Vorlagen wurden verarbeitet`);
+    return templatesProcessed > 0;
   } catch (error) {
     console.error(`Fehler beim Erstellen der ${type}-E-Mail-Vorlagen:`, error);
     return false;
@@ -508,20 +525,27 @@ export function registerSuperadminEmailRoutes(app: Express) {
       const success = await createCustomerEmailTemplates(userId, shopId);
       
       if (success) {
+        // Lade alle Vorlagen neu, um sie zurückzugeben
+        const templates = await db.select()
+          .from(emailTemplates)
+          .where(eq(emailTemplates.userId, userId))
+          .orderBy(desc(emailTemplates.updatedAt));
+          
         res.status(201).json({ 
           success: true, 
-          message: "Standard-Kundenkommunikationsvorlagen wurden erfolgreich erstellt"
+          message: "Standard-Kundenkommunikationsvorlagen wurden erfolgreich aktualisiert",
+          templates
         });
       } else {
         res.status(500).json({ 
           success: false, 
-          message: "Fehler beim Erstellen der Standard-Kundenkommunikationsvorlagen" 
+          message: "Keine Vorlagen aktualisiert oder erstellt. Möglicherweise sind bereits alle Standardvorlagen vorhanden." 
         });
       }
     } catch (error: any) {
       res.status(500).json({ 
         success: false, 
-        message: `Fehler beim Erstellen der Standard-Kundenkommunikationsvorlagen: ${error.message}` 
+        message: `Fehler beim Erstellen/Aktualisieren der Standard-Kundenkommunikationsvorlagen: ${error.message}` 
       });
     }
   });

@@ -159,11 +159,18 @@ export function EmailTemplateTab() {
       const response = await apiRequest('POST', '/api/email/restore-customer-templates');
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+    onSuccess: (data) => {
+      // Bei erfolgreicher Antwort mit Templates direkt die Daten setzen
+      if (data.templates && Array.isArray(data.templates)) {
+        queryClient.setQueryData(['/api/email-templates'], data.templates);
+      } else {
+        // Sonst normal invalidieren und neu laden
+        queryClient.invalidateQueries({ queryKey: ['/api/email-templates'] });
+      }
+      
       toast({
         title: 'Standardvorlagen wiederhergestellt',
-        description: 'Die Standard-Kundenkommunikationsvorlagen wurden erfolgreich erstellt.'
+        description: 'Die Standard-Kundenkommunikationsvorlagen wurden erfolgreich aktualisiert.'
       });
     },
     onError: (error) => {
