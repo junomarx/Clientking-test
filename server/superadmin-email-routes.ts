@@ -21,7 +21,7 @@ interface DefaultEmailTemplate {
 /**
  * Standard E-Mail-Vorlagen für die App (Systemvorlagen)
  */
-const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
+export const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
   {
     name: "Registrierungsbestätigung",
     subject: "Ihre Registrierung bei Handyshop Verwaltung",
@@ -120,7 +120,7 @@ const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
 /**
  * Standard E-Mail-Vorlagen für Kundenkommunikation
  */
-const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
+export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
   {
     name: "Bewertungen anfragen",
     subject: "Feedback zu Ihrer Reparatur",
