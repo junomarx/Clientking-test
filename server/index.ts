@@ -17,6 +17,16 @@ import { addErrorCatalogEntriesTable } from "./add-error-catalog-entries-table";
 import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog";
 import fileUpload from "express-fileupload";
 
+// Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
+if (!process.env.SMTP_SENDER_EMAIL) {
+  process.env.SMTP_SENDER_EMAIL = "noreply@phonerepair.at";
+}
+
+// Setze globalen SMTP-Absender-Namen wenn nicht vorhanden
+if (!process.env.SMTP_SENDER_NAME) {
+  process.env.SMTP_SENDER_NAME = "Handyshop Verwaltung";
+}
+
 const app = express();
 // Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
 app.use(express.json({ limit: '10mb' }));
