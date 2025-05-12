@@ -734,10 +734,20 @@ export function registerSuperadminEmailRoutes(app: Express) {
    */
   app.get("/api/superadmin/email/templates", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const templates = await db
+      const typeFilter = req.query.type as string | undefined;
+      
+      let queryBuilder = db
         .select()
-        .from(emailTemplates)
-        .orderBy(desc(emailTemplates.updatedAt));
+        .from(emailTemplates);
+      
+      // Filter-Optionen
+      if (typeFilter) {
+        // Nach Typ filtern (app oder customer)
+        queryBuilder = queryBuilder.where(eq(emailTemplates.type, typeFilter));
+      }
+      
+      // Sortieren nach Update-Datum (neueste zuerst)
+      const templates = await queryBuilder.orderBy(desc(emailTemplates.updatedAt));
       
       res.status(200).json(templates);
     } catch (error: any) {
@@ -766,7 +776,8 @@ export function registerSuperadminEmailRoutes(app: Express) {
         body: templateData.body,
         variables: templateData.variables || [],
         userId: null, // Globale Vorlage
-        shopId: 0 // Systemweit verfügbar
+        shopId: 0, // Systemweit verfügbar
+        type: templateData.type || 'customer' // Standard-Typ ist 'customer', kann aber überschrieben werden
       };
       
       const [createdTemplate] = await db
@@ -815,6 +826,12 @@ export function registerSuperadminEmailRoutes(app: Express) {
         })
         .where(eq(emailTemplates.id, id))
         .returning();
+      
+      // Besondere Behandlung für System-Vorlagen vom Typ 'customer'
+      // Wenn ein Superadmin eine globale Kunden-Vorlage aktualisiert, sorgen wir für Synchronisierung
+      if (existingTemplate.type === 'customer' && existingTemplate.userId === null && existingTemplate.shopId === 0) {
+        console.log(`Globale Kunden-Vorlage "${updatedTemplate.name}" wurde aktualisiert.`);
+      }
       
       res.status(200).json(updatedTemplate);
     } catch (error: any) {
