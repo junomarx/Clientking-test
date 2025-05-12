@@ -35,6 +35,7 @@ interface EmailTemplate {
   shopId: number;
   createdAt: string;
   updatedAt: string;
+  type?: 'app' | 'customer'; // Typ der Vorlage (System oder Kunde)
 }
 
 export default function SuperadminEmailTab() {
@@ -500,58 +501,142 @@ export default function SuperadminEmailTab() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : emailTemplates && emailTemplates.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Betreff</TableHead>
-                      <TableHead>Variablen</TableHead>
-                      <TableHead>Zuletzt aktualisiert</TableHead>
-                      <TableHead className="text-right">Aktionen</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {emailTemplates.map((template) => (
-                      <TableRow key={template.id}>
-                        <TableCell className="font-medium">{template.name}</TableCell>
-                        <TableCell>{template.subject}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {template.variables && template.variables.map((variable, index) => (
-                              <Badge key={index} variant="outline">{variable}</Badge>
-                            ))}
-                            {(!template.variables || template.variables.length === 0) && 
-                              <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                            }
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleEditTemplate(template)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="text-destructive"
-                              onClick={() => handleDeleteTemplate(template.id)}
-                              disabled={deleteTemplateMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <Tabs defaultValue="app" className="mt-4">
+                  <TabsList>
+                    <TabsTrigger value="app">System-Vorlagen</TabsTrigger>
+                    <TabsTrigger value="customer">Kunden-Vorlagen</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* System-Vorlagen Tab */}
+                  <TabsContent value="app">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Betreff</TableHead>
+                          <TableHead>Variablen</TableHead>
+                          <TableHead>Zuletzt aktualisiert</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emailTemplates
+                          .filter(template => !template.type || template.type === 'app')
+                          .map((template) => (
+                            <TableRow key={template.id}>
+                              <TableCell className="font-medium">{template.name}</TableCell>
+                              <TableCell>{template.subject}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {template.variables && template.variables.map((variable, index) => (
+                                    <Badge key={index} variant="outline">{variable}</Badge>
+                                  ))}
+                                  {(!template.variables || template.variables.length === 0) && 
+                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                                  }
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleEditTemplate(template)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteTemplate(template.id)}
+                                    disabled={deleteTemplateMutation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {emailTemplates.filter(template => !template.type || template.type === 'app').length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4">
+                              Keine System-Vorlagen gefunden
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                  
+                  {/* Kunden-Vorlagen Tab */}
+                  <TabsContent value="customer">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Betreff</TableHead>
+                          <TableHead>Variablen</TableHead>
+                          <TableHead>Zuletzt aktualisiert</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emailTemplates
+                          .filter(template => template.type === 'customer')
+                          .map((template) => (
+                            <TableRow key={template.id}>
+                              <TableCell className="font-medium">{template.name}</TableCell>
+                              <TableCell>{template.subject}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {template.variables && template.variables.map((variable, index) => (
+                                    <Badge key={index} variant="outline">{variable}</Badge>
+                                  ))}
+                                  {(!template.variables || template.variables.length === 0) && 
+                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                                  }
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleEditTemplate(template)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="text-destructive"
+                                    onClick={() => handleDeleteTemplate(template.id)}
+                                    disabled={deleteTemplateMutation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {emailTemplates.filter(template => template.type === 'customer').length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4">
+                              Keine Kunden-Vorlagen gefunden
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                </Tabs>
               ) : (
                 <div className="text-center py-8">
                   <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

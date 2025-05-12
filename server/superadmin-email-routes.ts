@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Express } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
-import { emailTemplates, type EmailTemplate, type InsertEmailTemplate } from "@shared/schema";
+import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate } from "@shared/schema";
 import { eq, desc, isNull, or } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
