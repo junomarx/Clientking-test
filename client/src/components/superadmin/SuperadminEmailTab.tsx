@@ -146,7 +146,7 @@ export default function SuperadminEmailTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/templates'] });
       setIsCreateTemplateOpen(false);
-      setNewTemplate({ name: '', subject: '', body: '', variables: [] });
+      setNewTemplate({ name: '', subject: '', body: '', variables: [], type: 'customer' });
       toast({
         title: 'Vorlage erstellt',
         description: 'Die E-Mail-Vorlage wurde erfolgreich erstellt.'
@@ -669,6 +669,40 @@ export default function SuperadminEmailTab() {
           
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="templateType">Typ der Vorlage</Label>
+                <div className="flex flex-col space-y-1.5">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="typeApp"
+                      name="templateType"
+                      value="app"
+                      checked={newTemplate.type === 'app'}
+                      onChange={() => setNewTemplate({ ...newTemplate, type: 'app' })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="typeApp" className="font-normal">System-Vorlage (für App-Benachrichtigungen)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="typeCustomer"
+                      name="templateType"
+                      value="customer"
+                      checked={newTemplate.type === 'customer'}
+                      onChange={() => setNewTemplate({ ...newTemplate, type: 'customer' })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="typeCustomer" className="font-normal">Kunden-Vorlage (für Kundenkommunikation)</Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    System-Vorlagen werden für interne App-Benachrichtigungen verwendet, während 
+                    Kunden-Vorlagen für die direkte Kommunikation mit Kunden gedacht sind.
+                  </p>
+                </div>
+              </div>
+            
               <div className="space-y-2">
                 <Label htmlFor="templateName">Name der Vorlage</Label>
                 <Input
