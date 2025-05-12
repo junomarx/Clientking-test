@@ -821,6 +821,19 @@ export function registerSuperadminEmailRoutes(app: Express) {
         return res.status(404).json({ message: "E-Mail-Vorlage nicht gefunden" });
       }
       
+      // Prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
+      const emailHistoryEntries = await db.select()
+        .from(emailHistory)
+        .where(eq(emailHistory.emailTemplateId, id));
+      
+      const usageCount = emailHistoryEntries.length;
+      
+      if (usageCount > 0) {
+        return res.status(409).json({ 
+          message: `Diese E-Mail-Vorlage wird in ${usageCount} E-Mails verwendet und kann nicht gelöscht werden. Sie können jedoch die Vorlage bearbeiten, um den Inhalt zu ändern.`
+        });
+      }
+      
       // Lösche die Vorlage
       await db
         .delete(emailTemplates)
