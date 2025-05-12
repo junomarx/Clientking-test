@@ -3,7 +3,7 @@ import { Express } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
 import { emailTemplates, emailHistory, type EmailTemplate, type InsertEmailTemplate } from "@shared/schema";
-import { eq, desc, isNull, or } from "drizzle-orm";
+import { eq, desc, isNull, or, and, sql } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { emailService } from "./email-service";
 
@@ -458,8 +458,25 @@ async function createCustomerEmailTemplates(
   try {
     const whereCondition = eq(emailTemplates.userId, userId);
     
-    // Nur Kundenvorlagen
-    const relevantTemplates = defaultCustomerEmailTemplates.filter(template => template.type === 'customer');
+    // Statt den statischen Templates aus dem Code, holen wir die systemweiten Vorlagen aus der DB
+    // Diese wurden möglicherweise im Superadmin-Bereich bearbeitet
+    const systemTemplates = await db.select()
+      .from(emailTemplates)
+      .where(and(
+        isNull(emailTemplates.userId),
+        eq(emailTemplates.shopId, 0),
+        eq(emailTemplates.type, 'customer')
+      ));
+    
+    // Wenn keine systemweiten Vorlagen existieren, fallen wir auf die Standardvorlagen zurück
+    let relevantTemplates: any[] = [];
+    if (systemTemplates.length > 0) {
+      console.log(`${systemTemplates.length} globale Systemvorlagen gefunden, verwende diese.`);
+      relevantTemplates = systemTemplates;
+    } else {
+      console.log(`Keine globalen Systemvorlagen gefunden, verwende Standardvorlagen aus dem Code.`);
+      relevantTemplates = defaultCustomerEmailTemplates.filter(template => template.type === 'customer');
+    }
     
     // Alle existierenden Vorlagen des Benutzers abrufen
     const existingTemplates = await db.select()
@@ -486,8 +503,9 @@ async function createCustomerEmailTemplates(
             .set({
               subject: template.subject,
               body: template.body,
-              variables: template.variables,
-              updatedAt: now
+              variables: template.variables || [],
+              updatedAt: now,
+              type: template.type || 'customer' // Stellen sicher, dass der Typ übernommen wird
             })
             .where(eq(emailTemplates.id, existingTemplate.id));
           
@@ -502,11 +520,12 @@ async function createCustomerEmailTemplates(
           name: template.name,
           subject: template.subject,
           body: template.body,
-          variables: template.variables,
+          variables: template.variables || [],
           userId,
           shopId: shopIdNumber,
           createdAt: now,
-          updatedAt: now
+          updatedAt: now,
+          type: template.type || 'customer'
         });
         
         console.log(`E-Mail-Vorlage '${template.name}' wurde erstellt für Benutzer ${userId}`);
