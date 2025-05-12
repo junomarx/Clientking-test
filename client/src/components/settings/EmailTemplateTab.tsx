@@ -298,9 +298,25 @@ export function EmailTemplateTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center border-b pb-4">
         <h2 className="font-semibold text-lg">E-Mail Vorlagen</h2>
-        <Button onClick={openCreateSheet} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Neue Vorlage
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => restoreCustomerTemplatesMutation.mutate()} 
+            size="sm" 
+            variant="outline" 
+            disabled={restoreCustomerTemplatesMutation.isPending}
+            title="Standard-Kundenkommunikationsvorlagen wiederherstellen"
+          >
+            {restoreCustomerTemplatesMutation.isPending ? (
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            ) : (
+              <MessageSquare className="h-4 w-4 mr-1" />
+            )}
+            Standardvorlagen
+          </Button>
+          <Button onClick={openCreateSheet} size="sm">
+            <Plus className="h-4 w-4 mr-1" /> Neue Vorlage
+          </Button>
+        </div>
       </div>
 
       {templates?.length === 0 ? (

@@ -426,8 +426,9 @@ async function createDefaultAppEmailTemplates(): Promise<boolean> {
 /**
  * Erstellt Standardvorlagen für Kundenkommunikation für einen bestimmten Benutzer
  */
-async function createCustomerEmailTemplates(userId: number, shopId: number): Promise<boolean> {
-  return await createEmailTemplates(defaultCustomerEmailTemplates, 'customer', userId, shopId);
+async function createCustomerEmailTemplates(userId: number, shopId: number | null = 0): Promise<boolean> {
+  const shopIdNumber = typeof shopId === 'number' ? shopId : 0;
+  return await createEmailTemplates(defaultCustomerEmailTemplates, 'customer', userId, shopIdNumber);
 }
 
 /**
@@ -502,7 +503,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
       }
       
       const userId = req.user!.id;
-      const shopId = req.user!.shopId;
+      const shopId = req.user!.shopId || 0; // Falls shopId null ist, verwende 0
       
       const success = await createCustomerEmailTemplates(userId, shopId);
       
