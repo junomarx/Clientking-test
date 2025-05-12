@@ -456,26 +456,26 @@ export function setupAuth(app: Express) {
 // Hilfsfunktion zum Senden einer Passwort-Zurücksetzungs-E-Mail
 async function sendPasswordResetEmail(to: string, subject: string, html: string, userId: number): Promise<boolean> {
   try {
-    // Hole die SMTP-Einstellungen aus den Geschäftseinstellungen
-    const businessSettings = await storage.getBusinessSettings(userId);
+    // Verwende die globalen SMTP-Einstellungen aus den Umgebungsvariablen für systemrelevante E-Mails
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPassword = process.env.SMTP_PASSWORD;
+    const smtpSenderName = process.env.SMTP_SENDER_NAME || "Handyshop Verwaltung";
+    const smtpSenderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER || "no-reply@example.com";
     
-    if (!businessSettings) {
-      console.error("Geschäftseinstellungen nicht gefunden für Benutzer:", userId);
+    if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword) {
+      console.error("Globale SMTP-Einstellungen fehlen - Passwort-Zurücksetzungs-E-Mail kann nicht gesendet werden");
       return false;
     }
     
-    const smtpHost = businessSettings.smtpHost || process.env.SMTP_HOST;
-    const smtpPort = parseInt(businessSettings.smtpPort || process.env.SMTP_PORT || "587");
-    const smtpUser = businessSettings.smtpUser || process.env.SMTP_USER;
-    const smtpPassword = businessSettings.smtpPassword || process.env.SMTP_PASSWORD;
-    const smtpSenderName = businessSettings.smtpSenderName || businessSettings.businessName;
-    
-    console.log("[E-Mail-Debug] Verwende SMTP-Konfiguration:", {
+    console.log("[E-Mail-Debug] Verwende globale SMTP-Konfiguration für systemrelevante E-Mail:", {
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
       user: smtpUser,
-      senderName: smtpSenderName
+      senderName: smtpSenderName,
+      senderEmail: smtpSenderEmail
     });
     
     // Erstelle einen SMTP-Transporter
@@ -489,11 +489,11 @@ async function sendPasswordResetEmail(to: string, subject: string, html: string,
       }
     });
     
-    console.log("[E-Mail-Debug] Sende E-Mail an:", to);
+    console.log("[E-Mail-Debug] Sende Passwort-Zurücksetzungs-E-Mail an:", to);
     
     // Sende die E-Mail
     const info = await transporter.sendMail({
-      from: `"${smtpSenderName}" <${smtpUser}>`,
+      from: `"${smtpSenderName}" <${smtpSenderEmail}>`,
       to,
       subject,
       html
