@@ -17,8 +17,8 @@ interface DefaultEmailTemplate {
   type: 'app' | 'customer' | 'archived';
 }
 
-// Externe Liste der Standard-E-Mail-Vorlagen
-import { defaultCustomerEmailTemplates } from "./superadmin-email-routes";
+// Externe Listen der Standard-E-Mail-Vorlagen
+import { defaultCustomerEmailTemplates, defaultAppEmailTemplates } from "./superadmin-email-routes";
 
 /**
  * Überprüft, ob in der Datenbank bereits globale E-Mail-Vorlagen existieren
@@ -37,12 +37,40 @@ export async function syncEmailTemplates(): Promise<void> {
         eq(emailTemplates.shopId, 0)
       ));
     
-    if (systemTemplates.length === 0) {
-      console.log("Keine globalen E-Mail-Vorlagen gefunden. Erstelle Standardvorlagen aus dem Code...");
+    const appTemplatesCount = systemTemplates.filter(t => t.type === 'app').length;
+    const customerTemplatesCount = systemTemplates.filter(t => t.type === 'customer').length;
+    
+    const now = new Date();
+    
+    // Überprüfe und erstelle App-Vorlagen
+    if (appTemplatesCount === 0) {
+      console.log("Keine globalen App-Vorlagen gefunden. Erstelle App-Vorlagen aus dem Code...");
       
-      const now = new Date();
+      // Alle App-Vorlagen aus dem Code in die Datenbank einfügen
+      for (const template of defaultAppEmailTemplates) {
+        await db.insert(emailTemplates).values({
+          name: template.name,
+          subject: template.subject,
+          body: template.body,
+          variables: template.variables,
+          userId: null, // Globale Vorlage
+          shopId: 0, // Systemweit
+          createdAt: now,
+          updatedAt: now,
+          type: 'app'
+        });
+        
+        console.log(`Globale App-E-Mail-Vorlage '${template.name}' wurde in der Datenbank erstellt`);
+      }
+    } else {
+      console.log(`${appTemplatesCount} globale App-Vorlagen gefunden.`);
+    }
+    
+    // Überprüfe und erstelle Kunden-Vorlagen
+    if (customerTemplatesCount === 0) {
+      console.log("Keine globalen Kunden-Vorlagen gefunden. Erstelle Kunden-Vorlagen aus dem Code...");
       
-      // Alle Vorlagen aus dem Code in die Datenbank einfügen
+      // Alle Kunden-Vorlagen aus dem Code in die Datenbank einfügen
       for (const template of defaultCustomerEmailTemplates) {
         await db.insert(emailTemplates).values({
           name: template.name,
@@ -53,16 +81,16 @@ export async function syncEmailTemplates(): Promise<void> {
           shopId: 0, // Systemweit
           createdAt: now,
           updatedAt: now,
-          type: template.type
+          type: 'customer'
         });
         
-        console.log(`Globale E-Mail-Vorlage '${template.name}' wurde in der Datenbank erstellt`);
+        console.log(`Globale Kunden-E-Mail-Vorlage '${template.name}' wurde in der Datenbank erstellt`);
       }
-      
-      console.log(`${defaultCustomerEmailTemplates.length} globale E-Mail-Vorlagen wurden erfolgreich erstellt`);
     } else {
-      console.log(`${systemTemplates.length} globale E-Mail-Vorlagen existieren bereits in der Datenbank`);
+      console.log(`${customerTemplatesCount} globale Kunden-Vorlagen gefunden.`);
     }
+    
+    console.log("E-Mail-Vorlagen-Synchronisation abgeschlossen.");
   } catch (error: any) {
     console.error(`Fehler bei der Synchronisierung der E-Mail-Vorlagen: ${error.message}`);
   }

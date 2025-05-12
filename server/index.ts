@@ -16,6 +16,7 @@ import { addPrintTemplatesTable } from "./add-print-templates-table";
 import { addErrorCatalogEntriesTable } from "./add-error-catalog-entries-table";
 import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog";
 import { addEmailTemplateTypeColumn } from "./add-email-template-type";
+import { syncEmailTemplates } from "./sync-email-templates";
 import fileUpload from "express-fileupload";
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
@@ -87,6 +88,9 @@ app.use((req, res, next) => {
     await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
     await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
     await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
+    
+    // Synchronisiere E-Mail-Vorlagen beim Server-Start
+    await syncEmailTemplates();
     
     const server = await registerRoutes(app);
 

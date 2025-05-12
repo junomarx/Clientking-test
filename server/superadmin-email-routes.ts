@@ -615,7 +615,9 @@ export function registerSuperadminEmailRoutes(app: Express) {
       const userId = req.user!.id;
       const shopId = req.user!.shopId || 0; // Falls shopId null ist, verwende 0
       
-      const success = await createCustomerEmailTemplates(userId, shopId);
+      // Wichtig: Immer force=true setzen, damit die Vorlagen aus der Datenbank
+      // aktualisiert werden, auch wenn sie bereits existieren
+      const success = await createCustomerEmailTemplates(userId, shopId, true);
       
       if (success) {
         // Lade alle Vorlagen neu, um sie zurückzugeben
@@ -632,7 +634,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
       } else {
         res.status(500).json({ 
           success: false, 
-          message: "Keine Vorlagen aktualisiert oder erstellt. Möglicherweise sind bereits alle Standardvorlagen vorhanden." 
+          message: "Keine Vorlagen aktualisiert oder erstellt. Möglicherweise gibt es ein Problem mit den Systemvorlagen." 
         });
       }
     } catch (error: any) {
