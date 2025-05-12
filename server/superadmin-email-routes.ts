@@ -441,11 +441,83 @@ async function createDefaultAppEmailTemplates(): Promise<boolean> {
 }
 
 /**
- * Erstellt Standardvorlagen für Kundenkommunikation für einen bestimmten Benutzer
+ * Erstellt oder aktualisiert Standardvorlagen für Kundenkommunikation für einen bestimmten Benutzer
+ * @param userId Benutzer-ID
+ * @param shopId Shop-ID
+ * @param forceUpdate Wenn true, werden alle Vorlagen aktualisiert, auch wenn sie bereits existieren
  */
-async function createCustomerEmailTemplates(userId: number, shopId: number | null = 0): Promise<boolean> {
+async function createCustomerEmailTemplates(
+  userId: number, 
+  shopId: number | null = 0,
+  forceUpdate: boolean = true
+): Promise<boolean> {
   const shopIdNumber = typeof shopId === 'number' ? shopId : 0;
-  return await createEmailTemplates(defaultCustomerEmailTemplates, 'customer', userId, shopIdNumber);
+  
+  try {
+    const whereCondition = eq(emailTemplates.userId, userId);
+    
+    // Nur Kundenvorlagen
+    const relevantTemplates = defaultCustomerEmailTemplates.filter(template => template.type === 'customer');
+    
+    // Alle existierenden Vorlagen des Benutzers abrufen
+    const existingTemplates = await db.select()
+      .from(emailTemplates)
+      .where(whereCondition);
+    
+    // Vorlagen in existierende und neue aufteilen
+    const existingTemplateMap = new Map();
+    existingTemplates.forEach(template => {
+      existingTemplateMap.set(template.name, template);
+    });
+    
+    const now = new Date();
+    let templatesProcessed = 0;
+    
+    // Alle Vorlagen durchgehen, entweder aktualisieren oder neu erstellen
+    for (const template of relevantTemplates) {
+      const existingTemplate = existingTemplateMap.get(template.name);
+      
+      if (existingTemplate) {
+        // Wenn forceUpdate aktiviert ist, aktualisiere die Vorlage
+        if (forceUpdate) {
+          await db.update(emailTemplates)
+            .set({
+              subject: template.subject,
+              body: template.body,
+              variables: template.variables,
+              updatedAt: now
+            })
+            .where(eq(emailTemplates.id, existingTemplate.id));
+          
+          console.log(`E-Mail-Vorlage '${template.name}' wurde aktualisiert für Benutzer ${userId}`);
+          templatesProcessed++;
+        } else {
+          console.log(`E-Mail-Vorlage '${template.name}' existiert bereits für Benutzer ${userId}`);
+        }
+      } else {
+        // Neue Vorlage erstellen
+        await db.insert(emailTemplates).values({
+          name: template.name,
+          subject: template.subject,
+          body: template.body,
+          variables: template.variables,
+          userId,
+          shopId: shopIdNumber,
+          createdAt: now,
+          updatedAt: now
+        });
+        
+        console.log(`E-Mail-Vorlage '${template.name}' wurde erstellt für Benutzer ${userId}`);
+        templatesProcessed++;
+      }
+    }
+    
+    console.log(`${templatesProcessed} Kunden-E-Mail-Vorlagen wurden verarbeitet`);
+    return templatesProcessed > 0;
+  } catch (error) {
+    console.error('Fehler beim Erstellen/Aktualisieren der Kunden-E-Mail-Vorlagen:', error);
+    return false;
+  }
 }
 
 /**
