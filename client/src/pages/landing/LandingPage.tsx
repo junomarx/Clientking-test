@@ -33,16 +33,14 @@ export default function LandingPage() {
               </Button>
             </Link>
           </div>
-          <div className="mt-16 bg-white rounded-xl shadow-xl overflow-hidden max-w-5xl mx-auto">
-            <img 
-              src="/dashboard-preview.jpg" 
-              alt="Dashboard Preview" 
-              className="w-full h-auto"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = 'https://via.placeholder.com/1200x600/f5f5f5/a3a3a3?text=Dashboard+Preview';
-              }}
-            />
+          {/* Vorschaubild entfernt auf Anforderung */}
+          <div className="mt-16 mx-auto max-w-5xl">
+            <div className="bg-white rounded-xl shadow-xl p-12 text-center">
+              <h3 className="text-2xl font-semibold text-gray-800 mb-4">Optimiert für höchste Performance</h3>
+              <p className="text-gray-600">
+                Eine intuitive Benutzeroberfläche, die auf verschiedenen Geräten funktioniert und dabei stets höchste Performance bietet.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -287,15 +285,13 @@ export default function LandingPage() {
           
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
-              <img 
-                src="/team-image.jpg" 
-                alt="Unser Team" 
-                className="rounded-xl shadow-lg w-full h-auto"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'https://via.placeholder.com/800x600/f5f5f5/a3a3a3?text=Unser+Team';
-                }}
-              />
+              {/* Bild entfernt auf Anforderung */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg w-full p-12 flex items-center justify-center">
+                <div className="text-center">
+                  <h4 className="text-xl font-medium text-primary mb-3">Experten für Mobile Reparaturen</h4>
+                  <p className="text-gray-600">Unser Team verfügt über mehr als 10 Jahre Erfahrung in der Handyreparatur-Branche</p>
+                </div>
+              </div>
             </div>
             <div>
               <h3 className="text-2xl font-bold mb-6">Von Handyshop-Betreibern für Handyshop-Betreiber</h3>
