@@ -402,6 +402,7 @@ async function createEmailTemplates(
             subject: template.subject,
             body: template.body,
             variables: template.variables,
+            type: type, // Typ der Vorlage (app oder customer)
             updatedAt: now
           })
           .where(eq(emailTemplates.id, existingTemplate.id));
@@ -414,6 +415,7 @@ async function createEmailTemplates(
           subject: template.subject,
           body: template.body,
           variables: template.variables,
+          type: type, // Typ der Vorlage (app oder customer)
           userId,
           shopId,
           createdAt: now,

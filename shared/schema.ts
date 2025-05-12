@@ -310,6 +310,7 @@ export const emailTemplates = pgTable("email_templates", {
   variables: text("variables").array(),  // Liste von Variablen, die in der Vorlage verwendet werden können
   userId: integer("user_id"), // Benutzer, dem die Vorlage gehört
   shopId: integer("shop_id").default(1), // Shop, zu dem die Vorlage gehört (für Multi-Tenant-Isolation)
+  type: text("type"), // Typ der Vorlage: 'app' (System) oder 'customer' (Kunde)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
