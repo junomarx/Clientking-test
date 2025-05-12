@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerten Sie unsere Reparaturleistung</title>
+    <style>
+        body, p, h1, h2, h3, h4, h5, h6, table, td, div, span {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f7f7f7;
+            color: #333333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .header {
+            padding: 25px 20px;
+            text-align: center;
+            background-color: #f0f7ff;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999999;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #2c5aa0;
+            font-size: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            font-size: 15px;
+            text-align: left;
+        }
+        
+        .button-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2c5aa0;
+            color: white;
+            text-decoration: none;
+            font-weight: normal;
+            font-size: 15px;
+            border-radius: 4px;
+        }
+        
+        .thank-you {
+            margin-top: 30px;
+            font-style: italic;
+            color: #555;
+            text-align: center;
+        }
+        
+        .contact-info {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{logo}}" alt="{{geschaeftsname}}" class="logo">
+        </div>
+        
+        <div class="content">
+            <h1>Feedback zu Ihrer Reparatur</h1>
+            
+            <p>Sehr geehrte(r) {{kundenname}},</p>
+            
+            <p>wir hoffen, dass Ihr {{geraet}} von {{hersteller}} nach der Reparatur wieder einwandfrei funktioniert und Sie mit unserem Service zufrieden sind.</p>
+            
+            <p>Um unsere Leistungen kontinuierlich zu verbessern, würden wir uns sehr über Ihre Bewertung freuen. Ihre Meinung hilft uns und anderen Kunden.</p>
+            
+            <div class="button-container">
+                <a href="{{bewertungslink}}" class="button">Bewertung abgeben</a>
+            </div>
+            
+            <p>Sollten Sie Fragen oder Anregungen haben, können Sie uns jederzeit kontaktieren.</p>
+            
+            <div class="divider"></div>
+            
+            <div class="contact-info">
+                <p><strong>{{geschaeftsname}}</strong><br>
+                {{adresse}}<br>
+                Telefon: <a href="tel:{{telefon}}">{{telefon}}</a><br>
+                E-Mail: <a href="mailto:{{email}}">{{email}}</a><br>
+                <a href="{{website}}">{{website}}</a></p>
+            </div>
+            
+            <p class="thank-you">Vielen Dank für Ihr Vertrauen!</p>
+        </div>
+        
+        <div class="footer">
+            <p>Sie erhalten diese E-Mail, weil Sie unseren Service in Anspruch genommen haben.<br>
+            © {{geschaeftsname}} {{aktuellesJahr}} | <a href="{{datenschutzlink}}">Datenschutz</a></p>
+        </div>
+    </div>
+</body>
+</html>
