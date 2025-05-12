@@ -1616,9 +1616,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
-      const success = await storage.deleteEmailTemplate(id, userId);
-      if (!success) {
-        return res.status(404).json({ error: "Email template not found or could not be deleted" });
+      try {
+        const success = await storage.deleteEmailTemplate(id, userId);
+        if (!success) {
+          return res.status(404).json({ error: "Email template not found or could not be deleted" });
+        }
+      } catch (err: any) {
+        // Prüfen, ob es sich um einen spezifischen Fehler handelt
+        if (err.message && err.message.includes("used in email history")) {
+          return res.status(409).json({ 
+            error: "Diese E-Mail-Vorlage wurde bereits für den Versand von E-Mails verwendet und kann nicht gelöscht werden. Sie können jedoch die Vorlage bearbeiten, um den Inhalt zu ändern." 
+          });
+        }
+        
+        // Wenn es ein anderer Fehler ist, werfen wir ihn weiter
+        throw err;
       }
       
       return res.status(200).json({ message: "Email template deleted successfully" });

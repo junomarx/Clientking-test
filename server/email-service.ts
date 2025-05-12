@@ -1,6 +1,6 @@
 import { db } from './db';
 import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
-import { eq, desc, isNull, or, and, SQL } from 'drizzle-orm';
+import { eq, desc, isNull, or, and, SQL, count } from 'drizzle-orm';
 import { storage } from './storage';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
@@ -281,6 +281,35 @@ export class EmailService {
 
   async deleteEmailTemplate(id: number, userId?: number): Promise<boolean> {
     try {
+      // Zuerst prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
+      const emailHistoryEntries = await db.select()
+        .from(emailHistory)
+        .where(eq(emailHistory.emailTemplateId, id));
+      
+      const usageCount = emailHistoryEntries.length;
+      
+      if (usageCount > 0) {
+        console.log(`E-Mail-Vorlage mit ID ${id} wird in ${usageCount} E-Mail-Historie-Einträgen verwendet und kann nicht gelöscht werden.`);
+        
+        // Duplizierte Vorlagen finden und Benutzer informieren
+        let templateQuery = db.select()
+          .from(emailTemplates)
+          .where(eq(emailTemplates.id, id));
+        
+        const templateToDelete = await templateQuery.execute();
+        
+        if (templateToDelete.length === 0) {
+          return false;
+        }
+        
+        // Prüfen, ob es Duplikate gibt (Vorlagen mit gleichem Namen für den gleichen Benutzer)
+        const template = templateToDelete[0];
+        
+        // Es handelt sich um eine Vorlage, die in der Historie verwendet wird
+        // Wir können sie nicht löschen, aber wir geben false zurück mit einem spezifischen Fehler
+        throw new Error(`Template with ID ${id} is used in email history and cannot be deleted.`);
+      }
+      
       if (!userId) {
         // Ohne Benutzer-ID können nur globale Vorlagen gelöscht werden
         await db.delete(emailTemplates).where(
