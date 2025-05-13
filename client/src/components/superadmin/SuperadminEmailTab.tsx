@@ -645,30 +645,17 @@ export default function SuperadminEmailTab() {
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">Typ</Label>
+              <Label htmlFor="newTemplateType" className="text-right">Typ</Label>
               <div className="col-span-3">
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="typeApp"
-                      checked={newTemplate.type === 'app'}
-                      onChange={() => setNewTemplate({ ...newTemplate, type: 'app' })}
-                      className={radioStyle}
-                    />
-                    <Label htmlFor="typeApp" className="cursor-pointer font-normal">System-Vorlage</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="typeCustomer"
-                      checked={newTemplate.type === 'customer'}
-                      onChange={() => setNewTemplate({ ...newTemplate, type: 'customer' })}
-                      className={radioStyle}
-                    />
-                    <Label htmlFor="typeCustomer" className="cursor-pointer font-normal">Kunden-Vorlage</Label>
-                  </div>
-                </div>
+                <select
+                  id="newTemplateType"
+                  value={newTemplate.type}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, type: e.target.value as 'app' | 'customer' })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="app">System-Vorlage</option>
+                  <option value="customer">Kunden-Vorlage</option>
+                </select>
               </div>
             </div>
             <div className="grid grid-cols-4 items-start gap-4">
@@ -750,30 +737,17 @@ export default function SuperadminEmailTab() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Typ</Label>
+                <Label htmlFor="editTemplateType" className="text-right">Typ</Label>
                 <div className="col-span-3">
-                  <div className="flex items-center space-x-6">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id="editTypeApp"
-                        checked={selectedTemplate.type === 'app'}
-                        onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'app' })}
-                        className={radioStyle}
-                      />
-                      <Label htmlFor="editTypeApp" className="cursor-pointer font-normal">System-Vorlage</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id="editTypeCustomer"
-                        checked={selectedTemplate.type === 'customer'}
-                        onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'customer' })}
-                        className={radioStyle}
-                      />
-                      <Label htmlFor="editTypeCustomer" className="cursor-pointer font-normal">Kunden-Vorlage</Label>
-                    </div>
-                  </div>
+                  <select
+                    id="editTemplateType"
+                    value={selectedTemplate.type}
+                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, type: e.target.value as 'app' | 'customer' })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="app">System-Vorlage</option>
+                    <option value="customer">Kunden-Vorlage</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-4 items-start gap-4">
