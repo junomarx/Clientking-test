@@ -359,19 +359,45 @@ export class EmailService {
     try {
       console.log("Start Bereinigung redundanter E-Mail-Vorlagen...");
       
-      // Für den angegebenen Benutzer oder globale Vorlagen
-      if (userId !== undefined) {
-        await this.cleanupCompletedTemplateForUser(userId);
-      } else {
-        // Für einen bestimmten Benutzer nehmen wir einfach Benutzer 3 als Beispiel
-        await this.cleanupCompletedTemplateForUser(3);
-        // Auch die globalen Vorlagen bereinigen
-        await this.cleanupCompletedTemplateForUser(null);
-      }
+      // Explizit die bekannte redundante Vorlage für Benutzer 3 archivieren
+      await this.archiveCompletedTemplateForUser(3);
       
       console.log("Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.");
     } catch (error) {
       console.error("Fehler beim Bereinigen redundanter E-Mail-Vorlagen:", error);
+    }
+  }
+  
+  /**
+   * Archiviert die "Reparatur abgeschlossen" Vorlage für einen bestimmten Benutzer
+   */
+  private async archiveCompletedTemplateForUser(userId: number): Promise<void> {
+    try {
+      // Die "Reparatur abgeschlossen" Vorlage für den Benutzer finden
+      const templates = await db.select()
+        .from(emailTemplates)
+        .where(
+          and(
+            eq(emailTemplates.userId, userId),
+            eq(emailTemplates.name, "Reparatur abgeschlossen")
+          )
+        );
+      
+      // Wenn die Vorlage gefunden wurde, archivieren
+      if (templates.length > 0) {
+        for (const template of templates) {
+          await db.update(emailTemplates)
+            .set({
+              name: `[ARCHIVIERT] Reparatur abgeschlossen`,
+              updatedAt: new Date()
+            })
+            .where(eq(emailTemplates.id, template.id));
+          
+          console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" (ID: ${template.id}) für Benutzer ${userId} archiviert.`);
+        }
+      }
+    } catch (error) {
+      console.error(`Fehler beim Archivieren der "Reparatur abgeschlossen" Vorlage für Benutzer ${userId}:`, error);
     }
   }
 
