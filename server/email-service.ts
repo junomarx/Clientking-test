@@ -270,35 +270,42 @@ export class EmailService {
     try {
       console.log('Starte Versand einer Superadmin-Test-E-Mail an:', to);
       
-      if (!this.superadminSmtpTransporter) {
-        console.log('Kein Superadmin-SMTP-Transporter vorhanden, versuche Initialisierung...');
-        // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
-        await this.initSuperadminSmtpTransporter();
-        
-        if (!this.superadminSmtpTransporter) {
-          console.error('Initialisierung des Superadmin-SMTP-Transporters fehlgeschlagen');
-          throw new Error('Kein Superadmin-SMTP-Transporter konfiguriert');
-        }
+      // Zuerst die neuesten Einstellungen aus der Datenbank laden
+      const [dbSettings] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .where(eq(superadminEmailSettings.isActive, true))
+        .limit(1);
+      
+      if (!dbSettings) {
+        console.error('Keine Superadmin-E-Mail-Einstellungen in der Datenbank gefunden');
+        throw new Error('Keine Superadmin-E-Mail-Konfiguration in der Datenbank gefunden');
       }
       
-      if (!this.superadminEmailConfig) {
-        console.error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
-        throw new Error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
-      }
+      // Aktualisiere die Konfiguration mit den neuesten Daten
+      this.superadminEmailConfig = dbSettings;
       
-      const senderName = this.superadminEmailConfig.smtpSenderName;
-      const senderEmail = this.superadminEmailConfig.smtpSenderEmail;
+      console.log('Aktuelle Superadmin-E-Mail-Konfiguration:', {
+        host: dbSettings.smtpHost,
+        port: dbSettings.smtpPort,
+        user: dbSettings.smtpUser,
+        sender: dbSettings.smtpSenderEmail,
+        senderName: dbSettings.smtpSenderName
+      });
       
-      console.log(`Sende Superadmin-Test-E-Mail von "${senderName}" <${senderEmail}> an ${to}`);
+      const senderName = dbSettings.smtpSenderName;
+      const senderEmail = dbSettings.smtpSenderEmail;
       
-      // Erstellen Sie eine manuelle Verbindung zum SMTP-Server (für Test-Zwecke)
+      console.log(`Sende Superadmin-Test-E-Mail mit direkter Konfiguration von "${senderName}" <${senderEmail}> an ${to}`);
+      
+      // Erstellen Sie eine frische Verbindung zum SMTP-Server mit den aktuellsten Daten
       const config = {
-        host: this.superadminEmailConfig.smtpHost,
-        port: this.superadminEmailConfig.smtpPort,
-        secure: this.superadminEmailConfig.smtpPort === 465,
+        host: dbSettings.smtpHost,
+        port: dbSettings.smtpPort,
+        secure: dbSettings.smtpPort === 465,
         auth: {
-          user: this.superadminEmailConfig.smtpUser,
-          pass: this.superadminEmailConfig.smtpPassword
+          user: dbSettings.smtpUser,
+          pass: dbSettings.smtpPassword
         },
         // Eine angemessene Zeitüberschreitung festlegen
         connectionTimeout: 10000, // 10 Sekunden
@@ -313,7 +320,7 @@ export class EmailService {
         logger: true
       };
       
-      console.log('Erstelle neuen Test-Transporter mit aktuellen Konfigurationsdaten');
+      console.log('Erstelle neuen Test-Transporter mit direkt geladenen Konfigurationsdaten');
       const testTransporter = nodemailer.createTransport(config);
       
       const mailOptions = {
@@ -328,7 +335,7 @@ export class EmailService {
             
             <p>Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen korrekt konfiguriert sind.</p>
             
-            <p>Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails über die Superadmin-E-Mail-Adresse zu versenden.</p>
+            <p>Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails über die Superadmin-E-Mail-Adresse (${senderEmail}) zu versenden.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
@@ -336,7 +343,7 @@ export class EmailService {
             </div>
           </div>
         `,
-        text: 'Superadmin-Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.'
+        text: `Superadmin-Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen für ${senderEmail} korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.`
       };
       
       console.log('Sende Test-E-Mail...');
@@ -345,6 +352,14 @@ export class EmailService {
       
       // Schließe den Test-Transporter
       testTransporter.close();
+      
+      // Wenn die Test-E-Mail erfolgreich ist, aktualisieren wir auch den normalen Transporter
+      if (this.superadminSmtpTransporter) {
+        this.superadminSmtpTransporter.close();
+      }
+      
+      // Erstelle den Superadmin-SMTP-Transporter neu mit den aktuellen Einstellungen
+      this.superadminSmtpTransporter = nodemailer.createTransport(config);
       
       return true;
     } catch (error) {
@@ -431,6 +446,20 @@ export class EmailService {
         processedBody = processedBody.replace(placeholder, value);
       });
       
+      // Lade aktuelle Superadmin-Einstellungen, falls sie noch nicht geladen wurden
+      if (isSystemEmail && !this.superadminEmailConfig) {
+        await this.initSuperadminSmtpTransporter();
+      }
+      
+      // Prüfe, ob SMTP-Transporters existieren, initialisiere sie bei Bedarf
+      if (isSystemEmail && !this.superadminSmtpTransporter) {
+        console.warn('Superadmin-SMTP-Transporter nicht vorhanden, versuche zu initialisieren...');
+        await this.initSuperadminSmtpTransporter();
+      } else if (!isSystemEmail && !this.smtpTransporter) {
+        console.warn('Standard-SMTP-Transporter nicht vorhanden, versuche zu initialisieren...');
+        this.initDefaultSmtpTransporter();
+      }
+      
       // Wähle den richtigen SMTP-Transporter basierend auf isSystemEmail
       let transporter: nodemailer.Transporter;
       let senderName: string;
@@ -443,6 +472,7 @@ export class EmailService {
         senderEmail = this.superadminEmailConfig.smtpSenderEmail;
         
         console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über Superadmin-SMTP`);
+        console.log(`Verwende Superadmin-Absender: "${senderName}" <${senderEmail}>`);
       } else {
         // Standard-SMTP-Einstellungen verwenden
         if (!this.smtpTransporter) {
@@ -458,9 +488,8 @@ export class EmailService {
         senderEmail = process.env.SMTP_USER;
         
         console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Standard-SMTP`);
+        console.log(`Verwende Standard-Absender: "${senderName}" <${senderEmail}>`);
       }
-      
-      console.log(`Sending ${isSystemEmail ? 'system' : 'user'} email with sender: "${senderName}" <${senderEmail}> to ${recipientEmail}`);
       
       // Erstelle E-Mail-Optionen mit den ausgewählten SMTP-Einstellungen
       const mailOptions = {
@@ -470,6 +499,13 @@ export class EmailService {
         html: processedBody,
         text: processedBody.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
       };
+      
+      console.log('Sende E-Mail mit folgenden Daten:', {
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        isSystemEmail: isSystemEmail
+      });
       
       // Sende die E-Mail über den ausgewählten SMTP-Transporter
       const info = await transporter.sendMail(mailOptions);
