@@ -253,23 +253,24 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     
     console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
-    // Bei allen Status-Änderungen, die E-Mail-Option haben und diese ausgewählt wurde,
-    // erst den Status ändern und dann den E-Mail-Dialog öffnen
-    if (sendEmail && (newStatus === 'fertig' || newStatus === 'ersatzteil_eingetroffen' || newStatus === 'abgeholt')) {
-      // Status ändern und dann E-Mail-Dialog öffnen
+    // Bei allen Status-Änderungen, bei denen eine E-Mail gesendet werden soll
+    if (sendEmail) {
+      // Erst den Status ändern und dann den E-Mail-Dialog öffnen
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
         status: newStatus
       }, {
         onSuccess: () => {
           // Nach erfolgreicher Statusänderung den E-Mail-Dialog öffnen
+          // Verzögerung hinzufügen, damit die Statusänderung zuerst verarbeitet wird
           setTimeout(() => {
-            handleSendReviewRequest(selectedRepairId);
-          }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
+            setSelectedRepairId(selectedRepairId);
+            setShowEmailDialog(true);
+          }, 300);
         }
       });
     } 
-    // Alle anderen Statusänderungen ohne E-Mail
+    // Statusänderungen ohne E-Mail
     else {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 

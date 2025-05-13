@@ -26,18 +26,14 @@ export function EmailSendDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Lade E-Mail-Vorlagen für diese Reparatur
+  // Lade alle Kunden-E-Mail-Vorlagen (Typ 'customer')
   const { data: templatesData, isLoading: isLoadingTemplates, error: templatesError } = useQuery({
-    queryKey: ['/api/repairs', repairId, 'email-templates'],
+    queryKey: ['/api/email-templates', 'customer'],
     queryFn: async () => {
-      if (!repairId) {
-        throw new Error("Keine Reparatur ausgewählt");
-      }
-      const response = await apiRequest('GET', `/api/repairs/${repairId}/email-templates`);
-      const data = await response.json();
-      return data.templates as EmailTemplate[];
+      const response = await apiRequest('GET', `/api/email-templates?type=customer`);
+      return await response.json() as EmailTemplate[];
     },
-    enabled: open && !!repairId, // Nur laden, wenn der Dialog geöffnet ist und eine Reparatur ausgewählt ist
+    enabled: open, // Nur laden, wenn der Dialog geöffnet ist
   });
 
   // E-Mail-Senden-Mutation
@@ -46,9 +42,41 @@ export function EmailSendDialog({
       if (!repairId) {
         throw new Error("Keine Reparatur ausgewählt");
       }
-      const response = await apiRequest('POST', `/api/repairs/${repairId}/send-email`, {
-        templateId: parseInt(selectedTemplateId)
+      
+      // Die Reparatur abrufen, um die Kundendaten zu erhalten
+      const repairResponse = await apiRequest('GET', `/api/repairs/${repairId}`);
+      const repair = await repairResponse.json();
+      
+      if (!repair.customerId) {
+        throw new Error("Diese Reparatur hat keinen zugeordneten Kunden");
+      }
+      
+      // Den Kunden abrufen, um die E-Mail-Adresse zu erhalten
+      const customerResponse = await apiRequest('GET', `/api/customers/${repair.customerId}`);
+      const customer = await customerResponse.json();
+      
+      if (!customer.email) {
+        throw new Error("Der Kunde hat keine E-Mail-Adresse");
+      }
+      
+      // Variablen für die E-Mail-Vorlage sammeln
+      const variables = {
+        kundenname: `${customer.firstName} ${customer.lastName}`,
+        geraet: repair.model || "",
+        hersteller: repair.brand || "",
+        auftragsnummer: repair.orderCode || `#${repair.id}`,
+        fehler: repair.issue || "",
+        kostenvoranschlag: repair.estimatedCost?.toString() || "Nicht angegeben",
+        repairId: repair.id.toString()
+      };
+      
+      // E-Mail senden mit der allgemeinen API
+      const response = await apiRequest('POST', `/api/send-email`, {
+        templateId: parseInt(selectedTemplateId),
+        to: customer.email,
+        variables: variables
       });
+      
       return await response.json();
     },
     onSuccess: () => {
