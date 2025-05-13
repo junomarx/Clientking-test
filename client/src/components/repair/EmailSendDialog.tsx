@@ -12,7 +12,7 @@ import { EmailTemplate } from "@shared/schema";
 interface EmailSendDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  repairId: number;
+  repairId: number | null;
   onSuccess?: () => void;
 }
 
@@ -30,16 +30,22 @@ export function EmailSendDialog({
   const { data: templatesData, isLoading: isLoadingTemplates, error: templatesError } = useQuery({
     queryKey: ['/api/repairs', repairId, 'email-templates'],
     queryFn: async () => {
+      if (!repairId) {
+        throw new Error("Keine Reparatur ausgewählt");
+      }
       const response = await apiRequest('GET', `/api/repairs/${repairId}/email-templates`);
       const data = await response.json();
       return data.templates as EmailTemplate[];
     },
-    enabled: open, // Nur laden, wenn der Dialog geöffnet ist
+    enabled: open && !!repairId, // Nur laden, wenn der Dialog geöffnet ist und eine Reparatur ausgewählt ist
   });
 
   // E-Mail-Senden-Mutation
   const { mutate: sendEmail, isPending: isSending } = useMutation({
     mutationFn: async () => {
+      if (!repairId) {
+        throw new Error("Keine Reparatur ausgewählt");
+      }
       const response = await apiRequest('POST', `/api/repairs/${repairId}/send-email`, {
         templateId: parseInt(selectedTemplateId)
       });

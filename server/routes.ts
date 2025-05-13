@@ -1897,16 +1897,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Variablen für die E-Mail-Vorlage
       const variables = {
-        "customer_name": customer.name || "",
+        "customer_name": customer.firstName + " " + customer.lastName,
         "repair_id": repair.id.toString(),
-        "device": repair.deviceName || "",
+        "device": repair.model || repair.deviceType || "",
         "businessName": businessSettings?.businessName || "",
         "reviewLink": reviewLink,
         "repairId": repairId.toString(),
         "userId": userId.toString(),
-        "businessAddress": businessSettings?.businessAddress || "",
-        "businessPhone": businessSettings?.businessPhone || "",
-        "businessEmail": businessSettings?.businessEmail || ""
+        "businessAddress": businessSettings?.address || "",
+        "businessPhone": businessSettings?.phone || "",
+        "businessEmail": businessSettings?.email || ""
       };
       
       console.log(`Sende E-Mail mit Vorlage ID ${templateId} für Reparatur ${repairId} an ${customer.email}`);

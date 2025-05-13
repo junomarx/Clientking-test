@@ -825,6 +825,17 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           }, 300);
         }}
       />
+
+      {/* E-Mail-Versand-Dialog */}
+      <EmailSendDialog
+        open={showEmailDialog}
+        onOpenChange={setShowEmailDialog}
+        repairId={selectedRepairId}
+        onSuccess={() => {
+          // Update der Reparaturdaten nach erfolgreicher E-Mail-Versendung
+          queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+        }}
+      />
     </div>
   );
 }
