@@ -306,8 +306,16 @@ export class EmailService {
         const template = templateToDelete[0];
         
         // Es handelt sich um eine Vorlage, die in der Historie verwendet wird
-        // Wir können sie nicht löschen, aber wir geben false zurück mit einem spezifischen Fehler
-        throw new Error(`Template with ID ${id} is used in email history and cannot be deleted.`);
+        // Daher archivieren wir sie, anstatt sie zu löschen
+        await db.update(emailTemplates)
+          .set({
+            name: `[ARCHIVIERT] ${template.name}`,
+            updatedAt: new Date()
+          })
+          .where(eq(emailTemplates.id, id));
+        
+        console.log(`E-Mail-Vorlage '${template.name}' wurde archiviert, da sie in der E-Mail-Historie verwendet wird.`);
+        return true;
       }
       
       if (!userId) {
