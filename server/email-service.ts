@@ -544,7 +544,59 @@ export class EmailService {
   }
 
   // E-Mail-Versand mit Vorlagenverarbeitung
-  async sendEmailWithTemplate(
+  /**
+   * Sendet eine Test-E-Mail mit einer bestimmten Vorlage
+   * Diese Funktion erlaubt die direkte Übermittlung von Betreff und Body anstatt die Vorlage aus der Datenbank zu laden
+   */
+  async sendEmailWithTemplate({
+    templateName,
+    recipientEmail,
+    data,
+    subject,
+    body
+  }: {
+    templateName: string,
+    recipientEmail: string,
+    data: Record<string, string>,
+    subject: string,
+    body: string
+  }): Promise<boolean> {
+    try {
+      // Ersetze Platzhalter in Betreff und Text mit den übergebenen Daten
+      let processedSubject = subject;
+      let processedBody = body;
+      
+      // Alle Variablen ersetzen
+      Object.entries(data).forEach(([key, value]) => {
+        const placeholder = new RegExp(`{{${key}}}`, 'g');
+        processedSubject = processedSubject.replace(placeholder, value);
+        processedBody = processedBody.replace(placeholder, value);
+      });
+      
+      // Erstelle E-Mail-Optionen mit den globalen SMTP-Einstellungen
+      const mailOptions = {
+        from: `"${process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung'}" <${process.env.SMTP_SENDER_EMAIL || 'noreply@phonerepair.at'}>`,
+        to: recipientEmail,
+        subject: processedSubject,
+        html: processedBody,
+        text: processedBody.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
+      };
+      
+      // Sende die E-Mail über den globalen SMTP-Transporter
+      const info = await this.smtpTransporter.sendMail(mailOptions);
+      console.log('Test-E-Mail mit Vorlage erfolgreich gesendet:', info.messageId);
+      
+      return true;
+    } catch (error) {
+      console.error('Fehler beim Senden der Test-E-Mail mit Vorlage:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Sendet eine E-Mail mit einer Vorlage, die aus der Datenbank geladen wird
+   */
+  async sendEmailWithTemplateById(
     templateId: number, 
     to: string, 
     variables: Record<string, string>

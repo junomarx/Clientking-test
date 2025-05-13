@@ -66,6 +66,11 @@ export default function SuperadminEmailTab() {
   // Aktiver Tab für E-Mail-Vorlagentypen (app oder customer)
   const [templateType, setTemplateType] = useState<'app' | 'customer'>('app');
   
+  // States für den Vorlagen-Test
+  const [templateTestDialogOpen, setTemplateTestDialogOpen] = useState(false);
+  const [templateToTest, setTemplateToTest] = useState<EmailTemplate | null>(null);
+  const [templateTestEmail, setTemplateTestEmail] = useState('');
+  
   // Radiobutton-Style für konsistente Darstellung
   const radioStyle = "w-4 h-4 border border-gray-300 bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   
