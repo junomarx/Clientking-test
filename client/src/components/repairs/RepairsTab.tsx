@@ -20,6 +20,7 @@ import { RepairDetailsDialog } from './RepairDetailsDialog';
 import { ChangeStatusDialog } from './ChangeStatusDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { EmailSendDialog } from '../repair/EmailSendDialog';
 import { 
   Pencil, 
   Printer, 
@@ -48,6 +49,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
   // SMS-Funktionalität wurde entfernt
@@ -333,7 +335,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   
   // Funktion zum Senden einer Bewertungsanfrage
   const handleSendReviewRequest = (repairId: number) => {
-    sendReviewRequestMutation.mutate(repairId);
+    setSelectedRepairId(repairId);
+    setShowEmailDialog(true);
   };
   
   // Pagination logic
