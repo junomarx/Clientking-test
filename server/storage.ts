@@ -179,6 +179,13 @@ export interface IStorage {
     variables: Record<string, string>,
     userId?: number,
   ): Promise<boolean>;
+  
+  sendEmailWithTemplateById(
+    templateId: number,
+    to: string,
+    variables: Record<string, string>,
+    userId?: number,
+  ): Promise<boolean>;
 
   // SMS-Funktionalität wurde auf Kundenwunsch entfernt
 
