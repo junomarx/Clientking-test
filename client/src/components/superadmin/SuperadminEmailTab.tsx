@@ -647,16 +647,16 @@ export default function SuperadminEmailTab() {
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Typ</Label>
               <div className="col-span-3">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
                     <input
                       type="radio"
                       id="typeApp"
                       checked={newTemplate.type === 'app'}
                       onChange={() => setNewTemplate({ ...newTemplate, type: 'app' })}
-                      className="w-4 h-4"
+                      className={radioStyle}
                     />
-                    <Label htmlFor="typeApp" className="cursor-pointer">System-Vorlage</Label>
+                    <Label htmlFor="typeApp" className="cursor-pointer font-normal">System-Vorlage</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <input
@@ -664,9 +664,9 @@ export default function SuperadminEmailTab() {
                       id="typeCustomer"
                       checked={newTemplate.type === 'customer'}
                       onChange={() => setNewTemplate({ ...newTemplate, type: 'customer' })}
-                      className="w-4 h-4"
+                      className={radioStyle}
                     />
-                    <Label htmlFor="typeCustomer" className="cursor-pointer">Kunden-Vorlage</Label>
+                    <Label htmlFor="typeCustomer" className="cursor-pointer font-normal">Kunden-Vorlage</Label>
                   </div>
                 </div>
               </div>
@@ -759,7 +759,7 @@ export default function SuperadminEmailTab() {
                         id="editTypeApp"
                         checked={selectedTemplate.type === 'app'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'app' })}
-                        className="w-4 h-4 border-primary bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className={radioStyle}
                       />
                       <Label htmlFor="editTypeApp" className="cursor-pointer font-normal">System-Vorlage</Label>
                     </div>
@@ -769,7 +769,7 @@ export default function SuperadminEmailTab() {
                         id="editTypeCustomer"
                         checked={selectedTemplate.type === 'customer'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'customer' })}
-                        className="w-4 h-4 border-primary bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className={radioStyle}
                       />
                       <Label htmlFor="editTypeCustomer" className="cursor-pointer font-normal">Kunden-Vorlage</Label>
                     </div>
