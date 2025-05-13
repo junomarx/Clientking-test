@@ -253,40 +253,23 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     
     console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
-    // Status auf "fertig" aktualisieren mit optionaler E-Mail-Benachrichtigung
-    if (newStatus === 'fertig') {
-      updateStatusMutation.mutate({ 
-        id: selectedRepairId, 
-        status: newStatus, 
-        sendEmail: sendEmail
-      });
-    }
-    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
-    else if (newStatus === 'abgeholt') {
+    // Bei allen Status-Änderungen, die E-Mail-Option haben und diese ausgewählt wurde,
+    // erst den Status ändern und dann den E-Mail-Dialog öffnen
+    if (sendEmail && (newStatus === 'fertig' || newStatus === 'ersatzteil_eingetroffen' || newStatus === 'abgeholt')) {
+      // Status ändern und dann E-Mail-Dialog öffnen
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
         status: newStatus
       }, {
         onSuccess: () => {
-          // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
-          if (sendEmail) {
-            setTimeout(() => {
-              handleSendReviewRequest(selectedRepairId);
-            }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
-          }
+          // Nach erfolgreicher Statusänderung den E-Mail-Dialog öffnen
+          setTimeout(() => {
+            handleSendReviewRequest(selectedRepairId);
+          }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
         }
       });
-    }
-    // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung
-    else if (newStatus === 'ersatzteil_eingetroffen') {
-      console.log("Status wird auf 'ersatzteil_eingetroffen' gesetzt mit sendEmail:", sendEmail);
-      updateStatusMutation.mutate({ 
-        id: selectedRepairId, 
-        status: newStatus,
-        sendEmail: sendEmail
-      });
-    }
-    // Alle anderen Statusänderungen ohne zusätzliche Funktionen
+    } 
+    // Alle anderen Statusänderungen ohne E-Mail
     else {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 

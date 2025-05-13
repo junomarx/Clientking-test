@@ -448,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
               
               // E-Mail senden
-              const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables);
+              const emailSent = await storage.sendEmailWithTemplate(pickupTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
             } else {
               console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
