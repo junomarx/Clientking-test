@@ -54,47 +54,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      console.log(`Sende Anmeldedaten für Benutzer: ${credentials.username}`);
+      
+      try {
+        const res = await apiRequest("POST", "/api/login", credentials);
+        
+        // Überprüfen, ob die Antwort ein OK-Status ist
+        if (!res.ok) {
+          console.error(`Login-Fehler: HTTP Status ${res.status}`);
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Anmeldung fehlgeschlagen');
+        }
+        
+        return await res.json();
+      } catch (error) {
+        console.error('Login-Fehler:', error);
+        throw error;
+      }
     },
     onSuccess: (data: any) => {
-      // Hier speichern wir den Token aus der Antwort
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token);
-        console.log('Token saved to localStorage');
+      console.log('Login erfolgreich, Antwortdaten:', data);
+      
+      try {
+        // Hier speichern wir den Token aus der Antwort
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+          console.log('Token saved to localStorage');
+        } else {
+          console.warn('Kein Token in der Antwort erhalten');
+        }
+        
+        // WICHTIG: Benutzer-ID im localStorage speichern, damit sie für API-Anfragen verfügbar ist
+        if (data.id) {
+          localStorage.setItem('userId', data.id.toString());
+          console.log('UserId saved to localStorage:', data.id);
+        } else {
+          console.warn('Keine Benutzer-ID in der Antwort erhalten');
+        }
+        
+        // Benutzername im localStorage speichern für Debugging
+        if (data.username) {
+          localStorage.setItem('username', data.username);
+          console.log('Username saved to localStorage:', data.username);
+        }
+        
+        // Benutzer-Daten setzen
+        queryClient.setQueryData(["/api/user"], data);
+        
+        // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
+        // Dies verhindert, dass Daten anderer Benutzer angezeigt werden
+        queryClient.invalidateQueries();
+        
+        // Nach erfolgreichem Login zur App-Seite weiterleiten
+        setLocation('/app');
+        
+        toast({
+          title: "Anmeldung erfolgreich",
+          description: `Willkommen zurück, ${data.username}!`,
+        });
+      } catch (error) {
+        console.error('Fehler beim Verarbeiten der erfolgreichen Anmeldung:', error);
       }
-      
-      // WICHTIG: Benutzer-ID im localStorage speichern, damit sie für API-Anfragen verfügbar ist
-      if (data.id) {
-        localStorage.setItem('userId', data.id.toString());
-        console.log('UserId saved to localStorage:', data.id);
-      }
-      
-      // Benutzername im localStorage speichern für Debugging
-      if (data.username) {
-        localStorage.setItem('username', data.username);
-        console.log('Username saved to localStorage:', data.username);
-      }
-      
-      // Benutzer-Daten setzen
-      queryClient.setQueryData(["/api/user"], data);
-      
-      // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
-      // Dies verhindert, dass Daten anderer Benutzer angezeigt werden
-      queryClient.invalidateQueries();
-      
-      // Nach erfolgreichem Login zur App-Seite weiterleiten
-      setLocation('/app');
-      
-      toast({
-        title: "Anmeldung erfolgreich",
-        description: `Willkommen zurück, ${data.username}!`,
-      });
     },
     onError: (error: Error) => {
+      console.error('Login-Fehler im onError-Handler:', error);
+      
+      // Spezifische Fehlermeldung anzeigen oder generischen Fehlertext
+      let errorMessage = "Die Anmeldung ist fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.";
+      if (error.message && error.message !== "Failed to fetch") {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Anmeldung fehlgeschlagen",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },

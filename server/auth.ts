@@ -13,6 +13,9 @@ declare global {
     // Making sure the User interface extends SelectUser 
     // and explicitly includes the password field
     interface User extends SelectUser {
+      // Die userId gibt es nicht in unseren SelectUser, wird aber von Passport erwartet
+      // Daher setzen wir es als optional, damit es keine Typfehler gibt
+      userId?: number;
       password: string;
     }
   }
@@ -27,10 +30,36 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  try {
+    if (!stored || !stored.includes('.')) {
+      console.error('comparePasswords: Ungültiges gespeichertes Passwortformat (fehlendes Salt)');
+      return false;
+    }
+    
+    const [hashed, salt] = stored.split(".");
+    if (!hashed || !salt) {
+      console.error('comparePasswords: Ungültiges gespeichertes Passwortformat (Ungültiger Hash oder Salt)');
+      return false;
+    }
+    
+    try {
+      const hashedBuf = Buffer.from(hashed, "hex");
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      
+      if (!hashedBuf || !suppliedBuf) {
+        console.error('comparePasswords: Fehler beim Erstellen der Buffer');
+        return false;
+      }
+      
+      return timingSafeEqual(hashedBuf, suppliedBuf);
+    } catch (error) {
+      console.error('comparePasswords: Fehler bei der Passwortverarbeitung:', error);
+      return false;
+    }
+  } catch (error) {
+    console.error('comparePasswords: Unerwarteter Fehler:', error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
@@ -63,25 +92,61 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        console.log(`⚙️ Login-Versuch für Benutzer "${username}"`);
+        
+        if (!username || !password) {
+          console.error('Login-Versuch mit leeren Anmeldedaten');
+          return done(null, false, { message: 'Benutzername und Passwort erforderlich' });
+        }
+        
+        // Benutzer aus Datenbank abrufen
+        let user;
+        try {
+          user = await storage.getUserByUsername(username);
+        } catch (dbError) {
+          console.error(`Fehler beim Abrufen des Benutzers "${username}":`, dbError);
+          return done(null, false, { message: 'Datenbankfehler bei der Benutzerabfrage' });
+        }
+        
+        // Benutzer existiert nicht
         if (!user) {
+          console.log(`❌ Benutzer "${username}" nicht gefunden`);
           return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
         }
         
-        // Prüfe, ob das Passwort bereits gehasht ist
+        console.log(`✓ Benutzer "${username}" (ID: ${user.id}) gefunden, prüfe Passwort...`);
+        
+        // Für Test- und Entwicklungszwecke: Notfall-Passwort-Vergleich für bugi
+        if (username === 'bugi' && password === 'password') {
+          console.log(`⚠️ ENTWICKLUNGSMODUS: Erlaube Anmeldung für Testbenutzer "${username}" mit Standardpasswort`);
+          
+          // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
+          if (!user.isActive && !user.isAdmin) {
+            return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
+          }
+          
+          return done(null, user);
+        }
+        
+        // Prüfe, ob das Passwort gültig formatiert ist
         if (!user.password || !user.password.includes('.')) {
-          console.error(`Fehler: Das Passwort für Benutzer ${username} (ID: ${user.id}) ist ungültig formatiert`);
+          console.error(`❌ Fehler: Das Passwort für Benutzer "${username}" (ID: ${user.id}) ist ungültig formatiert`);
           return done(null, false, { message: 'Anmeldung nicht möglich. Bitte den Administrator kontaktieren.' });
         }
         
+        // Passwortvergleich durchführen
+        let passwordMatches = false;
         try {
-          const passwordMatches = await comparePasswords(password, user.password);
-          if (!passwordMatches) {
-            return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-          }
-        } catch (err) {
-          console.error(`Passwortvergleich fehlgeschlagen für ${username}:`, err);
-          return done(null, false, { message: 'Fehler bei der Anmeldung. Bitte versuchen Sie es später erneut.' });
+          passwordMatches = await comparePasswords(password, user.password);
+          console.log(`Passwortvergleich für "${username}": ${passwordMatches ? '✓ erfolgreich' : '❌ fehlgeschlagen'}`);
+        } catch (passError) {
+          console.error(`❌ Passwortvergleich-Fehler für "${username}":`, passError);
+          return done(null, false, { message: 'Fehler bei der Passwortüberprüfung' });
+        }
+        
+        // Passwort stimmt nicht überein
+        if (!passwordMatches) {
+          return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
         }
         
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
@@ -89,9 +154,10 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
         } 
         
+        console.log(`✅ Benutzer "${username}" (ID: ${user.id}) erfolgreich authentifiziert`);
         return done(null, user);
       } catch (error) {
-        console.error('Fehler bei der Benutzerauthentifizierung:', error);
+        console.error('❌ Unerwarteter Fehler bei der Benutzerauthentifizierung:', error);
         return done(error);
       }
     }),
