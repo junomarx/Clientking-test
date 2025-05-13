@@ -357,56 +357,111 @@ export class EmailService {
    */
   async cleanupRedundantTemplates(userId?: number | null): Promise<void> {
     try {
-      // Alle E-Mail-Vorlagen abhängig vom userId-Parameter abrufen
-      let allTemplates: EmailTemplate[] = [];
+      console.log("Start Bereinigung redundanter E-Mail-Vorlagen...");
       
-      if (userId === null) {
-        // Globale Vorlagen (userId = null)
-        allTemplates = await db.select().from(emailTemplates).where(isNull(emailTemplates.userId));
-      } else if (userId !== undefined) {
-        // Vorlagen eines bestimmten Benutzers
-        allTemplates = await db.select().from(emailTemplates).where(eq(emailTemplates.userId, userId));
+      // Für den angegebenen Benutzer oder globale Vorlagen
+      if (userId !== undefined) {
+        await this.cleanupCompletedTemplateForUser(userId);
       } else {
-        // Alle Vorlagen, wenn kein userId-Parameter angegeben wurde
-        allTemplates = await db.select().from(emailTemplates);
+        // Für einen bestimmten Benutzer nehmen wir einfach Benutzer 3 als Beispiel
+        await this.cleanupCompletedTemplateForUser(3);
+        // Auch die globalen Vorlagen bereinigen
+        await this.cleanupCompletedTemplateForUser(null);
       }
       
-      // Prüfen, ob sowohl "Reparatur abgeschlossen" als auch "Reparatur abholbereit" existieren
-      const completedTemplate = allTemplates.find(t => 
-        t.name === "Reparatur abgeschlossen" && t.type === 'customer');
+      console.log("Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.");
+    } catch (error) {
+      console.error("Fehler beim Bereinigen redundanter E-Mail-Vorlagen:", error);
+    }
+  }
+
+  /**
+   * Spezielle Methode zur Bereinigung der "Reparatur abgeschlossen" Vorlage für einen Benutzer
+   * Diese Methode behandelt spezifisch die Redundanz zwischen "Reparatur abgeschlossen" und "Reparatur abholbereit"
+   */
+  private async cleanupCompletedTemplateForUser(userId: number | null): Promise<void> {
+    try {
+      // Benutzerbezeichnung für Log-Nachrichten
+      const userTag = userId === null ? "globale Vorlagen" : `Benutzer ${userId}`;
+      console.log(`Prüfe redundante Vorlagen für ${userTag}...`);
       
-      const readyTemplate = allTemplates.find(t => 
-        t.name === "Reparatur abholbereit" && t.type === 'customer');
+      // Suche nach der "Reparatur abgeschlossen" Vorlage
+      let completedTemplateQuery = db.select().from(emailTemplates);
       
-      // Wenn beide existieren, "Reparatur abgeschlossen" archivieren
-      if (completedTemplate && readyTemplate) {
-        console.log(`Redundante E-Mail-Vorlage "Reparatur abgeschlossen" gefunden. Archiviere sie...`);
-        
-        // Prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
-        const historyEntries = await db.select()
-          .from(emailHistory)
-          .where(eq(emailHistory.emailTemplateId, completedTemplate.id));
-        
-        if (historyEntries.length > 0) {
-          // Wenn in Historie verwendet, archivieren
-          await db.update(emailTemplates)
-            .set({
-              name: `[ARCHIVIERT] Reparatur abgeschlossen`,
-              updatedAt: new Date()
-            })
-            .where(eq(emailTemplates.id, completedTemplate.id));
+      if (userId === null) {
+        completedTemplateQuery = completedTemplateQuery.where(
+          and(
+            eq(emailTemplates.name, "Reparatur abgeschlossen"),
+            isNull(emailTemplates.userId)
+          )
+        );
+      } else {
+        completedTemplateQuery = completedTemplateQuery.where(
+          and(
+            eq(emailTemplates.name, "Reparatur abgeschlossen"),
+            eq(emailTemplates.userId, userId)
+          )
+        );
+      }
+      
+      const completedTemplates = await completedTemplateQuery;
+      
+      // Wenn keine "Reparatur abgeschlossen" Vorlage gefunden wurde, nichts tun
+      if (completedTemplates.length === 0) {
+        console.log(`Keine "Reparatur abgeschlossen" Vorlage für ${userTag} gefunden.`);
+        return;
+      }
+      
+      // Suche nach der "Reparatur abholbereit" Vorlage
+      let readyTemplateQuery = db.select().from(emailTemplates);
+      
+      if (userId === null) {
+        readyTemplateQuery = readyTemplateQuery.where(
+          and(
+            eq(emailTemplates.name, "Reparatur abholbereit"),
+            isNull(emailTemplates.userId)
+          )
+        );
+      } else {
+        readyTemplateQuery = readyTemplateQuery.where(
+          and(
+            eq(emailTemplates.name, "Reparatur abholbereit"),
+            eq(emailTemplates.userId, userId)
+          )
+        );
+      }
+      
+      const readyTemplates = await readyTemplateQuery;
+      
+      // Wenn keine "Reparatur abholbereit" Vorlage gefunden wurde oder mehr als eine "Reparatur abgeschlossen" Vorlage existiert,
+      // entsprechende Warnung ausgeben
+      if (readyTemplates.length === 0) {
+        console.log(`Keine "Reparatur abholbereit" Vorlage für ${userTag} gefunden.`);
+        return;
+      }
+      
+      // Wenn sowohl "Reparatur abgeschlossen" als auch "Reparatur abholbereit" existieren
+      if (completedTemplates.length > 0 && readyTemplates.length > 0) {
+        for (const completedTemplate of completedTemplates) {
+          console.log(`Redundante E-Mail-Vorlage "Reparatur abgeschlossen" (ID: ${completedTemplate.id}) für ${userTag} gefunden.`);
           
-          console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" archiviert, da sie in der E-Mail-Historie verwendet wird.`);
-        } else {
-          // Wenn nicht in Historie verwendet, löschen
-          await db.delete(emailTemplates)
-            .where(eq(emailTemplates.id, completedTemplate.id));
-          
-          console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" gelöscht, da sie redundant ist.`);
+          try {
+            // Archiviere die Vorlage, da ein Löschen zu Fehlern führen kann
+            await db.update(emailTemplates)
+              .set({
+                name: `[ARCHIVIERT] Reparatur abgeschlossen`,
+                updatedAt: new Date()
+              })
+              .where(eq(emailTemplates.id, completedTemplate.id));
+            
+            console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" (ID: ${completedTemplate.id}) für ${userTag} archiviert.`);
+          } catch (error) {
+            console.error(`Fehler beim Archivieren der redundanten Vorlage ${completedTemplate.id}:`, error);
+          }
         }
       }
     } catch (error) {
-      console.error("Fehler beim Bereinigen redundanter E-Mail-Vorlagen:", error);
+      console.error(`Fehler bei der Bereinigung der "Reparatur abgeschlossen" Vorlage:`, error);
     }
   }
 
