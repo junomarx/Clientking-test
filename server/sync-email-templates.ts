@@ -5,6 +5,7 @@
 import { db } from "./db";
 import { emailTemplates } from "@shared/schema";
 import { and, eq, isNull } from "drizzle-orm";
+import { emailService } from "./email-service";
 
 // Standard E-Mail-Vorlagen aus superadmin-email-routes.ts
 // Dies ist eine vereinfachte Version, nur damit wir auf die richtige Struktur zugreifen können
@@ -91,6 +92,15 @@ export async function syncEmailTemplates(): Promise<void> {
     }
     
     console.log("E-Mail-Vorlagen-Synchronisation abgeschlossen.");
+    
+    // Bereinige redundante E-Mail-Vorlagen (z.B. "Reparatur abgeschlossen" vs. "Reparatur abholbereit")
+    try {
+      console.log("Bereinige redundante E-Mail-Vorlagen...");
+      await emailService.cleanupRedundantTemplates(null); // Globale Vorlagen
+      console.log("Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.");
+    } catch (cleanupError: any) {
+      console.error(`Fehler bei der Bereinigung redundanter E-Mail-Vorlagen: ${cleanupError.message}`);
+    }
   } catch (error: any) {
     console.error(`Fehler bei der Synchronisierung der E-Mail-Vorlagen: ${error.message}`);
   }

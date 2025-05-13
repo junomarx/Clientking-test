@@ -274,8 +274,8 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Reparatur abgeschlossen",
-    subject: "Ihre Reparatur wurde abgeschlossen",
+    name: "Reparatur abholbereit",
+    subject: "Ihre Reparatur ist abholbereit",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <div style="text-align: center; margin-bottom: 20px;">

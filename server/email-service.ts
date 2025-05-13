@@ -343,6 +343,65 @@ export class EmailService {
     }
   }
 
+  /**
+   * Verwaltet die redundanten E-Mail-Vorlagen (entfernt "Reparatur abgeschlossen" wenn "Reparatur abholbereit" existiert)
+   * Diese Methode verhindert doppelte Vorlagen für den gleichen Zweck
+   */
+  async cleanupRedundantTemplates(userId?: number | null): Promise<void> {
+    try {
+      // Alle E-Mail-Vorlagen abhängig vom userId-Parameter abrufen
+      let allTemplates: EmailTemplate[] = [];
+      
+      if (userId === null) {
+        // Globale Vorlagen (userId = null)
+        allTemplates = await db.select().from(emailTemplates).where(isNull(emailTemplates.userId));
+      } else if (userId !== undefined) {
+        // Vorlagen eines bestimmten Benutzers
+        allTemplates = await db.select().from(emailTemplates).where(eq(emailTemplates.userId, userId));
+      } else {
+        // Alle Vorlagen, wenn kein userId-Parameter angegeben wurde
+        allTemplates = await db.select().from(emailTemplates);
+      }
+      
+      // Prüfen, ob sowohl "Reparatur abgeschlossen" als auch "Reparatur abholbereit" existieren
+      const completedTemplate = allTemplates.find(t => 
+        t.name === "Reparatur abgeschlossen" && t.type === 'customer');
+      
+      const readyTemplate = allTemplates.find(t => 
+        t.name === "Reparatur abholbereit" && t.type === 'customer');
+      
+      // Wenn beide existieren, "Reparatur abgeschlossen" archivieren
+      if (completedTemplate && readyTemplate) {
+        console.log(`Redundante E-Mail-Vorlage "Reparatur abgeschlossen" gefunden. Archiviere sie...`);
+        
+        // Prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
+        const historyEntries = await db.select()
+          .from(emailHistory)
+          .where(eq(emailHistory.emailTemplateId, completedTemplate.id));
+        
+        if (historyEntries.length > 0) {
+          // Wenn in Historie verwendet, archivieren
+          await db.update(emailTemplates)
+            .set({
+              name: `[ARCHIVIERT] Reparatur abgeschlossen`,
+              updatedAt: new Date()
+            })
+            .where(eq(emailTemplates.id, completedTemplate.id));
+          
+          console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" archiviert, da sie in der E-Mail-Historie verwendet wird.`);
+        } else {
+          // Wenn nicht in Historie verwendet, löschen
+          await db.delete(emailTemplates)
+            .where(eq(emailTemplates.id, completedTemplate.id));
+          
+          console.log(`E-Mail-Vorlage "Reparatur abgeschlossen" gelöscht, da sie redundant ist.`);
+        }
+      }
+    } catch (error) {
+      console.error("Fehler beim Bereinigen redundanter E-Mail-Vorlagen:", error);
+    }
+  }
+
   // E-Mail-Versand mit Vorlagenverarbeitung
   async sendEmailWithTemplate(
     templateId: number, 
