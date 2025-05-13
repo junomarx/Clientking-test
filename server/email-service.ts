@@ -573,14 +573,24 @@ export class EmailService {
         processedBody = processedBody.replace(placeholder, value);
       });
       
+      // SMTP-Konfiguration abrufen
+      if (!process.env.SMTP_USER) {
+        throw new Error("SMTP_USER nicht konfiguriert");
+      }
+      
+      // Wichtig: Stelle sicher, dass die Absender-E-Mail der erlaubten Domain entspricht
+      const smtpUser = process.env.SMTP_USER;
+      
       // Erstelle E-Mail-Optionen mit den globalen SMTP-Einstellungen
       const mailOptions = {
-        from: `"${process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung'}" <${process.env.SMTP_SENDER_EMAIL || 'noreply@phonerepair.at'}>`,
+        from: `"${process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung'}" <${smtpUser}>`,
         to: recipientEmail,
         subject: processedSubject,
         html: processedBody,
         text: processedBody.replace(/<[^>]*>/g, '') // Strip HTML für Plaintext
       };
+      
+      console.log('Sende Test-E-Mail mit Absender:', mailOptions.from);
       
       // Sende die E-Mail über den globalen SMTP-Transporter
       const info = await this.smtpTransporter.sendMail(mailOptions);
