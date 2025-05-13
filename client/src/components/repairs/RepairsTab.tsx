@@ -67,31 +67,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const itemsPerPageOptions = [10, 20, 50, 100];
   
-  // Mutation zum Senden von Bewertungsanfragen
-  const sendReviewRequestMutation = useMutation({
-    mutationFn: async (repairId: number) => {
-      const response = await apiRequest('POST', `/api/repairs/${repairId}/send-review-request`);
-      return response.json();
-    },
-    onSuccess: () => {
-      // Invalidiere den Cache, um die aktuellen Daten vom Server zu holen
-      // Dies sorgt dafür, dass das reviewRequestSent-Flag im UI angezeigt wird
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      
-      toast({
-        title: "Erfolgreich",
-        description: "Die Bewertungsanfrage wurde erfolgreich gesendet.",
-        variant: "default",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler",
-        description: "Die Bewertungsanfrage konnte nicht gesendet werden: " + (error as Error).message,
-        variant: "destructive",
-      });
-    }
-  });
+  // Der queryClient wird für verschiedene Daten-Abfragen und Cache-Invalidierungen benötigt
+  const queryClient = useQueryClient();
   
   // Check for status filter and email action in URL
   useEffect(() => {
