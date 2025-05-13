@@ -351,17 +351,17 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Ersatzteil eingetroffen - Gerät bringen",
-    subject: "Ersatzteil für Ihre Reparatur ist eingetroffen - Bitte Gerät bringen",
+    name: "Gerät zur Reparatur bringen",
+    subject: "Ersatzteile sind eingetroffen - Bitte bringen Sie Ihr Gerät vorbei",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
+          <h2 style="color: #10b981;">Reparatur kann beginnen!</h2>
         </div>
         
         <p>Sehr geehrte(r) {{kundenname}},</p>
         
-        <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für die Reparatur Ihres Geräts eingetroffen ist.</p>
+        <p>wir freuen uns, Ihnen mitteilen zu können, dass alle benötigten Ersatzteile für die Reparatur Ihres Geräts nun eingetroffen sind.</p>
         
         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
@@ -369,7 +369,9 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
           <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
         </div>
         
-        <p><strong>Bitte bringen Sie Ihr Gerät jetzt in unser Geschäft, damit wir mit der Reparatur beginnen können.</strong></p>
+        <p style="font-weight: bold; color: #10b981; font-size: 16px; text-align: center; margin: 25px 0; padding: 10px; border: 2px solid #10b981; border-radius: 5px;">
+          Bitte bringen Sie Ihr Gerät jetzt in unser Geschäft, damit wir mit der Reparatur beginnen können
+        </p>
         
         <p>Unsere Öffnungszeiten sind:</p>
         <p style="margin-left: 20px;">{{oeffnungszeiten}}</p>
