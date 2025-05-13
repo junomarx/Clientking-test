@@ -66,6 +66,9 @@ export default function SuperadminEmailTab() {
   // Aktiver Tab für E-Mail-Vorlagentypen (app oder customer)
   const [templateType, setTemplateType] = useState<'app' | 'customer'>('app');
   
+  // Radiobutton-Style für konsistente Darstellung
+  const radioStyle = "w-4 h-4 border border-gray-300 bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  
   // SMTP-Konfiguration abrufen
   const { data: smtpConfig, isLoading: isLoadingConfig } = useQuery<GlobalEmailSettings>({
     queryKey: ['/api/superadmin/email/config']
@@ -749,16 +752,16 @@ export default function SuperadminEmailTab() {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Typ</Label>
                 <div className="col-span-3">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
                         id="editTypeApp"
                         checked={selectedTemplate.type === 'app'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'app' })}
-                        className="w-4 h-4"
+                        className="w-4 h-4 border-primary bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       />
-                      <Label htmlFor="editTypeApp" className="cursor-pointer">System-Vorlage</Label>
+                      <Label htmlFor="editTypeApp" className="cursor-pointer font-normal">System-Vorlage</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
@@ -766,9 +769,9 @@ export default function SuperadminEmailTab() {
                         id="editTypeCustomer"
                         checked={selectedTemplate.type === 'customer'}
                         onChange={() => setSelectedTemplate({ ...selectedTemplate, type: 'customer' })}
-                        className="w-4 h-4"
+                        className="w-4 h-4 border-primary bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       />
-                      <Label htmlFor="editTypeCustomer" className="cursor-pointer">Kunden-Vorlage</Label>
+                      <Label htmlFor="editTypeCustomer" className="cursor-pointer font-normal">Kunden-Vorlage</Label>
                     </div>
                   </div>
                 </div>
