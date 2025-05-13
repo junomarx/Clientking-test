@@ -17,10 +17,10 @@ async function migrateSuperadminEmailSettings() {
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
         AND table_name = 'superadmin_email_settings'
-      );
+      ) as exists;
     `);
     
-    if (!tableExists[0].exists) {
+    if (!tableExists[0]?.exists) {
       console.log('Die superadmin_email_settings-Tabelle existiert nicht, erstelle sie...');
       
       // 2. Tabelle erstellen

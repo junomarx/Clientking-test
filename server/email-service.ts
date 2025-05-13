@@ -584,7 +584,7 @@ export class EmailService {
           eq(emailTemplates.userId, userId)
         ),
         eq(emailTemplates.userId, null as any) // Globale Vorlagen sind für alle sichtbar
-      ) as SQL<unknown>;
+      );
       
       // Vorlagen ohne [ARCHIVIERT] im Namen bevorzugen
       const allTemplates = await db.select().from(emailTemplates)
@@ -699,6 +699,7 @@ export class EmailService {
     
     try {
       // Benutzer abrufen, um Shop-ID zu erhalten
+      if (!userId) return undefined;
       const user = await storage.getUser(userId);
       if (!user) return undefined;
       
@@ -785,6 +786,7 @@ export class EmailService {
         ) as SQL<unknown>;
       } else {
         // Normaler Benutzer: Shop-basierte Einschränkung
+        if (!userId) return false;
         const user = await storage.getUser(userId);
         if (!user) return false;
         
