@@ -217,7 +217,7 @@ export default function SuperadminEmailTab() {
     }
   });
   
-  // Test-E-Mail senden
+  // SMTP-Test-E-Mail senden
   const sendTestEmailMutation = useMutation({
     mutationFn: async (email: string) => {
       const response = await apiRequest('POST', '/api/superadmin/email/test', { email });
@@ -233,6 +233,27 @@ export default function SuperadminEmailTab() {
       toast({
         variant: 'destructive',
         title: 'Fehler beim Senden der Test-E-Mail',
+        description: error.message
+      });
+    }
+  });
+  
+  // Vorlage-Test-E-Mail senden
+  const sendTemplateTestEmailMutation = useMutation({
+    mutationFn: async (data: { templateId: number, testEmail: string }) => {
+      const response = await apiRequest('POST', '/api/superadmin/email/template-test', data);
+      return await response.json();
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: 'Vorlagen-Test-E-Mail gesendet',
+        description: `Die Test-E-Mail wurde erfolgreich an ${variables.testEmail} versendet.`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler beim Senden der Vorlagen-Test-E-Mail',
         description: error.message
       });
     }
@@ -561,6 +582,15 @@ export default function SuperadminEmailTab() {
                                 <Button
                                   size="sm"
                                   variant="outline"
+                                  title="Test-E-Mail senden"
+                                  onClick={() => handleSendTemplateTestEmail(template)}
+                                >
+                                  <Send className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  title="Vorlage bearbeiten"
                                   onClick={() => handleEditTemplate(template)}
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -568,6 +598,7 @@ export default function SuperadminEmailTab() {
                                 <Button
                                   size="sm"
                                   variant="destructive"
+                                  title="Vorlage löschen"
                                   onClick={() => handleDeleteTemplate(template.id)}
                                 >
                                   <Trash2 className="h-4 w-4" />
