@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -67,7 +67,7 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const itemsPerPageOptions = [10, 20, 50, 100];
   
-  // Der queryClient wird für verschiedene Daten-Abfragen und Cache-Invalidierungen benötigt
+  // React Query für Cache-Invalidierungen
   const queryClient = useQueryClient();
   
   // Check for status filter and email action in URL
