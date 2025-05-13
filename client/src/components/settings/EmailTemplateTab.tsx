@@ -349,7 +349,7 @@ export function EmailTemplateTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {templates?.map((template: EmailTemplate) => (
+              {templates?.filter(template => !template.name.includes("[ARCHIVIERT]")).map((template: EmailTemplate) => (
                 <TableRow key={template.id}>
                   <TableCell className="font-medium">{template.name}</TableCell>
                   <TableCell>{template.subject}</TableCell>
