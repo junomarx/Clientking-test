@@ -25,6 +25,19 @@ interface GlobalEmailSettings {
   smtpSenderEmail: string;
 }
 
+interface SuperadminEmailSettings {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  smtpSenderName: string;
+  smtpSenderEmail: string;
+  isActive: boolean;
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface EmailTemplate {
   id: number;
   name: string;
@@ -49,6 +62,17 @@ export default function SuperadminEmailTab() {
     smtpPassword: '',
     smtpSenderName: '',
     smtpSenderEmail: ''
+  });
+  
+  // States für Superadmin-SMTP-Einstellungen
+  const [superadminEmailSettings, setSuperadminEmailSettings] = useState<SuperadminEmailSettings>({
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUser: '',
+    smtpPassword: '',
+    smtpSenderName: 'Handyshop Verwaltung',
+    smtpSenderEmail: 'noreply@phonerepair.at',
+    isActive: true
   });
   
   // States für E-Mail-Vorlagen
@@ -79,12 +103,24 @@ export default function SuperadminEmailTab() {
     queryKey: ['/api/superadmin/email/config']
   });
   
-  // Callback für SMTP-Konfiguration-Fehler
+  // Superadmin SMTP-Konfiguration abrufen
+  const { data: superadminSmtpConfig, isLoading: isLoadingSuperadminConfig } = useQuery<SuperadminEmailSettings>({
+    queryKey: ['/api/superadmin/email/superadmin-config']
+  });
+  
+  // Callback für SMTP-Konfiguration
   useEffect(() => {
     if (smtpConfig) {
       setEmailSettings(smtpConfig);
     }
   }, [smtpConfig]);
+  
+  // Callback für Superadmin-SMTP-Konfiguration
+  useEffect(() => {
+    if (superadminSmtpConfig) {
+      setSuperadminEmailSettings(superadminSmtpConfig);
+    }
+  }, [superadminSmtpConfig]);
   
   // Standard-App-Vorlagen erstellen
   const createDefaultTemplatesMutation = useMutation({
@@ -147,6 +183,28 @@ export default function SuperadminEmailTab() {
       toast({
         variant: 'destructive',
         title: 'Fehler beim Speichern',
+        description: error.message
+      });
+    }
+  });
+  
+  // Superadmin-SMTP-Konfiguration speichern
+  const saveSuperadminSmtpConfigMutation = useMutation({
+    mutationFn: async (config: SuperadminEmailSettings) => {
+      const response = await apiRequest('POST', '/api/superadmin/email/superadmin-config', config);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/superadmin-config'] });
+      toast({
+        title: 'Superadmin-SMTP-Konfiguration gespeichert',
+        description: 'Die Superadmin-E-Mail-Einstellungen wurden erfolgreich aktualisiert.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler beim Speichern der Superadmin-Einstellungen',
         description: error.message
       });
     }
@@ -243,6 +301,27 @@ export default function SuperadminEmailTab() {
     }
   });
   
+  // Superadmin-SMTP-Test-E-Mail senden
+  const sendSuperadminTestEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await apiRequest('POST', '/api/superadmin/email/superadmin-test', { email });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Superadmin Test-E-Mail gesendet',
+        description: 'Die Test-E-Mail über den Superadmin-SMTP-Server wurde erfolgreich versendet.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler beim Senden der Superadmin-Test-E-Mail',
+        description: error.message
+      });
+    }
+  });
+  
   // Vorlage-Test-E-Mail senden
   const sendTemplateTestEmailMutation = useMutation({
     mutationFn: async (data: { templateId: number, testEmail: string }) => {
@@ -280,16 +359,35 @@ export default function SuperadminEmailTab() {
   
   // Test-E-Mail senden
   const handleSendTestEmail = () => {
-    // Verwende die E-Mail-Adresse aus den Einstellungen
-    if (emailSettings.smtpSenderEmail) {
-      sendTestEmailMutation.mutate(emailSettings.smtpSenderEmail);
+    // Verwende die E-Mail-Adresse aus dem Dialog
+    if (templateTestEmail) {
+      sendTestEmailMutation.mutate(templateTestEmail);
     } else {
       toast({
         variant: 'destructive',
         title: 'Keine E-Mail-Adresse',
-        description: 'Bitte geben Sie eine Absender-E-Mail-Adresse ein.'
+        description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
       });
     }
+  };
+  
+  // Superadmin Test-E-Mail senden
+  const handleSendSuperadminTestEmail = () => {
+    // Verwende die E-Mail-Adresse aus dem Dialog
+    if (templateTestEmail) {
+      sendSuperadminTestEmailMutation.mutate(templateTestEmail);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Keine E-Mail-Adresse',
+        description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
+      });
+    }
+  };
+  
+  // Superadmin-SMTP-Konfiguration speichern
+  const handleSaveSuperadminSmtpConfig = () => {
+    saveSuperadminSmtpConfigMutation.mutate(superadminEmailSettings);
   };
   
   // Vorlage zum Testen auswählen und Dialog öffnen
@@ -399,7 +497,8 @@ export default function SuperadminEmailTab() {
       
       <Tabs defaultValue="smtp" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="smtp">SMTP-Einstellungen</TabsTrigger>
+          <TabsTrigger value="smtp">Globale SMTP</TabsTrigger>
+          <TabsTrigger value="superadmin-smtp">Superadmin SMTP</TabsTrigger>
           <TabsTrigger value="templates">E-Mail-Vorlagen</TabsTrigger>
         </TabsList>
         
@@ -516,6 +615,145 @@ export default function SuperadminEmailTab() {
                   <Save className="h-4 w-4 mr-2" />
                 )}
                 Einstellungen speichern
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        {/* Superadmin SMTP-Einstellungen Tab */}
+        <TabsContent value="superadmin-smtp">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Server className="h-5 w-5 mr-2" />
+                Superadmin SMTP-Server-Konfiguration
+              </CardTitle>
+              <CardDescription>
+                Diese Einstellungen werden für alle System-E-Mails verwendet, die vom Superadmin versendet werden.
+                Beispielsweise für Passwortrücksetzung und andere automatisierte System-E-Mails.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpHost">SMTP Server</Label>
+                      <Input
+                        id="superadminSmtpHost"
+                        placeholder="z.B. smtp.example.com"
+                        value={superadminEmailSettings.smtpHost}
+                        onChange={(e) => setSuperadminEmailSettings({ ...superadminEmailSettings, smtpHost: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpPort">SMTP Port</Label>
+                      <Input
+                        id="superadminSmtpPort"
+                        placeholder="z.B. 587"
+                        type="number"
+                        value={superadminEmailSettings.smtpPort.toString()}
+                        onChange={(e) => setSuperadminEmailSettings({ 
+                          ...superadminEmailSettings, 
+                          smtpPort: parseInt(e.target.value) || 587 
+                        })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpUser">SMTP Benutzername</Label>
+                      <Input
+                        id="superadminSmtpUser"
+                        placeholder="z.B. user@example.com"
+                        value={superadminEmailSettings.smtpUser}
+                        onChange={(e) => setSuperadminEmailSettings({ ...superadminEmailSettings, smtpUser: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpPassword">SMTP Passwort</Label>
+                      <Input
+                        id="superadminSmtpPassword"
+                        type="password"
+                        placeholder="Passwort eingeben"
+                        value={superadminEmailSettings.smtpPassword}
+                        onChange={(e) => setSuperadminEmailSettings({ ...superadminEmailSettings, smtpPassword: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpSenderName">Absender-Name</Label>
+                      <Input
+                        id="superadminSmtpSenderName"
+                        placeholder="z.B. Handyshop Verwaltung"
+                        value={superadminEmailSettings.smtpSenderName}
+                        onChange={(e) => setSuperadminEmailSettings({ ...superadminEmailSettings, smtpSenderName: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="superadminSmtpSenderEmail">Absender-E-Mail</Label>
+                      <Input
+                        id="superadminSmtpSenderEmail"
+                        placeholder="z.B. noreply@example.com"
+                        value={superadminEmailSettings.smtpSenderEmail}
+                        onChange={(e) => setSuperadminEmailSettings({ ...superadminEmailSettings, smtpSenderEmail: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Mail className="mr-2 h-4 w-4" />
+                      Test-E-Mail senden
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Superadmin Test-E-Mail senden</DialogTitle>
+                      <DialogDescription>
+                        Senden Sie eine Test-E-Mail, um Ihre Superadmin-SMTP-Konfiguration zu überprüfen.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="superadminTestEmail" className="text-right">
+                          E-Mail-Adresse
+                        </Label>
+                        <Input
+                          id="superadminTestEmail"
+                          value={templateTestEmail}
+                          onChange={(e) => setTemplateTestEmail(e.target.value)}
+                          placeholder="name@example.com"
+                          className="col-span-3"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" onClick={() => handleSendSuperadminTestEmail()}>Senden</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <Button onClick={() => handleSaveSuperadminSmtpConfig()} disabled={saveSuperadminSmtpConfigMutation.isPending}>
+                {saveSuperadminSmtpConfigMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Speichern...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Konfiguration speichern
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
