@@ -292,6 +292,26 @@ export default function SuperadminEmailTab() {
     }
   };
   
+  // Vorlage zum Testen auswählen und Dialog öffnen
+  const handleSendTemplateTestEmail = (template: EmailTemplate) => {
+    setTemplateToTest(template);
+    setTemplateTestEmail('');
+    setTemplateTestDialogOpen(true);
+  };
+  
+  // Test-E-Mail mit ausgewählter Vorlage senden
+  const handleSendTemplateTest = () => {
+    if (templateToTest && templateTestEmail) {
+      sendTemplateTestEmailMutation.mutate({
+        templateId: templateToTest.id,
+        testEmail: templateTestEmail
+      });
+      setTemplateTestDialogOpen(false);
+      setTemplateToTest(null);
+      setTemplateTestEmail('');
+    }
+  };
+  
   // Neue Vorlage erstellen
   const handleCreateTemplate = () => {
     // Einfache Validierung
@@ -816,6 +836,47 @@ export default function SuperadminEmailTab() {
                 <Save className="h-4 w-4 mr-2" />
               )}
               Änderungen speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog für Vorlage-Test-E-Mail */}
+      <Dialog open={templateTestDialogOpen} onOpenChange={setTemplateTestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Test-E-Mail mit Vorlage senden</DialogTitle>
+            <DialogDescription>
+              Geben Sie eine E-Mail-Adresse ein, an die eine Test-E-Mail mit der Vorlage "{templateToTest?.name}" gesendet werden soll.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="test-email">E-Mail-Adresse</Label>
+              <Input
+                id="test-email"
+                placeholder="example@example.com"
+                value={templateTestEmail}
+                onChange={(e) => setTemplateTestEmail(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateTestDialogOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSendTemplateTest} disabled={!templateTestEmail || sendTemplateTestEmailMutation.isPending}>
+              {sendTemplateTestEmailMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Senden...
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Test-E-Mail senden
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
