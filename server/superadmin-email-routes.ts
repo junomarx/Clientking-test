@@ -492,13 +492,37 @@ async function createCustomerEmailTemplates(
     const now = new Date();
     let templatesProcessed = 0;
     
+    // Prüfen, ob "Reparatur abholbereit" vorhanden ist (oder ob archivierte "Reparatur abgeschlossen" existiert)
+    const readyTemplateExists = existingTemplateMap.has("Reparatur abholbereit");
+    
+    // Prüfen, ob bereits eine archivierte "Reparatur abgeschlossen" Vorlage existiert
+    let hasArchivedTemplate = false;
+    for (const [name, template] of existingTemplateMap.entries()) {
+      if (name.includes("[ARCHIVIERT]") && name.includes("Reparatur abgeschlossen")) {
+        hasArchivedTemplate = true;
+        break;
+      }
+    }
+    
     // Alle Vorlagen durchgehen, entweder aktualisieren oder neu erstellen
     for (const template of relevantTemplates) {
+      // Überspringe "Reparatur abgeschlossen", wenn "Reparatur abholbereit" bereits existiert
+      if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
+        console.log(`Überspringe '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+        continue;
+      }
+      
       const existingTemplate = existingTemplateMap.get(template.name);
       
       if (existingTemplate) {
         // Wenn forceUpdate aktiviert ist, aktualisiere die Vorlage
         if (forceUpdate) {
+          // Auch hier überprüfen, ob wir "Reparatur abgeschlossen" aktualisieren sollen
+          if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
+            console.log(`Überspringe Aktualisierung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+            continue;
+          }
+          
           await db.update(emailTemplates)
             .set({
               subject: template.subject,
@@ -515,6 +539,12 @@ async function createCustomerEmailTemplates(
           console.log(`E-Mail-Vorlage '${template.name}' existiert bereits für Benutzer ${userId}`);
         }
       } else {
+        // Überprüfen, ob "Reparatur abgeschlossen" neu erstellt werden soll
+        if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
+          console.log(`Überspringe Erstellung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+          continue;
+        }
+        
         // Neue Vorlage erstellen
         await db.insert(emailTemplates).values({
           name: template.name,
