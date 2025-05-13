@@ -45,11 +45,12 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
     console.error('Fehler beim Verarbeiten der X-User-ID:', error);
   }
   
-  if (!req.session || !req.session.userId) {
+  // Benutzer über req.user prüfen (gesetzt durch Passport.js)
+  if (!req.isAuthenticated() || !req.user?.id) {
     return res.status(401).json({ message: "Nicht authentifiziert" });
   }
   
-  const user = await storage.getUser(req.session.userId);
+  const user = await storage.getUser(req.user.id);
   if (!user) {
     return res.status(401).json({ message: "Benutzer nicht gefunden" });
   }
@@ -83,11 +84,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Fehler bei der Token-Authentifizierung" });
     }
     
-    if (!req.session || !req.session.userId) {
+    // Benutzer aus der Session oder direkt aus req.user laden
+    if (!req.isAuthenticated() || !req.user?.id) {
       return res.status(401).json({ message: "Nicht authentifiziert" });
     }
     
-    const user = await storage.getUser(req.session.userId);
+    const user = await storage.getUser(req.user.id);
     if (!user) {
       return res.status(401).json({ message: "Benutzer nicht gefunden" });
     }
