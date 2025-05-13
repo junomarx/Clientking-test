@@ -845,7 +845,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
    */
   app.post("/api/superadmin/email/superadmin-config", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const { smtpSenderName, smtpSenderEmail, smtpHost, smtpUser, smtpPassword, smtpPort } = req.body;
+      const { smtpSenderName, smtpSenderEmail, smtpHost, smtpUser, smtpPassword, smtpPort, skipTest } = req.body;
       
       // Validiere die SMTP-Konfiguration
       if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword || !smtpSenderEmail) {
@@ -854,8 +854,15 @@ export function registerSuperadminEmailRoutes(app: Express) {
         });
       }
       
-      // Aktualisiere die Einstellungen in der Datenbank und im E-Mail-Service
-      const success = await emailService.updateSuperadminSmtpSettings({
+      console.log('Speichere Superadmin-E-Mail-Einstellungen:', {
+        host: smtpHost,
+        port: smtpPort,
+        user: smtpUser,
+        sender: smtpSenderEmail
+      });
+      
+      // SMTP-Einstellungs-Objekt erstellen
+      const settingsData = {
         smtpSenderName: smtpSenderName || "Handyshop Verwaltung",
         smtpSenderEmail,
         smtpHost,
@@ -863,14 +870,73 @@ export function registerSuperadminEmailRoutes(app: Express) {
         smtpPassword,
         smtpPort: typeof smtpPort === 'string' ? parseInt(smtpPort) : smtpPort,
         isActive: true
-      });
+      };
       
-      if (!success) {
-        return res.status(500).json({ message: "Fehler beim Aktualisieren der Superadmin-E-Mail-Einstellungen" });
+      try {
+        // Bei den vorhandenen Einstellungen nachsehen
+        let existingSettings;
+        try {
+          [existingSettings] = await db
+            .select()
+            .from(superadminEmailSettings)
+            .limit(1);
+        } catch (err) {
+          console.error('Fehler beim Abrufen der vorhandenen Superadmin-E-Mail-Einstellungen:', err);
+        }
+        
+        // Direkte Datenbankaktualisierung, unabhängig vom SMTP-Test
+        if (existingSettings) {
+          // Aktualisieren der vorhandenen Einstellungen
+          await db
+            .update(superadminEmailSettings)
+            .set({
+              ...settingsData,
+              updatedAt: new Date()
+            })
+            .where(eq(superadminEmailSettings.id, existingSettings.id));
+          
+          console.log(`Superadmin-E-Mail-Einstellungen mit ID ${existingSettings.id} direkt in der Datenbank aktualisiert`);
+        } else {
+          // Neue Einstellungen erstellen
+          await db
+            .insert(superadminEmailSettings)
+            .values({
+              ...settingsData,
+              isActive: true
+            });
+          
+          console.log('Neue Superadmin-E-Mail-Einstellungen direkt in der Datenbank erstellt');
+        }
+        
+        // Aktualisiere die Einstellungen im E-Mail-Service (nur wenn der Test nicht übersprungen wird)
+        if (!skipTest) {
+          console.log('Versuche SMTP-Verbindung zu testen...');
+          const testSuccess = await emailService.updateSuperadminSmtpSettings(settingsData);
+          
+          if (!testSuccess) {
+            console.warn('SMTP-Test fehlgeschlagen, aber Einstellungen wurden in der Datenbank gespeichert');
+            return res.status(200).json({ 
+              success: true, 
+              warning: true,
+              message: "Superadmin-E-Mail-Einstellungen gespeichert, aber der SMTP-Verbindungstest ist fehlgeschlagen. Die Einstellungen sollten überprüft werden."
+            });
+          }
+        } else {
+          // Aktualisiere das E-Mail-Service ohne Test
+          emailService.loadSuperadminEmailConfig(settingsData);
+        }
+        
+        console.log('Superadmin-E-Mail-Einstellungen erfolgreich gespeichert');
+        res.status(200).json({ 
+          success: true, 
+          message: "Superadmin-E-Mail-Einstellungen erfolgreich gespeichert" 
+        });
+      } catch (dbError) {
+        console.error('Fehler bei der Datenbankaktualisierung:', dbError);
+        throw dbError;
       }
-      
-      res.status(200).json({ success: true, message: "Superadmin-E-Mail-Einstellungen erfolgreich gespeichert" });
     } catch (error: any) {
+      console.error('Allgemeiner Fehler bei Superadmin-E-Mail-Einstellungen:', error);
       res.status(500).json({ message: `Fehler beim Speichern der Superadmin-E-Mail-Einstellungen: ${error.message}` });
     }
   });

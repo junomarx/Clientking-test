@@ -126,44 +126,39 @@ export class EmailService {
   }
   
   /**
+   * Lädt die Superadmin-E-Mail-Konfiguration ohne SMTP-Test
+   * Diese Methode dient dazu, die Konfiguration im Service zu aktualisieren,
+   * ohne eine SMTP-Verbindung zu testen.
+   */
+  loadSuperadminEmailConfig(settings: Omit<SuperadminEmailSettings, 'id' | 'createdAt' | 'updatedAt'>) {
+    console.log('Lade Superadmin-E-Mail-Konfiguration ohne Verbindungstest');
+    
+    // Speichere die Konfiguration im Service
+    this.superadminEmailConfig = {
+      id: 1, // Standard-ID, wenn keine bekannt ist
+      ...settings,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    // Schließe bestehenden Transporter, falls vorhanden
+    if (this.superadminSmtpTransporter) {
+      this.superadminSmtpTransporter.close();
+      this.superadminSmtpTransporter = null;
+    }
+    
+    console.log('Superadmin-E-Mail-Konfiguration erfolgreich geladen');
+  }
+
+  /**
    * Aktualisiert die SMTP-Einstellungen für den Superadmin-Transporter
+   * und testet die SMTP-Verbindung
    */
   async updateSuperadminSmtpSettings(settings: Omit<SuperadminEmailSettings, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> {
     try {
-      // Aktualisieren oder Einfügen der Einstellungen in die Datenbank
-      let existingSettings;
-      
-      try {
-        [existingSettings] = await db
-          .select()
-          .from(superadminEmailSettings)
-          .limit(1);
-      } catch (err) {
-        console.error('Fehler beim Abrufen der vorhandenen Superadmin-E-Mail-Einstellungen:', err);
-      }
-      
-      if (existingSettings) {
-        // Aktualisieren der vorhandenen Einstellungen
-        await db
-          .update(superadminEmailSettings)
-          .set({
-            ...settings,
-            updatedAt: new Date()
-          })
-          .where(eq(superadminEmailSettings.id, existingSettings.id));
-        
-        console.log(`Superadmin-E-Mail-Einstellungen mit ID ${existingSettings.id} aktualisiert`);
-      } else {
-        // Neue Einstellungen erstellen
-        await db
-          .insert(superadminEmailSettings)
-          .values({
-            ...settings,
-            isActive: true
-          });
-        
-        console.log('Neue Superadmin-E-Mail-Einstellungen erstellt');
-      }
+      // Speichere zuerst die Konfiguration
+      this.loadSuperadminEmailConfig(settings);
       
       try {
         // Transporter mit den neuen Einstellungen aktualisieren
@@ -188,7 +183,7 @@ export class EmailService {
           logger: true
         };
         
-        console.log('Konfiguriere Superadmin SMTP mit den folgenden Einstellungen:', {
+        console.log('Teste Superadmin SMTP-Verbindung mit den folgenden Einstellungen:', {
           host: settings.smtpHost,
           port: settings.smtpPort,
           secure: settings.smtpPort === 465,
@@ -196,42 +191,21 @@ export class EmailService {
           sender: settings.smtpSenderEmail
         });
         
-        // Bestehenden Transporter schließen, wenn vorhanden
-        if (this.superadminSmtpTransporter) {
-          this.superadminSmtpTransporter.close();
-        }
-        
         // Neuen Transporter erstellen
-        this.superadminSmtpTransporter = nodemailer.createTransport(config);
+        const testTransporter = nodemailer.createTransport(config);
         
         // Verbindung testen
-        await this.superadminSmtpTransporter.verify();
+        await testTransporter.verify();
         
-        // Konfiguration speichern
-        this.superadminEmailConfig = {
-          id: existingSettings ? existingSettings.id : 1,
-          ...settings,
-          isActive: true,
-          createdAt: existingSettings ? existingSettings.createdAt : new Date(),
-          updatedAt: new Date()
-        };
+        // Wenn der Test erfolgreich war, setze den Transporter
+        this.superadminSmtpTransporter = testTransporter;
         
-        console.log(`Superadmin SMTP-Transporter für ${settings.smtpHost} wurde erfolgreich aktualisiert`);
+        console.log(`Superadmin SMTP-Verbindung zu ${settings.smtpHost} erfolgreich getestet`);
         return true;
       } catch (smtpError) {
-        console.error('SMTP-Konfigurationsfehler:', smtpError);
-        
-        // Auch bei fehlgeschlagener SMTP-Verbindung die Konfiguration speichern
-        this.superadminEmailConfig = {
-          id: existingSettings ? existingSettings.id : 1,
-          ...settings,
-          isActive: true,
-          createdAt: existingSettings ? existingSettings.createdAt : new Date(),
-          updatedAt: new Date()
-        };
-        
+        console.error('SMTP-Verbindungstest fehlgeschlagen:', smtpError);
         console.warn('SMTP-Verbindungstest fehlgeschlagen, aber Konfiguration wurde gespeichert.');
-        throw smtpError;
+        return false;
       }
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Superadmin-SMTP-Transporters:', error);
