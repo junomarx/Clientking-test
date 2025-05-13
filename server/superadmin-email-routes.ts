@@ -807,6 +807,97 @@ export function registerSuperadminEmailRoutes(app: Express) {
       res.status(500).json({ message: `Fehler beim Senden der Test-E-Mail: ${error.message}` });
     }
   });
+
+  /**
+   * Superadmin-E-Mail-Einstellungen abrufen
+   */
+  app.get("/api/superadmin/email/superadmin-config", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      // Lade Einstellungen aus der Datenbank
+      const [settings] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .where(eq(superadminEmailSettings.isActive, true))
+        .limit(1);
+      
+      if (!settings) {
+        // Sende einen leeren Standardwert, wenn keine Einstellungen gefunden wurden
+        return res.status(200).json({
+          smtpSenderName: "Handyshop Verwaltung",
+          smtpSenderEmail: "noreply@phonerepair.at",
+          smtpHost: "",
+          smtpUser: "",
+          smtpPassword: "",
+          smtpPort: 587,
+          isActive: true
+        });
+      }
+
+      // Sende die gefundenen Einstellungen zurück
+      res.status(200).json(settings);
+    } catch (error: any) {
+      res.status(500).json({ message: `Fehler beim Abrufen der Superadmin-E-Mail-Einstellungen: ${error.message}` });
+    }
+  });
+
+  /**
+   * Superadmin-E-Mail-Einstellungen speichern/aktualisieren
+   */
+  app.post("/api/superadmin/email/superadmin-config", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { smtpSenderName, smtpSenderEmail, smtpHost, smtpUser, smtpPassword, smtpPort } = req.body;
+      
+      // Validiere die SMTP-Konfiguration
+      if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword || !smtpSenderEmail) {
+        return res.status(400).json({
+          message: "Ungültige SMTP-Konfiguration. Host, Port, Benutzername, Passwort und Absender-E-Mail sind erforderlich."
+        });
+      }
+      
+      // Aktualisiere die Einstellungen in der Datenbank und im E-Mail-Service
+      const success = await emailService.updateSuperadminSmtpSettings({
+        smtpSenderName: smtpSenderName || "Handyshop Verwaltung",
+        smtpSenderEmail,
+        smtpHost,
+        smtpUser,
+        smtpPassword,
+        smtpPort: typeof smtpPort === 'string' ? parseInt(smtpPort) : smtpPort,
+        isActive: true
+      });
+      
+      if (!success) {
+        return res.status(500).json({ message: "Fehler beim Aktualisieren der Superadmin-E-Mail-Einstellungen" });
+      }
+      
+      res.status(200).json({ success: true, message: "Superadmin-E-Mail-Einstellungen erfolgreich gespeichert" });
+    } catch (error: any) {
+      res.status(500).json({ message: `Fehler beim Speichern der Superadmin-E-Mail-Einstellungen: ${error.message}` });
+    }
+  });
+
+  /**
+   * Superadmin-Test-E-Mail senden
+   */
+  app.post("/api/superadmin/email/superadmin-test", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "E-Mail-Adresse ist erforderlich" });
+      }
+      
+      // Test-E-Mail vom Superadmin-SMTP-Server senden
+      const success = await emailService.sendSuperadminTestEmail(email);
+      
+      if (success) {
+        res.status(200).json({ success: true, message: "Superadmin-Test-E-Mail erfolgreich gesendet" });
+      } else {
+        res.status(500).json({ message: "Fehler beim Senden der Superadmin-Test-E-Mail" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Fehler beim Senden der Superadmin-Test-E-Mail: ${error.message}` });
+    }
+  });
   
   /**
    * Test-E-Mail mit einer bestimmten Vorlage senden
