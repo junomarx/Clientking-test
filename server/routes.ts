@@ -1742,12 +1742,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "userId": userId.toString()
       };
       
-      // Suche nach der Bewertungs-E-Mail-Vorlage
-      const templates = await storage.getAllEmailTemplates();
+      // Suche nach der Bewertungs-E-Mail-Vorlage mit Benutzer-ID für Shop-Isolation
+      const templates = await storage.getAllEmailTemplates(userId);
+      
+      console.log(`Suche nach Bewertungsvorlage für Benutzer ${userId}. Gefundene Vorlagen: ${templates.length}`);
+      templates.forEach((t, index) => {
+        console.log(`  Vorlage ${index+1}: ID=${t.id}, Name="${t.name}", Typ=${t.type || 'unbekannt'}`);
+      });
+      
       const reviewTemplate = templates.find(t => 
         t.name.toLowerCase().includes("bewertung") || 
         t.name.toLowerCase().includes("feedback")
       );
+      
+      if (reviewTemplate) {
+        console.log(`Bewertungsvorlage gefunden: ID=${reviewTemplate.id}, Name="${reviewTemplate.name}"`);
+      } else {
+        console.log("Keine passende Bewertungsvorlage gefunden!");
+      }
       
       if (!reviewTemplate) {
         return res.status(404).json({ message: "Keine Bewertungs-E-Mail-Vorlage gefunden" });
