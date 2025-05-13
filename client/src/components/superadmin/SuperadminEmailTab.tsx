@@ -607,8 +607,12 @@ export default function SuperadminEmailTab() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  title="Test-E-Mail senden"
-                                  onClick={() => handleSendTemplateTestEmail(template)}
+                                  title="Test-E-Mail mit dieser Vorlage senden"
+                                  onClick={() => {
+                                    setTemplateToTest(template);
+                                    setTemplateTestEmail('');
+                                    setTemplateTestDialogOpen(true);
+                                  }}
                                 >
                                   <Send className="h-4 w-4" />
                                 </Button>
