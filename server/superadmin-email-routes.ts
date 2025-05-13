@@ -809,6 +809,125 @@ export function registerSuperadminEmailRoutes(app: Express) {
   });
   
   /**
+   * Test-E-Mail mit einer bestimmten Vorlage senden
+   */
+  app.post("/api/superadmin/email/template-test", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { templateId, testEmail } = req.body;
+      
+      if (!templateId) {
+        return res.status(400).json({ message: "Vorlagen-ID ist erforderlich" });
+      }
+      
+      if (!testEmail) {
+        return res.status(400).json({ message: "Test-E-Mail-Adresse ist erforderlich" });
+      }
+      
+      // Vorlage aus der Datenbank abrufen
+      const [template] = await db.select()
+        .from(emailTemplates)
+        .where(eq(emailTemplates.id, templateId));
+      
+      if (!template) {
+        return res.status(404).json({ message: "Vorlage nicht gefunden" });
+      }
+      
+      // Beispieldaten für die Variablen zusammenstellen
+      const testData: Record<string, string> = {};
+      
+      // Für jede Variable in der Vorlage einen Beispielwert setzen
+      if (template.variables && template.variables.length > 0) {
+        for (const variable of template.variables) {
+          // Standard-Beispielwerte für häufig verwendete Variablen
+          switch (variable) {
+            case 'kundenname':
+              testData[variable] = 'Max Mustermann';
+              break;
+            case 'geraet':
+              testData[variable] = 'iPhone 13';
+              break;
+            case 'hersteller':
+              testData[variable] = 'Apple';
+              break;
+            case 'auftragsnummer':
+              testData[variable] = 'R-2025-123456';
+              break;
+            case 'fehler':
+              testData[variable] = 'Displayschaden';
+              break;
+            case 'reparaturarbeit':
+              testData[variable] = 'Display-Austausch';
+              break;
+            case 'oeffnungszeiten':
+              testData[variable] = 'Mo-Fr: 9:00 - 18:00, Sa: 10:00 - 14:00';
+              break;
+            case 'geschaeftsname':
+              testData[variable] = 'Handy Reparatur Shop';
+              break;
+            case 'adresse':
+              testData[variable] = 'Musterstraße 123, 1234 Musterstadt';
+              break;
+            case 'telefon':
+              testData[variable] = '+43 123 456 789';
+              break;
+            case 'email':
+              testData[variable] = 'info@example.com';
+              break;
+            case 'website':
+              testData[variable] = 'www.example.com';
+              break;
+            case 'bewertungslink':
+              testData[variable] = 'https://www.example.com/bewertung';
+              break;
+            case 'aktuellesJahr':
+              testData[variable] = new Date().getFullYear().toString();
+              break;
+            case 'datenschutzlink':
+              testData[variable] = 'https://www.example.com/datenschutz';
+              break;
+            case 'logo':
+              testData[variable] = 'https://www.example.com/logo.png';
+              break;
+            case 'benutzername':
+              testData[variable] = 'max.mustermann';
+              break;
+            case 'loginLink':
+              testData[variable] = 'https://www.example.com/login';
+              break;
+            case 'resetLink':
+              testData[variable] = 'https://www.example.com/reset-password?token=example';
+              break;
+            default:
+              // Für unbekannte Variablen einen generischen Beispielwert
+              testData[variable] = `<${variable}>`;
+          }
+        }
+      }
+      
+      // E-Mail mit Testdaten senden
+      const success = await emailService.sendEmailWithTemplate({
+        templateName: template.name,
+        recipientEmail: testEmail,
+        data: testData,
+        subject: template.subject,
+        body: template.body
+      });
+      
+      if (success) {
+        res.status(200).json({ 
+          success: true, 
+          message: "Test-E-Mail mit Vorlage erfolgreich gesendet",
+          testData: testData 
+        });
+      } else {
+        res.status(500).json({ message: "Fehler beim Senden der Test-E-Mail mit Vorlage" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Fehler beim Senden der Test-E-Mail mit Vorlage: ${error.message}` });
+    }
+  });
+  
+  /**
    * Alle E-Mail-Vorlagen abrufen (systemweit)
    */
   app.get("/api/superadmin/email/templates", isSuperadmin, async (req: Request, res: Response) => {
