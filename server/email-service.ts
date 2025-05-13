@@ -24,15 +24,27 @@ export class EmailService {
         console.warn('Eine oder mehrere globale SMTP-Einstellungen fehlen');
       } else {
         // Verwende die globalen SMTP-Einstellungen als Fallback
-        this.smtpTransporter = nodemailer.createTransport({
+        const config = {
           host: smtpHost,
           port: smtpPort,
           secure: smtpPort === 465, // true für 465, false für andere Ports
           auth: {
             user: smtpUser,
             pass: smtpPassword
-          }
+          },
+          // Debug-Optionen aktivieren
+          debug: true,
+          logger: true
+        };
+        
+        console.log('SMTP-Konfiguration:', {
+          host: config.host,
+          port: config.port,
+          secure: config.secure,
+          auth: { user: config.auth.user, pass: '********' }
         });
+        
+        this.smtpTransporter = nodemailer.createTransport(config);
         
         console.log(`Globaler SMTP-Transporter für ${smtpHost} wurde initialisiert`);
       }
@@ -52,8 +64,22 @@ export class EmailService {
         this.smtpTransporter.close();
       }
       
+      // Debug-Optionen hinzufügen
+      const updatedConfig = {
+        ...config,
+        debug: true,
+        logger: true
+      };
+      
+      console.log('SMTP-Konfiguration wird aktualisiert:', {
+        host: updatedConfig.host,
+        port: updatedConfig.port,
+        secure: updatedConfig.secure,
+        auth: updatedConfig.auth ? { user: (updatedConfig.auth as any).user, pass: '********' } : undefined
+      });
+      
       // Neuen Transporter erstellen
-      this.smtpTransporter = nodemailer.createTransport(config);
+      this.smtpTransporter = nodemailer.createTransport(updatedConfig);
       
       // Verbindung testen
       await this.smtpTransporter.verify();
@@ -75,8 +101,11 @@ export class EmailService {
         throw new Error('Kein SMTP-Transporter konfiguriert');
       }
       
+      // Für World4You muss die Absender-E-Mail mit dem SMTP-Benutzer übereinstimmen
       const senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-      const senderEmail = process.env.SMTP_SENDER_EMAIL || process.env.SMTP_USER || 'no-reply@example.com';
+      const senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
+      
+      console.log(`Sending test email with sender: "${senderName}" <${senderEmail}> to ${to}`);
       
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
@@ -580,10 +609,14 @@ export class EmailService {
       
       // Wichtig: Stelle sicher, dass die Absender-E-Mail der erlaubten Domain entspricht
       const smtpUser = process.env.SMTP_USER;
+      const senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+      
+      console.log(`Sending template email with sender: "${senderName}" <${smtpUser}> to ${recipientEmail}`);
+      console.log(`Template name: ${templateName}`);
       
       // Erstelle E-Mail-Optionen mit den globalen SMTP-Einstellungen
       const mailOptions = {
-        from: `"${process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung'}" <${smtpUser}>`,
+        from: `"${senderName}" <${smtpUser}>`,
         to: recipientEmail,
         subject: processedSubject,
         html: processedBody,
