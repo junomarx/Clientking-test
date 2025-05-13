@@ -886,15 +886,39 @@ export function registerSuperadminEmailRoutes(app: Express) {
         return res.status(400).json({ message: "E-Mail-Adresse ist erforderlich" });
       }
       
+      console.log('Superadmin-Test-E-Mail-Anfrage erhalten für:', email);
+      
+      // SMTP-Einstellungen abrufen, um zu überprüfen, ob sie korrekt konfiguriert sind
+      const [settings] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .where(eq(superadminEmailSettings.isActive, true))
+        .limit(1);
+      
+      if (!settings) {
+        return res.status(400).json({ message: "Keine aktiven Superadmin-E-Mail-Einstellungen gefunden. Bitte konfigurieren Sie die SMTP-Einstellungen zuerst." });
+      }
+      
+      console.log('Verwende folgende Superadmin-SMTP-Einstellungen:', {
+        host: settings.smtpHost,
+        port: settings.smtpPort,
+        user: settings.smtpUser,
+        sender: settings.smtpSenderEmail,
+        senderName: settings.smtpSenderName
+      });
+      
       // Test-E-Mail vom Superadmin-SMTP-Server senden
       const success = await emailService.sendSuperadminTestEmail(email);
       
       if (success) {
+        console.log('Superadmin-Test-E-Mail erfolgreich gesendet an:', email);
         res.status(200).json({ success: true, message: "Superadmin-Test-E-Mail erfolgreich gesendet" });
       } else {
-        res.status(500).json({ message: "Fehler beim Senden der Superadmin-Test-E-Mail" });
+        console.error('Fehler beim Senden der Superadmin-Test-E-Mail an:', email);
+        res.status(500).json({ message: "Fehler beim Senden der Superadmin-Test-E-Mail. Bitte überprüfen Sie die SMTP-Einstellungen und versuchen Sie es erneut." });
       }
     } catch (error: any) {
+      console.error('Ausnahme beim Senden der Superadmin-Test-E-Mail:', error);
       res.status(500).json({ message: `Fehler beim Senden der Superadmin-Test-E-Mail: ${error.message}` });
     }
   });

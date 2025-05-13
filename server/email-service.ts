@@ -165,44 +165,74 @@ export class EmailService {
         console.log('Neue Superadmin-E-Mail-Einstellungen erstellt');
       }
       
-      // Transporter mit den neuen Einstellungen aktualisieren
-      const config = {
-        host: settings.smtpHost,
-        port: settings.smtpPort,
-        secure: settings.smtpPort === 465,
-        auth: {
+      try {
+        // Transporter mit den neuen Einstellungen aktualisieren
+        const config = {
+          host: settings.smtpHost,
+          port: settings.smtpPort,
+          secure: settings.smtpPort === 465,
+          auth: {
+            user: settings.smtpUser,
+            pass: settings.smtpPassword
+          },
+          // Eine angemessene Zeitüberschreitung festlegen
+          connectionTimeout: 10000, // 10 Sekunden
+          // Authentifizierungsmechanismen festlegen
+          authMethod: 'PLAIN',
+          // Ignoriere TLS-Zertifikatsfehler (nur für Entwicklungszwecke)
+          tls: {
+            rejectUnauthorized: false
+          },
+          // Debug-Optionen
+          debug: true,
+          logger: true
+        };
+        
+        console.log('Konfiguriere Superadmin SMTP mit den folgenden Einstellungen:', {
+          host: settings.smtpHost,
+          port: settings.smtpPort,
+          secure: settings.smtpPort === 465,
           user: settings.smtpUser,
-          pass: settings.smtpPassword
-        },
-        // Eine angemessene Zeitüberschreitung festlegen
-        connectionTimeout: 10000, // 10 Sekunden
-        // Debug-Optionen
-        debug: true,
-        logger: true
-      };
-      
-      // Bestehenden Transporter schließen, wenn vorhanden
-      if (this.superadminSmtpTransporter) {
-        this.superadminSmtpTransporter.close();
+          sender: settings.smtpSenderEmail
+        });
+        
+        // Bestehenden Transporter schließen, wenn vorhanden
+        if (this.superadminSmtpTransporter) {
+          this.superadminSmtpTransporter.close();
+        }
+        
+        // Neuen Transporter erstellen
+        this.superadminSmtpTransporter = nodemailer.createTransport(config);
+        
+        // Verbindung testen
+        await this.superadminSmtpTransporter.verify();
+        
+        // Konfiguration speichern
+        this.superadminEmailConfig = {
+          id: existingSettings ? existingSettings.id : 1,
+          ...settings,
+          isActive: true,
+          createdAt: existingSettings ? existingSettings.createdAt : new Date(),
+          updatedAt: new Date()
+        };
+        
+        console.log(`Superadmin SMTP-Transporter für ${settings.smtpHost} wurde erfolgreich aktualisiert`);
+        return true;
+      } catch (smtpError) {
+        console.error('SMTP-Konfigurationsfehler:', smtpError);
+        
+        // Auch bei fehlgeschlagener SMTP-Verbindung die Konfiguration speichern
+        this.superadminEmailConfig = {
+          id: existingSettings ? existingSettings.id : 1,
+          ...settings,
+          isActive: true,
+          createdAt: existingSettings ? existingSettings.createdAt : new Date(),
+          updatedAt: new Date()
+        };
+        
+        console.warn('SMTP-Verbindungstest fehlgeschlagen, aber Konfiguration wurde gespeichert.');
+        throw smtpError;
       }
-      
-      // Neuen Transporter erstellen
-      this.superadminSmtpTransporter = nodemailer.createTransport(config);
-      
-      // Verbindung testen
-      await this.superadminSmtpTransporter.verify();
-      
-      // Konfiguration speichern
-      this.superadminEmailConfig = {
-        id: existingSettings ? existingSettings.id : 1,
-        ...settings,
-        isActive: true,
-        createdAt: existingSettings ? existingSettings.createdAt : new Date(),
-        updatedAt: new Date()
-      };
-      
-      console.log(`Superadmin SMTP-Transporter für ${settings.smtpHost} wurde aktualisiert`);
-      return true;
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Superadmin-SMTP-Transporters:', error);
       return false;
@@ -252,23 +282,53 @@ export class EmailService {
    */
   async sendSuperadminTestEmail(to: string): Promise<boolean> {
     try {
+      console.log('Starte Versand einer Superadmin-Test-E-Mail an:', to);
+      
       if (!this.superadminSmtpTransporter) {
+        console.log('Kein Superadmin-SMTP-Transporter vorhanden, versuche Initialisierung...');
         // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
         await this.initSuperadminSmtpTransporter();
         
         if (!this.superadminSmtpTransporter) {
+          console.error('Initialisierung des Superadmin-SMTP-Transporters fehlgeschlagen');
           throw new Error('Kein Superadmin-SMTP-Transporter konfiguriert');
         }
       }
       
       if (!this.superadminEmailConfig) {
+        console.error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
         throw new Error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
       }
       
       const senderName = this.superadminEmailConfig.smtpSenderName;
       const senderEmail = this.superadminEmailConfig.smtpSenderEmail;
       
-      console.log(`Sending superadmin test email with sender: "${senderName}" <${senderEmail}> to ${to}`);
+      console.log(`Sende Superadmin-Test-E-Mail von "${senderName}" <${senderEmail}> an ${to}`);
+      
+      // Erstellen Sie eine manuelle Verbindung zum SMTP-Server (für Test-Zwecke)
+      const config = {
+        host: this.superadminEmailConfig.smtpHost,
+        port: this.superadminEmailConfig.smtpPort,
+        secure: this.superadminEmailConfig.smtpPort === 465,
+        auth: {
+          user: this.superadminEmailConfig.smtpUser,
+          pass: this.superadminEmailConfig.smtpPassword
+        },
+        // Eine angemessene Zeitüberschreitung festlegen
+        connectionTimeout: 10000, // 10 Sekunden
+        // Authentifizierungsmechanismen festlegen
+        authMethod: 'PLAIN',
+        // Ignoriere TLS-Zertifikatsfehler (nur für Entwicklungszwecke)
+        tls: {
+          rejectUnauthorized: false
+        },
+        // Debug-Optionen
+        debug: true,
+        logger: true
+      };
+      
+      console.log('Erstelle neuen Test-Transporter mit aktuellen Konfigurationsdaten');
+      const testTransporter = nodemailer.createTransport(config);
       
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
@@ -286,14 +346,19 @@ export class EmailService {
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
+              <p>Gesendet: ${new Date().toLocaleString('de-DE')}</p>
             </div>
           </div>
         `,
         text: 'Superadmin-Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.'
       };
       
-      const info = await this.superadminSmtpTransporter.sendMail(mailOptions);
+      console.log('Sende Test-E-Mail...');
+      const info = await testTransporter.sendMail(mailOptions);
       console.log('Superadmin-Test-E-Mail erfolgreich gesendet:', info.messageId);
+      
+      // Schließe den Test-Transporter
+      testTransporter.close();
       
       return true;
     } catch (error) {
