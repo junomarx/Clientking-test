@@ -1826,6 +1826,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // SMS-Endpunkt wurde auf Kundenwunsch entfernt
 
+  // API-Endpunkt zum Abrufen verfügbarer E-Mail-Vorlagen für eine Reparatur
+  app.get("/api/repairs/:id/email-templates", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Reparatur abrufen um zu prüfen ob der Benutzer Zugriff hat
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Hole alle Kundenemail-Vorlagen
+      const allTemplates = await storage.getAllEmailTemplates(userId);
+      
+      // Filtere nach Kunden-Vorlagen und entferne archivierte Vorlagen
+      const customerTemplates = allTemplates.filter(t => 
+        t.type === 'customer' && !t.name.includes('[ARCHIVIERT]')
+      );
+      
+      return res.status(200).json({ templates: customerTemplates });
+    } catch (error) {
+      console.error("Fehler beim Abrufen der E-Mail-Vorlagen:", error);
+      return res.status(500).json({ message: "Fehler beim Abrufen der E-Mail-Vorlagen" });
+    }
+  });
+  
+  // API-Endpunkt zum Senden einer E-Mail mit einer bestimmten Vorlage für eine Reparatur
+  app.post("/api/repairs/:id/send-email", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Extrahiere template ID aus dem Request-Body
+      const { templateId } = req.body;
+      if (!templateId) {
+        return res.status(400).json({ message: "Keine Vorlagen-ID angegeben" });
+      }
+      
+      // Reparatur abrufen um zu prüfen ob der Benutzer Zugriff hat
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // Kunde und Business-Daten laden
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      if (!customer.email) {
+        return res.status(400).json({ message: "Kunde hat keine E-Mail-Adresse" });
+      }
+      
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Lade den Bewertungslink aus den Geschäftseinstellungen
+      let reviewLink = businessSettings?.reviewLink || "";
+      
+      // Stelle sicher, dass der Bewertungslink mit http:// oder https:// beginnt
+      if (reviewLink && !reviewLink.startsWith('http')) {
+        reviewLink = 'https://' + reviewLink;
+      }
+      
+      // Variablen für die E-Mail-Vorlage
+      const variables = {
+        "customer_name": customer.name || "",
+        "repair_id": repair.id.toString(),
+        "device": repair.deviceName || "",
+        "businessName": businessSettings?.businessName || "",
+        "reviewLink": reviewLink,
+        "repairId": repairId.toString(),
+        "userId": userId.toString(),
+        "businessAddress": businessSettings?.businessAddress || "",
+        "businessPhone": businessSettings?.businessPhone || "",
+        "businessEmail": businessSettings?.businessEmail || ""
+      };
+      
+      console.log(`Sende E-Mail mit Vorlage ID ${templateId} für Reparatur ${repairId} an ${customer.email}`);
+      
+      // Überprüfe die Vorlage
+      const template = await storage.getEmailTemplate(templateId, userId);
+      if (!template) {
+        return res.status(404).json({ message: "E-Mail-Vorlage nicht gefunden" });
+      }
+      
+      // E-Mail senden
+      const emailSent = await storage.sendEmailWithTemplate(
+        templateId, 
+        customer.email, 
+        variables
+      );
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      }
+      
+      // Wenn es sich um eine Bewertungsanfrage handelt, setze das reviewRequestSent-Flag
+      if (template.name.toLowerCase().includes("bewertung") || 
+          template.name.toLowerCase().includes("feedback")) {
+        console.log(`Aktualisiere reviewRequestSent für Reparatur ${repairId} auf TRUE`);
+        try {
+          const result = await db.update(repairs)
+            .set({ reviewRequestSent: true })
+            .where(eq(repairs.id, repairId));
+        } catch (updateError) {
+          console.error("Fehler beim Aktualisieren des reviewRequestSent-Flags:", updateError);
+        }
+      }
+      
+      return res.status(200).json({ message: "E-Mail erfolgreich gesendet" });
+    } catch (error) {
+      console.error("Fehler beim Senden der E-Mail:", error);
+      return res.status(500).json({ message: "Fehler beim Senden der E-Mail" });
+    }
+  });
+
   // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
   // API-Endpunkt zum Speichern einer digitalen Unterschrift für eine Reparatur
   // API-Endpunkt zum Speichern einer digitalen Unterschrift für eine Reparatur
