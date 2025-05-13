@@ -301,6 +301,29 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks).omit({
 export type Feedback = typeof feedbacks.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 
+// Tabelle für die Superadmin-E-Mail-Einstellungen (globale E-Mail-Einstellungen)
+export const superadminEmailSettings = pgTable("superadmin_email_settings", {
+  id: serial("id").primaryKey(),
+  smtpSenderName: text("smtp_sender_name").default("Handyshop Verwaltung").notNull(), // Bei den Mails anzuzeigender Name
+  smtpSenderEmail: text("smtp_sender_email").default("noreply@phonerepair.at").notNull(), // Absender-E-Mail-Adresse
+  smtpHost: text("smtp_host").notNull(),        // SMTP Host (z.B. smtp.example.com)
+  smtpUser: text("smtp_user").notNull(),        // SMTP Benutzername
+  smtpPassword: text("smtp_password").notNull(), // SMTP Passwort
+  smtpPort: integer("smtp_port").default(587).notNull(), // SMTP Port (z.B. 587)
+  isActive: boolean("is_active").default(true).notNull(), // Ob diese Einstellungen aktiv sind
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSuperadminEmailSettingsSchema = createInsertSchema(superadminEmailSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type SuperadminEmailSettings = typeof superadminEmailSettings.$inferSelect;
+export type InsertSuperadminEmailSettings = z.infer<typeof insertSuperadminEmailSettingsSchema>;
+
 // E-Mail-Vorlagen für Kundenkommunikation
 export const emailTemplates = pgTable("email_templates", {
   id: serial("id").primaryKey(),
