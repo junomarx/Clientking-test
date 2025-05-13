@@ -64,17 +64,34 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
           return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-        } 
+        }
+        
+        // Prüfe, ob das Passwort bereits gehasht ist
+        if (!user.password || !user.password.includes('.')) {
+          console.error(`Fehler: Das Passwort für Benutzer ${username} (ID: ${user.id}) ist ungültig formatiert`);
+          return done(null, false, { message: 'Anmeldung nicht möglich. Bitte den Administrator kontaktieren.' });
+        }
+        
+        try {
+          const passwordMatches = await comparePasswords(password, user.password);
+          if (!passwordMatches) {
+            return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
+          }
+        } catch (err) {
+          console.error(`Passwortvergleich fehlgeschlagen für ${username}:`, err);
+          return done(null, false, { message: 'Fehler bei der Anmeldung. Bitte versuchen Sie es später erneut.' });
+        }
+        
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
-        else if (!user.isActive && !user.isAdmin) {
+        if (!user.isActive && !user.isAdmin) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
         } 
-        else {
-          return done(null, user);
-        }
+        
+        return done(null, user);
       } catch (error) {
+        console.error('Fehler bei der Benutzerauthentifizierung:', error);
         return done(error);
       }
     }),

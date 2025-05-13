@@ -295,9 +295,17 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   };
   
   // Funktion zum Senden einer Bewertungsanfrage
+  // Funktion, um den E-Mail-Dialog zu öffnen
   const handleSendReviewRequest = (repairId: number) => {
-    setSelectedRepairId(repairId);
-    setShowEmailDialog(true);
+    console.log(`Öffne E-Mail-Dialog für Reparatur ID ${repairId}`);
+    // setSelectedRepairId nur setzen, wenn es sich ändert
+    if (selectedRepairId !== repairId) {
+      setSelectedRepairId(repairId);
+    }
+    // Dialog NACH der Zustandsänderung öffnen
+    setTimeout(() => {
+      setShowEmailDialog(true);
+    }, 0);
   };
   
   // Pagination logic

@@ -25,6 +25,15 @@ export function EmailSendDialog({
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Zurücksetzen des ausgewählten Templates, wenn der Dialog geschlossen wird
+  useEffect(() => {
+    if (!open) {
+      // Dialog wird geschlossen, Zustand zurücksetzen
+      console.log("EmailSendDialog: Dialog geschlossen, setze Zustand zurück");
+      setSelectedTemplateId("");
+    }
+  }, [open]);
 
   // Lade alle Kunden-E-Mail-Vorlagen (Typ 'customer')
   const { data: templatesData, isLoading: isLoadingTemplates, error: templatesError } = useQuery({
@@ -100,7 +109,10 @@ export function EmailSendDialog({
 
   // Automatisch das erste Template auswählen, wenn die Vorlagen geladen werden
   useEffect(() => {
-    if (templatesData && templatesData.length > 0 && !selectedTemplateId) {
+    // Nur ausführen, wenn Vorlagen geladen sind UND noch keine Vorlage ausgewählt ist
+    if (templatesData && templatesData.length > 0 && selectedTemplateId === "") {
+      console.log("EmailSendDialog: Lade Standardvorlage...");
+      
       // Versuche zuerst eine Bewertungsvorlage zu finden
       const reviewTemplate = templatesData.find(t => 
         t.name.toLowerCase().includes("bewertung") || 
@@ -108,11 +120,14 @@ export function EmailSendDialog({
       );
       
       // Wenn eine Bewertungsvorlage gefunden wurde oder die erste Vorlage auswählen
-      setSelectedTemplateId(
-        reviewTemplate ? reviewTemplate.id.toString() : templatesData[0].id.toString()
-      );
+      const newTemplateId = reviewTemplate 
+        ? reviewTemplate.id.toString() 
+        : templatesData[0].id.toString();
+        
+      console.log("EmailSendDialog: Setze Standardvorlage ID:", newTemplateId);
+      setSelectedTemplateId(newTemplateId);
     }
-  }, [templatesData, selectedTemplateId]);
+  }, [templatesData]);
 
   const handleSendEmail = () => {
     if (!selectedTemplateId) {
