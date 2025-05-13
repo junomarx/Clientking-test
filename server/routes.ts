@@ -474,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`E-Mail-Vorlage gefunden: ${sparepartTemplate.name}`);
               
               // E-Mail senden
-              const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables);
+              const emailSent = await storage.sendEmailWithTemplate(sparepartTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
               
               // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
@@ -1897,6 +1897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Variablen für die E-Mail-Vorlage
       const variables = {
+        // Neue Namen
         "customer_name": customer.firstName + " " + customer.lastName,
         "repair_id": repair.id.toString(),
         "device": repair.model || repair.deviceType || "",
@@ -1904,9 +1905,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "reviewLink": reviewLink,
         "repairId": repairId.toString(),
         "userId": userId.toString(),
-        "businessAddress": businessSettings?.address || "",
-        "businessPhone": businessSettings?.phone || "",
-        "businessEmail": businessSettings?.email || ""
+        
+        // Alte Namen für Kompatibilität mit bestehenden Vorlagen
+        "kundenname": customer.firstName + " " + customer.lastName,
+        "reparatur_id": repair.id.toString(),
+        "geraet": repair.model || repair.deviceType || ""
       };
       
       console.log(`Sende E-Mail mit Vorlage ID ${templateId} für Reparatur ${repairId} an ${customer.email}`);
