@@ -93,6 +93,12 @@ export class EmailService {
       
       // Speichern der Konfiguration für spätere Verwendung
       this.superadminEmailConfig = settings;
+      console.log('Superadmin-E-Mail-Konfiguration geladen:', {
+        host: settings.smtpHost,
+        port: settings.smtpPort,
+        sender: settings.smtpSenderEmail,
+        senderName: settings.smtpSenderName
+      });
       
       // Erstelle den Transporter mit den Superadmin-Einstellungen
       const config = {
@@ -102,6 +108,12 @@ export class EmailService {
         auth: {
           user: settings.smtpUser,
           pass: settings.smtpPassword
+        },
+        // Verbindungstimeout setzen
+        connectionTimeout: 10000, // 10 Sekunden
+        // Für SSL-Probleme
+        tls: {
+          rejectUnauthorized: false
         },
         // Debug-Optionen aktivieren
         debug: true,
