@@ -1,5 +1,5 @@
 import { db } from './db';
-import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory } from '@shared/schema';
+import { emailTemplates, type EmailTemplate, type InsertEmailTemplate, businessSettings, emailHistory, type InsertEmailHistory, users } from '@shared/schema';
 import { eq, desc, isNull, or, and, SQL, count } from 'drizzle-orm';
 import { storage } from './storage';
 import nodemailer from 'nodemailer';
@@ -359,8 +359,17 @@ export class EmailService {
     try {
       console.log("Start Bereinigung redundanter E-Mail-Vorlagen...");
       
-      // Explizit die bekannte redundante Vorlage für Benutzer 3 archivieren
-      await this.archiveCompletedTemplateForUser(3);
+      // Wenn userId angegeben ist, nur für diesen Benutzer bereinigen
+      if (userId !== undefined && userId !== null) {
+        await this.archiveCompletedTemplateForUser(userId);
+      } else {
+        // Andernfalls explizit die bekannten redundanten Vorlagen behandeln
+        // Für Benutzer 3
+        await this.archiveCompletedTemplateForUser(3);
+        
+        // Weitere bekannte Benutzer können hier hinzugefügt werden
+        // z.B. await this.archiveCompletedTemplateForUser(5);
+      }
       
       console.log("Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.");
     } catch (error) {
