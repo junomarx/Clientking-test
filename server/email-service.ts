@@ -584,7 +584,7 @@ export class EmailService {
           eq(emailTemplates.userId, userId)
         ),
         eq(emailTemplates.userId, null as any) // Globale Vorlagen sind für alle sichtbar
-      );
+      ) as SQL<unknown>;
       
       // Vorlagen ohne [ARCHIVIERT] im Namen bevorzugen
       const allTemplates = await db.select().from(emailTemplates)
