@@ -497,18 +497,20 @@ async function createCustomerEmailTemplates(
     
     // Prüfen, ob bereits eine archivierte "Reparatur abgeschlossen" Vorlage existiert
     let hasArchivedTemplate = false;
-    for (const [name, template] of existingTemplateMap.entries()) {
+    
+    // Alternative Implementierung, um TypeScript-Fehler zu vermeiden
+    Object.keys(existingTemplateMap).forEach(name => {
       if (name.includes("[ARCHIVIERT]") && name.includes("Reparatur abgeschlossen")) {
         hasArchivedTemplate = true;
-        break;
       }
-    }
+    });
     
     // Alle Vorlagen durchgehen, entweder aktualisieren oder neu erstellen
     for (const template of relevantTemplates) {
       // Überspringe "Reparatur abgeschlossen", wenn "Reparatur abholbereit" bereits existiert
-      if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
-        console.log(`Überspringe '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+      // oder wenn bereits eine archivierte Version vorhanden ist
+      if (template.name === "Reparatur abgeschlossen" && (readyTemplateExists || hasArchivedTemplate)) {
+        console.log(`Überspringe '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist oder eine archivierte Version existiert.`);
         continue;
       }
       
@@ -518,8 +520,8 @@ async function createCustomerEmailTemplates(
         // Wenn forceUpdate aktiviert ist, aktualisiere die Vorlage
         if (forceUpdate) {
           // Auch hier überprüfen, ob wir "Reparatur abgeschlossen" aktualisieren sollen
-          if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
-            console.log(`Überspringe Aktualisierung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+          if (template.name === "Reparatur abgeschlossen" && (readyTemplateExists || hasArchivedTemplate)) {
+            console.log(`Überspringe Aktualisierung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist oder eine archivierte Version existiert.`);
             continue;
           }
           
@@ -540,8 +542,8 @@ async function createCustomerEmailTemplates(
         }
       } else {
         // Überprüfen, ob "Reparatur abgeschlossen" neu erstellt werden soll
-        if (template.name === "Reparatur abgeschlossen" && readyTemplateExists) {
-          console.log(`Überspringe Erstellung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist.`);
+        if (template.name === "Reparatur abgeschlossen" && (readyTemplateExists || hasArchivedTemplate)) {
+          console.log(`Überspringe Erstellung von '${template.name}' für Benutzer ${userId}, da 'Reparatur abholbereit' bereits vorhanden ist oder eine archivierte Version existiert.`);
           continue;
         }
         
