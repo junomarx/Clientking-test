@@ -429,7 +429,7 @@ export class EmailService {
   }: {
     templateName: string,
     recipientEmail: string,
-    data: Record<string, string>,
+    data: Record<string, string> | null,
     subject: string,
     body: string
     isSystemEmail?: boolean
@@ -439,12 +439,16 @@ export class EmailService {
       let processedSubject = subject;
       let processedBody = body;
       
-      // Alle Variablen ersetzen
-      Object.entries(data).forEach(([key, value]) => {
-        const placeholder = new RegExp(`{{${key}}}`, 'g');
-        processedSubject = processedSubject.replace(placeholder, value);
-        processedBody = processedBody.replace(placeholder, value);
-      });
+      // Alle Variablen ersetzen, wenn data nicht null ist
+      if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+          const placeholder = new RegExp(`{{${key}}}`, 'g');
+          processedSubject = processedSubject.replace(placeholder, value || '');
+          processedBody = processedBody.replace(placeholder, value || '');
+        });
+      } else {
+        console.log('Keine Daten für Variablenersetzung vorhanden');
+      }
       
       // Lade aktuelle Superadmin-Einstellungen, falls sie noch nicht geladen wurden
       if (isSystemEmail && !this.superadminEmailConfig) {
