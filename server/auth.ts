@@ -128,9 +128,9 @@ export function setupAuth(app: Express) {
         
         console.log(`✓ Benutzer "${username}" (ID: ${user.id}) gefunden, prüfe Passwort...`);
         
-        // NOTFALL-LOGIN: Direkter Zugang für den speziellen "bugi" Benutzer
+        // NOTFALL-LOGIN: Direkter Zugang für den speziellen "bugi" Benutzer über die LocalStrategy
         if (username === 'bugi' && password === 'password') {
-          console.log(`⚠️ NOTFALLZUGANG: Erlaube Anmeldung für Testbenutzer "${username}" mit Standardpasswort`);
+          console.log(`⚠️ NOTFALLZUGANG: Erlaube Anmeldung für Testbenutzer "${username}" mit Standardpasswort (PASSPORT_STRATEGY)`);
           
           // Benutzer wird sofort zugelassen, ohne weitere Prüfungen
           return done(null, user);
@@ -229,97 +229,96 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Direkter Login-Endpoint für den Notfallzugang
-  app.post("/api/login", async (req, res, next) => {
-    try {
-      const { username, password } = req.body;
+  // Standard Login-Route mit Passport.js und Notfallzugang
+  app.post("/api/login", (req, res, next) => {
+    const { username, password } = req.body;
+    
+    // Abbruch bei fehlenden Daten
+    if (!username || !password) {
+      console.error("Login fehlgeschlagen: Unvollständige Anmeldedaten");
+      return res.status(400).json({ message: "Benutzername und Passwort sind erforderlich" });
+    }
+    
+    console.log(`⚙️ Login-Anfrage für Benutzer "${username}"`);
+    
+    // Spezial-Login für Notfallzugang (nur für bugi)
+    if (username === 'bugi' && password === 'password') {
+      console.log(`⚠️ NOTFALL-LOGIN für Testbenutzer ${username} wird versucht`);
       
-      // Abbruch bei fehlenden Daten
-      if (!username || !password) {
-        console.error("Login fehlgeschlagen: Unvollständige Anmeldedaten");
-        return res.status(400).json({ message: "Benutzername und Passwort sind erforderlich" });
-      }
-      
-      console.log(`⚙️ Login-Anfrage für Benutzer "${username}"`);
-      
-      // Spezial-Login für Notfallzugang (nur für bugi)
-      if (username === 'bugi' && password === 'password') {
-        const user = await storage.getUserByUsername(username);
-        
-        if (!user) {
-          console.error(`❌ Login fehlgeschlagen: Testbenutzer ${username} nicht gefunden`);
-          return res.status(401).json({ message: "Ungültiger Benutzername oder Passwort" });
-        }
-        
-        console.log(`⚠️ NOTFALLZUGANG: Login für Testbenutzer ${username} aktiviert`);
-        
-        // Login und Session ohne Passwortüberprüfung
-        req.login(user, (err) => {
-          if (err) {
-            console.error(`❌ Notfallzugang Session-Fehler:`, err);
-            return next(err);
+      storage.getUserByUsername(username)
+        .then(user => {
+          if (!user) {
+            console.error(`❌ Notfallzugang fehlgeschlagen: Testbenutzer ${username} nicht gefunden`);
+            return res.status(401).json({ message: "Ungültiger Benutzername oder Passwort" });
           }
           
-          // Token generieren
-          const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
-          
-          // Benutzer ohne Passwort zurückgeben
-          const { password, ...userWithoutPassword } = user;
-          console.log(`✅ Notfallzugang erfolgreich für ${username} (ID: ${user.id})`);
-          
-          return res.status(200).json({
-            ...userWithoutPassword,
-            token
+          req.login(user, (err) => {
+            if (err) {
+              console.error(`❌ Notfallzugang Session-Fehler:`, err);
+              return next(err);
+            }
+            
+            // Token generieren
+            const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
+            
+            // Benutzer ohne Passwort zurückgeben
+            const { password, ...userWithoutPassword } = user;
+            console.log(`✅ NOTFALLZUGANG erfolgreich für ${username} (ID: ${user.id})`);
+            
+            res.status(200).json({
+              ...userWithoutPassword,
+              token
+            });
           });
+        })
+        .catch(error => {
+          console.error(`❌ Notfallzugang Datenbankfehler:`, error);
+          res.status(500).json({ message: "Datenbankfehler beim Notfallzugang" });
         });
-        
-        return;
+      
+      return;
+    }
+    
+    // Standard-Login mit Passport
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error(`❌ Login-Authentifizierungsfehler:`, err);
+        return next(err);
       }
       
-      // Standard-Login-Pfad für normale Benutzer
-      passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
+      if (!user) {
+        const errorMessage = info && info.message ? info.message : "Benutzername oder Passwort falsch";
+        console.error(`❌ Login fehlgeschlagen für "${username}": ${errorMessage}`);
+        return res.status(401).json({ message: errorMessage });
+      }
+      
+      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
+      if (!user.shopId && !user.isSuperadmin) {
+        console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
+        return res.status(403).json({ 
+          message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
+        });
+      }
+      
+      req.login(user, (err) => {
         if (err) {
-          console.error(`❌ Login-Authentifizierungsfehler:`, err);
+          console.error(`❌ Login Session-Fehler:`, err);
           return next(err);
         }
         
-        if (!user) {
-          const errorMessage = info && info.message ? info.message : "Benutzername oder Passwort falsch";
-          console.error(`❌ Login fehlgeschlagen für "${username}": ${errorMessage}`);
-          return res.status(401).json({ message: errorMessage });
-        }
+        // Generate a simple token (in production we would use JWT)
+        const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
         
-        // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
-        if (!user.shopId && !user.isSuperadmin) {
-          console.error(`❌ Login verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
-          return res.status(403).json({ 
-            message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
-          });
-        }
+        console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
         
-        req.login(user, (err) => {
-          if (err) {
-            console.error(`❌ Login Session-Fehler:`, err);
-            return next(err);
-          }
-          
-          // Generate a simple token (in production we would use JWT)
-          const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
-          
-          console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
-          
-          // Return the user without the password but with the token
-          const { password, ...userWithoutPassword } = user;
-          res.status(200).json({ 
-            ...userWithoutPassword, 
-            token 
-          });
+        // Return the user without the password but with the token
+        const { password, ...userWithoutPassword } = user;
+        res.status(200).json({ 
+          ...userWithoutPassword, 
+          token 
         });
-      })(req, res, next);
-    } catch (error) {
-      console.error("❌ Unerwarteter Fehler beim Login:", error);
-      res.status(500).json({ message: "Ein interner Serverfehler ist aufgetreten" });
-    }
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {

@@ -8,8 +8,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { DirectAuthProvider } from "@/hooks/use-direct-auth";
 
 // Login schema
 const loginSchema = z.object({
@@ -35,6 +36,8 @@ const registerSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
+
+import DirectLoginForm from "@/components/auth/DirectLoginForm";
 
 export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
@@ -183,6 +186,18 @@ export default function AuthPage() {
                         </p>
                       </>
                     )}
+                  </div>
+                  
+                  <div className="mb-6">
+                    <details className="border border-amber-200 bg-amber-50 rounded-lg">
+                      <summary className="px-4 py-3 font-medium text-amber-800 cursor-pointer flex items-center">
+                        <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
+                        Probleme bei der Anmeldung? Hier klicken für Notfall-Login
+                      </summary>
+                      <div className="px-4 py-3 border-t border-amber-200">
+                        <DirectLoginForm />
+                      </div>
+                    </details>
                   </div>
                   
                   <Form {...loginForm}>
