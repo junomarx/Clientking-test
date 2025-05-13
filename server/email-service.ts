@@ -174,6 +174,9 @@ export class EmailService {
           user: settings.smtpUser,
           pass: settings.smtpPassword
         },
+        // Eine angemessene Zeitüberschreitung festlegen
+        connectionTimeout: 10000, // 10 Sekunden
+        // Debug-Optionen
         debug: true,
         logger: true
       };
