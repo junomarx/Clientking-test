@@ -91,7 +91,7 @@ export function setupAuth(app: Express) {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
       sameSite: 'lax',
       httpOnly: true,
-      secure: false, // In Entwicklung immer false, da kein HTTPS
+      secure: process.env.NODE_ENV === 'production', // Nur in Produktion auf true setzen
       path: '/'
     }
   };

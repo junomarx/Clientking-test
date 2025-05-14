@@ -101,9 +101,23 @@ app.use((req, res, next) => {
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
+      
+      console.error('Server-Fehler:', {
+        status,
+        message,
+        stack: err.stack,
+        url: _req.originalUrl,
+        method: _req.method
+      });
 
-      res.status(status).json({ message });
-      throw err;
+      // Fehler als JSON zurückgeben, ohne den Server zu beenden
+      res.status(status).json({ 
+        message,
+        error: app.get('env') === 'development' ? err.stack : 'Ein Fehler ist aufgetreten' 
+      });
+      
+      // NICHT werfen - das würde den Server abstürzen lassen
+      // throw err;
     });
 
     // importantly only setup vite in development and after
