@@ -10,7 +10,7 @@ import {
   superadminEmailSettings,
   type SuperadminEmailSettings
 } from '@shared/schema';
-import { eq, desc, isNull, or, and, SQL, count } from 'drizzle-orm';
+import { eq, desc, isNull, or, and, SQL, count, sql } from 'drizzle-orm';
 import { storage } from './storage';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
@@ -844,8 +844,8 @@ export class EmailService {
           and(
             eq(emailTemplates.userId, userId),
             or(
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abgeschlossen%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%completed%'`
+              sql`LOWER(${emailTemplates.name}) LIKE '%abgeschlossen%'`,
+              sql`LOWER(${emailTemplates.name}) LIKE '%completed%'`
             )
           )
         );
@@ -880,12 +880,12 @@ export class EmailService {
         .from(emailTemplates)
         .where(
           and(
-            userId !== null ? eq(emailTemplates.userId, userId) : SQL`1=1`,
+            userId !== null ? eq(emailTemplates.userId, userId) : eq(1, 1),
             or(
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abholbereit%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abholen%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%ready%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%pickup%'`
+              sql`LOWER(${emailTemplates.name}) LIKE '%abholbereit%'`,
+              sql`LOWER(${emailTemplates.name}) LIKE '%abholen%'`,
+              sql`LOWER(${emailTemplates.name}) LIKE '%ready%'`,
+              sql`LOWER(${emailTemplates.name}) LIKE '%pickup%'`
             )
           )
         );
