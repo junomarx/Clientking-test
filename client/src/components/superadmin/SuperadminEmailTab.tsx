@@ -234,8 +234,8 @@ export default function SuperadminEmailTab() {
     },
     onSuccess: () => {
       toast({
-        title: 'Test-E-Mail gesendet',
-        description: 'Die Test-E-Mail wurde erfolgreich versendet.'
+        title: 'Zentrale System-Test-E-Mail gesendet',
+        description: 'Die System-Test-E-Mail wurde erfolgreich versendet.'
       });
     },
     onError: (error: Error) => {
@@ -258,7 +258,7 @@ export default function SuperadminEmailTab() {
     onSuccess: (_, variables) => {
       toast({
         title: 'Vorlagen-Test-E-Mail gesendet',
-        description: `Die Test-E-Mail wurde erfolgreich an ${variables.testEmail} versendet.`
+        description: `Die Test-E-Mail mit der ${templateToTest?.type === 'app' ? 'System' : 'Kunden'}-Vorlage wurde erfolgreich an ${variables.testEmail} versendet.`
       });
     },
     onError: (error: Error) => {
@@ -348,18 +348,18 @@ export default function SuperadminEmailTab() {
   
   // Vorlage aktualisieren
   const handleUpdateTemplate = () => {
-    if (!selectedTemplate) return;
-    
-    updateTemplateMutation.mutate({
-      id: selectedTemplate.id,
-      template: {
-        name: selectedTemplate.name,
-        subject: selectedTemplate.subject,
-        body: selectedTemplate.body,
-        variables: selectedTemplate.variables,
-        type: selectedTemplate.type || 'customer' // Stelle sicher, dass der Typ übermittelt wird
-      }
-    });
+    if (selectedTemplate) {
+      updateTemplateMutation.mutate({
+        id: selectedTemplate.id,
+        template: {
+          name: selectedTemplate.name,
+          subject: selectedTemplate.subject,
+          body: selectedTemplate.body,
+          variables: selectedTemplate.variables,
+          type: selectedTemplate.type || 'customer' // Stelle sicher, dass der Typ übermittelt wird
+        }
+      });
+    }
   };
   
   // Vorlage löschen
