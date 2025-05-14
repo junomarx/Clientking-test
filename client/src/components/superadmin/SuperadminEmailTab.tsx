@@ -25,18 +25,7 @@ interface GlobalEmailSettings {
   smtpSenderEmail: string;
 }
 
-interface SuperadminEmailSettings {
-  smtpHost: string;
-  smtpPort: number;
-  smtpUser: string;
-  smtpPassword: string;
-  smtpSenderName: string;
-  smtpSenderEmail: string;
-  isActive: boolean;
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
+// Interface für Superadmin Email-Einstellungen wird nicht mehr verwendet, da wir nur noch eine SMTP-Konfiguration verwenden
 
 interface EmailTemplate {
   id: number;
@@ -165,27 +154,7 @@ export default function SuperadminEmailTab() {
     }
   });
   
-  // Superadmin-SMTP-Konfiguration speichern
-  const saveSuperadminSmtpConfigMutation = useMutation({
-    mutationFn: async (config: SuperadminEmailSettings) => {
-      const response = await apiRequest('POST', '/api/superadmin/email/superadmin-config', config);
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/superadmin/email/superadmin-config'] });
-      toast({
-        title: 'Superadmin-SMTP-Konfiguration gespeichert',
-        description: 'Die Superadmin-E-Mail-Einstellungen wurden erfolgreich aktualisiert.'
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler beim Speichern der Superadmin-Einstellungen',
-        description: error.message
-      });
-    }
-  });
+  // Die Superadmin-SMTP-Konfiguration wurde mit der globalen SMTP-Konfiguration konsolidiert
   
   // E-Mail-Vorlage erstellen
   const createTemplateMutation = useMutation({
@@ -278,26 +247,7 @@ export default function SuperadminEmailTab() {
     }
   });
   
-  // Superadmin-SMTP-Test-E-Mail senden
-  const sendSuperadminTestEmailMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await apiRequest('POST', '/api/superadmin/email/superadmin-test', { email });
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Superadmin Test-E-Mail gesendet',
-        description: 'Die Test-E-Mail über den Superadmin-SMTP-Server wurde erfolgreich versendet.'
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: 'destructive',
-        title: 'Fehler beim Senden der Superadmin-Test-E-Mail',
-        description: error.message
-      });
-    }
-  });
+  // Die Superadmin-Test-E-Mail-Funktionalität wurde in die allgemeine Test-E-Mail-Funktionalität integriert
   
   // Vorlage-Test-E-Mail senden
   const sendTemplateTestEmailMutation = useMutation({
@@ -348,19 +298,7 @@ export default function SuperadminEmailTab() {
     }
   };
   
-  // Superadmin Test-E-Mail senden
-  const handleSendSuperadminTestEmail = () => {
-    // Verwende die E-Mail-Adresse aus dem Dialog
-    if (templateTestEmail) {
-      sendSuperadminTestEmailMutation.mutate(templateTestEmail);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Keine E-Mail-Adresse',
-        description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
-      });
-    }
-  };
+  // Keine zusätzliche Superadmin-Test-E-Mail-Funktion mehr, wir verwenden nur noch eine SMTP-Konfiguration
   
   // SMTP-Konfiguration speichern (Überarbeitet)
   const handleSaveSuperadminSmtpConfig = () => {
