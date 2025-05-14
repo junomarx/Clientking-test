@@ -54,25 +54,14 @@ interface EmailTemplate {
 export default function SuperadminEmailTab() {
   const { toast } = useToast();
   
-  // States für SMTP-Einstellungen
+  // States für SMTP-Einstellungen (konsolidiert)
   const [emailSettings, setEmailSettings] = useState<GlobalEmailSettings>({
     smtpHost: '',
     smtpPort: '587',
     smtpUser: '',
     smtpPassword: '',
-    smtpSenderName: '',
-    smtpSenderEmail: ''
-  });
-  
-  // States für Superadmin-SMTP-Einstellungen
-  const [superadminEmailSettings, setSuperadminEmailSettings] = useState<SuperadminEmailSettings>({
-    smtpHost: '',
-    smtpPort: 587,
-    smtpUser: '',
-    smtpPassword: '',
     smtpSenderName: 'Handyshop Verwaltung',
-    smtpSenderEmail: 'noreply@phonerepair.at',
-    isActive: true
+    smtpSenderEmail: 'noreply@phonerepair.at'
   });
   
   // States für E-Mail-Vorlagen
@@ -98,14 +87,9 @@ export default function SuperadminEmailTab() {
   // Radiobutton-Style für konsistente Darstellung
   const radioStyle = "w-4 h-4 border border-gray-300 bg-background text-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   
-  // SMTP-Konfiguration abrufen
+  // SMTP-Konfiguration abrufen (konsolidiertes System)
   const { data: smtpConfig, isLoading: isLoadingConfig } = useQuery<GlobalEmailSettings>({
     queryKey: ['/api/superadmin/email/config']
-  });
-  
-  // Superadmin SMTP-Konfiguration abrufen
-  const { data: superadminSmtpConfig, isLoading: isLoadingSuperadminConfig } = useQuery<SuperadminEmailSettings>({
-    queryKey: ['/api/superadmin/email/superadmin-config']
   });
   
   // Callback für SMTP-Konfiguration
@@ -114,13 +98,6 @@ export default function SuperadminEmailTab() {
       setEmailSettings(smtpConfig);
     }
   }, [smtpConfig]);
-  
-  // Callback für Superadmin-SMTP-Konfiguration
-  useEffect(() => {
-    if (superadminSmtpConfig) {
-      setSuperadminEmailSettings(superadminSmtpConfig);
-    }
-  }, [superadminSmtpConfig]);
   
   // Standard-App-Vorlagen erstellen
   const createDefaultTemplatesMutation = useMutation({
@@ -385,9 +362,9 @@ export default function SuperadminEmailTab() {
     }
   };
   
-  // Superadmin-SMTP-Konfiguration speichern
+  // SMTP-Konfiguration speichern (Überarbeitet)
   const handleSaveSuperadminSmtpConfig = () => {
-    saveSuperadminSmtpConfigMutation.mutate(superadminEmailSettings);
+    saveSmtpConfigMutation.mutate(emailSettings);
   };
   
   // Vorlage zum Testen auswählen und Dialog öffnen
