@@ -284,7 +284,7 @@ export default function SuperadminEmailTab() {
     saveSmtpConfigMutation.mutate(emailSettings);
   };
   
-  // Test-E-Mail senden
+  // Test-E-Mail senden (eine zentrale Funktion für alle Test-Emails)
   const handleSendTestEmail = () => {
     // Verwende die E-Mail-Adresse aus dem Dialog
     if (templateTestEmail) {
