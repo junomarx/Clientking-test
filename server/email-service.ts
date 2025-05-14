@@ -162,7 +162,7 @@ export class EmailService {
   }
 
   /**
-   * Aktualisiert die SMTP-Einstellungen für den Superadmin-Transporter
+   * Aktualisiert die zentralen SMTP-Einstellungen für alle System-E-Mails
    * und testet die SMTP-Verbindung
    */
   async updateSuperadminSmtpSettings(settings: Omit<SuperadminEmailSettings, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> {
@@ -266,7 +266,8 @@ export class EmailService {
   }
   
   /**
-   * Sendet eine Test-E-Mail mit den Superadmin-SMTP-Einstellungen
+   * Sendet eine Test-E-Mail mit den zentralen SMTP-Einstellungen
+   * Diese Methode testet die Konfiguration für System-E-Mails
    */
   async sendSuperadminTestEmail(to: string): Promise<boolean> {
     try {
@@ -303,12 +304,12 @@ export class EmailService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #4f46e5;">Superadmin-Test-E-Mail erfolgreich!</h2>
+              <h2 style="color: #4f46e5;">SMTP-Konfiguration Test erfolgreich!</h2>
             </div>
             
-            <p>Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen korrekt konfiguriert sind.</p>
+            <p>Diese E-Mail bestätigt, dass Ihre zentralen SMTP-Einstellungen korrekt konfiguriert sind.</p>
             
-            <p>Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails über die Superadmin-E-Mail-Adresse zu versenden.</p>
+            <p>Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails über die zentrale SMTP-Konfiguration zu versenden.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
