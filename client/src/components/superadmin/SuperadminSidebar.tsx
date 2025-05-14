@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -27,13 +27,13 @@ interface SuperadminSidebarProps {
   handleLogout: () => void;
 }
 
-export function SuperadminSidebar({ 
+export const SuperadminSidebar = memo(({ 
   activeTab, 
   setActiveTab, 
   currentUser, 
   businessSettings, 
   handleLogout 
-}: SuperadminSidebarProps) {
+}: SuperadminSidebarProps) => {
   
   // Navigationselemente, die in der Sidebar angezeigt werden
   type NavItemsProps = {

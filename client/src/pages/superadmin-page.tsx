@@ -31,7 +31,7 @@ export default function SuperadminPage() {
   });
 
   // Ausloggen-Funktion
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await apiRequest("POST", "/api/logout");
       localStorage.removeItem("userId");
@@ -49,7 +49,7 @@ export default function SuperadminPage() {
         description: "Bitte versuchen Sie es erneut.",
       });
     }
-  };
+  }, [setLocation, toast]);
 
   // Seite-Titel aktualisieren
   useEffect(() => {

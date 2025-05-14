@@ -356,21 +356,21 @@ export default function SuperadminEmailTab() {
   });
   
   // SMTP-Einstellungen ändern
-  const handleSmtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSmtpChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEmailSettings(prev => ({
       ...prev,
       [name]: value
     }));
-  };
+  }, []);
   
   // SMTP-Konfiguration speichern
-  const handleSaveSmtpConfig = () => {
+  const handleSaveSmtpConfig = useCallback(() => {
     saveSmtpConfigMutation.mutate(emailSettings);
-  };
+  }, [saveSmtpConfigMutation, emailSettings]);
   
   // Test-E-Mail senden
-  const handleSendTestEmail = () => {
+  const handleSendTestEmail = useCallback(() => {
     // Verwende die E-Mail-Adresse aus dem Dialog
     if (templateTestEmail) {
       sendTestEmailMutation.mutate(templateTestEmail);
@@ -381,10 +381,10 @@ export default function SuperadminEmailTab() {
         description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
       });
     }
-  };
+  }, [templateTestEmail, sendTestEmailMutation, toast]);
   
   // Superadmin Test-E-Mail senden
-  const handleSendSuperadminTestEmail = () => {
+  const handleSendSuperadminTestEmail = useCallback(() => {
     // Verwende die E-Mail-Adresse aus dem Dialog
     if (templateTestEmail) {
       sendSuperadminTestEmailMutation.mutate(templateTestEmail);
@@ -395,7 +395,7 @@ export default function SuperadminEmailTab() {
         description: 'Bitte geben Sie eine E-Mail-Adresse ein.'
       });
     }
-  };
+  }, [templateTestEmail, sendSuperadminTestEmailMutation, toast]);
   
   // Superadmin-SMTP-Konfiguration speichern
   const handleSaveSuperadminSmtpConfig = useCallback(() => {
