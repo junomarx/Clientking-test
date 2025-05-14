@@ -509,17 +509,18 @@ export class EmailService {
       }
       
       // Wähle den richtigen SMTP-Transporter basierend auf isSystemEmail
-      let transporter: nodemailer.Transporter;
+      // Default für Transporter ist immer der globale SMTP-Transporter
+      // Kann aber in Spezialfällen überschrieben werden
+      let transporter = this.smtpTransporter;
       let senderName: string;
       let senderEmail: string;
       
-      if (isSystemEmail && this.superadminSmtpTransporter && this.superadminEmailConfig) {
-        // Superadmin-SMTP-Einstellungen verwenden
-        transporter = this.superadminSmtpTransporter;
+      if (isSystemEmail && this.superadminEmailConfig) {
+        // Superadmin-SMTP-Einstellungen verwenden (Absender)
         senderName = this.superadminEmailConfig.smtpSenderName;
         senderEmail = this.superadminEmailConfig.smtpSenderEmail;
         
-        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über Superadmin-SMTP`);
+        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" und Superadmin-Absender`);
       } else if (forceUserId) {
         // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
         try {
