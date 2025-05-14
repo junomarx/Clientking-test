@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -111,14 +111,26 @@ export default function SuperadminEmailTab() {
   // Callback für SMTP-Konfiguration
   useEffect(() => {
     if (smtpConfig) {
-      setEmailSettings(smtpConfig);
+      setEmailSettings(prevSettings => {
+        // Nur aktualisieren, wenn sich etwas geändert hat
+        if (JSON.stringify(prevSettings) !== JSON.stringify(smtpConfig)) {
+          return smtpConfig;
+        }
+        return prevSettings;
+      });
     }
   }, [smtpConfig]);
   
   // Callback für Superadmin-SMTP-Konfiguration
   useEffect(() => {
     if (superadminSmtpConfig) {
-      setSuperadminEmailSettings(superadminSmtpConfig);
+      setSuperadminEmailSettings(prevSettings => {
+        // Nur aktualisieren, wenn sich etwas geändert hat
+        if (JSON.stringify(prevSettings) !== JSON.stringify(superadminSmtpConfig)) {
+          return superadminSmtpConfig;
+        }
+        return prevSettings;
+      });
     }
   }, [superadminSmtpConfig]);
   
@@ -386,19 +398,19 @@ export default function SuperadminEmailTab() {
   };
   
   // Superadmin-SMTP-Konfiguration speichern
-  const handleSaveSuperadminSmtpConfig = () => {
+  const handleSaveSuperadminSmtpConfig = useCallback(() => {
     saveSuperadminSmtpConfigMutation.mutate(superadminEmailSettings);
-  };
+  }, [saveSuperadminSmtpConfigMutation, superadminEmailSettings]);
   
   // Vorlage zum Testen auswählen und Dialog öffnen
-  const handleSendTemplateTestEmail = (template: EmailTemplate) => {
+  const handleSendTemplateTestEmail = useCallback((template: EmailTemplate) => {
     setTemplateToTest(template);
     setTemplateTestEmail('');
     setTemplateTestDialogOpen(true);
-  };
+  }, []);
   
   // Test-E-Mail mit ausgewählter Vorlage senden
-  const handleSendTemplateTest = () => {
+  const handleSendTemplateTest = useCallback(() => {
     if (templateToTest && templateTestEmail) {
       sendTemplateTestEmailMutation.mutate({
         templateId: templateToTest.id,
@@ -408,7 +420,7 @@ export default function SuperadminEmailTab() {
       setTemplateToTest(null);
       setTemplateTestEmail('');
     }
-  };
+  }, [templateToTest, templateTestEmail, sendTemplateTestEmailMutation]);
   
   // Neue Vorlage erstellen
   const handleCreateTemplate = () => {
