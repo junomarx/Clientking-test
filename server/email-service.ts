@@ -292,7 +292,7 @@ export class EmailService {
       const senderName = this.superadminEmailConfig.smtpSenderName;
       const senderEmail = this.superadminEmailConfig.smtpSenderEmail;
       
-      console.log(`Sende Test-E-Mail von "${senderName}" <${senderEmail}> an ${to}`);
+      console.log(`Sende zentrale System-Test-E-Mail von: "${senderName}" <${senderEmail}> an: ${to}`);
       
       // Der SMTP-Transporter wurde bereits initialisiert, verwende diesen
       // Es ist keine neue Verbindung erforderlich
@@ -300,16 +300,16 @@ export class EmailService {
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: to,
-        subject: 'SMTP-Konfiguration Test von Handyshop Verwaltung',
+        subject: 'Zentrale SMTP-Konfiguration Test von Handyshop Verwaltung',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #4f46e5;">SMTP-Konfiguration Test erfolgreich!</h2>
+              <h2 style="color: #4f46e5;">Zentrale SMTP-Konfiguration Test erfolgreich!</h2>
             </div>
             
-            <p>Diese E-Mail bestätigt, dass Ihre zentralen SMTP-Einstellungen korrekt konfiguriert sind.</p>
+            <p>Diese E-Mail bestätigt, dass Ihre zentrale SMTP-Konfiguration für System-E-Mails korrekt eingerichtet ist.</p>
             
-            <p>Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails über die zentrale SMTP-Konfiguration zu versenden.</p>
+            <p>Ihre Handyshop Verwaltung ist nun bereit, System-E-Mails über die zentrale SMTP-Konfiguration zu versenden.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
@@ -317,10 +317,10 @@ export class EmailService {
             </div>
           </div>
         `,
-        text: 'SMTP-Konfiguration Test erfolgreich! Diese E-Mail bestätigt, dass Ihre zentralen SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.'
+        text: 'Zentrale SMTP-Konfiguration Test erfolgreich! Diese E-Mail bestätigt, dass Ihre zentrale SMTP-Konfiguration für System-E-Mails korrekt eingerichtet ist. Ihre Handyshop Verwaltung ist nun bereit, System-E-Mails über die zentrale SMTP-Konfiguration zu versenden.'
       };
       
-      console.log('Sende Test-E-Mail...');
+      console.log('Sende zentrale System-Test-E-Mail...');
       const info = await this.smtpTransporter.sendMail(mailOptions);
       console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
       
