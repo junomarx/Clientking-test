@@ -300,7 +300,7 @@ export class EmailService {
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: to,
-        subject: 'Superadmin-Test-E-Mail von Handyshop Verwaltung',
+        subject: 'SMTP-Konfiguration Test von Handyshop Verwaltung',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -317,7 +317,7 @@ export class EmailService {
             </div>
           </div>
         `,
-        text: 'Superadmin-Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre Superadmin-SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.'
+        text: 'SMTP-Konfiguration Test erfolgreich! Diese E-Mail bestätigt, dass Ihre zentralen SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, systemrelevante E-Mails zu versenden.'
       };
       
       console.log('Sende Test-E-Mail...');
@@ -326,39 +326,40 @@ export class EmailService {
       
       return true;
     } catch (error) {
-      console.error('Fehler beim Senden der Superadmin-Test-E-Mail:', error);
+      console.error('Fehler beim Senden der Test-E-Mail mit zentraler SMTP-Konfiguration:', error);
       return false;
     }
   }
   
   /**
-   * Sendet eine Test-E-Mail mit den Standard-SMTP-Einstellungen
+   * Sendet eine Test-E-Mail mit den shop-spezifischen SMTP-Einstellungen
+   * Diese Methode testet die Konfiguration für shop-spezifische E-Mails
    */
   async sendTestEmail(to: string): Promise<boolean> {
     try {
       if (!this.smtpTransporter) {
-        throw new Error('Kein SMTP-Transporter konfiguriert');
+        throw new Error('Kein shop-spezifischer SMTP-Transporter konfiguriert');
       }
       
       // Für World4You muss die Absender-E-Mail mit dem SMTP-Benutzer übereinstimmen
       const senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
       const senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
       
-      console.log(`Sending test email with sender: "${senderName}" <${senderEmail}> to ${to}`);
+      console.log(`Sende shop-spezifische Test-E-Mail von: "${senderName}" <${senderEmail}> an: ${to}`);
       
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: to,
-        subject: 'Test-E-Mail von Handyshop Verwaltung',
+        subject: 'Shop-spezifische Test-E-Mail von Handyshop Verwaltung',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <div style="text-align: center; margin-bottom: 20px;">
-              <h2 style="color: #4f46e5;">Test-E-Mail erfolgreich!</h2>
+              <h2 style="color: #4f46e5;">Shop-spezifische Test-E-Mail erfolgreich!</h2>
             </div>
             
-            <p>Diese E-Mail bestätigt, dass Ihre SMTP-Einstellungen korrekt konfiguriert sind.</p>
+            <p>Diese E-Mail bestätigt, dass Ihre shop-spezifischen SMTP-Einstellungen korrekt konfiguriert sind.</p>
             
-            <p>Ihre Handyshop Verwaltung ist nun bereit, E-Mails zu versenden.</p>
+            <p>Ihr Shop in der Handyshop Verwaltung ist nun bereit, E-Mails an Kunden zu versenden.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
               <p>Dies ist eine automatisch generierte E-Mail. Bitte antworten Sie nicht darauf.</p>
