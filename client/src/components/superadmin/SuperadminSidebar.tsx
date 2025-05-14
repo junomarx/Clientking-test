@@ -1,4 +1,4 @@
-import React, { useCallback, memo } from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -27,129 +27,98 @@ interface SuperadminSidebarProps {
   handleLogout: () => void;
 }
 
-export const SuperadminSidebar = memo(({ 
+export function SuperadminSidebar({ 
   activeTab, 
   setActiveTab, 
   currentUser, 
   businessSettings, 
   handleLogout 
-}: SuperadminSidebarProps) => {
+}: SuperadminSidebarProps) {
   
-  // Navigationselemente, die in der Sidebar angezeigt werden
-  type NavItemsProps = {
-    isMobile?: boolean;
-    closeMenu?: () => void;
+  // Optimierte Tab-Änderungsfunktionen
+  const setTabWithMemo = useCallback((tab: string) => () => {
+    setActiveTab(tab);
+  }, [setActiveTab]);
+  
+  // Navigationselemente für Desktop und Mobile
+  const NavItems = ({ isMobile = false, closeMenu = () => {} }) => {
+    // Optimierte Click-Handler
+    const handleClick = useCallback((tab: string) => () => {
+      setActiveTab(tab);
+      if (isMobile) closeMenu();
+    }, [isMobile, closeMenu]);
+    
+    return (
+      <>
+        <div className="space-y-1">
+          <Button 
+            variant={activeTab === "dashboard" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("dashboard")}
+          >
+            <GaugeCircle className="h-5 w-5 mr-2" />
+            Dashboard
+          </Button>
+          <Button 
+            variant={activeTab === "users" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("users")}
+          >
+            <Users className="h-5 w-5 mr-2" />
+            Benutzer
+          </Button>
+          <Button 
+            variant={activeTab === "packages" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("packages")}
+          >
+            <Package className="h-5 w-5 mr-2" />
+            Pakete
+          </Button>
+          <Button 
+            variant={activeTab === "devices" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("devices")}
+          >
+            <Laptop className="h-5 w-5 mr-2" />
+            Geräte
+          </Button>
+        </div>
+        
+        {/* Weitere Kategorien */}
+        <div className="mt-6 mb-2">
+          <Separator className="mb-2" />
+          <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            Einstellungen
+          </h3>
+        </div>
+        <div className="space-y-1">
+          <Button 
+            variant={activeTab === "email" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("email")}
+          >
+            <Mail className="h-5 w-5 mr-2" />
+            E-Mail
+          </Button>
+          <Button 
+            variant={activeTab === "print-templates" ? "default" : "ghost"}
+            className="w-full justify-start"
+            onClick={handleClick("print-templates")}
+          >
+            <FileCode className="h-5 w-5 mr-2" />
+            Vorlagen
+          </Button>
+        </div>
+      </>
+    );
   };
 
-  const handleDashboardClick = useCallback(() => {
-    setActiveTab("dashboard");
-  }, [setActiveTab]);
-  
-  const handleUsersClick = useCallback(() => {
-    setActiveTab("users");
-  }, [setActiveTab]);
-  
-  const handlePackagesClick = useCallback(() => {
-    setActiveTab("packages");
-  }, [setActiveTab]);
-  
-  const handleDevicesClick = useCallback(() => {
-    setActiveTab("devices");
-  }, [setActiveTab]);
-  
-  const handleEmailClick = useCallback(() => {
-    setActiveTab("email");
-  }, [setActiveTab]);
-  
-  const handleTemplatesClick = useCallback(() => {
-    setActiveTab("print-templates");
-  }, [setActiveTab]);
-  
-  const NavItems = memo(({ isMobile = false, closeMenu = () => {} }: NavItemsProps) => {
-    return (
-    <>
-      <div className="space-y-1">
-        <Button 
-          variant={activeTab === "dashboard" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handleDashboardClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <GaugeCircle className="h-5 w-5 mr-2" />
-          Dashboard
-        </Button>
-        <Button 
-          variant={activeTab === "users" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handleUsersClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Users className="h-5 w-5 mr-2" />
-          Benutzer
-        </Button>
-        <Button 
-          variant={activeTab === "packages" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handlePackagesClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Package className="h-5 w-5 mr-2" />
-          Pakete
-        </Button>
-        <Button 
-          variant={activeTab === "devices" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handleDevicesClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Laptop className="h-5 w-5 mr-2" />
-          Geräte
-        </Button>
-      </div>
-      
-      {/* Weitere Kategorien */}
-      <div className="mt-6 mb-2">
-        <Separator className="mb-2" />
-        <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-          Einstellungen
-        </h3>
-      </div>
-      <div className="space-y-1">
-        <Button 
-          variant={activeTab === "email" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handleEmailClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Mail className="h-5 w-5 mr-2" />
-          E-Mail
-        </Button>
-        <Button 
-          variant={activeTab === "print-templates" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            handleTemplatesClick();
-            if (isMobile) closeMenu();
-          }}
-        >
-          <FileCode className="h-5 w-5 mr-2" />
-          Vorlagen
-        </Button>
-
-      </div>
-    </>
+  const closeMobileMenu = useCallback(() => {
+    document.querySelector('[data-radix-collection-item]')?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true })
     );
-  });
+  }, []);
 
   return (
     <>
@@ -202,12 +171,7 @@ export const SuperadminSidebar = memo(({
               </h2>
             </div>
             <nav className="flex flex-col space-y-2 px-1">
-              <NavItems isMobile={true} closeMenu={() => {
-                // Sheet schließen durch Klick auf den close-Button
-                document.querySelector('[data-radix-collection-item]')?.dispatchEvent(
-                  new MouseEvent('click', { bubbles: true })
-                );
-              }} />
+              <NavItems isMobile={true} closeMenu={closeMobileMenu} />
             </nav>
             <Separator className="my-4" />
             <div className="space-y-2 px-1">
@@ -235,4 +199,4 @@ export const SuperadminSidebar = memo(({
       </div>
     </>
   );
-});
+}
