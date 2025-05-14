@@ -1,37 +1,20 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect, useState } from 'react';
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { LogOut, Home } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
-import { User, BusinessSettings } from "@shared/schema";
 
-import SuperadminDashboardTab from "@/components/superadmin/SuperadminDashboardTab";
-import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
-import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
-import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
-import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
-import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
-
-import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
+// NOTFALLSEITE FÜR DEN SUPERADMIN
+// Diese Seite wurde vereinfacht, um Rendering-Probleme zu umgehen
 
 export default function SuperadminPage() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
-
-  // Benutzer abrufen, um den richtigen Namen anzuzeigen
-  const { data: currentUser } = useQuery<User>({ 
-    queryKey: ["/api/user"],
-  });
-
-  // Geschäftseinstellungen für den Kopfbereich
-  const { data: businessSettings } = useQuery<BusinessSettings>({
-    queryKey: ["/api/business-settings"],
-  });
 
   // Ausloggen-Funktion
-  const handleLogout = useCallback(async () => {
+  const handleLogout = async () => {
     try {
       await apiRequest("POST", "/api/logout");
       localStorage.removeItem("userId");
@@ -49,80 +32,41 @@ export default function SuperadminPage() {
         description: "Bitte versuchen Sie es erneut.",
       });
     }
-  }, [setLocation, toast]);
+  };
 
   // Seite-Titel aktualisieren
   useEffect(() => {
-    document.title = "Superadmin-Bereich | Handyshop Verwaltung";
+    document.title = "Superadmin-Bereich (Notfallmodus) | Handyshop Verwaltung";
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/10">
-      {/* Sidebar Komponente */}
-      <SuperadminSidebar 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        currentUser={currentUser}
-        businessSettings={businessSettings}
-        handleLogout={handleLogout}
-      />
-
-      {/* Main content area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Top header - Mobile und Desktop */}
-        <header className="flex justify-between items-center py-3 px-4 md:py-4 md:px-6 bg-background shadow-sm border-b">
-          {/* Mobile Titel */}
-          <div className="flex items-center md:hidden">
-            <h1 className="text-lg font-medium ml-10">
-              {activeTab === "dashboard" && "Dashboard"}
-              {activeTab === "users" && "Benutzer"}
-              {activeTab === "packages" && "Pakete"}
-              {activeTab === "devices" && "Geräte"}
-              {activeTab === "email" && "E-Mail"}
-              {activeTab === "print-templates" && "Vorlagen"}
-
-            </h1>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <div className="max-w-md w-full p-6 bg-card rounded-lg shadow-lg border">
+        <h1 className="text-2xl font-bold text-center mb-2">Superadmin-Bereich</h1>
+        <h2 className="text-xl font-semibold text-center text-destructive mb-6">⚠️ Notfallmodus ⚠️</h2>
+        
+        <p className="mb-4 text-muted-foreground">
+          Der Superadmin-Bereich wurde aufgrund von Rendering-Problemen vorübergehend in einen Notfallmodus versetzt.
+          Bitte kehren Sie zur Hauptansicht zurück und verwenden Sie die Funktionen der App.
+        </p>
+        
+        <p className="mb-6 text-muted-foreground">
+          Ein Administrator wird sich in Kürze um das Problem kümmern.
+        </p>
+        
+        <div className="flex flex-col space-y-3">
+          <Button asChild variant="default" className="w-full">
+            <Link to="/app">
+              <Home className="mr-2 h-4 w-4" />
+              Zurück zur Hauptansicht
+            </Link>
+          </Button>
           
-          {/* Desktop Titel */}
-          <div className="hidden md:block">
-            <h1 className="text-xl font-semibold">
-              {activeTab === "dashboard" && "Superadmin Dashboard"}
-              {activeTab === "users" && "Benutzerverwaltung"}
-              {activeTab === "packages" && "Paketverwaltung"}
-              {activeTab === "devices" && "Geräteverwaltung"}
-              {activeTab === "email" && "E-Mail-Konfiguration"}
-              {activeTab === "print-templates" && "Vorlagenverwaltung"}
-
-            </h1>
-            {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
-          </div>
-          
-          {/* Geschäftsname rechts (Desktop) */}
-          <div className="flex items-center text-right">
-            <p className="text-sm text-muted-foreground hidden md:block">
-              {businessSettings?.businessName || "Handyshop Verwaltung"}
-            </p>
-          </div>
-        </header>
-
-        {/* Main content */}
-        <main className="flex-1 overflow-auto p-3 md:p-6">
-          <ScrollArea className="h-full">
-            {activeTab === "dashboard" && <SuperadminDashboardTab />}
-            {activeTab === "users" && <SuperadminUsersTab />}
-            {activeTab === "packages" && <SuperadminPackagesTab />}
-            {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
-            {activeTab === "email" && (
-              <div className="p-8">
-                <h2 className="text-xl font-bold">E-Mail-Konfiguration (vorübergehend deaktiviert)</h2>
-                <p className="mt-4">Dieser Bereich wurde aufgrund von Rendering-Problemen vorübergehend deaktiviert.</p>
-              </div>
-            )}
-            {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
-
-          </ScrollArea>
-        </main>
+          <Button variant="outline" onClick={handleLogout} className="w-full">
+            <LogOut className="mr-2 h-4 w-4" />
+            Ausloggen
+          </Button>
+        </div>
       </div>
     </div>
   );
