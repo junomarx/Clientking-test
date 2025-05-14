@@ -610,6 +610,85 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getRepair(id: number, userId: number): Promise<Repair | undefined> {
+    try {
+      console.log(`getRepair: Abrufen der Reparatur ID ${id} für Benutzer ${userId}`);
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`getRepair: Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ getRepair: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getRepair: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
+
+      const [repair] = await db
+        .select()
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, shopId)
+          )
+        );
+
+      if (repair) {
+        console.log(`getRepair: Reparatur ${id} gefunden für Benutzer ${userId}`);
+      } else {
+        console.warn(`getRepair: Reparatur ${id} wurde nicht gefunden oder gehört nicht zu Shop ${shopId}`);
+      }
+
+      return repair;
+    } catch (error) {
+      console.error(`Error getting repair ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async getRepairsByCustomerId(customerId: number, userId: number): Promise<Repair[]> {
+    try {
+      console.log(`getRepairsByCustomerId: Abrufen der Reparaturen für Kunde ${customerId} (Benutzer ${userId})`);
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`getRepairsByCustomerId: Benutzer mit ID ${userId} nicht gefunden.`);
+        return [];
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ getRepairsByCustomerId: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getRepairsByCustomerId: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
+
+      const results = await db
+        .select()
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.customerId, customerId),
+            eq(repairs.shopId, shopId)
+          )
+        )
+        .orderBy(desc(repairs.createdAt));
+
+      return results;
+    } catch (error) {
+      console.error(`Error getting repairs for customer ${customerId}:`, error);
+      return [];
+    }
+  }
+
   // Geschäftseinstellungen
   async getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined> {
     try {
