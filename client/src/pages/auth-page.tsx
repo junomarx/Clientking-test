@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { 
@@ -113,22 +113,65 @@ export default function AuthPage() {
     }, 1000);
   }
   
-  // Import für Dialog-Komponenten
+  // State für Dialog und Tab-Steuerung
   const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+  const tabsRef = useRef<HTMLDivElement>(null);
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
     registerMutation.mutate(registerData, {
       onSuccess: () => {
-        // Dialog öffnen und Formular zurücksetzen
+        // Dialog öffnen
         setIsSuccessDialogOpen(true);
       }
     });
   }
   
+  // Funktion zum Zurücksetzen und Wechseln zum Login-Tab
+  function handleDialogClose() {
+    // Dialog schließen
+    setIsSuccessDialogOpen(false);
+    
+    // Formular zurücksetzen
+    registerForm.reset({
+      username: "",
+      password: "",
+      confirmPassword: "",
+      email: "",
+      companyName: "",
+      companyAddress: "",
+      companyVatNumber: "",
+      companyPhone: "",
+    });
+    
+    // Zum Login-Tab wechseln
+    setActiveTab("login");
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Header variant="auth" />
+      
+      {/* Erfolgsdialog */}
+      <Dialog open={isSuccessDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+              Registrierung erfolgreich
+            </DialogTitle>
+            <DialogDescription>
+              Vielen Dank für Ihre Registrierung. Ihr Konto muss nun von einem Administrator freigeschaltet werden, bevor Sie sich anmelden können. Sie werden per E-Mail benachrichtigt, sobald Ihr Konto aktiviert wurde.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleDialogClose} className="w-full">
+              Verstanden
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="grid md:grid-cols-2 w-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Hero section - Left side with blue background */}
@@ -170,7 +213,11 @@ export default function AuthPage() {
           
           {/* Forms section - Right side with white background */}
           <div className="p-8 md:p-12 flex flex-col justify-center">
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              ref={tabsRef} 
+              className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8">
                 <TabsTrigger value="login">Anmelden</TabsTrigger>
                 <TabsTrigger value="register">Registrieren</TabsTrigger>
@@ -429,29 +476,13 @@ export default function AuthPage() {
                             />
                           </div>
                           
-                          <FormField
-                            control={registerForm.control}
-                            name="companyEmail"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    type="email" 
-                                    placeholder="Geschäfts-E-Mail" 
-                                    {...field} 
-                                    className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          {/* Geschäfts-E-Mail-Feld entfernt */}
                         </div>
                       </div>
                       
                       <div className="text-sm text-gray-500 mt-4">
                         <p className="mb-2">Hinweis: Nach der Registrierung muss Ihr Konto von einem Administrator freigeschaltet werden, bevor Sie sich anmelden können.</p>
-                        <p>Mit * markierte Felder sind Pflichtfelder.</p>
+                        <p>Alle Felder sind Pflichtfelder.</p>
                       </div>
                       
                       <Button 
