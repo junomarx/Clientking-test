@@ -521,11 +521,11 @@ export class EmailService {
       let senderEmail: string;
       
       if (isSystemEmail && this.superadminEmailConfig) {
-        // Superadmin-SMTP-Einstellungen verwenden (Absender)
+        // Zentrale SMTP-Einstellungen verwenden (für System-E-Mails)
         senderName = this.superadminEmailConfig.smtpSenderName;
         senderEmail = this.superadminEmailConfig.smtpSenderEmail;
         
-        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" und Superadmin-Absender`);
+        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über zentrale SMTP-Konfiguration`);
       } else if (forceUserId) {
         // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
         try {
@@ -569,23 +569,23 @@ export class EmailService {
           throw error;
         }
       } else {
-        // Standard-SMTP-Einstellungen verwenden
+        // Shop-spezifische SMTP-Einstellungen verwenden
         if (!this.smtpTransporter) {
-          throw new Error("Standard-SMTP-Transporter nicht konfiguriert");
+          throw new Error("Shop-spezifischer SMTP-Transporter nicht konfiguriert");
         }
         
         if (!process.env.SMTP_USER) {
-          throw new Error("SMTP_USER nicht konfiguriert");
+          throw new Error("SMTP_USER für Shop-Transporter nicht konfiguriert");
         }
         
         transporter = this.smtpTransporter;
         senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
         senderEmail = process.env.SMTP_USER;
         
-        console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Standard-SMTP`);
+        console.log(`Sende Kunden-E-Mail mit Vorlage "${templateName}" über shop-spezifische SMTP-Konfiguration`);
       }
       
-      console.log(`Sending ${isSystemEmail ? 'system' : 'user'} email with sender: "${senderName}" <${senderEmail}> to ${recipientEmail}`);
+      console.log(`Sende ${isSystemEmail ? 'System' : 'Kunden'}-E-Mail von: "${senderName}" <${senderEmail}> an: ${recipientEmail}`);
       
       // Erstelle E-Mail-Optionen mit den ausgewählten SMTP-Einstellungen
       const mailOptions = {
@@ -598,11 +598,11 @@ export class EmailService {
       
       // Sende die E-Mail über den ausgewählten SMTP-Transporter
       const info = await transporter.sendMail(mailOptions);
-      console.log(`E-Mail mit Vorlage erfolgreich gesendet (${isSystemEmail ? 'System' : 'Benutzer'})`, info.messageId);
+      console.log(`${isSystemEmail ? 'System' : 'Kunden'}-E-Mail mit Vorlage erfolgreich gesendet`, info.messageId);
       
       return true;
     } catch (error) {
-      console.error(`Fehler beim Senden der E-Mail mit Vorlage (${isSystemEmail ? 'System' : 'Benutzer'}):`, error);
+      console.error(`Fehler beim Senden der ${isSystemEmail ? 'System' : 'Kunden'}-E-Mail mit Vorlage:`, error);
       return false;
     }
   }
