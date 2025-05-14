@@ -761,7 +761,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Benutzer nicht gefunden" });
         }
         
-        const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID vorhanden
+        // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Fehler zurückgeben statt Fallback auf Shop 1
+        if (!user.shopId) {
+          console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+          return res.status(403).json({ message: "Keine Shop-Zuordnung vorhanden" });
+        }
+        
+        const shopId = user.shopId;
         
         // Erstelle ein Business-Settings-Objekt mit Standardwerten
         const userData = req.user as any;
@@ -818,7 +824,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      const shopId = user.shopId || 1; // Default auf 1, wenn keine Shop-ID vorhanden
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Fehler zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return res.status(403).json({ message: "Keine Shop-Zuordnung vorhanden" });
+      }
+      
+      const shopId = user.shopId;
       
       // Aktuelle Einstellungen abrufen (mit Shop-Isolation)
       const currentSettings = await storage.getBusinessSettings(userId);

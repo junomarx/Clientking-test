@@ -1022,8 +1022,14 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return undefined;
+    }
+
     // Jeder Benutzer kann nur Kunden aus seinem eigenen Shop aktualisieren (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
     const [updatedCustomer] = await db
       .update(customers)
       .set(customerUpdate)
@@ -1042,8 +1048,14 @@ export class DatabaseStorage implements IStorage {
       const currentUser = await this.getUser(currentUserId);
       if (!currentUser) return false;
 
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, false zurückgeben statt Fallback auf Shop 1
+      if (!currentUser.shopId) {
+        console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+
       // Jeder Benutzer kann nur Kunden aus seinem eigenen Shop löschen (DSGVO-konform)
-      const shopIdValue = currentUser.shopId || 1;
+      const shopIdValue = currentUser.shopId;
       await db
         .delete(customers)
         .where(and(eq(customers.id, id), eq(customers.shopId, shopIdValue)));
