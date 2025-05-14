@@ -73,11 +73,12 @@ export class EmailService {
   }
 
   /**
-   * Initialisiert den Superadmin-SMTP-Transporter mit den Einstellungen aus der Datenbank
+   * Initialisiert den zentralen SMTP-Transporter mit den Einstellungen aus der Datenbank
+   * Dieser wird für alle System-E-Mails verwendet (App-Benachrichtigungen, Registrierung, etc.)
    */
   private async initSuperadminSmtpTransporter() {
     try {
-      // Lade die Superadmin-E-Mail-Einstellungen aus der Datenbank
+      // Lade die globalen E-Mail-Einstellungen aus der Datenbank
       const [settings] = await db
         .select()
         .from(superadminEmailSettings)
@@ -85,7 +86,7 @@ export class EmailService {
         .limit(1);
       
       if (!settings) {
-        console.warn('Keine aktiven Superadmin-E-Mail-Einstellungen in der Datenbank gefunden');
+        console.warn('Keine aktiven globalen E-Mail-Einstellungen in der Datenbank gefunden');
         console.warn('E-Mail-Versand ist deaktiviert, bis gültige SMTP-Einstellungen konfiguriert werden');
         return;
       }
@@ -93,10 +94,12 @@ export class EmailService {
       // Speichern der Konfiguration für spätere Verwendung
       this.superadminEmailConfig = settings;
       
-      // Erstelle den Transporter mit den Superadmin-Einstellungen für ALLE App-E-Mails
+      // Erstelle den Transporter mit den globalen Einstellungen für ALLE System-E-Mails
       let portNum = 587;
       try {
-        portNum = parseInt(settings.smtpPort);
+        portNum = typeof settings.smtpPort === 'string' 
+          ? parseInt(settings.smtpPort) 
+          : settings.smtpPort || 587;
       } catch (e) {
         console.warn(`Konnte SMTP-Port nicht parsen, verwende Standard-Port 587: ${e}`);
       }
@@ -114,7 +117,7 @@ export class EmailService {
         logger: true
       };
       
-      console.log('SMTP-Konfiguration für alle App-E-Mails:', {
+      console.log('Zentrale SMTP-Konfiguration für System-E-Mails:', {
         host: config.host,
         port: config.port,
         secure: config.secure,
@@ -122,23 +125,23 @@ export class EmailService {
         sender: settings.smtpSenderEmail
       });
       
-      // Verwende nur noch einen einzigen Transporter für alle App-E-Mails
+      // Verwende nur noch einen einzigen Transporter für alle System-E-Mails
       this.smtpTransporter = nodemailer.createTransport(config);
       
-      console.log(`SMTP-Transporter für ${settings.smtpHost} wurde initialisiert (für alle App-bezogenen E-Mails)`);
+      console.log(`Zentraler SMTP-Transporter für System-E-Mails wurde initialisiert (Host: ${settings.smtpHost})`);
     } catch (error) {
-      console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
+      console.error('Fehler beim Initialisieren des zentralen SMTP-Transporters:', error);
       this.smtpTransporter = null;
     }
   }
   
   /**
-   * Lädt die Superadmin-E-Mail-Konfiguration ohne SMTP-Test
+   * Lädt die globale E-Mail-Konfiguration ohne SMTP-Test
    * Diese Methode dient dazu, die Konfiguration im Service zu aktualisieren,
    * ohne eine SMTP-Verbindung zu testen.
    */
   loadSuperadminEmailConfig(settings: Omit<SuperadminEmailSettings, 'id' | 'createdAt' | 'updatedAt'>) {
-    console.log('Lade Superadmin-E-Mail-Konfiguration ohne Verbindungstest');
+    console.log('Lade globale E-Mail-Konfiguration ohne Verbindungstest');
     
     // Speichere die Konfiguration im Service
     this.superadminEmailConfig = {
@@ -155,7 +158,7 @@ export class EmailService {
       this.smtpTransporter = null;
     }
     
-    console.log('E-Mail-Konfiguration erfolgreich geladen');
+    console.log('Globale E-Mail-Konfiguration erfolgreich geladen');
   }
 
   /**
