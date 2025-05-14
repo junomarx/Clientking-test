@@ -29,6 +29,9 @@ import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { registerSuperadminEmailRoutes } from "./superadmin-email-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
+import { emailService } from "./email-service";
+import { emailTemplates } from "@shared/schema";
+import { isNull } from "drizzle-orm";
 
 // Passwort-Hash-Funktion (gleich wie in auth.ts)
 const scryptAsync = promisify(scrypt);
@@ -341,8 +344,8 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(400).json({ message: "Ungültige Benutzer-ID" });
       }
 
-      // Aktuellen Status des Benutzers abrufen
-      const [user] = await db.select({ isActive: users.isActive }).from(users).where(eq(users.id, userId));
+      // Vollständige Benutzerdaten abrufen, um Namen und E-Mail für die Benachrichtigung zu haben
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
       
       if (!user) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
@@ -353,7 +356,56 @@ export function registerSuperadminRoutes(app: Express) {
         .update(users)
         .set({ isActive: !user.isActive })
         .where(eq(users.id, userId))
-        .returning({ id: users.id, isActive: users.isActive });
+        .returning({
+          id: users.id,
+          isActive: users.isActive,
+          username: users.username,
+          email: users.email
+        });
+
+      // Wenn der Benutzer aktiviert wurde, sende eine Benachrichtigungs-E-Mail
+      if (updatedUser.isActive) {
+        try {
+          console.log(`Sende Aktivierungsbenachrichtigung an Benutzer ${updatedUser.username} (${updatedUser.email})`);
+          
+          // Suche nach der Vorlage "Konto freigeschaltet"
+          const [template] = await db
+            .select()
+            .from(emailTemplates)
+            .where(and(
+              eq(emailTemplates.name, "Konto freigeschaltet"),
+              eq(emailTemplates.type, "app"),
+              isNull(emailTemplates.userId)
+            ));
+          
+          if (template) {
+            // Bereite Variablen für die E-Mail-Vorlage vor
+            const variables = {
+              benutzername: updatedUser.username,
+              loginLink: process.env.PUBLIC_URL || "https://yourapp.replit.app"
+            };
+            
+            // Sende die E-Mail mit der gefundenen Vorlage
+            const emailSent = await emailService.sendEmailWithTemplateById(
+              template.id,
+              updatedUser.email,
+              variables,
+              true // Als System-E-Mail senden, damit Superadmin-SMTP verwendet wird
+            );
+            
+            if (emailSent) {
+              console.log(`Aktivierungsbenachrichtigung erfolgreich an ${updatedUser.email} gesendet`);
+            } else {
+              console.error(`Fehler beim Senden der Aktivierungsbenachrichtigung an ${updatedUser.email}`);
+            }
+          } else {
+            console.error(`E-Mail-Vorlage "Konto freigeschaltet" nicht gefunden`);
+          }
+        } catch (emailError) {
+          console.error("Fehler beim Senden der Aktivierungsbenachrichtigung:", emailError);
+          // Wir lassen den Endpunkt trotzdem erfolgreich zurückgeben, auch wenn die E-Mail fehlschlägt
+        }
+      }
 
       res.json(updatedUser);
     } catch (error) {
