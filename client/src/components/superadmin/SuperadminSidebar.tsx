@@ -41,14 +41,39 @@ export const SuperadminSidebar = memo(({
     closeMenu?: () => void;
   };
 
-  const NavItems = ({ isMobile = false, closeMenu = () => {} }: NavItemsProps) => (
+  const handleDashboardClick = useCallback(() => {
+    setActiveTab("dashboard");
+  }, [setActiveTab]);
+  
+  const handleUsersClick = useCallback(() => {
+    setActiveTab("users");
+  }, [setActiveTab]);
+  
+  const handlePackagesClick = useCallback(() => {
+    setActiveTab("packages");
+  }, [setActiveTab]);
+  
+  const handleDevicesClick = useCallback(() => {
+    setActiveTab("devices");
+  }, [setActiveTab]);
+  
+  const handleEmailClick = useCallback(() => {
+    setActiveTab("email");
+  }, [setActiveTab]);
+  
+  const handleTemplatesClick = useCallback(() => {
+    setActiveTab("print-templates");
+  }, [setActiveTab]);
+  
+  const NavItems = memo(({ isMobile = false, closeMenu = () => {} }: NavItemsProps) => {
+    return (
     <>
       <div className="space-y-1">
         <Button 
           variant={activeTab === "dashboard" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("dashboard");
+            handleDashboardClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -59,7 +84,7 @@ export const SuperadminSidebar = memo(({
           variant={activeTab === "users" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("users");
+            handleUsersClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -70,7 +95,7 @@ export const SuperadminSidebar = memo(({
           variant={activeTab === "packages" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("packages");
+            handlePackagesClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -81,7 +106,7 @@ export const SuperadminSidebar = memo(({
           variant={activeTab === "devices" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("devices");
+            handleDevicesClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -102,7 +127,7 @@ export const SuperadminSidebar = memo(({
           variant={activeTab === "email" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("email");
+            handleEmailClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -113,7 +138,7 @@ export const SuperadminSidebar = memo(({
           variant={activeTab === "print-templates" ? "default" : "ghost"}
           className="w-full justify-start"
           onClick={() => {
-            setActiveTab("print-templates");
+            handleTemplatesClick();
             if (isMobile) closeMenu();
           }}
         >
@@ -123,7 +148,8 @@ export const SuperadminSidebar = memo(({
 
       </div>
     </>
-  );
+    );
+  });
 
   return (
     <>
@@ -209,4 +235,4 @@ export const SuperadminSidebar = memo(({
       </div>
     </>
   );
-}
+});
