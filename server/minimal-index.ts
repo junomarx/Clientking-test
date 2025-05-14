@@ -74,6 +74,11 @@ async function startServer() {
       await serveStatic(app);
     }
     
+    // Notfall-Login-Seite bereitstellen
+    app.get('/emergency', (req, res) => {
+      res.sendFile('/home/runner/workspace/emergency-login.html');
+    });
+    
     // Server starten
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
