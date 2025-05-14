@@ -619,7 +619,25 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      // Spezialfall: Wenn der Benutzer ein Superadmin ist, kann er alle Reparaturen sehen
+      if (user.isSuperadmin) {
+        console.log(`getRepair: Superadmin ${user.username} (ID: ${user.id}) fragt Reparatur ${id} an`);
+        
+        const [repair] = await db
+          .select()
+          .from(repairs)
+          .where(eq(repairs.id, id));
+        
+        if (repair) {
+          console.log(`getRepair: Reparatur ${id} gefunden für Superadmin ${userId}`);
+        } else {
+          console.warn(`getRepair: Reparatur ${id} wurde nicht gefunden`);
+        }
+        
+        return repair;
+      }
+      
+      // Für reguläre Benutzer: DSGVO-Fix - Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
       if (!user.shopId) {
         console.warn(`❌ getRepair: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return undefined;
@@ -661,6 +679,19 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
+      // Spezialfall: Superadmin kann alle Reparaturen sehen
+      if (user.isSuperadmin) {
+        console.log(`getRepairsByCustomerId: Superadmin ${user.username} (ID: ${user.id}) fragt Reparaturen für Kunde ${customerId} an`);
+        
+        const results = await db
+          .select()
+          .from(repairs)
+          .where(eq(repairs.customerId, customerId))
+          .orderBy(desc(repairs.createdAt));
+        
+        return results;
+      }
+
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ getRepairsByCustomerId: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
@@ -696,10 +727,34 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      console.log(`Suche nach Geschäftseinstellungen für Benutzer mit ID ${userId}`);
+      console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId}`);
+      
       const user = await this.getUser(userId);
       if (!user) {
         console.warn(`Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+
+      // Superadmin-Fall: Für Superadmins werden Default-Einstellungen zurückgegeben oder erstellt
+      if (user.isSuperadmin) {
+        console.log(`Superadmin-Benutzer gefunden: ID=${user.id}, username=${user.username}, shopId=${user.shopId}`);
+        
+        // Superadmin-Einstellungen suchen (könnten bereits existieren)
+        const [superadminSettings] = await db
+          .select()
+          .from(businessSettings)
+          .where(eq(businessSettings.userId, userId));
+          
+        if (superadminSettings) {
+          console.log(`Bestehende Superadmin-Einstellungen gefunden: ID ${superadminSettings.id}`);
+          return superadminSettings;
+        }
+        
+        // Keine Einstellungen gefunden - Default-Einstellungen für Superadmin erstellen
+        console.log(`Keine Einstellungen für Superadmin ${user.username} gefunden, erstelle Standard-Superadmin-Einstellungen`);
+        
+        // Hier würden wir normalerweise Default-Einstellungen erstellen, aber für den Moment
+        // geben wir nur eine Warnung aus, da die Einstellungen ohne Shop-ID nicht gespeichert werden können
         return undefined;
       }
 
@@ -756,6 +811,66 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`Benutzer mit ID ${userId} nicht gefunden.`);
       }
 
+      // Spezialfall: Superadmin darf Einstellungen auch ohne Shop-ID aktualisieren
+      if (user.isSuperadmin) {
+        console.log(`Superadmin-Benutzer aktualisiert Einstellungen: ID=${user.id}, username=${user.username}`);
+        
+        // Prüfen, ob bereits Einstellungen für diesen Superadmin existieren
+        const [existingSuperadminSettings] = await db
+          .select()
+          .from(businessSettings)
+          .where(eq(businessSettings.userId, userId));
+          
+        if (existingSuperadminSettings) {
+          console.log(`Bestehende Superadmin-Einstellungen gefunden: ID ${existingSuperadminSettings.id}`);
+          
+          // Einstellungen aktualisieren
+          const [updatedSettings] = await db
+            .update(businessSettings)
+            .set({
+              ...settings,
+              updatedAt: new Date(),
+              userId: userId,
+              // Verwende die vorhandene Shop-ID, wenn die Einstellungen bereits eine hatten
+              shopId: existingSuperadminSettings.shopId
+            })
+            .where(eq(businessSettings.id, existingSuperadminSettings.id))
+            .returning();
+          
+          console.log(`Superadmin-Einstellungen aktualisiert: ID ${updatedSettings.id}`);
+          return updatedSettings;
+        } else if (user.shopId) {
+          // Wenn der Superadmin eine Shop-ID hat, erstellen wir neue Einstellungen
+          console.log(`Erstelle neue Einstellungen für Superadmin mit Shop-ID ${user.shopId}`);
+          
+          // Neue Einstellungen erstellen
+          const [newSettings] = await db
+            .insert(businessSettings)
+            .values({
+              businessName: settings.businessName || "",
+              city: settings.city || "",
+              zipCode: settings.zipCode || "",
+              phone: settings.phone || "",
+              email: settings.email || "",
+              website: settings.website || "",
+              // Für Superadmin hier weitere Felder einfügen - oder besser als any casten
+              ...(settings as any),
+              shopId: user.shopId,
+              userId: userId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .returning();
+          
+          console.log(`Neue Superadmin-Einstellungen erstellt: ID ${newSettings.id}`);
+          return newSettings;
+        } else {
+          // Der Superadmin hat keine Shop-ID, wir können keine Einstellungen erstellen
+          throw new Error("Superadmin benötigt eine Shop-ID, um neue Einstellungen zu erstellen");
+        }
+      }
+
+      // Regulärer Benutzer (nicht Superadmin)
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Fehler werfen statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
