@@ -334,6 +334,7 @@ export const emailTemplates = pgTable("email_templates", {
   userId: integer("user_id"), // Benutzer, dem die Vorlage gehört
   shopId: integer("shop_id").default(1), // Shop, zu dem die Vorlage gehört (für Multi-Tenant-Isolation)
   type: text("type"), // Typ der Vorlage: 'app' (System) oder 'customer' (Kunde)
+  isGlobal: boolean("is_global").default(false), // Ob die Vorlage global für alle Benutzer verfügbar ist
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -636,6 +637,7 @@ export const printTemplates = pgTable('print_templates', {
   variables: text('variables').array(),
   userId: integer('user_id'),
   shopId: integer('shop_id').default(0),
+  isGlobal: boolean('is_global').default(false), // Ob die Vorlage global für alle Benutzer verfügbar ist
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow()
 });

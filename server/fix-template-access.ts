@@ -31,15 +31,15 @@ export async function isEmailTemplateAccessible(templateId: number, userId: numb
  */
 export async function getAccessibleEmailTemplates(userId: number) {
   try {
-    return await db.select()
-      .from(emailTemplates)
-      .where(
-        or(
-          eq(emailTemplates.userId, userId),
-          eq(emailTemplates.userId, 10),  // Superadmin-Vorlagen
-          isNull(emailTemplates.userId)   // Vorlagen ohne Benutzer
-        )
-      );
+    const templates = await db.query.emailTemplates.findMany({
+      where: or(
+        eq(emailTemplates.userId, userId),
+        eq(emailTemplates.userId, 10),  // Superadmin-Vorlagen
+        isNull(emailTemplates.userId)   // Vorlagen ohne Benutzer
+      )
+    });
+    
+    return templates;
   } catch (error) {
     console.error("Fehler beim Abrufen der E-Mail-Vorlagen:", error);
     return [];
@@ -52,15 +52,15 @@ export async function getAccessibleEmailTemplates(userId: number) {
  */
 export async function getAccessiblePrintTemplates(userId: number) {
   try {
-    return await db.select()
-      .from(printTemplates)
-      .where(
-        or(
-          eq(printTemplates.userId, userId),
-          eq(printTemplates.userId, 10),   // Superadmin-Vorlagen
-          isNull(printTemplates.userId)    // Vorlagen ohne Benutzer
-        )
-      );
+    const templates = await db.query.printTemplates.findMany({
+      where: or(
+        eq(printTemplates.userId, userId),
+        eq(printTemplates.userId, 10),   // Superadmin-Vorlagen
+        isNull(printTemplates.userId)    // Vorlagen ohne Benutzer
+      )
+    });
+    
+    return templates;
   } catch (error) {
     console.error("Fehler beim Abrufen der Druckvorlagen:", error);
     return [];
@@ -72,23 +72,30 @@ export async function getAccessiblePrintTemplates(userId: number) {
  */
 export async function repairTemplateAccess() {
   try {
-    // Stelle sicher, dass die globale Spalte existiert
+    // Aktualisiere alle Vorlagen vom Superadmin als global
     try {
-      await db.execute(`
-        ALTER TABLE email_templates 
-        ADD COLUMN IF NOT EXISTS is_global BOOLEAN DEFAULT false
-      `);
+      // Verwende einen direkteren Ansatz, der die Spaltenattribute umgeht
+      try {
+        await db.execute(`
+          ALTER TABLE email_templates 
+          ADD COLUMN IF NOT EXISTS is_global BOOLEAN DEFAULT false
+        `);
+        console.log("✅ is_global-Spalte zur email_templates-Tabelle hinzugefügt");
+      } catch (error) {
+        console.log("ℹ️ is_global-Spalte in email_templates existiert bereits oder kann nicht erstellt werden");
+      }
       
-      await db.execute(`
-        ALTER TABLE print_templates 
-        ADD COLUMN IF NOT EXISTS is_global BOOLEAN DEFAULT false
-      `);
-    } catch (error) {
-      console.error("Fehler beim Hinzufügen der is_global-Spalte:", error);
-    }
-    
-    // Setze alle Vorlagen vom Superadmin als global
-    try {
+      try {
+        await db.execute(`
+          ALTER TABLE print_templates 
+          ADD COLUMN IF NOT EXISTS is_global BOOLEAN DEFAULT false
+        `);
+        console.log("✅ is_global-Spalte zur print_templates-Tabelle hinzugefügt");
+      } catch (error) {
+        console.log("ℹ️ is_global-Spalte in print_templates existiert bereits oder kann nicht erstellt werden");
+      }
+      
+      // Markiere alle globalen Vorlagen
       await db.execute(`
         UPDATE email_templates 
         SET is_global = true 
