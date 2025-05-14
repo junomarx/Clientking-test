@@ -178,8 +178,8 @@ export class EmailService {
         
         const config = {
           host: settings.smtpHost,
-          port: portNum,
-          secure: portNum === 465,
+          port: Number(portNum),
+          secure: Number(portNum) === 465,
           auth: {
             user: settings.smtpUser,
             pass: settings.smtpPassword
@@ -199,20 +199,17 @@ export class EmailService {
         
         console.log('Teste SMTP-Verbindung mit den folgenden Einstellungen:', {
           host: settings.smtpHost,
-          port: portNum,
-          secure: portNum === 465,
+          port: Number(portNum),
+          secure: Number(portNum) === 465,
           user: settings.smtpUser,
           sender: settings.smtpSenderEmail
         });
         
-        // Neuen Transporter erstellen
-        const testTransporter = nodemailer.createTransport(config);
+        // Transporter erstellen und setzen
+        this.smtpTransporter = nodemailer.createTransport(config);
         
         // Verbindung testen
-        await testTransporter.verify();
-        
-        // Wenn der Test erfolgreich war, setze den Transporter
-        this.smtpTransporter = testTransporter;
+        await this.smtpTransporter.verify();
         
         console.log(`SMTP-Verbindung zu ${settings.smtpHost} erfolgreich getestet`);
         return true;
