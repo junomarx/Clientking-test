@@ -392,7 +392,99 @@ export class EmailService {
    * Sendet eine E-Mail mit einer benutzerdefinierten Vorlage
    * @param isSystemEmail Wenn true, wird die E-Mail über den Superadmin-SMTP-Transporter gesendet
    */
-  async sendEmailWithTemplate({
+  /**
+   * Sendet eine E-Mail mit einer Vorlage, die aus der Datenbank geladen wird
+   * @param templateId ID der E-Mail-Vorlage
+   * @param recipientEmail E-Mail-Adresse des Empfängers
+   * @param variables Variablen für die Ersetzung in der Vorlage
+   * @param isSystemEmail Wenn true, wird die E-Mail über den Superadmin-SMTP-Transporter gesendet
+   */
+  async sendEmailWithTemplateById(
+    templateId: number,
+    recipientEmail: string,
+    variables: Record<string, string>,
+    isSystemEmail = false
+  ): Promise<boolean> {
+    try {
+      console.log(`Sende E-Mail mit Vorlage ID ${templateId} an ${recipientEmail}...`);
+      
+      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden) für Zugriffskontrolle
+      const userId = variables.userId ? parseInt(variables.userId) : undefined;
+      
+      // E-Mail-Vorlage aus der Datenbank abrufen
+      let template;
+      try {
+        const whereCondition = userId 
+          ? and(eq(emailTemplates.id, templateId), eq(emailTemplates.userId, userId))
+          : eq(emailTemplates.id, templateId);
+        
+        [template] = await db
+          .select()
+          .from(emailTemplates)
+          .where(whereCondition);
+          
+        if (!template) {
+          // Wenn nicht gefunden, suche nach einer globalen Vorlage (userId = null)
+          [template] = await db
+            .select()
+            .from(emailTemplates)
+            .where(eq(emailTemplates.id, templateId));
+        }
+      } catch (dbError) {
+        console.error('Fehler beim Abrufen der E-Mail-Vorlage:', dbError);
+      }
+      
+      if (!template) {
+        console.error(`E-Mail-Vorlage mit ID ${templateId} nicht gefunden`);
+        return false;
+      }
+      
+      console.log(`E-Mail-Vorlage gefunden: "${template.name}" mit Betreff: "${template.subject}"`);
+      
+      // Die sendEmailWithTemplate-Methode mit dem Options-Objekt aufrufen
+      return await this.sendEmailWithTemplateInternal({
+        templateName: template.name,
+        recipientEmail,
+        data: variables,
+        subject: template.subject,
+        body: template.body,
+        isSystemEmail
+      });
+    } catch (error) {
+      console.error('Fehler beim Senden der E-Mail mit Vorlagen-ID:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Überladene Methode für Abwärtskompatibilität mit älteren API-Aufrufen
+   */
+  async sendEmailWithTemplate(
+    templateIdOrOptions: number | {
+      templateName: string,
+      recipientEmail: string,
+      data: Record<string, string>,
+      subject: string,
+      body: string
+      isSystemEmail?: boolean
+    },
+    recipientEmail?: string,
+    variables?: Record<string, string>
+  ): Promise<boolean> {
+    // Prüfen, ob es die neue oder alte Form des Aufrufs ist
+    if (typeof templateIdOrOptions === 'number') {
+      // Alter Aufruf: templateId, recipientEmail, variables
+      return this.sendEmailWithTemplateById(templateIdOrOptions, recipientEmail!, variables || {});
+    }
+    
+    // Neuer Aufruf mit Options-Objekt
+    return this.sendEmailWithTemplateInternal(templateIdOrOptions);
+  }
+  
+  /**
+   * Interne Implementierung von sendEmailWithTemplate mit Options-Objekt
+   */
+  private async sendEmailWithTemplateInternal({
     templateName,
     recipientEmail,
     data,
@@ -477,33 +569,13 @@ export class EmailService {
   }
   
   /**
-   * Sendet eine E-Mail mit einer Vorlage, die aus der Datenbank geladen wird
-   * @param isSystemEmail Wenn true, wird die E-Mail über den Superadmin-SMTP-Transporter gesendet
+   * Internes Hilfsmethode zum Laden von Geschäftseinstellungen für einen Benutzer
+   * Wird von sendEmailWithTemplateById verwendet
    */
-  async sendEmailWithTemplateById(
-    templateId: number, 
-    to: string, 
-    variables: Record<string, string>,
-    isSystemEmail = false
-  ): Promise<boolean> {
+  private async loadBusinessSettings(userId: number) {
     try {
-      // Benutzer-ID aus den Variablen extrahieren (wenn vorhanden)
-      const userId = variables.userId ? parseInt(variables.userId) : 0;
-      
-      // Lade die Vorlage unter Berücksichtigung der Shop-ID des Benutzers
-      const template = await this.getEmailTemplate(templateId, userId);
-      if (!template) {
-        throw new Error("E-Mail-Vorlage nicht gefunden");
-      }
-      
-      // Variablen in Betreff und Text ersetzen
-      let subject = template.subject;
-      let body = template.body;
-      
-      // Geschäftsinformationen für das Absenderfeld des aktuellen Benutzers laden
-      let businessSetting;
       if (userId > 0) {
-        [businessSetting] = await db.select().from(businessSettings)
+        const [businessSetting] = await db.select().from(businessSettings)
           .where(eq(businessSettings.userId, userId));
         
         if (!businessSetting) {

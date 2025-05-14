@@ -2302,7 +2302,7 @@ export class DatabaseStorage implements IStorage {
     return await emailService.deleteEmailTemplate(id, userId);
   }
 
-  // Email sending method with template processing
+  // Email sending method with template processing - verwendet sendEmailWithTemplateById zur Abwärtskompatibilität
   async sendEmailWithTemplate(
     templateId: number,
     to: string,
@@ -2315,92 +2315,55 @@ export class DatabaseStorage implements IStorage {
         templateId,
       );
 
-      // Benutzer-ID aus den Parametern oder Variablen extrahieren, wenn vorhanden
-      const userIdForAccess =
-        userId || (variables.userId ? parseInt(variables.userId) : undefined);
-
-      // E-Mail-Vorlage abrufen (mit userId, falls vorhanden, um Zugriffsrechte zu prüfen)
-      const template = await this.getEmailTemplate(templateId, userIdForAccess);
-      if (!template) {
-        console.error(`E-Mail-Vorlage mit ID ${templateId} nicht gefunden`);
-        return false;
+      // Sicherstellen, dass variables ein Objekt ist
+      const safeVariables = variables || {};
+      
+      // Benutzer-ID in variables einfügen, wenn vorhanden
+      if (userId) {
+        safeVariables.userId = userId.toString();
       }
 
-      // E-Mail über den E-Mail-Service senden
-      const emailSent = await emailService.sendEmailWithTemplate(
-        templateId,
-        to,
-        variables,
+      // Direkt die neue Methode aufrufen
+      return await emailService.sendEmailWithTemplate(
+        templateId, 
+        to, 
+        safeVariables
       );
-
-      // Wenn die E-Mail erfolgreich gesendet wurde und eine Reparatur-ID in den Variablen ist
-      if (emailSent && variables.repairId) {
-        console.log(
-          `E-Mail erfolgreich gesendet. Erstelle Verlaufseintrag für Reparatur ${variables.repairId}`,
-        );
-
-        // Reparatur-ID und Benutzer-ID aus den Variablen extrahieren
-        const repairId = parseInt(variables.repairId);
-        const userIdForHistory = variables.userId
-          ? parseInt(variables.userId)
-          : undefined;
-
-        if (!isNaN(repairId)) {
-          // E-Mail-Verlaufseintrag erstellen
-          try {
-            const historyEntry: InsertEmailHistory = {
-              repairId,
-              emailTemplateId: templateId,
-              subject: template.subject,
-              recipient: to,
-              status: "success",
-              userId,
-            };
-
-            console.log(
-              "Erstelle E-Mail-Verlaufseintrag in der Datenbank:",
-              historyEntry,
-            );
-
-            // Direktes SQL für den E-Mail-Verlaufseintrag verwenden, um Spaltennamenprobleme zu vermeiden
-            const emailHistoryQuery = `
-              INSERT INTO "email_history" ("repairId", "emailTemplateId", "subject", "recipient", "status", "userId", "sentAt") 
-              VALUES (
-                ${repairId},
-                ${templateId},
-                '${template.subject.replace(/'/g, "''")}',
-                '${to.replace(/'/g, "''")}',
-                'success',
-                ${userId || "NULL"},
-                NOW()
-              )
-            `;
-
-            console.log(
-              "Manuelles SQL für E-Mail-Verlaufseintrag:",
-              emailHistoryQuery,
-            );
-            await db.execute(emailHistoryQuery);
-            console.log(
-              `E-Mail-Verlaufseintrag für Reparatur ${repairId} erstellt`,
-            );
-          } catch (historyError) {
-            console.error(
-              "Fehler beim Erstellen des E-Mail-Verlaufseintrags:",
-              historyError,
-            );
-            // Trotzdem true zurückgeben, da die E-Mail erfolgreich gesendet wurde
-          }
-        } else {
-          console.error(
-            `Ungültige Reparatur-ID in Variablen: ${variables.repairId}`,
-          );
-        }
-      }
-
-      return emailSent;
     } catch (error) {
       console.error("Fehler in storage.sendEmailWithTemplate:", error);
+      return false;
+    }
+  }
+  
+  // Neue Methode, die direkt sendEmailWithTemplateById aufruft
+  async sendEmailWithTemplateById(
+    templateId: number,
+    to: string,
+    variables: Record<string, string>,
+    userId?: number,
+  ): Promise<boolean> {
+    try {
+      console.log(
+        "Storage sendEmailWithTemplateById aufgerufen mit templateId:",
+        templateId,
+      );
+
+      // Sicherstellen, dass variables ein Objekt ist
+      const safeVariables = variables || {};
+      
+      // Benutzer-ID in variables einfügen, wenn vorhanden
+      if (userId) {
+        safeVariables.userId = userId.toString();
+      }
+
+      // Direkt die neue Methode aufrufen
+      return await emailService.sendEmailWithTemplateById(
+        templateId, 
+        to, 
+        safeVariables
+      );
+    } catch (error) {
+      console.error("Fehler in storage.sendEmailWithTemplateById:", error);
       return false;
     }
   }
