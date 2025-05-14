@@ -67,76 +67,50 @@ export function ChangeStatusDialog({
     },
   });
   
-  // E-Mail-Option für alle Status anzeigen
+  // Zeige E-Mail-Option je nach gewähltem Status
   const currentSelectedStatus = form.watch('status');
-  // Alle Status können jetzt E-Mails senden
-  const showEmailOption = true;
+  const showEmailOption = currentSelectedStatus === 'fertig' || 
+                          currentSelectedStatus === 'ersatzteil_eingetroffen' ||
+                          currentSelectedStatus === 'abgeholt';
   
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
-    // Spezifische Labels je nach Status
-    switch (currentSelectedStatus) {
-      case 'abgeholt':
-        if (!isProfessionalOrHigher) {
-          return (
-            <>
-              <div className="flex items-center gap-1 text-amber-500">
-                <AlertCircle className="h-4 w-4" /> Bewertungsanfragen nur in Professional verfügbar
-              </div>
-              <p className="text-xs text-amber-500">
-                Upgrade auf Professional, um Bewertungsanfragen an Kunden zu senden
-              </p>
-            </>
-          );
-        }
-        
+    if (currentSelectedStatus === 'abgeholt') {
+      if (!isProfessionalOrHigher) {
         return (
           <>
-            <FormLabel className="flex items-center gap-1">
-              <Star className="h-4 w-4" /> Bewertung anfragen
-            </FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Senden Sie eine Bewertungsanfrage per E-Mail an den Kunden
+            <div className="flex items-center gap-1 text-amber-500">
+              <AlertCircle className="h-4 w-4" /> Bewertungsanfragen nur in Professional verfügbar
+            </div>
+            <p className="text-xs text-amber-500">
+              Upgrade auf Professional, um Bewertungsanfragen an Kunden zu senden
             </p>
           </>
         );
-        
-      case 'fertig':
-        return (
-          <>
-            <FormLabel className="flex items-center gap-1">
-              <Mail className="h-4 w-4" /> Abholbenachrichtigung senden
-            </FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Informieren Sie den Kunden, dass sein Gerät zur Abholung bereit ist
-            </p>
-          </>
-        );
-        
-      case 'ersatzteil_eingetroffen':
-        return (
-          <>
-            <FormLabel className="flex items-center gap-1">
-              <Mail className="h-4 w-4" /> Ersatzteil-Information senden
-            </FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Informieren Sie den Kunden, dass das Ersatzteil eingetroffen ist
-            </p>
-          </>
-        );
+      }
       
-      default:
-        return (
-          <>
-            <FormLabel className="flex items-center gap-1">
-              <Mail className="h-4 w-4" /> E-Mail zum Status senden
-            </FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Benachrichtigen Sie den Kunden per E-Mail über die Statusänderung
-            </p>
-          </>
-        );
+      return (
+        <>
+          <FormLabel className="flex items-center gap-1">
+            <Star className="h-4 w-4" /> Bewertung anfragen
+          </FormLabel>
+          <p className="text-sm text-muted-foreground">
+            Senden Sie eine Bewertungsanfrage per E-Mail an den Kunden
+          </p>
+        </>
+      );
     }
+    
+    return (
+      <>
+        <FormLabel className="flex items-center gap-1">
+          <Mail className="h-4 w-4" /> E-Mail senden
+        </FormLabel>
+        <p className="text-sm text-muted-foreground">
+          Benachrichtigen Sie den Kunden per E-Mail über die Statusänderung
+        </p>
+      </>
+    );
   };
   
   // Übersetzungen für StatusBadge-Labels

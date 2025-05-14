@@ -13,9 +13,6 @@ declare global {
     // Making sure the User interface extends SelectUser 
     // and explicitly includes the password field
     interface User extends SelectUser {
-      // Die userId gibt es nicht in unseren SelectUser, wird aber von Passport erwartet
-      // Daher setzen wir es als optional, damit es keine Typfehler gibt
-      userId?: number;
       password: string;
     }
   }
@@ -30,48 +27,10 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  try {
-    console.log(`Starte Passwortvergleich - gespeichertes Passwort Format: ${stored.substring(0, 10)}...`);
-    
-    // Testen für "plain text" Passwörter (für Testkonten wie bugi)
-    if (supplied === stored) {
-      console.log(`✓ Direkter Passwortvergleich erfolgreich`);
-      return true;
-    }
-    
-    if (!stored || !stored.includes('.')) {
-      console.error('comparePasswords: Ungültiges gespeichertes Passwortformat (fehlendes Salt)');
-      return false;
-    }
-    
-    const [hashed, salt] = stored.split(".");
-    if (!hashed || !salt) {
-      console.error('comparePasswords: Ungültiges gespeichertes Passwortformat (Ungültiger Hash oder Salt)');
-      return false;
-    }
-    
-    try {
-      console.log(`Vergleiche Passwort mit Hash: ${hashed.substring(0, 10)}... und Salt: ${salt.substring(0, 5)}...`);
-      
-      const hashedBuf = Buffer.from(hashed, "hex");
-      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-      
-      if (!hashedBuf || !suppliedBuf) {
-        console.error('comparePasswords: Fehler beim Erstellen der Buffer');
-        return false;
-      }
-      
-      const result = timingSafeEqual(hashedBuf, suppliedBuf);
-      console.log(`Passwortvergleich Ergebnis: ${result ? 'erfolgreich' : 'fehlgeschlagen'}`);
-      return result;
-    } catch (error) {
-      console.error('comparePasswords: Fehler bei der Passwortverarbeitung:', error);
-      return false;
-    }
-  } catch (error) {
-    console.error('comparePasswords: Unerwarteter Fehler:', error);
-    return false;
-  }
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -91,7 +50,7 @@ export function setupAuth(app: Express) {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
       sameSite: 'lax',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Nur in Produktion auf true setzen
+      secure: false, // In Entwicklung immer false, da kein HTTPS
       path: '/'
     }
   };
@@ -104,73 +63,18 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        console.log(`⚙️ Login-Versuch für Benutzer "${username}"`);
-        
-        if (!username || !password) {
-          console.error('Login-Versuch mit leeren Anmeldedaten');
-          return done(null, false, { message: 'Benutzername und Passwort erforderlich' });
-        }
-        
-        // Benutzer aus Datenbank abrufen
-        let user;
-        try {
-          user = await storage.getUserByUsername(username);
-        } catch (dbError) {
-          console.error(`Fehler beim Abrufen des Benutzers "${username}":`, dbError);
-          return done(null, false, { message: 'Datenbankfehler bei der Benutzerabfrage' });
-        }
-        
-        // Benutzer existiert nicht
-        if (!user) {
-          console.log(`❌ Benutzer "${username}" nicht gefunden`);
+        const user = await storage.getUserByUsername(username);
+        if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-        }
-        
-        console.log(`✓ Benutzer "${username}" (ID: ${user.id}) gefunden, prüfe Passwort...`);
-        
-        // NOTFALL-LOGIN: Direkter Zugang für den speziellen "bugi" Benutzer über die LocalStrategy
-        if (username === 'bugi' && password === 'password') {
-          console.log(`⚠️ NOTFALLZUGANG: Erlaube Anmeldung für Testbenutzer "${username}" mit Standardpasswort (PASSPORT_STRATEGY)`);
-          
-          // Benutzer wird sofort zugelassen, ohne weitere Prüfungen
-          return done(null, user);
-        }
-        
-        // Für Testzwecke: Überprüfen, ob das Passwort einfach "password" ist
-        if (password === 'password') {
-          console.log(`⚠️ HINWEIS: Benutzer "${username}" versucht sich mit dem Passwort "password" anzumelden`);
-        }
-        
-        // Prüfe, ob das Passwort gültig formatiert ist
-        if (!user.password || !user.password.includes('.')) {
-          console.error(`❌ Fehler: Das Passwort für Benutzer "${username}" (ID: ${user.id}) ist ungültig formatiert`);
-          return done(null, false, { message: 'Anmeldung nicht möglich. Bitte den Administrator kontaktieren.' });
-        }
-        
-        // Passwortvergleich durchführen
-        let passwordMatches = false;
-        try {
-          passwordMatches = await comparePasswords(password, user.password);
-          console.log(`Passwortvergleich für "${username}": ${passwordMatches ? '✓ erfolgreich' : '❌ fehlgeschlagen'}`);
-        } catch (passError) {
-          console.error(`❌ Passwortvergleich-Fehler für "${username}":`, passError);
-          return done(null, false, { message: 'Fehler bei der Passwortüberprüfung' });
-        }
-        
-        // Passwort stimmt nicht überein
-        if (!passwordMatches) {
-          return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-        }
-        
+        } 
         // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
-        if (!user.isActive && !user.isAdmin) {
+        else if (!user.isActive && !user.isAdmin) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
         } 
-        
-        console.log(`✅ Benutzer "${username}" (ID: ${user.id}) erfolgreich authentifiziert`);
-        return done(null, user);
+        else {
+          return done(null, user);
+        }
       } catch (error) {
-        console.error('❌ Unerwarteter Fehler bei der Benutzerauthentifizierung:', error);
         return done(error);
       }
     }),
@@ -229,66 +133,12 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Standard Login-Route mit Passport.js und Notfallzugang
   app.post("/api/login", (req, res, next) => {
-    const { username, password } = req.body;
-    
-    // Abbruch bei fehlenden Daten
-    if (!username || !password) {
-      console.error("Login fehlgeschlagen: Unvollständige Anmeldedaten");
-      return res.status(400).json({ message: "Benutzername und Passwort sind erforderlich" });
-    }
-    
-    console.log(`⚙️ Login-Anfrage für Benutzer "${username}"`);
-    
-    // Spezial-Login für Notfallzugang (nur für bugi)
-    if (username === 'bugi' && password === 'password') {
-      console.log(`⚠️ NOTFALL-LOGIN für Testbenutzer ${username} wird versucht`);
-      
-      storage.getUserByUsername(username)
-        .then(user => {
-          if (!user) {
-            console.error(`❌ Notfallzugang fehlgeschlagen: Testbenutzer ${username} nicht gefunden`);
-            return res.status(401).json({ message: "Ungültiger Benutzername oder Passwort" });
-          }
-          
-          req.login(user, (err) => {
-            if (err) {
-              console.error(`❌ Notfallzugang Session-Fehler:`, err);
-              return next(err);
-            }
-            
-            // Token generieren
-            const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
-            
-            // Benutzer ohne Passwort zurückgeben
-            const { password, ...userWithoutPassword } = user;
-            console.log(`✅ NOTFALLZUGANG erfolgreich für ${username} (ID: ${user.id})`);
-            
-            res.status(200).json({
-              ...userWithoutPassword,
-              token
-            });
-          });
-        })
-        .catch(error => {
-          console.error(`❌ Notfallzugang Datenbankfehler:`, error);
-          res.status(500).json({ message: "Datenbankfehler beim Notfallzugang" });
-        });
-      
-      return;
-    }
-    
-    // Standard-Login mit Passport
-    passport.authenticate("local", (err, user, info) => {
-      if (err) {
-        console.error(`❌ Login-Authentifizierungsfehler:`, err);
-        return next(err);
-      }
-      
+    passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
+      if (err) return next(err);
       if (!user) {
+        // Verwende die Fehlermeldung aus info, wenn vorhanden
         const errorMessage = info && info.message ? info.message : "Benutzername oder Passwort falsch";
-        console.error(`❌ Login fehlgeschlagen für "${username}": ${errorMessage}`);
         return res.status(401).json({ message: errorMessage });
       }
       
@@ -301,17 +151,13 @@ export function setupAuth(app: Express) {
       }
       
       req.login(user, (err) => {
-        if (err) {
-          console.error(`❌ Login Session-Fehler:`, err);
-          return next(err);
-        }
-        
+        if (err) return next(err);
         // Generate a simple token (in production we would use JWT)
         const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
         
         console.log(`✅ Login erfolgreich für Benutzer ${user.username} (ID: ${user.id}, Shop-ID: ${user.shopId})`);
         
-        // Return the user without the password but with the token
+        // Return the user without the password and token
         const { password, ...userWithoutPassword } = user;
         res.status(200).json({ 
           ...userWithoutPassword, 

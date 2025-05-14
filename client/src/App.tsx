@@ -22,8 +22,6 @@ import ResponsiveDevicesDemo from "@/pages/responsive-devices-demo";
 import ApiTest from "@/pages/api-test";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
-import { DirectAuthProvider } from "./hooks/use-direct-auth";
-import { EmergencyAuthProvider } from "./hooks/use-emergency-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
@@ -140,22 +138,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <DirectAuthProvider>
-          <EmergencyAuthProvider>
-            <BusinessSettingsProvider>
-              <ThemeProvider>
-                <PrintManagerProvider>
-                  <TooltipProvider>
-                    <TitleUpdater />
-                    <CacheClearer />
-                    <Toaster />
-                    <Router />
-                  </TooltipProvider>
-                </PrintManagerProvider>
-              </ThemeProvider>
-            </BusinessSettingsProvider>
-          </EmergencyAuthProvider>
-        </DirectAuthProvider>
+        <BusinessSettingsProvider>
+          <ThemeProvider>
+            <PrintManagerProvider>
+              <TooltipProvider>
+                <TitleUpdater />
+                <CacheClearer />
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </PrintManagerProvider>
+          </ThemeProvider>
+        </BusinessSettingsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

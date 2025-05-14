@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,7 +20,6 @@ import { RepairDetailsDialog } from './RepairDetailsDialog';
 import { ChangeStatusDialog } from './ChangeStatusDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
-import { EmailSendDialog } from '../repair/EmailSendDialog';
 import { 
   Pencil, 
   Printer, 
@@ -49,7 +48,6 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
   // SMS-Funktionalität wurde entfernt
@@ -67,8 +65,31 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const itemsPerPageOptions = [10, 20, 50, 100];
   
-  // React Query für Cache-Invalidierungen
-  const queryClient = useQueryClient();
+  // Mutation zum Senden von Bewertungsanfragen
+  const sendReviewRequestMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('POST', `/api/repairs/${repairId}/send-review-request`);
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidiere den Cache, um die aktuellen Daten vom Server zu holen
+      // Dies sorgt dafür, dass das reviewRequestSent-Flag im UI angezeigt wird
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      
+      toast({
+        title: "Erfolgreich",
+        description: "Die Bewertungsanfrage wurde erfolgreich gesendet.",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Fehler",
+        description: "Die Bewertungsanfrage konnte nicht gesendet werden: " + (error as Error).message,
+        variant: "destructive",
+      });
+    }
+  });
   
   // Check for status filter and email action in URL
   useEffect(() => {
@@ -253,24 +274,40 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     
     console.log(`Status-Update wird ausgeführt: ID=${selectedRepairId}, newStatus=${newStatus}, sendEmail=${sendEmail}`);
     
-    // Bei allen Status-Änderungen, bei denen eine E-Mail gesendet werden soll
-    if (sendEmail) {
-      // Erst den Status ändern und dann den E-Mail-Dialog öffnen
+    // Status auf "fertig" aktualisieren mit optionaler E-Mail-Benachrichtigung
+    if (newStatus === 'fertig') {
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus, 
+        sendEmail: sendEmail
+      });
+    }
+    // Status auf "abgeholt" aktualisieren, und evtl. Bewertungsanfrage senden
+    else if (newStatus === 'abgeholt') {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
         status: newStatus
       }, {
         onSuccess: () => {
-          // Nach erfolgreicher Statusänderung den E-Mail-Dialog öffnen
-          // Verzögerung hinzufügen, damit die Statusänderung zuerst verarbeitet wird
-          setTimeout(() => {
-            setSelectedRepairId(selectedRepairId);
-            setShowEmailDialog(true);
-          }, 300);
+          // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
+          if (sendEmail) {
+            setTimeout(() => {
+              handleSendReviewRequest(selectedRepairId);
+            }, 500); // Kleine Verzögerung, damit die Statusänderung zuerst verarbeitet wird
+          }
         }
       });
-    } 
-    // Statusänderungen ohne E-Mail
+    }
+    // Status auf "ersatzteil_eingetroffen" mit E-Mail-Benachrichtigung
+    else if (newStatus === 'ersatzteil_eingetroffen') {
+      console.log("Status wird auf 'ersatzteil_eingetroffen' gesetzt mit sendEmail:", sendEmail);
+      updateStatusMutation.mutate({ 
+        id: selectedRepairId, 
+        status: newStatus,
+        sendEmail: sendEmail
+      });
+    }
+    // Alle anderen Statusänderungen ohne zusätzliche Funktionen
     else {
       updateStatusMutation.mutate({ 
         id: selectedRepairId, 
@@ -295,17 +332,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   };
   
   // Funktion zum Senden einer Bewertungsanfrage
-  // Funktion, um den E-Mail-Dialog zu öffnen
   const handleSendReviewRequest = (repairId: number) => {
-    console.log(`Öffne E-Mail-Dialog für Reparatur ID ${repairId}`);
-    // setSelectedRepairId nur setzen, wenn es sich ändert
-    if (selectedRepairId !== repairId) {
-      setSelectedRepairId(repairId);
-    }
-    // Dialog NACH der Zustandsänderung öffnen
-    setTimeout(() => {
-      setShowEmailDialog(true);
-    }, 0);
+    sendReviewRequestMutation.mutate(repairId);
   };
   
   // Pagination logic
@@ -792,17 +820,6 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
             setSelectedRepairId(id);
             setShowEditDialog(true);
           }, 300);
-        }}
-      />
-
-      {/* E-Mail-Versand-Dialog */}
-      <EmailSendDialog
-        open={showEmailDialog}
-        onOpenChange={setShowEmailDialog}
-        repairId={selectedRepairId}
-        onSuccess={() => {
-          // Update der Reparaturdaten nach erfolgreicher E-Mail-Versendung
-          queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
         }}
       />
     </div>

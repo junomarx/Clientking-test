@@ -17,10 +17,6 @@ import { addErrorCatalogEntriesTable } from "./add-error-catalog-entries-table";
 import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog";
 import { addEmailTemplateTypeColumn } from "./add-email-template-type";
 import { syncEmailTemplates } from "./sync-email-templates";
-import { setupDirectAuth } from "./direct-auth";
-import { setupAuth } from "./auth";
-import { fixBugiAdminRights } from "./fix-bugi-admin";
-import { repairTemplateAccess } from "./fix-template-access";
 import fileUpload from "express-fileupload";
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
@@ -45,85 +41,65 @@ app.use(fileUpload({
   useTempFiles: false // Benutze den Speicher für kleine Dateien
 }));
 
-// Minimales Logging - Keine überflüssige Middleware mehr
-console.log("Minimales Logging aktiviert - keine Middleware wird verwendet");
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "…";
+      }
+
+      log(logLine);
+    }
+  });
+
+  next();
+});
 
 (async () => {
   try {
-    // Importiere die Datenbankverbindungsprüfung
-    const { checkDatabaseConnection } = await import('./db');
+    // Führe die Migrationen aus
+    await addSecondSignatureColumns();
+    await addPricingPlanColumn();
+    await addCompanySloganVatColumns();
+    await addShopIdColumn();
+    await addFeatureOverridesColumn();
+    await addPackageTables(); // Neue Migration für das Paketsystem
+    await addSuperadminColumn(); // Migration für Superadmin-Rolle
+    await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
+    await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
+    await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
+    await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
+    await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
+    await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
+    await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
     
-    // Prüfe die Datenbankverbindung vor dem Ausführen von Migrationen
-    const dbConnected = await checkDatabaseConnection();
-    if (!dbConnected) {
-      console.warn('⚠️ Datenbankverbindung konnte nicht hergestellt werden');
-      console.log('🚨 Server wird mit eingeschränkter Funktionalität gestartet (Notfallmodus)');
-    } else {
-      console.log('✅ Datenbankverbindung erfolgreich hergestellt');
-      
-      try {
-        // Führe die Migrationen aus
-        await addSecondSignatureColumns();
-        await addPricingPlanColumn();
-        await addCompanySloganVatColumns();
-        await addShopIdColumn();
-        await addFeatureOverridesColumn();
-        await addPackageTables(); // Neue Migration für das Paketsystem
-        await addSuperadminColumn(); // Migration für Superadmin-Rolle
-        await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
-        await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
-        await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
-        await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
-        await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
-        await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
-        await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
-        
-        // Synchronisiere E-Mail-Vorlagen beim Server-Start
-        await syncEmailTemplates();
-
-        // Stelle sicher, dass bugi Admin-Rechte hat
-        await fixBugiAdminRights();
-        
-        // Repariere den Zugriff auf globale Vorlagen
-        await repairTemplateAccess();
-        
-        console.log('✅ Alle Migrationen erfolgreich abgeschlossen');
-      } catch (migrationError) {
-        console.error('❌ Fehler bei der Ausführung von Migrationen:', migrationError);
-        console.log('🚨 Server wird mit eingeschränkter Funktionalität gestartet (Notfallmodus)');
-      }
-    }
-    
-    // Direkte Authentifizierungs-Endpoints einrichten (ohne Session, für Notfälle)
-    console.log('🔑 Direkte Authentifizierung wird eingerichtet (für Notfälle)');
-    setupDirectAuth(app);
-    
-    // Reguläre Authentifizierung mit Express-Session einrichten
-    console.log('🔐 Reguläre Authentifizierung wird eingerichtet');
-    setupAuth(app);
+    // Synchronisiere E-Mail-Vorlagen beim Server-Start
+    await syncEmailTemplates();
     
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-      
-      console.error('Server-Fehler:', {
-        status,
-        message,
-        stack: err.stack,
-        url: _req.originalUrl,
-        method: _req.method
-      });
 
-      // Fehler als JSON zurückgeben, ohne den Server zu beenden
-      res.status(status).json({ 
-        message,
-        error: app.get('env') === 'development' ? err.stack : 'Ein Fehler ist aufgetreten' 
-      });
-      
-      // NICHT werfen - das würde den Server abstürzen lassen
-      // throw err;
+      res.status(status).json({ message });
+      throw err;
     });
 
     // importantly only setup vite in development and after
