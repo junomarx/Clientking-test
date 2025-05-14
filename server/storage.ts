@@ -71,6 +71,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUsersByEmail(email: string): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
+  getSuperadmins(): Promise<User[]>;
   updateUser(
     id: number,
     userData: Partial<Omit<User, "id" | "password">>,
@@ -341,8 +342,61 @@ function convertToUser(row: any): User {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Session store
   sessionStore: session.Store;
-
+  
+  constructor() {
+    // Initialize session store with PostgreSQL
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      tableName: 'session',
+      createTableIfMissing: true
+    });
+  }
+  
+  // Superadmin-Benutzer abfragen
+  async getSuperadmins(): Promise<User[]> {
+    try {
+      const superadmins = await db
+        .select()
+        .from(users)
+        .where(eq(users.isSuperadmin, true));
+      
+      console.log(`Gefunden: ${superadmins.length} Superadmin-Benutzer im System`);
+      return superadmins;
+    } catch (error) {
+      console.error("Fehler beim Abfragen der Superadmins:", error);
+      return [];
+    }
+  }
+  
+  // Findet eine System-E-Mail-Vorlage anhand des Namens
+  async findSystemEmailTemplateIdByName(name: string): Promise<number | undefined> {
+    try {
+      // Suche nach der E-Mail-Vorlage für System-E-Mails (type = 'app')
+      const [template] = await db
+        .select()
+        .from(emailTemplates)
+        .where(
+          and(
+            sql`LOWER(${emailTemplates.name}) LIKE ${`%${name.toLowerCase()}%`}`,
+            eq(emailTemplates.type, 'app')
+          )
+        );
+      
+      if (template) {
+        console.log(`Systemvorlage "${name}" gefunden: ID=${template.id}`);
+        return template.id;
+      } else {
+        console.warn(`Systemvorlage "${name}" nicht gefunden`);
+        return undefined;
+      }
+    } catch (error) {
+      console.error(`Fehler beim Suchen der Systemvorlage "${name}":`, error);
+      return undefined;
+    }
+  }
   // Hilfsfunktion: Extrahiert eine Zahl aus einem String (z.B. "€ 150,99" -> 150.99)
   private extractNumberFromString(input: string): number {
     if (!input) return 0;
@@ -359,12 +413,7 @@ export class DatabaseStorage implements IStorage {
     return isNaN(number) ? 0 : number;
   }
 
-  constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true,
-    });
-  }
+  // Bereits im ersten constructor definiert
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
