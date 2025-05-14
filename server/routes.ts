@@ -1710,7 +1710,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Kunde hat keine E-Mail-Adresse" });
       }
       
+      // Business-Einstellungen laden
       const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Prüfen, ob der Benutzer SMTP-Einstellungen konfiguriert hat
+      if (!businessSettings || !businessSettings.smtpHost || !businessSettings.smtpUser || !businessSettings.smtpPassword) {
+        return res.status(400).json({ 
+          message: "Keine E-Mail-Einstellungen konfiguriert. Bitte konfigurieren Sie Ihre SMTP-Einstellungen in den Geschäftseinstellungen, bevor Sie E-Mails versenden."
+        });
+      }
       
       // Lade den Bewertungslink aus den Geschäftseinstellungen
       let reviewLink = businessSettings?.reviewLink || "";
@@ -1768,14 +1776,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // E-Mail senden
       // Verwende storage.sendEmailWithTemplate statt emailService.sendEmailWithTemplate
       // um E-Mail-Verlaufseinträge zu erstellen
-      const emailSent = await storage.sendEmailWithTemplate(
-        reviewTemplate.id, 
-        customer.email, 
-        variables
-      );
-      
-      if (!emailSent) {
-        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      try {
+        const emailSent = await storage.sendEmailWithTemplate(
+          reviewTemplate.id, 
+          customer.email, 
+          variables
+        );
+        
+        if (!emailSent) {
+          return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+        }
+      } catch (error) {
+        console.error("Fehler beim Senden der Bewertungs-E-Mail:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        return res.status(500).json({ 
+          message: `E-Mail konnte nicht gesendet werden: ${errorMessage}`
+        });
       }
       
       // Setze das reviewRequestSent-Flag in der Datenbank

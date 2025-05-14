@@ -543,6 +543,7 @@ export class EmailService {
             .from(businessSettings)
             .where(eq(businessSettings.userId, forceUserId));
           
+          // Wichtig: Die SMTP-Einstellungen müssen komplett sein, sonst keine E-Mail senden
           if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
             console.log(`Verwende benutzerspezifische SMTP-Einstellungen für Benutzer ${forceUserId}`);
             
@@ -565,28 +566,15 @@ export class EmailService {
             
             console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Benutzer-SMTP (${senderEmail})`);
           } else {
-            console.log(`Keine SMTP-Einstellungen für Benutzer ${forceUserId} gefunden, verwende Standard-SMTP`);
-            
-            // Fallback auf Standard-SMTP-Einstellungen
-            if (!this.smtpTransporter) {
-              throw new Error("Standard-SMTP-Transporter nicht konfiguriert");
-            }
-            
-            transporter = this.smtpTransporter;
-            senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-            senderEmail = process.env.SMTP_USER || '';
+            // KRITISCH: Keine E-Mail senden, wenn SMTP-Einstellungen fehlen
+            console.error(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen konfiguriert!`);
+            throw new Error(`Benutzer ${forceUserId} hat keine E-Mail-Einstellungen konfiguriert. E-Mail kann nicht gesendet werden.`);
           }
         } catch (error) {
-          console.error(`Fehler beim Laden der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
-          
-          // Fallback auf Standard-SMTP-Einstellungen
-          if (!this.smtpTransporter) {
-            throw new Error("Standard-SMTP-Transporter nicht konfiguriert");
-          }
-          
-          transporter = this.smtpTransporter;
-          senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-          senderEmail = process.env.SMTP_USER || '';
+          console.error(`Fehler beim Laden oder Prüfen der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
+          // Bei Benutzerprofil-E-Mails KEIN Fallback auf Standard-SMTP, 
+          // da dies zu verwirrenden E-Mail-Absendern führen würde
+          throw error;
         }
       } else {
         // Standard-SMTP-Einstellungen verwenden
