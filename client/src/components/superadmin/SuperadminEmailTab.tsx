@@ -423,7 +423,7 @@ export default function SuperadminEmailTab() {
   }, [templateToTest, templateTestEmail, sendTemplateTestEmailMutation]);
   
   // Neue Vorlage erstellen
-  const handleCreateTemplate = () => {
+  const handleCreateTemplate = useCallback(() => {
     // Einfache Validierung
     if (!newTemplate.name || !newTemplate.subject || !newTemplate.body) {
       toast({
@@ -435,16 +435,16 @@ export default function SuperadminEmailTab() {
     }
     
     createTemplateMutation.mutate(newTemplate);
-  };
+  }, [createTemplateMutation, newTemplate, toast]);
   
   // Vorlage zur Bearbeitung auswählen
-  const handleEditTemplate = (template: EmailTemplate) => {
+  const handleEditTemplate = useCallback((template: EmailTemplate) => {
     setSelectedTemplate(template);
     setIsEditTemplateOpen(true);
-  };
+  }, []);
   
   // Vorlage aktualisieren
-  const handleUpdateTemplate = () => {
+  const handleUpdateTemplate = useCallback(() => {
     if (!selectedTemplate) return;
     
     updateTemplateMutation.mutate({
@@ -457,14 +457,14 @@ export default function SuperadminEmailTab() {
         type: selectedTemplate.type || 'customer' // Stelle sicher, dass der Typ übermittelt wird
       }
     });
-  };
+  }, [selectedTemplate, updateTemplateMutation]);
   
   // Vorlage löschen
-  const handleDeleteTemplate = (id: number) => {
+  const handleDeleteTemplate = useCallback((id: number) => {
     if (window.confirm('Sind Sie sicher, dass Sie diese Vorlage löschen möchten?')) {
       deleteTemplateMutation.mutate(id);
     }
-  };
+  }, [deleteTemplateMutation]);
   
   // Variablen aus dem Body extrahieren (Muster: {{variableName}})
   const extractVariables = (body: string): string[] => {
