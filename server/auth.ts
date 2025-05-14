@@ -67,9 +67,9 @@ export function setupAuth(app: Express) {
         if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
         } 
-        // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Admin)
-        else if (!user.isActive && !user.isAdmin) {
-          return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Administrator.' });
+        // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
+        else if (!user.isActive && !user.isSuperadmin) {
+          return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
         } 
         else {
           return done(null, user);
@@ -196,7 +196,7 @@ export function setupAuth(app: Express) {
       const userId = parseInt(tokenData[0]);
       const user = await storage.getUser(userId);
       
-      if (!user || (!user.isActive && !user.isAdmin)) {
+      if (!user || (!user.isActive && !user.isSuperadmin)) {
         return res.sendStatus(401);
       }
       
