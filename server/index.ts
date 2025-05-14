@@ -42,65 +42,12 @@ app.use(fileUpload({
   useTempFiles: false // Benutze den Speicher für kleine Dateien
 }));
 
+// Vereinfachte Logging-Middleware ohne Monkey-Patching für mehr Stabilität
 app.use((req, res, next) => {
-  try {
-    const start = Date.now();
-    const path = req.path;
-    let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-    // Speichere das Original-json-Methode
-    const originalResJson = res.json;
-    
-    // Überschreibe sie mit einer sicheren Version
-    res.json = function (bodyJson, ...args) {
-      try {
-        capturedJsonResponse = bodyJson;
-        return originalResJson.apply(res, [bodyJson, ...args]);
-      } catch (jsonError) {
-        console.error('Fehler beim Überschreiben von res.json:', jsonError);
-        // Stelle sicher, dass wir das Original zurückgeben
-        return originalResJson.apply(res, [bodyJson, ...args]);
-      }
-    };
-
-    // Sicheres Logging bei Abschluss der Anfrage
-    res.on("finish", () => {
-      try {
-        const duration = Date.now() - start;
-        if (path && path.startsWith("/api")) {
-          let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-          
-          // Sicheres JSON-Logging
-          if (capturedJsonResponse) {
-            try {
-              // Nur einfache Objekte loggen, keine komplexen Strukturen
-              if (typeof capturedJsonResponse === 'object') {
-                logLine += ` :: ${JSON.stringify(capturedJsonResponse, null, 0)}`;
-              }
-            } catch (stringifyError) {
-              logLine += ` :: [Nicht serialisierbares Objekt]`;
-            }
-          }
-
-          // Lange Logs kürzen
-          if (logLine.length > 120) {
-            logLine = logLine.slice(0, 119) + "…";
-          }
-
-          log(logLine);
-        }
-      } catch (finishError) {
-        console.error('Fehler beim Logging:', finishError);
-      }
-    });
-
-    // Weiter zur nächsten Middleware
-    return next();
-  } catch (error) {
-    console.error('Unerwarteter Fehler in der Logging-Middleware:', error);
-    // Auch bei Fehlern weitermachen, damit die Anwendung nicht abbricht
-    return next();
+  if (req.path && req.path.startsWith("/api")) {
+    console.log(`[API] ${req.method} ${req.path}`);
   }
+  next();
 });
 
 (async () => {
