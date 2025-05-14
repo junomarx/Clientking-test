@@ -150,12 +150,12 @@ export class EmailService {
     };
     
     // Schließe bestehenden Transporter, falls vorhanden
-    if (this.superadminSmtpTransporter) {
-      this.superadminSmtpTransporter.close();
-      this.superadminSmtpTransporter = null;
+    if (this.smtpTransporter) {
+      this.smtpTransporter.close();
+      this.smtpTransporter = null;
     }
     
-    console.log('Superadmin-E-Mail-Konfiguration erfolgreich geladen');
+    console.log('E-Mail-Konfiguration erfolgreich geladen');
   }
 
   /**
@@ -169,10 +169,17 @@ export class EmailService {
       
       try {
         // Transporter mit den neuen Einstellungen aktualisieren
+        let portNum = 587;
+        try {
+          portNum = parseInt(settings.smtpPort);
+        } catch (e) {
+          console.warn(`Konnte SMTP-Port nicht parsen, verwende Standard-Port 587: ${e}`);
+        }
+        
         const config = {
           host: settings.smtpHost,
-          port: settings.smtpPort,
-          secure: settings.smtpPort === 465,
+          port: portNum,
+          secure: portNum === 465,
           auth: {
             user: settings.smtpUser,
             pass: settings.smtpPassword
@@ -190,10 +197,10 @@ export class EmailService {
           logger: true
         };
         
-        console.log('Teste Superadmin SMTP-Verbindung mit den folgenden Einstellungen:', {
+        console.log('Teste SMTP-Verbindung mit den folgenden Einstellungen:', {
           host: settings.smtpHost,
-          port: settings.smtpPort,
-          secure: settings.smtpPort === 465,
+          port: portNum,
+          secure: portNum === 465,
           user: settings.smtpUser,
           sender: settings.smtpSenderEmail
         });
@@ -205,9 +212,9 @@ export class EmailService {
         await testTransporter.verify();
         
         // Wenn der Test erfolgreich war, setze den Transporter
-        this.superadminSmtpTransporter = testTransporter;
+        this.smtpTransporter = testTransporter;
         
-        console.log(`Superadmin SMTP-Verbindung zu ${settings.smtpHost} erfolgreich getestet`);
+        console.log(`SMTP-Verbindung zu ${settings.smtpHost} erfolgreich getestet`);
         return true;
       } catch (smtpError) {
         console.error('SMTP-Verbindungstest fehlgeschlagen:', smtpError);
@@ -215,7 +222,7 @@ export class EmailService {
         return false;
       }
     } catch (error) {
-      console.error('Fehler beim Aktualisieren des Superadmin-SMTP-Transporters:', error);
+      console.error('Fehler beim Aktualisieren des SMTP-Transporters:', error);
       return false;
     }
   }
@@ -263,53 +270,31 @@ export class EmailService {
    */
   async sendSuperadminTestEmail(to: string): Promise<boolean> {
     try {
-      console.log('Starte Versand einer Superadmin-Test-E-Mail an:', to);
+      console.log('Starte Versand einer Test-E-Mail an:', to);
       
-      if (!this.superadminSmtpTransporter) {
-        console.log('Kein Superadmin-SMTP-Transporter vorhanden, versuche Initialisierung...');
+      if (!this.smtpTransporter) {
+        console.log('Kein SMTP-Transporter vorhanden, versuche Initialisierung...');
         // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
         await this.initSuperadminSmtpTransporter();
         
-        if (!this.superadminSmtpTransporter) {
-          console.error('Initialisierung des Superadmin-SMTP-Transporters fehlgeschlagen');
-          throw new Error('Kein Superadmin-SMTP-Transporter konfiguriert');
+        if (!this.smtpTransporter) {
+          console.error('Initialisierung des SMTP-Transporters fehlgeschlagen');
+          throw new Error('Kein SMTP-Transporter konfiguriert');
         }
       }
       
       if (!this.superadminEmailConfig) {
-        console.error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
-        throw new Error('Keine Superadmin-E-Mail-Konfiguration verfügbar');
+        console.error('Keine E-Mail-Konfiguration verfügbar');
+        throw new Error('Keine E-Mail-Konfiguration verfügbar');
       }
       
       const senderName = this.superadminEmailConfig.smtpSenderName;
       const senderEmail = this.superadminEmailConfig.smtpSenderEmail;
       
-      console.log(`Sende Superadmin-Test-E-Mail von "${senderName}" <${senderEmail}> an ${to}`);
+      console.log(`Sende Test-E-Mail von "${senderName}" <${senderEmail}> an ${to}`);
       
-      // Erstellen Sie eine manuelle Verbindung zum SMTP-Server (für Test-Zwecke)
-      const config = {
-        host: this.superadminEmailConfig.smtpHost,
-        port: this.superadminEmailConfig.smtpPort,
-        secure: this.superadminEmailConfig.smtpPort === 465,
-        auth: {
-          user: this.superadminEmailConfig.smtpUser,
-          pass: this.superadminEmailConfig.smtpPassword
-        },
-        // Eine angemessene Zeitüberschreitung festlegen
-        connectionTimeout: 10000, // 10 Sekunden
-        // Authentifizierungsmechanismen festlegen
-        authMethod: 'PLAIN',
-        // Ignoriere TLS-Zertifikatsfehler (nur für Entwicklungszwecke)
-        tls: {
-          rejectUnauthorized: false
-        },
-        // Debug-Optionen
-        debug: true,
-        logger: true
-      };
-      
-      console.log('Erstelle neuen Test-Transporter mit aktuellen Konfigurationsdaten');
-      const testTransporter = nodemailer.createTransport(config);
+      // Der SMTP-Transporter wurde bereits initialisiert, verwende diesen
+      // Es ist keine neue Verbindung erforderlich
       
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
@@ -335,11 +320,8 @@ export class EmailService {
       };
       
       console.log('Sende Test-E-Mail...');
-      const info = await testTransporter.sendMail(mailOptions);
-      console.log('Superadmin-Test-E-Mail erfolgreich gesendet:', info.messageId);
-      
-      // Schließe den Test-Transporter
-      testTransporter.close();
+      const info = await this.smtpTransporter.sendMail(mailOptions);
+      console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
       
       return true;
     } catch (error) {
