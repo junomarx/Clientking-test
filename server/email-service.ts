@@ -20,12 +20,10 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
  */
 export class EmailService {
   private smtpTransporter: nodemailer.Transporter | null = null;
-  private superadminSmtpTransporter: nodemailer.Transporter | null = null;
   private superadminEmailConfig: SuperadminEmailSettings | null = null;
 
   constructor() {
-    // Initialisiere die SMTP-Transporters
-    this.initDefaultSmtpTransporter();
+    // Initialisiere nur den Superadmin-SMTP-Transporter für alle App-E-Mails
     this.initSuperadminSmtpTransporter(); // Asynchron, aber kein await in constructor möglich
   }
 
@@ -88,17 +86,25 @@ export class EmailService {
       
       if (!settings) {
         console.warn('Keine aktiven Superadmin-E-Mail-Einstellungen in der Datenbank gefunden');
+        console.warn('E-Mail-Versand ist deaktiviert, bis gültige SMTP-Einstellungen konfiguriert werden');
         return;
       }
       
       // Speichern der Konfiguration für spätere Verwendung
       this.superadminEmailConfig = settings;
       
-      // Erstelle den Transporter mit den Superadmin-Einstellungen
+      // Erstelle den Transporter mit den Superadmin-Einstellungen für ALLE App-E-Mails
+      let portNum = 587;
+      try {
+        portNum = parseInt(settings.smtpPort);
+      } catch (e) {
+        console.warn(`Konnte SMTP-Port nicht parsen, verwende Standard-Port 587: ${e}`);
+      }
+      
       const config = {
         host: settings.smtpHost,
-        port: settings.smtpPort,
-        secure: settings.smtpPort === 465, // true für 465, false für andere Ports
+        port: portNum,
+        secure: portNum === 465, // true für 465, false für andere Ports
         auth: {
           user: settings.smtpUser,
           pass: settings.smtpPassword
@@ -108,7 +114,7 @@ export class EmailService {
         logger: true
       };
       
-      console.log('Superadmin SMTP-Konfiguration:', {
+      console.log('SMTP-Konfiguration für alle App-E-Mails:', {
         host: config.host,
         port: config.port,
         secure: config.secure,
@@ -116,12 +122,13 @@ export class EmailService {
         sender: settings.smtpSenderEmail
       });
       
-      this.superadminSmtpTransporter = nodemailer.createTransport(config);
+      // Verwende nur noch einen einzigen Transporter für alle App-E-Mails
+      this.smtpTransporter = nodemailer.createTransport(config);
       
-      console.log(`Superadmin SMTP-Transporter für ${settings.smtpHost} wurde initialisiert`);
+      console.log(`SMTP-Transporter für ${settings.smtpHost} wurde initialisiert (für alle App-bezogenen E-Mails)`);
     } catch (error) {
-      console.error('Fehler beim Initialisieren des Superadmin-SMTP-Transporters:', error);
-      this.superadminSmtpTransporter = null;
+      console.error('Fehler beim Initialisieren des SMTP-Transporters:', error);
+      this.smtpTransporter = null;
     }
   }
   
