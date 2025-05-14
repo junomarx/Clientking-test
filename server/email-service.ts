@@ -322,11 +322,11 @@ export class EmailService {
       
       console.log('Sende zentrale System-Test-E-Mail...');
       const info = await this.smtpTransporter.sendMail(mailOptions);
-      console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+      console.log('Zentrale System-Test-E-Mail erfolgreich gesendet:', info.messageId);
       
       return true;
     } catch (error) {
-      console.error('Fehler beim Senden der Test-E-Mail mit zentraler SMTP-Konfiguration:', error);
+      console.error('Fehler beim Senden der zentralen System-Test-E-Mail:', error);
       return false;
     }
   }
@@ -370,7 +370,7 @@ export class EmailService {
       };
       
       const info = await this.smtpTransporter.sendMail(mailOptions);
-      console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+      console.log('Shop-spezifische Kunden-Test-E-Mail erfolgreich gesendet:', info.messageId);
       
       return true;
     } catch (error) {
