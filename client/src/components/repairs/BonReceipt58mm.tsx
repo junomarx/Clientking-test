@@ -17,6 +17,7 @@ interface BonReceipt58mmProps {
   modell?: string;
   problem?: string;
   preis?: string;
+  imei?: string;
   signatur_dropoff?: string;
   signatur_pickup?: string;
   datum_pickup?: string;
@@ -38,6 +39,7 @@ export function BonReceipt58mm({
   modell,
   problem,
   preis,
+  imei,
   signatur_dropoff,
   signatur_pickup,
   datum_pickup
@@ -89,6 +91,14 @@ export function BonReceipt58mm({
           <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "2px" }}>
             {hersteller} {modell}
           </div>
+        )}
+
+        {/* IMEI / Seriennummer - nur anzeigen wenn vorhanden */}
+        {imei && (
+          <>
+            <div style={{ fontWeight: "bold", fontSize: "11px", marginTop: "6px", marginBottom: "2px" }}>IMEI / Seriennummer</div>
+            <div>{imei}</div>
+          </>
         )}
 
         <div style={{ fontWeight: "bold", marginTop: "6px", marginBottom: "2px" }}>Schaden/Fehler</div>

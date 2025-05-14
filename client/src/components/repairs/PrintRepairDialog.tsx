@@ -289,7 +289,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
                         deviceModel: repair?.model || "",
                         deviceIssue: repair?.issue ? repair.issue : '',
-                        deviceImei: "",
+                        deviceImei: repair?.serialNumber || "",
                         
                         // Preis-Platzhalter
                         estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",

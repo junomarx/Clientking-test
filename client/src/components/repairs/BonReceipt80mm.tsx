@@ -17,6 +17,7 @@ interface BonReceipt80mmProps {
   modell?: string;
   problem?: string;
   preis?: string;
+  imei?: string;
   signatur_dropoff?: string;
   signatur_pickup?: string;
   datum_pickup?: string;
@@ -38,6 +39,7 @@ export function BonReceipt80mm({
   modell,
   problem,
   preis,
+  imei,
   signatur_dropoff,
   signatur_pickup,
   datum_pickup
@@ -92,6 +94,14 @@ export function BonReceipt80mm({
         {(hersteller || modell) && (
           <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>
             {hersteller} {modell}
+          </div>
+        )}
+
+        {/* IMEI / Seriennummer - nur anzeigen wenn vorhanden */}
+        {imei && (
+          <div>
+            <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>IMEI / Seriennummer</div>
+            <div>{imei}</div>
           </div>
         )}
 
