@@ -2324,7 +2324,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Direkt die neue Methode aufrufen
-      return await emailService.sendEmailWithTemplate(
+      return await emailService.sendEmailWithTemplateById(
         templateId, 
         to, 
         safeVariables

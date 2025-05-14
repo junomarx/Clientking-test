@@ -389,6 +389,10 @@ export class EmailService {
   }
 
   /**
+   * Sendet eine E-Mail mit einer benutzerdefinierten Vorlage
+   * @param isSystemEmail Wenn true, wird die E-Mail über den Superadmin-SMTP-Transporter gesendet
+   */
+  /**
    * Sendet eine E-Mail mit einer Vorlage, die aus der Datenbank geladen wird
    * @param templateId ID der E-Mail-Vorlage
    * @param recipientEmail E-Mail-Adresse des Empfängers
@@ -568,32 +572,153 @@ export class EmailService {
       return false;
     }
   }
+  
+  /**
+   * Internes Hilfsmethode zum Laden von Geschäftseinstellungen für einen Benutzer
+   * Wird von sendEmailWithTemplateById verwendet
+   */
+  private async loadBusinessSettings(userId: number) {
+    try {
+      if (userId > 0) {
+        const [businessSetting] = await db.select().from(businessSettings)
+          .where(eq(businessSettings.userId, userId));
+        
+        if (!businessSetting) {
+          console.error(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden`);
+        }
+      }
+      
+      // Füge das aktuelle Jahr als Variable hinzu
+      variables["aktuellesJahr"] = new Date().getFullYear().toString();
+      
+      // Füge alle relevanten Geschäftsdaten als Variablen hinzu, wenn Geschäftseinstellungen vorhanden sind
+      if (businessSetting) {
+        // Geschäftsname als Variable
+        if (!variables["geschaeftsname"] && businessSetting.businessName) {
+          variables["geschaeftsname"] = businessSetting.businessName;
+        }
+        
+        // Adresse als Variable
+        if (!variables["adresse"] && businessSetting.streetAddress) {
+          variables["adresse"] = `${businessSetting.streetAddress}, ${businessSetting.zipCode} ${businessSetting.city}`;
+        }
+        
+        // Telefonnummer als Variable
+        if (!variables["telefon"] && businessSetting.phone) {
+          variables["telefon"] = businessSetting.phone;
+        }
+        
+        // E-Mail als Variable
+        if (!variables["email"] && businessSetting.email) {
+          variables["email"] = businessSetting.email;
+        }
+      }
+      
+      // E-Mail mit Vorlage senden
+      const success = await this.sendEmailWithTemplate({
+        templateName: template.name,
+        recipientEmail: to,
+        data: variables,
+        subject: subject,
+        body: body,
+        isSystemEmail: isSystemEmail || template.type === 'app' // System-E-Mails oder App-Vorlagen immer über Superadmin senden
+      });
+      
+      if (success) {
+        // E-Mail-Verlauf nur speichern, wenn ein Benutzer angegeben ist und die E-Mail erfolgreich gesendet wurde
+        if (userId > 0 && variables.repairId) {
+          try {
+            const repairId = parseInt(variables.repairId);
+            
+            // E-Mail-Verlauf speichern
+            const historyEntry: InsertEmailHistory = {
+              repairId: repairId,
+              emailTemplateId: templateId,
+              subject: subject,
+              recipient: to,
+              status: "success",
+              userId: userId,
+              shopId: template.shopId
+            };
+            
+            await db.insert(emailHistory).values(historyEntry);
+            console.log(`E-Mail-Verlauf für Reparatur ${repairId} gespeichert`);
+          } catch (historyError) {
+            console.error("Fehler beim Speichern des E-Mail-Verlaufs:", historyError);
+          }
+        }
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("Fehler beim Senden der E-Mail mit Vorlage:", error);
+      
+      // Fehlerprotokollierung im E-Mail-Verlauf, wenn Reparatur-ID vorhanden ist
+      if (variables.userId && variables.repairId) {
+        try {
+          const userId = parseInt(variables.userId);
+          const repairId = parseInt(variables.repairId);
+          
+          // Speichere den fehlgeschlagenen Versuch im Verlauf
+          const historyEntry: InsertEmailHistory = {
+            repairId: repairId,
+            emailTemplateId: templateId,
+            subject: "Fehlgeschlagen",
+            recipient: to,
+            status: "failed",
+            userId: userId,
+            shopId: 1 // Standard-Shop-ID
+          };
+          
+          await db.insert(emailHistory).values(historyEntry);
+        } catch (historyError) {
+          console.error("Fehler beim Speichern des fehlgeschlagenen E-Mail-Verlaufs:", historyError);
+        }
+      }
+      
+      return false;
+    }
+  }
 
   /**
    * Holt alle E-Mail-Vorlagen für einen bestimmten Benutzer (mit DSGVO-konformen Shop-Filter)
    */
   async getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]> {
     try {
-      // Basis-Query für E-Mail-Vorlagen
-      let query = db.select().from(emailTemplates);
-      
-      // Wenn userId vorhanden ist, filtere nach denen des Benutzers und den globalen Vorlagen
-      if (userId) {
-        query = query.where(
-          or(
-            eq(emailTemplates.userId, userId),
-            isNull(emailTemplates.userId)
-          )
-        );
+      // Superadmin kann alle globalen Vorlagen sehen
+      if (userId === null) {
+        const globalTemplates = await db.select().from(emailTemplates)
+          .where(eq(emailTemplates.userId, null as any))
+          .orderBy(desc(emailTemplates.updatedAt));
+        
+        return globalTemplates;
       }
       
-      // Sortiere nach ID absteigend (neueste zuerst)
-      query = query.orderBy(desc(emailTemplates.id));
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId || 0);
+      if (!user) return [];
       
-      const templates = await query;
-      return templates;
+      // SQL-Bedingung basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      // DSGVO-konform: Benutzer dürfen nur Vorlagen ihres eigenen Shops sehen
+      const shopId = user.shopId || 1;
+      whereCondition = or(
+        and(
+          eq(emailTemplates.shopId, shopId),
+          eq(emailTemplates.userId, userId)
+        ),
+        eq(emailTemplates.userId, null as any) // Globale Vorlagen sind für alle sichtbar
+      ) as SQL<unknown>;
+      
+      // Vorlagen ohne [ARCHIVIERT] im Namen bevorzugen
+      const allTemplates = await db.select().from(emailTemplates)
+        .where(whereCondition)
+        .orderBy(desc(emailTemplates.updatedAt));
+      
+      return allTemplates;
     } catch (error) {
-      console.error("Fehler beim Abrufen aller E-Mail-Vorlagen:", error);
+      console.error("Fehler beim Abrufen der E-Mail-Vorlagen:", error);
       return [];
     }
   }
@@ -603,27 +728,44 @@ export class EmailService {
    */
   async getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined> {
     try {
-      // Basis-Query mit ID-Filter
-      let query = db.select()
-        .from(emailTemplates)
-        .where(eq(emailTemplates.id, id));
-      
-      // Wenn userId vorhanden ist, erweitere Filter um Benutzer-Prüfung oder globale Vorlagen
-      if (userId !== undefined) {
-        query = query.where(
-          or(
-            eq(emailTemplates.userId, userId),
-            isNull(emailTemplates.userId)
-          )
-        );
+      // Superadmin-Fall: Globale Vorlagen abrufen
+      if (userId === null) {
+        const [template] = await db.select().from(emailTemplates)
+          .where(eq(emailTemplates.id, id))
+          .where(eq(emailTemplates.userId, null as any))
+          .limit(1);
+        
+        return template;
       }
       
-      // Führe Query aus und hole erstes Ergebnis
-      const [template] = await query;
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      const user = await storage.getUser(userId || 0);
+      if (!user) return undefined;
+      
+      // SQL-Bedingung basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      // DSGVO-konform: Benutzer dürfen nur Vorlagen ihres eigenen Shops sehen
+      // (außer globale Vorlagen, die für alle sichtbar sind)
+      const shopId = user.shopId || 1;
+      whereCondition = or(
+        and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.shopId, shopId)
+        ),
+        and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.userId, null as any)
+        )
+      ) as SQL<unknown>;
+      
+      const [template] = await db.select().from(emailTemplates)
+        .where(whereCondition)
+        .limit(1);
       
       return template;
     } catch (error) {
-      console.error(`Fehler beim Abrufen der E-Mail-Vorlage mit ID ${id}:`, error);
+      console.error("Fehler beim Abrufen der E-Mail-Vorlage:", error);
       return undefined;
     }
   }
@@ -632,48 +774,76 @@ export class EmailService {
    * Erstellt eine neue E-Mail-Vorlage für einen Benutzer (mit DSGVO-konformen Shop-Filter)
    */
   async createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate> {
-    try {
-      // Sicherstellen, dass die Vorlage die richtige Benutzer-ID hat, wenn angegeben
-      const templateWithUserId = {
+    // Superadmin-Fall: Globale Vorlage erstellen
+    if (userId === null) {
+      const [createdTemplate] = await db.insert(emailTemplates).values({
         ...template,
-        userId: userId
-      };
-      
-      // Erstelle die E-Mail-Vorlage
-      const [createdTemplate] = await db.insert(emailTemplates)
-        .values(templateWithUserId)
-        .returning();
+        userId: null as any,
+        shopId: 0
+      }).returning();
       
       return createdTemplate;
-    } catch (error) {
-      console.error("Fehler beim Erstellen der E-Mail-Vorlage:", error);
-      throw error;
     }
+    
+    // Benutzer abrufen, um Shop-ID zuzuweisen
+    const user = await storage.getUser(userId || 0);
+    if (!user) throw new Error("Benutzer nicht gefunden");
+    
+    // DSGVO-konform: Vorlagen werden immer dem Shop des Benutzers zugeordnet
+    const shopId = user.shopId || 1;
+    
+    const [createdTemplate] = await db.insert(emailTemplates).values({
+      ...template,
+      userId,
+      shopId
+    }).returning();
+    
+    return createdTemplate;
   }
 
   /**
    * Aktualisiert eine bestehende E-Mail-Vorlage für einen Benutzer (mit DSGVO-konformen Shop-Filter)
    */
   async updateEmailTemplate(id: number, template: Partial<EmailTemplate>, userId?: number): Promise<EmailTemplate | undefined> {
-    try {
-      // Basis-Query mit ID-Filter
-      let whereCondition = eq(emailTemplates.id, id);
-      
-      // Wenn userId vorhanden ist, erweitere Filter um Benutzer-Prüfung
-      if (userId !== undefined) {
-        // Benutzer darf nur seine eigenen Vorlagen oder globale Vorlagen bearbeiten, für die er Rechte hat
-        whereCondition = and(
-          whereCondition,
-          or(
-            eq(emailTemplates.userId, userId),
-            isNull(emailTemplates.userId)
-          )
-        );
-      }
-      
-      // Aktualisiere die Vorlage mit dem entsprechenden Filter
+    // Superadmin-Fall: Globale Vorlage aktualisieren
+    if (userId === null) {
       const [updatedTemplate] = await db.update(emailTemplates)
-        .set(template)
+        .set({
+          ...template,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(emailTemplates.id, id),
+            eq(emailTemplates.userId, null as any)
+          )
+        )
+        .returning();
+      return updatedTemplate;
+    }
+    
+    try {
+      // Benutzer abrufen, um Shop-ID zu erhalten
+      if (!userId) return undefined;
+      const user = await storage.getUser(userId);
+      if (!user) return undefined;
+      
+      // SQL-Bedingung basierend auf Benutzerrechten erstellen
+      let whereCondition: SQL<unknown>;
+      
+      // DSGVO-konform: Admins und normale Benutzer dürfen nur Vorlagen ihres eigenen Shops aktualisieren
+      const shopId = user.shopId || 1;
+      whereCondition = and(
+        eq(emailTemplates.id, id),
+        eq(emailTemplates.shopId, shopId)
+      ) as SQL<unknown>;
+      
+      const [updatedTemplate] = await db
+        .update(emailTemplates)
+        .set({
+          ...template,
+          updatedAt: new Date()
+        })
         .where(whereCondition)
         .returning();
       
@@ -711,96 +881,93 @@ export class EmailService {
           return false;
         }
         
-        // Wenn die Vorlage in der Historie verwendet wird, markiere sie als archiviert statt zu löschen
         const template = templateToDelete[0];
         
-        // Archiviere die Vorlage durch Umbenennung und Deaktivierung
-        await db.update(emailTemplates)
-          .set({
-            name: `[Archiviert] ${template.name}`,
-            isArchived: true
-          })
-          .where(eq(emailTemplates.id, id));
+        // Vorlage umbenennen, um sie als archiviert zu kennzeichnen
+        if (!template.name.startsWith('[ARCHIVIERT]')) {
+          await db.update(emailTemplates)
+            .set({
+              name: `[ARCHIVIERT] ${template.name}`,
+              updatedAt: new Date()
+            })
+            .where(eq(emailTemplates.id, id));
+          
+          console.log(`Vorlage "${template.name}" wurde als archiviert markiert, da sie in der E-Mail-Historie verwendet wird.`);
+        }
         
-        console.log(`E-Mail-Vorlage mit ID ${id} wurde archiviert.`);
-        return true;
+        return true; // Erfolg, obwohl nicht gelöscht, sondern nur archiviert
       }
       
-      // Wenn die Vorlage nicht in der Historie verwendet wird, kann sie gelöscht werden
-      // Erstelle Basis-Query mit ID-Filter
-      let deleteQuery = db.delete(emailTemplates)
-        .where(eq(emailTemplates.id, id));
+      // Sonst: Lösche die Vorlage, wenn sie nicht in der Historie verwendet wird
       
-      // Wenn userId vorhanden ist, erweitere Filter um Benutzer-Prüfung
-      if (userId !== undefined) {
-        deleteQuery = deleteQuery.where(
-          or(
-            eq(emailTemplates.userId, userId),
-            and(
-              isNull(emailTemplates.userId),
-              eq(userId, 0) // Nur Superadmin (userId=0) darf globale Vorlagen löschen
-            )
-          )
-        );
+      // Unterscheiden zwischen Superadmin (globale Vorlagen) und normalen Benutzern
+      let deleteCondition: SQL<unknown>;
+      
+      if (userId === null) {
+        // Superadmin: Nur globale Vorlagen löschen
+        deleteCondition = and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.userId, null as any)
+        ) as SQL<unknown>;
+      } else {
+        // Normaler Benutzer: Shop-basierte Einschränkung
+        if (!userId) return false;
+        const user = await storage.getUser(userId);
+        if (!user) return false;
+        
+        const shopId = user.shopId || 1;
+        deleteCondition = and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.shopId, shopId)
+        ) as SQL<unknown>;
       }
       
-      // Führe Lösch-Query aus
-      await deleteQuery.execute();
+      const result = await db.delete(emailTemplates)
+        .where(deleteCondition);
       
-      console.log(`E-Mail-Vorlage mit ID ${id} wurde gelöscht.`);
       return true;
     } catch (error) {
-      console.error(`Fehler beim Löschen der E-Mail-Vorlage mit ID ${id}:`, error);
+      console.error("Fehler beim Löschen der E-Mail-Vorlage:", error);
       return false;
     }
   }
-  
+
   /**
    * Verwaltet die redundanten E-Mail-Vorlagen (entfernt "Reparatur abgeschlossen" wenn "Reparatur abholbereit" existiert)
    * Diese Methode verhindert doppelte Vorlagen für den gleichen Zweck
    */
   async cleanupRedundantTemplates(userId?: number | null): Promise<void> {
-    try {
-      console.log('Start Bereinigung redundanter E-Mail-Vorlagen...');
+    console.log("Start Bereinigung redundanter E-Mail-Vorlagen...");
+    
+    if (userId !== null && userId !== undefined) {
+      // Nur für einen bestimmten Benutzer bereinigen
+      await this.cleanupCompletedTemplateForUser(userId);
+    } else {
+      // Für alle Benutzer bereinigen
+      const allUsers = await db.select().from(users);
+      console.log(`Gefunden: ${allUsers.length} Benutzer insgesamt.`);
       
-      // Wenn keine Benutzer-ID angegeben ist, bereinige für alle Benutzer
-      if (userId === undefined || userId === null) {
-        // Hole alle Benutzer
-        const allUsers = await db.select().from(users);
-        console.log(`Gefunden: ${allUsers.length} Benutzer insgesamt.`);
-        
-        // Bereinige für jeden Benutzer einzeln
-        for (const user of allUsers) {
-          console.log(`Bearbeite Benutzer: ${user.username} (ID: ${user.id})`);
-          await this.cleanupCompletedTemplateForUser(user.id);
-        }
-      } else {
-        // Bereinige nur für einen bestimmten Benutzer
-        console.log(`Bereinige E-Mail-Vorlagen für Benutzer mit ID ${userId}`);
-        await this.cleanupCompletedTemplateForUser(userId);
+      for (const user of allUsers) {
+        console.log(`Bearbeite Benutzer: ${user.username} (ID: ${user.id})`);
+        await this.cleanupCompletedTemplateForUser(user.id);
       }
-      
-      console.log('Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.');
-    } catch (error) {
-      console.error('Fehler bei der Bereinigung redundanter E-Mail-Vorlagen:', error);
     }
+    
+    console.log("Bereinigung redundanter E-Mail-Vorlagen abgeschlossen.");
   }
-  
+
   /**
    * Archiviert die "Reparatur abgeschlossen" Vorlage für einen bestimmten Benutzer
    */
   private async archiveCompletedTemplateForUser(userId: number): Promise<void> {
     try {
-      // Suche nach der "Reparatur abgeschlossen" Vorlage
+      // "Reparatur abgeschlossen" Vorlage für den Benutzer finden
       const [completedTemplate] = await db.select()
         .from(emailTemplates)
         .where(
           and(
             eq(emailTemplates.userId, userId),
-            or(
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abgeschlossen%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%completed%'`
-            )
+            eq(emailTemplates.name, "Reparatur abgeschlossen")
           )
         );
       
@@ -809,38 +976,48 @@ export class EmailService {
         return;
       }
       
-      // Vorlage archivieren
-      await db.update(emailTemplates)
-        .set({
-          name: `[Archiviert] ${completedTemplate.name}`,
-          isArchived: true
-        })
-        .where(eq(emailTemplates.id, completedTemplate.id));
+      // Prüfen, ob die Vorlage in der E-Mail-Historie verwendet wird
+      const historyEntries = await db.select()
+        .from(emailHistory)
+        .where(eq(emailHistory.emailTemplateId, completedTemplate.id));
+      
+      if (historyEntries.length > 0) {
+        // Vorlage umbenennen, um sie als archiviert zu kennzeichnen
+        await db.update(emailTemplates)
+          .set({
+            name: `[ARCHIVIERT] Reparatur abgeschlossen`,
+            updatedAt: new Date()
+          })
+          .where(eq(emailTemplates.id, completedTemplate.id));
         
-      console.log(`Vorlage "${completedTemplate.name}" (ID: ${completedTemplate.id}) wurde archiviert.`);
+        console.log(`Vorlage "Reparatur abgeschlossen" für Benutzer ${userId} wurde als archiviert markiert, da sie in der E-Mail-Historie verwendet wird.`);
+      } else {
+        // Vorlage löschen, wenn sie nicht in der Historie verwendet wird
+        await db.delete(emailTemplates)
+          .where(eq(emailTemplates.id, completedTemplate.id));
+        
+        console.log(`Vorlage "Reparatur abgeschlossen" für Benutzer ${userId} wurde gelöscht.`);
+      }
     } catch (error) {
       console.error(`Fehler beim Archivieren der "Reparatur abgeschlossen" Vorlage für Benutzer ${userId}:`, error);
     }
   }
-  
+
   /**
    * Spezielle Methode zur Bereinigung der "Reparatur abgeschlossen" Vorlage für einen Benutzer
    * Diese Methode behandelt spezifisch die Redundanz zwischen "Reparatur abgeschlossen" und "Reparatur abholbereit"
    */
   private async cleanupCompletedTemplateForUser(userId: number | null): Promise<void> {
+    if (userId === null) return;
+    
     try {
-      // Suche erst nach der "Reparatur abholbereit" Vorlage
+      // "Reparatur abholbereit" Vorlage für den Benutzer finden
       const [readyTemplate] = await db.select()
         .from(emailTemplates)
         .where(
           and(
-            userId !== null ? eq(emailTemplates.userId, userId) : SQL`1=1`,
-            or(
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abholbereit%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%abholen%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%ready%'`,
-              SQL`LOWER(${emailTemplates.name}) LIKE '%pickup%'`
-            )
+            eq(emailTemplates.userId, userId),
+            eq(emailTemplates.name, "Reparatur abholbereit")
           )
         );
       
@@ -849,12 +1026,10 @@ export class EmailService {
         return;
       }
       
-      // Wenn "abholbereit" existiert, archiviere "abgeschlossen"
-      if (userId !== null) {
-        await this.archiveCompletedTemplateForUser(userId);
-      }
+      // "Reparatur abgeschlossen" Vorlage finden und ggf. archivieren oder löschen
+      await this.archiveCompletedTemplateForUser(userId);
     } catch (error) {
-      console.error(`Fehler bei der Bereinigung der "Reparatur abgeschlossen" Vorlage für Benutzer ${userId}:`, error);
+      console.error(`Fehler bei der Bereinigung für Benutzer ${userId}:`, error);
     }
   }
 }
