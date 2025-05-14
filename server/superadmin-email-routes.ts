@@ -809,39 +809,12 @@ export function registerSuperadminEmailRoutes(app: Express) {
   });
 
   /**
-   * Superadmin-E-Mail-Einstellungen abrufen
+   * Die separate Superadmin-E-Mail-Einstellungs-Route wurde mit der SMTP-Konfigurationsroute konsolidiert
    */
-  app.get("/api/superadmin/email/superadmin-config", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      // Lade Einstellungen aus der Datenbank
-      const [settings] = await db
-        .select()
-        .from(superadminEmailSettings)
-        .where(eq(superadminEmailSettings.isActive, true))
-        .limit(1);
-      
-      if (!settings) {
-        // Sende einen leeren Standardwert, wenn keine Einstellungen gefunden wurden
-        return res.status(200).json({
-          smtpSenderName: "Handyshop Verwaltung",
-          smtpSenderEmail: "noreply@phonerepair.at",
-          smtpHost: "",
-          smtpUser: "",
-          smtpPassword: "",
-          smtpPort: 587,
-          isActive: true
-        });
-      }
-
-      // Sende die gefundenen Einstellungen zurück
-      res.status(200).json(settings);
-    } catch (error: any) {
-      res.status(500).json({ message: `Fehler beim Abrufen der Superadmin-E-Mail-Einstellungen: ${error.message}` });
-    }
-  });
 
   /**
-   * Superadmin-E-Mail-Einstellungen speichern/aktualisieren
+   * Diese Route wird durch die SMTP-Konfigurationsroute ersetzt
+   * @deprecated Verwende stattdessen /api/superadmin/email/smtp-config
    */
   app.post("/api/superadmin/email/superadmin-config", isSuperadmin, async (req: Request, res: Response) => {
     try {
@@ -941,53 +914,7 @@ export function registerSuperadminEmailRoutes(app: Express) {
     }
   });
 
-  /**
-   * Superadmin-Test-E-Mail senden
-   */
-  app.post("/api/superadmin/email/superadmin-test", isSuperadmin, async (req: Request, res: Response) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "E-Mail-Adresse ist erforderlich" });
-      }
-      
-      console.log('Superadmin-Test-E-Mail-Anfrage erhalten für:', email);
-      
-      // SMTP-Einstellungen abrufen, um zu überprüfen, ob sie korrekt konfiguriert sind
-      const [settings] = await db
-        .select()
-        .from(superadminEmailSettings)
-        .where(eq(superadminEmailSettings.isActive, true))
-        .limit(1);
-      
-      if (!settings) {
-        return res.status(400).json({ message: "Keine aktiven Superadmin-E-Mail-Einstellungen gefunden. Bitte konfigurieren Sie die SMTP-Einstellungen zuerst." });
-      }
-      
-      console.log('Verwende folgende Superadmin-SMTP-Einstellungen:', {
-        host: settings.smtpHost,
-        port: settings.smtpPort,
-        user: settings.smtpUser,
-        sender: settings.smtpSenderEmail,
-        senderName: settings.smtpSenderName
-      });
-      
-      // Test-E-Mail vom Superadmin-SMTP-Server senden
-      const success = await emailService.sendSuperadminTestEmail(email);
-      
-      if (success) {
-        console.log('Superadmin-Test-E-Mail erfolgreich gesendet an:', email);
-        res.status(200).json({ success: true, message: "Superadmin-Test-E-Mail erfolgreich gesendet" });
-      } else {
-        console.error('Fehler beim Senden der Superadmin-Test-E-Mail an:', email);
-        res.status(500).json({ message: "Fehler beim Senden der Superadmin-Test-E-Mail. Bitte überprüfen Sie die SMTP-Einstellungen und versuchen Sie es erneut." });
-      }
-    } catch (error: any) {
-      console.error('Ausnahme beim Senden der Superadmin-Test-E-Mail:', error);
-      res.status(500).json({ message: `Fehler beim Senden der Superadmin-Test-E-Mail: ${error.message}` });
-    }
-  });
+  // Die Superadmin-Test-E-Mail-Route wurde entfernt und in die allgemeine Test-E-Mail-Route integriert
   
   /**
    * Test-E-Mail mit einer bestimmten Vorlage senden
