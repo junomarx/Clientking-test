@@ -497,6 +497,19 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return [];
 
+      // Spezialfall: Superadmin kann alle Kunden sehen
+      if (user.isSuperadmin) {
+        console.log(`getAllCustomers: Superadmin ${user.username} (ID: ${user.id}) hat Zugriff auf alle Kunden`);
+        
+        const results = await db
+          .select()
+          .from(customers)
+          .orderBy(customers.lastName, customers.firstName);
+        
+        console.log(`Superadmin: Returning all ${results.length} customers from all shops`);
+        return results;
+      }
+
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
@@ -526,6 +539,18 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return undefined;
 
+      // Spezialfall: Superadmin kann alle Kunden sehen
+      if (user.isSuperadmin) {
+        console.log(`getCustomer: Superadmin ${user.username} (ID: ${user.id}) fragt Kunde ${id} an`);
+        
+        const [result] = await db
+          .select()
+          .from(customers)
+          .where(eq(customers.id, id));
+        
+        return result;
+      }
+
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
@@ -551,6 +576,25 @@ export class DatabaseStorage implements IStorage {
     try {
       const user = await this.getUser(userId);
       if (!user) return [];
+
+      // Spezialfall: Superadmin kann alle Kunden sehen
+      if (user.isSuperadmin) {
+        console.log(`findCustomersByName: Superadmin ${user.username} (ID: ${user.id}) sucht nach Kunden`);
+        
+        let query = db
+          .select()
+          .from(customers);
+        
+        if (firstName) {
+          query = query.where(sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`);
+        }
+        
+        if (lastName) {
+          query = query.where(sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`);
+        }
+        
+        return await query.orderBy(customers.lastName, customers.firstName);
+      }
 
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
