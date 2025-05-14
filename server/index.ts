@@ -43,57 +43,108 @@ app.use(fileUpload({
 }));
 
 app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  try {
+    const start = Date.now();
+    const path = req.path;
+    let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+    // Speichere das Original-json-Methode
+    const originalResJson = res.json;
+    
+    // Überschreibe sie mit einer sicheren Version
+    res.json = function (bodyJson, ...args) {
+      try {
+        capturedJsonResponse = bodyJson;
+        return originalResJson.apply(res, [bodyJson, ...args]);
+      } catch (jsonError) {
+        console.error('Fehler beim Überschreiben von res.json:', jsonError);
+        // Stelle sicher, dass wir das Original zurückgeben
+        return originalResJson.apply(res, [bodyJson, ...args]);
       }
+    };
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+    // Sicheres Logging bei Abschluss der Anfrage
+    res.on("finish", () => {
+      try {
+        const duration = Date.now() - start;
+        if (path && path.startsWith("/api")) {
+          let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+          
+          // Sicheres JSON-Logging
+          if (capturedJsonResponse) {
+            try {
+              // Nur einfache Objekte loggen, keine komplexen Strukturen
+              if (typeof capturedJsonResponse === 'object') {
+                logLine += ` :: ${JSON.stringify(capturedJsonResponse, null, 0)}`;
+              }
+            } catch (stringifyError) {
+              logLine += ` :: [Nicht serialisierbares Objekt]`;
+            }
+          }
+
+          // Lange Logs kürzen
+          if (logLine.length > 120) {
+            logLine = logLine.slice(0, 119) + "…";
+          }
+
+          log(logLine);
+        }
+      } catch (finishError) {
+        console.error('Fehler beim Logging:', finishError);
       }
+    });
 
-      log(logLine);
-    }
-  });
-
-  next();
+    // Weiter zur nächsten Middleware
+    return next();
+  } catch (error) {
+    console.error('Unerwarteter Fehler in der Logging-Middleware:', error);
+    // Auch bei Fehlern weitermachen, damit die Anwendung nicht abbricht
+    return next();
+  }
 });
 
 (async () => {
   try {
-    // Führe die Migrationen aus
-    await addSecondSignatureColumns();
-    await addPricingPlanColumn();
-    await addCompanySloganVatColumns();
-    await addShopIdColumn();
-    await addFeatureOverridesColumn();
-    await addPackageTables(); // Neue Migration für das Paketsystem
-    await addSuperadminColumn(); // Migration für Superadmin-Rolle
-    await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
-    await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
-    await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
-    await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
-    await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
-    await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
-    await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
+    // Importiere die Datenbankverbindungsprüfung
+    const { checkDatabaseConnection } = await import('./db');
     
-    // Synchronisiere E-Mail-Vorlagen beim Server-Start
-    await syncEmailTemplates();
+    // Prüfe die Datenbankverbindung vor dem Ausführen von Migrationen
+    const dbConnected = await checkDatabaseConnection();
+    if (!dbConnected) {
+      console.warn('⚠️ Datenbankverbindung konnte nicht hergestellt werden');
+      console.log('🚨 Server wird mit eingeschränkter Funktionalität gestartet (Notfallmodus)');
+    } else {
+      console.log('✅ Datenbankverbindung erfolgreich hergestellt');
+      
+      try {
+        // Führe die Migrationen aus
+        await addSecondSignatureColumns();
+        await addPricingPlanColumn();
+        await addCompanySloganVatColumns();
+        await addShopIdColumn();
+        await addFeatureOverridesColumn();
+        await addPackageTables(); // Neue Migration für das Paketsystem
+        await addSuperadminColumn(); // Migration für Superadmin-Rolle
+        await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
+        await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
+        await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
+        await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
+        await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
+        await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
+        await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
+        
+        // Synchronisiere E-Mail-Vorlagen beim Server-Start
+        await syncEmailTemplates();
+        
+        console.log('✅ Alle Migrationen erfolgreich abgeschlossen');
+      } catch (migrationError) {
+        console.error('❌ Fehler bei der Ausführung von Migrationen:', migrationError);
+        console.log('🚨 Server wird mit eingeschränkter Funktionalität gestartet (Notfallmodus)');
+      }
+    }
     
-    // Direkte Authentifizierungs-Endpoints einrichten (ohne Session)
+    // Direkte Authentifizierungs-Endpoints einrichten (ohne Session, für Notfälle)
+    console.log('🔑 Direkte Authentifizierung wird eingerichtet (für Notfälle)');
     setupDirectAuth(app);
     
     const server = await registerRoutes(app);
