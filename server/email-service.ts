@@ -366,7 +366,7 @@ export class EmailService {
             </div>
           </div>
         `,
-        text: 'Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre SMTP-Einstellungen korrekt konfiguriert sind. Ihre Handyshop Verwaltung ist nun bereit, E-Mails zu versenden.'
+        text: 'Shop-spezifische Test-E-Mail erfolgreich! Diese E-Mail bestätigt, dass Ihre shop-spezifischen SMTP-Einstellungen korrekt konfiguriert sind. Ihr Shop in der Handyshop Verwaltung ist nun bereit, E-Mails an Kunden zu versenden.'
       };
       
       const info = await this.smtpTransporter.sendMail(mailOptions);
@@ -374,7 +374,7 @@ export class EmailService {
       
       return true;
     } catch (error) {
-      console.error('Fehler beim Senden der Test-E-Mail:', error);
+      console.error('Fehler beim Senden der shop-spezifischen Kunden-Test-E-Mail:', error);
       return false;
     }
   }
