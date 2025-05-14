@@ -89,31 +89,34 @@ export interface IStorage {
   getGlobalModelsByBrandAndDeviceType(brandId: number, deviceTypeId: number): Promise<UserModel[]>;
 
   // Customer methods
-  getAllCustomers(): Promise<Customer[]>;
-  getCustomer(id: number): Promise<Customer | undefined>;
-  findCustomersByName(firstName: string, lastName: string): Promise<Customer[]>;
-  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  getAllCustomers(userId: number): Promise<Customer[]>;
+  getCustomer(id: number, userId: number): Promise<Customer | undefined>;
+  findCustomersByName(firstName: string, lastName: string, userId: number): Promise<Customer[]>;
+  createCustomer(customer: InsertCustomer, userId: number): Promise<Customer>;
   updateCustomer(
     id: number,
     customer: Partial<InsertCustomer>,
+    userId: number,
   ): Promise<Customer | undefined>;
-  deleteCustomer(id: number): Promise<boolean>;
+  deleteCustomer(id: number, userId: number): Promise<boolean>;
 
   // Repair methods
-  getAllRepairs(): Promise<Repair[]>;
-  getRepair(id: number): Promise<Repair | undefined>;
-  getRepairsByCustomerId(customerId: number): Promise<Repair[]>;
-  createRepair(repair: InsertRepair): Promise<Repair>;
+  getAllRepairs(userId: number): Promise<Repair[]>;
+  getRepair(id: number, userId: number): Promise<Repair | undefined>;
+  getRepairsByCustomerId(customerId: number, userId: number): Promise<Repair[]>;
+  createRepair(repair: InsertRepair, userId: number): Promise<Repair>;
   updateRepair(
     id: number,
     repair: Partial<InsertRepair>,
+    userId: number,
   ): Promise<Repair | undefined>;
-  updateRepairStatus(id: number, status: string): Promise<Repair | undefined>;
+  updateRepairStatus(id: number, status: string, userId: number): Promise<Repair | undefined>;
   updateRepairSignature(
     id: number,
     signature: string,
+    userId: number,
   ): Promise<Repair | undefined>;
-  deleteRepair(id: number): Promise<boolean>;
+  deleteRepair(id: number, userId: number): Promise<boolean>;
 
   // Business settings methods
   getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined>;
@@ -123,7 +126,7 @@ export interface IStorage {
   ): Promise<BusinessSettings>;
 
   // Stats methods
-  getStats(): Promise<{
+  getStats(userId: number): Promise<{
     totalOrders: number;
     inRepair: number;
     completed: number;
@@ -355,6 +358,122 @@ export class DatabaseStorage implements IStorage {
     });
   }
   
+  // Implementierung der User-Methoden
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id));
+      
+      return user;
+    } catch (error) {
+      console.error("Error getting user:", error);
+      return undefined;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.username, username));
+      
+      return user;
+    } catch (error) {
+      console.error("Error getting user by username:", error);
+      return undefined;
+    }
+  }
+
+  async getUsersByEmail(email: string): Promise<User[]> {
+    try {
+      const results = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      
+      return results;
+    } catch (error) {
+      console.error("Error getting users by email:", error);
+      return [];
+    }
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const results = await db
+        .select()
+        .from(users)
+        .orderBy(users.username);
+      
+      return results;
+    } catch (error) {
+      console.error("Error getting all users:", error);
+      return [];
+    }
+  }
+
+  async updateUser(
+    id: number,
+    userData: Partial<Omit<User, "id" | "password">>,
+  ): Promise<User | undefined> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set(userData)
+        .where(eq(users.id, id))
+        .returning();
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      return undefined;
+    }
+  }
+
+  async updateUserPassword(id: number, newPassword: string): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ password: newPassword })
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user password:", error);
+      return false;
+    }
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    try {
+      await db
+        .delete(users)
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
+    }
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      const [newUser] = await db
+        .insert(users)
+        .values(user)
+        .returning();
+      
+      return newUser;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+  }
+  
   // Superadmin-Benutzer abfragen
   async getSuperadmins(): Promise<User[]> {
     try {
@@ -368,6 +487,255 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Fehler beim Abfragen der Superadmins:", error);
       return [];
+    }
+  }
+
+  // Implementierung der Kunden-Methoden mit userId-Parameter für Shop-Isolation
+  async getAllCustomers(userId: number): Promise<Customer[]> {
+    try {
+      console.log(`getAllCustomers: Benutzer mit ID ${userId} angefragt`);
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getAllCustomers: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId} - isAdmin: ${user.isAdmin}`);
+
+      const results = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.shopId, shopId))
+        .orderBy(customers.lastName, customers.firstName);
+
+      console.log(`Returning all ${results.length} customers`);
+      return results;
+    } catch (error) {
+      console.error("Error getting all customers:", error);
+      return [];
+    }
+  }
+
+  async getCustomer(id: number, userId: number): Promise<Customer | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+
+      const [result] = await db
+        .select()
+        .from(customers)
+        .where(and(eq(customers.id, id), eq(customers.shopId, shopId)));
+
+      return result;
+    } catch (error) {
+      console.error("Error getting customer:", error);
+      return undefined;
+    }
+  }
+
+  async findCustomersByName(firstName: string, lastName: string, userId: number): Promise<Customer[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+
+      let query = db
+        .select()
+        .from(customers)
+        .where(eq(customers.shopId, shopId));
+
+      if (firstName) {
+        query = query.where(sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`);
+      }
+
+      if (lastName) {
+        query = query.where(sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`);
+      }
+
+      return await query.orderBy(customers.lastName, customers.firstName);
+    } catch (error) {
+      console.error("Error finding customers by name:", error);
+      return [];
+    }
+  }
+
+  // Reparatur-Methoden mit userId-Parameter
+  async getAllRepairs(userId: number): Promise<Repair[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getAllRepairs: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId} - isAdmin: ${user.isAdmin}`);
+
+      const results = await db
+        .select()
+        .from(repairs)
+        .where(eq(repairs.shopId, shopId))
+        .orderBy(desc(repairs.createdAt));
+
+      return results;
+    } catch (error) {
+      console.error("Error getting all repairs:", error);
+      return [];
+    }
+  }
+
+  // Statistiken abhängig vom Benutzer
+  async getStats(userId: number): Promise<{
+    totalOrders: number;
+    inRepair: number;
+    completed: number;
+    today: number;
+    readyForPickup: number;
+    outsourced: number;
+    received: number;
+  }> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        return {
+          totalOrders: 0,
+          inRepair: 0,
+          completed: 0,
+          today: 0,
+          readyForPickup: 0,
+          outsourced: 0,
+          received: 0
+        };
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Statistik zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return {
+          totalOrders: 0,
+          inRepair: 0,
+          completed: 0,
+          today: 0,
+          readyForPickup: 0,
+          outsourced: 0,
+          received: 0
+        };
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getStats: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId} - isAdmin: ${user.isAdmin}`);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [countResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(eq(repairs.shopId, shopId));
+
+      const [inRepairResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          eq(repairs.status, 'in-reparatur')
+        ));
+
+      const [completedResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          eq(repairs.status, 'fertig')
+        ));
+
+      const [todayResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          gte(repairs.createdAt, today)
+        ));
+
+      const [readyForPickupResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          eq(repairs.status, 'abholbereit')
+        ));
+
+      const [outsourcedResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          eq(repairs.status, 'ausgelagert')
+        ));
+
+      const [receivedResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          eq(repairs.status, 'angenommen')
+        ));
+
+      const totalOrders = Number(countResult?.count) || 0;
+      const inRepair = Number(inRepairResult?.count) || 0;
+      const completed = Number(completedResult?.count) || 0;
+      const todayCount = Number(todayResult?.count) || 0;
+      const readyForPickup = Number(readyForPickupResult?.count) || 0;
+      const outsourced = Number(outsourcedResult?.count) || 0;
+      const received = Number(receivedResult?.count) || 0;
+
+      return {
+        totalOrders,
+        inRepair,
+        completed,
+        today: todayCount,
+        readyForPickup,
+        outsourced,
+        received
+      };
+    } catch (error) {
+      console.error("Error getting repair stats:", error);
+      return {
+        totalOrders: 0,
+        inRepair: 0,
+        completed: 0,
+        today: 0,
+        readyForPickup: 0,
+        outsourced: 0,
+        received: 0
+      };
     }
   }
   
