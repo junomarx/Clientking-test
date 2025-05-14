@@ -85,7 +85,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Benutzer aus der Session oder direkt aus req.user laden
-    if (!req.isAuthenticated() || !req.user?.id) {
+    // Verwende einen sicheren Check, der auch funktioniert, wenn isAuthenticated() nicht verfügbar ist
+    if (!req.user?.id) {
       return res.status(401).json({ message: "Nicht authentifiziert" });
     }
     

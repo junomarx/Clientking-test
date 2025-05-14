@@ -18,6 +18,7 @@ import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog
 import { addEmailTemplateTypeColumn } from "./add-email-template-type";
 import { syncEmailTemplates } from "./sync-email-templates";
 import { setupDirectAuth } from "./direct-auth";
+import { setupAuth } from "./auth";
 import fileUpload from "express-fileupload";
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
@@ -88,6 +89,10 @@ console.log("Minimales Logging aktiviert - keine Middleware wird verwendet");
     // Direkte Authentifizierungs-Endpoints einrichten (ohne Session, für Notfälle)
     console.log('🔑 Direkte Authentifizierung wird eingerichtet (für Notfälle)');
     setupDirectAuth(app);
+    
+    // Reguläre Authentifizierung mit Express-Session einrichten
+    console.log('🔐 Reguläre Authentifizierung wird eingerichtet');
+    setupAuth(app);
     
     const server = await registerRoutes(app);
 
