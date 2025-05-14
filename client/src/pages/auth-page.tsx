@@ -256,7 +256,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormControl>
                               <Input 
-                                placeholder="Benutzername" 
+                                placeholder="Benutzername *" 
                                 {...field} 
                                 className="h-12 px-4 border-gray-200 focus:border-blue-500"
                               />
@@ -274,7 +274,7 @@ export default function AuthPage() {
                             <FormControl>
                               <Input 
                                 type="password" 
-                                placeholder="Passwort" 
+                                placeholder="Passwort *" 
                                 {...field} 
                                 className="h-12 px-4 border-gray-200 focus:border-blue-500"
                               />
@@ -465,7 +465,7 @@ export default function AuthPage() {
                                 <FormItem>
                                   <FormControl>
                                     <Input 
-                                      placeholder="Telefon" 
+                                      placeholder="Telefon *" 
                                       {...field} 
                                       className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                     />
