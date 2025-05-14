@@ -930,8 +930,14 @@ export class DatabaseStorage implements IStorage {
     const currentUser = await this.getUser(currentUserId);
     if (!currentUser) return undefined;
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return undefined;
+    }
+
     // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
+    const shopIdValue = currentUser.shopId;
     const [customer] = await db
       .select()
       .from(customers)
