@@ -120,12 +120,54 @@ export function setupAuth(app: Express) {
         isAdmin: false    // Standardmäßig kein Administrator
       });
 
+      // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können
+      try {
+        // Suche alle Superadmin-Benutzer
+        const superadmins = await storage.getSuperadmins();
+        if (superadmins && superadmins.length > 0) {
+          console.log(`Sende Benachrichtigung an ${superadmins.length} Superadmins über neue Benutzerregistrierung: ${username}`);
+          
+          // Finde die "Neue Registrierung" E-Mail-Vorlage für Superadmins
+          const emailTemplateId = await storage.findSystemEmailTemplateIdByName("Neue Benutzerregistrierung");
+          
+          if (emailTemplateId) {
+            // Erstelle Variablen für die E-Mail-Vorlage
+            const variables = {
+              username,
+              email,
+              companyName,
+              registrationDate: new Date().toLocaleString('de-DE'),
+              activationLink: `${process.env.FRONTEND_URL || 'https://example.com'}/superadmin/users`
+            };
+            
+            // Sende E-Mail an jeden Superadmin
+            for (const admin of superadmins) {
+              if (admin.email) {
+                try {
+                  await storage.sendEmailWithTemplateById(emailTemplateId, admin.email, variables);
+                  console.log(`✅ Benachrichtigungs-E-Mail an Superadmin ${admin.username} (${admin.email}) gesendet`);
+                } catch (emailError) {
+                  console.error(`❌ Fehler beim Senden der Benachrichtigungs-E-Mail an Superadmin ${admin.username}:`, emailError);
+                }
+              }
+            }
+          } else {
+            console.warn("Keine E-Mail-Vorlage für 'Neue Benutzerregistrierung' gefunden");
+          }
+        } else {
+          console.warn("Keine Superadmin-Benutzer gefunden für Benachrichtigung über neue Registrierung");
+        }
+      } catch (notificationError) {
+        console.error("Fehler beim Benachrichtigen der Superadmins über neue Registrierung:", notificationError);
+        // Ignoriere Fehler beim Benachrichtigen, damit die Registrierung trotzdem funktioniert
+      }
+      
       // Sende einen Erfolg zurück, aber logge den Benutzer nicht ein
-      // Der Benutzer muss erst vom Administrator freigeschaltet werden
+      // Der Benutzer muss erst vom Superadmin freigeschaltet werden
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json({ 
         ...userWithoutPassword, 
-        message: "Registrierung erfolgreich. Ihr Konto muss vom Administrator freigeschaltet werden, bevor Sie sich anmelden können." 
+        message: "Registrierung erfolgreich. Ihr Konto muss vom Superadministrator freigeschaltet werden, bevor Sie sich anmelden können." 
       });
     } catch (error) {
       console.error("Fehler bei der Registrierung:", error);

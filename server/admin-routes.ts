@@ -745,7 +745,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
   
-  // Benutzer aktivieren/deaktivieren
+  // Benutzer aktivieren/deaktivieren - EINGESCHRÄNKT (nur Superadmins können aktivieren)
   app.patch("/api/admin/users/:id/activate", isAdmin, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -759,6 +759,16 @@ export function registerAdminRoutes(app: Express) {
       
       if (!user) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Überprüfe, ob der anfragende Benutzer ein Superadmin ist
+      const requestingUser = req.user;
+      
+      // Wenn Benutzer aktiviert werden soll (isActive = true), darf das nur ein Superadmin
+      if (isActive && !requestingUser.isSuperadmin) {
+        return res.status(403).json({ 
+          message: "Die Aktivierung von Benutzern ist nur für Superadministratoren verfügbar. Neue Benutzer müssen vom Superadmin freigeschaltet werden." 
+        });
       }
       
       // Verhindere, dass Administratoren deaktiviert werden können
