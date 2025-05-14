@@ -42,13 +42,8 @@ app.use(fileUpload({
   useTempFiles: false // Benutze den Speicher für kleine Dateien
 }));
 
-// Vereinfachte Logging-Middleware ohne Monkey-Patching für mehr Stabilität
-app.use((req, res, next) => {
-  if (req.path && req.path.startsWith("/api")) {
-    console.log(`[API] ${req.method} ${req.path}`);
-  }
-  next();
-});
+// Minimales Logging - Keine überflüssige Middleware mehr
+console.log("Minimales Logging aktiviert - keine Middleware wird verwendet");
 
 (async () => {
   try {
