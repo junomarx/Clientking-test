@@ -610,6 +610,131 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Geschäftseinstellungen
+  async getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined> {
+    try {
+      if (!userId) {
+        return undefined;
+      }
+
+      console.log(`Suche nach Geschäftseinstellungen für Benutzer mit ID ${userId}`);
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+
+      console.log(`Suche nach Geschäftseinstellungen für Benutzer ${user.username} (ID ${userId}, Shop ${user.shopId})`);
+      
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+
+      const [settings] = await db
+        .select()
+        .from(businessSettings)
+        .where(eq(businessSettings.shopId, shopId));
+
+      if (settings) {
+        console.log(`Gefunden: Einstellungen mit ID ${settings.id} für User ${userId} (Shop ${shopId})`);
+        console.log(`Einstellungen für Benutzer ${userId} gefunden: ID ${settings.id} (Shop ${shopId})`);
+      } else {
+        console.log(`Keine Einstellungen für Benutzer ${userId} (Shop ${shopId}) gefunden.`);
+      }
+
+      return settings;
+    } catch (error) {
+      console.error("Error getting business settings:", error);
+      return undefined;
+    }
+  }
+
+  async updateBusinessSettings(
+    settings: Partial<InsertBusinessSettings>,
+    userId?: number,
+  ): Promise<BusinessSettings> {
+    try {
+      if (!userId) {
+        throw new Error("User ID muss angegeben werden");
+      }
+
+      console.log(`NEUE IMPLEMENTATION: Updating business settings for user ${userId}`);
+      
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden.`);
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, Fehler werfen statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        throw new Error(`Benutzer ${user.username} hat keine Shop-Zuordnung`);
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+
+      // Prüfen, ob Einstellungen für diesen Shop bereits existieren
+      const existingSettings = await this.getBusinessSettings(userId);
+
+      if (existingSettings) {
+        // Einstellungen aktualisieren
+        const [updatedSettings] = await db
+          .update(businessSettings)
+          .set({
+            ...settings,
+            updatedAt: new Date(),
+          })
+          .where(eq(businessSettings.id, existingSettings.id))
+          .returning();
+
+        console.log(`Geschäftseinstellungen für Shop ${shopId} aktualisiert: ID ${updatedSettings.id}`);
+        return updatedSettings;
+      } else {
+        // Neue Einstellungen erstellen
+        const [newSettings] = await db
+          .insert(businessSettings)
+          .values({
+            businessName: settings.businessName || "",
+            street: settings.street || "",
+            city: settings.city || "",
+            zipCode: settings.zipCode || "",
+            phone: settings.phone || "",
+            email: settings.email || "",
+            website: settings.website || "",
+            vatId: settings.vatId || "",
+            taxNumber: settings.taxNumber || "",
+            bankName: settings.bankName || "",
+            iban: settings.iban || "",
+            bic: settings.bic || "",
+            logoUrl: settings.logoUrl || "",
+            footerText: settings.footerText || "",
+            repairTerms: settings.repairTerms || "",
+            termsAndConditions: settings.termsAndConditions || "",
+            receiptText: settings.receiptText || "",
+            invoiceTemplate: settings.invoiceTemplate || "",
+            shopId: shopId,
+            userId: userId,
+            color: settings.color || "#3b82f6",
+            businessCurrency: settings.businessCurrency || "EUR",
+            businessCountry: settings.businessCountry || "Deutschland"
+          })
+          .returning();
+
+        console.log(`Neue Geschäftseinstellungen für Shop ${shopId} erstellt: ID ${newSettings.id}`);
+        return newSettings;
+      }
+    } catch (error) {
+      console.error("Error updating business settings:", error);
+      throw error;
+    }
+  }
+
   // Statistiken abhängig vom Benutzer
   async getStats(userId: number): Promise<{
     totalOrders: number;
