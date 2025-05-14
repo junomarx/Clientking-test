@@ -443,13 +443,15 @@ export class EmailService {
       console.log(`E-Mail-Vorlage gefunden: "${template.name}" mit Betreff: "${template.subject}"`);
       
       // Die sendEmailWithTemplate-Methode mit dem Options-Objekt aufrufen
+      // Wichtig: forceUserId ermöglicht das Senden mit den SMTP-Einstellungen des Benutzers
       return await this.sendEmailWithTemplateInternal({
         templateName: template.name,
         recipientEmail,
         data: variables,
         subject: template.subject,
         body: template.body,
-        isSystemEmail
+        isSystemEmail,
+        forceUserId: userId // Verwende die Benutzer-ID für die SMTP-Einstellungen
       });
     } catch (error) {
       console.error('Fehler beim Senden der E-Mail mit Vorlagen-ID:', error);
@@ -491,14 +493,16 @@ export class EmailService {
     data,
     subject,
     body,
-    isSystemEmail = false
+    isSystemEmail = false,
+    forceUserId = undefined
   }: {
     templateName: string,
     recipientEmail: string,
     data: Record<string, string>,
     subject: string,
-    body: string
-    isSystemEmail?: boolean
+    body: string,
+    isSystemEmail?: boolean,
+    forceUserId?: number
   }): Promise<boolean> {
     try {
       // Ersetze Platzhalter in Betreff und Text mit den übergebenen Daten
@@ -530,6 +534,60 @@ export class EmailService {
         senderEmail = this.superadminEmailConfig.smtpSenderEmail;
         
         console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über Superadmin-SMTP`);
+      } else if (forceUserId) {
+        // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
+        try {
+          // Hole die Geschäftseinstellungen des Benutzers
+          const [businessSetting] = await db
+            .select()
+            .from(businessSettings)
+            .where(eq(businessSettings.userId, forceUserId));
+          
+          if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
+            console.log(`Verwende benutzerspezifische SMTP-Einstellungen für Benutzer ${forceUserId}`);
+            
+            // Erstelle einen temporären Transporter für diesen Benutzer
+            const userConfig = {
+              host: businessSetting.smtpHost,
+              port: businessSetting.smtpPort || 587,
+              secure: (businessSetting.smtpPort || 587) === 465,
+              auth: {
+                user: businessSetting.smtpUser,
+                pass: businessSetting.smtpPassword
+              },
+              debug: true,
+              logger: true
+            };
+            
+            transporter = nodemailer.createTransport(userConfig);
+            senderName = businessSetting.businessName || businessSetting.smtpSenderName || 'Handyshop';
+            senderEmail = businessSetting.smtpUser;
+            
+            console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Benutzer-SMTP (${senderEmail})`);
+          } else {
+            console.log(`Keine SMTP-Einstellungen für Benutzer ${forceUserId} gefunden, verwende Standard-SMTP`);
+            
+            // Fallback auf Standard-SMTP-Einstellungen
+            if (!this.smtpTransporter) {
+              throw new Error("Standard-SMTP-Transporter nicht konfiguriert");
+            }
+            
+            transporter = this.smtpTransporter;
+            senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+            senderEmail = process.env.SMTP_USER || '';
+          }
+        } catch (error) {
+          console.error(`Fehler beim Laden der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
+          
+          // Fallback auf Standard-SMTP-Einstellungen
+          if (!this.smtpTransporter) {
+            throw new Error("Standard-SMTP-Transporter nicht konfiguriert");
+          }
+          
+          transporter = this.smtpTransporter;
+          senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+          senderEmail = process.env.SMTP_USER || '';
+        }
       } else {
         // Standard-SMTP-Einstellungen verwenden
         if (!this.smtpTransporter) {
