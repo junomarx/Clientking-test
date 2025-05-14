@@ -412,12 +412,18 @@ export class EmailService {
       let processedSubject = subject;
       let processedBody = body;
       
-      // Alle Variablen ersetzen
-      Object.entries(data).forEach(([key, value]) => {
-        const placeholder = new RegExp(`{{${key}}}`, 'g');
-        processedSubject = processedSubject.replace(placeholder, value);
-        processedBody = processedBody.replace(placeholder, value);
-      });
+      // Alle Variablen ersetzen, aber nur wenn data nicht null oder undefined ist
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            const placeholder = new RegExp(`{{${key}}}`, 'g');
+            processedSubject = processedSubject.replace(placeholder, value.toString());
+            processedBody = processedBody.replace(placeholder, value.toString());
+          }
+        });
+      } else {
+        console.log('Keine Ersetzungsdaten für E-Mail-Vorlage gefunden oder ungültiges Format');
+      }
       
       // Wähle den richtigen SMTP-Transporter basierend auf isSystemEmail
       let transporter: nodemailer.Transporter;
