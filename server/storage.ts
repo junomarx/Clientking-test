@@ -974,8 +974,13 @@ export class DatabaseStorage implements IStorage {
       lastNameFilter = sql`LOWER(${customers.lastName}) LIKE LOWER(${"%" + lastName + "%"})`;
     }
 
+    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      return [];
+    }
+
     // Jeder Benutzer sieht nur Kunden aus seinem eigenen Shop (DSGVO-konform)
-    const shopIdValue = currentUser.shopId || 1;
     return await db
       .select()
       .from(customers)
@@ -983,7 +988,7 @@ export class DatabaseStorage implements IStorage {
         and(
           firstNameFilter,
           lastNameFilter,
-          eq(customers.shopId, shopIdValue),
+          eq(customers.shopId, currentUser.shopId),
         ) as SQL<unknown>,
       );
   }
@@ -992,14 +997,23 @@ export class DatabaseStorage implements IStorage {
     insertCustomer: InsertCustomer,
     currentUserId?: number,
   ): Promise<Customer> {
-    // Wenn eine Benutzer-ID vorhanden ist, hole den Benutzer, um die shop_id zu setzen
-    let shopId = 1; // Standardwert
-    if (currentUserId) {
-      const currentUser = await this.getUser(currentUserId);
-      if (currentUser && currentUser.shopId) {
-        shopId = currentUser.shopId;
-      }
+    // DSGVO-Fix: Kundenkreation erfordert eine gültige Shop-Zuordnung
+    if (!currentUserId) {
+      throw new Error("Kunde kann nicht ohne Benutzerkontext erstellt werden");
     }
+    
+    const currentUser = await this.getUser(currentUserId);
+    if (!currentUser) {
+      throw new Error(`Benutzer mit ID ${currentUserId} nicht gefunden`);
+    }
+    
+    if (!currentUser.shopId) {
+      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Kundenkreation verweigert`);
+      throw new Error("Kunde kann nicht erstellt werden: Benutzer hat keine Shop-Zuordnung");
+    }
+    
+    // Shop-ID des aktuellen Benutzers verwenden
+    const shopId = currentUser.shopId;
 
     const [customer] = await db
       .insert(customers)
