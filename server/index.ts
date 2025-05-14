@@ -20,6 +20,7 @@ import { syncEmailTemplates } from "./sync-email-templates";
 import { setupDirectAuth } from "./direct-auth";
 import { setupAuth } from "./auth";
 import { fixBugiAdminRights } from "./fix-bugi-admin";
+import { repairTemplateAccess } from "./fix-template-access";
 import fileUpload from "express-fileupload";
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
@@ -82,6 +83,9 @@ console.log("Minimales Logging aktiviert - keine Middleware wird verwendet");
 
         // Stelle sicher, dass bugi Admin-Rechte hat
         await fixBugiAdminRights();
+        
+        // Repariere den Zugriff auf globale Vorlagen
+        await repairTemplateAccess();
         
         console.log('✅ Alle Migrationen erfolgreich abgeschlossen');
       } catch (migrationError) {
