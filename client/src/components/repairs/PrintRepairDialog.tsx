@@ -317,6 +317,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     modell={repair?.model || undefined}
                     problem={repair?.issue ? repair.issue : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    imei={repair?.serialNumber || undefined}
                     signatur_dropoff={repair?.dropoffSignature || undefined}
                     signatur_pickup={repair?.pickupSignature || undefined}
                     datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
@@ -338,6 +339,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     modell={repair?.model || undefined}
                     problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                    imei={repair?.serialNumber || undefined}
                     signatur_dropoff={repair?.dropoffSignature || undefined}
                     signatur_pickup={repair?.pickupSignature || undefined}
                     datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
