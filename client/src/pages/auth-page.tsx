@@ -8,8 +8,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter 
+} from "@/components/ui/dialog";
 
 // Login schema
 const loginSchema = z.object({
@@ -24,10 +32,10 @@ const registerSchema = z.object({
   confirmPassword: z.string(),
   email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein."),
   companyName: z.string().min(2, "Bitte geben Sie einen Firmennamen ein."),
-  companyAddress: z.string().optional(),
-  companyVatNumber: z.string().optional(),
-  companyPhone: z.string().optional(),
-  companyEmail: z.string().email("Bitte geben Sie eine gültige Geschäfts-E-Mail-Adresse ein.").optional(),
+  companyAddress: z.string().min(2, "Bitte geben Sie eine Adresse ein."),
+  companyVatNumber: z.string().min(2, "Bitte geben Sie eine USt-IdNr. ein."),
+  companyPhone: z.string().min(2, "Bitte geben Sie eine Telefonnummer ein."),
+  // companyEmail-Feld entfernt, da nicht benötigt
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein.",
   path: ["confirmPassword"],
@@ -82,7 +90,6 @@ export default function AuthPage() {
       companyAddress: "",
       companyVatNumber: "",
       companyPhone: "",
-      companyEmail: "",
     },
   });
   
@@ -106,9 +113,17 @@ export default function AuthPage() {
     }, 1000);
   }
   
+  // Import für Dialog-Komponenten
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
-    registerMutation.mutate(registerData);
+    registerMutation.mutate(registerData, {
+      onSuccess: () => {
+        // Dialog öffnen und Formular zurücksetzen
+        setIsSuccessDialogOpen(true);
+      }
+    });
   }
   
   return (
