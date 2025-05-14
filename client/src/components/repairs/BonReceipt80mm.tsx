@@ -97,8 +97,8 @@ export function BonReceipt80mm({
           </div>
         )}
 
-        {/* IMEI / Seriennummer - nur anzeigen wenn vorhanden */}
-        {imei && (
+        {/* IMEI / Seriennummer - nur anzeigen wenn vorhanden und nicht leer */}
+        {imei && imei.trim() !== "" && (
           <div>
             <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>IMEI / Seriennummer</div>
             <div>{imei}</div>
@@ -136,8 +136,8 @@ export function BonReceipt80mm({
         </div>
       </div>
 
-      {/* Unterschrift Abgabe */}
-      {signatur_dropoff && (
+      {/* Unterschrift Abgabe - nur anzeigen wenn vorhanden und nicht leer */}
+      {signatur_dropoff && signatur_dropoff.trim() !== "" && (
         <div style={{ marginTop: "20px" }}>
           <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Reparaturauftrag erteilt</div>
           <img 
@@ -155,8 +155,8 @@ export function BonReceipt80mm({
         </div>
       )}
 
-      {/* Unterschrift Abholung */}
-      {signatur_pickup && (
+      {/* Unterschrift Abholung - nur anzeigen wenn vorhanden und nicht leer */}
+      {signatur_pickup && signatur_pickup.trim() !== "" && (
         <div style={{ marginTop: "20px" }}>
           <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Gerät abgeholt</div>
           <img 
