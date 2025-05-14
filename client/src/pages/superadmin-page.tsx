@@ -113,7 +113,12 @@ export default function SuperadminPage() {
             {activeTab === "users" && <SuperadminUsersTab />}
             {activeTab === "packages" && <SuperadminPackagesTab />}
             {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
-            {activeTab === "email" && <SuperadminEmailTab />}
+            {activeTab === "email" && (
+              <div className="p-8">
+                <h2 className="text-xl font-bold">E-Mail-Konfiguration (vorübergehend deaktiviert)</h2>
+                <p className="mt-4">Dieser Bereich wurde aufgrund von Rendering-Problemen vorübergehend deaktiviert.</p>
+              </div>
+            )}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
 
           </ScrollArea>
