@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/customers", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
+  app.post("/api/customers", isAuthenticated, attachShopId, checkTrialExpiry, async (req: Request, res: Response) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
       
@@ -313,7 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/repairs", isAuthenticated, checkTrialExpiry, async (req: Request, res: Response) => {
     try {
       console.log("Received repair data:", req.body);
       console.log("Auth status:", req.isAuthenticated(), "User:", req.user?.username);
@@ -2120,7 +2120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Einen neuen Kostenvoranschlag erstellen
-  app.post("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/cost-estimates", isAuthenticated, checkTrialExpiry, async (req: Request, res: Response) => {
     // Benutzer-ID aus der Authentifizierung abrufen
     const userId = (req.user as any).id;
     

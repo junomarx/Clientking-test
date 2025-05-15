@@ -45,8 +45,35 @@ export async function apiRequest(
     });
 
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`${res.status}: ${text || res.statusText}`);
+      // Versuche den Response-Body als JSON zu parsen
+      try {
+        const contentType = res.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await res.json();
+          
+          // Prüfung auf spezifische Fehlercodes
+          if (errorData.code === "TRIAL_EXPIRED") {
+            throw new Error("Ihre Testversion ist abgelaufen. Bitte aktualisieren Sie Ihr Paket, um weiterhin Zugriff zu haben.");
+          } else if (errorData.error) {
+            throw new Error(errorData.error);
+          } else if (errorData.message) {
+            throw new Error(errorData.message);
+          }
+        }
+        
+        const text = await res.text();
+        throw new Error(`${res.status}: ${text || res.statusText}`);
+      } catch (jsonError) {
+        // Wenn das JSON-Parsing fehlschlägt oder kein spezieller Fehlercode gefunden wurde,
+        // werfen wir den ursprünglichen Fehler
+        if (jsonError instanceof Error && jsonError.message.includes("Testversion")) {
+          throw jsonError; // Gib den speziellen Fehler weiter
+        }
+        
+        const text = await res.text();
+        throw new Error(`${res.status}: ${text || res.statusText}`);
+      }
     }
     
     return res;
