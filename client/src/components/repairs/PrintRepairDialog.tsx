@@ -114,25 +114,9 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     enabled: !!repair?.customerId && open,
   });
 
-  // Lade Unternehmenseinstellungen
-  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings | null>({
-    queryKey: ['/api/business-settings'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/business-settings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
-        });
-        if (!response.ok) return null;
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
-        return null;
-      }
-    },
-    enabled: open,
-  });
+  // Wir verwenden nur die Unternehmenseinstellungen aus dem useBusinessSettings Hook
+  // und entfernen die redundante Abfrage, die zu inkonsistenten Daten führt
+  const isLoadingSettings = false; // Wird bereits in useBusinessSettings geladen
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
@@ -261,14 +245,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                   <div 
                     dangerouslySetInnerHTML={{
                       __html: applyTemplateVariables(templateContent, {
-                        businessName: businessSettings?.businessName || "Handyshop Verwaltung",
-                        businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
-                        businessPhone: businessSettings?.phone || "",
-                        businessEmail: businessSettings?.email || "",
-                        businessLogo: businessSettings?.logoImage || "",
-                        businessSlogan: businessSettings?.companySlogan || "",
-                        vatNumber: businessSettings?.vatNumber || "",
-                        websiteUrl: businessSettings?.website || "",
+                        businessName: settings?.businessName || "Handyshop Verwaltung",
+                        businessAddress: `${settings?.streetAddress || ""}, ${settings?.zipCode || ""} ${settings?.city || ""}`,
+                        businessPhone: settings?.phone || "",
+                        businessEmail: settings?.email || "",
+                        businessLogo: settings?.logoImage || "",
+                        businessSlogan: settings?.companySlogan || "",
+                        vatNumber: settings?.vatNumber || "",
+                        websiteUrl: settings?.website || "",
                         
                         // Reparatur-Platzhalter
                         repairId: repair?.orderCode || `#${repair?.id}`,
@@ -296,18 +280,18 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         finalPrice: "",
                         
                         // Zusätzliche Platzhalter für Kompatibilität
-                        logoUrl: businessSettings?.logoImage || ""
+                        logoUrl: settings?.logoImage || ""
                       })
                     }}
                   />
                 ) : settings?.receiptWidth === '58mm' ? (
                   <BonReceipt58mm 
-                    firmenlogo={businessSettings?.logoImage || ""}
-                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                    firmenadresse={businessSettings?.streetAddress || ""}
-                    firmenplz={businessSettings?.zipCode || ""}
-                    firmenort={businessSettings?.city || ""}
-                    firmentelefon={businessSettings?.phone || ""}
+                    firmenlogo={settings?.logoImage || ""}
+                    firmenname={settings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={settings?.streetAddress || ""}
+                    firmenplz={settings?.zipCode || ""}
+                    firmenort={settings?.city || ""}
+                    firmentelefon={settings?.phone || ""}
                     auftragsnummer={repair?.orderCode || `#${repair?.id}`}
                     datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
@@ -324,12 +308,12 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                   />
                 ) : (
                   <BonReceipt80mm 
-                    firmenlogo={businessSettings?.logoImage || ""}
-                    firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                    firmenadresse={businessSettings?.streetAddress || ""}
-                    firmenplz={businessSettings?.zipCode || ""}
-                    firmenort={businessSettings?.city || ""}
-                    firmentelefon={businessSettings?.phone || ""}
+                    firmenlogo={settings?.logoImage || ""}
+                    firmenname={settings?.businessName || "Handyshop Verwaltung"}
+                    firmenadresse={settings?.streetAddress || ""}
+                    firmenplz={settings?.zipCode || ""}
+                    firmenort={settings?.city || ""}
+                    firmentelefon={settings?.phone || ""}
                     auftragsnummer={repair?.orderCode || `#${repair?.id}`}
                     datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
