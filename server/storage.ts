@@ -885,11 +885,12 @@ export class DatabaseStorage implements IStorage {
         console.log(`Keine persönlichen Einstellungen für Benutzer ${user.username} gefunden, suche Shop-Einstellungen...`);
         
         // ...suchen wir nach beliebigen Einstellungen für diesen Shop - nehmen die neueste
+        // Da businessSettings.updatedAt möglicherweise nicht definiert ist, verwenden wir businessSettings.id
         const shopSettings = await db
           .select()
           .from(businessSettings)
           .where(eq(businessSettings.shopId, shopId))
-          .orderBy(desc(businessSettings.updatedAt))
+          .orderBy(desc(businessSettings.id))
           .limit(1);
           
         if (shopSettings.length > 0) {
