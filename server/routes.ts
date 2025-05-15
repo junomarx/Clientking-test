@@ -110,6 +110,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
+  // Globale Middleware für Shop-Isolation registrieren
+  // Diese Middleware hängt automatisch die Shop-ID des angemeldeten Benutzers an alle Anfragen an
+  app.use(attachShopId);
+  
   // Set up admin routes
   registerAdminRoutes(app);
   
@@ -126,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGlobalDeviceRoutes(app);
   
   // CUSTOMERS API
-  app.get("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/customers", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
     try {
       console.log("GET /api/customers: Auth status:", req.isAuthenticated(), "User:", req.user?.username);
       
@@ -174,7 +178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -194,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/customers", isAuthenticated, async (req: Request, res: Response) => {
+  app.post("/api/customers", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
     try {
       const customerData = insertCustomerSchema.parse(req.body);
       
@@ -212,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const customerData = insertCustomerSchema.partial().parse(req.body);
@@ -237,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete customer
-  app.delete("/api/customers/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -259,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // REPAIRS API
-  app.get("/api/repairs", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/repairs", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
@@ -272,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -742,7 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // BUSINESS SETTINGS API - KOMPLETT ÜBERARBEITET MIT SHOP-ISOLATION
-  app.get("/api/business-settings", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/business-settings", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "Nicht authentifiziert" });
