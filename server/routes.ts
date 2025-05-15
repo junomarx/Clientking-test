@@ -35,6 +35,7 @@ import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templ
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
+import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
