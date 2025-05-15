@@ -683,16 +683,19 @@ export class DatabaseStorage implements IStorage {
         
         // 4. Löschen aller Kostenvoranschläge für den Shop
         try {
-          // Erst alle Kostenvoranschlag-Positionen löschen
-          await tx.delete(costEstimateItems)
-            .where(
-              inArray(
-                costEstimateItems.costEstimateId,
-                tx.select({ id: costEstimates.id })
-                  .from(costEstimates)
-                  .where(eq(costEstimates.shopId, shopId))
-              )
-            );
+          // Kostenvoranschläge mit zugehörigen IDs abrufen
+          const costEstimatesList = await tx
+            .select({ id: costEstimates.id })
+            .from(costEstimates)
+            .where(eq(costEstimates.shopId, shopId));
+            
+          const costEstimateIds = costEstimatesList.map(entry => entry.id);
+          
+          // Wenn Kostenvoranschläge vorhanden sind
+          if (costEstimateIds.length > 0) {
+            // Kostenvoranschläge-Positionen löschen
+            await tx.execute(sql`DELETE FROM cost_estimate_items WHERE cost_estimate_id IN (${sql.join(costEstimateIds)})`);
+          }
             
           // Dann die Kostenvoranschläge selbst löschen
           const estimatesResult = await tx.delete(costEstimates)
@@ -705,11 +708,9 @@ export class DatabaseStorage implements IStorage {
         
         // 5. Löschen aller Gerätetypen des Benutzers
         try {
-          const deviceTypesResult = await tx.delete(userDeviceTypes)
-            .where(and(
-              eq(userDeviceTypes.userId, id),
-              eq(userDeviceTypes.isGlobal, false)
-            ));
+          const deviceTypesResult = await tx.execute(
+            sql`DELETE FROM user_device_types WHERE user_id = ${id} AND is_global = false`
+          );
           deletedData.deviceTypes = deviceTypesResult.rowCount || 0;
           console.log(`Gelöschte Gerätetypen: ${deletedData.deviceTypes}`);
         } catch (error) {
@@ -718,11 +719,9 @@ export class DatabaseStorage implements IStorage {
         
         // 6. Löschen aller Marken des Benutzers
         try {
-          const brandsResult = await tx.delete(userBrands)
-            .where(and(
-              eq(userBrands.userId, id),
-              eq(userBrands.isGlobal, false)
-            ));
+          const brandsResult = await tx.execute(
+            sql`DELETE FROM user_brands WHERE user_id = ${id} AND is_global = false`
+          );
           deletedData.brands = brandsResult.rowCount || 0;
           console.log(`Gelöschte Marken: ${deletedData.brands}`);
         } catch (error) {
@@ -731,11 +730,9 @@ export class DatabaseStorage implements IStorage {
         
         // 7. Löschen aller Modelle des Benutzers
         try {
-          const modelsResult = await tx.delete(userModels)
-            .where(and(
-              eq(userModels.userId, id),
-              eq(userModels.isGlobal, false)
-            ));
+          const modelsResult = await tx.execute(
+            sql`DELETE FROM user_models WHERE user_id = ${id} AND is_global = false`
+          );
           deletedData.models = modelsResult.rowCount || 0;
           console.log(`Gelöschte Modelle: ${deletedData.models}`);
         } catch (error) {
@@ -744,8 +741,9 @@ export class DatabaseStorage implements IStorage {
         
         // 8. Löschen aller Feedback-Tokens für den Shop
         try {
-          const feedbackResult = await tx.delete(feedbackTokens)
-            .where(eq(feedbackTokens.shopId, shopId));
+          const feedbackResult = await tx.execute(
+            sql`DELETE FROM feedback_tokens WHERE shop_id = ${shopId}`
+          );
           deletedData.feedbackTokens = feedbackResult.rowCount || 0;
           console.log(`Gelöschte Feedback-Tokens: ${deletedData.feedbackTokens}`);
         } catch (error) {
@@ -754,9 +752,10 @@ export class DatabaseStorage implements IStorage {
         
         // 9. Löschen der Geschäftseinstellungen
         try {
-          const settingsResult = await tx.delete(businessSettings)
-            .where(eq(businessSettings.shopId, shopId));
-          deletedData.businessSettings = settingsResult.rowCount > 0;
+          const settingsResult = await tx.execute(
+            sql`DELETE FROM business_settings WHERE shop_id = ${shopId}`
+          );
+          deletedData.businessSettings = (settingsResult.rowCount || 0) > 0;
           console.log(`Geschäftseinstellungen gelöscht: ${deletedData.businessSettings}`);
         } catch (error) {
           console.error("Fehler beim Löschen der Geschäftseinstellungen:", error);
@@ -764,9 +763,10 @@ export class DatabaseStorage implements IStorage {
         
         // 10. Löschen des Benutzers
         try {
-          const userResult = await tx.delete(users)
-            .where(eq(users.id, id));
-          deletedData.user = userResult.rowCount > 0;
+          const userResult = await tx.execute(
+            sql`DELETE FROM users WHERE id = ${id}`
+          );
+          deletedData.user = (userResult.rowCount || 0) > 0;
           console.log(`Benutzer gelöscht: ${deletedData.user}`);
         } catch (error) {
           console.error("Fehler beim Löschen des Benutzers:", error);
