@@ -499,7 +499,10 @@ export function registerSuperadminRoutes(app: Express) {
       }
 
       // Features des Pakets abrufen
-      const packageFeaturesList = await db.select().from(packageFeatures)
+      const packageFeaturesList = await db.select({
+        packageId: packageFeatures.packageId,
+        feature: packageFeatures.feature
+      }).from(packageFeatures)
         .where(eq(packageFeatures.packageId, packageId));
 
       // Benutzer mit diesem Paket zählen

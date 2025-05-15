@@ -164,12 +164,8 @@ export const packages = pgTable("packages", {
 
 // Paket-Features-Tabelle (package_features) für die Zuordnung von Features zu Paketen
 export const packageFeatures = pgTable("package_features", {
-  id: serial("id").primaryKey(),
   packageId: integer("package_id").notNull().references(() => packages.id),
-  featureName: text("feature_name").notNull(),
-  displayName: text("display_name").notNull(),
-  isEnabled: boolean("is_enabled").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  feature: text("feature").notNull()
 });
 
 // Schemas für die Pakete
