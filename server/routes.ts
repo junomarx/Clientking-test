@@ -296,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.get("/api/customers/:id/repairs", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/customers/:id/repairs", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const customerId = parseInt(req.params.id);
       
@@ -361,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const repairData = insertRepairSchema.partial().parse(req.body);
@@ -401,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.patch("/api/repairs/:id/status", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/repairs/:id/status", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const { status, sendEmail } = req.body;
@@ -562,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Delete repair
-  app.delete("/api/repairs/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -925,7 +925,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Gerätearte nach ID abrufen
-  app.get("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/device-types/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -975,7 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Geräteart aktualisieren
-  app.patch("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/device-types/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
