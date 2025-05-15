@@ -358,6 +358,26 @@ export class DatabaseStorage implements IStorage {
     });
   }
   
+  // Holt aktive Support-Zugriffslogs für Support-Modus-Protokollierung
+  async getActiveSupportAccessLogs(userId: number, shopId: number) {
+    try {
+      return await db
+        .select()
+        .from(supportAccessLogs)
+        .where(
+          and(
+            eq(supportAccessLogs.superadminId, userId),
+            eq(supportAccessLogs.shopId, shopId),
+            eq(supportAccessLogs.isActive, true),
+            eq(supportAccessLogs.status, 'approved') // Nur genehmigte Anfragen
+          )
+        );
+    } catch (error) {
+      console.error("Fehler beim Abrufen der aktiven Support-Zugriffslogger:", error);
+      return [];
+    }
+  }
+  
   // Implementierung der User-Methoden
   async getUser(id: number): Promise<User | undefined> {
     try {

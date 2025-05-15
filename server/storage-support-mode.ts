@@ -119,12 +119,8 @@ export async function canSuperadminAccessShop(userId: number, shopId: number): P
   return await hasActiveSupportAccess(userId, shopId);
 }
 
-// Füge für die Unterstützung des Support-Modus eine Funktion zum Abrufen aktiver Support-Zugriffsprofile hinzu
-// Diese Funktion sollte in die Storage-Klasse integriert werden
-export async function getActiveSupportAccessLogs(userId: number, shopId: number) {
-  // Implementierung erfolgt später in der Storage-Klasse
-  return [];
-}
+// Die Funktion zum Abrufen aktiver Support-Zugriffsprofile wurde in die DatabaseStorage-Klasse integriert
+// Siehe storage.ts - getActiveSupportAccessLogs
 
 // Export der Funktionen, um sie in storage.ts verfügbar zu machen
 export const supportModeHelpers = {
