@@ -69,6 +69,7 @@ export interface IStorage {
   // User methods (required by template)
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByShopId(shopId: number): Promise<User | undefined>;
   getUsersByEmail(email: string): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
   getSuperadmins(): Promise<User[]>;
@@ -403,6 +404,20 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error("Error getting user by username:", error);
+      return undefined;
+    }
+  }
+  
+  async getUserByShopId(shopId: number): Promise<User | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.shopId, shopId));
+      
+      return user;
+    } catch (error) {
+      console.error("Error getting user by shop ID:", error);
       return undefined;
     }
   }
