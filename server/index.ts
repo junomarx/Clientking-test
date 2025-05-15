@@ -18,6 +18,7 @@ import { addGameconsoleToErrorCatalog } from "./add-gameconsole-to-error-catalog
 import { addEmailTemplateTypeColumn } from "./add-email-template-type";
 import { syncEmailTemplates } from "./sync-email-templates";
 import { addSupportAccessTable } from "./add-support-access-table";
+import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
@@ -90,6 +91,7 @@ app.use((req, res, next) => {
     await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
     await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
     await addSupportAccessTable(); // Migration für Support-Zugriffsprotokolle (DSGVO-Konformität)
+    await addSupportRequestStatus(); // Migration für Support-Anfrage-Status (DSGVO-Genehmigungsworkflow)
     
     // Synchronisiere E-Mail-Vorlagen beim Server-Start
     await syncEmailTemplates();
