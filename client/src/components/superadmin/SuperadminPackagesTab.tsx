@@ -125,7 +125,15 @@ export default function SuperadminPackagesTab() {
   // Mutation zum Aktualisieren eines Pakets
   const updatePackageMutation = useMutation({
     mutationFn: async ({ packageId, data }: { packageId: number; data: PackageFormData }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/packages/${packageId}`, data);
+      // Formatiere die Features für die API - wir senden nur die Feature-Namen, nicht die Objekte
+      const featuresForAPI = data.features.map(f => f.feature);
+      
+      const response = await apiRequest("PUT", `/api/superadmin/packages/${packageId}`, {
+        name: data.name,
+        description: data.description,
+        priceMonthly: data.priceMonthly,
+        features: featuresForAPI
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -175,12 +183,26 @@ export default function SuperadminPackagesTab() {
       
       setSelectedPackage(packageData);
       
+      // Konvertiere die Feature-Struktur von der API (stringliste) 
+      // in die Form, die das Frontend erwartet (Objekte mit feature und value)
+      const formattedFeatures = initialFormState.features.map(defaultFeature => {
+        // Prüfen ob dieses Feature in den vom Server geladenen Features vorhanden ist
+        const featureExists = packageData.features && 
+          packageData.features.some((f: any) => f.feature === defaultFeature.feature);
+        
+        // Wenn ja, setze value auf true, sonst behalte den Default-Wert
+        return {
+          feature: defaultFeature.feature,
+          value: featureExists ? true : defaultFeature.value
+        };
+      });
+      
       // Formular vorbefüllen
       setEditForm({
         name: packageData.name,
         description: packageData.description || '',
         priceMonthly: packageData.priceMonthly,
-        features: packageData.features || []
+        features: formattedFeatures
       });
       
       setIsEditDialogOpen(true);

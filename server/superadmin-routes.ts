@@ -520,6 +520,51 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Abrufen des Pakets" });
     }
   });
+  
+  // Paket aktualisieren
+  app.put("/api/superadmin/packages/:id", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ message: "Ungültige Paket-ID" });
+      }
+
+      // Überprüfen, ob das Paket existiert
+      const [existingPackage] = await db.select().from(packages).where(eq(packages.id, packageId));
+      if (!existingPackage) {
+        return res.status(404).json({ message: "Paket nicht gefunden" });
+      }
+
+      const { name, description, priceMonthly, features } = req.body;
+
+      // Paket-Grunddaten aktualisieren
+      await db.update(packages)
+        .set({
+          name: name,
+          description: description,
+          priceMonthly: parseFloat(priceMonthly),
+        })
+        .where(eq(packages.id, packageId));
+
+      // Bestehende Features löschen
+      await db.delete(packageFeatures).where(eq(packageFeatures.packageId, packageId));
+
+      // Neue Features hinzufügen
+      if (features && Array.isArray(features)) {
+        for (const feature of features) {
+          await db.insert(packageFeatures).values({
+            packageId: packageId,
+            feature: feature
+          });
+        }
+      }
+
+      res.json({ message: "Paket erfolgreich aktualisiert" });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Pakets:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Pakets" });
+    }
+  });
 
 
 
