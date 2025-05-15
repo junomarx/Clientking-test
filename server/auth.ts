@@ -8,6 +8,11 @@ import nodemailer from "nodemailer";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 
+// Hilfsfunktion zur Prüfung, ob ein Benutzer Superadmin ist
+export function isSuperadmin(user: Express.User | null | undefined): boolean {
+  return Boolean(user && user.isSuperadmin === true);
+}
+
 declare global {
   namespace Express {
     // Making sure the User interface extends SelectUser 

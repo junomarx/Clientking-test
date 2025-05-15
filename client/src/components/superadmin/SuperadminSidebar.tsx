@@ -14,7 +14,8 @@ import {
   Mail,
   FileCode,
   Layout,
-  X
+  X,
+  ShieldAlert
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User, BusinessSettings } from "@shared/schema";
@@ -120,7 +121,17 @@ export function SuperadminSidebar({
           <FileCode className="h-5 w-5 mr-2" />
           Vorlagen
         </Button>
-
+        <Button 
+          variant={activeTab === "support-mode" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("support-mode");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <ShieldAlert className="h-5 w-5 mr-2" />
+          Support-Modus
+        </Button>
       </div>
     </>
   );

@@ -12,6 +12,7 @@ import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab
 import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
+import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportModeTab";
 
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
@@ -115,6 +116,7 @@ export default function SuperadminPage() {
             {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}
             {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
+            {activeTab === "support-mode" && <SuperadminSupportModeTab />}
 
           </ScrollArea>
         </main>

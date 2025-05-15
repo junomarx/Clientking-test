@@ -31,6 +31,7 @@ import { registerAdminRoutes } from "./admin-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
+import { setupSupportAccessRoutes } from "./support-access-routes";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { emailService } from "./email-service";
@@ -116,6 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Set up superadmin print templates routes
   registerSuperadminPrintTemplatesRoutes(app);
+  
+  // Set up support access routes for DSGVO-compliance
+  setupSupportAccessRoutes(app);
   
   // Set up global device data routes
   registerGlobalDeviceRoutes(app);
