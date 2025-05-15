@@ -873,12 +873,21 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ message: "Sie können Ihren eigenen Benutzer nicht löschen" });
       }
       
-      const deleted = await storage.deleteUser(id);
+      console.log(`DSGVO-konforme vollständige Löschung eines Benutzers mit ID ${id} gestartet...`);
       
-      if (!deleted) {
-        return res.status(500).json({ message: "Fehler beim Löschen des Benutzers und seiner zugehörigen Daten" });
+      // Vollständige Löschung des Benutzers mit allen zugehörigen Daten (DSGVO-konform)
+      const result = await storage.completeUserDeletion(id);
+      
+      if (!result.success) {
+        return res.status(500).json({ 
+          message: "Fehler beim vollständigen Löschen des Benutzers und seiner zugehörigen Daten",
+          details: result.deletedData
+        });
       }
       
+      console.log(`Benutzer mit ID ${id} und alle zugehörigen Daten wurden erfolgreich gelöscht:`, result.deletedData);
+      
+      // 204 No Content - Erfolgreiche Löschung ohne Rückgabeinhalt
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting user:", error);

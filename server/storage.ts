@@ -83,7 +83,35 @@ export interface IStorage {
     userData: Partial<Omit<User, "id" | "password">>,
   ): Promise<User | undefined>;
   updateUserPassword(id: number, newPassword: string): Promise<boolean>;
+  
+  /**
+   * Löscht einen Benutzer aus dem System
+   * @param id Die ID des zu löschenden Benutzers
+   * @returns True, wenn der Benutzer gelöscht wurde
+   */
   deleteUser(id: number): Promise<boolean>;
+  
+  /**
+   * Vollständiges Löschen eines Benutzers mit allen zugehörigen Daten (DSGVO-konform)
+   * @param id Die ID des zu löschenden Benutzers
+   * @returns Ein Objekt mit Informationen über die gelöschten Daten
+   */
+  completeUserDeletion(id: number): Promise<{
+    success: boolean;
+    deletedData: {
+      user: boolean;
+      businessSettings: boolean;
+      customers: number;
+      repairs: number;
+      emailTemplates: number;
+      costEstimates: number;
+      deviceTypes: number;
+      brands: number;
+      models: number;
+      feedbackTokens: number;
+    };
+  }>;
+  
   createUser(user: InsertUser): Promise<User>;
   
   // Subscription and quota methods
@@ -564,6 +592,197 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error deleting user:", error);
       return false;
+    }
+  }
+  
+  async completeUserDeletion(id: number): Promise<{
+    success: boolean;
+    deletedData: {
+      user: boolean;
+      businessSettings: boolean;
+      customers: number;
+      repairs: number;
+      emailTemplates: number;
+      costEstimates: number;
+      deviceTypes: number;
+      brands: number;
+      models: number;
+      feedbackTokens: number;
+    };
+  }> {
+    // Zunächst den Benutzer und die zugehörige Shop-ID abrufen
+    const user = await this.getUser(id);
+    if (!user || !user.shopId) {
+      return {
+        success: false,
+        deletedData: {
+          user: false,
+          businessSettings: false,
+          customers: 0,
+          repairs: 0,
+          emailTemplates: 0,
+          costEstimates: 0,
+          deviceTypes: 0,
+          brands: 0,
+          models: 0,
+          feedbackTokens: 0
+        }
+      };
+    }
+    
+    const shopId = user.shopId;
+    
+    // Zur Protokollierung der gelöschten Einträge
+    const deletedData = {
+      user: false,
+      businessSettings: false,
+      customers: 0,
+      repairs: 0,
+      emailTemplates: 0,
+      costEstimates: 0,
+      deviceTypes: 0,
+      brands: 0,
+      models: 0,
+      feedbackTokens: 0
+    };
+    
+    try {
+      console.log(`Starte vollständiges Löschen für Benutzer ID ${id} (Shop ID ${shopId})...`);
+      
+      // Verwenden einer Transaktion, um Atomarität sicherzustellen
+      return await db.transaction(async (tx) => {
+        // 1. Löschen aller Reparaturen für den Shop
+        try {
+          const repairsResult = await tx.delete(repairs)
+            .where(eq(repairs.shopId, shopId));
+          deletedData.repairs = repairsResult.rowCount || 0;
+          console.log(`Gelöschte Reparaturen: ${deletedData.repairs}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Reparaturen:", error);
+        }
+        
+        // 2. Löschen aller Kunden für den Shop
+        try {
+          const customersResult = await tx.delete(customers)
+            .where(eq(customers.shopId, shopId));
+          deletedData.customers = customersResult.rowCount || 0;
+          console.log(`Gelöschte Kunden: ${deletedData.customers}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Kunden:", error);
+        }
+        
+        // 3. Löschen aller E-Mail-Vorlagen für den Benutzer
+        try {
+          const templatesResult = await tx.delete(emailTemplates)
+            .where(eq(emailTemplates.userId, id));
+          deletedData.emailTemplates = templatesResult.rowCount || 0;
+          console.log(`Gelöschte E-Mail-Vorlagen: ${deletedData.emailTemplates}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der E-Mail-Vorlagen:", error);
+        }
+        
+        // 4. Löschen aller Kostenvoranschläge für den Shop
+        try {
+          // Erst alle Kostenvoranschlag-Positionen löschen
+          await tx.delete(costEstimateItems)
+            .where(
+              inArray(
+                costEstimateItems.costEstimateId,
+                tx.select({ id: costEstimates.id })
+                  .from(costEstimates)
+                  .where(eq(costEstimates.shopId, shopId))
+              )
+            );
+            
+          // Dann die Kostenvoranschläge selbst löschen
+          const estimatesResult = await tx.delete(costEstimates)
+            .where(eq(costEstimates.shopId, shopId));
+          deletedData.costEstimates = estimatesResult.rowCount || 0;
+          console.log(`Gelöschte Kostenvoranschläge: ${deletedData.costEstimates}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Kostenvoranschläge:", error);
+        }
+        
+        // 5. Löschen aller Gerätetypen des Benutzers
+        try {
+          const deviceTypesResult = await tx.delete(userDeviceTypes)
+            .where(and(
+              eq(userDeviceTypes.userId, id),
+              eq(userDeviceTypes.isGlobal, false)
+            ));
+          deletedData.deviceTypes = deviceTypesResult.rowCount || 0;
+          console.log(`Gelöschte Gerätetypen: ${deletedData.deviceTypes}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Gerätetypen:", error);
+        }
+        
+        // 6. Löschen aller Marken des Benutzers
+        try {
+          const brandsResult = await tx.delete(userBrands)
+            .where(and(
+              eq(userBrands.userId, id),
+              eq(userBrands.isGlobal, false)
+            ));
+          deletedData.brands = brandsResult.rowCount || 0;
+          console.log(`Gelöschte Marken: ${deletedData.brands}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Marken:", error);
+        }
+        
+        // 7. Löschen aller Modelle des Benutzers
+        try {
+          const modelsResult = await tx.delete(userModels)
+            .where(and(
+              eq(userModels.userId, id),
+              eq(userModels.isGlobal, false)
+            ));
+          deletedData.models = modelsResult.rowCount || 0;
+          console.log(`Gelöschte Modelle: ${deletedData.models}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Modelle:", error);
+        }
+        
+        // 8. Löschen aller Feedback-Tokens für den Shop
+        try {
+          const feedbackResult = await tx.delete(feedbackTokens)
+            .where(eq(feedbackTokens.shopId, shopId));
+          deletedData.feedbackTokens = feedbackResult.rowCount || 0;
+          console.log(`Gelöschte Feedback-Tokens: ${deletedData.feedbackTokens}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Feedback-Tokens:", error);
+        }
+        
+        // 9. Löschen der Geschäftseinstellungen
+        try {
+          const settingsResult = await tx.delete(businessSettings)
+            .where(eq(businessSettings.shopId, shopId));
+          deletedData.businessSettings = settingsResult.rowCount > 0;
+          console.log(`Geschäftseinstellungen gelöscht: ${deletedData.businessSettings}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Geschäftseinstellungen:", error);
+        }
+        
+        // 10. Löschen des Benutzers
+        try {
+          const userResult = await tx.delete(users)
+            .where(eq(users.id, id));
+          deletedData.user = userResult.rowCount > 0;
+          console.log(`Benutzer gelöscht: ${deletedData.user}`);
+        } catch (error) {
+          console.error("Fehler beim Löschen des Benutzers:", error);
+        }
+        
+        return {
+          success: deletedData.user,
+          deletedData
+        };
+      });
+    } catch (error) {
+      console.error("Fehler bei der vollständigen Benutzerlöschung:", error);
+      return {
+        success: false,
+        deletedData
+      };
     }
   }
 
