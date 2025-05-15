@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 // Import der Berechtigungsprüfung aus permissions.ts
 import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from './permissions';
+// Import der Middleware für die Prüfung der Trial-Version
+import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,

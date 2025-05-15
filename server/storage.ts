@@ -356,6 +356,9 @@ export interface IStorage {
   // Paket-Methoden
   getPackageByName(name: string): Promise<Package | undefined>;
   getPackageById(id: number): Promise<Package | undefined>;
+  
+  // Trial-Version Methoden
+  isTrialExpired(userId: number): Promise<boolean>;
 }
 
 /**
@@ -2026,6 +2029,69 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error getting email history for repair:", error);
       return [];
+    }
+  }
+
+  // Paket-Methoden Implementation
+  async getPackageByName(name: string): Promise<Package | undefined> {
+    try {
+      const [pkg] = await db
+        .select()
+        .from(packages)
+        .where(eq(packages.name, name));
+      
+      return pkg;
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Pakets nach Namen:", error);
+      return undefined;
+    }
+  }
+
+  async getPackageById(id: number): Promise<Package | undefined> {
+    try {
+      const [pkg] = await db
+        .select()
+        .from(packages)
+        .where(eq(packages.id, id));
+      
+      return pkg;
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Pakets nach ID:", error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Überprüft, ob die Testversion eines Benutzers abgelaufen ist
+   * @param userId Die Benutzer-ID
+   * @returns true, wenn die Testversion abgelaufen ist, sonst false
+   */
+  async isTrialExpired(userId: number): Promise<boolean> {
+    try {
+      // Benutzer abrufen
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`Benutzer mit ID ${userId} nicht gefunden bei Prüfung des Trial-Ablaufs`);
+        return true; // Im Zweifelsfall annehmen, dass die Trial abgelaufen ist
+      }
+      
+      // Wenn der Benutzer kein trialExpiresAt hat, ist es keine Demo-Version
+      if (!user.trialExpiresAt) {
+        return false; // Kein Ablaufdatum bedeutet, es ist keine Trial
+      }
+      
+      // Prüfen, ob das Demo-Paket zugewiesen ist
+      const demoPackage = await this.getPackageByName("Demo");
+      if (!demoPackage || user.packageId !== demoPackage.id) {
+        return false; // Wenn nicht das Demo-Paket, dann keine Einschränkung
+      }
+      
+      // Jetzt prüfen wir, ob das Ablaufdatum in der Vergangenheit liegt
+      const now = new Date();
+      return user.trialExpiresAt < now;
+    } catch (error) {
+      console.error("Fehler bei der Überprüfung des Trial-Ablaufs:", error);
+      return true; // Im Fehlerfall gehen wir davon aus, dass die Trial abgelaufen ist
     }
   }
 
