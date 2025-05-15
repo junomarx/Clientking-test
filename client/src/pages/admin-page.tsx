@@ -45,6 +45,7 @@ import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FeatureOverridesTestPanel } from "@/components/admin/FeatureOverridesTestPanel";
 import { PlanFeaturesManager } from "@/components/admin/PlanFeaturesManager";
 import { FeatureMatrixTab } from "@/components/admin/FeatureMatrixTab";
+import SupportRequestsTab from "@/components/admin/SupportRequestsTab";
 import ToastTestDialog from "@/components/ToastTestDialog";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
 import { User } from "@shared/schema";
