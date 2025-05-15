@@ -1,31 +1,25 @@
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, XCircle, AlertTriangle, Shield, Clock } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Shield, Check, X, ExternalLink, Calendar, User, Info } from "lucide-react";
+import { useState } from "react";
+import { apiRequest } from "../../lib/queryClient";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { formatDistanceToNow } from "date-fns";
+import { de } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-// Typen für Support-Anfragen
 interface SupportRequest {
   id: number;
   superadminId: number;
@@ -40,214 +34,252 @@ interface SupportRequest {
 export default function SupportRequestsTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
-  // Anfragen laden
-  const { data: supportRequests = [], isLoading, error } = useQuery<SupportRequest[]>({
-    queryKey: ['/api/support/requests/pending'],
+  // Abrufen der ausstehenden Support-Anfragen
+  const { data: pendingRequests = [], isLoading, error } = useQuery({
+    queryKey: ["/api/support/requests/pending"],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/support/requests/pending');
-      if (!response.ok) {
-        throw new Error(`Fehler beim Laden der Support-Anfragen: ${response.statusText}`);
-      }
-      return response.json();
+      const res = await apiRequest("GET", "/api/support/requests/pending");
+      return await res.json() as SupportRequest[];
     },
-    // Aktualisierung alle 30 Sekunden
-    refetchInterval: 30000,
+    refetchInterval: 30000, // Alle 30 Sekunden automatisch aktualisieren
   });
 
-  // Anfrage genehmigen
+  // Mutation zum Genehmigen einer Support-Anfrage
   const approveMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      const response = await apiRequest('POST', `/api/support/requests/${requestId}/approve`);
-      if (!response.ok) {
-        throw new Error('Fehler bei der Genehmigung der Anfrage');
-      }
-      return response.json();
+      const res = await apiRequest("POST", `/api/support/requests/${requestId}/approve`);
+      return await res.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/support/requests/pending"] });
       toast({
-        title: 'Anfrage genehmigt',
-        description: 'Die Support-Anfrage wurde erfolgreich genehmigt.',
+        title: "Support-Anfrage genehmigt",
+        description: "Der Superadmin kann jetzt auf Ihre Shopdaten zugreifen.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/support/requests/pending'] });
+      setIsApproveDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: error.message,
+        title: "Fehler",
+        description: `Die Anfrage konnte nicht genehmigt werden: ${error.message}`,
+        variant: "destructive",
       });
+      setIsApproveDialogOpen(false);
     },
   });
 
-  // Anfrage ablehnen
+  // Mutation zum Ablehnen einer Support-Anfrage
   const rejectMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      const response = await apiRequest('POST', `/api/support/requests/${requestId}/reject`);
-      if (!response.ok) {
-        throw new Error('Fehler bei der Ablehnung der Anfrage');
-      }
-      return response.json();
+      const res = await apiRequest("POST", `/api/support/requests/${requestId}/reject`);
+      return await res.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/support/requests/pending"] });
       toast({
-        title: 'Anfrage abgelehnt',
-        description: 'Die Support-Anfrage wurde abgelehnt.',
+        title: "Support-Anfrage abgelehnt",
+        description: "Die Support-Anfrage wurde abgelehnt.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/support/requests/pending'] });
+      setIsRejectDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: error.message,
+        title: "Fehler",
+        description: `Die Anfrage konnte nicht abgelehnt werden: ${error.message}`,
+        variant: "destructive",
       });
+      setIsRejectDialogOpen(false);
     },
   });
 
-  // Datum formatieren
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
+  // Handler für Genehmigen-Button
+  const handleApprove = (requestId: number) => {
+    setSelectedRequestId(requestId);
+    setIsApproveDialogOpen(true);
   };
 
-  // Zugriffstyp als lesbaren Text
-  const getAccessTypeLabel = (accessType: string) => {
-    switch (accessType) {
-      case 'all':
-        return 'Vollzugriff';
-      case 'repair_data':
-        return 'Reparaturdaten';
-      case 'customer_data':
-        return 'Kundendaten';
-      case 'business_settings':
-        return 'Geschäftseinstellungen';
+  // Handler für Ablehnen-Button
+  const handleReject = (requestId: number) => {
+    setSelectedRequestId(requestId);
+    setIsRejectDialogOpen(true);
+  };
+
+  // Bestätigung der Genehmigung
+  const confirmApprove = () => {
+    if (selectedRequestId) {
+      approveMutation.mutate(selectedRequestId);
+    }
+  };
+
+  // Bestätigung der Ablehnung
+  const confirmReject = () => {
+    if (selectedRequestId) {
+      rejectMutation.mutate(selectedRequestId);
+    }
+  };
+
+  // Hilfsfunktion zur Formatierung des Zeitabstands
+  const formatTimeAgo = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: de });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  // Hilfsfunktion zur Konvertierung des Zugriffstyps in menschenlesbaren Text
+  const getAccessTypeLabel = (type: string) => {
+    switch (type) {
+      case "FULL":
+        return "Vollzugriff";
+      case "READ_ONLY":
+        return "Nur Lesezugriff";
+      case "LIMITED":
+        return "Eingeschränkter Zugriff";
       default:
-        return accessType;
+        return type;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="my-4">
-        <AlertDescription>Fehler beim Laden der Support-Anfragen</AlertDescription>
-      </Alert>
+      <div className="p-4 bg-red-50 text-red-800 rounded-md">
+        <p className="font-semibold">Fehler beim Laden der Support-Anfragen</p>
+        <p className="text-sm">{(error as Error).message}</p>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Support-Anfragen
-          </CardTitle>
-          <CardDescription>
-            Hier können Sie Support-Anfragen von Administratoren genehmigen oder ablehnen
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {supportRequests.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <p>Keine ausstehenden Support-Anfragen</p>
-              <p className="text-sm mt-1">Anfragen werden hier angezeigt, wenn der Support Zugriff auf Ihre Daten benötigt</p>
-            </div>
-          ) : (
-            <Table>
-              <TableCaption>Offene Support-Anfragen: {supportRequests.length}</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Administratorname</TableHead>
-                  <TableHead>Zugriffsart</TableHead>
-                  <TableHead>Begründung</TableHead>
-                  <TableHead>Angefragt am</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aktionen</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {supportRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium">{request.superadminUsername || `Administrator #${request.superadminId}`}</TableCell>
-                    <TableCell>
-                      <Badge variant={request.accessType === 'all' ? 'destructive' : 'outline'}>
-                        {getAccessTypeLabel(request.accessType)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-md truncate" title={request.reason}>
-                      {request.reason}
-                    </TableCell>
-                    <TableCell>{formatDate(request.startedAt)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Offene Anfrage
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1"
-                          onClick={() => rejectMutation.mutate(request.id)}
-                          disabled={rejectMutation.isPending || approveMutation.isPending}
-                        >
-                          {rejectMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
-                          <XCircle className="h-4 w-4 text-red-500" />
-                          Ablehnen
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="gap-1"
-                          onClick={() => approveMutation.mutate(request.id)}
-                          disabled={rejectMutation.isPending || approveMutation.isPending}
-                        >
-                          {approveMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
-                          <CheckCircle className="h-4 w-4" />
-                          Genehmigen
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Support-Anfragen</h2>
+      </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Datenschutzhinweise</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm space-y-2">
-            <p>
-              <strong>Wichtig:</strong> Die Genehmigung einer Support-Anfrage gewährt dem Administrator
-              temporären Zugriff auf die Daten Ihres Shops im angegebenen Umfang.
-            </p>
-            <p>
-              Alle Zugriffe werden protokolliert und sind zeitlich begrenzt. Sie können den Zugriff
-              jederzeit widerrufen, indem Sie den Support kontaktieren.
-            </p>
-            <p>
-              Der Support-Zugriff ist DSGVO-konform und dient ausschließlich der Unterstützung
-              bei technischen Problemen oder der Beantwortung Ihrer Fragen.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <Separator />
+      
+      {pendingRequests.length === 0 ? (
+        <div className="text-center p-8 bg-muted/20 rounded-lg">
+          <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium">Keine ausstehenden Support-Anfragen</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Hier werden Anfragen von Superadmins angezeigt, die Zugriff auf Ihre Shopdaten benötigen.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {pendingRequests.map((request) => (
+            <Card key={request.id} className="overflow-hidden">
+              <CardHeader className="bg-muted/10">
+                <div className="flex items-center justify-between">
+                  <Badge variant={request.accessType === "FULL" ? "destructive" : request.accessType === "READ_ONLY" ? "outline" : "secondary"}>
+                    {getAccessTypeLabel(request.accessType)}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {formatTimeAgo(request.startedAt)}
+                  </span>
+                </div>
+                <CardTitle className="text-lg">{request.reason}</CardTitle>
+                <CardDescription className="flex items-center gap-1">
+                  <User className="h-3 w-3" /> {request.superadminUsername}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Der Support benötigt Zugriff auf Ihre Shopdaten. Bitte genehmigen Sie die Anfrage, nur wenn Sie Hilfe vom Support angefordert haben.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>Angefragt am {new Date(request.startedAt).toLocaleString('de-DE')}</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between bg-muted/5 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleReject(request.id)}
+                  disabled={rejectMutation.isPending}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Ablehnen
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleApprove(request.id)}
+                  disabled={approveMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Genehmigen
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Bestätigungsdialog für das Genehmigen */}
+      <AlertDialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Support-Anfrage genehmigen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Möchten Sie diese Support-Anfrage wirklich genehmigen? Der Superadmin erhält dadurch
+              Zugriff auf die Daten Ihres Shops. Dieser Zugriff wird vollständig protokolliert.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmApprove}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Genehmigen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bestätigungsdialog für das Ablehnen */}
+      <AlertDialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Support-Anfrage ablehnen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Möchten Sie diese Support-Anfrage wirklich ablehnen? Der Superadmin erhält keinen
+              Zugriff auf die Daten Ihres Shops und muss eine neue Anfrage stellen, falls Support
+              benötigt wird.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmReject}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Ablehnen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
