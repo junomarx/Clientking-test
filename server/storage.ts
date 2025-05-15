@@ -827,7 +827,7 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      console.log(`NEUE IMPLEMENTATION: Fetching business settings for user ${userId}`);
+      console.log(`FINALE IMPLEMENTATION: Fetching business settings for user ${userId}`);
       
       const user = await this.getUser(userId);
       if (!user) {
@@ -869,18 +869,39 @@ export class DatabaseStorage implements IStorage {
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
       const shopId = user.shopId;
 
-      // GEÄNDERT: Wir filtern NUR nach shopId, um die Shopeinstellungen für ALLE Benutzer des Shops
-      // zugänglich zu machen. Die Datenisolation zwischen Shops bleibt gewährleistet.
-      const [settings] = await db
+      // LÖSUNG: Zuerst versuchen wir, die Einstellungen zu finden, die genau zu diesem Benutzer gehören
+      let [settings] = await db
         .select()
         .from(businessSettings)
-        .where(eq(businessSettings.shopId, shopId));
+        .where(
+          and(
+            eq(businessSettings.shopId, shopId),
+            eq(businessSettings.userId, userId)
+          )
+        );
+
+      // Wenn keine persönlichen Einstellungen gefunden wurden...
+      if (!settings) {
+        console.log(`Keine persönlichen Einstellungen für Benutzer ${user.username} gefunden, suche Shop-Einstellungen...`);
+        
+        // ...suchen wir nach beliebigen Einstellungen für diesen Shop - nehmen die neueste
+        const shopSettings = await db
+          .select()
+          .from(businessSettings)
+          .where(eq(businessSettings.shopId, shopId))
+          .orderBy(desc(businessSettings.updatedAt))
+          .limit(1);
+          
+        if (shopSettings.length > 0) {
+          settings = shopSettings[0];
+          console.log(`Shop-Einstellungen gefunden: ID ${settings.id} für Shop ${shopId}`);
+        }
+      }
 
       if (settings) {
-        console.log(`Gefunden: Einstellungen mit ID ${settings.id} für Shop ${shopId}`);
-        console.log(`Einstellungen für Shop ${shopId} gefunden: ID ${settings.id}`);
+        console.log(`Finale Einstellungen mit ID ${settings.id} für Benutzer ${user.username} (Shop ${shopId})`);
       } else {
-        console.log(`Keine Einstellungen für Shop ${shopId} gefunden.`);
+        console.log(`Keine Einstellungen für Benutzer ${user.username} oder Shop ${shopId} gefunden.`);
       }
 
       return settings;
