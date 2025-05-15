@@ -638,20 +638,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/repair-quota", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
-      const result = await storage.canCreateNewRepair(userId);
       
-      // Erweitere das Ergebnis um zusätzliche Informationen
+      // Benutzer abrufen
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
+      // Standardwerte für den Fall, dass kein Limit existiert (für Professional und Enterprise)
+      let quotaInfo = {
+        count: 0,
+        limit: 50, // Standard für Basic
+        canCreate: true
+      };
+      
+      // Versuche, die Funktion zu verwenden, falls sie existiert
+      if (typeof storage.canCreateNewRepair === 'function') {
+        try {
+          quotaInfo = await storage.canCreateNewRepair(userId);
+        } catch (err) {
+          console.error("Fehler beim Abrufen des Reparaturkontingents:", err);
+          // Verwende die Standardwerte
+        }
+      } else {
+        console.warn("canCreateNewRepair-Funktion existiert nicht - verwende Standardwerte für Quota");
+        
+        // Wenn der Benutzer auf Professional oder Enterprise ist, hat er unbegrenzte Reparaturen
+        if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
+          quotaInfo.count = 0;
+          quotaInfo.limit = 999999; // Praktisch unbegrenzt
+          quotaInfo.canCreate = true;
+        } else if (user.shopId) {
+          // Für Basic-Plan: Anzahl der Reparaturen im aktuellen Monat berechnen
+          const now = new Date();
+          const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+          
+          try {
+            const count = await db
+              .select({ count: sql`count(*)`.mapWith(Number) })
+              .from(repairs)
+              .where(
+                and(
+                  eq(repairs.shopId, user.shopId),
+                  gte(repairs.createdAt, firstDayOfMonth),
+                  lt(repairs.createdAt, nextMonth)
+                )
+              )
+              .then(result => result[0]?.count || 0);
+              
+            quotaInfo.count = count;
+            quotaInfo.canCreate = count < quotaInfo.limit;
+          } catch (err) {
+            console.error("Fehler beim Abrufen der Reparaturanzahl aus der Datenbank:", err);
+          }
+        }
+      }
+      
+      // Datumsinformationen
       const today = new Date();
       const currentMonth = today.toLocaleString('de-DE', { month: 'long' });
       const currentYear = today.getFullYear();
       
+      // Antwort
       res.json({
-        ...result,
+        ...quotaInfo,
         pricingPlan: user.pricingPlan,
         displayName: user.pricingPlan === 'basic' ? 'Basic' : 
                     user.pricingPlan === 'professional' ? 'Professional' : 'Enterprise',
