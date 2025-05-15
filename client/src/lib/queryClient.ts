@@ -45,35 +45,43 @@ export async function apiRequest(
     });
 
     if (!res.ok) {
-      // Versuche den Response-Body als JSON zu parsen
+      // Versuche den Response-Body zu erhalten
+      let errorMessage = `Fehler ${res.status}: ${res.statusText}`;
+      
       try {
         const contentType = res.headers.get('content-type');
         
+        // Prüfe, ob der Response JSON enthält
         if (contentType && contentType.includes('application/json')) {
-          const errorData = await res.json();
+          const errorText = await res.text();
           
-          // Prüfung auf spezifische Fehlercodes
-          if (errorData.code === "TRIAL_EXPIRED") {
-            throw new Error("Ihre Testversion ist abgelaufen. Bitte aktualisieren Sie Ihr Paket, um weiterhin Zugriff zu haben.");
-          } else if (errorData.error) {
-            throw new Error(errorData.error);
-          } else if (errorData.message) {
-            throw new Error(errorData.message);
+          try {
+            // Versuche das JSON zu parsen
+            const errorData = JSON.parse(errorText);
+            
+            // Prüfung auf spezifische Fehlercodes
+            if (errorData.code === "TRIAL_EXPIRED") {
+              errorMessage = "Ihre Testversion ist abgelaufen. Bitte aktualisieren Sie Ihr Paket, um weiterhin Zugriff zu haben.";
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (jsonParsingError) {
+            // JSON konnte nicht geparst werden, verwende den Rohtext
+            errorMessage = errorText || errorMessage;
           }
+        } else {
+          // Kein JSON-Content, versuche regulären Text zu lesen
+          const errorText = await res.text();
+          errorMessage = errorText || errorMessage;
         }
-        
-        const text = await res.text();
-        throw new Error(`${res.status}: ${text || res.statusText}`);
-      } catch (jsonError) {
-        // Wenn das JSON-Parsing fehlschlägt oder kein spezieller Fehlercode gefunden wurde,
-        // werfen wir den ursprünglichen Fehler
-        if (jsonError instanceof Error && jsonError.message.includes("Testversion")) {
-          throw jsonError; // Gib den speziellen Fehler weiter
-        }
-        
-        const text = await res.text();
-        throw new Error(`${res.status}: ${text || res.statusText}`);
+      } catch (responseError) {
+        // Fehler beim Lesen des Response-Body, behalte die Standard-Fehlermeldung bei
+        console.error("Fehler beim Lesen des Fehler-Response:", responseError);
       }
+      
+      throw new Error(errorMessage);
     }
     
     return res;
