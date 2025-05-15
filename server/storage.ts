@@ -497,23 +497,26 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return [];
 
-      // Spezialfall: Superadmin kann alle Kunden sehen
-      if (user.isSuperadmin) {
-        console.log(`getAllCustomers: Superadmin ${user.username} (ID: ${user.id}) hat Zugriff auf alle Kunden`);
-        
-        const results = await db
-          .select()
-          .from(customers)
-          .orderBy(customers.lastName, customers.firstName);
-        
-        console.log(`Superadmin: Returning all ${results.length} customers from all shops`);
-        return results;
-      }
-
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return [];
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Kundendaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return [];
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
@@ -539,22 +542,26 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return undefined;
 
-      // Spezialfall: Superadmin kann alle Kunden sehen
-      if (user.isSuperadmin) {
-        console.log(`getCustomer: Superadmin ${user.username} (ID: ${user.id}) fragt Kunde ${id} an`);
-        
-        const [result] = await db
-          .select()
-          .from(customers)
-          .where(eq(customers.id, id));
-        
-        return result;
-      }
-
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return undefined;
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Kundendaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return undefined;
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
