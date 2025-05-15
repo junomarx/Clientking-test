@@ -986,6 +986,7 @@ export default function AdminPage() {
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
             {activeTab === "featureTest" && <FeatureOverridesTestPanel />}
+            {activeTab === "supportRequests" && <SupportRequestsTab />}
           </div>
         </div>
       </div>
@@ -1105,6 +1106,7 @@ export default function AdminPage() {
             )}
             {activeTab === "system" && <SystemDiagnosticTab />}
             {activeTab === "backup" && <BackupRestoreTab />}
+            {activeTab === "supportRequests" && <SupportRequestsTab />}
             {activeTab === "featureTest" && <FeatureOverridesTestPanel />}
           </div>
         </div>
