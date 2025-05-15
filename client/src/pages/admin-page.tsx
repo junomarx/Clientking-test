@@ -839,6 +839,14 @@ export default function AdminPage() {
                 {!sidebarCollapsed && <span className="ml-3">Pakete</span>}
               </div>
               
+              <div 
+                className={`flex items-center p-2 rounded-md hover:bg-gray-800 ${activeTab === "supportRequests" ? 'text-blue-400 font-medium' : 'text-gray-300'} cursor-pointer`}
+                onClick={() => setActiveTab("supportRequests")}
+              >
+                <Shield className="h-5 w-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span className="ml-3">Support-Anfragen</span>}
+              </div>
+              
               {/* Geräte mit Unterkategorien */}
               <div className="space-y-1">
                 <div 
