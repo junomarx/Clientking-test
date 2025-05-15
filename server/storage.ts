@@ -367,6 +367,70 @@ export class DatabaseStorage implements IStorage {
     });
   }
   
+  // Implementierung für Abonnement-Kontingente
+  async canCreateNewRepair(userId: number): Promise<{ count: number, limit: number, canCreate: boolean }> {
+    try {
+      // Benutzer abrufen, um den Plan zu ermitteln
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+      
+      // Wenn der Benutzer auf Professional oder Enterprise ist, hat er unbegrenzte Reparaturen
+      if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
+        return {
+          count: 0,
+          limit: 999999, // Praktisch unbegrenzt
+          canCreate: true
+        };
+      }
+      
+      // Basic-Plan: 50 Reparaturen pro Monat
+      const limit = 50;
+      
+      // Wenn keine Shop-ID vorhanden ist, kann der Benutzer keine Reparaturen erstellen
+      if (!user.shopId) {
+        return {
+          count: 0,
+          limit,
+          canCreate: false
+        };
+      }
+      
+      // Aktuellen Monat ermitteln (z.B. 202505 für Mai 2025)
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      
+      // Anzahl der Reparaturen im aktuellen Monat abrufen
+      const count = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.shopId, user.shopId),
+            gte(repairs.createdAt, firstDayOfMonth),
+            lt(repairs.createdAt, nextMonth)
+          )
+        )
+        .then(result => result[0]?.count || 0);
+      
+      return {
+        count,
+        limit,
+        canCreate: count < limit
+      };
+    } catch (error) {
+      console.error("Error in canCreateNewRepair:", error);
+      // Standardwert im Fehlerfall
+      return {
+        count: 0,
+        limit: 50,
+        canCreate: false
+      };
+    }
+  }
+  
   // Holt aktive Support-Zugriffslogs für Support-Modus-Protokollierung
   async getActiveSupportAccessLogs(userId: number, shopId: number) {
     try {
