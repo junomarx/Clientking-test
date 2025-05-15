@@ -26,6 +26,9 @@ export const supportAccessLogs = pgTable("support_access_logs", {
   isActive: boolean("is_active").default(true).notNull(),
   accessType: text("access_type").notNull(), // z.B. "repair_data", "customer_data", "all", etc.
   affectedEntities: text("affected_entities"), // IDs der betroffenen Entitäten, z.B. "repair:123,customer:456"
+  status: text("status").notNull().default("pending"),
+  responded_at: timestamp("responded_at"),
+  responding_user_id: integer("responding_user_id")
 });
 
 // Füge die Tabelle hinzu, wenn sie noch nicht existiert
@@ -46,7 +49,10 @@ export async function addSupportAccessTable() {
         ended_at TIMESTAMP,
         is_active BOOLEAN DEFAULT TRUE NOT NULL,
         access_type TEXT NOT NULL,
-        affected_entities TEXT
+        affected_entities TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        responded_at TIMESTAMP,
+        responding_user_id INTEGER
       );
     `);
 

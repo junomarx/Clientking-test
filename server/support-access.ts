@@ -11,7 +11,7 @@
  */
 
 import { db } from "./db";
-import { supportAccessLogs } from "./add-support-access-table";
+import { supportAccessLogs } from "./add-support-access-table"; // Verwende die aktualisierte Schema-Definition
 import { eq, and, sql, not, or, isNull } from "drizzle-orm";
 
 // Standardzeitraum für Support-Zugriffe in Minuten

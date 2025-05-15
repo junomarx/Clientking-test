@@ -116,4 +116,88 @@ export function setupSupportAccessRoutes(app: Express) {
     
     return res.json(history);
   });
+  
+  // Offene Support-Anfragen für einen Shop abrufen
+  app.get("/api/support/requests/pending", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Benutzer nicht gefunden" });
+    }
+    
+    // Nur Shop-Admin kann Anfragen sehen
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: "Keine Berechtigung" });
+    }
+    
+    // Shop-ID des anfragenden Benutzers verwenden
+    const shopId = req.user.shopId;
+    
+    if (!shopId) {
+      return res.status(400).json({ message: "Keine Shop-ID für den Benutzer gefunden" });
+    }
+    
+    const pendingRequests = await getPendingSupportRequests(shopId);
+    return res.status(200).json(pendingRequests);
+  });
+  
+  // Support-Anfrage genehmigen
+  app.post("/api/support/requests/:requestId/approve", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Benutzer nicht gefunden" });
+    }
+    
+    // Nur Shop-Admin kann Anfragen genehmigen
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: "Keine Berechtigung" });
+    }
+    
+    const requestId = parseInt(req.params.requestId);
+    if (isNaN(requestId)) {
+      return res.status(400).json({ message: "Ungültige Anfrage-ID" });
+    }
+    
+    const success = await approveSupportRequest(requestId, req.user.id);
+    
+    if (success) {
+      return res.status(200).json({ message: "Support-Anfrage wurde genehmigt" });
+    } else {
+      return res.status(500).json({ message: "Fehler beim Genehmigen der Anfrage" });
+    }
+  });
+  
+  // Support-Anfrage ablehnen
+  app.post("/api/support/requests/:requestId/reject", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Nicht authentifiziert" });
+    }
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "Benutzer nicht gefunden" });
+    }
+    
+    // Nur Shop-Admin kann Anfragen ablehnen
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: "Keine Berechtigung" });
+    }
+    
+    const requestId = parseInt(req.params.requestId);
+    if (isNaN(requestId)) {
+      return res.status(400).json({ message: "Ungültige Anfrage-ID" });
+    }
+    
+    const success = await rejectSupportRequest(requestId, req.user.id);
+    
+    if (success) {
+      return res.status(200).json({ message: "Support-Anfrage wurde abgelehnt" });
+    } else {
+      return res.status(500).json({ message: "Fehler beim Ablehnen der Anfrage" });
+    }
+  });
 }
