@@ -648,3 +648,24 @@ export const insertPrintTemplateSchema = createInsertSchema(printTemplates).omit
 
 export type PrintTemplate = typeof printTemplates.$inferSelect;
 export type InsertPrintTemplate = z.infer<typeof insertPrintTemplateSchema>;
+
+// Support-Zugriffsprotokolle für DSGVO-konforme Shop-Isolation
+export const supportAccessLogs = pgTable("support_access_logs", {
+  id: serial("id").primaryKey(),
+  superadminId: integer("superadmin_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, denied, revoked, expired
+  requestedAt: timestamp("requested_at").defaultNow().notNull(),
+  respondedAt: timestamp("responded_at"),
+  expiresAt: timestamp("expires_at"),
+  responding_user_id: integer("responding_user_id").references(() => users.id),
+});
+
+export const insertSupportAccessLogSchema = createInsertSchema(supportAccessLogs).omit({
+  id: true,
+  requestedAt: true,
+});
+
+export type SupportAccessLog = typeof supportAccessLogs.$inferSelect;
+export type InsertSupportAccessLog = z.infer<typeof insertSupportAccessLogSchema>;

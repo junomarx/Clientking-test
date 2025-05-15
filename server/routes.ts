@@ -28,7 +28,7 @@ import {
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
 import { registerAdminRoutes } from "./admin-routes";
-import { setupSupportAccessRoutes } from "./support-access-routes";
+import { supportAccessRouter } from "./support-access-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSuperadminPrintTemplatesRoutes(app);
   
   // Set up support access routes for DSGVO-compliance
-  setupSupportAccessRoutes(app);
+  app.use('/api/support-access', supportAccessRouter);
   
   // Set up global device data routes
   registerGlobalDeviceRoutes(app);
@@ -2471,8 +2471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Die globalen Gerätedata-Routen wurden bereits oben registriert
   
-  // Support-Zugriffs-Routen für DSGVO-Konformität registrieren
-  setupSupportAccessRoutes(app);
+  // Support-Zugriffs-Routen für DSGVO-Konformität wurden bereits oben registriert
 
   const httpServer = createServer(app);
 

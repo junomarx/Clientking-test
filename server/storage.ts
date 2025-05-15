@@ -36,6 +36,11 @@ import {
   type CostEstimate,
   type InsertCostEstimate,
   type CostEstimateItem,
+  shops,
+  type Shop,
+  supportAccessLogs,
+  type SupportAccessLog,
+  type InsertSupportAccessLog,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";

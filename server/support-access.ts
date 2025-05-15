@@ -1,83 +1,99 @@
 /**
- * Dieses Modul implementiert den DSGVO-konformen Support-Modus für Superadmins.
+ * Support-Zugriffssystem für DSGVO-konforme Shop-Isolation
  * 
- * Der Support-Modus erlaubt Superadmins temporären Zugriff auf die Daten eines bestimmten Shops.
- * Alle Zugriffe werden protokolliert und haben eine begrenzte Gültigkeitsdauer.
- * Dies stellt sicher, dass datenschutzrechtliche Anforderungen erfüllt werden und
- * gleichzeitig technischer Support möglich bleibt.
- * 
- * Ab jetzt muss jede Support-Anfrage explizit vom Shop-Besitzer genehmigt werden,
- * um die DSGVO-Konformität zu gewährleisten und die Datensouveränität zu stärken.
+ * Dieses Modul implementiert einen sicheren Mechanismus, mit dem Superadmins
+ * zeitlich begrenzten Zugriff auf Daten anderer Shops erhalten können.
+ * Jeder Zugriff wird protokolliert und muss explizit genehmigt werden.
  */
 
 import { db } from "./db";
-import { supportAccessLogs } from "./add-support-access-table"; // Verwende die aktualisierte Schema-Definition
-import { eq, and, sql, not, or, isNull } from "drizzle-orm";
-
-// Standardzeitraum für Support-Zugriffe in Minuten
-const DEFAULT_SUPPORT_ACCESS_DURATION = 30;
-
-// Status-Typen für Support-Zugriffe
-export enum SupportAccessStatus {
-  PENDING = 'pending',     // Anfrage gestellt, noch nicht beantwortet
-  APPROVED = 'approved',   // Anfrage genehmigt, Zugriff erlaubt
-  REJECTED = 'rejected',   // Anfrage abgelehnt, kein Zugriff
-  EXPIRED = 'expired',     // Anfrage abgelaufen (keine Antwort innerhalb der Frist)
-  COMPLETED = 'completed'  // Zugriffsanfrage abgeschlossen (manuell beendet)
-}
+import { supportAccessLogs, type SupportAccessLog } from "@shared/schema";
+import { eq, and, lt, gte } from "drizzle-orm";
+import { storage } from "./storage";
 
 /**
- * Prüft, ob ein aktiver Support-Zugriff für den angegebenen Superadmin und Shop besteht
+ * Prüft, ob ein Superadmin aktiven Support-Zugriff auf einen bestimmten Shop hat
+ * @param superadminId ID des Superadmins
+ * @param shopId ID des Shops, auf den zugegriffen werden soll
+ * @returns true, wenn Zugriff gewährt ist, sonst false
  */
 export async function hasActiveSupportAccess(superadminId: number, shopId: number): Promise<boolean> {
   try {
-    const activeSessions = await db
-      .select({ id: supportAccessLogs.id })
+    // Sicherstellen, dass der User ein Superadmin ist
+    const user = await storage.getUser(superadminId);
+    if (!user || !user.isSuperadmin) {
+      console.warn(`Kein Support-Zugriff für Benutzer ${superadminId}, da kein Superadmin`);
+      return false;
+    }
+
+    // Aktuelles Datum für Vergleich mit Ablaufdatum
+    const now = new Date();
+
+    // Aktiven Support-Zugriff aus der Datenbank abrufen
+    const [accessLog] = await db
+      .select()
       .from(supportAccessLogs)
       .where(
         and(
           eq(supportAccessLogs.superadminId, superadminId),
           eq(supportAccessLogs.shopId, shopId),
-          eq(supportAccessLogs.isActive, true),
-          eq(supportAccessLogs.status, SupportAccessStatus.APPROVED), // Nur genehmigte Anfragen erlauben Zugriff
-          sql`${supportAccessLogs.startedAt} > NOW() - INTERVAL '${DEFAULT_SUPPORT_ACCESS_DURATION} minutes'`
+          eq(supportAccessLogs.status, "approved"),
+          lt(now, supportAccessLogs.expiresAt)
         )
       );
-    
-    return activeSessions.length > 0;
+
+    return !!accessLog;
   } catch (error) {
-    console.error("Fehler beim Prüfen des Support-Zugriffs:", error);
+    console.error("Fehler bei der Prüfung des Support-Zugriffs:", error);
     return false;
   }
 }
 
 /**
  * Erstellt eine neue Support-Zugriffsanfrage
+ * @param superadminId ID des Superadmins, der Zugriff anfordert
+ * @param shopId ID des Shops, auf den zugegriffen werden soll
+ * @param reason Grund für den Zugriff (für Protokollierung)
+ * @returns Die erstellte Zugriffsanfrage oder null bei Fehler
  */
-export async function createSupportAccess(
-  superadminId: number, 
-  shopId: number, 
-  reason: string, 
-  accessType: string
-): Promise<number | null> {
+export async function createSupportAccessRequest(
+  superadminId: number,
+  shopId: number,
+  reason: string
+): Promise<SupportAccessLog | null> {
   try {
-    // Deaktiviere alle bestehenden aktiven Zugriffe für diesen Superadmin und Shop
-    await deactivateAllSupportAccess(superadminId, shopId);
-    
-    // Erstelle eine neue Support-Zugriffsanfrage mit Status "pending"
-    const [result] = await db
+    // Sicherstellen, dass der User ein Superadmin ist
+    const user = await storage.getUser(superadminId);
+    if (!user || !user.isSuperadmin) {
+      console.warn(`Keine Support-Zugriffsanfrage möglich für Benutzer ${superadminId}, da kein Superadmin`);
+      return null;
+    }
+
+    // Shop existiert?
+    const shop = await storage.getShopById(shopId);
+    if (!shop) {
+      console.warn(`Keine Support-Zugriffsanfrage möglich für Shop ${shopId}, da nicht existent`);
+      return null;
+    }
+
+    // Standard-Ablaufdatum: 24 Stunden nach Genehmigung
+    const defaultDuration = 24 * 60 * 60 * 1000; // 24 Stunden in Millisekunden
+
+    // Neue Anfrage erstellen
+    const [accessRequest] = await db
       .insert(supportAccessLogs)
       .values({
         superadminId,
         shopId,
         reason,
-        accessType,
-        isActive: true,
-        status: SupportAccessStatus.PENDING, // Neuer Status: Anfrage wartet auf Genehmigung
+        status: "pending",
+        requestedAt: new Date(),
+        // Ablaufdatum wird erst bei Genehmigung gesetzt
+        expiresAt: new Date(Date.now() + defaultDuration),
       })
-      .returning({ id: supportAccessLogs.id });
-    
-    return result?.id || null;
+      .returning();
+
+    return accessRequest;
   } catch (error) {
     console.error("Fehler beim Erstellen der Support-Zugriffsanfrage:", error);
     return null;
@@ -85,141 +101,198 @@ export async function createSupportAccess(
 }
 
 /**
- * Beendet alle aktiven Support-Zugriffe für den angegebenen Superadmin und Shop
+ * Genehmigt eine Support-Zugriffsanfrage
+ * @param requestId ID der Zugriffsanfrage
+ * @param respondingUserId ID des Benutzers, der die Anfrage genehmigt (Shop-Admin)
+ * @param duration Zugriffsdauer in Stunden (optional, Standard: 24h)
+ * @returns Die aktualisierte Zugriffsanfrage oder null bei Fehler
  */
-export async function deactivateAllSupportAccess(superadminId: number, shopId: number): Promise<void> {
+export async function approveSupportAccessRequest(
+  requestId: number,
+  respondingUserId: number,
+  duration: number = 24
+): Promise<SupportAccessLog | null> {
   try {
-    await db
+    // Zugriffsanfrage abrufen
+    const [request] = await db
+      .select()
+      .from(supportAccessLogs)
+      .where(eq(supportAccessLogs.id, requestId));
+
+    if (!request) {
+      console.warn(`Support-Zugriffsanfrage mit ID ${requestId} nicht gefunden`);
+      return null;
+    }
+
+    // Prüfen, ob der genehmigende Benutzer Admin des betreffenden Shops ist
+    const user = await storage.getUser(respondingUserId);
+    if (!user || !user.isAdmin || user.shopId !== request.shopId) {
+      console.warn(`Benutzer ${respondingUserId} ist nicht berechtigt, Support-Zugriff für Shop ${request.shopId} zu genehmigen`);
+      return null;
+    }
+
+    // Ablaufdatum basierend auf der angegebenen Dauer berechnen
+    const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000);
+
+    // Anfrage aktualisieren
+    const [updatedRequest] = await db
       .update(supportAccessLogs)
       .set({
-        isActive: false,
-        endedAt: sql`NOW()`,
-        status: SupportAccessStatus.COMPLETED // Setze Status auf abgeschlossen
+        status: "approved",
+        respondingUserId,
+        respondedAt: new Date(),
+        expiresAt,
       })
+      .where(eq(supportAccessLogs.id, requestId))
+      .returning();
+
+    return updatedRequest;
+  } catch (error) {
+    console.error("Fehler beim Genehmigen der Support-Zugriffsanfrage:", error);
+    return null;
+  }
+}
+
+/**
+ * Lehnt eine Support-Zugriffsanfrage ab
+ * @param requestId ID der Zugriffsanfrage
+ * @param respondingUserId ID des Benutzers, der die Anfrage ablehnt
+ * @returns Die aktualisierte Zugriffsanfrage oder null bei Fehler
+ */
+export async function denySupportAccessRequest(
+  requestId: number,
+  respondingUserId: number
+): Promise<SupportAccessLog | null> {
+  try {
+    // Zugriffsanfrage abrufen
+    const [request] = await db
+      .select()
+      .from(supportAccessLogs)
+      .where(eq(supportAccessLogs.id, requestId));
+
+    if (!request) {
+      console.warn(`Support-Zugriffsanfrage mit ID ${requestId} nicht gefunden`);
+      return null;
+    }
+
+    // Prüfen, ob der ablehnende Benutzer Admin des betreffenden Shops ist
+    const user = await storage.getUser(respondingUserId);
+    if (!user || !user.isAdmin || user.shopId !== request.shopId) {
+      console.warn(`Benutzer ${respondingUserId} ist nicht berechtigt, Support-Zugriff für Shop ${request.shopId} abzulehnen`);
+      return null;
+    }
+
+    // Anfrage aktualisieren
+    const [updatedRequest] = await db
+      .update(supportAccessLogs)
+      .set({
+        status: "denied",
+        respondingUserId,
+        respondedAt: new Date(),
+      })
+      .where(eq(supportAccessLogs.id, requestId))
+      .returning();
+
+    return updatedRequest;
+  } catch (error) {
+    console.error("Fehler beim Ablehnen der Support-Zugriffsanfrage:", error);
+    return null;
+  }
+}
+
+/**
+ * Widerruft einen aktiven Support-Zugriff vorzeitig
+ * @param requestId ID der Zugriffsanfrage
+ * @param revokingUserId ID des Benutzers, der den Zugriff widerruft (kann Shop-Admin oder der Superadmin selbst sein)
+ * @returns Die aktualisierte Zugriffsanfrage oder null bei Fehler
+ */
+export async function revokeSupportAccess(
+  requestId: number,
+  revokingUserId: number
+): Promise<SupportAccessLog | null> {
+  try {
+    // Zugriffsanfrage abrufen
+    const [request] = await db
+      .select()
+      .from(supportAccessLogs)
+      .where(eq(supportAccessLogs.id, requestId));
+
+    if (!request) {
+      console.warn(`Support-Zugriffsanfrage mit ID ${requestId} nicht gefunden`);
+      return null;
+    }
+
+    // Prüfen, ob der widerrufende Benutzer berechtigt ist (Shop-Admin oder der Superadmin selbst)
+    const user = await storage.getUser(revokingUserId);
+    if (!user) {
+      return null;
+    }
+
+    const isSuperadminSelf = user.id === request.superadminId && user.isSuperadmin;
+    const isShopAdmin = user.isAdmin && user.shopId === request.shopId;
+
+    if (!isSuperadminSelf && !isShopAdmin) {
+      console.warn(`Benutzer ${revokingUserId} ist nicht berechtigt, Support-Zugriff für Shop ${request.shopId} zu widerrufen`);
+      return null;
+    }
+
+    // Anfrage aktualisieren
+    const [updatedRequest] = await db
+      .update(supportAccessLogs)
+      .set({
+        status: "revoked",
+        expiresAt: new Date(), // Sofort ablaufen lassen
+      })
+      .where(eq(supportAccessLogs.id, requestId))
+      .returning();
+
+    return updatedRequest;
+  } catch (error) {
+    console.error("Fehler beim Widerrufen des Support-Zugriffs:", error);
+    return null;
+  }
+}
+
+/**
+ * Ruft alle Support-Zugriffsanfragen für einen bestimmten Shop ab
+ * @param shopId ID des Shops
+ * @returns Liste der Zugriffsanfragen
+ */
+export async function getSupportAccessRequestsForShop(shopId: number): Promise<SupportAccessLog[]> {
+  try {
+    return await db
+      .select()
+      .from(supportAccessLogs)
+      .where(eq(supportAccessLogs.shopId, shopId))
+      .orderBy(supportAccessLogs.requestedAt);
+  } catch (error) {
+    console.error(`Fehler beim Abrufen der Support-Zugriffsanfragen für Shop ${shopId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Ruft alle aktiven Support-Zugriffsberechtigungen für einen Superadmin ab
+ * @param superadminId ID des Superadmins
+ * @returns Liste der aktiven Zugriffsberechtigungen
+ */
+export async function getActiveSupportAccessForSuperadmin(superadminId: number): Promise<SupportAccessLog[]> {
+  try {
+    const now = new Date();
+
+    return await db
+      .select()
+      .from(supportAccessLogs)
       .where(
         and(
           eq(supportAccessLogs.superadminId, superadminId),
-          eq(supportAccessLogs.shopId, shopId),
-          eq(supportAccessLogs.isActive, true)
-        )
-      );
-  } catch (error) {
-    console.error("Fehler beim Deaktivieren des Support-Zugriffs:", error);
-  }
-}
-
-/**
- * Protokolliert die betroffenen Entitäten bei einem Support-Zugriff
- */
-export async function logAffectedEntities(
-  accessId: number, 
-  entityType: string, 
-  entityIds: number[]
-): Promise<void> {
-  try {
-    const [currentLog] = await db
-      .select({ affectedEntities: supportAccessLogs.affectedEntities })
-      .from(supportAccessLogs)
-      .where(eq(supportAccessLogs.id, accessId));
-    
-    let affectedEntities = currentLog?.affectedEntities || "";
-    
-    // Füge neue Entitäten zum Log hinzu
-    const newEntities = entityIds.map(id => `${entityType}:${id}`).join(",");
-    
-    if (affectedEntities) {
-      affectedEntities += "," + newEntities;
-    } else {
-      affectedEntities = newEntities;
-    }
-    
-    // Aktualisiere den Log
-    await db
-      .update(supportAccessLogs)
-      .set({ affectedEntities })
-      .where(eq(supportAccessLogs.id, accessId));
-  } catch (error) {
-    console.error("Fehler beim Protokollieren der betroffenen Entitäten:", error);
-  }
-}
-
-/**
- * Gibt alle Support-Zugriffe für einen Superadmin zurück
- */
-export async function getSupportAccessHistory(superadminId: number) {
-  try {
-    return await db
-      .select()
-      .from(supportAccessLogs)
-      .where(eq(supportAccessLogs.superadminId, superadminId))
-      .orderBy(sql`${supportAccessLogs.startedAt} DESC`);
-  } catch (error) {
-    console.error("Fehler beim Abrufen der Support-Zugriffs-Historie:", error);
-    return [];
-  }
-}
-
-/**
- * Gibt alle offenen Support-Anfragen für einen Shop zurück
- */
-export async function getPendingSupportRequests(shopId: number) {
-  try {
-    return await db
-      .select()
-      .from(supportAccessLogs)
-      .where(
-        and(
-          eq(supportAccessLogs.shopId, shopId),
-          eq(supportAccessLogs.status, SupportAccessStatus.PENDING)
+          eq(supportAccessLogs.status, "approved"),
+          gte(supportAccessLogs.expiresAt, now)
         )
       )
-      .orderBy(sql`${supportAccessLogs.startedAt} DESC`);
+      .orderBy(supportAccessLogs.expiresAt);
   } catch (error) {
-    console.error("Fehler beim Abrufen der offenen Support-Anfragen:", error);
+    console.error(`Fehler beim Abrufen der aktiven Support-Zugriffsberechtigungen für Superadmin ${superadminId}:`, error);
     return [];
-  }
-}
-
-/**
- * Genehmigt eine Support-Anfrage
- */
-export async function approveSupportRequest(requestId: number, userId: number): Promise<boolean> {
-  try {
-    await db
-      .update(supportAccessLogs)
-      .set({
-        status: SupportAccessStatus.APPROVED,
-        responded_at: sql`NOW()`,
-        responding_user_id: userId
-      })
-      .where(eq(supportAccessLogs.id, requestId));
-    
-    return true;
-  } catch (error) {
-    console.error("Fehler beim Genehmigen der Support-Anfrage:", error);
-    return false;
-  }
-}
-
-/**
- * Lehnt eine Support-Anfrage ab
- */
-export async function rejectSupportRequest(requestId: number, userId: number): Promise<boolean> {
-  try {
-    await db
-      .update(supportAccessLogs)
-      .set({
-        status: SupportAccessStatus.REJECTED,
-        isActive: false,
-        responded_at: sql`NOW()`,
-        responding_user_id: userId,
-        endedAt: sql`NOW()`
-      })
-      .where(eq(supportAccessLogs.id, requestId));
-    
-    return true;
-  } catch (error) {
-    console.error("Fehler beim Ablehnen der Support-Anfrage:", error);
-    return false;
   }
 }
