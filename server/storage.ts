@@ -86,6 +86,9 @@ export interface IStorage {
   deleteUser(id: number): Promise<boolean>;
   createUser(user: InsertUser): Promise<User>;
   
+  // Subscription and quota methods
+  canCreateNewRepair(userId: number): Promise<{ count: number, limit: number, canCreate: boolean }>;
+  
   // Global device data methods for public access
   getGlobalDeviceTypes(): Promise<UserDeviceType[]>;
   getGlobalBrands(): Promise<UserBrand[]>;
