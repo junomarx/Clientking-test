@@ -869,8 +869,9 @@ export class DatabaseStorage implements IStorage {
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
       const shopId = user.shopId;
 
-      // LÖSUNG: Zuerst versuchen wir, die Einstellungen zu finden, die genau zu diesem Benutzer gehören
-      let [settings] = await db
+      // VERBESSERTE LÖSUNG: Wir suchen nach den neuesten Einstellungen dieses Benutzers für diesen Shop
+      // Dies behebt das Problem, dass ein Benutzer möglicherweise mehrere Business-Settings Einträge hat
+      let personalSettings = await db
         .select()
         .from(businessSettings)
         .where(
@@ -878,24 +879,34 @@ export class DatabaseStorage implements IStorage {
             eq(businessSettings.shopId, shopId),
             eq(businessSettings.userId, userId)
           )
-        );
+        )
+        .orderBy(desc(businessSettings.id))  // Wir verwenden die höchste ID (neueste Einträge)
+        .limit(1);
+
+      // Benutze persönliche Einstellungen, wenn vorhanden
+      let settings = personalSettings.length > 0 ? personalSettings[0] : undefined;
 
       // Wenn keine persönlichen Einstellungen gefunden wurden...
       if (!settings) {
         console.log(`Keine persönlichen Einstellungen für Benutzer ${user.username} gefunden, suche Shop-Einstellungen...`);
         
-        // ...suchen wir nach beliebigen Einstellungen für diesen Shop - nehmen die neueste
-        // Da businessSettings.updatedAt möglicherweise nicht definiert ist, verwenden wir businessSettings.id
+        // Finde die neuesten Einstellungen für diesen Shop, aber von ANDEREN Benutzern
+        // Dies ist ein Fallback, falls der Benutzer selbst keine Einstellungen hat
         const shopSettings = await db
           .select()
           .from(businessSettings)
-          .where(eq(businessSettings.shopId, shopId))
+          .where(
+            and(
+              eq(businessSettings.shopId, shopId),
+              not(eq(businessSettings.userId, userId))  // Ausschließen der eigenen Einstellungen
+            )
+          )
           .orderBy(desc(businessSettings.id))
           .limit(1);
           
         if (shopSettings.length > 0) {
           settings = shopSettings[0];
-          console.log(`Shop-Einstellungen gefunden: ID ${settings.id} für Shop ${shopId}`);
+          console.log(`Shop-Einstellungen von anderem Benutzer gefunden: ID ${settings.id} für Shop ${shopId}`);
         }
       }
 
