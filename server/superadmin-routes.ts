@@ -230,12 +230,11 @@ export function registerSuperadminRoutes(app: Express) {
       console.log("Superadmin-Bereich: Shop-Liste angefordert");
       
       // Sammle alle einzigartigen shopIds und zugehörige Informationen aus der Business-Settings-Tabelle
+      // Verwende nur Spalten, die sicher existieren
       const shopData = await db.execute(sql`
         SELECT DISTINCT 
           bs.shop_id as id,
-          bs.business_name as "businessName",
-          bs.phone_number as "phoneNumber",
-          bs.email
+          bs.business_name as "businessName"
         FROM 
           business_settings bs
         WHERE 
