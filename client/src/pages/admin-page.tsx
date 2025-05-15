@@ -1052,6 +1052,14 @@ export default function AdminPage() {
               </Button>
               
               <Button 
+                variant={activeTab === "support-requests" ? "default" : "outline"}
+                className={`p-3 h-auto justify-start ${activeTab === "support-requests" ? "bg-primary text-white" : "bg-secondary/10"}`}
+                onClick={() => setActiveTab("support-requests")}
+              >
+                <ShieldAlert className="h-4 w-4 mr-2" /> Support-Anfragen
+              </Button>
+              
+              <Button 
                 variant={activeTab === "featureTest" ? "default" : "outline"}
                 className={`p-3 h-auto justify-start ${activeTab === "featureTest" ? "bg-primary text-white" : "bg-secondary/10"}`}
                 onClick={() => setActiveTab("featureTest")}
