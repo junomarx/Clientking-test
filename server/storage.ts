@@ -869,23 +869,18 @@ export class DatabaseStorage implements IStorage {
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
       const shopId = user.shopId;
 
-      // WICHTIG: Wir filtern nach shopId UND userId, um sicherzustellen, dass jeder Benutzer
-      // nur seine eigenen Einstellungen sieht, selbst wenn sie die gleiche Shop-ID haben
+      // GEÄNDERT: Wir filtern NUR nach shopId, um die Shopeinstellungen für ALLE Benutzer des Shops
+      // zugänglich zu machen. Die Datenisolation zwischen Shops bleibt gewährleistet.
       const [settings] = await db
         .select()
         .from(businessSettings)
-        .where(
-          and(
-            eq(businessSettings.shopId, shopId),
-            eq(businessSettings.userId, userId)
-          )
-        );
+        .where(eq(businessSettings.shopId, shopId));
 
       if (settings) {
-        console.log(`Gefunden: Einstellungen mit ID ${settings.id} für User ${userId} (Shop ${shopId})`);
-        console.log(`Einstellungen für Benutzer ${userId} gefunden: ID ${settings.id} (Shop ${shopId})`);
+        console.log(`Gefunden: Einstellungen mit ID ${settings.id} für Shop ${shopId}`);
+        console.log(`Einstellungen für Shop ${shopId} gefunden: ID ${settings.id}`);
       } else {
-        console.log(`Keine Einstellungen für Benutzer ${userId} (Shop ${shopId}) gefunden.`);
+        console.log(`Keine Einstellungen für Shop ${shopId} gefunden.`);
       }
 
       return settings;
