@@ -116,13 +116,25 @@ export function setupAuth(app: Express) {
       if (usersWithEmail && usersWithEmail.length > 0) {
         return res.status(400).json({ message: "Diese E-Mail-Adresse wird bereits verwendet" });
       }
+      
+      // Demo-Paket aus der Datenbank abrufen
+      const demoPackage = await storage.getPackageByName("Demo");
+      
+      // Ablaufdatum für Demo-Paket berechnen (14 Tage ab jetzt)
+      const trialExpiresAt = new Date();
+      trialExpiresAt.setDate(trialExpiresAt.getDate() + 14); // 14 Tage in die Zukunft
+      
+      console.log(`Neuer Benutzer ${username} erhält Demo-Paket mit Ablaufdatum ${trialExpiresAt.toISOString()}`);
 
       // Erstelle einen neuen Benutzer (standardmäßig inaktiv)
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(password),
         isActive: false,  // Benutzer müssen vom Admin aktiviert werden
-        isAdmin: false    // Standardmäßig kein Administrator
+        isAdmin: false,   // Standardmäßig kein Administrator
+        pricingPlan: "demo", // Demo-Plan (für Abwärtskompatibilität)
+        packageId: demoPackage?.id, // Verknüpfung mit dem Demo-Paket
+        trialExpiresAt  // Ablaufdatum für die Testversion
       });
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können

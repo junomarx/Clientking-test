@@ -41,6 +41,9 @@ import {
   supportAccessLogs,
   type SupportAccessLog,
   type InsertSupportAccessLog,
+  packages,
+  type Package,
+  packageFeatures,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -68,6 +71,7 @@ import { emailService } from "./email-service";
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  getPackageByName(name: string): Promise<Package | undefined>;
   // Session store
   sessionStore: session.Store;
 
@@ -112,7 +116,7 @@ export interface IStorage {
     };
   }>;
   
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: InsertUser & { trialExpiresAt?: Date }): Promise<User>;
   
   // Subscription and quota methods
   canCreateNewRepair(userId: number): Promise<{ count: number, limit: number, canCreate: boolean }>;
@@ -348,6 +352,10 @@ export interface IStorage {
     id: number,
     currentUserId?: number,
   ): Promise<Repair | undefined>;
+  
+  // Paket-Methoden
+  getPackageByName(name: string): Promise<Package | undefined>;
+  getPackageById(id: number): Promise<Package | undefined>;
 }
 
 /**
@@ -378,6 +386,7 @@ function convertToUser(row: any): User {
     createdAt: new Date(row.created_at),
     featureOverrides: row.feature_overrides,
     packageId: row.package_id ? Number(row.package_id) : null,
+    trialExpiresAt: row.trial_expires_at ? new Date(row.trial_expires_at) : null,
   };
 }
 
@@ -393,6 +402,21 @@ export class DatabaseStorage implements IStorage {
       tableName: 'session',
       createTableIfMissing: true
     });
+  }
+  
+  // Paket anhand des Namens abrufen
+  async getPackageByName(name: string): Promise<Package | undefined> {
+    try {
+      const [pkg] = await db
+        .select()
+        .from(packages)
+        .where(eq(packages.name, name));
+      
+      return pkg;
+    } catch (error) {
+      console.error(`Error getting package with name "${name}":`, error);
+      return undefined;
+    }
   }
   
   // Implementierung für Abonnement-Kontingente

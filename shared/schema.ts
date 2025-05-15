@@ -164,13 +164,12 @@ export const packages = pgTable("packages", {
 
 // Paket-Features-Tabelle (package_features) für die Zuordnung von Features zu Paketen
 export const packageFeatures = pgTable("package_features", {
+  id: serial("id").primaryKey(),
   packageId: integer("package_id").notNull().references(() => packages.id),
-  feature: text("feature").notNull(),
-  // Zusammengesetzer Primary Key aus packageId und feature
-}, (table) => {
-  return {
-    pk: primaryKey({ columns: [table.packageId, table.feature] })
-  };
+  featureName: text("feature_name").notNull(),
+  displayName: text("display_name").notNull(),
+  isEnabled: boolean("is_enabled").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // Schemas für die Pakete
@@ -219,6 +218,7 @@ export const users = pgTable("users", {
   companyEmail: text("company_email"),                     // Geschäfts-E-Mail
   resetToken: text("reset_token"),                         // Token für Passwort-Zurücksetzung
   resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
+  trialExpiresAt: timestamp("trial_expires_at"),           // Ablaufdatum des Demo-Zugangs (nur für Demo-Paket)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
