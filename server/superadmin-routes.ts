@@ -243,8 +243,16 @@ export function registerSuperadminRoutes(app: Express) {
           bs.business_name
       `);
       
-      console.log(`${shopData.length} Shops gefunden`);
-      res.json(shopData);
+      // Konvertiere das Ergebnis in das erwartete Array-Format mit den benötigten Eigenschaften
+      const formattedShops = shopData.rows.map((row: any) => ({
+        id: row.id,
+        businessName: row.businessName,
+        ownerName: "Nicht verfügbar", // Platzhalterwert
+        contactEmail: "" // Platzhalterwert
+      }));
+      
+      console.log(`${formattedShops.length} Shops gefunden`);
+      res.json(formattedShops);
     } catch (error) {
       console.error("Fehler beim Abrufen der Shops:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Shops" });
