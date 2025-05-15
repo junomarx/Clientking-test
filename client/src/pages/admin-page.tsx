@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Users, Layers, Smartphone, Cog, Save, ChevronDown, ChevronRight, ChevronLeft, MoreVertical, Pencil, Trash2, LayoutDashboard, Download } from "lucide-react";
+import { Loader2, Users, Layers, Smartphone, Cog, Save, ChevronDown, ChevronRight, ChevronLeft, MoreVertical, Pencil, Trash2, LayoutDashboard, Download, Shield, ShieldAlert } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
