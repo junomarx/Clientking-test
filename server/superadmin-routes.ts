@@ -224,6 +224,34 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // Liste aller Shops für Superadmin
+  app.get("/api/superadmin/shops", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Superadmin-Bereich: Shop-Liste angefordert");
+      
+      // Sammle alle einzigartigen shopIds und zugehörige Informationen aus der Business-Settings-Tabelle
+      const shopData = await db.execute(sql`
+        SELECT DISTINCT 
+          bs.shop_id as id,
+          bs.business_name as "businessName",
+          bs.phone_number as "phoneNumber",
+          bs.email
+        FROM 
+          business_settings bs
+        WHERE 
+          bs.shop_id IS NOT NULL
+        ORDER BY 
+          bs.business_name
+      `);
+      
+      console.log(`${shopData.length} Shops gefunden`);
+      res.json(shopData);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Shops:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Shops" });
+    }
+  });
+
   // Benutzerverwaltung
   app.get("/api/superadmin/users", isSuperadmin, async (req: Request, res: Response) => {
     try {
