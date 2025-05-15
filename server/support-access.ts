@@ -5,14 +5,26 @@
  * Alle Zugriffe werden protokolliert und haben eine begrenzte Gültigkeitsdauer.
  * Dies stellt sicher, dass datenschutzrechtliche Anforderungen erfüllt werden und
  * gleichzeitig technischer Support möglich bleibt.
+ * 
+ * Ab jetzt muss jede Support-Anfrage explizit vom Shop-Besitzer genehmigt werden,
+ * um die DSGVO-Konformität zu gewährleisten und die Datensouveränität zu stärken.
  */
 
 import { db } from "./db";
 import { supportAccessLogs } from "./add-support-access-table";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, not, or, isNull } from "drizzle-orm";
 
 // Standardzeitraum für Support-Zugriffe in Minuten
 const DEFAULT_SUPPORT_ACCESS_DURATION = 30;
+
+// Status-Typen für Support-Zugriffe
+export enum SupportAccessStatus {
+  PENDING = 'pending',     // Anfrage gestellt, noch nicht beantwortet
+  APPROVED = 'approved',   // Anfrage genehmigt, Zugriff erlaubt
+  REJECTED = 'rejected',   // Anfrage abgelehnt, kein Zugriff
+  EXPIRED = 'expired',     // Anfrage abgelaufen (keine Antwort innerhalb der Frist)
+  COMPLETED = 'completed'  // Zugriffsanfrage abgeschlossen (manuell beendet)
+}
 
 /**
  * Prüft, ob ein aktiver Support-Zugriff für den angegebenen Superadmin und Shop besteht
@@ -27,6 +39,7 @@ export async function hasActiveSupportAccess(superadminId: number, shopId: numbe
           eq(supportAccessLogs.superadminId, superadminId),
           eq(supportAccessLogs.shopId, shopId),
           eq(supportAccessLogs.isActive, true),
+          eq(supportAccessLogs.status, SupportAccessStatus.APPROVED), // Nur genehmigte Anfragen erlauben Zugriff
           sql`${supportAccessLogs.startedAt} > NOW() - INTERVAL '${DEFAULT_SUPPORT_ACCESS_DURATION} minutes'`
         )
       );
@@ -39,7 +52,7 @@ export async function hasActiveSupportAccess(superadminId: number, shopId: numbe
 }
 
 /**
- * Erstellt einen neuen Support-Zugriff
+ * Erstellt eine neue Support-Zugriffsanfrage
  */
 export async function createSupportAccess(
   superadminId: number, 
@@ -51,7 +64,7 @@ export async function createSupportAccess(
     // Deaktiviere alle bestehenden aktiven Zugriffe für diesen Superadmin und Shop
     await deactivateAllSupportAccess(superadminId, shopId);
     
-    // Erstelle einen neuen Support-Zugriff
+    // Erstelle eine neue Support-Zugriffsanfrage mit Status "pending"
     const [result] = await db
       .insert(supportAccessLogs)
       .values({
@@ -60,12 +73,13 @@ export async function createSupportAccess(
         reason,
         accessType,
         isActive: true,
+        status: SupportAccessStatus.PENDING, // Neuer Status: Anfrage wartet auf Genehmigung
       })
       .returning({ id: supportAccessLogs.id });
     
     return result?.id || null;
   } catch (error) {
-    console.error("Fehler beim Erstellen des Support-Zugriffs:", error);
+    console.error("Fehler beim Erstellen der Support-Zugriffsanfrage:", error);
     return null;
   }
 }
@@ -80,6 +94,7 @@ export async function deactivateAllSupportAccess(superadminId: number, shopId: n
       .set({
         isActive: false,
         endedAt: sql`NOW()`,
+        status: SupportAccessStatus.COMPLETED // Setze Status auf abgeschlossen
       })
       .where(
         and(
@@ -141,5 +156,70 @@ export async function getSupportAccessHistory(superadminId: number) {
   } catch (error) {
     console.error("Fehler beim Abrufen der Support-Zugriffs-Historie:", error);
     return [];
+  }
+}
+
+/**
+ * Gibt alle offenen Support-Anfragen für einen Shop zurück
+ */
+export async function getPendingSupportRequests(shopId: number) {
+  try {
+    return await db
+      .select()
+      .from(supportAccessLogs)
+      .where(
+        and(
+          eq(supportAccessLogs.shopId, shopId),
+          eq(supportAccessLogs.status, SupportAccessStatus.PENDING)
+        )
+      )
+      .orderBy(sql`${supportAccessLogs.startedAt} DESC`);
+  } catch (error) {
+    console.error("Fehler beim Abrufen der offenen Support-Anfragen:", error);
+    return [];
+  }
+}
+
+/**
+ * Genehmigt eine Support-Anfrage
+ */
+export async function approveSupportRequest(requestId: number, userId: number): Promise<boolean> {
+  try {
+    await db
+      .update(supportAccessLogs)
+      .set({
+        status: SupportAccessStatus.APPROVED,
+        responded_at: sql`NOW()`,
+        responding_user_id: userId
+      })
+      .where(eq(supportAccessLogs.id, requestId));
+    
+    return true;
+  } catch (error) {
+    console.error("Fehler beim Genehmigen der Support-Anfrage:", error);
+    return false;
+  }
+}
+
+/**
+ * Lehnt eine Support-Anfrage ab
+ */
+export async function rejectSupportRequest(requestId: number, userId: number): Promise<boolean> {
+  try {
+    await db
+      .update(supportAccessLogs)
+      .set({
+        status: SupportAccessStatus.REJECTED,
+        isActive: false,
+        responded_at: sql`NOW()`,
+        responding_user_id: userId,
+        endedAt: sql`NOW()`
+      })
+      .where(eq(supportAccessLogs.id, requestId));
+    
+    return true;
+  } catch (error) {
+    console.error("Fehler beim Ablehnen der Support-Anfrage:", error);
+    return false;
   }
 }

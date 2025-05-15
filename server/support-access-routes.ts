@@ -10,7 +10,11 @@ import {
   hasActiveSupportAccess,
   createSupportAccess,
   deactivateAllSupportAccess,
-  getSupportAccessHistory
+  getSupportAccessHistory,
+  getPendingSupportRequests,
+  approveSupportRequest,
+  rejectSupportRequest,
+  SupportAccessStatus
 } from "./support-access";
 import { isSuperadmin } from "./auth";
 
