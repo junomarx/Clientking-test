@@ -584,29 +584,26 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return [];
 
-      // Spezialfall: Superadmin kann alle Kunden sehen
-      if (user.isSuperadmin) {
-        console.log(`findCustomersByName: Superadmin ${user.username} (ID: ${user.id}) sucht nach Kunden`);
-        
-        let query = db
-          .select()
-          .from(customers);
-        
-        if (firstName) {
-          query = query.where(sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`);
-        }
-        
-        if (lastName) {
-          query = query.where(sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`);
-        }
-        
-        return await query.orderBy(customers.lastName, customers.firstName);
-      }
-
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return [];
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Kundendaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return [];
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
@@ -643,6 +640,22 @@ export class DatabaseStorage implements IStorage {
         console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return [];
       }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Reparaturdaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return [];
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
+      }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
       const shopId = user.shopId;
@@ -670,28 +683,26 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
 
-      // Spezialfall: Wenn der Benutzer ein Superadmin ist, kann er alle Reparaturen sehen
-      if (user.isSuperadmin) {
-        console.log(`getRepair: Superadmin ${user.username} (ID: ${user.id}) fragt Reparatur ${id} an`);
-        
-        const [repair] = await db
-          .select()
-          .from(repairs)
-          .where(eq(repairs.id, id));
-        
-        if (repair) {
-          console.log(`getRepair: Reparatur ${id} gefunden für Superadmin ${userId}`);
-        } else {
-          console.warn(`getRepair: Reparatur ${id} wurde nicht gefunden`);
-        }
-        
-        return repair;
-      }
-      
-      // Für reguläre Benutzer: DSGVO-Fix - Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      // Für alle Benutzer: DSGVO-Fix - Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
       if (!user.shopId) {
         console.warn(`❌ getRepair: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return undefined;
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Reparaturdaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return undefined;
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
@@ -730,23 +741,26 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // Spezialfall: Superadmin kann alle Reparaturen sehen
-      if (user.isSuperadmin) {
-        console.log(`getRepairsByCustomerId: Superadmin ${user.username} (ID: ${user.id}) fragt Reparaturen für Kunde ${customerId} an`);
-        
-        const results = await db
-          .select()
-          .from(repairs)
-          .where(eq(repairs.customerId, customerId))
-          .orderBy(desc(repairs.createdAt));
-        
-        return results;
-      }
-
       // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
       if (!user.shopId) {
         console.warn(`❌ getRepairsByCustomerId: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
         return [];
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        // Wir importieren die Funktion hasActiveSupportAccess dynamisch, um zirkuläre Abhängigkeiten zu vermeiden
+        const { hasActiveSupportAccess } = await import('./support-access');
+        
+        // Prüfe, ob ein aktiver Support-Zugriff besteht - nur dann darf ein Superadmin auf Reparaturdaten zugreifen
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return [];
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
       }
 
       // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
