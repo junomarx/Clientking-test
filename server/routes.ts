@@ -1007,7 +1007,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Geräteart löschen
-  app.delete("/api/device-types/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/device-types/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1060,7 +1060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Marke nach ID abrufen
-  app.get("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/brands/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1118,7 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Marke aktualisieren
-  app.patch("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/brands/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1151,7 +1151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifische Marke löschen
-  app.delete("/api/brands/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/brands/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1229,7 +1229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifisches Modell aktualisieren
-  app.patch("/api/models/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.patch("/api/models/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1257,7 +1257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Benutzerspezifisches Modell löschen
-  app.delete("/api/models/:id", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/models/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       // Benutzer-ID aus der Authentifizierung abrufen
@@ -1328,7 +1328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Alle Modelle für eine bestimmte Marke löschen
-  app.delete("/api/brands/:brandId/models", isAuthenticated, async (req: Request, res: Response) => {
+  app.delete("/api/brands/:brandId/models", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const brandId = parseInt(req.params.brandId);
       // Benutzer-ID aus der Authentifizierung abrufen
