@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   Card, 
@@ -85,11 +85,28 @@ export default function SuperadminUsersTab() {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Benutzer abrufen
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery<User[]>({ 
     queryKey: ["/api/superadmin/users"],
   });
+  
+  // Benutzer filtern und sortieren
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    
+    // Filtere nach Suchbegriff
+    const filtered = searchQuery 
+      ? users.filter(user => 
+          user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          user.id.toString().includes(searchQuery))
+      : users;
+    
+    // Sortiere alphabetisch nach Benutzernamen
+    return [...filtered].sort((a, b) => a.username.localeCompare(b.username));
+  }, [users, searchQuery]);
 
   // Pakete abrufen
   const { data: packages, isLoading: isLoadingPackages } = useQuery<Package[]>({ 
@@ -217,6 +234,14 @@ export default function SuperadminUsersTab() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
           <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie alle Benutzer der Plattform</p>
+        </div>
+        <div className="w-full md:w-72">
+          <Input
+            placeholder="Benutzer suchen..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
         </div>
       </div>
       

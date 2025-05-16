@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card,
@@ -24,6 +24,19 @@ import {
   Legend
 } from 'recharts';
 import SuperadminStatsOverview from './SuperadminStatsOverview';
+import { User } from '@shared/schema';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { BadgeCheck, BadgeX } from 'lucide-react';
 
 // Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
@@ -55,6 +68,43 @@ export default function SuperadminDashboardTab() {
   const { data: stats, isLoading, error } = useQuery<SuperadminStats>({
     queryKey: ["/api/superadmin/stats"],
   });
+  
+  // Abrufen der nicht aktivierten Benutzer
+  const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
+    queryKey: ["/api/superadmin/users"],
+  });
+  
+  // Finde nicht aktivierte Benutzer und sortiere alphabetisch
+  const inactiveUsers = useMemo(() => {
+    if (!users) return [];
+    return users
+      .filter(user => !user.isActive)
+      .sort((a, b) => a.username.localeCompare(b.username));
+  }, [users]);
+  
+  // Benutzer aktivieren
+  const handleActivateUser = async (userId: number) => {
+    try {
+      await apiRequest("PATCH", `/api/superadmin/users/${userId}`, {
+        isActive: true
+      });
+      
+      // Cache aktualisieren
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/stats"] });
+      
+      toast({
+        title: "Benutzer aktiviert",
+        description: "Der Benutzer wurde erfolgreich aktiviert.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Fehler beim Aktivieren",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler",
+      });
+    }
+  };
 
   if (error) {
     toast({
@@ -158,6 +208,58 @@ export default function SuperadminDashboardTab() {
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+                
+                {/* Nicht aktivierte Benutzer */}
+                <Card className="col-span-1">
+                  <CardHeader className="py-3 md:py-4">
+                    <CardTitle className="text-base md:text-lg">Neue Benutzer</CardTitle>
+                    <CardDescription className="text-xs md:text-sm">Nicht aktivierte Benutzerkonten</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {isLoadingUsers ? (
+                      <div className="p-4">
+                        <Skeleton className="h-20 w-full" />
+                      </div>
+                    ) : inactiveUsers && inactiveUsers.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Benutzername</TableHead>
+                            <TableHead>E-Mail</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Aktionen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {inactiveUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">{user.username}</TableCell>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                  <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleActivateUser(user.id)}
+                                >
+                                  Aktivieren
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground">
+                        Keine inaktiven Benutzer gefunden
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
