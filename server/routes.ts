@@ -697,28 +697,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Prüfe auf max. Reparaturen für Benutzer ${userId} mit Paket ${user.packageId}`);
           
           try {
-            // Lade die Paket-Features aus der Datenbank
-            const { packageFeatures } = await db.select({
-              packageFeatures: db.jsonAgg(
-                db.selectDistinct({
-                  feature: packageFeatures.feature,
-                  value: packageFeatures.value
-                }).from(packageFeatures).where(eq(packageFeatures.packageId, user.packageId))
-              )
-            }).from(users).where(eq(users.id, userId)).then(res => res[0] || { packageFeatures: [] });
+            // Direkte Abfrage des maxRepairs-Features für das Paket des Benutzers
+            const features = await db.select({
+              feature: packageFeatures.feature,
+              value: packageFeatures.value
+            })
+            .from(packageFeatures)
+            .where(eq(packageFeatures.packageId, user.packageId));
             
-            console.log("Paket-Features für Benutzer:", packageFeatures);
+            console.log("Paket-Features für Benutzer:", features);
             
-            // Suche nach dem maxRepairs-Feature
-            const maxRepairsFeature = packageFeatures?.find((feature: any) => 
-              feature && feature.feature === 'maxRepairs'
-            );
+            // Direkte Suche nach dem maxRepairs-Feature
+            const maxRepairsFeature = features.find(feature => feature.feature === 'maxRepairs');
             
-            if (maxRepairsFeature && maxRepairsFeature.value !== undefined) {
-              console.log(`Max. Reparaturen Feature gefunden: ${maxRepairsFeature.value}`);
+            if (maxRepairsFeature && maxRepairsFeature.value) {
+              console.log(`Max. Reparaturen Feature direkt gefunden: ${maxRepairsFeature.value}`);
               quotaInfo.limit = parseInt(maxRepairsFeature.value) || 10; // Fallback auf 10, wenn keine gültige Zahl
             } else {
-              // Wenn kein spezifisches maxRepairs gesetzt ist, bestimme anhand des Pakettyps
+              // Wenn kein spezifisches maxRepairs gefunden wurde, bestimme anhand des Pakettyps
               const userPackage = await storage.getPackageById(user.packageId);
               
               if (userPackage) {
@@ -728,8 +724,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   quotaInfo.limit = 999999; // Unbegrenzt für höhere Pakete
                 } else if (userPackage.name === 'Demo') {
                   quotaInfo.limit = 10; // Demo hat 10 Reparaturen
+                  // Ansonsten bleibt der Standardwert von 50 für Basic
                 }
-                // Ansonsten bleibt der Standardwert von 50 für Basic
               }
             }
           } catch (error) {
@@ -779,12 +775,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       pricingPlan === 'professional' ? 'Professional' : 'Enterprise';
       }
       
+      // Ablaufdatum für das Demo-Paket hinzufügen
+      let trialExpiryInfo = null;
+      if (displayName === 'Demo' && user.trialExpiresAt) {
+        const expiryDate = new Date(user.trialExpiresAt);
+        const today = new Date();
+        
+        // Berechnung der verbleibenden Tage
+        const remainingDays = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        
+        trialExpiryInfo = {
+          expiresAt: user.trialExpiresAt,
+          remainingDays: remainingDays > 0 ? remainingDays : 0
+        };
+      }
+      
       res.json({
         ...quotaInfo,
         pricingPlan,
         displayName,
         currentMonth,
-        currentYear
+        currentYear,
+        trialExpiryInfo
       });
     } catch (error) {
       console.error("Error fetching repair quota:", error);
