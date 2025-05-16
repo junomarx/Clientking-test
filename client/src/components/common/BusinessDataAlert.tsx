@@ -48,7 +48,7 @@ export function BusinessDataAlert() {
           variant="outline" 
           size="sm" 
           className="bg-white hover:bg-gray-100 whitespace-nowrap"
-          onClick={() => navigate('/app/settings/business')}
+          onClick={() => navigate('/?tab=business-settings')}
         >
           Zu den Geschäftseinstellungen
         </Button>
