@@ -705,7 +705,7 @@ export default function SuperadminPackagesTab() {
             </Button>
             <Button 
               onClick={() => selectedPackage && updatePackageMutation.mutate({ packageId: selectedPackage.id, data: editForm })}
-              disabled={!editForm.name || editForm.priceMonthly <= 0}
+              disabled={!editForm.name || editForm.priceMonthly < 0} // Erlaubt Preis 0 für kostenlose Pakete
             >
               Paket aktualisieren
             </Button>
