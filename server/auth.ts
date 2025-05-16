@@ -98,11 +98,27 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       // Überprüfe die erforderlichen Felder
-      const { username, password, email, companyName } = req.body;
+      const { 
+        username, 
+        password, 
+        email, 
+        companyName,
+        companyAddress,
+        companyVatNumber,
+        companyPhone
+      } = req.body;
       
+      // Überprüfe alle erforderlichen Felder (Basis-Informationen)
       if (!username || !password || !email || !companyName) {
         return res.status(400).json({ 
           message: "Bitte füllen Sie alle erforderlichen Felder aus (Benutzername, Passwort, E-Mail, Firmenname)" 
+        });
+      }
+      
+      // Überprüfe alle erforderlichen Geschäftsdaten
+      if (!companyAddress || !companyVatNumber || !companyPhone) {
+        return res.status(400).json({ 
+          message: "Bitte füllen Sie alle Geschäftsdaten aus (Adresse, USt-IdNr., Telefon)" 
         });
       }
       

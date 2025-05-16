@@ -20,6 +20,7 @@ import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/queryClient';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
 import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
+import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -158,6 +159,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       initial="hidden"
       animate="visible"
     >
+      {/* Alert für unvollständige Geschäftsdaten */}
+      <BusinessDataAlert />
+      
       <motion.div 
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
         initial={{ opacity: 0, y: -20 }}
