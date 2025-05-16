@@ -433,7 +433,26 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
             {onEdit && (
               <Button
                 variant="outline"
-                onClick={() => onEdit(user)}
+                onClick={() => {
+                  // Geschäftsdaten aus den business_settings übernehmen, falls vorhanden
+                  if (businessSettings) {
+                    // Benutzer mit business_settings-Daten anreichern
+                    const userWithBusinessData = {
+                      ...user,
+                      // Unternehmensdaten aus businessSettings übernehmen
+                      companyName: user.companyName || businessSettings.businessName || '',
+                      companyAddress: user.companyAddress || 
+                        (businessSettings.streetAddress ? 
+                          `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}` : ''),
+                      companyVatNumber: user.companyVatNumber || businessSettings.vatNumber || '',
+                      companyPhone: user.companyPhone || businessSettings.phone || '',
+                      companyEmail: user.companyEmail || businessSettings.email || ''
+                    };
+                    onEdit(userWithBusinessData);
+                  } else {
+                    onEdit(user);
+                  }
+                }}
                 className="flex items-center gap-1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg> Bearbeiten
