@@ -127,8 +127,21 @@ export default function SuperadminPackagesTab() {
     mutationFn: async ({ packageId, data }: { packageId: number; data: PackageFormData }) => {
       // Formatiere die Features für die API - wir senden nur die aktiven Features
       const featuresForAPI = data.features
-        .filter(f => typeof f.value === 'boolean' ? f.value : true)
-        .map(f => f.feature);
+        .filter(f => {
+          // Boolean-Features: nur aktive einschließen
+          if (typeof f.value === 'boolean') {
+            return f.value;
+          }
+          // Numerische Features (wie maxRepairs) immer einschließen
+          return true;
+        })
+        .map(f => {
+          // Bei numerischen Features (maxRepairs) fügen wir den Wert zum Feature-Namen hinzu
+          if (f.feature === 'maxRepairs' && typeof f.value === 'number') {
+            return `maxRepairs:${f.value}`;
+          }
+          return f.feature;
+        });
       
       console.log("Sende folgende Features an API:", featuresForAPI);
       
@@ -138,9 +151,17 @@ export default function SuperadminPackagesTab() {
         priceMonthly: data.priceMonthly,
         features: featuresForAPI
       });
-      return await response.json();
+      
+      const result = await response.json();
+      
+      // Direkt Cache-Eintrag für dieses spezifische Paket invalidieren
+      queryClient.invalidateQueries({ queryKey: [`/api/superadmin/packages/${packageId}`] });
+      
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Paket erfolgreich aktualisiert:", data);
+      // Gesamtliste der Pakete invalidieren
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/packages"] });
       setIsEditDialogOpen(false);
       toast({
@@ -149,6 +170,7 @@ export default function SuperadminPackagesTab() {
       });
     },
     onError: (error: Error) => {
+      console.error("Fehler bei Paketaktualisierung:", error);
       toast({
         variant: "destructive",
         title: "Fehler",
@@ -187,19 +209,41 @@ export default function SuperadminPackagesTab() {
       
       setSelectedPackage(packageData);
       
-      // Konvertiere die Feature-Struktur von der API (stringliste) 
-      // in die Form, die das Frontend erwartet (Objekte mit feature und value)
+      // Konvertiere die Feature-Struktur von der API in die Form, die das Frontend erwartet
       const formattedFeatures = initialFormState.features.map(defaultFeature => {
-        // Prüfen ob dieses Feature in den vom Server geladenen Features vorhanden ist
-        const featureExists = packageData.features && 
-          packageData.features.some((f: any) => f.feature === defaultFeature.feature);
+        // Boolean-Features prüfen (canPrintLabels, canUseCostEstimates, etc.)
+        if (typeof defaultFeature.value === 'boolean') {
+          // Prüfen ob dieses Feature in den vom Server geladenen Features vorhanden ist
+          const featureExists = packageData.features && 
+            packageData.features.some((f: any) => f.feature === defaultFeature.feature);
+          
+          return {
+            feature: defaultFeature.feature,
+            value: featureExists // Wenn ja, setze value auf true, sonst false
+          };
+        } 
+        // Numerische Features verarbeiten (z.B. maxRepairs)
+        else if (defaultFeature.feature === 'maxRepairs') {
+          // Suche nach einem maxRepairs Feature mit speziellem Wert
+          const maxRepairsFeature = packageData.features && 
+            packageData.features.find((f: any) => f.feature === 'maxRepairs');
+          
+          // Prüfe, ob ein value explizit gesetzt wurde
+          if (maxRepairsFeature && maxRepairsFeature.value !== undefined) {
+            return {
+              feature: 'maxRepairs',
+              value: maxRepairsFeature.value
+            };
+          }
+          
+          return defaultFeature; // Verwende den Standardwert, wenn nichts gefunden
+        }
         
-        // Wenn ja, setze value auf true, sonst behalte den Default-Wert
-        return {
-          feature: defaultFeature.feature,
-          value: featureExists ? true : defaultFeature.value
-        };
+        // Standardfall: behalte den Default-Wert bei
+        return defaultFeature;
       });
+      
+      console.log("Formatierte Features für das Formular:", formattedFeatures);
       
       // Formular vorbefüllen
       setEditForm({

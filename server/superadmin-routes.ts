@@ -561,7 +561,20 @@ export function registerSuperadminRoutes(app: Express) {
       if (features && Array.isArray(features)) {
         console.log("Features zum Hinzufügen:", features);
         
-        for (const feature of features) {
+        // Spezielle Features mit Zahlenwerten verarbeiten (z.B. maxRepairs:10)
+        const processedFeatures = features.map(feature => {
+          // Prüfe, ob es sich um ein Feature mit Zahlenwert handelt
+          if (typeof feature === 'string' && feature.includes(':')) {
+            const [featureName, featureValue] = feature.split(':');
+            // Wenn es maxRepairs ist, speichern wir nur den Namen ohne Wert in der DB
+            if (featureName === 'maxRepairs') {
+              return featureName;
+            }
+          }
+          return feature;
+        });
+        
+        for (const feature of processedFeatures) {
           try {
             await db.insert(packageFeatures).values({
               packageId: packageId,
@@ -586,11 +599,29 @@ export function registerSuperadminRoutes(app: Express) {
       const [updatedPackage] = await db.select().from(packages).where(eq(packages.id, packageId));
       const packageFeaturesList = await db.select().from(packageFeatures).where(eq(packageFeatures.packageId, packageId));
       
+      // Einige Features anreichern (z.B. maxRepairs mit Wert)
+      const enrichedFeatures = packageFeaturesList.map(f => {
+        // Wenn ein maxRepairs Feature gefunden wird, suchen wir den Wert im ursprünglichen features Array
+        if (f.feature === 'maxRepairs') {
+          const maxRepairsFeature = features.find(feat => 
+            typeof feat === 'string' && feat.startsWith('maxRepairs:')
+          );
+          
+          if (maxRepairsFeature) {
+            const maxRepairsValue = maxRepairsFeature.split(':')[1];
+            return { ...f, value: parseInt(maxRepairsValue) || 10 };
+          }
+        }
+        return f;
+      });
+      
+      console.log("Angereicherte Features für Frontend:", enrichedFeatures);
+      
       res.json({ 
         message: "Paket erfolgreich aktualisiert",
         package: {
           ...updatedPackage,
-          features: packageFeaturesList
+          features: enrichedFeatures
         }
       });
     } catch (error) {
