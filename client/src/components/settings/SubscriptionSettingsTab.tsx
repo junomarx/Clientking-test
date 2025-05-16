@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 // Typ-Definition für die API-Antwort des Reparaturkontingents
 interface RepairQuota {
   canCreate: boolean;
-  currentCount: number;
+  count: number; // Aktuell benutzte Reparaturaufträge
   limit: number;
   pricingPlan: string;
   displayName: string;
@@ -46,7 +46,7 @@ export function SubscriptionSettingsTab() {
   
   // Prozentsatz der verbrauchten Kontingent berechnen
   const usagePercentage = quotaData 
-    ? Math.min(100, Math.round((quotaData.currentCount / quotaData.limit) * 100)) 
+    ? Math.min(100, Math.round((quotaData.count / quotaData.limit) * 100)) 
     : 0;
   
   if (isLoading) {
@@ -161,14 +161,12 @@ export function SubscriptionSettingsTab() {
                     <div className="flex justify-between text-sm">
                       <span>Verbleibende Reparaturaufträge</span>
                       <span>
-                        {quotaData.displayName === 'Demo' ? 
-                          `${10 - quotaData.currentCount} von 10` : 
-                          `${quotaData.limit - quotaData.currentCount} von ${quotaData.limit}`}
+                        {`${quotaData.limit - quotaData.count} von ${quotaData.limit}`}
                       </span>
                     </div>
                     <Progress value={usagePercentage} className="h-2" />
                     
-                    {quotaData.currentCount >= quotaData.limit && (
+                    {quotaData.count >= quotaData.limit && (
                       <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
                         <strong>Monatliches Limit erreicht.</strong> Upgrade auf Professional für unbegrenzte Aufträge.
                       </div>
