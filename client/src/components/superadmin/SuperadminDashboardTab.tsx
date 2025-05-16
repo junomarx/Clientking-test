@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/table";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { BadgeCheck, BadgeX } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 // Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
@@ -64,6 +65,7 @@ interface SuperadminStats {
 
 export default function SuperadminDashboardTab() {
   const { toast } = useToast();
+  const [_, setLocation] = useLocation();
 
   const { data: stats, isLoading, error } = useQuery<SuperadminStats>({
     queryKey: ["/api/superadmin/stats"],
@@ -246,9 +248,11 @@ export default function SuperadminDashboardTab() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  onClick={() => handleActivateUser(user.id)}
+                                  onClick={() => {
+                                    setLocation(`/superadmin?tab=users&userId=${user.id}`);
+                                  }}
                                 >
-                                  Aktivieren
+                                  Details
                                 </Button>
                               </TableCell>
                             </TableRow>
