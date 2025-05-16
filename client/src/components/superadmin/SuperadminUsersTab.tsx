@@ -244,7 +244,11 @@ export default function SuperadminUsersTab() {
           <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle>Alle Benutzer</CardTitle>
-              <CardDescription>Insgesamt {users.length} Benutzer im System</CardDescription>
+              <CardDescription>
+                {searchQuery 
+                  ? `${filteredUsers.length} von ${users.length} Benutzern gefunden` 
+                  : `Insgesamt ${users.length} Benutzer im System`}
+              </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
               <Input
@@ -274,7 +278,7 @@ export default function SuperadminUsersTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.id}</TableCell>
                       <TableCell>{user.username}</TableCell>
