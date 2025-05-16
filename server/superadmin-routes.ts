@@ -10,7 +10,7 @@ import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
-  hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries
+  hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries, businessSettings
 } from "@shared/schema";
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
@@ -3200,6 +3200,31 @@ export function registerSuperadminRoutes(app: Express) {
         success: false,
         message: 'Fehler beim Import des Fehlerkatalogs'
       });
+    }
+  });
+  
+  // Geschäftseinstellungen eines bestimmten Shops abrufen
+  app.get("/api/superadmin/business-settings/:shopId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const shopId = parseInt(req.params.shopId);
+      
+      if (isNaN(shopId)) {
+        return res.status(400).json({ message: "Ungültige Shop-ID" });
+      }
+      
+      // Geschäftseinstellungen für den angegebenen Shop abrufen
+      const [settings] = await db.select()
+        .from(businessSettings)
+        .where(eq(businessSettings.shopId, shopId));
+      
+      if (!settings) {
+        return res.status(404).json({ message: "Keine Geschäftseinstellungen für diesen Shop gefunden" });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
     }
   });
 }
