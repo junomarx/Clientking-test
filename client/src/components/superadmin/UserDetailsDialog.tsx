@@ -444,7 +444,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                       companyAddress: user.companyAddress || 
                         (businessSettings.streetAddress ? 
                           `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}` : ''),
-                      companyVatNumber: user.companyVatNumber || businessSettings.vatNumber || '',
+                      companyVatNumber: user.companyVatNumber || businessSettings.vatNumber || businessSettings.taxId || '',
                       companyPhone: user.companyPhone || businessSettings.phone || '',
                       companyEmail: user.companyEmail || businessSettings.email || ''
                     };

@@ -1209,16 +1209,13 @@ export class DatabaseStorage implements IStorage {
       if (!settings) {
         console.log(`Keine persönlichen Einstellungen für Benutzer ${user.username} gefunden, suche Shop-Einstellungen...`);
         
-        // Finde die neuesten Einstellungen für diesen Shop, aber von ANDEREN Benutzern
-        // Dies ist ein Fallback, falls der Benutzer selbst keine Einstellungen hat
+        // Finde nur die neuesten Einstellungen für diesen Shop (nur für denselben Shop)
+        // Das ist besser für die DSGVO-Einhaltung - keine Shop-übergreifenden Daten
         const shopSettings = await db
           .select()
           .from(businessSettings)
           .where(
-            and(
-              eq(businessSettings.shopId, shopId),
-              not(eq(businessSettings.userId, userId))  // Ausschließen der eigenen Einstellungen
-            )
+            eq(businessSettings.shopId, shopId)
           )
           .orderBy(desc(businessSettings.id))
           .limit(1);
