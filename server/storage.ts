@@ -62,6 +62,7 @@ import {
   isNull,
   like,
   SQL,
+  not,
 } from "drizzle-orm";
 import { pool } from "./db";
 import session from "express-session";
