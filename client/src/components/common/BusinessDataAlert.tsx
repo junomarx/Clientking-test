@@ -3,15 +3,17 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useBusinessSettings } from '@/hooks/use-business-settings';
-import { useLocation } from 'wouter';
 
 /**
  * Komponente zur Anzeige einer Warnung, wenn Geschäftsdaten unvollständig sind
  */
-export function BusinessDataAlert() {
+interface BusinessDataAlertProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export function BusinessDataAlert({ onTabChange }: BusinessDataAlertProps) {
   const [missingData, setMissingData] = useState(false);
   const { settings, isLoading } = useBusinessSettings();
-  const [, navigate] = useLocation();
 
   // Prüft, ob notwendige Geschäftsdaten vorhanden sind
   useEffect(() => {
@@ -48,7 +50,7 @@ export function BusinessDataAlert() {
           variant="outline" 
           size="sm" 
           className="bg-white hover:bg-gray-100 whitespace-nowrap"
-          onClick={() => navigate('/?tab=business-settings')}
+          onClick={() => onTabChange && onTabChange('business-settings')}
         >
           Zu den Geschäftseinstellungen
         </Button>
