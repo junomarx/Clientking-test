@@ -505,6 +505,22 @@ export function registerSuperadminRoutes(app: Express) {
       }).from(packageFeatures)
         .where(eq(packageFeatures.packageId, packageId));
 
+      // Features mit Werten anreichern
+      const processedFeatures = packageFeaturesList.map(feature => {
+        // Boolsche Features (deren Existenz bedeutet "true")
+        if (["canPrintLabels", "canUseCostEstimates", "canViewDetailedStats", "canSendEmails"].includes(feature.feature)) {
+          return { ...feature, value: true };
+        }
+        // maxRepairs standardmäßig auf 10 setzen, falls nicht anders angegeben
+        else if (feature.feature === "maxRepairs") {
+          return { ...feature, value: 10 };
+        }
+        
+        return feature;
+      });
+      
+      console.log("Paket Details abrufen - Features:", processedFeatures);
+
       // Benutzer mit diesem Paket zählen
       const [userCount] = await db.select({
         count: count().as("user_count"),
@@ -512,7 +528,7 @@ export function registerSuperadminRoutes(app: Express) {
 
       res.json({
         ...packageData,
-        features: packageFeaturesList,
+        features: processedFeatures,
         userCount: userCount.count,
       });
     } catch (error) {
