@@ -5,6 +5,9 @@ import { storage } from "./storage";
 import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from './permissions';
 // Import der Middleware für die Prüfung der Trial-Version
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
+import { format } from 'date-fns';
+import { db } from './db';
+import { eq } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -403,9 +406,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ungültiger Reparaturstatus" });
       }
       
-      // Reparatur mit Benutzerkontext erstellen
-      const repair = await storage.createRepair(repairData, userId);
-      console.log("Created repair:", repair);
+      // DSGVO-konformer direkter DB-Zugriff mit Shop-ID zur Erstellung der Reparatur
+      // Benutzer abrufen, um die Shop-ID zu bekommen
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user || !user.shopId) {
+        console.warn(`⚠️ DSGVO-Schutz: Reparatur kann nicht ohne Shop-ID erstellt werden (User: ${userId})`);
+        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+      }
+      
+      // Reparatur mit Shop-ID erstellen
+      const newRepair = {
+        ...repairData,
+        userId,
+        shopId: user.shopId,
+        createdAt: new Date(),
+        creationMonth: format(new Date(), 'yyyy-MM')
+      };
+      
+      const [repair] = await db
+        .insert(repairs)
+        .values(newRepair)
+        .returning();
+      
+      console.log(`✅ DSGVO-konform: Neue Reparatur ${repair.id} für Shop ${user.shopId} erstellt`);
       res.status(201).json(repair);
     } catch (error) {
       console.error("Error creating repair:", error);
