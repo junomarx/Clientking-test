@@ -73,6 +73,12 @@ interface User {
 // Erweiterter Benutzertyp für Formulareingaben
 interface UserFormData extends Partial<User> {
   password?: string;
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  streetAddress?: string;
+  zipCode?: string;
+  city?: string;
+  country?: string;
 }
 
 // Paket-Typ
