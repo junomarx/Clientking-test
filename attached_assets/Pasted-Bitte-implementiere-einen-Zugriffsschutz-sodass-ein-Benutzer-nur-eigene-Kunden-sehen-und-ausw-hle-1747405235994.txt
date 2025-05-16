@@ -1,0 +1,84 @@
+Bitte implementiere einen Zugriffsschutz, sodass ein Benutzer **nur eigene Kunden sehen und auswählen kann**, wenn er einen Reparaturauftrag anlegt. Kein Zugriff auf Kunden anderer Benutzer oder Shops darf möglich sein – auch nicht durch direkte API-Aufrufe.
+
+---
+
+### ✅ Ziel:
+- Ein Benutzer darf **nur Kunden sehen**, die er selbst erstellt hat oder die seinem Shop zugeordnet sind.
+- Gilt sowohl für:
+  - das UI (Dropdown „Kunde auswählen“ beim Reparaturauftrag)
+  - als auch die API (z. B. POST /api/repairs)
+
+---
+
+### 🔧 Aufgabe 1: API absichern
+
+Ergänze in `pages/api/repairs/index.ts` (oder wo neue Reparaturaufträge gespeichert werden):
+
+```ts
+// Beispielhafte Sicherheit in der API
+if (req.method === "POST") {
+  const { customerId, ...repairData } = req.body;
+  const user = req.user || req.session?.user;
+
+  // ✅ Zugriff prüfen: gehört der Kunde zum Shop des Nutzers?
+  const customer = await prisma.customer.findFirst({
+    where: {
+      id: customerId,
+      shopId: user.shopId,
+    },
+  });
+
+  if (!customer) {
+    return res.status(403).json({ error: "Zugriff verweigert: Kunde gehört nicht zu deinem Shop." });
+  }
+
+  const repair = await prisma.repair.create({
+    data: {
+      ...repairData,
+      customerId,
+      shopId: user.shopId,
+      userId: user.id,
+    },
+  });
+
+  return res.status(200).json(repair);
+}
+🔧 Aufgabe 2: Kundenliste im UI filtern
+Beim Laden der Kunden im Reparaturformular:
+
+ts
+Kopieren
+Bearbeiten
+const { data: customers } = useQuery({
+  queryKey: ["customers"],
+  queryFn: async () => {
+    const res = await fetch("/api/customers");
+    const data = await res.json();
+    return data.filter((customer) => customer.shopId === session.shopId); // optional redundant im Frontend
+  },
+});
+ODER: Besser direkt in der API schon gefiltert:
+
+ts
+Kopieren
+Bearbeiten
+// pages/api/customers/index.ts
+const user = req.user || req.session?.user;
+
+const customers = await prisma.customer.findMany({
+  where: { shopId: user.shopId },
+});
+🧠 Aufgabe 3: Datenmodell prüfen
+Stelle sicher, dass Customer in der Datenbank ein shopId-Feld hat und dieses gesetzt wird, wenn ein Kunde angelegt wird.
+
+ts
+Kopieren
+Bearbeiten
+await prisma.customer.create({
+  data: {
+    name: "Max Mustermann",
+    email: "max@example.com",
+    shopId: user.shopId,
+    userId: user.id,
+  },
+});
