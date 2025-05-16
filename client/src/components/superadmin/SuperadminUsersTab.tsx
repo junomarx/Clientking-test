@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { UserDetailsDialog } from './UserDetailsDialog';
 import { 
   Card, 
   CardContent, 
@@ -86,6 +87,8 @@ export default function SuperadminUsersTab() {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Benutzer abrufen
@@ -206,6 +209,12 @@ export default function SuperadminUsersTab() {
       companyEmail: user.companyEmail,
     });
     setIsEditDialogOpen(true);
+  };
+  
+  // Benutzerdetails anzeigen
+  const handleShowUserDetails = (userId: number) => {
+    setSelectedUserId(userId);
+    setIsDetailsDialogOpen(true);
   };
 
   // Benutzerdaten aktualisieren
