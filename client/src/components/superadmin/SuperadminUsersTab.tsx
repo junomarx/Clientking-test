@@ -331,14 +331,6 @@ export default function SuperadminUsersTab() {
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleEditUser(user)}
-                            className="w-full sm:w-auto"
-                          >
-                            <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
-                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -346,22 +338,6 @@ export default function SuperadminUsersTab() {
                             className="w-full sm:w-auto"
                           >
                             <Info className="h-3 w-3 mr-1" /> Details
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={user.isActive ? "outline" : "default"}
-                            onClick={() => toggleActivationMutation.mutate(user.id)}
-                            className="w-full sm:w-auto"
-                          >
-                            {user.isActive ? (
-                              <>
-                                <BadgeX className="h-3 w-3 mr-1" /> Deaktivieren
-                              </>
-                            ) : (
-                              <>
-                                <BadgeCheck className="h-3 w-3 mr-1" /> Aktivieren
-                              </>
-                            )}
                           </Button>
                           <Button 
                             size="sm" 

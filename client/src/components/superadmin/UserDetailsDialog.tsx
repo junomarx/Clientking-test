@@ -290,7 +290,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                     <div className="flex items-start gap-2">
                       <Building2 className="h-4 w-4 mt-1 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{user.companyName || 'Nicht angegeben'}</p>
+                        <p className="font-medium">{user.companyName || (businessSettings?.businessName) || 'Nicht angegeben'}</p>
                         <p className="text-sm text-muted-foreground">Firmenname</p>
                       </div>
                     </div>
@@ -298,7 +298,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                     <div className="flex items-start gap-2">
                       <Store className="h-4 w-4 mt-1 text-muted-foreground" />
                       <div>
-                        <p className="font-medium whitespace-pre-line">{user.companyAddress || 'Nicht angegeben'}</p>
+                        <p className="font-medium whitespace-pre-line">{user.companyAddress || (businessSettings?.businessAddress) || 'Nicht angegeben'}</p>
                         <p className="text-sm text-muted-foreground">Firmenadresse</p>
                       </div>
                     </div>
@@ -306,7 +306,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                     <div className="flex items-start gap-2">
                       <ReceiptText className="h-4 w-4 mt-1 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{user.companyVatNumber || 'Nicht angegeben'}</p>
+                        <p className="font-medium">{user.companyVatNumber || (businessSettings?.vatNumber) || 'Nicht angegeben'}</p>
                         <p className="text-sm text-muted-foreground">USt-IdNr.</p>
                       </div>
                     </div>
@@ -322,7 +322,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                     <div className="flex items-start gap-2">
                       <Phone className="h-4 w-4 mt-1 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{user.companyPhone || 'Nicht angegeben'}</p>
+                        <p className="font-medium">{user.companyPhone || (businessSettings?.businessPhone) || 'Nicht angegeben'}</p>
                         <p className="text-sm text-muted-foreground">Telefonnummer</p>
                       </div>
                     </div>
