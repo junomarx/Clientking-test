@@ -87,8 +87,8 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
     if (!userId) return;
     
     try {
-      // Benutze den Admin-Endpunkt statt des Shop-ID-Endpunkts, um die korrekten Daten zu erhalten
-      const response = await fetch(`/api/admin/business-settings/${userId}`);
+      // Benutze den Superadmin-Endpunkt für die korrekten Daten
+      const response = await fetch(`/api/superadmin/user-business-settings/${userId}`);
       if (response.ok) {
         const data = await response.json();
         console.log("Business settings für Benutzer", userId, "geladen:", data);
