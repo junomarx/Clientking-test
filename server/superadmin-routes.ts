@@ -560,20 +560,39 @@ export function registerSuperadminRoutes(app: Express) {
       // Neue Features hinzufügen
       if (features && Array.isArray(features)) {
         console.log("Features zum Hinzufügen:", features);
-        const featureInsertPromises = features.map(feature => 
-          db.insert(packageFeatures).values({
-            packageId: packageId,
-            feature: feature
-          })
-        );
         
-        await Promise.all(featureInsertPromises);
+        for (const feature of features) {
+          try {
+            await db.insert(packageFeatures).values({
+              packageId: packageId,
+              feature: feature
+            });
+            console.log(`Feature '${feature}' hinzugefügt.`);
+          } catch (featureError) {
+            console.error(`Fehler beim Hinzufügen des Features '${feature}':`, featureError);
+          }
+        }
+        
         console.log(`${features.length} Features für Paket ${packageId} aktualisiert`);
+        
+        // Überprüfen, welche Features tatsächlich gespeichert wurden
+        const updatedFeatures = await db.select().from(packageFeatures).where(eq(packageFeatures.packageId, packageId));
+        console.log("Tatsächlich gespeicherte Features:", updatedFeatures);
       } else {
         console.log("Keine Features zum Hinzufügen gefunden oder ungültiges Format");
       }
 
-      res.json({ message: "Paket erfolgreich aktualisiert" });
+      // Abrufen des aktualisierten Pakets mit Features
+      const [updatedPackage] = await db.select().from(packages).where(eq(packages.id, packageId));
+      const packageFeaturesList = await db.select().from(packageFeatures).where(eq(packageFeatures.packageId, packageId));
+      
+      res.json({ 
+        message: "Paket erfolgreich aktualisiert",
+        package: {
+          ...updatedPackage,
+          features: packageFeaturesList
+        }
+      });
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Pakets:", error);
       res.status(500).json({ message: "Fehler beim Aktualisieren des Pakets", error: error instanceof Error ? error.message : 'Unbekannter Fehler' });
