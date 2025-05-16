@@ -17,9 +17,28 @@ import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportM
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
 export default function SuperadminPage() {
-  const [_, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  
+  // URL-Parameter verarbeiten, um direkt zu einem Tab/User zu springen
+  useEffect(() => {
+    // URL-Parameter extrahieren
+    const params = new URLSearchParams(location.includes('?') ? location.split('?')[1] : '');
+    const tabParam = params.get('tab');
+    const userIdParam = params.get('userId');
+    
+    // Tab setzen, wenn in URL vorhanden
+    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'email', 'print-templates', 'support-mode'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+    
+    // Benutzer-ID setzen, wenn in URL vorhanden
+    if (userIdParam && !isNaN(parseInt(userIdParam))) {
+      setSelectedUserId(parseInt(userIdParam));
+    }
+  }, [location]);
 
   // Benutzer abrufen, um den richtigen Namen anzuzeigen
   const { data: currentUser } = useQuery<User>({ 
@@ -111,7 +130,7 @@ export default function SuperadminPage() {
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
             {activeTab === "dashboard" && <SuperadminDashboardTab />}
-            {activeTab === "users" && <SuperadminUsersTab />}
+            {activeTab === "users" && <SuperadminUsersTab initialSelectedUserId={selectedUserId} />}
             {activeTab === "packages" && <SuperadminPackagesTab />}
             {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
             {activeTab === "email" && <SuperadminEmailTab />}

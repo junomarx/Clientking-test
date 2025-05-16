@@ -90,12 +90,16 @@ interface Package {
   createdAt: string;
 }
 
-export default function SuperadminUsersTab() {
+interface SuperadminUsersTabProps {
+  initialSelectedUserId?: number | null;
+}
+
+export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(initialSelectedUserId || null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Benutzer abrufen
