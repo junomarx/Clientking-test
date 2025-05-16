@@ -15,6 +15,10 @@ interface RepairQuota {
   displayName: string;
   currentMonth: string;
   currentYear: number;
+  trialExpiryInfo?: {
+    expiresAt: string;
+    remainingDays: number;
+  };
 }
 
 // Schnell-Feature-Vergleich
@@ -106,8 +110,21 @@ export function SubscriptionSettingsTab() {
                 <span className="text-lg md:text-xl">{quotaData.displayName}</span>
               </CardTitle>
               <CardDescription className="text-xs md:text-sm">
-                <span className="block">Abrechnungszeitraum: {quotaData.currentMonth} {quotaData.currentYear}</span>
-                <span className="block mt-1">Nächste Abrechnung: 01.{quotaData.currentMonth === 'Dezember' ? 'Januar' : 'Juni'} {quotaData.currentMonth === 'Dezember' ? quotaData.currentYear + 1 : quotaData.currentYear}</span>
+                {quotaData.displayName === 'Demo' && quotaData.trialExpiryInfo ? (
+                  <>
+                    <span className="block font-medium text-amber-600">
+                      Demo-Version: Noch {quotaData.trialExpiryInfo.remainingDays} Tage verfügbar
+                    </span>
+                    <span className="block mt-1">
+                      Läuft ab am: {new Date(quotaData.trialExpiryInfo.expiresAt).toLocaleDateString('de-DE')}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="block">Abrechnungszeitraum: {quotaData.currentMonth} {quotaData.currentYear}</span>
+                    <span className="block mt-1">Nächste Abrechnung: 01.{quotaData.currentMonth === 'Dezember' ? 'Januar' : 'Juni'} {quotaData.currentMonth === 'Dezember' ? quotaData.currentYear + 1 : quotaData.currentYear}</span>
+                  </>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
@@ -124,6 +141,19 @@ export function SubscriptionSettingsTab() {
                     </a>
                   </Button>
                 </div>
+                
+                {/* Demo-Paket Ablaufwarnung */}
+                {quotaData.displayName === 'Demo' && quotaData.trialExpiryInfo && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <h4 className="text-sm font-semibold text-amber-800 flex items-center">
+                      <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
+                      Demo-Version läuft in {quotaData.trialExpiryInfo.remainingDays} Tagen ab
+                    </h4>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Um Ihre Daten zu behalten und den Service weiterhin zu nutzen, upgraden Sie bitte auf ein kostenpflichtiges Paket vor dem {new Date(quotaData.trialExpiryInfo.expiresAt).toLocaleDateString('de-DE')}.
+                    </p>
+                  </div>
+                )}
 
                 {/* Wenn Basic Plan, dann Kontingent anzeigen */}
                 {quotaData.pricingPlan === 'basic' && (
