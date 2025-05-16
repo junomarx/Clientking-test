@@ -239,10 +239,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Kunde mit Benutzerkontext erstellen
-      const customer = await storage.createCustomer(customerData, userId);
+      // Benutzer aus der Datenbank holen, um die Shop-ID zu bekommen
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user || !user.shopId) {
+        console.warn(`⚠️ DSGVO-Schutz: Kunde kann nicht ohne Shop-ID erstellt werden (User: ${userId})`);
+        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+      }
+      
+      // DSGVO-konforme Kundenerstellung mit expliziter Shop-ID
+      const newCustomer = {
+        ...customerData,
+        userId: userId,
+        shopId: user.shopId,
+        createdAt: new Date()
+      };
+      
+      // Direkter DB-Zugriff für DSGVO-konforme Verarbeitung
+      const [customer] = await db
+        .insert(customers)
+        .values(newCustomer)
+        .returning();
+      
+      console.log(`✅ DSGVO-konform: Neuer Kunde ${customer.firstName} ${customer.lastName} für Shop ${user.shopId} erstellt`);
       res.status(201).json(customer);
     } catch (error) {
+      console.error("Fehler beim Erstellen eines Kunden:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ message: "Invalid customer data", errors: error.errors });
       }

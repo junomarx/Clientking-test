@@ -8,7 +8,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../db';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { users, customers } from '../../shared/schema';
 
 /**
@@ -61,29 +61,23 @@ export async function enforceShopIsolation(req: Request, res: Response, next: Ne
 /**
  * Diese Funktion prüft strikt, ob der angegebene Customer zur Shop-ID des anfragenden Benutzers gehört
  */
-export function validateCustomerBelongsToShop(customerId: number, req: Request): Promise<boolean> {
-  return new Promise(async (resolve) => {
-    try {
-      const shopId = (req as any).userShopId;
-      if (!shopId) {
-        console.warn('Shop-ID fehlt bei der Kundenvalidierung');
-        return resolve(false);
-      }
-
-      // Prüfe direkt in der Datenbank, ob der Kunde zum Shop gehört
-      const result = await db
-        .select({ count: sql`COUNT(*)` })
-        .from(customers)
-        .where(and(
-          eq(customers.id, customerId),
-          eq(customers.shopId, shopId)
-        ));
-
-      const count = result.rows[0]?.count || 0;
-      return resolve(parseInt(count) > 0);
-    } catch (error) {
-      console.error('Fehler bei der Kundenvalidierung:', error);
-      return resolve(false);
+export async function validateCustomerBelongsToShop(customerId: number, userShopId: number): Promise<boolean> {
+  try {
+    if (!userShopId) {
+      console.warn('Shop-ID fehlt bei der Kundenvalidierung');
+      return false;
     }
-  });
+
+    // Prüfen ob ein Kunde mit dieser ID für den Shop existiert
+    const customerEntries = await db
+      .select({ count: db.fn.count() })
+      .from(customers)
+      .where(eq(customers.id, customerId))
+      .where(eq(customers.shopId, userShopId));
+
+    return customerEntries.length > 0 && Number(customerEntries[0].count) > 0;
+  } catch (error) {
+    console.error('Fehler bei der Kundenvalidierung:', error);
+    return false;
+  }
 }
