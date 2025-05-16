@@ -161,7 +161,9 @@ export function SubscriptionSettingsTab() {
                     <div className="flex justify-between text-sm">
                       <span>Verbleibende Reparaturaufträge</span>
                       <span>
-                        {quotaData.limit - quotaData.currentCount} von {quotaData.limit}
+                        {quotaData.displayName === 'Demo' ? 
+                          `${10 - quotaData.currentCount} von 10` : 
+                          `${quotaData.limit - quotaData.currentCount} von ${quotaData.limit}`}
                       </span>
                     </div>
                     <Progress value={usagePercentage} className="h-2" />

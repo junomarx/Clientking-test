@@ -650,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Standardwerte für den Fall, dass kein Limit existiert (für Professional und Enterprise)
       let quotaInfo = {
         count: 0,
-        limit: 50, // Standard für Basic
+        limit: 10, // Geändert von 50 auf 10 als Standardwert
         canCreate: true
       };
       
