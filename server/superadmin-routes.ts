@@ -76,6 +76,52 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
     }
   });
+  
+  // Aktualisieren der Geschäftseinstellungen eines Benutzers als Superadmin
+  app.patch("/api/superadmin/user-business-settings/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+      
+      // Benutzer holen, um zu prüfen, ob er existiert
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Aktualisieren der Geschäftseinstellungen
+      console.log(`Superadmin aktualisiert Geschäftseinstellungen für Benutzer ${user.username} (ID: ${userId})`);
+      
+      try {
+        // Bestehende Einstellungen abrufen
+        const existingSettings = await storage.getBusinessSettings(userId);
+        
+        // Aktualisierte Daten mit bestehenden Daten zusammenführen
+        const updatedSettings = {
+          ...(existingSettings || {}),
+          ...req.body,
+        };
+        
+        // Daten speichern - shop_id wird automatisch vom User übernommen
+        const savedSettings = await storage.updateBusinessSettings(updatedSettings, userId);
+        console.log(`Geschäftseinstellungen für Benutzer ${user.username} aktualisiert: ID ${savedSettings.id}`);
+        
+        // Zwinge Query-Cache zum Invalidieren, damit der Benutzer die Änderungen sofort sieht
+        // Dies ist wichtig, da sonst die Änderungen erst nach einem Neuladen angezeigt werden
+        
+        res.json(savedSettings);
+      } catch (error) {
+        console.error("Fehler beim Aktualisieren der Geschäftseinstellungen:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Geschäftseinstellungen:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Geschäftseinstellungen" });
+    }
+  });
   // E-Mail-Routen registrieren
   registerSuperadminEmailRoutes(app);
   
