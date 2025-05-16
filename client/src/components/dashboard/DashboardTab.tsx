@@ -160,7 +160,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       animate="visible"
     >
       {/* Alert für unvollständige Geschäftsdaten */}
-      <BusinessDataAlert />
+      <BusinessDataAlert onTabChange={onTabChange} />
       
       <motion.div 
         className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
