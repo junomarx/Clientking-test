@@ -93,16 +93,18 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
         const data = await response.json();
         console.log("Business settings für Benutzer", userId, "geladen:", data);
         setBusinessSettings(data);
+      } else if (response.status === 404) {
+        // Wenn keine Geschäftsdaten gefunden werden (404), einfach null setzen ohne Fehler anzuzeigen
+        console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden.`);
+        setBusinessSettings(null);
       } else {
+        // Nur bei anderen Fehlern als 404 einen Fehler werfen
         throw new Error('Fehler beim Abrufen der Geschäftseinstellungen');
       }
     } catch (error) {
       console.error('Fehler beim Abrufen der Geschäftseinstellungen:', error);
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Die Geschäftseinstellungen konnten nicht geladen werden.",
-      });
+      // Keine Fehlermeldung mehr anzeigen, stattdessen einfach businessSettings auf null setzen
+      setBusinessSettings(null);
     }
   };
   
