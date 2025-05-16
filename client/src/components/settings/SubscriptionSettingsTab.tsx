@@ -41,14 +41,17 @@ export function SubscriptionSettingsTab() {
     refetchInterval: 30000,
   });
   
-  // Korrektur für das Demo-Paket - Backend liefert falsches Limit
-  let quotaData = rawQuotaData;
-  if (quotaData && quotaData.displayName === 'Demo') {
-    quotaData = {
-      ...quotaData,
-      limit: 10
-    };
-  }
+  // Variable für die tatsächlichen angezeigten Daten
+  const quotaData = React.useMemo(() => {
+    if (!rawQuotaData) return null;
+    
+    // Für Demo-Paket festes Limit von 10 erzwingen
+    if (rawQuotaData?.displayName === 'Demo') {
+      return { ...rawQuotaData, limit: 10 };
+    }
+    
+    return rawQuotaData;
+  }, [rawQuotaData]);
   
   // Ist der Benutzer auf Professional oder höher?
   const isProfessionalOrHigher = quotaData?.pricingPlan === 'professional' || quotaData?.pricingPlan === 'enterprise';
