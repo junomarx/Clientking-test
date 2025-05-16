@@ -153,12 +153,61 @@ export default function SuperadminUsersTab() {
   // Mutation zum Aktualisieren eines Benutzers
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, data }: { userId: number; data: UserFormData }) => {
+      // 1. Benutzer-Stammdaten aktualisieren
       const response = await apiRequest(
         "PATCH",
         `/api/superadmin/users/${userId}`,
-        data
+        {
+          email: data.email,
+          isAdmin: data.isAdmin,
+          packageId: data.packageId,
+          shopId: data.shopId,
+          companyName: data.companyName,
+          companyAddress: data.companyAddress,
+          companyVatNumber: data.companyVatNumber,
+          companyPhone: data.companyPhone,
+          companyEmail: data.companyEmail,
+          password: data.password,
+        }
       );
-      return await response.json();
+      const updatedUser = await response.json();
+      
+      // 2. Geschäftseinstellungen aktualisieren, sofern zusätzliche Daten vorhanden sind
+      if (data.ownerFirstName || data.ownerLastName || data.streetAddress || 
+          data.zipCode || data.city || data.country) {
+        
+        try {
+          // Nur die Geschäftseinstellungs-relevanten Felder senden
+          const businessSettings = {
+            ownerFirstName: data.ownerFirstName,
+            ownerLastName: data.ownerLastName,
+            streetAddress: data.streetAddress || data.companyAddress,
+            zipCode: data.zipCode,
+            city: data.city,
+            country: data.country,
+            businessName: data.companyName,
+            email: data.companyEmail,
+            phone: data.companyPhone,
+            vatNumber: data.companyVatNumber,
+          };
+          
+          const businessSettingsResponse = await apiRequest(
+            "PATCH",
+            `/api/superadmin/user-business-settings/${userId}`,
+            businessSettings
+          );
+          
+          if (!businessSettingsResponse.ok) {
+            console.warn("Benutzer konnte aktualisiert werden, aber die Geschäftseinstellungen nicht.", 
+                        await businessSettingsResponse.text());
+          }
+        } catch (error) {
+          console.error("Fehler beim Aktualisieren der Geschäftseinstellungen:", error);
+          // Hauptoperation war erfolgreich, also keine Exception werfen
+        }
+      }
+      
+      return updatedUser;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/superadmin/users"] });
