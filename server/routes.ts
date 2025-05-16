@@ -665,17 +665,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         console.warn("canCreateNewRepair-Funktion existiert nicht - verwende Standardwerte für Quota");
         
-        // Wenn der Benutzer auf Professional oder Enterprise ist, hat er unbegrenzte Reparaturen
-        if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
-          quotaInfo.count = 0;
-          quotaInfo.limit = 999999; // Praktisch unbegrenzt
-          quotaInfo.canCreate = true;
-        } else if (user.shopId) {
-          // Für Basic-Plan: Anzahl der Reparaturen im aktuellen Monat berechnen
-          const now = new Date();
-          const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-          
+        // Aktuelle Anzahl der Reparaturen für den aktuellen Monat berechnen
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        
+        if (user.shopId) {
           try {
             const count = await db
               .select({ count: sql`count(*)`.mapWith(Number) })
@@ -690,11 +685,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
               .then(result => result[0]?.count || 0);
               
             quotaInfo.count = count;
-            quotaInfo.canCreate = count < quotaInfo.limit;
+            
+            // Limit wird später basierend auf dem Paket festgelegt
           } catch (err) {
             console.error("Fehler beim Abrufen der Reparaturanzahl aus der Datenbank:", err);
           }
         }
+        
+        // Prüfe auf Paket-Features für maxRepairs
+        if (user.packageId) {
+          console.log(`Prüfe auf max. Reparaturen für Benutzer ${userId} mit Paket ${user.packageId}`);
+          
+          try {
+            // Lade die Paket-Features aus der Datenbank
+            const { packageFeatures } = await db.select({
+              packageFeatures: db.jsonAgg(
+                db.selectDistinct({
+                  feature: packageFeatures.feature,
+                  value: packageFeatures.value
+                }).from(packageFeatures).where(eq(packageFeatures.packageId, user.packageId))
+              )
+            }).from(users).where(eq(users.id, userId)).then(res => res[0] || { packageFeatures: [] });
+            
+            console.log("Paket-Features für Benutzer:", packageFeatures);
+            
+            // Suche nach dem maxRepairs-Feature
+            const maxRepairsFeature = packageFeatures?.find((feature: any) => 
+              feature && feature.feature === 'maxRepairs'
+            );
+            
+            if (maxRepairsFeature && maxRepairsFeature.value !== undefined) {
+              console.log(`Max. Reparaturen Feature gefunden: ${maxRepairsFeature.value}`);
+              quotaInfo.limit = parseInt(maxRepairsFeature.value) || 10; // Fallback auf 10, wenn keine gültige Zahl
+            } else {
+              // Wenn kein spezifisches maxRepairs gesetzt ist, bestimme anhand des Pakettyps
+              const userPackage = await storage.getPackageById(user.packageId);
+              
+              if (userPackage) {
+                console.log(`Bestimme Limit basierend auf Pakettyp: ${userPackage.name}`);
+                
+                if (userPackage.name === 'Professional' || userPackage.name === 'Enterprise') {
+                  quotaInfo.limit = 999999; // Unbegrenzt für höhere Pakete
+                } else if (userPackage.name === 'Demo') {
+                  quotaInfo.limit = 10; // Demo hat 10 Reparaturen
+                }
+                // Ansonsten bleibt der Standardwert von 50 für Basic
+              }
+            }
+          } catch (error) {
+            console.error("Fehler beim Abrufen der Paket-Features:", error);
+          }
+        } else if (user.pricingPlan) {
+          // Fallback auf die alte pricingPlan-Eigenschaft
+          if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
+            quotaInfo.limit = 999999; // Praktisch unbegrenzt
+          }
+        }
+        
+        // Prüfen, ob neue Reparaturen erstellt werden können
+        quotaInfo.canCreate = quotaInfo.count < quotaInfo.limit;
       }
       
       // Datumsinformationen
