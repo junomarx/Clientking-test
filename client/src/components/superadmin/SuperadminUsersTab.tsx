@@ -47,7 +47,8 @@ import {
   BadgeX,
   Package,
   Pencil,
-  Store
+  Store,
+  Search
 } from 'lucide-react';
 
 // Benutzer-Typ ohne Passwort
@@ -101,6 +102,7 @@ export default function SuperadminUsersTab() {
       ? users.filter(user => 
           user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
           user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (user.companyName && user.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
           user.id.toString().includes(searchQuery))
       : users;
     
@@ -230,28 +232,30 @@ export default function SuperadminUsersTab() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie alle Benutzer der Plattform</p>
-        </div>
-        <div className="w-full md:w-72">
-          <Input
-            placeholder="Benutzer suchen..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Benutzerverwaltung</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie alle Benutzer der Plattform</p>
       </div>
       
       {isLoadingUsers ? (
         <Skeleton className="w-full h-96" />
       ) : users ? (
         <Card>
-          <CardHeader>
-            <CardTitle>Alle Benutzer</CardTitle>
-            <CardDescription>Insgesamt {users.length} Benutzer im System</CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Alle Benutzer</CardTitle>
+              <CardDescription>Insgesamt {users.length} Benutzer im System</CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Input
+                type="text"
+                placeholder="Suche nach Name, Firma..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto -mx-6 px-6">
