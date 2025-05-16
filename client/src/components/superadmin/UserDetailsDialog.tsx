@@ -83,13 +83,15 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
   });
   
   // Individuelle Geschäftseinstellungen des Benutzers abrufen
-  const fetchUserBusinessSettings = async (shopId: number) => {
-    if (!shopId) return;
+  const fetchUserBusinessSettings = async (userId: number) => {
+    if (!userId) return;
     
     try {
-      const response = await fetch(`/api/superadmin/business-settings/${shopId}`);
+      // Benutze den Admin-Endpunkt statt des Shop-ID-Endpunkts, um die korrekten Daten zu erhalten
+      const response = await fetch(`/api/admin/business-settings/${userId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log("Business settings für Benutzer", userId, "geladen:", data);
         setBusinessSettings(data);
       } else {
         throw new Error('Fehler beim Abrufen der Geschäftseinstellungen');
