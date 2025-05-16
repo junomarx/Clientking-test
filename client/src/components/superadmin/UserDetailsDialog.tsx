@@ -114,8 +114,9 @@ export function UserDetailsDialog({ open, onClose, userId }: UserDetailsDialogPr
   }, [open, userId, users]);
   
   // Formatiere das Datum im deutschen Format
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
+  const formatDate = (dateString: string | Date) => {
+    const date = dateString instanceof Date ? dateString : new Date(dateString);
+    return format(date, 'dd. MMMM yyyy', { locale: de });
   };
   
   if (!open) return null;
@@ -339,16 +340,32 @@ export function UserDetailsDialog({ open, onClose, userId }: UserDetailsDialogPr
                         <div className="flex items-start gap-2">
                           <Settings className="h-4 w-4 mt-1 text-muted-foreground" />
                           <div>
-                            <p className="font-medium">{businessSettings.repairTerms || 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">Reparaturbedingungen</p>
+                            <p className="font-medium">{businessSettings.companySlogan || 'Nicht angegeben'}</p>
+                            <p className="text-sm text-muted-foreground">Firmenslogan</p>
                           </div>
                         </div>
                         
                         <div className="flex items-start gap-2">
                           <FileCog className="h-4 w-4 mt-1 text-muted-foreground" />
                           <div>
-                            <p className="font-medium">{businessSettings.taxRate ? `${businessSettings.taxRate}%` : 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">Mehrwertsteuersatz</p>
+                            <p className="font-medium">{businessSettings.vatNumber || 'Nicht angegeben'}</p>
+                            <p className="text-sm text-muted-foreground">USt-IdNr.</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <Globe className="h-4 w-4 mt-1 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{businessSettings.website || 'Nicht angegeben'}</p>
+                            <p className="text-sm text-muted-foreground">Webseite</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-2">
+                          <Star className="h-4 w-4 mt-1 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">{businessSettings.reviewLink || 'Nicht angegeben'}</p>
+                            <p className="text-sm text-muted-foreground">Bewertungslink</p>
                           </div>
                         </div>
                       </div>
