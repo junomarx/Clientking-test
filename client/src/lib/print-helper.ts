@@ -98,12 +98,11 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
 export async function fetchLatestPrintTemplate(templateType: string): Promise<string | null> {
   try {
     const response = await fetch('/api/print-templates/' + templateType, {
-      headers: {
-        'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-      }
+      credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
     });
     
     if (!response.ok) {
+      console.error(`Fehler beim Laden der Druckvorlage ${templateType}: Status ${response.status}`);
       throw new Error('Fehler beim Laden der Druckvorlage: ' + response.status);
     }
     
