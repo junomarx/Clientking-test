@@ -69,12 +69,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     queryFn: async () => {
       if (!repairId) return null;
       try {
+        // Verwende Credentials: 'include' um Cookies zu senden
         const response = await fetch(`/api/repairs/${repairId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
         });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden der Reparatur ${repairId}: Status ${response.status}`);
+          throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        }
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
@@ -91,11 +94,13 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       if (!repair?.customerId) return null;
       try {
         const response = await fetch(`/api/customers/${repair.customerId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
         });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden des Kunden ${repair.customerId}: Status ${response.status}`);
+          throw new Error("Kundendaten konnten nicht geladen werden");
+        }
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Kundendaten:", err);
@@ -111,11 +116,13 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     queryFn: async () => {
       try {
         const response = await fetch('/api/business-settings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
         });
-        if (!response.ok) return null;
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden der Unternehmenseinstellungen: Status ${response.status}`);
+          return null;
+        }
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
