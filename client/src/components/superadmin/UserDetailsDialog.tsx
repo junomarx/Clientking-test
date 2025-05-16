@@ -40,6 +40,8 @@ import {
   ReceiptText,
   Settings,
   Shield,
+  Globe,
+  Star,
 } from 'lucide-react';
 
 interface UserDetailsDialogProps {
