@@ -107,6 +107,17 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     queryKey: ["/api/superadmin/users"],
   });
   
+  // Initialer User-Details-Dialog, wenn initialSelectedUserId gesetzt ist
+  useEffect(() => {
+    if (initialSelectedUserId && users) {
+      const userToShow = users.find(user => user.id === initialSelectedUserId);
+      if (userToShow) {
+        setSelectedUserId(initialSelectedUserId);
+        setIsDetailsDialogOpen(true);
+      }
+    }
+  }, [initialSelectedUserId, users]);
+  
   // Benutzer filtern und sortieren
   const filteredUsers = useMemo(() => {
     if (!users) return [];
