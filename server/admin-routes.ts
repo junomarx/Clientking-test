@@ -101,6 +101,35 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
 }
 
 export function registerAdminRoutes(app: Express) {
+  
+  // Abrufen der Geschäftseinstellungen eines Benutzers anhand seiner Benutzer-ID
+  app.get("/api/admin/business-settings/:userId", isAdmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+      
+      // Benutzer holen, um die Shop-ID zu ermitteln
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Geschäftseinstellungen für diesen Benutzer abrufen
+      const settings = await storage.getBusinessSettings(userId);
+      
+      if (!settings) {
+        return res.status(404).json({ message: "Keine Geschäftseinstellungen für diesen Benutzer gefunden" });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geschäftseinstellungen" });
+    }
+  });
   // Fehlerkatalog wurde komplett entfernt
   
   //==========================================================================
