@@ -724,7 +724,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   quotaInfo.limit = 999999; // Unbegrenzt für höhere Pakete
                 } else if (userPackage.name === 'Demo') {
                   quotaInfo.limit = 10; // Demo hat 10 Reparaturen
-                  // Ansonsten bleibt der Standardwert von 50 für Basic
+                } else if (userPackage.name === 'Basic') {
+                  quotaInfo.limit = 50; // Basic hat 50 Reparaturen
                 }
               }
             }

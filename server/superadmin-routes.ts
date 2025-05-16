@@ -577,26 +577,29 @@ export function registerSuperadminRoutes(app: Express) {
       if (features && Array.isArray(features)) {
         console.log("Features zum Hinzufügen:", features);
         
-        // Spezielle Features mit Zahlenwerten verarbeiten (z.B. maxRepairs:10)
-        const processedFeatures = features.map(feature => {
-          // Prüfe, ob es sich um ein Feature mit Zahlenwert handelt
-          if (typeof feature === 'string' && feature.includes(':')) {
-            const [featureName, featureValue] = feature.split(':');
-            // Wenn es maxRepairs ist, speichern wir nur den Namen ohne Wert in der DB
-            if (featureName === 'maxRepairs') {
-              return featureName;
-            }
-          }
-          return feature;
-        });
-        
-        for (const feature of processedFeatures) {
+        // Features mit ihren Werten einfügen
+        for (const feature of features) {
           try {
-            await db.insert(packageFeatures).values({
-              packageId: packageId,
-              feature: feature
-            });
-            console.log(`Feature '${feature}' hinzugefügt.`);
+            // Prüfe, ob es sich um ein Feature mit Zahlenwert handelt
+            if (typeof feature === 'string' && feature.includes(':')) {
+              const [featureName, featureValue] = feature.split(':');
+              
+              // Wenn es ein Feature mit Wert ist, speichern wir beides
+              await db.insert(packageFeatures).values({
+                packageId: packageId,
+                feature: featureName,
+                value: featureValue
+              });
+              console.log(`Feature '${featureName}' mit Wert '${featureValue}' hinzugefügt.`);
+            } else {
+              // Feature ohne Wert - einfach als boolean speichern
+              await db.insert(packageFeatures).values({
+                packageId: packageId,
+                feature: feature,
+                value: 'true'
+              });
+              console.log(`Feature '${feature}' hinzugefügt.`);
+            }
           } catch (featureError) {
             console.error(`Fehler beim Hinzufügen des Features '${feature}':`, featureError);
           }
