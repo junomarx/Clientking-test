@@ -165,7 +165,8 @@ export const packages = pgTable("packages", {
 // Paket-Features-Tabelle (package_features) für die Zuordnung von Features zu Paketen
 export const packageFeatures = pgTable("package_features", {
   packageId: integer("package_id").notNull().references(() => packages.id),
-  feature: text("feature").notNull()
+  feature: text("feature").notNull(),
+  value: text("value") // Wert für das Feature (z.B. '10' für maxRepairs=10)
 });
 
 // Schemas für die Pakete
