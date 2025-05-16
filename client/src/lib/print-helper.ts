@@ -97,12 +97,25 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
  */
 export async function fetchLatestPrintTemplate(templateType: string): Promise<string | null> {
   try {
+    // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
+    const userId = localStorage.getItem('userId');
+    
     const response = await fetch('/api/print-templates/' + templateType, {
-      credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
+      credentials: 'include',
+      headers: {
+        'X-User-ID': userId || '',
+      }
     });
     
     if (!response.ok) {
       console.error(`Fehler beim Laden der Druckvorlage ${templateType}: Status ${response.status}`);
+      
+      // Fallback für Demo-Shop: Standard-Druckvorlage zurückgeben
+      if (response.status === 401) {
+        console.log('Verwende Standard-Druckvorlage für den Demo-Shop');
+        return getDefaultTemplate(templateType);
+      }
+      
       throw new Error('Fehler beim Laden der Druckvorlage: ' + response.status);
     }
     
@@ -116,6 +129,129 @@ export async function fetchLatestPrintTemplate(templateType: string): Promise<st
     return template.content;
   } catch (error) {
     console.error('Fehler beim Laden der Druckvorlage:', error);
-    return null;
+    // Fallback: Standard-Vorlage zurückgeben
+    return getDefaultTemplate(templateType);
+  }
+}
+
+/**
+ * Gibt eine Standard-Druckvorlage zurück als Fallback
+ */
+function getDefaultTemplate(templateType: string): string {
+  switch (templateType) {
+    case 'receipt_58mm':
+      return `
+<div style="font-family: Arial, sans-serif; font-size: 11px; width: 58mm; margin: 0; padding: 10px;">
+  <div style="text-align: center; margin-bottom: 5px;">
+    {{businessLogo}}
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 10px;">
+    <strong>{{businessName}}</strong><br />
+    {{businessAddress}}<br />
+    {{businessPhone}}
+  </div>
+  
+  <div style="text-align: center; margin: 10px 0 15px;">
+    <div style="font-weight: bold; font-size: 14px; margin-bottom: 2px;">Abholschein</div>
+    <div style="font-weight: bold; font-size: 12px;">{{repairId}}</div>
+    <div>{{currentDate}}</div>
+  </div>
+  
+  <div style="margin-bottom: 14px;">
+    <div style="font-size: 12px; font-weight: bold; margin-bottom: 2px;">{{customerName}}</div>
+    <div style="margin-bottom: 3px;">{{customerPhone}}</div>
+    <div style="margin-bottom: 3px;">{{customerEmail}}</div>
+  </div>
+  
+  <div style="margin-bottom: 14px;">
+    <div style="font-size: 12px; font-weight: bold; margin-bottom: 2px;">
+      {{deviceBrand}} {{deviceModel}}
+    </div>
+    
+    <div style="font-weight: bold; margin-top: 6px; margin-bottom: 2px;">Schaden/Fehler</div>
+    <div>{{deviceIssue}}</div>
+    
+    <div style="font-weight: bold; font-size: 11px; margin-top: 8px; margin-bottom: 2px;">Reparaturkosten</div>
+    <div>{{preis}}</div>
+  </div>
+  
+  <div style="border: 1px solid #000; padding: 6px; font-size: 9px; line-height: 1.3; margin-bottom: 14px;">
+    <div style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 4px;">Reparaturbedingungen</div>
+    1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+    2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+    3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+    4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+    5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+    6. Mit Unterschrift werden Bedingungen akzeptiert.
+  </div>
+  
+  <div style="margin-top: 16px; text-align: center;">
+    <div style="font-weight: bold; margin-bottom: 4px;">Reparaturauftrag erteilt</div>
+    {{customerSignature}}
+    <div style="border-top: 1px solid #000; width: 100%; margin: 2px 0 6px;"></div>
+    {{customerName}}<br />
+    {{currentDate}}
+  </div>
+</div>
+      `;
+    case 'receipt_80mm':
+      return `
+<div style="font-family: Arial, sans-serif; font-size: 12px; width: 80mm; margin: 0; padding: 10px;">
+  <div style="text-align: center; margin-bottom: 8px;">
+    {{businessLogo}}
+  </div>
+  
+  <div style="text-align: center; margin-bottom: 15px;">
+    <strong style="font-size: 14px;">{{businessName}}</strong><br />
+    {{businessAddress}}<br />
+    {{businessPhone}}
+  </div>
+  
+  <div style="text-align: center; margin: 15px 0;">
+    <div style="font-weight: bold; font-size: 16px; margin-bottom: 5px;">Abholschein</div>
+    <div style="font-weight: bold; font-size: 14px;">{{repairId}}</div>
+    <div>{{currentDate}}</div>
+  </div>
+  
+  <div style="margin-bottom: 15px;">
+    <div style="font-size: 14px; font-weight: bold; margin-bottom: 3px;">{{customerName}}</div>
+    <div style="margin-bottom: 3px;">{{customerPhone}}</div>
+    <div style="margin-bottom: 3px;">{{customerEmail}}</div>
+  </div>
+  
+  <div style="margin-bottom: 15px;">
+    <div style="font-size: 14px; font-weight: bold; margin-bottom: 3px;">
+      {{deviceBrand}} {{deviceModel}}
+    </div>
+    
+    <div style="font-weight: bold; margin-top: 8px; margin-bottom: 3px;">Schaden/Fehler</div>
+    <div>{{deviceIssue}}</div>
+    
+    <div style="font-weight: bold; margin-top: 10px; margin-bottom: 3px;">Reparaturkosten</div>
+    <div>{{preis}}</div>
+  </div>
+  
+  <div style="border: 1px solid #000; padding: 8px; font-size: 10px; line-height: 1.4; margin-bottom: 15px;">
+    <div style="text-align: center; font-weight: bold; font-size: 11px; margin-bottom: 5px;">Reparaturbedingungen</div>
+    1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+    2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+    3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+    4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+    5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+    6. Mit Unterschrift werden Bedingungen akzeptiert.
+  </div>
+  
+  <div style="margin-top: 20px; text-align: center;">
+    <div style="font-weight: bold; margin-bottom: 5px;">Reparaturauftrag erteilt</div>
+    {{customerSignature}}
+    <div style="border-top: 1px solid #000; width: 100%; margin: 3px 0 8px;"></div>
+    {{customerName}}<br />
+    {{currentDate}}
+  </div>
+</div>
+      `;
+    default:
+      return '';
   }
 }

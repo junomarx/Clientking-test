@@ -63,15 +63,21 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     }
   }, [open, settings?.receiptWidth]);
 
-  // Lade Reparaturdaten
+  // Lade Reparaturdaten direkt mit der userId aus dem localStorage
   const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
-        // Verwende Credentials: 'include' um Cookies zu senden
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
+        const userId = localStorage.getItem('userId');
+        
+        // Verwende sowohl Credentials als auch den X-User-ID Header für robustere Authentifizierung
         const response = await fetch(`/api/repairs/${repairId}`, {
-          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
+          credentials: 'include',
+          headers: {
+            'X-User-ID': userId || '',
+          }
         });
         
         if (!response.ok) {
@@ -85,6 +91,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repairId && open,
+    // Deaktiviere Cache um sicherzustellen, dass wir immer frische Daten haben
+    staleTime: 0,
   });
 
   // Lade Kundendaten wenn Reparatur geladen ist
@@ -93,8 +101,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     queryFn: async () => {
       if (!repair?.customerId) return null;
       try {
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
+        const userId = localStorage.getItem('userId');
+        
         const response = await fetch(`/api/customers/${repair.customerId}`, {
-          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
+          credentials: 'include',
+          headers: {
+            'X-User-ID': userId || '',
+          }
         });
         
         if (!response.ok) {
@@ -108,6 +122,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repair?.customerId && open,
+    staleTime: 0,
   });
 
   // Lade Unternehmenseinstellungen
@@ -115,8 +130,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     queryKey: ['/api/business-settings'],
     queryFn: async () => {
       try {
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
+        const userId = localStorage.getItem('userId');
+        
         const response = await fetch('/api/business-settings', {
-          credentials: 'include', // Wichtig: Sendet Cookies mit, die für die Session-Authentifizierung benötigt werden
+          credentials: 'include',
+          headers: {
+            'X-User-ID': userId || '',
+          }
         });
         
         if (!response.ok) {
@@ -130,6 +151,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: open,
+    staleTime: 0,
   });
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
