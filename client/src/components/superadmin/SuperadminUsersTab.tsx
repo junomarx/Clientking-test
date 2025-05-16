@@ -549,7 +549,12 @@ export default function SuperadminUsersTab() {
       <UserDetailsDialog 
         open={isDetailsDialogOpen} 
         onOpenChange={setIsDetailsDialogOpen} 
-        userId={selectedUserId} 
+        userId={selectedUserId}
+        onEdit={(user) => {
+          setIsDetailsDialogOpen(false);
+          handleEditUser(user);
+        }}
+        onActivate={(userId) => toggleActivationMutation.mutate(userId)}
       />
     </div>
   );

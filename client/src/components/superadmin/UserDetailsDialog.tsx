@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -46,22 +47,26 @@ import {
 
 interface UserDetailsDialogProps {
   open: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   userId: number | null;
+  onEdit?: (user: User) => void;
+  onActivate?: (userId: number) => void;
 }
 
-export function UserDetailsDialog({ open, onClose, userId }: UserDetailsDialogProps) {
+export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActivate }: UserDetailsDialogProps) {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
   
   // Dialog schließen mit Verzögerung für Animationen
-  const handleClose = () => {
-    onClose();
+  const handleClose = (openState: boolean) => {
+    onOpenChange(openState);
     // Kurze Verzögerung, um Flackern zu vermeiden
-    setTimeout(() => {
-      setUser(null);
-    }, 300);
+    if (!openState) {
+      setTimeout(() => {
+        setUser(null);
+      }, 300);
+    }
   };
   
   // Benutzerinformationen abrufen
@@ -422,6 +427,47 @@ export function UserDetailsDialog({ open, onClose, userId }: UserDetailsDialogPr
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Aktionen */}
+        <DialogFooter className="pt-6 border-t mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            {onEdit && (
+              <Button
+                variant="outline"
+                onClick={() => onEdit(user)}
+                className="flex items-center gap-1"
+              >
+                <Pencil className="h-4 w-4" /> Bearbeiten
+              </Button>
+            )}
+            
+            {onActivate && (
+              <Button
+                variant={user.isActive ? "outline" : "default"}
+                onClick={() => onActivate(user.id)}
+                className="flex items-center gap-1"
+              >
+                {user.isActive ? (
+                  <>
+                    <BadgeX className="h-4 w-4" /> Deaktivieren
+                  </>
+                ) : (
+                  <>
+                    <BadgeCheck className="h-4 w-4" /> Aktivieren
+                  </>
+                )}
+              </Button>
+            )}
+            
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="ml-auto"
+            >
+              Schließen
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
