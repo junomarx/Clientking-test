@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerGlobalDeviceRoutes(app);
   
   // CUSTOMERS API
-  app.get("/api/customers", isAuthenticated, attachShopId, async (req: Request, res: Response) => {
+  app.get("/api/customers", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       console.log("GET /api/customers: Auth status:", req.isAuthenticated(), "User:", req.user?.username);
       
