@@ -544,6 +544,13 @@ export default function SuperadminUsersTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Benutzerdetails Dialog */}
+      <UserDetailsDialog 
+        open={isDetailsDialogOpen} 
+        onOpenChange={setIsDetailsDialogOpen} 
+        userId={selectedUserId} 
+      />
     </div>
   );
 }
