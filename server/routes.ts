@@ -35,7 +35,7 @@ import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, gte, lt } from "drizzle-orm";
 import { emailService } from "./email-service";
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 
@@ -702,12 +702,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentMonth = today.toLocaleString('de-DE', { month: 'long' });
       const currentYear = today.getFullYear();
       
-      // Antwort
+      // Antwort mit Berücksichtigung des neuen Paketsystems
+      // Wenn der Benutzer eine packageId hat, verwenden wir diese für die Bestimmung des Plans
+      let pricingPlan = user.pricingPlan || 'basic'; // Fallback auf die alte Eigenschaft
+      let displayName = 'Basic';
+      
+      if (user.packageId) {
+        try {
+          // Paket aus der Datenbank abrufen
+          const userPackage = await storage.getPackageById(user.packageId);
+          if (userPackage) {
+            // Paketname für die Anzeige und Entscheidungslogik verwenden
+            displayName = userPackage.name;
+            
+            // pricingPlan für Legacy-Kompatibilität setzen
+            if (userPackage.name === 'Basic') pricingPlan = 'basic';
+            else if (userPackage.name === 'Professional') pricingPlan = 'professional';
+            else if (userPackage.name === 'Enterprise') pricingPlan = 'enterprise';
+            else if (userPackage.name === 'Demo') pricingPlan = 'basic'; // Demo als Basic behandeln
+          }
+        } catch (error) {
+          console.error("Fehler beim Abrufen des Pakets:", error);
+        }
+      } else {
+        // Wenn keine packageId, dann verwenden wir die alte pricingPlan-Eigenschaft
+        displayName = pricingPlan === 'basic' ? 'Basic' : 
+                      pricingPlan === 'professional' ? 'Professional' : 'Enterprise';
+      }
+      
       res.json({
         ...quotaInfo,
-        pricingPlan: user.pricingPlan,
-        displayName: user.pricingPlan === 'basic' ? 'Basic' : 
-                    user.pricingPlan === 'professional' ? 'Professional' : 'Enterprise',
+        pricingPlan,
+        displayName,
         currentMonth,
         currentYear
       });
