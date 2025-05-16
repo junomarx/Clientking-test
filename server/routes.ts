@@ -38,6 +38,7 @@ import { db } from "./db";
 import { eq, and, sql, gte, lt } from "drizzle-orm";
 import { emailService } from "./email-service";
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
+import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -131,13 +132,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up global device data routes
   registerGlobalDeviceRoutes(app);
   
-  // CUSTOMERS API
-  app.get("/api/customers", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+  // CUSTOMERS API mit DSGVO-konformer Shop-Isolation
+  app.get("/api/customers", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       console.log("GET /api/customers: Auth status:", req.isAuthenticated(), "User:", req.user?.username);
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      // Shop-ID aus der Shop-Isolation-Middleware
+      const shopId = (req as any).userShopId;
+      
+      if (!shopId) {
+        console.warn(`⚠️ DSGVO-Schutz: Anfrage ohne Shop-ID abgelehnt`);
+        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+      }
+      
+      console.log(`DSGVO-konformer Zugriff: Benutzer ${req.user?.username} (ID: ${userId}) greift auf Kundendaten von Shop ${shopId} zu`);
       
       // Wenn firstName und lastName als Query-Parameter übergeben werden, suche nach Kunden mit diesem Namen
       if (req.query.firstName && req.query.lastName) {
@@ -150,9 +160,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
-        // Verwende die findCustomersByName-Methode (die bereits Shop-ID-Filterung enthält)
-        const matchingCustomers = await storage.findCustomersByName(firstName, lastName, userId);
-        console.log(`Found ${matchingCustomers.length} matching customers`);
+        // Direkter DB-Zugriff mit expliziter Shop-ID-Filterung für DSGVO-Konformität
+        const matchingCustomers = await db
+          .select()
+          .from(customers)
+          .where(and(
+            eq(customers.shopId, shopId),
+            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
+            sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`
+          ))
+          .orderBy(customers.lastName, customers.firstName);
+        
+        console.log(`Found ${matchingCustomers.length} matching customers (strict shop isolation: ${shopId})`);
         return res.json(matchingCustomers);
       }
       
@@ -164,16 +183,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         
-        // Verwende die findCustomersByName-Methode mit leerem lastName
-        const matchingCustomers = await storage.findCustomersByName(firstName, "", userId);
-        console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}"`);
+        // Direkter DB-Zugriff mit expliziter Shop-ID-Filterung für DSGVO-Konformität
+        const matchingCustomers = await db
+          .select()
+          .from(customers)
+          .where(and(
+            eq(customers.shopId, shopId),
+            sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`
+          ))
+          .orderBy(customers.lastName, customers.firstName);
+        
+        console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}" (strict shop isolation: ${shopId})`);
         return res.json(matchingCustomers);
       }
       
-      // Ansonsten gebe alle Kunden zurück (gefiltert nach Benutzer/Shop)
-      const customers = await storage.getAllCustomers(userId);
-      console.log(`Returning all ${customers.length} customers`);
-      res.json(customers);
+      // Ansonsten gebe alle Kunden zurück (gefiltert nach Shop-ID)
+      const allCustomers = await db
+        .select()
+        .from(customers)
+        .where(eq(customers.shopId, shopId))
+        .orderBy(customers.lastName, customers.firstName);
+      
+      console.log(`Returning all ${allCustomers.length} customers (strict shop isolation: ${shopId})`);
+      res.json(allCustomers);
     } catch (error) {
       console.error("Error fetching customers:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Kunden" });
