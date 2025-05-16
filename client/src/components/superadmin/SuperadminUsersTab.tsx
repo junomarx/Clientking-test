@@ -204,17 +204,68 @@ export default function SuperadminUsersTab() {
   // Benutzer zur Bearbeitung auswählen
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
-    setEditForm({
-      isAdmin: user.isAdmin,
-      packageId: user.packageId,
-      shopId: user.shopId,
-      email: user.email,
-      companyName: user.companyName,
-      companyAddress: user.companyAddress,
-      companyVatNumber: user.companyVatNumber,
-      companyPhone: user.companyPhone,
-      companyEmail: user.companyEmail,
-    });
+    
+    // Geschäftseinstellungen für diesen Benutzer abrufen
+    const fetchUserBusinessSettings = async (userId: number) => {
+      try {
+        const response = await fetch(`/api/superadmin/user-business-settings/${userId}`);
+        if (response.ok) {
+          const businessSettings = await response.json();
+          console.log("Business settings geladen:", businessSettings);
+          
+          // Formular mit Benutzerdaten und Geschäftseinstellungen füllen
+          setEditForm({
+            isAdmin: user.isAdmin,
+            packageId: user.packageId,
+            shopId: user.shopId,
+            email: user.email,
+            companyName: user.companyName || businessSettings?.businessName,
+            companyAddress: user.companyAddress || businessSettings?.streetAddress,
+            companyVatNumber: user.companyVatNumber || businessSettings?.vatNumber,
+            companyPhone: user.companyPhone || businessSettings?.phone,
+            companyEmail: user.companyEmail || businessSettings?.email,
+            
+            // Zusätzliche Felder aus den Geschäftseinstellungen
+            ownerFirstName: businessSettings?.ownerFirstName,
+            ownerLastName: businessSettings?.ownerLastName,
+            streetAddress: businessSettings?.streetAddress,
+            zipCode: businessSettings?.zipCode,
+            city: businessSettings?.city,
+            country: businessSettings?.country,
+          });
+        } else {
+          // Kein Fehler, nur Formular mit Benutzerdaten füllen
+          setEditForm({
+            isAdmin: user.isAdmin,
+            packageId: user.packageId,
+            shopId: user.shopId,
+            email: user.email,
+            companyName: user.companyName,
+            companyAddress: user.companyAddress,
+            companyVatNumber: user.companyVatNumber,
+            companyPhone: user.companyPhone,
+            companyEmail: user.companyEmail,
+          });
+        }
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
+        
+        // Im Fehlerfall nur Benutzerdaten anzeigen
+        setEditForm({
+          isAdmin: user.isAdmin,
+          packageId: user.packageId,
+          shopId: user.shopId,
+          email: user.email,
+          companyName: user.companyName,
+          companyAddress: user.companyAddress,
+          companyVatNumber: user.companyVatNumber,
+          companyPhone: user.companyPhone,
+          companyEmail: user.companyEmail,
+        });
+      }
+    };
+    
+    fetchUserBusinessSettings(user.id);
     setIsEditDialogOpen(true);
   };
   
@@ -462,55 +513,128 @@ export default function SuperadminUsersTab() {
             
             <TabsContent value="company" className="space-y-4 py-4">
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Firmenname</Label>
-                  <Input
-                    id="companyName"
-                    className="col-span-3"
-                    value={editForm.companyName || ''}
-                    onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
-                    placeholder="Firmenname"
-                  />
+                {/* Persönliche Daten des Eigentümers */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="font-medium mb-3">Inhaber-Daten</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Vorname</Label>
+                      <Input
+                        id="ownerFirstName"
+                        className="col-span-3"
+                        value={editForm.ownerFirstName || ''}
+                        onChange={(e) => setEditForm({ ...editForm, ownerFirstName: e.target.value })}
+                        placeholder="Vorname des Inhabers"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Nachname</Label>
+                      <Input
+                        id="ownerLastName"
+                        className="col-span-3"
+                        value={editForm.ownerLastName || ''}
+                        onChange={(e) => setEditForm({ ...editForm, ownerLastName: e.target.value })}
+                        placeholder="Nachname des Inhabers"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Adresse</Label>
-                  <Input
-                    id="companyAddress"
-                    className="col-span-3"
-                    value={editForm.companyAddress || ''}
-                    onChange={(e) => setEditForm({ ...editForm, companyAddress: e.target.value })}
-                    placeholder="Firmenadresse"
-                  />
+                
+                {/* Firmeninformationen */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="font-medium mb-3">Firmeninformationen</h3>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Firmenname</Label>
+                    <Input
+                      id="companyName"
+                      className="col-span-3"
+                      value={editForm.companyName || ''}
+                      onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
+                      placeholder="Firmenname"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4 mt-4">
+                    <Label className="text-right">USt-IdNr.</Label>
+                    <Input
+                      id="companyVatNumber"
+                      className="col-span-3"
+                      value={editForm.companyVatNumber || ''}
+                      onChange={(e) => setEditForm({ ...editForm, companyVatNumber: e.target.value })}
+                      placeholder="USt-IdNr."
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">USt-IdNr.</Label>
-                  <Input
-                    id="companyVatNumber"
-                    className="col-span-3"
-                    value={editForm.companyVatNumber || ''}
-                    onChange={(e) => setEditForm({ ...editForm, companyVatNumber: e.target.value })}
-                    placeholder="USt-IdNr."
-                  />
+                
+                {/* Adressinformationen */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="font-medium mb-3">Adressinformationen</h3>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Straße & Nr.</Label>
+                    <Input
+                      id="streetAddress"
+                      className="col-span-3"
+                      value={editForm.streetAddress || editForm.companyAddress || ''}
+                      onChange={(e) => setEditForm({ ...editForm, streetAddress: e.target.value })}
+                      placeholder="Straße und Hausnummer"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">PLZ</Label>
+                      <Input
+                        id="zipCode"
+                        className="col-span-3"
+                        value={editForm.zipCode || ''}
+                        onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
+                        placeholder="Postleitzahl"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">Ort</Label>
+                      <Input
+                        id="city"
+                        className="col-span-3"
+                        value={editForm.city || ''}
+                        onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                        placeholder="Ort"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4 mt-4">
+                    <Label className="text-right">Land</Label>
+                    <Input
+                      id="country"
+                      className="col-span-3"
+                      value={editForm.country || 'Österreich'}
+                      onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
+                      placeholder="Land"
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Telefon</Label>
-                  <Input
-                    id="companyPhone"
-                    className="col-span-3"
-                    value={editForm.companyPhone || ''}
-                    onChange={(e) => setEditForm({ ...editForm, companyPhone: e.target.value })}
-                    placeholder="Firmentelefon"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">E-Mail</Label>
-                  <Input
-                    id="companyEmail"
-                    className="col-span-3"
-                    value={editForm.companyEmail || ''}
-                    onChange={(e) => setEditForm({ ...editForm, companyEmail: e.target.value })}
-                    placeholder="Firmen-E-Mail"
-                  />
+                
+                {/* Kontaktinformationen */}
+                <div>
+                  <h3 className="font-medium mb-3">Kontaktinformationen</h3>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Telefon</Label>
+                    <Input
+                      id="companyPhone"
+                      className="col-span-3"
+                      value={editForm.companyPhone || ''}
+                      onChange={(e) => setEditForm({ ...editForm, companyPhone: e.target.value })}
+                      placeholder="Firmentelefon"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4 mt-4">
+                    <Label className="text-right">E-Mail</Label>
+                    <Input
+                      id="companyEmail"
+                      className="col-span-3"
+                      value={editForm.companyEmail || ''}
+                      onChange={(e) => setEditForm({ ...editForm, companyEmail: e.target.value })}
+                      placeholder="Firmen-E-Mail"
+                    />
+                  </div>
                 </div>
               </div>
             </TabsContent>
