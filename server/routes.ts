@@ -414,11 +414,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
       }
       
-      // Reparatur mit Shop-ID erstellen
+      // Auftragscode generieren im Format "AS" + Jahr + Monat + zufällige Zahl
+      const today = new Date();
+      const year = today.getFullYear().toString().slice(-2); // letzten 2 Stellen des Jahres
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Monat mit führender Null
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0'); // zufällige 4-stellige Zahl
+      const orderCode = `AS${year}${month}${random}`;
+      
+      // Reparatur mit Shop-ID und Auftragscode erstellen
       const newRepair = {
         ...repairData,
         userId,
         shopId: user.shopId,
+        orderCode,
         createdAt: new Date(),
         creationMonth: format(new Date(), 'yyyy-MM')
       };
