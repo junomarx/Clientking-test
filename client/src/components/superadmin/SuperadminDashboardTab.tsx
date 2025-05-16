@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useContext, createContext } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Card,
@@ -7,6 +7,9 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+
+// Context für die Tab-Kommunikation
+export const SuperadminContext = createContext<((tab: string) => void) | undefined>(undefined);
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,6 +69,7 @@ interface SuperadminStats {
 export default function SuperadminDashboardTab() {
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
+  const setActiveTab = useContext<((tab: string) => void) | undefined>(SuperadminContext);
 
   const { data: stats, isLoading, error } = useQuery<SuperadminStats>({
     queryKey: ["/api/superadmin/stats"],
@@ -249,7 +253,19 @@ export default function SuperadminDashboardTab() {
                                   variant="outline" 
                                   size="sm"
                                   onClick={() => {
-                                    setLocation(`/superadmin?tab=users&userId=${user.id}`);
+                                    // Direkt zum Users-Tab wechseln
+                                    if (setActiveTab) {
+                                      setActiveTab("users");
+                                      
+                                      // Nach kurzer Verzögerung zum Details-Dialog
+                                      setTimeout(() => {
+                                        // Event für Benutzerdetails simulieren
+                                        const event = new CustomEvent('showUserDetails', {
+                                          detail: { userId: user.id }
+                                        });
+                                        document.dispatchEvent(event);
+                                      }, 100);
+                                    }
                                   }}
                                 >
                                   Details

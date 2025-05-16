@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { UserDetailsDialog } from './UserDetailsDialog';
 import { 
@@ -117,6 +117,30 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       }
     }
   }, [initialSelectedUserId, users]);
+  
+  // Event-Listener für die Kommunikation vom Dashboard
+  useEffect(() => {
+    const handleShowUserDetails = (event: CustomEvent) => {
+      if (event.detail && event.detail.userId) {
+        // Bei vorhandenen Benutzerdaten den Dialog öffnen
+        if (users) {
+          const userToShow = users.find(user => user.id === event.detail.userId);
+          if (userToShow) {
+            setSelectedUserId(event.detail.userId);
+            setIsDetailsDialogOpen(true);
+          }
+        }
+      }
+    };
+    
+    // Event-Listener registrieren
+    document.addEventListener('showUserDetails', handleShowUserDetails as EventListener);
+    
+    // Cleanup beim Unmount
+    return () => {
+      document.removeEventListener('showUserDetails', handleShowUserDetails as EventListener);
+    };
+  }, [users]);
   
   // Benutzer filtern und sortieren
   const filteredUsers = useMemo(() => {

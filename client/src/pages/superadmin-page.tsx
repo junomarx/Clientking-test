@@ -6,7 +6,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { User, BusinessSettings } from "@shared/schema";
 
-import SuperadminDashboardTab from "@/components/superadmin/SuperadminDashboardTab";
+import SuperadminDashboardTab, { SuperadminContext } from "@/components/superadmin/SuperadminDashboardTab";
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
 import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
@@ -129,14 +129,15 @@ export default function SuperadminPage() {
         {/* Main content */}
         <main className="flex-1 overflow-auto p-3 md:p-6">
           <ScrollArea className="h-full">
-            {activeTab === "dashboard" && <SuperadminDashboardTab />}
-            {activeTab === "users" && <SuperadminUsersTab initialSelectedUserId={selectedUserId} />}
-            {activeTab === "packages" && <SuperadminPackagesTab />}
-            {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
-            {activeTab === "email" && <SuperadminEmailTab />}
-            {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
-            {activeTab === "support-mode" && <SuperadminSupportModeTab />}
-
+            <SuperadminContext.Provider value={setActiveTab}>
+              {activeTab === "dashboard" && <SuperadminDashboardTab />}
+              {activeTab === "users" && <SuperadminUsersTab initialSelectedUserId={selectedUserId} />}
+              {activeTab === "packages" && <SuperadminPackagesTab />}
+              {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
+              {activeTab === "email" && <SuperadminEmailTab />}
+              {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
+              {activeTab === "support-mode" && <SuperadminSupportModeTab />}
+            </SuperadminContext.Provider>
           </ScrollArea>
         </main>
       </div>
