@@ -414,12 +414,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
       }
       
-      // Auftragscode generieren im Format "AS" + Jahr + Monat + zufällige Zahl
+      // Auftragscode generieren im Format: (1. Buchstabe Marke)(1. Buchstabe Gerätetyp) + Jahr + 4 Zufallszahlen
+      // Beispiel: Apple Smartphone = AS2305xxxx, Samsung Tablet = ST2305xxxx
       const today = new Date();
       const year = today.getFullYear().toString().slice(-2); // letzten 2 Stellen des Jahres
-      const month = String(today.getMonth() + 1).padStart(2, '0'); // Monat mit führender Null
+      const brandFirstLetter = repairData.brand ? repairData.brand.charAt(0).toUpperCase() : 'X';
+      const deviceTypeFirstLetter = repairData.deviceType ? repairData.deviceType.charAt(0).toUpperCase() : 'X';
       const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0'); // zufällige 4-stellige Zahl
-      const orderCode = `AS${year}${month}${random}`;
+      const orderCode = `${brandFirstLetter}${deviceTypeFirstLetter}${year}${random}`;
       
       // Reparatur mit Shop-ID und Auftragscode erstellen
       const newRepair = {
