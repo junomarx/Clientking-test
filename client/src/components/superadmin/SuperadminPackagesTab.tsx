@@ -125,8 +125,12 @@ export default function SuperadminPackagesTab() {
   // Mutation zum Aktualisieren eines Pakets
   const updatePackageMutation = useMutation({
     mutationFn: async ({ packageId, data }: { packageId: number; data: PackageFormData }) => {
-      // Formatiere die Features für die API - wir senden nur die Feature-Namen, nicht die Objekte
-      const featuresForAPI = data.features.map(f => f.feature);
+      // Formatiere die Features für die API - wir senden nur die aktiven Features
+      const featuresForAPI = data.features
+        .filter(f => typeof f.value === 'boolean' ? f.value : true)
+        .map(f => f.feature);
+      
+      console.log("Sende folgende Features an API:", featuresForAPI);
       
       const response = await apiRequest("PUT", `/api/superadmin/packages/${packageId}`, {
         name: data.name,
