@@ -49,7 +49,8 @@ import {
   Package,
   Pencil,
   Store,
-  Search
+  Search,
+  Info
 } from 'lucide-react';
 
 // Benutzer-Typ ohne Passwort
@@ -337,6 +338,14 @@ export default function SuperadminUsersTab() {
                             className="w-full sm:w-auto"
                           >
                             <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleShowUserDetails(user.id)}
+                            className="w-full sm:w-auto"
+                          >
+                            <Info className="h-3 w-3 mr-1" /> Details
                           </Button>
                           <Button
                             size="sm"
