@@ -733,6 +733,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
+      console.log(`QUOTA-API: Benutzer ${user.username} (ID: ${userId}, Paket: ${user.package_id}, Plan: ${user.pricing_plan})`);
+      
       // Standardwerte für den Fall, dass kein Limit existiert (für Professional und Enterprise)
       let quotaInfo = {
         count: 0,
@@ -809,6 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 if (userPackage.name === 'Professional' || userPackage.name === 'Enterprise') {
                   quotaInfo.limit = 999999; // Unbegrenzt für höhere Pakete
                 } else if (userPackage.name === 'Demo') {
+                  console.log("DEMO-PAKET ERKANNT: Setze Limit auf 10 Reparaturen");
                   quotaInfo.limit = 10; // Demo hat 10 Reparaturen
                 } else if (userPackage.name === 'Basic') {
                   quotaInfo.limit = 50; // Basic hat 50 Reparaturen

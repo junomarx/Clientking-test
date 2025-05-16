@@ -35,11 +35,20 @@ const featureComparison = [
 
 export function SubscriptionSettingsTab() {
   // Abrufen des Reparaturkontingents über die API
-  const { data: quotaData, isLoading, error } = useQuery<RepairQuota>({
+  const { data: rawQuotaData, isLoading, error } = useQuery<RepairQuota>({
     queryKey: ["/api/repair-quota"],
     // Alle 30 Sekunden aktualisieren, wenn die Seite geöffnet ist
     refetchInterval: 30000,
   });
+  
+  // Korrektur für das Demo-Paket - Backend liefert falsches Limit
+  let quotaData = rawQuotaData;
+  if (quotaData && quotaData.displayName === 'Demo') {
+    quotaData = {
+      ...quotaData,
+      limit: 10
+    };
+  }
   
   // Ist der Benutzer auf Professional oder höher?
   const isProfessionalOrHigher = quotaData?.pricingPlan === 'professional' || quotaData?.pricingPlan === 'enterprise';
