@@ -1341,33 +1341,54 @@ export class DatabaseStorage implements IStorage {
         console.log(`Geschäftseinstellungen für Shop ${shopId} aktualisiert: ID ${updatedSettings.id}`);
         return updatedSettings;
       } else {
-        // Neue Einstellungen erstellen
+        // Neue Einstellungen erstellen mit überarbeiteten Schema
         const [newSettings] = await db
           .insert(businessSettings)
           .values({
+            // Grundlegende Geschäftsdaten
             businessName: settings.businessName || "",
-            street: settings.street || "",
+            
+            // Inhaber-Informationen
+            ownerFirstName: settings.ownerFirstName || "",
+            ownerLastName: settings.ownerLastName || "",
+            
+            // Adressinformationen
+            streetAddress: settings.streetAddress || settings.companyAddress || "",
             city: settings.city || "",
             zipCode: settings.zipCode || "",
-            phone: settings.phone || "",
-            email: settings.email || "",
+            country: settings.country || "Österreich",
+            
+            // Steuernummern
+            taxId: settings.taxId || "", // ATU Nummer
+            vatNumber: settings.vatNumber || settings.companyVatNumber || "",
+            
+            // Kontaktinformationen
+            phone: settings.phone || settings.companyPhone || "",
+            email: settings.email || settings.companyEmail || "",
             website: settings.website || "",
-            vatId: settings.vatId || "",
-            taxNumber: settings.taxNumber || "",
-            bankName: settings.bankName || "",
-            iban: settings.iban || "",
-            bic: settings.bic || "",
-            logoUrl: settings.logoUrl || "",
-            footerText: settings.footerText || "",
-            repairTerms: settings.repairTerms || "",
-            termsAndConditions: settings.termsAndConditions || "",
-            receiptText: settings.receiptText || "",
-            invoiceTemplate: settings.invoiceTemplate || "",
-            shopId: shopId,
+            
+            // Design-Einstellungen
+            colorTheme: settings.colorTheme || "blue",
+            receiptWidth: settings.receiptWidth || "80mm",
+            logoImage: settings.logoImage || "",
+            companySlogan: settings.companySlogan || "",
+            
+            // SMTP-Einstellungen
+            smtpSenderName: settings.smtpSenderName || "",
+            smtpHost: settings.smtpHost || "",
+            smtpUser: settings.smtpUser || "",
+            smtpPassword: settings.smtpPassword || "",
+            smtpPort: settings.smtpPort || "",
+            
+            // Review Link
+            reviewLink: settings.reviewLink || "",
+            
+            // Mandanten-Isolation
             userId: userId,
-            color: settings.color || "#3b82f6",
-            businessCurrency: settings.businessCurrency || "EUR",
-            businessCountry: settings.businessCountry || "Deutschland"
+            shopId: shopId,
+            
+            // Timestamps
+            updatedAt: new Date()
           })
           .returning();
 
