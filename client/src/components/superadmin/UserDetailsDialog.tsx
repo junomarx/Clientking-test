@@ -43,6 +43,7 @@ import {
   Shield,
   Globe,
   Star,
+  Pencil,
 } from 'lucide-react';
 
 interface UserDetailsDialogProps {
@@ -222,11 +223,11 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                       <div className="font-medium">
                         {user.isActive ? (
                           <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                            <BadgeCheck className="h-3 w-3 mr-1" /> Aktiv
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Aktiv
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-red-100 text-red-700 hover:bg-red-100">
-                            <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg> Inaktiv
                           </Badge>
                         )}
                       </div>
@@ -240,7 +241,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                       <div className="font-medium">
                         {user.isAdmin ? (
                           <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                            <BadgeCheck className="h-3 w-3 mr-1" /> Admin
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Admin
                           </Badge>
                         ) : (
                           <Badge variant="outline">
@@ -437,7 +438,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
                 onClick={() => onEdit(user)}
                 className="flex items-center gap-1"
               >
-                <Pencil className="h-4 w-4" /> Bearbeiten
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg> Bearbeiten
               </Button>
             )}
             
@@ -449,11 +450,11 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
               >
                 {user.isActive ? (
                   <>
-                    <BadgeX className="h-4 w-4" /> Deaktivieren
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg> Deaktivieren
                   </>
                 ) : (
                   <>
-                    <BadgeCheck className="h-4 w-4" /> Aktivieren
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Aktivieren
                   </>
                 )}
               </Button>
