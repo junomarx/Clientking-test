@@ -536,13 +536,21 @@ export function registerSuperadminRoutes(app: Express) {
       }
 
       const { name, description, priceMonthly, features } = req.body;
+      
+      console.log("Paket aktualisieren - Eingangsdaten:", { 
+        id: packageId, 
+        name, 
+        description, 
+        priceMonthly, 
+        features 
+      });
 
       // Paket-Grunddaten aktualisieren
       await db.update(packages)
         .set({
           name: name,
           description: description,
-          priceMonthly: parseFloat(priceMonthly),
+          priceMonthly: parseFloat(priceMonthly) || 0,
         })
         .where(eq(packages.id, packageId));
 
@@ -551,18 +559,24 @@ export function registerSuperadminRoutes(app: Express) {
 
       // Neue Features hinzufügen
       if (features && Array.isArray(features)) {
-        for (const feature of features) {
-          await db.insert(packageFeatures).values({
+        console.log("Features zum Hinzufügen:", features);
+        const featureInsertPromises = features.map(feature => 
+          db.insert(packageFeatures).values({
             packageId: packageId,
             feature: feature
-          });
-        }
+          })
+        );
+        
+        await Promise.all(featureInsertPromises);
+        console.log(`${features.length} Features für Paket ${packageId} aktualisiert`);
+      } else {
+        console.log("Keine Features zum Hinzufügen gefunden oder ungültiges Format");
       }
 
       res.json({ message: "Paket erfolgreich aktualisiert" });
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Pakets:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren des Pakets" });
+      res.status(500).json({ message: "Fehler beim Aktualisieren des Pakets", error: error instanceof Error ? error.message : 'Unbekannter Fehler' });
     }
   });
 
