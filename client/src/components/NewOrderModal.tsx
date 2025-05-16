@@ -499,10 +499,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       console.log("Neue Reparatur erstellt und Cache aktualisiert");
       
-      // Erfolgsmeldung anzeigen
+      // Erfolgsmeldung anzeigen (nur mit Auftragscode, nicht mit ID)
       toast({
         title: "Auftrag erstellt",
-        description: `Auftrag #${data.orderNumber || data.id} wurde erfolgreich erstellt.`,
+        description: `Auftrag ${data.orderCode} wurde erfolgreich erstellt.`,
       });
       
       // Modal schließen und Formular zurücksetzen
