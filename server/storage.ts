@@ -152,6 +152,19 @@ export interface IStorage {
     repair: Partial<InsertRepair>,
     userId: number,
   ): Promise<Repair | undefined>;
+  
+  /**
+   * Aktualisiert den Status einer Reparatur
+   * @param id Die ID der Reparatur
+   * @param status Der neue Status
+   * @param userId Die ID des Benutzers, der die Aktion durchführt
+   * @returns Die aktualisierte Reparatur oder undefined
+   */
+  updateRepairStatus(
+    id: number,
+    status: string,
+    userId: number,
+  ): Promise<Repair | undefined>;
   updateRepairStatus(id: number, status: string, userId: number): Promise<Repair | undefined>;
   updateRepairSignature(
     id: number,
