@@ -15,12 +15,19 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
   // Alle Platzhalter im Format {{variableName}} durch die entsprechenden Werte ersetzen
   console.log('Template-Variablen:', variables);
   
-  // Spezielle Behandlung für Fehlerbeschreibungen - ersetze Zeilenumbrüche durch <br>-Tags
+  // Spezielle Behandlung für Fehlerbeschreibungen:
+  // 1. Ersetze Kommas durch Zeilenumbrüche mit <br>-Tags
+  // 2. Ersetze vorhandene Zeilenumbrüche ebenfalls durch <br>-Tags
   // So wird jeder Fehler in einer eigenen Zeile angezeigt
   if (variables.deviceIssue) {
     variables = { 
       ...variables, 
-      deviceIssue: variables.deviceIssue.replace(/\n/g, '<br>') 
+      deviceIssue: variables.deviceIssue
+        .split(/,\s*/)               // Teile bei Kommas (mit optionalem Leerzeichen danach)
+        .map(item => item.trim())    // Entferne Leerzeichen am Anfang und Ende
+        .filter(item => item)        // Entferne leere Einträge
+        .join('<br>')                // Füge mit <br> wieder zusammen
+        .replace(/\n/g, '<br>')      // Ersetze auch manuelle Zeilenumbrüche
     };
   }
   
