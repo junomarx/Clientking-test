@@ -216,8 +216,14 @@ export function NewCostEstimateDialog({
         setSelectedCustomerIndex(prev => prev > 0 ? prev - 1 : 0);
       }
       
-      // Enter oder Tab zum Auswählen
-      if ((e.key === 'Enter' || e.key === 'Tab') && selectedCustomerIndex >= 0) {
+      // Enter zum Auswählen
+      if (e.key === 'Enter' && selectedCustomerIndex >= 0) {
+        e.preventDefault();
+        fillCustomerData(matchingCustomers[selectedCustomerIndex]);
+      }
+      
+      // Tab nur abfangen, wenn tatsächlich ein Kunde ausgewählt ist
+      if (e.key === 'Tab' && selectedCustomerIndex >= 0) {
         e.preventDefault();
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
       }
