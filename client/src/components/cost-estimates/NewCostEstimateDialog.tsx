@@ -73,8 +73,6 @@ export function NewCostEstimateDialog({
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
-  // Status zur Kontrolle, ob Tab gerade gedrückt wurde
-  const [tabPressed, setTabPressed] = useState<boolean>(false);
   
   // Gerätedaten-Stati
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
@@ -187,42 +185,37 @@ export function NewCostEstimateDialog({
   
   // Kundensuche starten, wenn beide Namensfelder ausgefüllt sind
   useEffect(() => {
-    // Nur Kundensuche starten, wenn Tab nicht gerade gedrückt wurde
-    if (watchFirstName && watchLastName && !tabPressed) {
+    if (watchFirstName && watchLastName) {
       // Kundensuche mit Verzögerung starten, um zu viele API-Aufrufe zu vermeiden
       const timer = setTimeout(() => {
         checkForExistingCustomer(watchFirstName, watchLastName);
       }, 500);
       
       return () => clearTimeout(timer);
-    } else if (!watchFirstName || !watchLastName) {
+    } else {
       // Dropdown schließen und Suchergebnisse zurücksetzen, wenn Felder leer sind
       setShowCustomerDropdown(false);
       setMatchingCustomers([]);
     }
-  }, [watchFirstName, watchLastName, tabPressed]);
+  }, [watchFirstName, watchLastName]);
+  
+  // Ein einfacher globaler Blur-Handler für alle Eingabefelder
+  const handleBlur = () => {
+    // Nach kurzer Verzögerung Dropdown schließen, um Fokus-Wechsel zu ermöglichen
+    setTimeout(() => {
+      setShowCustomerDropdown(false);
+    }, 200);
+  };
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Wenn Tab gedrückt wird, lassen wir das normale Verhalten zu
+    // Wenn Tab gedrückt wird, Dropdown schließen und normal weiter
     if (e.key === 'Tab') {
-      // Wenn ein Kunde ausgewählt ist, diesen übernehmen, aber nicht preventDefault aufrufen
       if (showCustomerDropdown && matchingCustomers.length > 0 && selectedCustomerIndex >= 0) {
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
-      } else {
-        // Dropdown immer schließen beim Tabben
-        setShowCustomerDropdown(false);
       }
       
-      // Tab-Flag setzen, um zu verhindern, dass das Dropdown sofort wieder geöffnet wird
-      setTabPressed(true);
-      
-      // Tab-Flag nach kurzer Zeit zurücksetzen
-      setTimeout(() => {
-        setTabPressed(false);
-      }, 500);
-      
-      // Tab-Taste nicht abfangen, normale Browsernavigation zulassen
+      setShowCustomerDropdown(false);
       return;
     }
     
