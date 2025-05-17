@@ -216,40 +216,48 @@ export function NewCostEstimateDialog({
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Wenn Tab gedrückt wird, Dropdown schließen und normal weiter
-    if (e.key === 'Tab') {
-      if (showCustomerDropdown && matchingCustomers.length > 0 && selectedCustomerIndex >= 0) {
-        fillCustomerData(matchingCustomers[selectedCustomerIndex]);
-      }
-      
-      setShowCustomerDropdown(false);
-      return;
-    }
-    
-    // Rest des Handlers nur ausführen, wenn Dropdown offen ist
+    // Nur im geöffneten Dropdown navigieren
     if (showCustomerDropdown && matchingCustomers.length > 0) {
       // Pfeiltaste nach unten
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedCustomerIndex(prev => 
-          prev < matchingCustomers.length - 1 ? prev + 1 : prev
+          Math.min(prev + 1, matchingCustomers.length - 1)
         );
       }
       
       // Pfeiltaste nach oben
-      if (e.key === 'ArrowUp') {
+      else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedCustomerIndex(prev => prev > 0 ? prev - 1 : 0);
+        setSelectedCustomerIndex(prev => Math.max(prev - 1, 0));
       }
       
       // Enter zum Auswählen
-      if (e.key === 'Enter' && selectedCustomerIndex >= 0) {
+      else if (e.key === 'Enter' && selectedCustomerIndex >= 0) {
         e.preventDefault();
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
       }
       
+      // Tab-Taste - wichtig für korrekte Navigation
+      else if (e.key === 'Tab' && selectedCustomerIndex >= 0) {
+        // Wichtig: Erst prüfen, dann preventDefault aufrufen, wenn ein Kunde ausgewählt ist
+        e.preventDefault();
+        const selectedCustomer = matchingCustomers[selectedCustomerIndex];
+        if (selectedCustomer) {
+          fillCustomerData(selectedCustomer);
+          
+          // Wichtig: Wechsel zum E-Mail-Feld nach Kundenauswahl
+          setTimeout(() => {
+            const nextField = document.querySelector('input[name="email"]') as HTMLInputElement;
+            if (nextField) {
+              nextField.focus();
+            }
+          }, 100);
+        }
+      }
+      
       // ESC zum Schließen
-      if (e.key === 'Escape') {
+      else if (e.key === 'Escape') {
         e.preventDefault();
         setShowCustomerDropdown(false);
       }
