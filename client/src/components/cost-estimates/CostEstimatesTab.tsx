@@ -36,7 +36,7 @@ interface CostEstimate {
   updatedAt: string;
 }
 
-// Interface für das Formular
+// Interface für das Formular - angepasst an die Komponente NewCostEstimateDialog
 interface CostEstimateFormData {
   customerId: number;
   firstName: string;
@@ -49,8 +49,10 @@ interface CostEstimateFormData {
   deviceType: string;
   manufacturer: string;
   model: string;
-  issue: string;
-  estimatedCost: string;
+  serialNumber?: string;
+  issueDescription: string;  // Entspricht "issue" im Backend
+  workToBeDone?: string;     // Zusätzliches Feld im Formular
+  totalPrice: string;        // Entspricht "estimatedCost" im Backend
   notes?: string;
 }
 
@@ -94,12 +96,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
         deviceType: data.deviceType,
         manufacturer: data.manufacturer,
         model: data.model,
-        issue: data.issue,
-        estimatedCost: data.estimatedCost,
+        issue: data.issueDescription, // Anpassung an Formularfeld
+        estimatedCost: data.totalPrice || "0", // Anpassung an Formularfeld
         notes: data.notes || null,
         status: "offen", // Default-Status
       };
       
+      console.log("Sende Daten an API:", costEstimateData);
       const response = await apiRequest('POST', '/api/cost-estimates', costEstimateData);
       return await response.json();
     },
