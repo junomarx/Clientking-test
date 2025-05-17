@@ -201,6 +201,17 @@ export function NewCostEstimateDialog({
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Tab-Taste nur erfassen, wenn Dropdown offen und ein Kunde ausgewählt ist
+    if (e.key === 'Tab') {
+      if (showCustomerDropdown && matchingCustomers.length > 0 && selectedCustomerIndex >= 0) {
+        e.preventDefault();
+        fillCustomerData(matchingCustomers[selectedCustomerIndex]);
+      }
+      // Sonst weiterspringen (normales Verhalten)
+      return;
+    }
+    
+    // Rest des Handlers nur ausführen, wenn Dropdown offen ist
     if (showCustomerDropdown && matchingCustomers.length > 0) {
       // Pfeiltaste nach unten
       if (e.key === 'ArrowDown') {
@@ -218,12 +229,6 @@ export function NewCostEstimateDialog({
       
       // Enter zum Auswählen
       if (e.key === 'Enter' && selectedCustomerIndex >= 0) {
-        e.preventDefault();
-        fillCustomerData(matchingCustomers[selectedCustomerIndex]);
-      }
-      
-      // Tab nur abfangen, wenn tatsächlich ein Kunde ausgewählt ist
-      if (e.key === 'Tab' && selectedCustomerIndex >= 0) {
         e.preventDefault();
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
       }
