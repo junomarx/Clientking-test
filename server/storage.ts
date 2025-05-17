@@ -471,7 +471,8 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate> {
+  // Erste Implementierung wird genutzt - weiter unten ist die korrekte vorhanden  
+  async _createCostEstimate_old(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("Benutzer nicht gefunden");
     
@@ -2589,20 +2590,21 @@ export class DatabaseStorage implements IStorage {
       const year = date.getFullYear().toString().slice(-2); // Die letzten zwei Ziffern des Jahres
       const month = String(date.getMonth() + 1).padStart(2, '0');
       
-      // Hole den letzten Kostenvoranschlag des Monats, um die Nummer zu erhöhen
-      const lastEstimateOfMonth = await db.query.costEstimates.findFirst({
-        where: and(
-          eq(costEstimates.shopId, shopId),
-          like(costEstimates.estimateNumber, `KV-${year}${month}-%`)
-        ),
-        orderBy: [desc(costEstimates.id)],
-      });
+      // Hole den letzten Kostenvoranschlag des Monats mit SQL, da die db.query Methode Probleme hat
+      const pattern = `KV-${year}${month}-%`;
+      const result = await pool.query(
+        `SELECT estimate_number FROM cost_estimates 
+         WHERE shop_id = $1 AND estimate_number LIKE $2 
+         ORDER BY id DESC LIMIT 1`,
+        [shopId, pattern]
+      );
 
       let nextNumber = 1;
-      if (lastEstimateOfMonth) {
-        const parts = lastEstimateOfMonth.estimateNumber.split('-');
-        if (parts.length === 3) {
-          nextNumber = parseInt(parts[2]) + 1;
+      if (result.rows.length > 0) {
+        const lastEstimateNumber = result.rows[0].estimate_number;
+        const match = lastEstimateNumber.match(/KV-\d{4}-(\d{3})/);
+        if (match && match[1]) {
+          nextNumber = parseInt(match[1]) + 1;
         }
       }
 
