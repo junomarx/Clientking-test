@@ -1527,7 +1527,7 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'in-reparatur')
+          eq(repairs.status, 'in_reparatur')
         ));
 
       const [completedResult] = await db
@@ -1535,7 +1535,7 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'fertig')
+          eq(repairs.status, 'abgeholt')
         ));
 
       const [todayResult] = await db
@@ -1559,7 +1559,7 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'ausgelagert')
+          eq(repairs.status, 'ausser_haus')
         ));
 
       const [receivedResult] = await db
@@ -1567,7 +1567,7 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'angenommen')
+          eq(repairs.status, 'eingegangen')
         ));
 
       const totalOrders = Number(countResult?.count) || 0;
