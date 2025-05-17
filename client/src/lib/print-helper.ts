@@ -15,6 +15,15 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
   // Alle Platzhalter im Format {{variableName}} durch die entsprechenden Werte ersetzen
   console.log('Template-Variablen:', variables);
   
+  // Spezielle Behandlung für Fehlerbeschreibungen - ersetze Zeilenumbrüche durch <br>-Tags
+  // So wird jeder Fehler in einer eigenen Zeile angezeigt
+  if (variables.deviceIssue) {
+    variables = { 
+      ...variables, 
+      deviceIssue: variables.deviceIssue.replace(/\n/g, '<br>') 
+    };
+  }
+  
   // Spezielle Behandlung für Logo-URL - kann entweder businessLogo oder logoUrl sein
   if (variables.businessLogo && !variables.logoUrl) {
     variables = { ...variables, logoUrl: variables.businessLogo };
