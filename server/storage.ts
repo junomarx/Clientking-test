@@ -2482,20 +2482,28 @@ export class DatabaseStorage implements IStorage {
         }
         
         // Umsatz berechnen (nur wenn ein Preis vorhanden ist)
-        if (repair.price) {
-          // Abhängig von der Einstellung, ob nach Erstellungs- oder Abholdatum
-          const relevantDate = revenueBasedOnPickup ? 
-            (repair.pickedUpAt || repair.createdAt) : repair.createdAt;
+        // Verwende estimatedCost (von Repair) statt price
+        if (repair.estimatedCost) {
+          // String in Nummer konvertieren (z.B. "123,45" oder "123.45" zu 123.45)
+          const cost = parseFloat(repair.estimatedCost.replace(',', '.'));
+          
+          if (!isNaN(cost)) {
+            // Abhängig von der Einstellung, ob nach Erstellungs- oder Abholdatum
+            // Verwende pickupSignedAt statt pickedUpAt
+            const relevantDate = revenueBasedOnPickup ? 
+              (repair.pickupSignedAt || repair.createdAt) : repair.createdAt;
+              
+            // Umsatz zum Gesamtumsatz addieren
+            total += cost;
             
-          // Umsatz zum Gesamtumsatz addieren
-          total += repair.price;
-          
-          // Nach Status gruppieren
-          byStatus[repair.status] = (byStatus[repair.status] || 0) + repair.price;
-          
-          // Nach Monat gruppieren
-          const month = relevantDate.getMonth();
-          byMonth[month] = (byMonth[month] || 0) + repair.price;
+            // Nach Status gruppieren (Status als String verwenden)
+            const statusKey = repair.status || 'Unbekannt';
+            byStatus[statusKey] = (byStatus[statusKey] || 0) + cost;
+            
+            // Nach Monat gruppieren
+            const month = relevantDate.getMonth();
+            byMonth[month] = (byMonth[month] || 0) + cost;
+          }
         }
       }
       
