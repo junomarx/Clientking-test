@@ -10,7 +10,7 @@ import {
   Wrench,
   Users,
   BarChart2,
-  FileText,
+  // FileText entfernt,
   Settings,
   LogOut,
   ChevronLeft,

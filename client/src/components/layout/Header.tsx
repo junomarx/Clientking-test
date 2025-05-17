@@ -12,7 +12,7 @@ import {
   Wrench,
   Users,
   BarChart2,
-  FileText,
+  // FileText entfernt
   PlusCircle,
   Building,
   Mail,
