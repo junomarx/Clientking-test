@@ -189,7 +189,7 @@ export default function SuperadminSupportModeTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">DSGVO-konformer Support-Modus</h1>
           <p className="text-muted-foreground">
@@ -199,7 +199,7 @@ export default function SuperadminSupportModeTab() {
         <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
           <DialogTrigger asChild>
             <Button 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 mt-2 md:mt-0 w-full md:w-auto"
               disabled={isLoadingShops}
             >
               <ShieldAlert className="w-4 h-4" />
@@ -370,59 +370,112 @@ export default function SuperadminSupportModeTab() {
               <p>Noch keine Support-Zugriffe protokolliert</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Shop</TableHead>
-                  <TableHead>Zugriffsart</TableHead>
-                  <TableHead>Begründung</TableHead>
-                  <TableHead>Beginn</TableHead>
-                  <TableHead>Ende</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Aktionen</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-auto">
+              {/* Desktop-Version der Tabelle */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Shop</TableHead>
+                      <TableHead>Zugriffsart</TableHead>
+                      <TableHead>Begründung</TableHead>
+                      <TableHead>Beginn</TableHead>
+                      <TableHead>Ende</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Aktionen</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {accessHistory.map((access) => (
+                      <TableRow key={access.id}>
+                        <TableCell className="font-medium">{access.shopName}</TableCell>
+                        <TableCell>
+                          <Badge variant={access.accessType === 'all' ? 'destructive' : 'default'}>
+                            {access.accessType === 'all' && 'Vollzugriff'}
+                            {access.accessType === 'repair_data' && 'Reparaturdaten'}
+                            {access.accessType === 'customer_data' && 'Kundendaten'}
+                            {access.accessType === 'business_settings' && 'Geschäftseinstellungen'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate" title={access.reason}>
+                          {access.reason}
+                        </TableCell>
+                        <TableCell>{formatDate(access.startedAt)}</TableCell>
+                        <TableCell>
+                          {access.endedAt ? formatDate(access.endedAt) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={access.isActive ? 'outline' : 'secondary'}>
+                            {access.isActive ? 'Aktiv' : 'Beendet'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {access.isActive && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => endAccess.mutate(access.shopId)}
+                              disabled={endAccess.isPending}
+                            >
+                              {endAccess.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                              Beenden
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile-Version mit Karten */}
+              <div className="md:hidden space-y-4">
                 {accessHistory.map((access) => (
-                  <TableRow key={access.id}>
-                    <TableCell className="font-medium">{access.shopName}</TableCell>
-                    <TableCell>
-                      <Badge variant={access.accessType === 'all' ? 'destructive' : 'default'}>
-                        {access.accessType === 'all' && 'Vollzugriff'}
-                        {access.accessType === 'repair_data' && 'Reparaturdaten'}
-                        {access.accessType === 'customer_data' && 'Kundendaten'}
-                        {access.accessType === 'business_settings' && 'Geschäftseinstellungen'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate" title={access.reason}>
-                      {access.reason}
-                    </TableCell>
-                    <TableCell>{formatDate(access.startedAt)}</TableCell>
-                    <TableCell>
-                      {access.endedAt ? formatDate(access.endedAt) : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={access.isActive ? 'outline' : 'secondary'}>
-                        {access.isActive ? 'Aktiv' : 'Beendet'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
+                  <Card key={access.id} className="overflow-hidden">
+                    <CardHeader className="p-3">
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-base">{access.shopName}</CardTitle>
+                        <Badge variant={access.isActive ? 'outline' : 'secondary'}>
+                          {access.isActive ? 'Aktiv' : 'Beendet'}
+                        </Badge>
+                      </div>
+                      <CardDescription className="mt-1 text-xs">
+                        {access.reason}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 text-sm">
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Zugriffsart:</p>
+                          <Badge variant={access.accessType === 'all' ? 'destructive' : 'default'} className="mt-1">
+                            {access.accessType === 'all' && 'Vollzugriff'}
+                            {access.accessType === 'repair_data' && 'Reparaturdaten'}
+                            {access.accessType === 'customer_data' && 'Kundendaten'}
+                            {access.accessType === 'business_settings' && 'Geschäftseinstellungen'}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Zeitraum:</p>
+                          <p className="mt-1">{formatDate(access.startedAt).split(" ")[0]}</p>
+                        </div>
+                      </div>
                       {access.isActive && (
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="w-full mt-2"
                           onClick={() => endAccess.mutate(access.shopId)}
                           disabled={endAccess.isPending}
                         >
                           {endAccess.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                          Beenden
+                          Zugriff beenden
                         </Button>
                       )}
-                    </TableCell>
-                  </TableRow>
+                    </CardContent>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

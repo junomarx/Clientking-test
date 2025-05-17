@@ -229,29 +229,77 @@ export default function SuperadminDashboardTab() {
                         <Skeleton className="h-20 w-full" />
                       </div>
                     ) : inactiveUsers && inactiveUsers.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Benutzername</TableHead>
-                            <TableHead>E-Mail</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Aktionen</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                      <div className="w-full overflow-auto">
+                        {/* Desktop Version - normale Tabelle */}
+                        <div className="hidden md:block">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Benutzername</TableHead>
+                                <TableHead>E-Mail</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Aktionen</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {inactiveUsers.map((user) => (
+                                <TableRow key={user.id}>
+                                  <TableCell className="font-medium">{user.username}</TableCell>
+                                  <TableCell>{user.email}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                      <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        // Direkt zum Users-Tab wechseln
+                                        if (setActiveTab) {
+                                          setActiveTab("users");
+                                          
+                                          // Nach kurzer Verzögerung zum Details-Dialog
+                                          setTimeout(() => {
+                                            // Event für Benutzerdetails simulieren
+                                            const event = new CustomEvent('showUserDetails', {
+                                              detail: { userId: user.id }
+                                            });
+                                            document.dispatchEvent(event);
+                                          }, 100);
+                                        }
+                                      }}
+                                    >
+                                      Details
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+
+                        {/* Mobile Version - Kartenlayout */}
+                        <div className="md:hidden space-y-3 p-3">
                           {inactiveUsers.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-medium">{user.username}</TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                  <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
+                            <Card key={user.id} className="overflow-hidden">
+                              <CardHeader className="py-3 px-4">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <CardTitle className="text-base">{user.username}</CardTitle>
+                                    <CardDescription className="text-xs mt-1">{user.email}</CardDescription>
+                                  </div>
+                                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                    <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="pt-0 pb-3 px-4">
                                 <Button 
                                   variant="outline" 
                                   size="sm"
+                                  className="w-full"
                                   onClick={() => {
                                     // Direkt zum Users-Tab wechseln
                                     if (setActiveTab) {
@@ -268,13 +316,13 @@ export default function SuperadminDashboardTab() {
                                     }
                                   }}
                                 >
-                                  Details
+                                  Details anzeigen
                                 </Button>
-                              </TableCell>
-                            </TableRow>
+                              </CardContent>
+                            </Card>
                           ))}
-                        </TableBody>
-                      </Table>
+                        </div>
+                      </div>
                     ) : (
                       <div className="p-4 text-center text-muted-foreground">
                         Keine inaktiven Benutzer gefunden

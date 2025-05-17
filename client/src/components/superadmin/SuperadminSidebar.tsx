@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
@@ -38,14 +38,11 @@ export function SuperadminSidebar({
   
   // Ref für Sheet-Komponente
   const sheetCloseRef = useRef<HTMLButtonElement>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Funktion zum Schließen des Menüs
   const closeSheetMenu = () => {
-    // Verwenden wir die Standard-DOM-Selektion, da die Ref nicht zuverlässig ist
-    const closeBtn = document.querySelector('button[aria-label="Close"]');
-    if (closeBtn instanceof HTMLElement) {
-      closeBtn.click();
-    }
+    setSheetOpen(false);
   };
 
   // Navigationselemente, die in der Sidebar angezeigt werden
@@ -185,14 +182,14 @@ export function SuperadminSidebar({
 
       {/* Mobile Menü - nur auf kleineren Bildschirmen sichtbar */}
       <div className="md:hidden">
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 md:hidden">
+            <Button variant="ghost" size="icon" className="absolute top-4 left-4 md:hidden z-10">
               <Menu className="h-6 w-6" />
               <span className="sr-only">Menü öffnen</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto">
+          <SheetContent side="left" className="w-[80%] pt-16 pb-10 h-full max-h-screen overflow-y-auto">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-left">
                 {currentUser ? `${currentUser.username} Menü` : 'Superadmin Menü'}
@@ -207,9 +204,7 @@ export function SuperadminSidebar({
                 variant="outline" 
                 className="w-full justify-start mb-2"
                 onClick={() => {
-                  // Menü schließen und dann ausloggen
                   closeSheetMenu();
-                  // Nach kurzer Verzögerung ausloggen
                   setTimeout(handleLogout, 100);
                 }}
               >
@@ -220,10 +215,7 @@ export function SuperadminSidebar({
                 variant="link" 
                 className="w-full justify-start"
                 asChild
-                onClick={() => {
-                  // Auch das Menü schließen, wenn der Link geklickt wird
-                  setTimeout(() => closeSheetMenu(), 100);
-                }}
+                onClick={() => closeSheetMenu()}
               >
                 <Link to="/app">
                   <ChevronLeft className="h-5 w-5 mr-2" />
