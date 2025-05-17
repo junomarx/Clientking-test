@@ -199,6 +199,37 @@ export function NewCostEstimateDialog({
     }
   }, [watchFirstName, watchLastName]);
   
+  // Handler für die Tastaturnavigation in der Kundenauswahl
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showCustomerDropdown && matchingCustomers.length > 0) {
+      // Pfeiltaste nach unten
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedCustomerIndex(prev => 
+          prev < matchingCustomers.length - 1 ? prev + 1 : prev
+        );
+      }
+      
+      // Pfeiltaste nach oben
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedCustomerIndex(prev => prev > 0 ? prev - 1 : 0);
+      }
+      
+      // Enter oder Tab zum Auswählen
+      if ((e.key === 'Enter' || e.key === 'Tab') && selectedCustomerIndex >= 0) {
+        e.preventDefault();
+        fillCustomerData(matchingCustomers[selectedCustomerIndex]);
+      }
+      
+      // ESC zum Schließen
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowCustomerDropdown(false);
+      }
+    }
+  };
+
   const onSubmit = (data: CostEstimateFormData) => {
     console.log("Formular-Daten:", data);
     
@@ -242,7 +273,10 @@ export function NewCostEstimateDialog({
                       <FormItem>
                         <FormLabel>Vorname*</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input 
+                            {...field}
+                            onKeyDown={handleInputKeyDown}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -258,7 +292,10 @@ export function NewCostEstimateDialog({
                       <FormItem>
                         <FormLabel>Nachname*</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input 
+                            {...field}
+                            onKeyDown={handleInputKeyDown}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
