@@ -1531,16 +1531,13 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.status, 'in_reparatur')
         ));
       
-      // Fertige Reparaturen = Alle mit Status "abgeholt" ODER "fertig" (für die Dashboard-Anzeige)
+      // Fertige Reparaturen = Alle mit Status "abgeholt" für die Dashboard-Anzeige
       const [completedResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          or(
-            eq(repairs.status, 'abgeholt'),
-            eq(repairs.status, 'fertig')
-          )
+          eq(repairs.status, 'abgeholt')
         ));
 
       // Heute erstellte Reparaturen
@@ -1552,13 +1549,13 @@ export class DatabaseStorage implements IStorage {
           gte(repairs.createdAt, today)
         ));
 
-      // Abholbereite Reparaturen
+      // Abholbereite Reparaturen (Status "fertig", NICHT "abholbereit")
       const [readyForPickupResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'abholbereit')
+          eq(repairs.status, 'fertig')
         ));
 
       // Ausgelagerte Reparaturen (Außer Haus)
@@ -1578,6 +1575,15 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.shopId, shopId),
           eq(repairs.status, 'eingegangen')
         ));
+
+      // Debug-Ausgaben für die Statistik
+      console.log(`Statistik für Shop ${shopId}:`);
+      console.log(`- Gesamt: ${Number(countResult?.count) || 0}`);
+      console.log(`- In Reparatur: ${Number(inRepairResult?.count) || 0}`);
+      console.log(`- Abgeholt: ${Number(completedResult?.count) || 0}`);
+      console.log(`- Abholbereit/Fertig: ${Number(readyForPickupResult?.count) || 0}`);
+      console.log(`- Eingegangen: ${Number(receivedResult?.count) || 0}`);
+      console.log(`- Außer Haus: ${Number(outsourcedResult?.count) || 0}`);
 
       const totalOrders = Number(countResult?.count) || 0;
       const inRepair = Number(inRepairResult?.count) || 0;
