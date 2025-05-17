@@ -23,7 +23,12 @@ export function isSuperadmin(req: Request, res: Response, next: NextFunction) {
           console.log(`Benutzer mit ID ${userId} aus Header gefunden: ${user.username}`);
           if (user.isSuperadmin) {
             console.log(`Superadmin-Bereich: Superadmin-Benutzer mit ID ${userId} gefunden: ${user.username}`);
-            req.user = user;
+            // Wichtig: Stelle sicher, dass der Benutzer das isSuperadmin-Flag hat
+            req.user = {
+              ...user,
+              isSuperadmin: true,
+              userId: user.id // Sicherstellen, dass die userId gesetzt ist
+            };
             return next();
           } else {
             console.log(`Superadmin-Bereich: Benutzer ist kein Superadmin`);
@@ -69,8 +74,11 @@ export function isSuperadmin(req: Request, res: Response, next: NextFunction) {
             return res.status(403).json({ message: "Keine Superadmin-Rechte" });
           }
           
-          // Benutzer in Request setzen
-          req.user = user;
+          // Benutzer in Request setzen mit userId
+          req.user = {
+            ...user,
+            userId: user.id
+          };
           return next();
         }).catch(err => {
           console.error('Superadmin-Bereich: Token-Auth Fehler:', err);
@@ -84,9 +92,14 @@ export function isSuperadmin(req: Request, res: Response, next: NextFunction) {
     } else {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
-  } else if (!req.user || !(req.user as any).isSuperadmin) {
+  } else if (!req.user) {
+    return res.status(401).json({ message: "Nicht angemeldet" });
+  } else if (!(req.user as any).isSuperadmin) {
+    console.log("Benutzer ist eingeloggt, aber kein Superadmin:", req.user);
     return res.status(403).json({ message: "Keine Superadmin-Rechte" });
   } else {
+    // Stelle sicher, dass der Benutzer mit allen Eigenschaften verknüpft ist
+    console.log("Superadmin authentifiziert:", req.user.username || (req.user as any).username);
     next();
   }
 }

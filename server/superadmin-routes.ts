@@ -57,6 +57,12 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(400).json({ message: "Ungültige Benutzer-ID" });
       }
       
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht angemeldet" });
+      }
+      
+      console.log(`Superadmin-Berechtigung bestätigt: ${req.user.username} (ID: ${req.user.id}) ruft Geschäftsdaten für Benutzer ${userId} ab`);
+      
       // Benutzer holen, um die Shop-ID zu ermitteln
       const user = await storage.getUser(userId);
       if (!user) {
@@ -67,9 +73,13 @@ export function registerSuperadminRoutes(app: Express) {
       const settings = await storage.getBusinessSettings(userId);
       
       if (!settings) {
-        return res.status(404).json({ message: "Keine Geschäftseinstellungen für diesen Benutzer gefunden" });
+        // Wenn keine Einstellungen gefunden wurden, senden wir eine leere Antwort mit Status 200
+        // um zu zeigen, dass die Anfrage erfolgreich war, aber keine Daten verfügbar sind
+        console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} (${user.username}) gefunden.`);
+        return res.status(200).json(null);
       }
       
+      console.log(`Geschäftseinstellungen für Benutzer ${userId} (${user.username}) erfolgreich abgerufen.`);
       res.json(settings);
     } catch (error) {
       console.error("Fehler beim Abrufen der Geschäftseinstellungen:", error);
