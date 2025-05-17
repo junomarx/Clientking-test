@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, addDays } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CalendarIcon, Plus, Trash, Euro, UserPlus } from 'lucide-react';
+import { CalendarIcon, Plus, Trash, Euro, UserPlus, X } from 'lucide-react';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,11 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -94,7 +90,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
   
   // Query für Kunden
-  const { data: customers, isLoading: isLoadingCustomers } = useQuery({
+  const { data: customers } = useQuery({
     queryKey: ['/api/customers'],
     queryFn: async () => {
       const response = await fetch('/api/customers');
@@ -303,7 +299,6 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
     // Bereite die Daten für das Absenden vor
     const formattedData = {
       ...data,
-      // Wir behalten das Date-Objekt, damit der Typ übereinstimmt
       items,
       subtotal,
       taxAmount,
@@ -315,193 +310,107 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-[800px] mx-auto p-5 font-['Arial']">
-        <h1 className="text-center text-2xl font-bold text-[#2c3e50] mb-8">Kostenvoranschlag Generator</h1>
-
-        {/* Kundendaten */}
-        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
-          <h2 className="text-[18px] font-bold border-b border-[#ddd] pb-2.5 mb-5">Kundendaten</h2>
-          
-          <div className="flex flex-wrap mb-4 -mx-2">
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">Vorname*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">Nachname*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="font-sans">
+        <div className="flex justify-between items-center mb-2">
+          <div>
+            <h2 className="text-lg font-bold">Neuen Kostenvoranschlag erstellen</h2>
+            <p className="text-gray-600 text-xs">Erstellen Sie einen neuen Kostenvoranschlag für einen Kunden.</p>
           </div>
+          <button 
+            type="button" 
+            className="text-gray-500 hover:text-gray-700"
+            onClick={() => window.history.back()}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-          <div className="mb-4">
+        <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#ddd] mb-3">
+          <h2 className="text-sm font-bold border-b border-[#ddd] pb-1 mb-2">Kundendaten</h2>
+          
+          <div className="grid grid-cols-2 gap-2 mb-2">
             <FormField
               control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem className="mb-4">
-                  <FormLabel className="block font-bold mb-1 text-[14px]">Adresse*</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="flex flex-wrap mb-4 -mx-2">
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="zipCode"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">PLZ*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">Ort*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap mb-4 -mx-2">
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">Telefonnummer*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-1/2 px-2">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="mb-4">
-                    <FormLabel className="block font-bold mb-1 text-[14px]">E-Mail*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        type="email" 
-                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </div>
-          
-          <div className="mb-4">
-            <FormField
-              control={form.control}
-              name="validUntil"
+              name="customerId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="block font-bold mb-1 text-[14px]">Gültig bis*</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className="w-full h-[38px] justify-start text-left px-2 py-2 border border-[#ddd] rounded-md font-normal"
+                  <FormLabel className="text-xs font-medium">Kunde auswählen*</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Kunden auswählen" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {customers?.map((customer) => (
+                        <SelectItem 
+                          key={customer.id} 
+                          value={customer.id.toString()}
                         >
-                          {field.value ? (
-                            format(field.value, "PPP", { locale: de })
-                          ) : (
-                            <span>Datum wählen</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value || undefined}
-                        onSelect={field.onChange}
-                        initialFocus
-                        locale={de}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
+                          {customer.firstName} {customer.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage className="text-xs" />
                 </FormItem>
               )}
             />
+            
+            <div className="flex items-end mb-1">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="h-8 w-full text-xs"
+                onClick={() => setIsNewCustomerDialogOpen(true)}
+              >
+                <UserPlus className="mr-1 h-3 w-3" />
+                Neuer Kunde
+              </Button>
+            </div>
           </div>
+          
+          <FormField
+            control={form.control}
+            name="validUntil"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-medium">Gültig bis*</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className="w-full h-8 justify-start text-left px-2 py-1 border border-[#ddd] rounded text-xs"
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: de })
+                        ) : (
+                          <span>Datum wählen</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value || undefined}
+                      onSelect={field.onChange}
+                      initialFocus
+                      locale={de}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
         </div>
-        
+
         {/* Gerätedaten */}
-        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
-          <h2 className="text-[18px] font-bold text-[#2c3e50] border-b border-[#ddd] pb-2.5 mb-5">Gerätedaten</h2>
+        <div className="bg-[#f9f9f9] rounded-lg p-3 border border-[#ddd] mb-3">
+          <h2 className="text-sm font-bold border-b border-[#ddd] pb-1 mb-2">Gerätedaten</h2>
           
           <div className="flex flex-wrap -mx-2">
             <div className="w-1/2 px-2">
