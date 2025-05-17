@@ -10,7 +10,7 @@ import {
   Wrench,
   Users,
   BarChart2,
-  // FileText entfernt,
+  FileText,
   Settings,
   LogOut,
   ChevronLeft,
@@ -95,6 +95,17 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           Kunden
         </Button>
         <Button 
+          variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('cost-estimates');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <FileText className="h-5 w-5 mr-2" />
+          Kostenvoranschläge
+        </Button>
+        <Button 
           variant={activeTab === 'statistics' ? 'default' : 'ghost'}
           className="w-full justify-start"
           onClick={() => {
@@ -105,7 +116,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <BarChart2 className="h-5 w-5 mr-2" />
           Statistiken
         </Button>
-        {/* Kostenvoranschläge Button entfernt */}
       </div>
       
       {/* Einstellungen Kategorie */}
