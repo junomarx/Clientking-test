@@ -99,6 +99,7 @@ export function PrintSettingsTab() {
   const repairOrderTemplates = templates?.filter(t => t.type === 'repair-order') || [];
   const receiptTemplates = templates?.filter(t => t.type === 'receipt') || [];
   const pickupTemplates = templates?.filter(t => t.type === 'pickup') || [];
+  // Kostenvoranschlag-Templates entfernt - werden später neu implementiert
 
   if (isLoading) {
     return (
@@ -200,7 +201,6 @@ export function PrintSettingsTab() {
           <option value="repair-order">Reparaturaufträge</option>
           <option value="receipt">Kassenbelege</option>
           <option value="pickup">Abholscheine</option>
-          <option value="cost-estimate">Kostenvoranschläge</option>
         </select>
       </div>
 
@@ -210,7 +210,7 @@ export function PrintSettingsTab() {
           <TabsTrigger value="repair-order">Reparaturaufträge</TabsTrigger>
           <TabsTrigger value="receipt">Kassenbelege</TabsTrigger>
           <TabsTrigger value="pickup">Abholscheine</TabsTrigger>
-          <TabsTrigger value="cost-estimate">Kostenvoranschläge</TabsTrigger>
+          {/* Kostenvoranschlag-Tab entfernt - wird später neu implementiert */}
         </TabsList>
 
         <TabsContent value="repair-order">
@@ -348,50 +348,7 @@ export function PrintSettingsTab() {
           </div>
         </TabsContent>
 
-        <TabsContent value="cost-estimate">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader className="p-4 md:p-6 pb-2 md:pb-3">
-                <CardTitle className="text-base md:text-lg font-semibold">Vorlagen für Kostenvoranschläge</CardTitle>
-                <CardDescription className="text-xs md:text-sm">Diese Vorlagen werden für Kostenvoranschläge verwendet</CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-                {costEstimateTemplates.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p>Es wurden noch keine Vorlagen für Kostenvoranschläge erstellt.</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Vorlagen werden vom Superadmin verwaltet und können hier nur verwendet werden.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                    {costEstimateTemplates.map((template) => (
-                      <Card key={template.id} className={`overflow-hidden ${template.isDefault ? 'border-green-300 bg-green-50' : ''}`}>
-                        <CardHeader className="p-3 md:p-4 pb-1 md:pb-2">
-                          <div className="flex justify-between items-center">
-                            <CardTitle className="text-sm md:text-md">{template.title}</CardTitle>
-                            {template.isDefault && (
-                              <span className="text-[10px] md:text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Standard</span>
-                            )}
-                          </div>
-                          <CardDescription className="text-[10px] md:text-xs">
-                            Zuletzt aktualisiert: {new Date(template.updatedAt).toLocaleDateString()}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-3 md:p-4 pt-0 md:pt-0">
-                          <p className="text-[10px] md:text-xs text-gray-500 italic mt-2">
-                            Wird automatisch im Reparaturablauf verwendet
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        {/* Kostenvoranschlag-Tab entfernt - wird später neu implementiert */}
       </Tabs>
     </div>
   );
