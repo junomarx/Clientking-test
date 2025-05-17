@@ -315,27 +315,27 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-4xl mx-auto p-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-[800px] mx-auto p-5 font-['Arial']">
         <h1 className="text-center text-2xl font-bold text-[#2c3e50] mb-8">Kostenvoranschlag Generator</h1>
 
         {/* Kundendaten */}
-        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#2c3e50] border-b border-[#ddd] pb-2 mb-5">Kundendaten</h2>
+        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
+          <h2 className="text-[18px] font-bold text-[#2c3e50] border-b border-[#ddd] pb-2.5 mb-5">Kundendaten</h2>
           
-          <div className="flex flex-row mb-4">
-            <div className="flex-1 mr-4">
+          <div className="flex flex-wrap mb-4 -mx-2">
+            <div className="w-1/2 px-2">
               <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="block font-bold mb-1 text-sm">Kunde*</FormLabel>
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Kunde*</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       value={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="w-full rounded-md border-[#ddd] shadow-none">
+                        <SelectTrigger className="w-full h-[38px] rounded-md border-[#ddd]">
                           <SelectValue placeholder="Kunden auswählen" />
                         </SelectTrigger>
                       </FormControl>
@@ -352,16 +352,14 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                 )}
               />
             </div>
-            <div className="flex items-end">
+            <div className="w-1/2 px-2 flex items-end mb-4">
               <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    variant="default" 
-                    className="bg-[#3498db] hover:bg-[#2980b9] rounded-md h-10"
                     type="button" 
+                    className="bg-[#3498db] hover:bg-[#2980b9] text-white border-none rounded-md px-5 py-2.5 h-[38px]"
                   >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    <span>Neuer Kunde</span>
+                    <span>Neuen Kunden anlegen</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
@@ -373,112 +371,145 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                   </DialogHeader>
                   <Form {...customerForm}>
                     <form onSubmit={customerForm.handleSubmit((data) => createCustomerMutation.mutate(data))} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={customerForm.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Vorname *</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={customerForm.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Nachname *</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <div className="flex flex-wrap -mx-2">
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="firstName"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">Vorname*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="lastName"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">Nachname*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
 
                       <FormField
                         control={customerForm.control}
                         name="address"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-bold">Adresse *</FormLabel>
+                          <FormItem className="mb-4">
+                            <FormLabel className="block font-bold mb-1 text-[14px]">Adresse*</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Musterstraße 10" className="border-[#ddd] rounded-md" />
+                              <Input 
+                                {...field} 
+                                className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={customerForm.control}
-                          name="zipCode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">PLZ *</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={customerForm.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Ort *</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <div className="flex flex-wrap -mx-2">
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="zipCode"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">PLZ*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">Ort*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={customerForm.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">Telefonnummer *</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={customerForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-bold">E-Mail *</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" className="border-[#ddd] rounded-md" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <div className="flex flex-wrap -mx-2">
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">Telefonnummer*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="w-1/2 px-2">
+                          <FormField
+                            control={customerForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem className="mb-4">
+                                <FormLabel className="block font-bold mb-1 text-[14px]">E-Mail*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    type="email" 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
 
                       <DialogFooter>
                         <Button 
                           type="button" 
-                          variant="destructive" 
-                          className="bg-[#e74c3c] hover:bg-[#c0392b]"
+                          className="bg-[#e74c3c] hover:bg-[#c0392b] text-white border-none rounded-md px-5 py-2.5 h-[38px]"
                           onClick={() => setIsNewCustomerDialogOpen(false)}
                         >
                           Abbrechen
@@ -486,7 +517,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                         <Button 
                           type="submit" 
                           disabled={createCustomerMutation.isPending}
-                          className="bg-[#2ecc71] hover:bg-[#27ae60]"
+                          className="bg-[#2ecc71] hover:bg-[#27ae60] text-white border-none rounded-md px-5 py-2.5 h-[38px]"
                         >
                           {createCustomerMutation.isPending ? "Wird erstellt..." : "Kunde erstellen"}
                         </Button>
@@ -503,13 +534,13 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
             name="validUntil"
             render={({ field }) => (
               <FormItem className="mb-4">
-                <FormLabel className="block font-bold mb-1 text-sm">Gültig bis*</FormLabel>
+                <FormLabel className="block font-bold mb-1 text-[14px]">Gültig bis*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
-                        className="w-full flex justify-start text-left font-normal border-[#ddd] rounded-md"
+                        className="w-full h-[38px] justify-start text-left px-2 py-2 border border-[#ddd] rounded-md"
                       >
                         {field.value ? (
                           format(field.value, "PPP", { locale: de })
@@ -537,52 +568,51 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
         </div>
         
         {/* Gerätedaten */}
-        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#2c3e50] border-b border-[#ddd] pb-2 mb-5">Gerätedaten</h2>
+        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
+          <h2 className="text-[18px] font-bold text-[#2c3e50] border-b border-[#ddd] pb-2.5 mb-5">Gerätedaten</h2>
           
-          <div className="flex flex-wrap mb-4 gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-1/2 px-2">
               <FormField
                 control={form.control}
                 name="deviceType"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="block font-bold mb-1 text-sm">Gerätetyp*</FormLabel>
-                    <FormControl>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                      >
-                        <SelectTrigger className="border-[#ddd] rounded-md shadow-none">
-                          <SelectValue placeholder="Gerätetyp wählen" />
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Gerätetyp*</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md">
+                          <SelectValue placeholder="z.B. Smartphone, Laptop, Tablet" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Smartphone">Smartphone</SelectItem>
-                          <SelectItem value="Tablet">Tablet</SelectItem>
-                          <SelectItem value="Laptop">Laptop</SelectItem>
-                          <SelectItem value="Watch">Watch</SelectItem>
-                          <SelectItem value="Spielekonsole">Spielekonsole</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Smartphone">Smartphone</SelectItem>
+                        <SelectItem value="Tablet">Tablet</SelectItem>
+                        <SelectItem value="Laptop">Laptop</SelectItem>
+                        <SelectItem value="Watch">Watch</SelectItem>
+                        <SelectItem value="Spielekonsole">Spielekonsole</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             
-            <div className="flex-1 min-w-[200px]">
+            <div className="w-1/2 px-2">
               <FormField
                 control={form.control}
                 name="brand"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="block font-bold mb-1 text-sm">Hersteller*</FormLabel>
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Hersteller*</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="z.B. Apple, Samsung" 
-                        className="border-[#ddd] rounded-md shadow-none"
                         {...field} 
+                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
                       />
                     </FormControl>
                     <FormMessage />
@@ -592,19 +622,18 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-1/2 px-2">
               <FormField
                 control={form.control}
                 name="model"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="block font-bold mb-1 text-sm">Modell*</FormLabel>
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Modell*</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="z.B. iPhone 13 Pro" 
-                        className="border-[#ddd] rounded-md shadow-none"
                         {...field} 
+                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
                       />
                     </FormControl>
                     <FormMessage />
@@ -613,18 +642,17 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
               />
             </div>
             
-            <div className="flex-1 min-w-[200px]">
+            <div className="w-1/2 px-2">
               <FormField
                 control={form.control}
                 name="serialNumber"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="block font-bold mb-1 text-sm">Seriennummer</FormLabel>
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Seriennummer</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Seriennummer (optional)" 
-                        className="border-[#ddd] rounded-md shadow-none"
                         {...field} 
+                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
                       />
                     </FormControl>
                     <FormMessage />
@@ -636,21 +664,20 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
         </div>
         
         {/* Fehlerbeschreibung und Arbeiten */}
-        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#2c3e50] border-b border-[#ddd] pb-2 mb-5">Fehlerbeschreibung und Arbeiten</h2>
+        <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
+          <h2 className="text-[18px] font-bold text-[#2c3e50] border-b border-[#ddd] pb-2.5 mb-5">Fehlerbeschreibung und Arbeiten</h2>
           
           <div className="mb-4">
             <FormField
               control={form.control}
               name="issue"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="block font-bold mb-1 text-sm">Fehlerbeschreibung*</FormLabel>
+                <FormItem className="mb-4">
+                  <FormLabel className="block font-bold mb-1 text-[14px]">Fehlerbeschreibung*</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Beschreiben Sie das Problem mit dem Gerät"
-                      className="resize-vertical border-[#ddd] rounded-md shadow-none min-h-[100px]"
                       {...field}
+                      className="w-full min-h-[100px] px-2 py-2 border border-[#ddd] rounded-md resize-vertical"
                     />
                   </FormControl>
                   <FormMessage />
@@ -660,200 +687,56 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
           </div>
           
           <div className="mb-4">
-            <div className="text-sm font-bold mb-3">Durchzuführende Arbeiten*</div>
-            {fields.map((field, index) => (
-              <div key={field.id} className="grid grid-cols-12 gap-2 mb-3 items-center">
-                <div className="col-span-1">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.position`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            readOnly 
-                            className="text-center h-10 border-[#ddd] rounded-md shadow-none" 
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="col-span-6">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.description`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input 
-                            placeholder="z.B. Displaytausch" 
-                            {...field} 
-                            className="h-10 border-[#ddd] rounded-md shadow-none" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="col-span-1">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.quantity`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            {...field} 
-                            onChange={(e) => {
-                              field.onChange(parseInt(e.target.value));
-                              updateTotalPrice(index);
-                            }} 
-                            className="text-center h-10 border-[#ddd] rounded-md shadow-none" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="col-span-2">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.unitPrice`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              {...field} 
-                              onBlur={(e) => {
-                                field.onChange(formatPrice(e.target.value));
-                                updateTotalPrice(index);
-                              }} 
-                              className="pr-6 text-right h-10 border-[#ddd] rounded-md shadow-none" 
-                            />
-                            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                              <Euro className="h-4 w-4 text-gray-400" />
-                            </div>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="col-span-1">
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.totalPrice`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              {...field} 
-                              readOnly 
-                              className="pr-6 text-right h-10 border-[#ddd] rounded-md shadow-none bg-gray-50" 
-                            />
-                            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                              <Euro className="h-4 w-4 text-gray-400" />
-                            </div>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="col-span-1 flex items-center justify-center">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => remove(index)}
-                    className="text-red-500 hover:bg-transparent hover:text-red-700"
-                    disabled={fields.length === 1}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            
-            <div className="flex mt-4 mb-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                className="border-[#ddd] rounded-md shadow-none"
-                onClick={() => append({
-                  position: fields.length + 1,
-                  description: "",
-                  quantity: 1,
-                  unitPrice: "0,00 €",
-                  totalPrice: "0,00 €",
-                })}
-              >
-                <Plus className="w-4 h-4 mr-2" /> Position hinzufügen
-              </Button>
-            </div>
-            
             <FormField
               control={form.control}
-              name="taxRate"
+              name={`items.0.description`}
               render={({ field }) => (
-                <FormItem className="flex justify-end">
-                  <div className="w-1/3">
-                    <FormLabel className="block font-bold mb-1 text-sm">Gesamtpreis (€)*</FormLabel>
-                    <FormControl>
-                      <Input 
-                        value="0,00 €" 
-                        readOnly
-                        className="text-right border-[#ddd] rounded-md shadow-none"
-                      />
-                    </FormControl>
-                  </div>
+                <FormItem className="mb-4">
+                  <FormLabel className="block font-bold mb-1 text-[14px]">Durchzuführende Arbeiten*</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      className="w-full min-h-[100px] px-2 py-2 border border-[#ddd] rounded-md resize-vertical"
+                    />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />
           </div>
+          
+          <div className="flex flex-wrap -mx-2">
+            <div className="w-full px-2">
+              <FormField
+                control={form.control}
+                name={`items.0.unitPrice`}
+                render={({ field }) => (
+                  <FormItem className="mb-4">
+                    <FormLabel className="block font-bold mb-1 text-[14px]">Gesamtpreis (€)*</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="z.B. 150,00 €"
+                        onBlur={(e) => {
+                          field.onChange(formatPrice(e.target.value));
+                          updateTotalPrice(0);
+                        }}
+                        className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
         </div>
-        
-        {/* Notizen */}
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem className="mb-6">
-              <FormLabel className="block font-bold mb-1 text-sm">Zusätzliche Notizen</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Zusätzliche Notizen zum Kostenvoranschlag"
-                  className="resize-vertical border-[#ddd] rounded-md shadow-none min-h-[100px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         
         {/* Absenden-Buttons */}
         <div className="text-center mt-8">
           <Button 
             type="reset" 
-            variant="destructive" 
-            className="mx-2 bg-[#e74c3c] hover:bg-[#c0392b]"
+            className="mx-2 bg-[#e74c3c] hover:bg-[#c0392b] text-white border-none rounded-md px-5 py-2.5 text-[16px]"
             onClick={() => form.reset()}
           >
             Formular zurücksetzen
@@ -861,7 +744,7 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
           <Button 
             type="submit" 
             disabled={createMutation.isPending} 
-            className="mx-2 bg-[#2ecc71] hover:bg-[#27ae60]"
+            className="mx-2 bg-[#2ecc71] hover:bg-[#27ae60] text-white border-none rounded-md px-5 py-2.5 text-[16px]"
           >
             {createMutation.isPending ? 
               "Wird erstellt..." : 
