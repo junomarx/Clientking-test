@@ -29,6 +29,9 @@ interface Customer {
 
 // Validierungsschema für das Formular
 const costEstimateSchema = z.object({
+  // Kundenreferenz-ID
+  customerId: z.number().optional(),
+  
   // Kundendaten
   firstName: z.string().min(1, "Vorname ist erforderlich"),
   lastName: z.string().min(1, "Nachname ist erforderlich"),
@@ -82,6 +85,7 @@ export function NewCostEstimateDialog({
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
     defaultValues: {
+      customerId: undefined,
       firstName: "",
       lastName: "",
       address: "",
@@ -157,8 +161,9 @@ export function NewCostEstimateDialog({
       form.setValue('city', customer.city);
     }
     
-    // Ausgewählte Kunden-ID setzen
+    // Ausgewählte Kunden-ID setzen UND im Formular speichern
     setSelectedCustomerId(customer.id);
+    form.setValue('customerId', customer.id);
     
     // Dropdown schließen und Matching-Customers leeren
     setShowCustomerDropdown(false);
