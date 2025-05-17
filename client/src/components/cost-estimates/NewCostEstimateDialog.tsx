@@ -15,13 +15,16 @@ const costEstimateSchema = z.object({
   // Kundendaten
   firstName: z.string().min(1, "Vorname ist erforderlich"),
   lastName: z.string().min(1, "Nachname ist erforderlich"),
-  addressLine1: z.string().min(1, "Adresszeile 1 ist erforderlich"),
-  addressLine2: z.string().min(1, "Adresszeile 2 ist erforderlich"),
+  address: z.string().min(1, "Adresse ist erforderlich"),
+  postalCode: z.string().min(1, "PLZ ist erforderlich"),
+  city: z.string().min(1, "Ort ist erforderlich"),
+  phone: z.string().min(1, "Telefonnummer ist erforderlich"),
+  email: z.string().email("Gültige E-Mail-Adresse erforderlich"),
   
   // Gerätedaten
+  deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
   manufacturer: z.string().min(1, "Hersteller ist erforderlich"),
   model: z.string().min(1, "Modell ist erforderlich"),
-  deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
   serialNumber: z.string().optional(),
   
   // Fehlerbeschreibung und Arbeiten
@@ -52,11 +55,14 @@ export function NewCostEstimateDialog({
     defaultValues: {
       firstName: "",
       lastName: "",
-      addressLine1: "",
-      addressLine2: "",
+      address: "",
+      postalCode: "",
+      city: "",
+      phone: "",
+      email: "",
+      deviceType: "",
       manufacturer: "",
       model: "",
-      deviceType: "",
       serialNumber: "",
       issueDescription: "",
       workToBeDone: "",
@@ -129,10 +135,10 @@ export function NewCostEstimateDialog({
                 
                 <FormField
                   control={form.control}
-                  name="addressLine1"
+                  name="address"
                   render={({ field }) => (
                     <FormItem className="col-span-1 md:col-span-2">
-                      <FormLabel>Adresszeile 1 (Straße, Hausnummer)*</FormLabel>
+                      <FormLabel>Adresse*</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -143,12 +149,54 @@ export function NewCostEstimateDialog({
                 
                 <FormField
                   control={form.control}
-                  name="addressLine2"
+                  name="postalCode"
                   render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
-                      <FormLabel>Adresszeile 2 (PLZ, Ort)*</FormLabel>
+                    <FormItem>
+                      <FormLabel>PLZ*</FormLabel>
                       <FormControl>
                         <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ort*</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefonnummer*</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="tel" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-Mail*</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,6 +209,20 @@ export function NewCostEstimateDialog({
             <div className="p-4 bg-muted/50 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Gerätedaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="deviceType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gerätetyp*</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="z.B. Smartphone, Laptop, Tablet" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name="manufacturer"
@@ -183,20 +245,6 @@ export function NewCostEstimateDialog({
                       <FormLabel>Modell*</FormLabel>
                       <FormControl>
                         <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="deviceType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gerätetyp*</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="z.B. Smartphone, Laptop, Tablet" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
