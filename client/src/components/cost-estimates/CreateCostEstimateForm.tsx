@@ -322,20 +322,20 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
         <div className="bg-[#f9f9f9] rounded-lg p-5 mb-6 shadow-sm border border-[#ddd]">
           <h2 className="text-[18px] font-bold text-[#2c3e50] border-b border-[#ddd] pb-2.5 mb-5">Kundendaten</h2>
           
-          <div className="flex flex-wrap mb-4 -mx-2">
-            <div className="w-1/2 px-2">
+          <div className="form-row flex flex-wrap mb-4">
+            <div className="form-group flex-1 min-w-[200px] mr-4 mb-2.5">
               <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="mb-4">
+                  <FormItem>
                     <FormLabel className="block font-bold mb-1 text-[14px]">Kunde*</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(parseInt(value))} 
                       value={field.value?.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger className="w-full h-[38px] rounded-md border-[#ddd]">
+                        <SelectTrigger className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md">
                           <SelectValue placeholder="Kunden auswählen" />
                         </SelectTrigger>
                       </FormControl>
@@ -352,7 +352,8 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                 )}
               />
             </div>
-            <div className="w-1/2 px-2 flex items-end mb-4">
+            
+            <div className="form-group flex-initial mb-2.5 flex items-end">
               <Dialog open={isNewCustomerDialogOpen} onOpenChange={setIsNewCustomerDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 
@@ -370,14 +371,14 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...customerForm}>
-                    <form onSubmit={customerForm.handleSubmit((data) => createCustomerMutation.mutate(data))} className="space-y-6">
-                      <div className="flex flex-wrap -mx-2">
-                        <div className="w-1/2 px-2">
+                    <form onSubmit={customerForm.handleSubmit((data) => createCustomerMutation.mutate(data))} className="space-y-4">
+                      <div className="form-row flex flex-wrap">
+                        <div className="form-group flex-1 min-w-[200px] mr-4 mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="firstName"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">Vorname*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -390,12 +391,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                             )}
                           />
                         </div>
-                        <div className="w-1/2 px-2">
+                        <div className="form-group flex-1 min-w-[200px] mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="lastName"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">Nachname*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -410,30 +411,34 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                         </div>
                       </div>
 
-                      <FormField
-                        control={customerForm.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel className="block font-bold mb-1 text-[14px]">Adresse*</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field} 
-                                className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="form-row">
+                        <div className="form-group w-full mb-2.5">
+                          <FormField
+                            control={customerForm.control}
+                            name="address"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="block font-bold mb-1 text-[14px]">Adresse*</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    {...field} 
+                                    className="w-full h-[38px] px-2 py-2 border border-[#ddd] rounded-md" 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
 
-                      <div className="flex flex-wrap -mx-2">
-                        <div className="w-1/2 px-2">
+                      <div className="form-row flex flex-wrap">
+                        <div className="form-group flex-initial w-1/3 mr-4 mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="zipCode"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">PLZ*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -446,12 +451,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                             )}
                           />
                         </div>
-                        <div className="w-1/2 px-2">
+                        <div className="form-group flex-1 mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="city"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">Ort*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -466,13 +471,13 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap -mx-2">
-                        <div className="w-1/2 px-2">
+                      <div className="form-row flex flex-wrap">
+                        <div className="form-group flex-1 min-w-[200px] mr-4 mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="phone"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">Telefonnummer*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -485,12 +490,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
                             )}
                           />
                         </div>
-                        <div className="w-1/2 px-2">
+                        <div className="form-group flex-1 min-w-[200px] mb-2.5">
                           <FormField
                             control={customerForm.control}
                             name="email"
                             render={({ field }) => (
-                              <FormItem className="mb-4">
+                              <FormItem>
                                 <FormLabel className="block font-bold mb-1 text-[14px]">E-Mail*</FormLabel>
                                 <FormControl>
                                   <Input 
@@ -533,14 +538,14 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
             control={form.control}
             name="validUntil"
             render={({ field }) => (
-              <FormItem className="mb-4">
+              <FormItem className="form-group mb-2.5">
                 <FormLabel className="block font-bold mb-1 text-[14px]">Gültig bis*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
-                        className="w-full h-[38px] justify-start text-left px-2 py-2 border border-[#ddd] rounded-md"
+                        className="w-full h-[38px] justify-start text-left px-2 py-2 border border-[#ddd] rounded-md font-normal"
                       >
                         {field.value ? (
                           format(field.value, "PPP", { locale: de })
