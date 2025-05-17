@@ -12,7 +12,7 @@ import {
   Wrench,
   Users,
   BarChart2,
-  // FileText entfernt
+  FileText,
   PlusCircle,
   Building,
   Mail,
@@ -147,6 +147,17 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       Kunden
                     </Button>
                     <Button 
+                      variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('cost-estimates');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <FileText className="h-5 w-5 mr-2" />
+                      Kostenvoranschläge
+                    </Button>
+                    <Button 
                       variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                       className="w-full justify-start"
                       onClick={() => {
@@ -157,7 +168,6 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       <BarChart2 className="h-5 w-5 mr-2" />
                       Statistiken
                     </Button>
-                    {/* Kostenvoranschläge Button entfernt */}
                     {/* Einstellungskategorie mit Unterpunkten */}
                     <div className="mt-2 mb-1">
                       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
