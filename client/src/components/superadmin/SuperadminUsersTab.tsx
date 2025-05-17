@@ -417,8 +417,9 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto -mx-6 px-6">
-              <Table className="w-[900px] md:w-full">
+            {/* Desktop-Tabelle (nur auf größeren Bildschirmen) */}
+            <div className="hidden md:block overflow-x-auto -mx-6 px-6">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">ID</TableHead>
@@ -429,7 +430,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                     <TableHead>Rolle</TableHead>
                     <TableHead>Paket</TableHead>
                     <TableHead>Erstellt</TableHead>
-                    <TableHead>Aktionen</TableHead>
+                    <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -474,13 +475,12 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                         )}
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleShowUserDetails(user.id)}
-                            className="w-full sm:w-auto"
                           >
                             <Info className="h-3 w-3 mr-1" /> Details
                           </Button>
@@ -488,7 +488,6 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                             size="sm" 
                             variant="destructive"
                             onClick={() => handleDeleteUser(user.id)}
-                            className="w-full sm:w-auto"
                           >
                             Löschen
                           </Button>
@@ -499,6 +498,92 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                 </TableBody>
               </Table>
             </div>
+            
+            {/* Mobile-Karten (nur auf kleinen Bildschirmen) */}
+            <div className="md:hidden space-y-4">
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-medium text-lg">{user.username}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleShowUserDetails(user.id)}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEditUser(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">ID:</span> {user.id}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Shop:</span> {user.shopId || '-'}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Erstellt:</span> {new Date(user.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {user.isActive ? (
+                      <Badge variant="outline" className="bg-green-100 text-green-700">
+                        <BadgeCheck className="h-3 w-3 mr-1" /> Aktiv
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-red-100 text-red-700">
+                        <BadgeX className="h-3 w-3 mr-1" /> Inaktiv
+                      </Badge>
+                    )}
+                    
+                    {user.isAdmin ? (
+                      <Badge variant="secondary">
+                        <UserCog className="h-3 w-3 mr-1" /> Admin
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        <CircleUserRound className="h-3 w-3 mr-1" /> Benutzer
+                      </Badge>
+                    )}
+                    
+                    {user.packageId ? (
+                      <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                        <Package className="h-3 w-3 mr-1" />
+                        {packages?.find(p => p.id === user.packageId)?.name || `Paket ${user.packageId}`}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-gray-100 text-gray-700">
+                        Kein Paket
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="pt-2">
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="w-full"
+                    >
+                      Löschen
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -507,9 +592,9 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       
       {/* Benutzer-Bearbeitungsdialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl md:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Benutzer bearbeiten: {selectedUser?.username}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Benutzer bearbeiten: {selectedUser?.username}</DialogTitle>
             <DialogDescription>
               Bearbeiten Sie die Informationen für {selectedUser?.username}.
             </DialogDescription>
@@ -524,11 +609,11 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             
             <TabsContent value="settings" className="space-y-4 py-4">
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-4">
-                  <Label className="sm:text-right">E-Mail</Label>
+                <div className="grid grid-cols-4 items-center gap-2 sm:gap-4">
+                  <Label className="text-right col-span-1">E-Mail</Label>
                   <Input
                     id="email"
-                    className="col-span-1 sm:col-span-3"
+                    className="col-span-3"
                     value={editForm.email || ''}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     placeholder="E-Mail-Adresse"
