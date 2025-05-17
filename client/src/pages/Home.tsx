@@ -35,7 +35,7 @@ export default function Home() {
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
       const validTabs = [
-        'dashboard', 'repairs', 'customers', 'statistics', 'cost-estimates',
+        'dashboard', 'repairs', 'customers', 'statistics',
         'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings'
       ];
       if (validTabs.includes(tabParam)) {
@@ -106,7 +106,7 @@ export default function Home() {
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header mit Benutzerdaten */}
-        <Header variant="app" activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} canUseCostEstimates={canUseCostEstimates} />
+        <Header variant="app" activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} />
         
         {/* Main content */}
         <main className="flex-1 overflow-auto p-3 md:p-6">

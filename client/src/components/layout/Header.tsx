@@ -37,7 +37,6 @@ type HeaderProps = {
   variant?: "landing" | "auth" | "app";
   activeTab?: string;
   onTabChange?: (tab: any) => void;
-  canUseCostEstimates?: boolean;
 };
 
 const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -48,7 +47,7 @@ const NavLink = ({ href, children }: { href: string; children: React.ReactNode }
   </Link>
 );
 
-export function Header({ variant = "landing", activeTab, onTabChange, canUseCostEstimates }: HeaderProps) {
+export function Header({ variant = "landing", activeTab, onTabChange }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
 
@@ -158,20 +157,7 @@ export function Header({ variant = "landing", activeTab, onTabChange, canUseCost
                       <BarChart2 className="h-5 w-5 mr-2" />
                       Statistiken
                     </Button>
-                    <Button 
-                      variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
-                      className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={() => {
-                        if (canUseCostEstimates && onTabChange) {
-                          onTabChange('cost-estimates');
-                          setMenuOpen(false);
-                        }
-                      }}
-                      disabled={!canUseCostEstimates}
-                    >
-                      <FileText className="h-5 w-5 mr-2" />
-                      Kostenvoranschläge
-                    </Button>
+                    {/* Kostenvoranschläge Button entfernt */}
                     {/* Einstellungskategorie mit Unterpunkten */}
                     <div className="mt-2 mb-1">
                       <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">

@@ -29,10 +29,9 @@ import { Separator } from '@/components/ui/separator';
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: any) => void;
-  canUseCostEstimates: boolean;
 }
 
-export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
   
   const handleLogout = () => {
@@ -106,20 +105,7 @@ export function Sidebar({ activeTab, onTabChange, canUseCostEstimates }: Sidebar
           <BarChart2 className="h-5 w-5 mr-2" />
           Statistiken
         </Button>
-        <Button 
-          variant={activeTab === 'cost-estimates' ? 'default' : 'ghost'}
-          className={`w-full justify-start ${!canUseCostEstimates ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={() => {
-            if (canUseCostEstimates) {
-              onTabChange('cost-estimates');
-              if (isMobile) closeMenu();
-            }
-          }}
-          disabled={!canUseCostEstimates}
-        >
-          <FileText className="h-5 w-5 mr-2" />
-          Kostenvoranschläge
-        </Button>
+        {/* Kostenvoranschläge Button entfernt */}
       </div>
       
       {/* Einstellungen Kategorie */}
