@@ -16,8 +16,6 @@ import {
   insertUserDeviceTypeSchema,
   insertUserBrandSchema,
   insertUserModelSchema,
-  insertCostEstimateSchema,
-  costEstimateItemSchema,
   repairStatuses,
   deviceTypes,
   type InsertEmailTemplate,
@@ -27,7 +25,6 @@ import {
   feedbacks,
   userDeviceTypes,
   userBrands,
-  costEstimates,
   businessSettings
 } from "@shared/schema";
 import { ZodError } from "zod";
