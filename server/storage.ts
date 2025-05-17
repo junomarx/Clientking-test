@@ -2472,8 +2472,8 @@ export class DatabaseStorage implements IStorage {
         }
         
         // Marke zählen
-        if (repair.deviceBrand) {
-          byBrand[repair.deviceBrand] = (byBrand[repair.deviceBrand] || 0) + 1;
+        if (repair.brand) {
+          byBrand[repair.brand] = (byBrand[repair.brand] || 0) + 1;
         }
         
         // Probleme/Fehler zählen
