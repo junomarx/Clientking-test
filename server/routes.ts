@@ -2208,32 +2208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Registriere die Admin-Routen
   registerAdminRoutes(app);
   
-  // KOSTENVORANSCHLAG API (COST ESTIMATES)
-  // Alle Kostenvoranschläge abrufen
-  app.get("/api/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
-    // Benutzer-ID aus der Authentifizierung abrufen
-    const userId = (req.user as any).id;
-    
-    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-    const isProfessional = await isProfessionalOrHigher(userId);
-    if (!isProfessional) {
-      return res.status(403).json({ 
-        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
-        errorCode: "FEATURE_NOT_AVAILABLE"
-      });
-    }
-    try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Kostenvoranschläge mit Benutzerfilterung abrufen
-      const estimates = await storage.getAllCostEstimates(userId);
-      res.json(estimates);
-    } catch (error) {
-      console.error("Error fetching cost estimates:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Kostenvoranschläge" });
-    }
-  });
+  // KOSTENVORANSCHLAG API ENTFERNT
   
   // Einen bestimmten Kostenvoranschlag abrufen
   app.get("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
