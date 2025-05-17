@@ -10,7 +10,8 @@ import {
   ShoppingBag, 
   TrendingUp, 
   Wrench as Tool,
-  Clock
+  Clock,
+  CheckCircle
 } from 'lucide-react';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { AnimatedStatCard } from './AnimatedStatCard';
