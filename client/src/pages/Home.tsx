@@ -5,7 +5,7 @@ import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
-// Kostenvoranschläge-Tab entfernt
+import { CostEstimatesTab } from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
 import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 
           'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
 
 export default function Home() {
@@ -131,7 +131,9 @@ export default function Home() {
                 <StatisticsTab onTabChange={setActiveTab} />
               )}
               
-              {/* Kostenvoranschlag-Tab entfernt */}
+              {activeTab === 'cost-estimates' && (
+                <CostEstimatesTab onNewCostEstimate={() => console.log('Neuer Kostenvoranschlag erstellen')} />
+              )}
               
               {activeTab === 'business-settings' && (
                 <BusinessSettingsTab />
