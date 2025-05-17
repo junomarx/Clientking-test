@@ -459,12 +459,12 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
             </div>
           </div>
           
-          <div className="mb-0 hidden">
+          <div className="mb-4">
             <FormField
               control={form.control}
               name="validUntil"
               render={({ field }) => (
-                <FormItem className="mb-4">
+                <FormItem>
                   <FormLabel className="block font-bold mb-1 text-[14px]">Gültig bis*</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
