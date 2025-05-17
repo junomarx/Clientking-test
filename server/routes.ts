@@ -2196,98 +2196,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // KOSTENVORANSCHLAG API ENTFERNT
   
-  // Einen bestimmten Kostenvoranschlag abrufen
-  app.get("/api/cost-estimates/:id", isAuthenticated, async (req: Request, res: Response) => {
-    // Benutzer-ID aus der Authentifizierung abrufen
-    const userId = (req.user as any).id;
-    
-    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-    const isProfessional = await isProfessionalOrHigher(userId);
-    if (!isProfessional) {
-      return res.status(403).json({ 
-        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
-        errorCode: "FEATURE_NOT_AVAILABLE"
-      });
-    }
-    try {
-      const id = parseInt(req.params.id);
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Kostenvoranschlag mit Benutzerfilterung abrufen
-      const estimate = await storage.getCostEstimate(id, userId);
-      
-      if (!estimate) {
-        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
-      }
-      
-      res.json(estimate);
-    } catch (error) {
-      console.error("Error fetching cost estimate:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen des Kostenvoranschlags" });
-    }
-  });
+  // Kostenvoranschlag-API-Endpunkt entfernt
   
-  // Kostenvoranschläge für einen bestimmten Kunden abrufen
-  app.get("/api/customers/:id/cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
-    // Benutzer-ID aus der Authentifizierung abrufen
-    const userId = (req.user as any).id;
-    
-    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-    const isProfessional = await isProfessionalOrHigher(userId);
-    if (!isProfessional) {
-      return res.status(403).json({ 
-        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
-        errorCode: "FEATURE_NOT_AVAILABLE"
-      });
-    }
-    try {
-      const customerId = parseInt(req.params.id);
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Kostenvoranschläge für den Kunden mit Benutzerfilterung abrufen
-      const estimates = await storage.getCostEstimatesByCustomerId(customerId, userId);
-      res.json(estimates);
-    } catch (error) {
-      console.error("Error fetching customer cost estimates:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Kostenvoranschläge für den Kunden" });
-    }
-  });
+  // Kostenvoranschlag-API-Endpunkt für Kunden entfernt
   
-  // Einen neuen Kostenvoranschlag erstellen
-  app.post("/api/cost-estimates", isAuthenticated, checkTrialExpiry, async (req: Request, res: Response) => {
-    // Benutzer-ID aus der Authentifizierung abrufen
-    const userId = (req.user as any).id;
-    
-    // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-    const isProfessional = await isProfessionalOrHigher(userId);
-    if (!isProfessional) {
-      return res.status(403).json({ 
-        message: "Diese Funktion ist nur in Professional- und Enterprise-Paketen verfügbar",
-        errorCode: "FEATURE_NOT_AVAILABLE"
-      });
-    }
-    try {
-      console.log("Received cost estimate data:", req.body);
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Verwende safeParse für bessere Fehlerdiagnose
-      const validationResult = insertCostEstimateSchema.safeParse(req.body);
-      
-      if (!validationResult.success) {
-        console.error("Validation failed:", validationResult.error);
-        return res.status(400).json({ 
-          message: "Ungültige Kostenvoranschlagsdaten", 
-          errors: validationResult.error.errors 
-        });
-      }
-      
-      const estimateData = validationResult.data;
+  // Kostenvoranschlag-Erstellung API-Endpunkt entfernt
       
       // Validiere, dass der Kunde existiert
       const customer = await storage.getCustomer(estimateData.customerId, userId);
