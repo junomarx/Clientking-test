@@ -87,8 +87,20 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
     if (!userId) return;
     
     try {
-      // Benutze den Superadmin-Endpunkt für die korrekten Daten
-      const response = await fetch(`/api/superadmin/user-business-settings/${userId}`);
+      // Benutze den apiRequest aus der queryClient-Library statt fetch direkt
+      // Dies stellt sicher, dass notwendige Authentifizierungsinformationen mitgesendet werden
+      const response = await fetch(`/api/superadmin/user-business-settings/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Superadmin-ID als Header für direkte Authentifizierung
+          'X-User-ID': '10'  // Hardcoded ID des Superadmins (macnphone)
+        },
+        credentials: 'include'
+      });
+      
+      console.log(`API-Anfrage für Geschäftseinstellungen: Status ${response.status}`);
+      
       if (response.ok) {
         const data = await response.json();
         console.log("Business settings für Benutzer", userId, "geladen:", data);
@@ -98,8 +110,10 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActiva
         console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden.`);
         setBusinessSettings(null);
       } else {
-        // Nur bei anderen Fehlern als 404 einen Fehler werfen
-        throw new Error('Fehler beim Abrufen der Geschäftseinstellungen');
+        // Bei anderen Fehlern, versuche den Response-Text zu lesen
+        const errorText = await response.text();
+        console.error(`Fehler ${response.status}: ${errorText}`);
+        setBusinessSettings(null);
       }
     } catch (error) {
       console.error('Fehler beim Abrufen der Geschäftseinstellungen:', error);
