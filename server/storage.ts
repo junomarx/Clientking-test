@@ -165,7 +165,6 @@ export interface IStorage {
     status: string,
     userId: number,
   ): Promise<Repair | undefined>;
-  updateRepairStatus(id: number, status: string, userId: number): Promise<Repair | undefined>;
   updateRepairSignature(
     id: number,
     signature: string,
@@ -1166,6 +1165,69 @@ export class DatabaseStorage implements IStorage {
       return updatedRepair;
     } catch (error) {
       console.error(`Error updating repair ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Aktualisiert den Status einer Reparatur
+   * @param id Die ID der Reparatur
+   * @param status Der neue Status
+   * @param userId Die ID des Benutzers, der die Änderung vornimmt
+   * @returns Die aktualisierte Reparatur oder undefined bei Fehler
+   */
+  async updateRepairStatus(
+    id: number,
+    status: string,
+    userId: number
+  ): Promise<Repair | undefined> {
+    try {
+      console.log(`updateRepairStatus: Benutzer mit ID ${userId} ändert Status der Reparatur ${id} zu "${status}"`);
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const existingRepair = await this.getRepair(id, userId);
+      if (!existingRepair) {
+        console.warn(`updateRepairStatus: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
+        return undefined;
+      }
+      
+      // Benutzer holen, um Shop-ID zu verifizieren
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`updateRepairStatus: Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+      
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ updateRepairStatus: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      // Aktualisiere nur den Status der Reparatur
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          status: status,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, user.shopId)
+          )
+        )
+        .returning();
+      
+      if (updatedRepair) {
+        console.log(`updateRepairStatus: Status der Reparatur ${id} erfolgreich auf '${status}' aktualisiert für Benutzer ${userId}`);
+      } else {
+        console.warn(`updateRepairStatus: Status der Reparatur ${id} konnte nicht aktualisiert werden (Shop-ID Konflikt?)`);
+      }
+      
+      return updatedRepair;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Status der Reparatur ${id}:`, error);
       return undefined;
     }
   }
