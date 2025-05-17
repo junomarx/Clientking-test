@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, FileText, Search } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { NewCostEstimateDialog } from "./NewCostEstimateDialog";
+import { useToast } from "@/hooks/use-toast";
 
 // Typen für die Props
 interface CostEstimatesTabProps {
@@ -11,14 +13,26 @@ interface CostEstimatesTabProps {
 
 export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleNewCostEstimate = () => {
+    // Dialog öffnen statt Event-Handling
+    setIsDialogOpen(true);
+    
     if (onNewCostEstimate) {
       onNewCostEstimate();
-    } else {
-      // Falls keine Callback-Funktion übergeben wurde, können wir ein Event auslösen
-      window.dispatchEvent(new CustomEvent('trigger-new-cost-estimate'));
     }
+  };
+
+  // Callback-Funktion für das Erstellen eines neuen Kostenvoranschlags
+  const handleCreateCostEstimate = (data: any) => {
+    console.log("Neuer Kostenvoranschlag erstellt:", data);
+    
+    toast({
+      title: "Kostenvoranschlag erstellt",
+      description: `Für ${data.firstName} ${data.lastName} - ${data.manufacturer} ${data.model}`,
+    });
   };
 
   return (
@@ -80,6 +94,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Formular-Dialog für neuen Kostenvoranschlag */}
+      <NewCostEstimateDialog 
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onCreateCostEstimate={handleCreateCostEstimate}
+      />
     </div>
   );
 }

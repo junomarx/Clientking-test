@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Kostenvoranschlag-Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .form-section h2 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: flex;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin-right: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .form-group:last-child {
+            margin-right: 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        input[type="text"], 
+        input[type="date"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button.preview {
+            background-color: #2ecc71;
+        }
+        
+        button.preview:hover {
+            background-color: #27ae60;
+        }
+        
+        button.reset {
+            background-color: #e74c3c;
+        }
+        
+        button.reset:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kostenvoranschlag Generator</h1>
+    
+    <form id="estimateForm">
+        <!-- Kundendaten -->
+        <div class="form-section">
+            <h2>Kundendaten</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vorname">Vorname*</label>
+                    <input type="text" id="vorname" name="vorname" required>
+                </div>
+                <div class="form-group">
+                    <label for="nachname">Nachname*</label>
+                    <input type="text" id="nachname" name="nachname" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="kundenadresse1">Adresszeile 1 (Straße, Hausnummer)*</label>
+                    <input type="text" id="kundenadresse1" name="kundenadresse1" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="kundenadresse2">Adresszeile 2 (PLZ, Ort)*</label>
+                    <input type="text" id="kundenadresse2" name="kundenadresse2" required>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gerätedaten -->
+        <div class="form-section">
+            <h2>Gerätedaten</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hersteller">Hersteller*</label>
+                    <input type="text" id="hersteller" name="hersteller" required>
+                </div>
+                <div class="form-group">
+                    <label for="modell">Modell*</label>
+                    <input type="text" id="modell" name="modell" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="geraetetyp">Gerätetyp*</label>
+                    <input type="text" id="geraetetyp" name="geraetetyp" required placeholder="z.B. Smartphone, Laptop, Tablet">
+                </div>
+                <div class="form-group">
+                    <label for="seriennummer">Seriennummer</label>
+                    <input type="text" id="seriennummer" name="seriennummer">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fehlerbeschreibung und Arbeiten -->
+        <div class="form-section">
+            <h2>Fehlerbeschreibung und Arbeiten</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fehlerbeschreibung">Fehlerbeschreibung*</label>
+                    <textarea id="fehlerbeschreibung" name="fehlerbeschreibung" required></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="arbeiten">Durchzuführende Arbeiten*</label>
+                    <textarea id="arbeiten" name="arbeiten" required></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="gesamtpreis">Gesamtpreis (€)*</label>
+                    <input type="text" id="gesamtpreis" name="gesamtpreis" placeholder="z.B. 150,00 €" required>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buttons -->
+        <div class="buttons">
+            <button type="button" class="preview" onclick="generateEstimate()">Kostenvoranschlag erstellen</button>
+            <button type="reset" class="reset">Formular zurücksetzen</button>
+        </div>
+    </form>
+    
+    <script>
+        function generateEstimate() {
+            // Formularvalidierung
+            const form = document.getElementById('estimateForm');
+            if (!form.checkValidity()) {
+                alert('Bitte füllen Sie alle Pflichtfelder aus.');
+                return;
+            }
+            
+            // Daten sammeln
+            const data = {
+                vorname: document.getElementById('vorname').value,
+                nachname: document.getElementById('nachname').value,
+                kundenname: document.getElementById('vorname').value + ' ' + document.getElementById('nachname').value,
+                kundenadresse1: document.getElementById('kundenadresse1').value,
+                kundenadresse2: document.getElementById('kundenadresse2').value,
+                auftragsnummer: 'KV-' + new Date().toISOString().slice(0,10).replace(/-/g, '') + '-' + Math.floor(Math.random() * 1000),
+                gueltig_bis: new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('de-DE'),
+                hersteller: document.getElementById('hersteller').value,
+                modell: document.getElementById('modell').value,
+                geraetetyp: document.getElementById('geraetetyp').value,
+                seriennummer: document.getElementById('seriennummer').value,
+                fehlerbeschreibung: document.getElementById('fehlerbeschreibung').value,
+                arbeiten: document.getElementById('arbeiten').value,
+                gesamtpreis: document.getElementById('gesamtpreis').value
+            };
+            
+            // Beispiel für Ausgabe (zu Demonstrationszwecken)
+            alert('Kostenvoranschlag wurde erstellt für: ' + data.kundenname + 
+                  '\nGerät: ' + data.hersteller + ' ' + data.modell + ' (' + data.geraetetyp + ')' +
+                  '\nGesamtpreis: ' + data.gesamtpreis);
+            
+            // In einer echten Anwendung würde hier mehr passieren, z.B.:
+            // window.open('generate_estimate.php?data=' + encodeURIComponent(JSON.stringify(data)), '_blank');
+        }
+    </script>
+</body>
+</html>
