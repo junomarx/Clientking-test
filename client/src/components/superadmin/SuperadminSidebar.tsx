@@ -188,10 +188,11 @@ export function SuperadminSidebar({
             </div>
             <nav className="flex flex-col space-y-2 px-1">
               <NavItems isMobile={true} closeMenu={() => {
-                // Sheet schließen durch Klick auf den close-Button
-                document.querySelector('[data-radix-collection-item]')?.dispatchEvent(
-                  new MouseEvent('click', { bubbles: true })
-                );
+                // Sheet schließen durch Klick auf den X-Button
+                const closeButton = document.querySelector('[data-radix-collection-item]');
+                if (closeButton instanceof HTMLElement) {
+                  closeButton.click();
+                }
               }} />
             </nav>
             <Separator className="my-4" />
