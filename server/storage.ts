@@ -2228,6 +2228,177 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  /**
+   * Kostenvoranschlag methods
+   */
+
+  async getAllCostEstimates(userId: number): Promise<CostEstimate[]> {
+    try {
+      // Finde den Shop-ID des Benutzers
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+
+      const shopId = user.shopId || 1;
+      console.log(`getAllCostEstimates: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
+
+      // Hole alle Kostenvoranschläge für diesen Shop
+      const estimates = await db
+        .select()
+        .from(costEstimates)
+        .where(eq(costEstimates.shopId, shopId))
+        .orderBy(desc(costEstimates.createdAt));
+
+      console.log(`Gefunden: ${estimates.length} Kostenvoranschläge für Shop ${shopId}`);
+      return estimates;
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kostenvoranschläge:", error);
+      return [];
+    }
+  }
+
+  async getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined> {
+    try {
+      // Finde den Shop-ID des Benutzers
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+
+      const shopId = user.shopId || 1;
+      console.log(`getCostEstimate: Abrufen des Kostenvoranschlags ID ${id} für Benutzer ${userId}`);
+
+      // Suche nach dem Kostenvoranschlag mit der angegebenen ID für diesen Shop
+      const [estimate] = await db
+        .select()
+        .from(costEstimates)
+        .where(and(eq(costEstimates.id, id), eq(costEstimates.shopId, shopId)));
+
+      if (!estimate) {
+        console.log(`Kostenvoranschlag mit ID ${id} für Shop ${shopId} nicht gefunden`);
+        return undefined;
+      }
+
+      console.log(`Kostenvoranschlag ${id} gefunden für Benutzer ${userId}`);
+      return estimate;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Kostenvoranschlags ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate> {
+    try {
+      // Finde den Shop-ID des Benutzers
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+
+      const shopId = user.shopId || 1;
+      console.log(`createCostEstimate: Erstelle Kostenvoranschlag für Benutzer ${userId} (Shop ${shopId})`);
+
+      // Erzeuge eine eindeutige Referenznummer (falls nicht vorhanden)
+      if (!estimate.referenceNumber) {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        estimate.referenceNumber = `KV${year}${month}-${random}`;
+      }
+
+      // Erstelle den Kostenvoranschlag mit Shop-ID
+      const [createdEstimate] = await db
+        .insert(costEstimates)
+        .values({
+          ...estimate,
+          userId,
+          shopId,
+        })
+        .returning();
+
+      console.log(`Neuer Kostenvoranschlag ID ${createdEstimate.id} erstellt für Shop ${shopId}`);
+      return createdEstimate;
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
+      throw error;
+    }
+  }
+
+  async updateCostEstimate(
+    id: number,
+    estimate: Partial<InsertCostEstimate>,
+    userId: number
+  ): Promise<CostEstimate | undefined> {
+    try {
+      // Finde den Shop-ID des Benutzers
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+
+      const shopId = user.shopId || 1;
+      console.log(`updateCostEstimate: Benutzer mit ID ${userId} aktualisiert Kostenvoranschlag ${id}`);
+
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await this.getCostEstimate(id, userId);
+      if (!existingEstimate) {
+        console.log(`Kostenvoranschlag mit ID ${id} für Shop ${shopId} nicht gefunden, Aktualisierung abgebrochen`);
+        return undefined;
+      }
+
+      // Aktualisiere den Kostenvoranschlag
+      const [updatedEstimate] = await db
+        .update(costEstimates)
+        .set({
+          ...estimate,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(costEstimates.id, id), eq(costEstimates.shopId, shopId)))
+        .returning();
+
+      console.log(`Kostenvoranschlag ${id} erfolgreich aktualisiert für Benutzer ${userId}`);
+      return updatedEstimate;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Kostenvoranschlags ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async deleteCostEstimate(id: number, userId: number): Promise<boolean> {
+    try {
+      // Finde den Shop-ID des Benutzers
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      }
+
+      const shopId = user.shopId || 1;
+      console.log(`deleteCostEstimate: Benutzer mit ID ${userId} löscht Kostenvoranschlag ${id}`);
+
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await this.getCostEstimate(id, userId);
+      if (!existingEstimate) {
+        console.log(`Kostenvoranschlag mit ID ${id} für Shop ${shopId} nicht gefunden, Löschung abgebrochen`);
+        return false;
+      }
+
+      // Lösche den Kostenvoranschlag
+      const result = await db
+        .delete(costEstimates)
+        .where(and(eq(costEstimates.id, id), eq(costEstimates.shopId, shopId)))
+        .returning();
+
+      const success = result.length > 0;
+      console.log(`Kostenvoranschlag ${id} ${success ? 'erfolgreich gelöscht' : 'konnte nicht gelöscht werden'} für Benutzer ${userId}`);
+      return success;
+    } catch (error) {
+      console.error(`Fehler beim Löschen des Kostenvoranschlags ${id}:`, error);
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
