@@ -73,6 +73,8 @@ export function NewCostEstimateDialog({
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
+  // Status zur Kontrolle, ob Tab gerade gedrückt wurde
+  const [tabPressed, setTabPressed] = useState<boolean>(false);
   
   // Gerätedaten-Stati
   const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
@@ -185,19 +187,20 @@ export function NewCostEstimateDialog({
   
   // Kundensuche starten, wenn beide Namensfelder ausgefüllt sind
   useEffect(() => {
-    if (watchFirstName && watchLastName) {
+    // Nur Kundensuche starten, wenn Tab nicht gerade gedrückt wurde
+    if (watchFirstName && watchLastName && !tabPressed) {
       // Kundensuche mit Verzögerung starten, um zu viele API-Aufrufe zu vermeiden
       const timer = setTimeout(() => {
         checkForExistingCustomer(watchFirstName, watchLastName);
       }, 500);
       
       return () => clearTimeout(timer);
-    } else {
+    } else if (!watchFirstName || !watchLastName) {
       // Dropdown schließen und Suchergebnisse zurücksetzen, wenn Felder leer sind
       setShowCustomerDropdown(false);
       setMatchingCustomers([]);
     }
-  }, [watchFirstName, watchLastName]);
+  }, [watchFirstName, watchLastName, tabPressed]);
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -210,6 +213,15 @@ export function NewCostEstimateDialog({
         // Dropdown immer schließen beim Tabben
         setShowCustomerDropdown(false);
       }
+      
+      // Tab-Flag setzen, um zu verhindern, dass das Dropdown sofort wieder geöffnet wird
+      setTabPressed(true);
+      
+      // Tab-Flag nach kurzer Zeit zurücksetzen
+      setTimeout(() => {
+        setTabPressed(false);
+      }, 500);
+      
       // Tab-Taste nicht abfangen, normale Browsernavigation zulassen
       return;
     }
