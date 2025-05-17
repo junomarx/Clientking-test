@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Search, User, UserPlus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { GlobalDeviceSelector } from "@/components/GlobalDeviceSelector";
 
 // Customer Interface kopiert aus der NewOrderModal.tsx
 interface Customer {
@@ -65,11 +66,18 @@ export function NewCostEstimateDialog({
   onCreateCostEstimate 
 }: NewCostEstimateDialogProps) {
   const { toast } = useToast();
+  
+  // Kundendaten-Stati
   const [filterText, setFilterText] = useState<string>("");
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
+  
+  // Gerätedaten-Stati
+  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
@@ -354,6 +362,36 @@ export function NewCostEstimateDialog({
             {/* Gerätedaten */}
             <div className="p-4 bg-muted/50 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Gerätedaten</h3>
+
+              {/* Globale Geräteauswahl (gleiche Komponente wie beim Reparaturauftrag) */}
+              <div className="border border-border rounded-md p-3 mb-4">
+                <div className="text-sm text-muted-foreground mb-2">
+                  Gerätedetails aus dem globalen Katalog
+                </div>
+                <GlobalDeviceSelector
+                  onDeviceTypeSelect={(deviceType, deviceTypeId) => {
+                    form.setValue('deviceType', deviceType);
+                    setSelectedDeviceTypeId(deviceTypeId);
+                    // Zurücksetzen der abhängigen Felder bei Änderung
+                    form.setValue('manufacturer', '');
+                    form.setValue('model', '');
+                    setSelectedBrandId(null);
+                    setSelectedModelId(null);
+                  }}
+                  onBrandSelect={(brand, brandId) => {
+                    form.setValue('manufacturer', brand);
+                    setSelectedBrandId(brandId);
+                    // Zurücksetzen des Modells bei Änderung
+                    form.setValue('model', '');
+                    setSelectedModelId(null);
+                  }}
+                  onModelSelect={(model, modelId) => {
+                    form.setValue('model', model);
+                    setSelectedModelId(modelId);
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -362,7 +400,7 @@ export function NewCostEstimateDialog({
                     <FormItem>
                       <FormLabel>Gerätetyp*</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="z.B. Smartphone, Laptop, Tablet" />
+                        <Input {...field} placeholder="z.B. Smartphone, Tablet" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
