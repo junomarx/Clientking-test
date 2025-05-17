@@ -263,19 +263,19 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.4 }}
-          onClick={() => navigateToFilteredRepairs('ausser_haus')}
+          onClick={() => navigateToFilteredRepairs('abgeholt')}
           className="cursor-pointer"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
           <div className="rounded-lg overflow-hidden shadow-sm border">
-            <div className="bg-purple-500 text-white rounded-t-lg px-4 py-2">
-              <h3 className="text-sm font-medium">Außer Haus</h3>
+            <div className="bg-green-600 text-white rounded-t-lg px-4 py-2">
+              <h3 className="text-sm font-medium">Abgeschlossen</h3>
             </div>
             <div className="p-4 bg-white flex justify-between items-center">
-              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.outsourced || 0}</p>
-              <div className="bg-purple-100 p-2 rounded-full text-purple-500">
-                <TrendingUp size={20} />
+              <p className="text-2xl font-bold">{statsLoading ? 0 : stats?.completed || 0}</p>
+              <div className="bg-green-100 p-2 rounded-full text-green-600">
+                <CheckCircle size={20} />
               </div>
             </div>
           </div>
