@@ -206,6 +206,9 @@ export function NewCostEstimateDialog({
       // Wenn ein Kunde ausgewählt ist, diesen übernehmen, aber nicht preventDefault aufrufen
       if (showCustomerDropdown && matchingCustomers.length > 0 && selectedCustomerIndex >= 0) {
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
+      } else {
+        // Dropdown immer schließen beim Tabben
+        setShowCustomerDropdown(false);
       }
       // Tab-Taste nicht abfangen, normale Browsernavigation zulassen
       return;
