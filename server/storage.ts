@@ -1522,6 +1522,7 @@ export class DatabaseStorage implements IStorage {
         .from(repairs)
         .where(eq(repairs.shopId, shopId));
 
+      // In Reparatur Anzahl (Status: in_reparatur)
       const [inRepairResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
@@ -1529,15 +1530,20 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.shopId, shopId),
           eq(repairs.status, 'in_reparatur')
         ));
-
+      
+      // Fertige Reparaturen = Alle mit Status "abgeholt" ODER "fertig" (für die Dashboard-Anzeige)
       const [completedResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          eq(repairs.status, 'abgeholt')
+          or(
+            eq(repairs.status, 'abgeholt'),
+            eq(repairs.status, 'fertig')
+          )
         ));
 
+      // Heute erstellte Reparaturen
       const [todayResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
@@ -1546,6 +1552,7 @@ export class DatabaseStorage implements IStorage {
           gte(repairs.createdAt, today)
         ));
 
+      // Abholbereite Reparaturen
       const [readyForPickupResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
@@ -1554,6 +1561,7 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.status, 'abholbereit')
         ));
 
+      // Ausgelagerte Reparaturen (Außer Haus)
       const [outsourcedResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
@@ -1562,6 +1570,7 @@ export class DatabaseStorage implements IStorage {
           eq(repairs.status, 'ausser_haus')
         ));
 
+      // Neue eingegangene Reparaturen
       const [receivedResult] = await db
         .select({ count: sql<number>`count(*)` })
         .from(repairs)
