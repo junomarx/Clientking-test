@@ -672,21 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // API-Endpunkt, um zu prüfen, ob der User ein Professional oder Enterprise Paket hat
-  app.get("/api/can-use-cost-estimates", isAuthenticated, async (req: Request, res: Response) => {
-    try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-      const isProfessional = await isProfessionalOrHigher(userId);
-      
-      // Ergebnis zurückgeben
-      res.json({ canUseCostEstimates: isProfessional });
-    } catch (error) {
-      console.error("Error checking pricing plan:", error);
-      res.status(500).json({ message: "Fehler bei der Überprüfung des Preispakets" });
-    }
-  });
+  // Kostenvoranschlag-Berechtigungsprüfung entfernt
   
   // API-Endpunkt, um zu prüfen, ob der User Etiketten drucken darf (nur Professional/Enterprise)
   app.get("/api/can-print-labels", isAuthenticated, async (req: Request, res: Response) => {
