@@ -479,7 +479,7 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
                 <Database className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{(stats?.completed || 0) - (stats?.readyForPickup || 0)}</div>
+                <div className="text-2xl font-bold">{stats?.completed || 0}</div>
                 <p className="text-xs text-muted-foreground">abgeschlossen</p>
               </CardContent>
             </Card>
