@@ -91,18 +91,17 @@ export function NewCostEstimateDialog({
     }
   });
   
-  // Kunden über eine gesonderte API-Route suchen
+  // Vereinfachter Ansatz für Kostenvoranschläge - ohne Kundendatenbank-Zugriff
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
     if (!firstName || !lastName) return;
     
     try {
-      // Angepasste API-Route verwenden, die speziell für Kostenvoranschläge gedacht ist
-      // Diese Route sollte auch für Superadmins funktionieren
-      const response = await apiRequest('GET', `/api/customers/search?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`);
+      // Versuch, mit der regulären API nach Kunden zu suchen
+      const response = await apiRequest('GET', `/api/customers?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`);
       
+      // Im Fehlerfall (403) - Superadmin ohne Shop-ID
       if (response.status === 403) {
-        console.warn("Shop-Isolation verhindert Kundenzugriff, benutze alternative Option");
-        // Im Fehlerfall (403) ein leeres Array verwenden und die Kundenauswahl deaktivieren
+        console.warn("Shop-Isolation verhindert Kundenzugriff - für Kostenvoranschlag keine Kundenverknüpfung notwendig");
         setMatchingCustomers([]);
         setShowCustomerDropdown(false);
         return;
