@@ -10,7 +10,7 @@ interface CreateCostEstimateFormProps {
   onSuccess?: () => void;
 }
 
-export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimateFormProps) {
+export default function SimpleCostEstimateForm({ onSuccess }: CreateCostEstimateFormProps) {
   const { toast } = useToast();
   
   // Standard-Gültigkeitsdatum (14 Tage ab heute)
@@ -101,7 +101,8 @@ export default function CreateCostEstimateForm({ onSuccess }: CreateCostEstimate
           <div className="mb-3">
             <label className="block text-sm font-medium mb-1">Gültig bis*</label>
             <Button
-              variant={"outline"}
+              type="button"
+              variant="outline"
               className="w-full h-9 justify-start text-left border border-[#ddd] rounded"
             >
               {formattedDate}

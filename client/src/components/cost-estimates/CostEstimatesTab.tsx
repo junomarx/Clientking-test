@@ -29,7 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import CreateCostEstimateForm from './CreateCostEstimateForm';
+import CreateCostEstimateForm from './SimpleCostEstimateForm';
 import EditCostEstimateForm from './EditCostEstimateForm';
 import ViewCostEstimateDetails from './ViewCostEstimateDetails';
 import {
