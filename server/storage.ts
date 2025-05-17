@@ -2584,26 +2584,44 @@ export class DatabaseStorage implements IStorage {
       const shopId = user.shopId || 1;
       console.log(`createCostEstimate: Erstelle Kostenvoranschlag für Benutzer ${userId} (Shop ${shopId})`);
 
-      // Erzeuge eine eindeutige Referenznummer (falls nicht vorhanden)
-      if (!estimate.referenceNumber) {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-        estimate.referenceNumber = `KV${year}${month}-${random}`;
+      // Erzeuge eine eindeutige Kostenvoranschlagsnummer im Format KV-YYMM-XXX
+      const date = new Date();
+      const year = date.getFullYear().toString().slice(-2); // Die letzten zwei Ziffern des Jahres
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      
+      // Hole den letzten Kostenvoranschlag des Monats, um die Nummer zu erhöhen
+      const lastEstimateOfMonth = await db.query.costEstimates.findFirst({
+        where: and(
+          eq(costEstimates.shopId, shopId),
+          like(costEstimates.estimateNumber, `KV-${year}${month}-%`)
+        ),
+        orderBy: [desc(costEstimates.id)],
+      });
+
+      let nextNumber = 1;
+      if (lastEstimateOfMonth) {
+        const parts = lastEstimateOfMonth.estimateNumber.split('-');
+        if (parts.length === 3) {
+          nextNumber = parseInt(parts[2]) + 1;
+        }
       }
 
-      // Erstelle den Kostenvoranschlag mit Shop-ID
+      // Generiere die Kostenvoranschlagsnummer
+      const estimateNumber = `KV-${year}${month}-${String(nextNumber).padStart(3, '0')}`;
+      console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
+
+      // Erstelle den Kostenvoranschlag mit Shop-ID und generierter Nummer
       const [createdEstimate] = await db
         .insert(costEstimates)
         .values({
           ...estimate,
+          estimateNumber,
           userId,
           shopId,
         })
         .returning();
 
-      console.log(`Neuer Kostenvoranschlag ID ${createdEstimate.id} erstellt für Shop ${shopId}`);
+      console.log(`Neuer Kostenvoranschlag ID ${createdEstimate.id} (${estimateNumber}) erstellt für Shop ${shopId}`);
       return createdEstimate;
     } catch (error) {
       console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
