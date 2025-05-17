@@ -32,10 +32,6 @@ import {
   userModels,
   type UserModel,
   type InsertUserModel,
-  costEstimates,
-  type CostEstimate,
-  type InsertCostEstimate,
-  type CostEstimateItem,
   shops,
   type Shop,
   supportAccessLogs,
@@ -348,35 +344,7 @@ export interface IStorage {
     userId: number,
   ): Promise<boolean>;
 
-  // Kostenvoranschläge (CostEstimates) methods
-  getAllCostEstimates(currentUserId?: number): Promise<CostEstimate[]>;
-  getCostEstimate(
-    id: number,
-    currentUserId?: number,
-  ): Promise<CostEstimate | undefined>;
-  getCostEstimatesByCustomerId(
-    customerId: number,
-    currentUserId?: number,
-  ): Promise<CostEstimate[]>;
-  createCostEstimate(
-    estimate: InsertCostEstimate,
-    currentUserId?: number,
-  ): Promise<CostEstimate>;
-  updateCostEstimate(
-    id: number,
-    estimateUpdate: Partial<InsertCostEstimate>,
-    currentUserId?: number,
-  ): Promise<CostEstimate | undefined>;
-  updateCostEstimateStatus(
-    id: number,
-    status: string,
-    currentUserId?: number,
-  ): Promise<CostEstimate | undefined>;
-  deleteCostEstimate(id: number, currentUserId?: number): Promise<boolean>;
-  convertToRepair(
-    id: number,
-    currentUserId?: number,
-  ): Promise<Repair | undefined>;
+  // Kostenvoranschläge wurden entfernt und werden später neu implementiert
   
   // Paket-Methoden
   getPackageByName(name: string): Promise<Package | undefined>;

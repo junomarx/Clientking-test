@@ -99,7 +99,6 @@ export function PrintSettingsTab() {
   const repairOrderTemplates = templates?.filter(t => t.type === 'repair-order') || [];
   const receiptTemplates = templates?.filter(t => t.type === 'receipt') || [];
   const pickupTemplates = templates?.filter(t => t.type === 'pickup') || [];
-  const costEstimateTemplates = templates?.filter(t => t.type === 'cost-estimate') || [];
 
   if (isLoading) {
     return (

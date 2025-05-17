@@ -555,74 +555,7 @@ export const insertUserModelSchema = createInsertSchema(userModels).omit({
 export type UserModel = typeof userModels.$inferSelect;
 export type InsertUserModel = z.infer<typeof insertUserModelSchema>;
 
-// Kostenvoranschläge (Angebote)
-export const costEstimates = pgTable("cost_estimates", {
-  id: serial("id").primaryKey(),
-  referenceNumber: text("reference_number").unique(), // Eindeutige Angebotsnummer (z.B. KV2025-0001)
-  customerId: integer("customer_id").notNull().references(() => customers.id),
-  title: text("title").notNull(), // Titel des Kostenvoranschlags
-  description: text("description"), // Beschreibung des Kostenvoranschlags
-  deviceType: text("device_type").notNull(),
-  brand: text("brand").notNull(),
-  model: text("model").notNull(),
-  serialNumber: text("serial_number"),
-  issue: text("issue"),
-  items: jsonb("items").notNull(), // JSON Array von Posten (Position, Beschreibung, Menge, Preis)
-  subtotal: text("subtotal").notNull(), // Zwischensumme (ohne MwSt)
-  taxRate: text("tax_rate").default("20").notNull(), // MwSt-Satz in Prozent
-  taxAmount: text("tax_amount").notNull(), // MwSt-Betrag
-  total: text("total").notNull(), // Gesamtsumme (mit MwSt)
-  validUntil: text("valid_until"), // Gültig bis (als ISO-String gespeichert)
-  status: text("status").default("offen").notNull(), // Status: offen, angenommen, abgelehnt, abgelaufen
-  notes: text("notes"), // Zusätzliche Notizen
-  acceptedAt: timestamp("accepted_at"), // Wann wurde der Kostenvoranschlag angenommen
-  convertedToRepair: boolean("converted_to_repair").default(false), // Wurde in Reparaturauftrag umgewandelt
-  repairId: integer("repair_id").references(() => repairs.id), // Referenz auf den Reparaturauftrag, falls umgewandelt
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  userId: integer("user_id").references(() => users.id), // Jeder Kostenvoranschlag gehört zu einem Benutzer
-  shopId: integer("shop_id").default(1), // Shop, zu dem der Kostenvoranschlag gehört (für Multi-Tenant-Isolation)
-});
-
-// Zod-Schema für einen Kostenvoranschlag-Posten
-export const costEstimateItemSchema = z.object({
-  position: z.number(), // Positionsnummer
-  description: z.string(), // Beschreibung des Postens
-  quantity: z.number().default(1), // Menge
-  unitPrice: z.string(), // Einzelpreis als String (mit €)
-  totalPrice: z.string(), // Gesamtpreis als String (mit €)
-});
-
-// Wir erstellen das Schema manuell, um das Date-Objekt als String zu akzeptieren
-export const insertCostEstimateSchema = z.object({
-  customerId: z.number({
-    required_error: "Kunde ist erforderlich",
-  }),
-  title: z.string().default("Kostenvoranschlag"),
-  deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
-  brand: z.string().min(1, "Marke ist erforderlich"),
-  model: z.string().min(1, "Modell ist erforderlich"),
-  serialNumber: z.string().optional(),
-  issue: z.string().optional(),
-  items: z.array(costEstimateItemSchema),
-  subtotal: z.string().min(1, "Zwischensumme ist erforderlich"),
-  taxRate: z.string().default("20"),
-  taxAmount: z.string().min(1, "MwSt-Betrag ist erforderlich"),
-  total: z.string().min(1, "Gesamtsumme ist erforderlich"),
-  validUntil: z.string().optional(), // Akzeptiert ISO-String
-  status: z.string().default("offen"),
-  notes: z.string().optional(),
-  repairId: z.number().optional(),
-  convertedToRepair: z.boolean().optional(),
-  userId: z.number().optional(),
-});
-
-export const insertCostEstimateItemsSchema = z.array(costEstimateItemSchema);
-
-export type CostEstimate = typeof costEstimates.$inferSelect;
-export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
-export type CostEstimateItem = z.infer<typeof costEstimateItemSchema>;
-export type InsertCostEstimateItems = z.infer<typeof insertCostEstimateItemsSchema>;
+// Kostenvoranschläge wurden entfernt und werden später neu implementiert
 
 // Druckvorlagen
 export const printTemplates = pgTable('print_templates', {
