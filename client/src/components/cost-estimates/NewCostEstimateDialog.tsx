@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,22 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Search, User, UserPlus, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+// Customer Interface kopiert aus der NewOrderModal.tsx
+interface Customer {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  zipCode?: string;
+}
 
 // Validierungsschema für das Formular
 const costEstimateSchema = z.object({
