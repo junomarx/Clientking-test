@@ -367,6 +367,61 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 export type EmailHistory = typeof emailHistory.$inferSelect;
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 
+// Kostenvoranschläge
+export const costEstimates = pgTable("cost_estimates", {
+  id: serial("id").primaryKey(),
+  estimateNumber: text("estimate_number").unique(), // Individuelle Kostenvoranschlagsnummer
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  deviceType: text("device_type").notNull(),
+  manufacturer: text("manufacturer").notNull(), // Hersteller (Brand)
+  model: text("model").notNull(),
+  issue: text("issue").notNull(),
+  estimatedCost: text("estimated_cost").notNull(),
+  notes: text("notes"),
+  status: text("status").default("offen").notNull(), // offen, angenommen, abgelehnt
+  convertedToRepair: boolean("converted_to_repair").default(false), // Wurde in Reparaturauftrag umgewandelt
+  validUntil: timestamp("valid_until"), // Gültig bis
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Jeder Kostenvoranschlag gehört zu einem Benutzer/Unternehmen
+  userId: integer("user_id").references(() => users.id),
+  // Jeder Kostenvoranschlag gehört zu einem Shop (für Multi-Tenant-Isolation)
+  shopId: integer("shop_id").default(1),
+});
+
+// Position eines Kostenvoranschlags
+export const costEstimateItems = pgTable("cost_estimate_items", {
+  id: serial("id").primaryKey(),
+  costEstimateId: integer("cost_estimate_id").notNull().references(() => costEstimates.id),
+  description: text("description").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  unitPrice: text("unit_price").notNull(),
+  totalPrice: text("total_price").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  // Jede Position gehört zu einem Shop (für Multi-Tenant-Isolation)
+  shopId: integer("shop_id").default(1),
+});
+
+// Schemas für Kostenvoranschläge
+export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
+  id: true,
+  estimateNumber: true, // Wird automatisch generiert
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCostEstimateItemSchema = createInsertSchema(costEstimateItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types für Kostenvoranschläge
+export type CostEstimate = typeof costEstimates.$inferSelect;
+export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
+
+export type CostEstimateItem = typeof costEstimateItems.$inferSelect;
+export type InsertCostEstimateItem = z.infer<typeof insertCostEstimateItemSchema>;
+
 // Beziehungen definieren - emailHistory zu repairs und emailTemplates
 export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
   repair: one(repairs, {
@@ -389,6 +444,23 @@ export const repairsRelations = relations(repairs, ({ many }) => ({
 }));
 
 // Beziehungen zwischen Benutzer und Paket definieren
+// Beziehungen für Kostenvoranschläge
+export const costEstimatesRelations = relations(costEstimates, ({ one, many }) => ({
+  customer: one(customers, {
+    fields: [costEstimates.customerId],
+    references: [customers.id],
+  }),
+  items: many(costEstimateItems),
+}));
+
+// Beziehungen für Kostenvoranschlagspositionen
+export const costEstimateItemsRelations = relations(costEstimateItems, ({ one }) => ({
+  costEstimate: one(costEstimates, {
+    fields: [costEstimateItems.costEstimateId],
+    references: [costEstimates.id],
+  }),
+}));
+
 export const userRelations = relations(users, ({ one }) => ({
   package: one(packages, {
     fields: [users.packageId],
