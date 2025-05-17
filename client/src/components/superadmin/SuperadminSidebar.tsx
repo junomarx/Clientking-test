@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Link } from 'wouter';
 import { 
   Menu,
@@ -41,15 +41,10 @@ export function SuperadminSidebar({
 
   // Funktion zum Schließen des Menüs
   const closeSheetMenu = () => {
-    // Suche nach dem Close-Button
-    if (sheetCloseRef.current) {
-      sheetCloseRef.current.click();
-    } else {
-      // Fallback-Methode falls die Ref nicht funktioniert
-      const closeBtn = document.querySelector('button[aria-label="Close"]');
-      if (closeBtn instanceof HTMLElement) {
-        closeBtn.click();
-      }
+    // Verwenden wir die Standard-DOM-Selektion, da die Ref nicht zuverlässig ist
+    const closeBtn = document.querySelector('button[aria-label="Close"]');
+    if (closeBtn instanceof HTMLElement) {
+      closeBtn.click();
     }
   };
 
@@ -197,7 +192,7 @@ export function SuperadminSidebar({
               <span className="sr-only">Menü öffnen</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto" id="mobile-sheet-content">
+          <SheetContent side="top" className="w-full pt-16 pb-10 h-auto max-h-[90vh] overflow-y-auto">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-left">
                 {currentUser ? `${currentUser.username} Menü` : 'Superadmin Menü'}
@@ -213,15 +208,9 @@ export function SuperadminSidebar({
                 className="w-full justify-start mb-2"
                 onClick={() => {
                   // Menü schließen und dann ausloggen
-                  const closeIcon = document.querySelector('button[aria-label="Close"]');
-                  if (closeIcon instanceof HTMLElement) {
-                    closeIcon.click();
-                    // Nach kurzer Verzögerung ausloggen
-                    setTimeout(handleLogout, 100);
-                  } else {
-                    // Falls kein Button gefunden wurde, direkt ausloggen
-                    handleLogout();
-                  }
+                  closeSheetMenu();
+                  // Nach kurzer Verzögerung ausloggen
+                  setTimeout(handleLogout, 100);
                 }}
               >
                 <LogOut className="h-5 w-5 mr-2" />
@@ -233,10 +222,7 @@ export function SuperadminSidebar({
                 asChild
                 onClick={() => {
                   // Auch das Menü schließen, wenn der Link geklickt wird
-                  const closeIcon = document.querySelector('button[aria-label="Close"]');
-                  if (closeIcon instanceof HTMLElement) {
-                    setTimeout(() => closeIcon.click(), 100);
-                  }
+                  setTimeout(() => closeSheetMenu(), 100);
                 }}
               >
                 <Link to="/app">
