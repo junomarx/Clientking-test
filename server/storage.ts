@@ -179,7 +179,12 @@ export interface IStorage {
   }>;
 
   // Detaillierte Reparaturstatistiken für erweiterte Analysen
-  getDetailedRepairStats(): Promise<{
+  getDetailedRepairStats(
+    userId: number, 
+    startDate?: Date, 
+    endDate?: Date, 
+    revenueBasedOnPickup?: boolean
+  ): Promise<{
     byDeviceType: Record<string, number>;
     byBrand: Record<string, number>;
     byIssue: Record<string, number>;
