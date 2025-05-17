@@ -201,13 +201,13 @@ export function NewCostEstimateDialog({
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Tab-Taste nur erfassen, wenn Dropdown offen und ein Kunde ausgewählt ist
+    // Wenn Tab gedrückt wird, lassen wir das normale Verhalten zu
     if (e.key === 'Tab') {
+      // Wenn ein Kunde ausgewählt ist, diesen übernehmen, aber nicht preventDefault aufrufen
       if (showCustomerDropdown && matchingCustomers.length > 0 && selectedCustomerIndex >= 0) {
-        e.preventDefault();
         fillCustomerData(matchingCustomers[selectedCustomerIndex]);
       }
-      // Sonst weiterspringen (normales Verhalten)
+      // Tab-Taste nicht abfangen, normale Browsernavigation zulassen
       return;
     }
     
