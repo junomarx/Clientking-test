@@ -5,7 +5,7 @@ import { DashboardTab } from '@/components/dashboard/DashboardTab';
 import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
-import CostEstimatesTab from '@/components/cost-estimates/CostEstimatesTab';
+// Kostenvoranschläge-Tab entfernt
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
 import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 
+type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 
           'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
 
 export default function Home() {
@@ -91,12 +91,7 @@ export default function Home() {
     };
   }, []);
 
-  // Abfrage für Kostenvoranschläge-Berechtigung
-  const { data: costEstimatesAccess } = useQuery<{ canUseCostEstimates: boolean }>({
-    queryKey: ['/api/can-use-cost-estimates']
-  });
-  
-  const canUseCostEstimates = costEstimatesAccess?.canUseCostEstimates || false;
+  // Kostenvoranschlag-Funktionalität entfernt
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/10">
@@ -104,8 +99,7 @@ export default function Home() {
       <div className="hidden md:block">
         <Sidebar 
           activeTab={activeTab} 
-          onTabChange={(tab) => setActiveTab(tab as Tab)} 
-          canUseCostEstimates={canUseCostEstimates} 
+          onTabChange={(tab) => setActiveTab(tab as Tab)}
         />
       </div>
       
@@ -137,9 +131,7 @@ export default function Home() {
                 <StatisticsTab onTabChange={setActiveTab} />
               )}
               
-              {activeTab === 'cost-estimates' && (
-                <CostEstimatesTab />
-              )}
+              {/* Kostenvoranschlag-Tab entfernt */}
               
               {activeTab === 'business-settings' && (
                 <BusinessSettingsTab />
