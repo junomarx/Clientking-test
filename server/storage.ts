@@ -2289,33 +2289,9 @@ export class DatabaseStorage implements IStorage {
 
   /**
    * Kostenvoranschlag methods
+   * 
+   * Diese Funktionen wurden entfernt und werden später neu implementiert
    */
-
-  async getAllCostEstimates(userId: number): Promise<CostEstimate[]> {
-    try {
-      // Finde den Shop-ID des Benutzers
-      const user = await this.getUser(userId);
-      if (!user) {
-        throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
-      }
-
-      const shopId = user.shopId || 1;
-      console.log(`getAllCostEstimates: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
-
-      // Hole alle Kostenvoranschläge für diesen Shop
-      const estimates = await db
-        .select()
-        .from(costEstimates)
-        .where(eq(costEstimates.shopId, shopId))
-        .orderBy(desc(costEstimates.createdAt));
-
-      console.log(`Gefunden: ${estimates.length} Kostenvoranschläge für Shop ${shopId}`);
-      return estimates;
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Kostenvoranschläge:", error);
-      return [];
-    }
-  }
 
   async getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined> {
     try {
