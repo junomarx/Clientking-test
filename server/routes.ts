@@ -2378,6 +2378,245 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Support-Zugriffs-Routen für DSGVO-Konformität wurden bereits oben registriert
 
+  // KOSTENVORANSCHLÄGE API mit DSGVO-konformer Shop-Isolation
+  app.get("/api/cost-estimates", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Kostenvoranschläge für Benutzer ${userId}`);
+      
+      const estimates = await storage.getAllCostEstimates(userId);
+      res.json(estimates);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kostenvoranschläge:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Kostenvoranschläge",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Einzelnen Kostenvoranschlag abrufen
+  app.get("/api/cost-estimates/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      const estimate = await storage.getCostEstimate(id, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      res.json(estimate);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Kostenvoranschlags ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen des Kostenvoranschlags",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Positionen eines Kostenvoranschlags abrufen
+  app.get("/api/cost-estimates/:id/items", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      const items = await storage.getCostEstimateItems(id, userId);
+      
+      res.json(items);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Positionen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Neuen Kostenvoranschlag erstellen
+  app.post("/api/cost-estimates", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      // Validierung der Daten mit Zod
+      const data = insertCostEstimateSchema.parse(req.body);
+      
+      // Zusätzliche Validierung - Prüfe, ob der Kunde zum Shop des Benutzers gehört
+      await validateCustomerBelongsToShop(data.customerId, (req.user as any).id);
+      
+      // Kostenvoranschlag mit Shop-Isolation erstellen
+      const userId = (req.user as any).id;
+      const newEstimate = await storage.createCostEstimate(data, userId);
+      
+      console.log(`Neuer Kostenvoranschlag ${newEstimate.id} erstellt für Benutzer ${userId}`);
+      res.status(201).json(newEstimate);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Validierungsfehler", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Fehler beim Erstellen des Kostenvoranschlags",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Kostenvoranschlag aktualisieren
+  app.put("/api/cost-estimates/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await storage.getCostEstimate(id, userId);
+      if (!existingEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // Wenn sich die customerId ändert, prüfen, ob der neue Kunde zum Shop gehört
+      if (req.body.customerId && req.body.customerId !== existingEstimate.customerId) {
+        await validateCustomerBelongsToShop(req.body.customerId, userId);
+      }
+      
+      // Aktualisierung durchführen
+      const updatedEstimate = await storage.updateCostEstimate(id, req.body, userId);
+      
+      if (!updatedEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag konnte nicht aktualisiert werden" });
+      }
+      
+      console.log(`Kostenvoranschlag ${id} aktualisiert von Benutzer ${userId}`);
+      res.json(updatedEstimate);
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Kostenvoranschlags ${req.params.id}:`, error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Validierungsfehler", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Kostenvoranschlags",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Kostenvoranschlag löschen
+  app.delete("/api/cost-estimates/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      const success = await storage.deleteCostEstimate(id, userId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Kostenvoranschlag konnte nicht gelöscht werden oder wurde nicht gefunden" });
+      }
+      
+      console.log(`Kostenvoranschlag ${id} gelöscht von Benutzer ${userId}`);
+      res.status(204).end();
+    } catch (error) {
+      console.error(`Fehler beim Löschen des Kostenvoranschlags ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Löschen des Kostenvoranschlags",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Position eines Kostenvoranschlags erstellen
+  app.post("/api/cost-estimates/:id/items", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await storage.getCostEstimate(id, userId);
+      if (!existingEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // Validierung der Daten mit Zod
+      const data = insertCostEstimateItemSchema.parse({
+        ...req.body,
+        costEstimateId: id
+      });
+      
+      // Position erstellen
+      const newItem = await storage.createCostEstimateItem(data, userId);
+      
+      console.log(`Neue Position für Kostenvoranschlag ${id} erstellt von Benutzer ${userId}`);
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error(`Fehler beim Erstellen der Position für Kostenvoranschlag ${req.params.id}:`, error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Validierungsfehler", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Fehler beim Erstellen der Position",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Position eines Kostenvoranschlags löschen
+  app.delete("/api/cost-estimate-items/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Positions-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      const success = await storage.deleteCostEstimateItem(id, userId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Position konnte nicht gelöscht werden oder wurde nicht gefunden" });
+      }
+      
+      console.log(`Position ${id} gelöscht von Benutzer ${userId}`);
+      res.status(204).end();
+    } catch (error) {
+      console.error(`Fehler beim Löschen der Position ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Löschen der Position",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

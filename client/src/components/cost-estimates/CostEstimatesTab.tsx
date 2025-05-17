@@ -1,10 +1,72 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileText, Search } from "lucide-react";
+import { Plus, FileText, Search, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { NewCostEstimateDialog } from "./NewCostEstimateDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { formatDistanceToNow } from "date-fns";
+import { de } from "date-fns/locale";
+import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "@/components/ui/table";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+
+// Interface für Kostenvoranschläge
+interface CostEstimate {
+  id: number;
+  estimateNumber: string;
+  customerId: number;
+  deviceType: string;
+  manufacturer: string;
+  model: string;
+  issue: string;
+  estimatedCost: string;
+  notes?: string;
+  status: string;
+  convertedToRepair: boolean;
+  validUntil?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Interface für das Formular
+interface CostEstimateFormData {
+  customerId: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  postalCode?: string;
+  city?: string;
+  deviceType: string;
+  manufacturer: string;
+  model: string;
+  issue: string;
+  estimatedCost: string;
+  notes?: string;
+}
+
+// Funktion zum Formatieren des Status
+function formatStatus(status: string) {
+  switch (status) {
+    case "offen":
+      return { label: "Offen", color: "bg-blue-500" };
+    case "angenommen":
+      return { label: "Angenommen", color: "bg-green-500" };
+    case "abgelehnt":
+      return { label: "Abgelehnt", color: "bg-red-500" };
+    default:
+      return { label: status, color: "bg-gray-500" };
+  }
+}
 
 // Typen für die Props
 interface CostEstimatesTabProps {
@@ -15,6 +77,45 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Query für das Abrufen der Kostenvoranschläge
+  const { data: costEstimates, isLoading, error } = useQuery<CostEstimate[]>({
+    queryKey: ['/api/cost-estimates'],
+    staleTime: 60000, // 1 Minute
+  });
+
+  // Mutation für das Erstellen eines neuen Kostenvoranschlags
+  const createCostEstimateMutation = useMutation({
+    mutationFn: async (data: CostEstimateFormData) => {
+      // Aus dem Formular die Daten für die API extrahieren
+      const costEstimateData = {
+        customerId: data.customerId,
+        deviceType: data.deviceType,
+        manufacturer: data.manufacturer,
+        model: data.model,
+        issue: data.issue,
+        estimatedCost: data.estimatedCost,
+        notes: data.notes || null,
+        status: "offen", // Default-Status
+      };
+      
+      const response = await apiRequest('POST', '/api/cost-estimates', costEstimateData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Cache invalidieren, damit die Liste aktualisiert wird
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      setIsDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Erstellen des Kostenvoranschlags",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleNewCostEstimate = () => {
     // Dialog öffnen statt Event-Handling
@@ -26,14 +127,30 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   };
 
   // Callback-Funktion für das Erstellen eines neuen Kostenvoranschlags
-  const handleCreateCostEstimate = (data: any) => {
-    console.log("Neuer Kostenvoranschlag erstellt:", data);
+  const handleCreateCostEstimate = (data: CostEstimateFormData) => {
+    console.log("Neuer Kostenvoranschlag wird erstellt:", data);
+    
+    // Mutation aufrufen, um den Kostenvoranschlag zu speichern
+    createCostEstimateMutation.mutate(data);
     
     toast({
-      title: "Kostenvoranschlag erstellt",
+      title: "Kostenvoranschlag wird erstellt",
       description: `Für ${data.firstName} ${data.lastName} - ${data.manufacturer} ${data.model}`,
     });
   };
+
+  // Gefilterte Kostenvoranschläge basierend auf der Suche
+  const filteredEstimates = costEstimates?.filter(estimate => {
+    if (!searchTerm) return true;
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      estimate.estimateNumber.toLowerCase().includes(searchTermLower) ||
+      estimate.manufacturer.toLowerCase().includes(searchTermLower) ||
+      estimate.model.toLowerCase().includes(searchTermLower) ||
+      estimate.deviceType.toLowerCase().includes(searchTermLower)
+    );
+  });
 
   return (
     <div className="space-y-4">
@@ -56,10 +173,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       </div>
       
       {/* Suchleiste */}
-      <div className="flex w-full max-w-md gap-2 mb-8">
+      <div className="flex w-full max-w-md gap-2 mb-4">
         <Input
           type="search"
-          placeholder="Suchen nach Kunde oder Gerät..."
+          placeholder="Suchen nach Auftragsnummer, Gerät..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1"
@@ -69,31 +186,134 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
         </Button>
       </div>
       
-      {/* Inhalt - Zunächst leerer Platzhalter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Kostenvoranschläge</CardTitle>
-          <CardDescription>
-            Hier erscheinen Ihre erstellten Kostenvoranschläge
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <FileText className="h-12 w-12 text-gray-300 mb-2" />
-            <p className="text-muted-foreground">Keine Kostenvoranschläge vorhanden</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Erstellen Sie einen neuen Kostenvoranschlag, um loszulegen
-            </p>
-            <Button 
-              onClick={handleNewCostEstimate}
-              variant="outline"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Neuer Kostenvoranschlag
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Ladezustand */}
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+      
+      {/* Fehler */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center text-center text-red-800">
+              <p>Fehler beim Laden der Kostenvoranschläge</p>
+              <p className="text-sm">Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Keine Kostenvoranschläge gefunden */}
+      {!isLoading && !error && (!costEstimates || costEstimates.length === 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kostenvoranschläge</CardTitle>
+            <CardDescription>
+              Hier erscheinen Ihre erstellten Kostenvoranschläge
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <FileText className="h-12 w-12 text-gray-300 mb-2" />
+              <p className="text-muted-foreground">Keine Kostenvoranschläge vorhanden</p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Erstellen Sie einen neuen Kostenvoranschlag, um loszulegen
+              </p>
+              <Button 
+                onClick={handleNewCostEstimate}
+                variant="outline"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Neuer Kostenvoranschlag
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Kostenvoranschlags-Tabelle */}
+      {!isLoading && !error && filteredEstimates && filteredEstimates.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kostenvoranschläge</CardTitle>
+            <CardDescription>
+              {filteredEstimates.length} Kostenvoranschläge gefunden
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nr.</TableHead>
+                    <TableHead>Datum</TableHead>
+                    <TableHead>Gerät</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Betrag</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEstimates.map((estimate) => {
+                    // Status-Formatierung
+                    const status = formatStatus(estimate.status);
+                    const createdDate = new Date(estimate.createdAt);
+                    const formattedDate = formatDistanceToNow(createdDate, { 
+                      addSuffix: true,
+                      locale: de
+                    });
+                    
+                    return (
+                      <TableRow key={estimate.id}>
+                        <TableCell className="font-medium">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>{estimate.estimateNumber}</TooltipTrigger>
+                              <TooltipContent>
+                                <p>Klicken Sie, um Details anzuzeigen</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger className="cursor-help">
+                                {formattedDate}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Erstellt am {createdDate.toLocaleDateString('de-DE')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        <TableCell>
+                          {estimate.manufacturer} {estimate.model}
+                          <div className="text-xs text-muted-foreground">
+                            {estimate.deviceType}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${status.color} text-white`}>
+                            {status.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {parseFloat(estimate.estimatedCost).toLocaleString('de-DE', {
+                            style: 'currency',
+                            currency: 'EUR'
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Formular-Dialog für neuen Kostenvoranschlag */}
       <NewCostEstimateDialog 
