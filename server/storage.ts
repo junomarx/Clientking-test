@@ -40,6 +40,12 @@ import {
   packages,
   type Package,
   packageFeatures,
+  costEstimates,
+  type CostEstimate,
+  type InsertCostEstimate,
+  costEstimateItems,
+  type CostEstimateItem,
+  type InsertCostEstimateItem,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -125,6 +131,20 @@ export interface IStorage {
   getGlobalModels(): Promise<UserModel[]>;
   getGlobalModelsByBrand(brandId: number): Promise<UserModel[]>;
   getGlobalModelsByBrandAndDeviceType(brandId: number, deviceTypeId: number): Promise<UserModel[]>;
+  
+  // Kostenvoranschläge methods
+  getAllCostEstimates(userId: number): Promise<CostEstimate[]>;
+  getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined>;
+  getCostEstimateItems(costEstimateId: number, userId: number): Promise<CostEstimateItem[]>;
+  createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate>;
+  createCostEstimateItem(item: InsertCostEstimateItem, userId: number): Promise<CostEstimateItem>;
+  updateCostEstimate(
+    id: number,
+    estimate: Partial<InsertCostEstimate>,
+    userId: number
+  ): Promise<CostEstimate | undefined>;
+  deleteCostEstimate(id: number, userId: number): Promise<boolean>;
+  deleteCostEstimateItem(id: number, userId: number): Promise<boolean>;
 
   // Customer methods
   getAllCustomers(userId: number): Promise<Customer[]>;
@@ -382,6 +402,236 @@ function convertToUser(row: any): User {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Kostenvoranschläge Methoden
+  async getAllCostEstimates(userId: number): Promise<CostEstimate[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    console.log(`Abrufen aller Kostenvoranschläge für Shop ${shopId}`);
+    
+    try {
+      // Strenge Shop-Isolation: Nur Kostenvoranschläge aus dem eigenen Shop anzeigen
+      return await db.select().from(costEstimates)
+        .where(eq(costEstimates.shopId, shopId))
+        .orderBy(desc(costEstimates.createdAt));
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kostenvoranschläge:", error);
+      return [];
+    }
+  }
+  
+  async getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    try {
+      // Strenge Shop-Isolation: Nur Kostenvoranschläge aus dem eigenen Shop anzeigen
+      const [costEstimate] = await db.select().from(costEstimates)
+        .where(
+          and(
+            eq(costEstimates.id, id),
+            eq(costEstimates.shopId, shopId)
+          )
+        );
+      return costEstimate;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Kostenvoranschlags ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getCostEstimateItems(costEstimateId: number, userId: number): Promise<CostEstimateItem[]> {
+    const user = await this.getUser(userId);
+    if (!user) return [];
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    // Zuerst überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
+    const costEstimate = await this.getCostEstimate(costEstimateId, userId);
+    if (!costEstimate) return [];
+    
+    try {
+      return await db.select().from(costEstimateItems)
+        .where(
+          and(
+            eq(costEstimateItems.costEstimateId, costEstimateId),
+            eq(costEstimateItems.shopId, shopId)
+          )
+        );
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}:`, error);
+      return [];
+    }
+  }
+  
+  async createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("Benutzer nicht gefunden");
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    // Generiere eine eindeutige Kostenvoranschlags-Nummer
+    // Format: KV-[Jahr 2-stellig][Monat 2-stellig]-[3-stellige fortlaufende Nummer]
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2); // Letzten 2 Stellen des Jahres
+    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Monat mit führender 0
+    
+    // Zähle bestehende Kostenvoranschläge für diesen Monat
+    const countResult = await db.select({ count: db.fn.count() }).from(costEstimates)
+      .where(
+        and(
+          eq(costEstimates.shopId, shopId),
+          // Filter für den aktuellen Monat, falls gewünscht
+        )
+      );
+    
+    const count = Number(countResult[0]?.count || 0) + 1;
+    const sequentialNumber = count.toString().padStart(3, '0');
+    const estimateNumber = `KV-${year}${month}-${sequentialNumber}`;
+    
+    try {
+      const [newCostEstimate] = await db.insert(costEstimates).values({
+        ...estimate,
+        estimateNumber,
+        shopId,
+        userId,
+      }).returning();
+      
+      return newCostEstimate;
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
+      throw new Error("Fehler beim Erstellen des Kostenvoranschlags");
+    }
+  }
+  
+  async createCostEstimateItem(item: InsertCostEstimateItem, userId: number): Promise<CostEstimateItem> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("Benutzer nicht gefunden");
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    // Überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
+    const costEstimate = await this.getCostEstimate(item.costEstimateId, userId);
+    if (!costEstimate) throw new Error("Kostenvoranschlag nicht gefunden oder keine Berechtigung");
+    
+    try {
+      const [newItem] = await db.insert(costEstimateItems).values({
+        ...item,
+        shopId,
+      }).returning();
+      
+      return newItem;
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Kostenvoranschlagsposition:", error);
+      throw new Error("Fehler beim Erstellen der Kostenvoranschlagsposition");
+    }
+  }
+  
+  async updateCostEstimate(
+    id: number,
+    estimate: Partial<InsertCostEstimate>,
+    userId: number
+  ): Promise<CostEstimate | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    // Überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
+    const existingEstimate = await this.getCostEstimate(id, userId);
+    if (!existingEstimate) return undefined;
+    
+    try {
+      const [updatedEstimate] = await db.update(costEstimates)
+        .set({
+          ...estimate,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(costEstimates.id, id),
+            eq(costEstimates.shopId, shopId)
+          )
+        )
+        .returning();
+      
+      return updatedEstimate;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Kostenvoranschlags ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deleteCostEstimate(id: number, userId: number): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    // Überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
+    const existingEstimate = await this.getCostEstimate(id, userId);
+    if (!existingEstimate) return false;
+    
+    try {
+      // Zuerst alle zugehörigen Positionen löschen
+      await db.delete(costEstimateItems)
+        .where(
+          and(
+            eq(costEstimateItems.costEstimateId, id),
+            eq(costEstimateItems.shopId, shopId)
+          )
+        );
+      
+      // Dann den Kostenvoranschlag selbst löschen
+      const result = await db.delete(costEstimates)
+        .where(
+          and(
+            eq(costEstimates.id, id),
+            eq(costEstimates.shopId, shopId)
+          )
+        );
+      
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error(`Fehler beim Löschen des Kostenvoranschlags ${id}:`, error);
+      return false;
+    }
+  }
+  
+  async deleteCostEstimateItem(id: number, userId: number): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
+    const shopId = user.shopId || 1;
+    
+    try {
+      // Position löschen
+      const result = await db.delete(costEstimateItems)
+        .where(
+          and(
+            eq(costEstimateItems.id, id),
+            eq(costEstimateItems.shopId, shopId)
+          )
+        );
+      
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error(`Fehler beim Löschen der Kostenvoranschlagsposition ${id}:`, error);
+      return false;
+    }
+  }
   // Session store
   sessionStore: session.Store;
   

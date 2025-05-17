@@ -16,16 +16,22 @@ import {
   insertUserDeviceTypeSchema,
   insertUserBrandSchema,
   insertUserModelSchema,
+  insertCostEstimateSchema,
+  insertCostEstimateItemSchema,
   repairStatuses,
   deviceTypes,
   type InsertEmailTemplate,
+  type InsertCostEstimate,
+  type InsertCostEstimateItem,
   customers,
   users,
   repairs,
   feedbacks,
   userDeviceTypes,
   userBrands,
-  businessSettings
+  businessSettings,
+  costEstimates,
+  costEstimateItems
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
