@@ -191,6 +191,13 @@ export interface IStorage {
     };
   }>;
 
+  // Kostenvoranschlag methods
+  getAllCostEstimates(userId: number): Promise<CostEstimate[]>;
+  getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined>;
+  createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate>;
+  updateCostEstimate(id: number, estimate: Partial<InsertCostEstimate>, userId: number): Promise<CostEstimate | undefined>;
+  deleteCostEstimate(id: number, userId: number): Promise<boolean>;
+
   // Feedback methods
   createFeedbackToken(repairId: number, customerId: number): Promise<string>;
   getFeedbackByToken(token: string): Promise<Feedback | undefined>;
