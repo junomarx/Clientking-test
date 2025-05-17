@@ -65,6 +65,11 @@ export function NewCostEstimateDialog({
   onCreateCostEstimate 
 }: NewCostEstimateDialogProps) {
   const { toast } = useToast();
+  const [filterText, setFilterText] = useState<string>("");
+  const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
   
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
@@ -85,6 +90,107 @@ export function NewCostEstimateDialog({
       totalPrice: ""
     }
   });
+  
+  // Kunden über eine gesonderte API-Route suchen
+  const checkForExistingCustomer = async (firstName: string, lastName: string) => {
+    if (!firstName || !lastName) return;
+    
+    try {
+      // Angepasste API-Route verwenden, die speziell für Kostenvoranschläge gedacht ist
+      // Diese Route sollte auch für Superadmins funktionieren
+      const response = await apiRequest('GET', `/api/customers/search?firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}`);
+      
+      if (response.status === 403) {
+        console.warn("Shop-Isolation verhindert Kundenzugriff, benutze alternative Option");
+        // Im Fehlerfall (403) ein leeres Array verwenden und die Kundenauswahl deaktivieren
+        setMatchingCustomers([]);
+        setShowCustomerDropdown(false);
+        return;
+      }
+      
+      const customers = await response.json();
+      
+      console.log(`Found ${customers.length} matching customers for ${firstName} ${lastName}`);
+      
+      // Kunden im State speichern für das Dropdown
+      setMatchingCustomers(customers);
+      
+      // Dropdown anzeigen, wenn Kunden gefunden wurden
+      setShowCustomerDropdown(customers.length > 0);
+      
+      // Ausgewählten Index zurücksetzen
+      setSelectedCustomerIndex(-1);
+    } catch (error) {
+      console.error('Error searching for customers:', error);
+      // Bei Fehlern die Kundenauswahl deaktivieren
+      setMatchingCustomers([]);
+      setShowCustomerDropdown(false);
+    }
+  };
+  
+  // Kundendaten in das Formular übernehmen
+  const fillCustomerData = (customer: Customer) => {
+    form.setValue('firstName', customer.firstName);
+    form.setValue('lastName', customer.lastName);
+    form.setValue('phone', customer.phone || "");
+    
+    if (customer.email) {
+      form.setValue('email', customer.email);
+    }
+    
+    if (customer.address) {
+      form.setValue('address', customer.address);
+    }
+    
+    if (customer.postalCode || customer.zipCode) {
+      form.setValue('postalCode', customer.postalCode || customer.zipCode || "");
+    }
+    
+    if (customer.city) {
+      form.setValue('city', customer.city);
+    }
+    
+    // Ausgewählte Kunden-ID setzen
+    setSelectedCustomerId(customer.id);
+    
+    // Dropdown schließen
+    setShowCustomerDropdown(false);
+  };
+  
+  // Reset Form beim Öffnen/Schließen des Dialogs
+  useEffect(() => {
+    if (open) {
+      // Alle Status zurücksetzen
+      setFilterText("");
+      setMatchingCustomers([]);
+      setSelectedCustomerId(null);
+      setSelectedCustomerIndex(-1);
+      setShowCustomerDropdown(false);
+      
+      // Formular zurücksetzen
+      form.reset();
+    }
+  }, [open, form]);
+  
+  // Überwachung der Namensfelder für die Kundensuche
+  const watchFirstName = form.watch('firstName');
+  const watchLastName = form.watch('lastName');
+  
+  // Kundensuche starten, wenn beide Namensfelder ausgefüllt sind
+  useEffect(() => {
+    if (watchFirstName && watchLastName) {
+      // Kundensuche mit Verzögerung starten, um zu viele API-Aufrufe zu vermeiden
+      const timer = setTimeout(() => {
+        checkForExistingCustomer(watchFirstName, watchLastName);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Dropdown schließen und Suchergebnisse zurücksetzen, wenn Felder leer sind
+      setShowCustomerDropdown(false);
+      setMatchingCustomers([]);
+    }
+  }, [watchFirstName, watchLastName]);
   
   const onSubmit = (data: CostEstimateFormData) => {
     console.log("Formular-Daten:", data);
@@ -121,33 +227,58 @@ export function NewCostEstimateDialog({
             <div className="p-4 bg-muted/50 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Kundendaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vorname*</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="relative">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vorname*</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nachname*</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div className="relative">
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nachname*</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {/* Dropdown für Kundenauswahl */}
+                  {showCustomerDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2 text-sm text-gray-500 border-b">
+                        {matchingCustomers.length} Kunden gefunden
+                      </div>
+                      {matchingCustomers.map((customer, index) => (
+                        <div
+                          key={customer.id}
+                          className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedCustomerIndex === index ? 'bg-gray-100' : ''}`}
+                          onClick={() => fillCustomerData(customer)}
+                          onMouseEnter={() => setSelectedCustomerIndex(index)}
+                        >
+                          <div className="font-medium">{customer.firstName} {customer.lastName}</div>
+                          <div className="text-sm text-gray-500">{customer.phone}</div>
+                          {customer.email && <div className="text-sm text-gray-500">{customer.email}</div>}
+                        </div>
+                      ))}
+                    </div>
                   )}
-                />
+                </div>
                 
                 <FormField
                   control={form.control}
