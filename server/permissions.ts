@@ -123,7 +123,7 @@ export async function isProfessionalOrHigher(userId: number): Promise<boolean> {
     
     // 1. Prüfen, ob ein Paket zugewiesen ist (neues System)
     if (user.packageId) {
-      const professionalFeatures = ['costEstimates', 'emailTemplates', 'printThermal', 'print58mm'];
+      const professionalFeatures = ['emailTemplates', 'printThermal', 'print58mm']; // 'costEstimates' entfernt für spätere Neuimplementierung
       
       // Features für dieses Paket aus der Datenbank abrufen
       const features = await db.select()
@@ -143,7 +143,7 @@ export async function isProfessionalOrHigher(userId: number): Promise<boolean> {
       try {
         const overrides = JSON.parse(user.featureOverrides);
         // Prüfen, ob mindestens eines der Professional-Features erlaubt ist
-        if (overrides.costEstimates === true || overrides.emailTemplates === true) {
+        if (overrides.emailTemplates === true) { // 'costEstimates' entfernt für spätere Neuimplementierung
           return true;
         }
       } catch (e) {
