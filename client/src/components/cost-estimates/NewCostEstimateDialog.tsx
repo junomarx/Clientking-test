@@ -162,6 +162,13 @@ export function NewCostEstimateDialog({
     
     // Dropdown schließen
     setShowCustomerDropdown(false);
+    
+    // Fokus auf das nächste Feld setzen - zum Beispiel E-Mail oder Adresse
+    // So wird verhindert, dass der Fokus weiterhin auf dem Namen bleibt
+    const nextField = document.querySelector('input[name="email"]') as HTMLInputElement;
+    if (nextField) {
+      nextField.focus();
+    }
   };
   
   // Reset Form beim Öffnen/Schließen des Dialogs
