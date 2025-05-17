@@ -2404,6 +2404,132 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Implementierung der detaillierten Reparaturstatistik
+  async getDetailedRepairStats(
+    userId: number, 
+    startDate?: Date, 
+    endDate?: Date, 
+    revenueBasedOnPickup: boolean = false
+  ): Promise<{
+    byDeviceType: Record<string, number>;
+    byBrand: Record<string, number>;
+    byIssue: Record<string, number>;
+    mostRecentRepairs: Repair[];
+    revenue: {
+      total: number;
+      byStatus: Record<string, number>;
+      byMonth: Record<number, number>;
+    };
+  }> {
+    try {
+      // Benutzer und Shop-ID abrufen
+      const user = await this.getUser(userId);
+      if (!user || !user.shopId) {
+        console.warn(`Benutzer mit ID ${userId} nicht gefunden oder keine Shop-ID vorhanden für detaillierte Statistiken`);
+        return {
+          byDeviceType: {},
+          byBrand: {},
+          byIssue: {},
+          mostRecentRepairs: [],
+          revenue: {
+            total: 0,
+            byStatus: {},
+            byMonth: {},
+          },
+        };
+      }
+      
+      // DSGVO-konform: Nur Daten des eigenen Shops
+      const shopId = user.shopId;
+      
+      // Alle Reparaturen des Shops abrufen (mit Zeitraumfilter falls angegeben)
+      let query = db.select().from(repairs).where(eq(repairs.shopId, shopId));
+      
+      if (startDate) {
+        query = query.where(gte(repairs.createdAt, startDate));
+      }
+      
+      if (endDate) {
+        query = query.where(lte(repairs.createdAt, endDate));
+      }
+      
+      const allRepairs = await query;
+      
+      // Nach Gerätetyp gruppieren
+      const byDeviceType: Record<string, number> = {};
+      const byBrand: Record<string, number> = {};
+      const byIssue: Record<string, number> = {};
+      let total = 0;
+      const byStatus: Record<string, number> = {};
+      const byMonth: Record<number, number> = {};
+      
+      // Durch alle Reparaturen iterieren und Statistiken berechnen
+      for (const repair of allRepairs) {
+        // Gerätetype zählen
+        if (repair.deviceType) {
+          byDeviceType[repair.deviceType] = (byDeviceType[repair.deviceType] || 0) + 1;
+        }
+        
+        // Marke zählen
+        if (repair.deviceBrand) {
+          byBrand[repair.deviceBrand] = (byBrand[repair.deviceBrand] || 0) + 1;
+        }
+        
+        // Probleme/Fehler zählen
+        if (repair.issue) {
+          byIssue[repair.issue] = (byIssue[repair.issue] || 0) + 1;
+        }
+        
+        // Umsatz berechnen (nur wenn ein Preis vorhanden ist)
+        if (repair.price) {
+          // Abhängig von der Einstellung, ob nach Erstellungs- oder Abholdatum
+          const relevantDate = revenueBasedOnPickup ? 
+            (repair.pickedUpAt || repair.createdAt) : repair.createdAt;
+            
+          // Umsatz zum Gesamtumsatz addieren
+          total += repair.price;
+          
+          // Nach Status gruppieren
+          byStatus[repair.status] = (byStatus[repair.status] || 0) + repair.price;
+          
+          // Nach Monat gruppieren
+          const month = relevantDate.getMonth();
+          byMonth[month] = (byMonth[month] || 0) + repair.price;
+        }
+      }
+      
+      // Die neuesten 5 Reparaturen zurückgeben
+      const mostRecentRepairs = allRepairs
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .slice(0, 5);
+      
+      return {
+        byDeviceType,
+        byBrand,
+        byIssue,
+        mostRecentRepairs,
+        revenue: {
+          total,
+          byStatus,
+          byMonth,
+        },
+      };
+    } catch (error) {
+      console.error("Fehler beim Abrufen der detaillierten Statistiken:", error);
+      return {
+        byDeviceType: {},
+        byBrand: {},
+        byIssue: {},
+        mostRecentRepairs: [],
+        revenue: {
+          total: 0,
+          byStatus: {},
+          byMonth: {},
+        },
+      };
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
