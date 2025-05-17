@@ -392,15 +392,15 @@ export function NewCostEstimateDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Versteckte Formularfelder, die durch GlobalDeviceSelector befüllt werden */}
+              <div className="hidden">
                 <FormField
                   control={form.control}
                   name="deviceType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gerätetyp*</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="z.B. Smartphone, Tablet" />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -412,7 +412,6 @@ export function NewCostEstimateDialog({
                   name="manufacturer"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Hersteller*</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -426,7 +425,6 @@ export function NewCostEstimateDialog({
                   name="model"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Modell*</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -434,7 +432,10 @@ export function NewCostEstimateDialog({
                     </FormItem>
                   )}
                 />
-                
+              </div>
+              
+              {/* Nur Seriennummer sichtbar lassen */}
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <FormField
                   control={form.control}
                   name="serialNumber"
