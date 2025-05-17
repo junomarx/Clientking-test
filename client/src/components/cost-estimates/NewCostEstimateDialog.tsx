@@ -160,8 +160,9 @@ export function NewCostEstimateDialog({
     // Ausgewählte Kunden-ID setzen
     setSelectedCustomerId(customer.id);
     
-    // Dropdown schließen
+    // Dropdown schließen und Matching-Customers leeren
     setShowCustomerDropdown(false);
+    setMatchingCustomers([]);
     
     // Fokus auf das nächste Feld setzen - zum Beispiel E-Mail oder Adresse
     // So wird verhindert, dass der Fokus weiterhin auf dem Namen bleibt
