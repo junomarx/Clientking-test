@@ -262,7 +262,7 @@ export function generatePrintHtml({
               <p>
                 <span class="label">Hersteller:</span> <span class="value">${estimate.brand || ''}</span> |
                 <span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span> |
-                <span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || ''}</span>
+                <span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || estimate.serialNumber || ''}</span>
               </p>
               <p><span class="label">Fehlerbeschreibung:</span> <span class="value">${estimate.issue || ''}</span></p>
             </div>
