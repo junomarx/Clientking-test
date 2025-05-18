@@ -388,7 +388,7 @@ export const costEstimates = pgTable("cost_estimates", {
   tax_amount: text("tax_amount"),
   total: text("total"),
   // Positionen werden direkt als JSONB gespeichert
-  items: text("items").default('[]'),
+  items: jsonb("items").default('[]'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jeder Kostenvoranschlag gehört zu einem Benutzer/Unternehmen
@@ -422,6 +422,9 @@ export type CostEstimateItem = {
   unitPrice: string;
   totalPrice: string;
 };
+
+// Der InsertCostEstimateItem-Typ wird immer noch für die API-Validierung verwendet
+export type InsertCostEstimateItem = CostEstimateItem;
 // Keine InsertCostEstimateItem mehr nötig, da wir die Items direkt im JSONB speichern
 
 // Beziehungen definieren - emailHistory zu repairs und emailTemplates

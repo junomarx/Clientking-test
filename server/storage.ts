@@ -469,9 +469,18 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      // Die Items sind jetzt direkt im Kostenvoranschlag als JSONB-Feld gespeichert
-      // Wir geben einfach das items-Array aus dem Kostenvoranschlag zurück
-      return costEstimate.items || [];
+      // Die Items sind direkt im Kostenvoranschlag als Text-Feld gespeichert
+      try {
+        if (costEstimate.items) {
+          // Versuche, das items-Feld als JSON zu parsen
+          return JSON.parse(costEstimate.items as string);
+        }
+      } catch (parseError) {
+        console.error(`Fehler beim Parsen der Items für Kostenvoranschlag ${costEstimateId}:`, parseError);
+      }
+      
+      // Fallback: Leeres Array zurückgeben, wenn keine Items vorhanden oder Parsing fehlschlägt
+      return [];
     } catch (error) {
       console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}:`, error);
       return [];
@@ -520,29 +529,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async createCostEstimateItem(item: InsertCostEstimateItem, userId: number): Promise<CostEstimateItem> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error("Benutzer nicht gefunden");
-    
-    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
-    const shopId = user.shopId || 1;
-    
-    // Überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
-    const costEstimate = await this.getCostEstimate(item.costEstimateId, userId);
-    if (!costEstimate) throw new Error("Kostenvoranschlag nicht gefunden oder keine Berechtigung");
-    
-    try {
-      const [newItem] = await db.insert(costEstimateItems).values({
-        ...item,
-        shopId,
-      }).returning();
-      
-      return newItem;
-    } catch (error) {
-      console.error("Fehler beim Erstellen der Kostenvoranschlagsposition:", error);
-      throw new Error("Fehler beim Erstellen der Kostenvoranschlagsposition");
-    }
-  }
+  // Die createCostEstimateItem-Funktion wurde entfernt.
+  // Stattdessen werden die Items jetzt direkt im Kostenvoranschlag als JSON gespeichert.
+  // Bei createCostEstimate oder updateCostEstimate werden die Items im items-Feld übergeben.
   
   async updateCostEstimate(
     id: number,
