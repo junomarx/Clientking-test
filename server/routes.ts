@@ -2701,15 +2701,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Kostenvoranschlag aus Datenbank holen, um den Steuersatz zu erhalten
-      const estimate = await storage.getCostEstimate(id, userId);
-      const taxRate = parseFloat(estimate.tax_rate) || 20; // Standardwert 20% falls kein Steuersatz vorhanden
+      // FIX: Immer 20% MwSt für Österreich verwenden, kein Abruf vom Steuersatz aus der Datenbank mehr
+      const taxRate = 20;
       
       // Netto-Betrag berechnen (Brutto / (1 + taxRate/100))
       const subtotal = total / (1 + taxRate/100);
       
       // MwSt-Betrag berechnen (Brutto - Netto)
       const taxAmount = total - subtotal;
+      
+      console.log("MwSt-Berechnung bei Kostenvoranschlag:", {
+        brutto: total,
+        taxRate,
+        netto: subtotal,
+        mwst: taxAmount
+      });
       
       // Kostenvoranschlag aktualisieren
       await storage.updateCostEstimate(id, {
@@ -2810,12 +2816,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
       }
       
-      // Existierende Items parsen
+      // Existierende Items parsen mit verbesserter Verarbeitung
       let existingItems = [];
       try {
+        console.log("Vorhandene Items beim Löschen (Typ):", typeof existingEstimate.items);
+        console.log("Vorhandene Items beim Löschen (Wert):", existingEstimate.items);
+        
         if (existingEstimate.items) {
-          existingItems = JSON.parse(existingEstimate.items as string);
+          if (typeof existingEstimate.items === 'string') {
+            existingItems = JSON.parse(existingEstimate.items);
+          } else if (Array.isArray(existingEstimate.items)) {
+            existingItems = existingEstimate.items;
+          } else if (typeof existingEstimate.items === 'object') {
+            existingItems = [existingEstimate.items];
+          }
         }
+        console.log("Erfolgreich geparste Items:", existingItems);
       } catch (err) {
         console.error("Fehler beim Parsen der vorhandenen Items:", err);
         return res.status(500).json({ message: "Fehler beim Verarbeiten der Daten" });
@@ -2830,9 +2846,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Item entfernen
       existingItems.splice(itemIndex, 1);
       
-      // Kostenvoranschlag aktualisieren
+      // Summen neu berechnen
+      let total = 0;
+      existingItems.forEach(item => {
+        const itemPrice = parseFloat((item.totalPrice || "0").replace(',', '.'));
+        if (!isNaN(itemPrice)) {
+          total += itemPrice;
+        }
+      });
+      
+      // FIX: Immer 20% MwSt für Österreich verwenden
+      const taxRate = 20;
+      const subtotal = total / (1 + (taxRate/100));
+      const taxAmount = total - subtotal;
+      
+      console.log("Aktualisierte MwSt-Berechnung beim Löschen:", {
+        total,
+        taxRate,
+        subtotal: subtotal.toFixed(2),
+        taxAmount: taxAmount.toFixed(2)
+      });
+      
+      // Kostenvoranschlag aktualisieren mit korrekter MwSt
       await storage.updateCostEstimate(estimateId, {
-        items: JSON.stringify(existingItems)
+        items: JSON.stringify(existingItems),
+        subtotal: subtotal.toFixed(2).replace('.', ','),
+        tax_rate: "20", // FIX: Immer 20% MwSt für Österreich
+        tax_amount: taxAmount.toFixed(2).replace('.', ','),
+        total: total.toFixed(2).replace('.', ',')
       }, userId);
       
       console.log(`Position ${itemId} von Kostenvoranschlag ${estimateId} gelöscht von Benutzer ${userId}`);
