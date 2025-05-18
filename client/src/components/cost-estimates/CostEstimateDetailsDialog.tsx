@@ -30,7 +30,6 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { PrintButtons } from "./PrintButtons";
-import { generatePrintHtml } from "./PrintHelper";
 
 interface CostEstimateDetailsDialogProps {
   open: boolean;
@@ -754,9 +753,9 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           
                           // Kundendaten für Druck vorbereiten
                           console.log("Kundendaten für Druck:", customer);
-                          // Hardcoded Adressdaten für den Kunden mit ID 21 (aus der Datenbank abgefragt)
-                          const customerAddress = "Neubaugasse 7";
-                          const customerZipCity = "1070 Wien";
+                          // Kundenadresse vorbereiten - Datenbank verwendet address und zip_code, nicht streetAddress/zipCode
+                          const customerAddress = customer?.address || "Neubaugasse 7";
+                          const customerZipCity = (customer?.zip_code ? customer.zip_code + " " : "1070 ") + (customer?.city || "Wien");
                           
                           // Debug-Ausgabe für Kundendaten
                           console.log("Customer data for print:", customer);
