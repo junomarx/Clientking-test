@@ -84,6 +84,19 @@ interface CostEstimateItem {
 
 export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEstimateDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [newItem, setNewItem] = useState<{
+    description: string;
+    quantity: number;
+    unitPrice: string;
+    totalPrice: string;
+  }>({
+    description: "",
+    quantity: 1,
+    unitPrice: "0,00",
+    totalPrice: "0,00"
+  });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -123,6 +136,57 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     },
     enabled: !!estimateId && open
   });
+
+  // Mutation für das Hinzufügen von Positionen
+  const addItemMutation = useMutation({
+    mutationFn: async (itemData: any) => {
+      if (!estimateId) throw new Error('Keine Kostenvoranschlags-ID vorhanden');
+      const response = await apiRequest('POST', `/api/cost-estimates/${estimateId}/items`, itemData);
+      return await response.json();
+    },
+    onSuccess: () => {
+      // Abfragen für Items und Kostenvoranschlag invalidieren
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates', estimateId, 'items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates', estimateId] });
+      
+      // Formular zurücksetzen
+      setNewItem({
+        description: "",
+        quantity: 1,
+        unitPrice: "0,00",
+        totalPrice: "0,00"
+      });
+      setShowAddItemForm(false);
+      
+      toast({
+        title: "Position hinzugefügt",
+        description: "Die Position wurde erfolgreich hinzugefügt.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: `Fehler beim Hinzufügen der Position: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Funktion zum Hinzufügen einer Position
+  const handleAddItem = () => {
+    if (!estimateId) return;
+    
+    // Formatierung für die API
+    const itemToAdd = {
+      description: newItem.description,
+      quantity: newItem.quantity,
+      unitPrice: newItem.unitPrice,
+      totalPrice: newItem.totalPrice,
+      position: items.length + 1
+    };
+    
+    addItemMutation.mutate(itemToAdd);
+  };
 
   // Mutation für das Aktualisieren des Status
   const updateStatusMutation = useMutation({
@@ -466,34 +530,124 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   <div className="flex justify-center items-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : items.length > 0 ? (
+                ) : (
                   <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <CardTitle className="text-lg">Positionen</CardTitle>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setShowAddItemForm(true)}
+                      >
+                        Neue Position hinzufügen
+                      </Button>
                     </CardHeader>
                     <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[50px]">Pos.</TableHead>
-                            <TableHead>Beschreibung</TableHead>
-                            <TableHead className="text-center">Anzahl</TableHead>
-                            <TableHead className="text-right">Einzelpreis</TableHead>
-                            <TableHead className="text-right">Gesamtpreis</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {items.map((item, index) => (
-                            <TableRow key={item.id || index}>
-                              <TableCell>{index + 1}</TableCell>
-                              <TableCell>{item.description}</TableCell>
-                              <TableCell className="text-center">{item.quantity}</TableCell>
-                              <TableCell className="text-right">{item.unitPrice}</TableCell>
-                              <TableCell className="text-right">{item.totalPrice}</TableCell>
+                      {showAddItemForm && (
+                        <div className="mb-6 p-4 border rounded-md bg-muted/20">
+                          <h3 className="text-md font-medium mb-3">Neue Position</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div className="col-span-2">
+                              <label className="text-sm font-medium block mb-1">Beschreibung</label>
+                              <input 
+                                type="text" 
+                                className="w-full p-2 border rounded-md"
+                                value={newItem.description}
+                                onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                                placeholder="z.B. Display-Austausch"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium block mb-1">Menge</label>
+                              <input 
+                                type="number" 
+                                className="w-full p-2 border rounded-md"
+                                value={newItem.quantity}
+                                onChange={(e) => {
+                                  const quantity = parseInt(e.target.value) || 1;
+                                  const unitPrice = parseFloat(newItem.unitPrice.replace(',', '.')) || 0;
+                                  const total = (quantity * unitPrice).toFixed(2).replace('.', ',');
+                                  setNewItem({
+                                    ...newItem, 
+                                    quantity, 
+                                    totalPrice: total
+                                  });
+                                }}
+                                min="1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium block mb-1">Einzelpreis (€)</label>
+                              <input 
+                                type="text" 
+                                className="w-full p-2 border rounded-md"
+                                value={newItem.unitPrice}
+                                onChange={(e) => {
+                                  const unitPrice = e.target.value.replace(',', '.');
+                                  if (!isNaN(parseFloat(unitPrice)) || unitPrice === '' || unitPrice === '.') {
+                                    const formattedPrice = unitPrice === '' ? '0' : unitPrice;
+                                    const quantity = newItem.quantity || 1;
+                                    const total = (quantity * parseFloat(formattedPrice)).toFixed(2).replace('.', ',');
+                                    
+                                    setNewItem({
+                                      ...newItem, 
+                                      unitPrice: e.target.value,
+                                      totalPrice: total
+                                    });
+                                  }
+                                }}
+                                placeholder="0,00"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-between mt-2">
+                            <Button variant="ghost" onClick={() => setShowAddItemForm(false)}>
+                              Abbrechen
+                            </Button>
+                            <Button 
+                              onClick={handleAddItem} 
+                              disabled={!newItem.description || parseFloat(newItem.unitPrice.replace(',', '.')) <= 0}
+                            >
+                              {addItemMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              ) : null}
+                              Position hinzufügen
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {items.length > 0 ? (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[50px]">Pos.</TableHead>
+                              <TableHead>Beschreibung</TableHead>
+                              <TableHead className="text-center">Anzahl</TableHead>
+                              <TableHead className="text-right">Einzelpreis</TableHead>
+                              <TableHead className="text-right">Gesamtpreis</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {items.map((item: any, index: number) => (
+                              <TableRow key={item.id || index}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>{item.description}</TableCell>
+                                <TableCell className="text-center">{item.quantity}</TableCell>
+                                <TableCell className="text-right">{item.unitPrice}</TableCell>
+                                <TableCell className="text-right">{item.totalPrice}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <p className="text-muted-foreground mb-2">Keine Positionen vorhanden</p>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            Fügen Sie Positionen hinzu, um den Kostenvoranschlag zu detaillieren.
+                          </p>
+                        </div>
+                      )}
 
                       <div className="flex flex-col items-end mt-6 space-y-2">
                         <div className="flex justify-between w-48">
@@ -509,15 +663,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           <span>{estimate.total}</span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-muted-foreground mb-2">Keine Positionen vorhanden</p>
-                      <p className="text-sm text-muted-foreground">
-                        Für diesen Kostenvoranschlag wurden keine detaillierten Positionen gefunden.
-                      </p>
                     </CardContent>
                   </Card>
                 )}
