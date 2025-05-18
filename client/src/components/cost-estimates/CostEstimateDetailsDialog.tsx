@@ -471,11 +471,11 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       </p>
                       <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
                       <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
-                      {(customer?.streetAddress || customer?.zipCode || customer?.city) && (
+                      {(customer?.address || customer?.zip_code || customer?.city) && (
                         <>
                           <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
-                          {customer?.streetAddress && <p className="text-sm">{customer.streetAddress}</p>}
-                          {(customer?.zipCode || customer?.city) && <p className="text-sm">{customer?.zipCode || ''} {customer?.city || ''}</p>}
+                          {customer?.address && <p className="text-sm">{customer.address}</p>}
+                          {(customer?.zip_code || customer?.city) && <p className="text-sm">{customer?.zip_code || ''} {customer?.city || ''}</p>}
                         </>
                       )}
                     </div>
@@ -752,6 +752,11 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           // HTML für Druckansicht generieren
                           const today = new Date();
                           const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
+                          
+                          // Kundendaten für Druck vorbereiten
+                          console.log("Kundendaten für Druck:", customer);
+                          const customerAddress = customer?.address || '';
+                          const customerZipCity = `${customer?.zip_code || ''} ${customer?.city || ''}`;
                           
                           // HTML für Druckansicht generieren
                           const html = `
