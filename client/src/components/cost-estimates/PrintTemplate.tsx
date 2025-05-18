@@ -85,8 +85,10 @@ export function generatePrintHtml({
         }
         
         .logo {
-          max-width: 200px;
-          max-height: 80px;
+          max-width: 300px;
+          max-height: 150px;
+          height: auto;
+          margin-bottom: 20px;
         }
         
         .company-info, .customer-info {
@@ -230,10 +232,11 @@ export function generatePrintHtml({
     </head>
     <body>
       <div class="invoice-container">
+        <div class="shop-logo" style="text-align: center; margin-bottom: 20px;">
+          <img src="https://macandphonedoc.at/wp-content/uploads/2023/05/macandphonedoc-logo-small.png" alt="Shop Logo" class="logo">
+        </div>
+        
         <div class="header">
-          <div class="logo-container">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}
-          </div>
           <div class="company-info">
             <p class="company-name">${businessName}</p>
             <p>${businessAddress}<br>
