@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { PrintButtons } from "./PrintButtons";
+import { generatePrintHtml } from "./PrintTemplate";
 
 interface CostEstimateDetailsDialogProps {
   open: boolean;
@@ -752,7 +753,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           const html = generatePrintHtml({
                             estimate,
                             customer,
-                            items
+                            items,
+                            businessName: "Mac and PhoneDoc",
+                            businessAddress: "Amerlingstraße 19",
+                            businessZipCity: "1060 Wien",
+                            businessPhone: "+4314103511",
+                            businessEmail: "office@macandphonedoc.at"
                           });
                           
                           // HTML im neuen Fenster einfügen und drucken
