@@ -471,11 +471,11 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       </p>
                       <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
                       <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
-                      {customer?.streetAddress && (
+                      {(customer?.streetAddress || customer?.zipCode || customer?.city) && (
                         <>
                           <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
-                          <p className="text-sm">{customer.streetAddress}</p>
-                          <p className="text-sm">{customer.zipCode} {customer.city}</p>
+                          {customer?.streetAddress && <p className="text-sm">{customer.streetAddress}</p>}
+                          {(customer?.zipCode || customer?.city) && <p className="text-sm">{customer?.zipCode || ''} {customer?.city || ''}</p>}
                         </>
                       )}
                     </div>
