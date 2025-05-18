@@ -65,8 +65,13 @@ interface CostEstimateFormData {
   serialNumber?: string;
   issueDescription: string;  // Entspricht "issue" im Backend
   workToBeDone?: string;     // Zusätzliches Feld im Formular
-  totalPrice: string;        // Entspricht "estimatedCost" im Backend
+  totalPrice: string;        // Entspricht "total" im Backend
+  subtotal?: string;         // Zwischensumme (netto)
+  taxRate?: string;          // MwSt. Satz (z.B. "20")
+  taxAmount?: string;        // MwSt. Betrag
+  items?: any[];             // Array für die Positionen
   notes?: string;
+  title?: string;            // Titel des Kostenvoranschlags
 }
 
 // Funktion zum Formatieren des Status
