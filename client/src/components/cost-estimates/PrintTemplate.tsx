@@ -259,12 +259,11 @@ export function generatePrintHtml({
           <div class="section-title">Geräteinformationen</div>
           <div class="device-details">
             <div>
-              <p><span class="label">Gerätetyp:</span> <span class="value">${estimate.deviceType || 'Smartphone'}</span></p>
-              <p><span class="label">Hersteller:</span> <span class="value">${estimate.brand || ''}</span></p>
-              <p><span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span></p>
-            </div>
-            <div>
-              <p><span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || ''}</span></p>
+              <p>
+                <span class="label">Hersteller:</span> <span class="value">${estimate.brand || ''}</span> |
+                <span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span> |
+                <span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || ''}</span>
+              </p>
               <p><span class="label">Fehlerbeschreibung:</span> <span class="value">${estimate.issue || ''}</span></p>
             </div>
           </div>
