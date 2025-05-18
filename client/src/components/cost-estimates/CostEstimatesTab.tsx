@@ -23,7 +23,7 @@ import { DebugCostEstimates } from '../../debug-costestimates';
 interface CostEstimate {
   id: number;
   reference_number: string; // Angepasst an Datenbankfeldname
-  customerId: number;
+  customer_id: number; // Angepasst an Datenbankfeldname
   deviceType: string;
   brand: string; // Ersetzt manufacturer
   model: string;
@@ -39,11 +39,11 @@ interface CostEstimate {
   tax_rate?: string;
   tax_amount?: string;
   total?: string;
-  createdAt: string;
-  updatedAt: string;
-  // Zusätzliche Kundenfelder vom JOIN
-  firstName?: string;
-  lastName?: string;
+  created_at: string; // Angepasst an Datenbankfeldname
+  updated_at: string; // Angepasst an Datenbankfeldname
+  // Zusätzliche Kundenfelder vom JOIN mit korrekten Aliasnamen
+  firstName?: string; // Dies ist ein Alias aus der SQL-Abfrage
+  lastName?: string; // Dies ist ein Alias aus der SQL-Abfrage
   email?: string;
   phone?: string;
 }
@@ -288,8 +288,8 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                   {filteredEstimates.map((estimate) => {
                     // Status-Formatierung
                     const status = formatStatus(estimate.status);
-                    // Sicherstellen, dass createdAt ein gültiges Datum ist
-                    const createdDate = estimate.createdAt ? new Date(estimate.createdAt) : new Date();
+                    // Sicherstellen, dass created_at ein gültiges Datum ist
+                    const createdDate = estimate.created_at ? new Date(estimate.created_at) : new Date();
                     const isValidDate = !isNaN(createdDate.getTime());
                     const formattedDate = isValidDate ? formatDistanceToNow(createdDate, { 
                       addSuffix: true,
@@ -322,7 +322,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {estimate.customer_id && `ID: ${estimate.customer_id}`}
+                            Kunden-ID: {estimate.customer_id || estimate.customerId || "??"}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             firstName: {estimate.firstName || "fehlt"}<br />
