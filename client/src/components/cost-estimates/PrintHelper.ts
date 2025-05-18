@@ -1,5 +1,8 @@
 // Hilfsfunktionen für den Druck von Kostenvoranschlägen
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
+// Typen für die Druckfunktionen
 interface CostEstimateItem {
   description: string;
   quantity: number;
@@ -11,14 +14,17 @@ interface PrintData {
   estimate: any;
   customer: any;
   items: CostEstimateItem[];
-  todayFormatted: string;
+  todayFormatted?: string;
 }
 
 /**
  * Generiert HTML für den Druck eines Kostenvoranschlags
  */
 export function generatePrintHtml(data: PrintData): string {
-  const { estimate, customer, items, todayFormatted } = data;
+  const { estimate, customer, items } = data;
+  
+  // Aktuelles Datum formatieren, falls nicht übergeben
+  const todayFormatted = data.todayFormatted || format(new Date(), 'dd.MM.yyyy', { locale: de });
   
   return `
     <!DOCTYPE html>
