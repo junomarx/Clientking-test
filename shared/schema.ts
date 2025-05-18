@@ -370,17 +370,23 @@ export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 // Kostenvoranschläge
 export const costEstimates = pgTable("cost_estimates", {
   id: serial("id").primaryKey(),
-  estimateNumber: text("estimate_number").unique(), // Individuelle Kostenvoranschlagsnummer
+  reference_number: text("reference_number").unique(), // Individuelle Kostenvoranschlagsnummer
   customerId: integer("customer_id").notNull().references(() => customers.id),
   deviceType: text("device_type").notNull(),
-  manufacturer: text("manufacturer").notNull(), // Hersteller (Brand)
+  brand: text("brand").notNull(), // Hersteller (früher manufacturer)
   model: text("model").notNull(),
   issue: text("issue").notNull(),
-  estimatedCost: text("estimated_cost").notNull(),
   notes: text("notes"),
+  title: text("title"),
+  description: text("description"),
+  serial_number: text("serial_number"),
   status: text("status").default("offen").notNull(), // offen, angenommen, abgelehnt
   convertedToRepair: boolean("converted_to_repair").default(false), // Wurde in Reparaturauftrag umgewandelt
   validUntil: timestamp("valid_until"), // Gültig bis
+  subtotal: text("subtotal"),
+  tax_rate: text("tax_rate"),
+  tax_amount: text("tax_amount"),
+  total: text("total"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jeder Kostenvoranschlag gehört zu einem Benutzer/Unternehmen
@@ -405,9 +411,11 @@ export const costEstimateItems = pgTable("cost_estimate_items", {
 // Schemas für Kostenvoranschläge
 export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
   id: true,
-  estimateNumber: true, // Wird automatisch generiert
+  reference_number: true, // Wird automatisch generiert
   createdAt: true,
   updatedAt: true,
+}).extend({
+  // Keine zusätzlichen Validierungen nötig
 });
 
 export const insertCostEstimateItemSchema = createInsertSchema(costEstimateItems).omit({
