@@ -231,9 +231,6 @@ export function generatePrintHtml({
     <body>
       <div class="invoice-container">
         <div class="header">
-          <div class="logo-container">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}
-          </div>
           <div class="company-info">
             <p class="company-name">${businessName}</p>
             <p>${businessAddress}<br>
@@ -241,6 +238,10 @@ export function generatePrintHtml({
             ${businessPhone}<br>
             ${businessEmail}</p>
           </div>
+        </div>
+        
+        <div class="logo-container" style="text-align: center; margin: 20px 0;">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : '<img src="https://macandphonedoc.at/wp-content/uploads/2023/10/Mac-and-Phonedoc.png" alt="Logo" class="logo" style="max-width: 200px;">'}
         </div>
       
         <div class="customer-info">
