@@ -17,7 +17,6 @@ import {
 import { 
   CheckCircle, 
   XCircle, 
-  Printer, 
   ArrowUpRight, 
   RotateCw,
   FileText,
