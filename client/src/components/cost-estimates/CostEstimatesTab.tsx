@@ -112,6 +112,12 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
     }
   });
 
+  // Funktion zum Erstellen des Kostenvoranschlags
+  const handleCreateCostEstimate = (data: CostEstimateFormData) => {
+    console.log("handleCreateCostEstimate aufgerufen mit Daten:", data);
+    createCostEstimateMutation.mutate(data);
+  };
+
   // Mutation für das Erstellen eines neuen Kostenvoranschlags
   const createCostEstimateMutation = useMutation({
     mutationFn: async (data: CostEstimateFormData) => {

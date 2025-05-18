@@ -361,7 +361,7 @@ export function NewCostEstimateDialog({
     
     // Kostenvoranschlag erstellen
     if (onCreateCostEstimate) {
-      onCreateCostEstimate(data);
+      onCreateCostEstimate(formData);
     }
     
     // Erfolgsmeldung anzeigen
