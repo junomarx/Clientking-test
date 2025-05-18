@@ -2692,9 +2692,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Kostenvoranschlag aktualisieren
       await storage.updateCostEstimate(id, {
         items: JSON.stringify(existingItems),
-        subtotal: subtotal.toFixed(2),
-        tax_amount: taxAmount.toFixed(2),
-        total: total.toFixed(2)
+        subtotal: subtotal.toFixed(2).replace('.', ','),
+        tax_rate: "20", // FIX: Immer 20% MwSt für Österreich
+        tax_amount: taxAmount.toFixed(2).replace('.', ','),
+        total: total.toFixed(2).replace('.', ',')
       }, userId);
       
       console.log(`Neue Position für Kostenvoranschlag ${id} erstellt von Benutzer ${userId}`);
@@ -2735,12 +2736,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Existierende Items parsen oder leeres Array zurückgeben
       let items = [];
       try {
-        if (existingEstimate.items && existingEstimate.items !== '[]' && existingEstimate.items !== '') {
-          items = JSON.parse(existingEstimate.items as string);
+        console.log("Kostenvoranschlag Items (Typ):", typeof existingEstimate.items);
+        console.log("Kostenvoranschlag Items (Wert):", existingEstimate.items);
+        
+        if (existingEstimate.items) {
+          if (typeof existingEstimate.items === 'string') {
+            // String parsen, wenn es sich um einen JSON-String handelt
+            items = JSON.parse(existingEstimate.items);
+          } else if (Array.isArray(existingEstimate.items)) {
+            // Wenn es bereits ein Array ist, direkt verwenden
+            items = existingEstimate.items;
+          } else if (typeof existingEstimate.items === 'object') {
+            // Wenn es ein Objekt ist, es in ein Array umwandeln
+            items = [existingEstimate.items];
+          }
         }
+        console.log("Verarbeitete Items:", items);
       } catch (err) {
         console.error("Fehler beim Parsen der Items:", err);
-        return res.status(500).json({ message: "Fehler beim Verarbeiten der Daten" });
+        // Fallback: leeres Array verwenden
+        console.log("Verwende leeres Array als Fallback");
+        items = [];
       }
       
       console.log(`Positionen für Kostenvoranschlag ${id} abgerufen von Benutzer ${userId}`);
