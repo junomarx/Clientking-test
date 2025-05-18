@@ -413,11 +413,18 @@ export class DatabaseStorage implements IStorage {
     console.log(`Abrufen aller Kostenvoranschläge für Shop ${shopId}`);
     
     try {
-      // Verwende direkten SQL-Zugriff statt Drizzle, um Probleme mit Feldnamen zu vermeiden
+      // Erweiterte SQL-Abfrage mit JOIN zur Kundentabelle
       const result = await pool.query(`
-        SELECT * FROM cost_estimates 
-        WHERE shop_id = $1
-        ORDER BY created_at DESC
+        SELECT 
+          ce.*,
+          c.first_name AS firstName,
+          c.last_name AS lastName,
+          c.email,
+          c.phone
+        FROM cost_estimates ce
+        LEFT JOIN customers c ON ce.customer_id = c.id
+        WHERE ce.shop_id = $1
+        ORDER BY ce.created_at DESC
       `, [shopId]);
       
       return result.rows;

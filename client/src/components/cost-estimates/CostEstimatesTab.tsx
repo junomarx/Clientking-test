@@ -40,6 +40,11 @@ interface CostEstimate {
   total?: string;
   createdAt: string;
   updatedAt: string;
+  // Zusätzliche Kundenfelder vom JOIN
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
 }
 
 // Interface für das Formular - angepasst an die Komponente NewCostEstimateDialog
@@ -154,10 +159,14 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
     
     const searchTermLower = searchTerm.toLowerCase();
     return (
-      estimate.reference_number.toLowerCase().includes(searchTermLower) ||
-      estimate.brand.toLowerCase().includes(searchTermLower) ||
-      estimate.model.toLowerCase().includes(searchTermLower) ||
-      estimate.deviceType.toLowerCase().includes(searchTermLower)
+      estimate.reference_number?.toLowerCase().includes(searchTermLower) ||
+      estimate.brand?.toLowerCase().includes(searchTermLower) ||
+      estimate.model?.toLowerCase().includes(searchTermLower) ||
+      estimate.deviceType?.toLowerCase().includes(searchTermLower) ||
+      estimate.firstName?.toLowerCase().includes(searchTermLower) ||
+      estimate.lastName?.toLowerCase().includes(searchTermLower) ||
+      estimate.email?.toLowerCase().includes(searchTermLower) ||
+      (estimate.firstName + " " + estimate.lastName)?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -182,17 +191,25 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       </div>
       
       {/* Suchleiste */}
-      <div className="flex w-full max-w-md gap-2 mb-4">
+      <div className="relative w-full max-w-md mb-4">
+        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Suchen nach Auftragsnummer, Gerät..."
+          placeholder="Suchen nach Kunde, Auftragsnummer, Gerät..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
+          className="pl-9 pr-9 w-full"
         />
-        <Button type="submit" variant="outline" size="icon">
-          <Search className="h-4 w-4" />
-        </Button>
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-transparent"
+            onClick={() => setSearchTerm("")}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       
       {/* Ladezustand */}
@@ -258,6 +275,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                   <TableRow>
                     <TableHead>Nr.</TableHead>
                     <TableHead>Datum</TableHead>
+                    <TableHead>Kunde</TableHead>
                     <TableHead>Gerät</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Betrag</TableHead>
@@ -298,6 +316,16 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">
+                            {estimate.firstName} {estimate.lastName}
+                          </div>
+                          {estimate.email && (
+                            <div className="text-xs text-muted-foreground truncate max-w-[180px]">
+                              {estimate.email}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           {estimate.brand} {estimate.model}
