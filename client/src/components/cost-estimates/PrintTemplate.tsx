@@ -264,7 +264,7 @@ export function generatePrintHtml({
                 <span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span> |
                 <span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || estimate.serialNumber || ''}</span>
               </p>
-              <p><span class="label">Fehlerbeschreibung:</span></p>
+              <p style="margin-top: 15px;"><span class="label">Fehlerbeschreibung:</span></p>
               <p style="margin-top: 5px; margin-left: 10px;"><span class="value">${estimate.issue || ''}</span></p>
             </div>
           </div>
