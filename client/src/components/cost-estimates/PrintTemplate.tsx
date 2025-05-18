@@ -297,15 +297,15 @@ export function generatePrintHtml({
           <table>
             <tr>
               <td>Zwischensumme:</td>
-              <td class="text-right">€ ${parseFloat(subtotal).toFixed(2)}</td>
+              <td class="text-right">€ ${Number(subtotal.replace(',', '.')).toFixed(2).replace('.', ',')}</td>
             </tr>
             <tr>
               <td>MwSt. (${taxRate}%):</td>
-              <td class="text-right">€ ${parseFloat(taxAmount).toFixed(2)}</td>
+              <td class="text-right">€ ${Number(taxAmount.replace(',', '.')).toFixed(2).replace('.', ',')}</td>
             </tr>
             <tr class="total">
               <td>Gesamtbetrag:</td>
-              <td class="text-right">€ ${parseFloat(total).toFixed(2)}</td>
+              <td class="text-right">€ ${Number(total.replace(',', '.')).toFixed(2).replace('.', ',')}</td>
             </tr>
           </table>
         </div>
