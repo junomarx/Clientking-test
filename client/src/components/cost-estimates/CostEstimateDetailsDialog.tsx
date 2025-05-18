@@ -739,10 +739,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                         items={items}
                         customer={customer}
                       />
-                      {/* Alte Druckfunktion auskommentiert 
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {*/}
                           // Druckfunktion über ein neues Fenster öffnen
                           const printWindow = window.open('', '_blank');
                           if (!printWindow) {
