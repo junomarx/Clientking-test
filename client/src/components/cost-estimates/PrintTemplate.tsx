@@ -321,7 +321,7 @@ export function generatePrintHtml({
             <li>Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</li>
           </ol>
           
-          <p style="margin-top: 20px;">Mit freundlichen Grüßen,<br>${businessName}</p>
+          <p style="margin-top: 50px;">Mit freundlichen Grüßen,<br>${businessName}</p>
         </div>
       </div>
     </body>
