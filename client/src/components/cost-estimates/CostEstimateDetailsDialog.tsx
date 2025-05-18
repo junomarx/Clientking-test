@@ -364,6 +364,9 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                 <Button 
                   variant="outline" 
                   onClick={() => {
+                    // Wichtig: Unsere parsedItems für das Template als items zur Verfügung stellen
+                    const items = parsedItems;
+                    
                     // Druckfunktion über ein neues Fenster öffnen
                     const printWindow = window.open('', '_blank');
                     if (!printWindow) {
