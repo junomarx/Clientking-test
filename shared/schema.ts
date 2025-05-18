@@ -450,20 +450,11 @@ export const repairsRelations = relations(repairs, ({ many }) => ({
 
 // Beziehungen zwischen Benutzer und Paket definieren
 // Beziehungen für Kostenvoranschläge
-export const costEstimatesRelations = relations(costEstimates, ({ one, many }) => ({
+export const costEstimatesRelations = relations(costEstimates, ({ one }) => ({
   customer: one(customers, {
     fields: [costEstimates.customerId],
     references: [customers.id],
-  }),
-  items: many(costEstimateItems),
-}));
-
-// Beziehungen für Kostenvoranschlagspositionen
-export const costEstimateItemsRelations = relations(costEstimateItems, ({ one }) => ({
-  costEstimate: one(costEstimates, {
-    fields: [costEstimateItems.costEstimateId],
-    references: [costEstimates.id],
-  }),
+  })
 }));
 
 export const userRelations = relations(users, ({ one }) => ({
