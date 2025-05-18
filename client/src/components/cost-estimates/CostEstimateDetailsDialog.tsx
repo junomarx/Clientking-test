@@ -283,23 +283,27 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   });
 
   // Hilfsfunktion für die Formatierung von Datum/Zeit
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     try {
       if (!dateString) return "Kein Datum";
-      const date = new Date(dateString);
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      if (isNaN(date.getTime())) return "Ungültiges Datum";
       return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
     } catch (error) {
+      console.error("Fehler bei Datumsformatierung:", error, dateString);
       return "Ungültiges Datum";
     }
   };
 
   // Hilfsfunktion für relative Zeitformatierung
-  const relativeTime = (dateString: string) => {
+  const relativeTime = (dateString: string | Date) => {
     try {
       if (!dateString) return "Kein Datum";
-      const date = new Date(dateString);
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      if (isNaN(date.getTime())) return "Ungültiges Datum";
       return formatDistanceToNow(date, { addSuffix: true, locale: de });
     } catch (error) {
+      console.error("Fehler bei relativer Zeitformatierung:", error, dateString);
       return "Ungültiges Datum";
     }
   };
@@ -486,78 +490,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                     </CardContent>
                   </Card>
 
-                  {/* Aktionen */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Aktionen</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                      {estimate.status === 'offen' && (
-                        <>
-                          <Button 
-                            onClick={handleAccept}
-                            disabled={updateStatusMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Annehmen
-                          </Button>
-                          <Button 
-                            onClick={handleReject}
-                            disabled={updateStatusMutation.isPending}
-                            variant="destructive"
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Ablehnen
-                          </Button>
-                        </>
-                      )}
-                      
-                      {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
-                        <Button 
-                          onClick={handleConvertToRepair}
-                          disabled={convertToRepairMutation.isPending}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <RotateCw className="h-4 w-4 mr-2" />
-                          In Reparatur umwandeln
-                        </Button>
-                      )}
-                      
-                      {/* Druck- und Export-Optionen */}
-                      <Button variant="outline">
-                        <Printer className="h-4 w-4 mr-2" />
-                        Drucken
-                      </Button>
-                      <Button variant="outline">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Als PDF
-                      </Button>
-                      <div className="flex mt-4 space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            // Kostenvoranschlag öffnen und bearbeiten - derzeit keine direkte Bearbeitungsseite
-                            toast({
-                              title: "Bearbeitung",
-                              description: "Die Bearbeitungsfunktion ist in Arbeit und wird bald verfügbar sein.",
-                            });
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-1" /> Bearbeiten
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => setShowDeleteConfirm(true)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Löschen
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
                   {/* Finanzdetails */}
                   {estimate.subtotal && estimate.total && (
                     <Card>
@@ -598,6 +530,76 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Aktionen (zum Schluss) */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Aktionen</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {estimate.status === 'offen' && (
+                          <>
+                            <Button 
+                              onClick={handleAccept}
+                              disabled={updateStatusMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Annehmen
+                            </Button>
+                            <Button 
+                              onClick={handleReject}
+                              disabled={updateStatusMutation.isPending}
+                              variant="destructive"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Ablehnen
+                            </Button>
+                          </>
+                        )}
+                        
+                        {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
+                          <Button 
+                            onClick={handleConvertToRepair}
+                            disabled={convertToRepairMutation.isPending}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <RotateCw className="h-4 w-4 mr-2" />
+                            In Reparatur umwandeln
+                          </Button>
+                        )}
+                        
+                        {/* Druck- und Export-Optionen */}
+                        <Button variant="outline">
+                          <Printer className="h-4 w-4 mr-2" />
+                          Drucken
+                        </Button>
+                        <Button variant="outline">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Als PDF
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            // Kostenvoranschlag öffnen und bearbeiten - derzeit keine direkte Bearbeitungsseite
+                            toast({
+                              title: "Bearbeitung",
+                              description: "Die Bearbeitungsfunktion ist in Arbeit und wird bald verfügbar sein.",
+                            });
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" /> Bearbeiten
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={() => setShowDeleteConfirm(true)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" /> Löschen
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="items" className="space-y-4">
