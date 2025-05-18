@@ -469,53 +469,76 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      console.log(`getCostEstimate: Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}`);
-      console.log(`Items-Wert (Typ: ${typeof costEstimate.items}):`, costEstimate.items);
+      console.log(`getCostEstimateItems: Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}`);
       
-      // Die Items sind direkt im Kostenvoranschlag als JSONB-Feld gespeichert
       try {
-        if (costEstimate.items) {
-          // Wenn der Wert bereits ein Array ist, verwende es direkt
-          if (Array.isArray(costEstimate.items)) {
-            console.log(`Items sind bereits ein Array mit ${costEstimate.items.length} Elementen`);
-            return costEstimate.items;
-          }
-          
-          // Wenn der Wert "[object Object]" ist, setze es auf ein leeres Array
-          if (costEstimate.items === "[object Object]" || costEstimate.items === '{}') {
-            console.log(`Ungültiges Format in Kostenvoranschlag ${costEstimateId} gefunden, korrigiere zu []`);
-            // Aktualisiere den Eintrag in der Datenbank
-            await this.updateCostEstimate(costEstimateId, { items: '[]' }, userId);
-            return [];
-          }
-          
-          // Versuche, das items-Feld als JSON zu parsen, wenn es ein String ist
-          if (typeof costEstimate.items === 'string') {
-            try {
-              const parsedItems = JSON.parse(costEstimate.items);
-              console.log(`Items erfolgreich geparst: ${parsedItems.length} Elemente gefunden`);
-              return parsedItems;
-            } catch (e) {
-              console.error(`Fehler beim JSON-Parsen von Items: ${e.message}`);
-              if (costEstimate.items === '[]' || costEstimate.items === '') {
-                return [];
-              }
+        // Direkter SQL-Query, um das JSON-Parsing-Problem zu umgehen
+        const result = await pool.query(
+          `SELECT items FROM cost_estimates WHERE id = $1 AND shop_id = (
+             SELECT shop_id FROM users WHERE id = $2
+           )`,
+          [costEstimateId, userId]
+        );
+        
+        if (result.rows.length === 0) {
+          console.log(`Kostenvoranschlag ${costEstimateId} nicht gefunden für Benutzer ${userId} (SQL)`);
+          return [];
+        }
+        
+        const itemsValue = result.rows[0].items;
+        console.log(`Items aus Datenbank (Typ: ${typeof itemsValue}):`, itemsValue);
+        
+        // Wenn es ein String ist, parsen versuchen
+        if (typeof itemsValue === 'string') {
+          try {
+            // Bei Vorhandensein von Escape-Sequenzen (z.B. \" statt ") bereinigen
+            const cleanedValue = itemsValue.replace(/\\"/g, '"');
+            let parsedItems;
+            
+            // Bei doppelten JSON-Anführungszeichen (häufiger Fehler) bereinigen
+            if (cleanedValue.startsWith('"[') && cleanedValue.endsWith(']"')) {
+              // Entferne die äußeren Anführungszeichen
+              const innerJson = cleanedValue.substring(1, cleanedValue.length - 1);
+              parsedItems = JSON.parse(innerJson);
+            } else {
+              // Normales Parsen versuchen
+              parsedItems = JSON.parse(cleanedValue);
             }
-          }
-          
-          // Wenn es ein Objekt ist, konvertiere es zu einem Array
-          if (typeof costEstimate.items === 'object' && costEstimate.items !== null) {
-            console.log(`Items sind ein Objekt, versuche Konvertierung zu Array`);
-            return Array.isArray(costEstimate.items) ? costEstimate.items : [];
+            
+            console.log(`Items erfolgreich geparst: ${parsedItems.length} Elemente gefunden`);
+            return Array.isArray(parsedItems) ? parsedItems : [];
+          } catch (parseError) {
+            console.error(`Fehler beim JSON-Parsen von Items (String): ${parseError.message}`);
           }
         }
-      } catch (parseError) {
-        console.error(`Fehler beim Parsen der Items für Kostenvoranschlag ${costEstimateId}:`, parseError);
-        // Bei einem Parse-Fehler, aktualisiere die Datenbank mit einem leeren Array
-        await this.updateCostEstimate(costEstimateId, { items: '[]' }, userId);
+        
+        // Wenn itemsValue bereits ein Array ist
+        if (Array.isArray(itemsValue)) {
+          console.log(`Items sind bereits ein Array mit ${itemsValue.length} Elementen`);
+          return itemsValue;
+        }
+        
+        // Wenn itemsValue ein Objekt ist, aber kein Array
+        if (typeof itemsValue === 'object' && itemsValue !== null) {
+          console.log('Items sind ein Objekt, versuche Konvertierung');
+          
+          // Versuche, es zu einem Array zu konvertieren, wenn möglich
+          if (Object.keys(itemsValue).length > 0) {
+            const itemsArray = Object.values(itemsValue);
+            if (Array.isArray(itemsArray[0])) {
+              return itemsArray[0];
+            }
+            return itemsArray;
+          }
+          
+          return [];
+        }
+        
+      } catch (dbError) {
+        console.error(`Datenbankfehler beim Abrufen der Items: ${dbError.message}`);
       }
       
-      // Fallback: Leeres Array zurückgeben, wenn keine Items vorhanden oder Parsing fehlschlägt
+      // Fallback: Leeres Array zurückgeben
       console.log(`Fallback: Leeres Array für Kostenvoranschlag ${costEstimateId}`);
       return [];
     } catch (error) {
