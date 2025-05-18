@@ -114,12 +114,18 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       const costEstimateData = {
         customerId: data.customerId,
         deviceType: data.deviceType,
-        brand: data.brand, // Geändert von manufacturer zu brand
+        brand: data.brand,
         model: data.model,
-        issue: data.issueDescription, // Anpassung an Formularfeld
-        total: data.totalPrice || "0", // Geändert von estimatedCost zu total
+        issue: data.issueDescription,
+        total: data.totalPrice || "0",
+        subtotal: data.subtotal || "0",
+        tax_rate: data.taxRate || "20",
+        tax_amount: data.taxAmount || "0",
+        items: data.items || [],
         notes: data.notes || null,
         status: "offen", // Default-Status
+        title: data.title || "Kostenvoranschlag",
+        serial_number: data.serialNumber || null
       };
       
       console.log("Sende Daten an API:", costEstimateData);
