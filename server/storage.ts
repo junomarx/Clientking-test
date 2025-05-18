@@ -501,7 +501,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const [newCostEstimate] = await db.insert(costEstimates).values({
         ...estimate,
-        estimateNumber,
+        reference_number: estimateNumber, // Korrigiert: Verwende reference_number statt estimateNumber
         shopId,
         userId,
       }).returning();
