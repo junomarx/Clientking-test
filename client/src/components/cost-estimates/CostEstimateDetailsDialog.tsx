@@ -162,12 +162,26 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd.MM.yyyy', { locale: de });
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy', { locale: de });
+    } catch (error) {
+      console.error('Fehler beim Formatieren des Datums:', error);
+      return dateString;
+    }
   };
 
-  const formatDateTime = (dateString: string) => {
-    return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+  const formatDateTime = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    
+    try {
+      return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+    } catch (error) {
+      console.error('Fehler beim Formatieren des Datums und der Zeit:', error);
+      return dateString;
+    }
   };
 
   return (
