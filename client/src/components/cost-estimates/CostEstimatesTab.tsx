@@ -41,9 +41,9 @@ interface CostEstimate {
   total?: string;
   created_at: string; // Angepasst an Datenbankfeldname
   updated_at: string; // Angepasst an Datenbankfeldname
-  // Zusätzliche Kundenfelder vom JOIN mit korrekten Aliasnamen
-  firstName?: string; // Dies ist ein Alias aus der SQL-Abfrage
-  lastName?: string; // Dies ist ein Alias aus der SQL-Abfrage
+  // Zusätzliche Kundenfelder vom JOIN - Namen aus SQL-Abfrage
+  firstname?: string; // Geändert: kleinbuchstaben wie im SQL-Alias
+  lastname?: string; // Geändert: kleinbuchstaben wie im SQL-Alias
   email?: string;
   phone?: string;
 }
@@ -170,10 +170,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       estimate.brand?.toLowerCase().includes(searchTermLower) ||
       estimate.model?.toLowerCase().includes(searchTermLower) ||
       estimate.deviceType?.toLowerCase().includes(searchTermLower) ||
-      estimate.firstName?.toLowerCase().includes(searchTermLower) ||
-      estimate.lastName?.toLowerCase().includes(searchTermLower) ||
+      estimate.firstname?.toLowerCase().includes(searchTermLower) ||
+      estimate.lastname?.toLowerCase().includes(searchTermLower) ||
       estimate.email?.toLowerCase().includes(searchTermLower) ||
-      (estimate.firstName + " " + estimate.lastName)?.toLowerCase().includes(searchTermLower)
+      (estimate.firstname + " " + estimate.lastname)?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -328,13 +328,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            Kunden-ID: {estimate.customer_id || estimate.customerId || "??"}
+                            {estimate.firstname} {estimate.lastname}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            firstName: {estimate.firstName || "fehlt"}<br />
-                            lastName: {estimate.lastName || "fehlt"}<br />
-                            email: {estimate.email || "fehlt"}
-                          </div>
+                          {estimate.email && (
+                            <div className="text-xs text-muted-foreground truncate max-w-[180px]">
+                              {estimate.email}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           {estimate.brand} {estimate.model}

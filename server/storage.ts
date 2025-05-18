@@ -417,8 +417,8 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(`
         SELECT 
           ce.*,
-          c.first_name AS "firstName",
-          c.last_name AS "lastName",
+          c.first_name AS firstname,
+          c.last_name AS lastname,
           c.email,
           c.phone
         FROM cost_estimates ce
@@ -426,6 +426,11 @@ export class DatabaseStorage implements IStorage {
         WHERE ce.shop_id = $1
         ORDER BY ce.created_at DESC
       `, [shopId]);
+      
+      // Debug-Ausgabe für den ersten Eintrag
+      if (result.rows.length > 0) {
+        console.log("SQL-Abfrage Ergebnis (erster Eintrag):", result.rows[0]);
+      }
       
       return result.rows;
     } catch (error) {

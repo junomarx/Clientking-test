@@ -1,0 +1,70 @@
+chunk-RPCDYKBN.js?v=16d4ad23:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:312 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+debug-costestimates.jsx:16 DEBUG: Cost Estimates Daten: Array(9)
+debug-costestimates.jsx:20 Eintrag #1 (KV202505-9967):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #2 (KV2025-0008):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 49
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #3 (KV2025-0007):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 28
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #4 (KV2025-0006):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 28
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #5 (KV2025-0005):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 25
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #6 (KV2025-0004):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #7 (KV2025-0003):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #8 (KV2025-0002):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 23
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
+debug-costestimates.jsx:20 Eintrag #9 (KV2025-0001):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: FEHLT
+debug-costestimates.jsx:24  - customer_id: 24
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id
