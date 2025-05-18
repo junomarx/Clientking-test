@@ -246,6 +246,11 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                 {estimate.brand} {estimate.model} - {estimate.issue}
               </DialogDescription>
             </DialogHeader>
+            <div className="mt-2 text-sm">
+              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">
+                Debug: Kundendaten: {JSON.stringify({firstname: estimate.firstname, lastname: estimate.lastname, customer_id: estimate.customer_id, email: estimate.email, phone: estimate.phone})}
+              </span>
+            </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-4">
