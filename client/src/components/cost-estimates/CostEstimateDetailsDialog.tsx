@@ -106,7 +106,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     if (!estimate?.items) return [];
     
     try {
-      console.log("Items-String:", estimate.items);
       // Prüfen, ob es sich um ein gültiges JSON handelt
       if (typeof estimate.items === 'string') {
         return JSON.parse(estimate.items) || [];
@@ -119,8 +118,14 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
       return [];
     }
   })();
-    
-  console.log("Geparste Items:", parsedItems);
+  
+  // Kundendaten richtig extrahieren
+  const customerName = customer 
+    ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() 
+    : `${estimate.firstname || ''} ${estimate.lastname || ''}`.trim() || 'Kein Kunde zugewiesen';
+  
+  const customerEmail = customer?.email || estimate.email || '';
+  const customerPhone = customer?.phone || estimate.phone || '';
 
   // Geschäftseinstellungen für das Logo abrufen
   const { data: businessSettings } = useQuery({
