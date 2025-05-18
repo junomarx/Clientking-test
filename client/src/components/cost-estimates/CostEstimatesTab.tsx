@@ -322,13 +322,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {estimate.firstName} {estimate.lastName}
+                            {estimate.customer_id && `ID: ${estimate.customer_id}`}
                           </div>
-                          {estimate.email && (
-                            <div className="text-xs text-muted-foreground truncate max-w-[180px]">
-                              {estimate.email}
-                            </div>
-                          )}
+                          <div className="text-xs text-muted-foreground">
+                            firstName: {estimate.firstName || "fehlt"}<br />
+                            lastName: {estimate.lastName || "fehlt"}<br />
+                            email: {estimate.email || "fehlt"}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {estimate.brand} {estimate.model}
