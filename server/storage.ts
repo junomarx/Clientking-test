@@ -2630,11 +2630,12 @@ export class DatabaseStorage implements IStorage {
       console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
 
       // Erstelle den Kostenvoranschlag mit Shop-ID und generierter Nummer
-      // Sicherstellen, dass title immer gesetzt ist
+      // Sicherstellen, dass title und items immer gesetzt sind
       const estimateData = {
         ...estimate,
         reference_number: estimateNumber,
         title: estimate.title || "Kostenvoranschlag", // Standardtitel setzen, falls keiner vorhanden
+        items: estimate.items || [], // Leere Items-Liste setzen, falls keine vorhanden
         userId,
         shopId,
       };
