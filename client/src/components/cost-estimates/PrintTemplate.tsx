@@ -232,7 +232,7 @@ export function generatePrintHtml({
       <div class="invoice-container">
         <div class="header">
           <div class="logo-container" style="flex: 1; text-align: left;">
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : '<img src="https://macandphonedoc.at/wp-content/uploads/2023/10/Mac-and-Phonedoc.png" alt="Logo" class="logo" style="max-width: 200px;">'}
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}
           </div>
           <div class="company-info">
             <p class="company-name">${businessName}</p>
@@ -240,6 +240,8 @@ export function generatePrintHtml({
             ${businessZipCity}<br>
             ${businessPhone}<br>
             ${businessEmail}</p>
+            <p style="margin-top: 12px;">Datum: ${todayFormatted}<br>
+            Gültig bis: ${validUntilFormatted}</p>
           </div>
         </div>
       
@@ -252,10 +254,6 @@ export function generatePrintHtml({
       
         <div class="document-title">Kostenvoranschlag</div>
         <div class="reference-number">Referenznummer: ${estimate.reference_number}</div>
-        
-        <div class="document-info">
-          <p>Datum: ${todayFormatted} | Gültig bis: ${validUntilFormatted}</p>
-        </div>
         
         <div class="device-info">
           <div class="section-title">Geräteinformationen</div>
