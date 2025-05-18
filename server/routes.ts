@@ -2449,6 +2449,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Zusätzliche Validierung - Prüfe, ob der Kunde zum Shop des Benutzers gehört
       await validateCustomerBelongsToShop(data.customerId, (req.user as any).id);
       
+      // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
+      // Bei einem Bruttopreis von 240€ sind das 40€ MwSt.
+      let total = parseFloat(data.total?.replace(',', '.') || '0');
+      let taxRate = 20; // 20% MwSt
+      
+      // MwSt berechnen: Bruttopreis enthält bereits die MwSt
+      // MwSt = Bruttopreis - (Bruttopreis / (1 + Steuersatz%/100))
+      let taxAmount = total - (total / (1 + taxRate/100));
+      
+      // Werte im data-Objekt aktualisieren
+      data.tax_rate = taxRate.toString();
+      data.tax_amount = taxAmount.toFixed(2);
+      
       // Kostenvoranschlag mit Shop-Isolation erstellen
       const userId = (req.user as any).id;
       const newEstimate = await storage.createCostEstimate(data, userId);
