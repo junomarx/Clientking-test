@@ -2633,30 +2633,32 @@ export class DatabaseStorage implements IStorage {
       // Sicherstellen, dass title und items immer gesetzt sind
       // Füge einen direkten SQL-Wert für 'items' ein, der JSONB sein muss
       try {
+        // Direktes SQL ohne Parametersubstitution
         const sql = `
           INSERT INTO cost_estimates (
             reference_number, customer_id, title, device_type, brand, model, 
             issue, status, created_at, updated_at, items, user_id, shop_id
           )
           VALUES (
-            $1, $2, $3, $4, $5, $6, 
-            $7, $8, NOW(), NOW(), '[]'::jsonb, $9, $10
+            '${estimateNumber}', 
+            ${estimate.customerId}, 
+            '${estimate.title || "Kostenvoranschlag"}', 
+            '${estimate.deviceType}', 
+            '${estimate.brand}', 
+            '${estimate.model}', 
+            '${estimate.issue}', 
+            'offen', 
+            NOW(), 
+            NOW(), 
+            '[]'::jsonb, 
+            ${userId}, 
+            ${shopId}
           )
           RETURNING *;
         `;
         
-        const result = await db.execute(sql, [
-          estimateNumber,
-          estimate.customerId,
-          estimate.title || "Kostenvoranschlag",
-          estimate.deviceType,
-          estimate.brand,
-          estimate.model,
-          estimate.issue,
-          "offen",
-          userId,
-          shopId
-        ]);
+        console.log("SQL ausführen:", sql);
+        const result = await db.execute(sql);
         
         if (result.rows && result.rows.length > 0) {
           console.log(`Neuer Kostenvoranschlag ID ${result.rows[0].id} (${estimateNumber}) erstellt für Shop ${shopId}`);
