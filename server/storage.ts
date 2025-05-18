@@ -2634,10 +2634,13 @@ export class DatabaseStorage implements IStorage {
       // Füge einen direkten SQL-Wert für 'items' ein, der JSONB sein muss
       try {
         // Direktes SQL ohne Parametersubstitution
+        // Alle Pflichtfelder müssen gesetzt werden
+        const totalPrice = estimate.total || "0.00";  
         const sql = `
           INSERT INTO cost_estimates (
             reference_number, customer_id, title, device_type, brand, model, 
-            issue, status, created_at, updated_at, items, user_id, shop_id
+            issue, status, created_at, updated_at, items, user_id, shop_id,
+            subtotal, tax_rate, tax_amount, total
           )
           VALUES (
             '${estimateNumber}', 
@@ -2646,13 +2649,17 @@ export class DatabaseStorage implements IStorage {
             '${estimate.deviceType}', 
             '${estimate.brand}', 
             '${estimate.model}', 
-            '${estimate.issue}', 
+            '${estimate.issue || "Keine Angabe"}', 
             'offen', 
             NOW(), 
             NOW(), 
             '[]'::jsonb, 
             ${userId}, 
-            ${shopId}
+            ${shopId},
+            '${totalPrice}',    /* subtotal */
+            '19',               /* tax_rate (Standard: 19%) */
+            '${(parseFloat(totalPrice) * 0.19).toFixed(2)}',  /* tax_amount */
+            '${totalPrice}'     /* total */
           )
           RETURNING *;
         `;
