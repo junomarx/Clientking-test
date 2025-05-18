@@ -4,6 +4,7 @@ import { Plus, FileText, Search, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { NewCostEstimateDialog } from "./NewCostEstimateDialog";
+import { CostEstimateDetailsDialog } from "./CostEstimateDetailsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -90,6 +91,7 @@ interface CostEstimatesTabProps {
 export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedEstimateId, setSelectedEstimateId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -303,7 +305,11 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                     }) : "Unbekanntes Datum";
                     
                     return (
-                      <TableRow key={estimate.id}>
+                      <TableRow 
+                        key={estimate.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedEstimateId(estimate.id)}
+                      >
                         <TableCell className="font-medium">
                           <TooltipProvider>
                             <Tooltip>
@@ -368,6 +374,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onCreateCostEstimate={handleCreateCostEstimate}
+      />
+
+      {/* Details-Dialog für Kostenvoranschläge */}
+      <CostEstimateDetailsDialog
+        open={selectedEstimateId !== null}
+        onClose={() => setSelectedEstimateId(null)}
+        estimateId={selectedEstimateId}
       />
     </div>
   );
