@@ -21,7 +21,10 @@ import {
   ArrowUpRight, 
   RotateCw,
   FileText,
-  ShieldAlert
+  ShieldAlert,
+  Trash2,
+  Edit,
+  AlertCircle
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +88,7 @@ interface CostEstimateItem {
 export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEstimateDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newItem, setNewItem] = useState<{
     description: string;
     quantity: number;
@@ -222,6 +226,33 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
       });
     }
   });
+  
+  // Mutation für das Löschen eines Kostenvoranschlags
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/cost-estimates/${id}`);
+      return response.ok;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      
+      toast({
+        title: "Kostenvoranschlag gelöscht",
+        description: "Der Kostenvoranschlag wurde erfolgreich gelöscht.",
+      });
+      
+      // Dialog schließen
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: `Der Kostenvoranschlag konnte nicht gelöscht werden: ${error.message}`,
+        variant: "destructive",
+      });
+      setShowDeleteConfirm(false);
+    }
+  });
 
   // Mutation für das Konvertieren in eine Reparatur
   const convertToRepairMutation = useMutation({
@@ -286,6 +317,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     if (!estimateId) return;
     convertToRepairMutation.mutate(estimateId);
   };
+  
+  // Funktion zum Löschen eines Kostenvoranschlags
+  const handleDelete = () => {
+    if (!estimateId) return;
+    deleteMutation.mutate(estimateId);
+  };
 
   // Status-Anzeige formatieren
   const getStatusBadge = (status: string) => {
@@ -311,8 +348,41 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   if (!open) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <>
+      {/* Löschbestätigungsdialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-red-600">
+              <AlertCircle className="h-6 w-6 inline-block mr-2" /> 
+              Kostenvoranschlag löschen
+            </DialogTitle>
+            <DialogDescription>
+              Möchten Sie den Kostenvoranschlag "{estimate?.reference_number}" wirklich löschen? 
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Löschen bestätigen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Hauptdialog */}
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         {isLoadingEstimate ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -340,6 +410,22 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
               <DialogDescription>
                 {estimate.brand} {estimate.model} - {estimate.issue}
               </DialogDescription>
+              <div className="flex justify-end mt-2 space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = `/cost-estimates/edit/${estimateId}`}
+                >
+                  <Edit className="h-4 w-4 mr-1" /> Bearbeiten
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" /> Löschen
+                </Button>
+              </div>
             </DialogHeader>
 
 
