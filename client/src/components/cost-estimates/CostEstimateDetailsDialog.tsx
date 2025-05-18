@@ -290,6 +290,13 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       </p>
                       <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
                       <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
+                      {customer?.streetAddress && (
+                        <>
+                          <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
+                          <p className="text-sm">{customer.streetAddress}</p>
+                          <p className="text-sm">{customer.zipCode} {customer.city}</p>
+                        </>
+                      )}
                     </div>
                     <div className="mt-2">
                       <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
