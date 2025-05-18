@@ -2443,6 +2443,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Neuen Kostenvoranschlag erstellen
   app.post("/api/cost-estimates", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
+      console.log("Erstelle neuen Kostenvoranschlag mit Daten:", JSON.stringify(req.body));
+      
+      // Sicherstellen, dass wir einen korrekten items Array haben
+      if (req.body.items && !Array.isArray(req.body.items)) {
+        try {
+          req.body.items = JSON.parse(req.body.items);
+        } catch (e) {
+          console.warn("Items konnten nicht geparst werden:", e);
+          req.body.items = [];
+        }
+      }
+      
       // Validierung der Daten mit Zod
       const data = insertCostEstimateSchema.parse(req.body);
       
@@ -2461,6 +2473,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Werte im data-Objekt aktualisieren
       data.tax_rate = taxRate.toString();
       data.tax_amount = taxAmount.toFixed(2);
+      
+      // Sicherstellen, dass items ein Array ist (falls nicht vom Frontend geliefert)
+      if (!data.items) {
+        data.items = [];
+      }
       
       // Kostenvoranschlag mit Shop-Isolation erstellen
       const userId = (req.user as any).id;
