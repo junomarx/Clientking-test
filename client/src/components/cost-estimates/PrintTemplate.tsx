@@ -260,8 +260,8 @@ export function generatePrintHtml({
           <div class="device-details">
             <div>
               <p>
-                <span class="label">Hersteller:</span> <span class="value">${estimate.brand || ''}</span> |
-                <span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span> |
+                <span class="label">Hersteller:</span> <span class="value">${estimate.brand || ''}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                <span class="label">Modell:</span> <span class="value">${estimate.model || ''}</span> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
                 <span class="label">Seriennummer:</span> <span class="value">${estimate.serial_number || estimate.serialNumber || ''}</span>
               </p>
               <p style="margin-top: 30px;"><span class="label">Fehlerbeschreibung:</span></p>
