@@ -747,6 +747,10 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                             return;
                           }
                           
+                          // Aktuelles Datum formatieren
+                          const today = new Date();
+                          const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
+                          
                           // HTML für Druckansicht generieren
                           const html = `
                             <!DOCTYPE html>
@@ -819,8 +823,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 .auftragsnummer {
                                     text-align: center;
                                     font-size: 18px;
-                                    margin: 0 0 40px 0;
+                                    margin: 0 0 10px 0;
                                     color: #222;
+                                }
+                                
+                                .document-date {
+                                    text-align: center;
+                                    font-size: 14px;
+                                    margin: 0 0 40px 0;
+                                    color: #666;
                                 }
                                 
                                 .section {
@@ -984,15 +995,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 <div class="section-title">Kundeninformationen</div>
                                 <p class="customer-name">${customer ? `${customer.firstName} ${customer.lastName}` : 
                                    (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : 'Kunde'}</p>
-                                <p>${customer?.email || estimate.email || ''}</p>
-                                <p>${customer?.phone || estimate.phone || ''}</p>
-                                ${customer?.streetAddress ? 
-                                  `<p>${customer.streetAddress}</p>
-                                   <p>${customer.zipCode || ''} ${customer.city || ''}</p>` : ''}
+                                <p>${customer?.streetAddress || ''}</p>
+                                <p>${customer?.zipCode || ''} ${customer?.city || ''}</p>
+                                <p>Tel: ${customer?.phone || estimate.phone || ''}</p>
+                                <p>Email: ${customer?.email || estimate.email || ''}</p>
                               </div>
                             
                               <div class="document-title">Kostenvoranschlag</div>
                               <div class="auftragsnummer">${estimate.reference_number}</div>
+                              <div class="document-date">Erstellt am: ${todayFormatted}</div>
                             
                               <!-- Geräteinformationen -->
                               <div class="device-info-box">
@@ -1072,7 +1083,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 <p><strong>3.</strong> Die im Kostenvoranschlag genannten Preise verstehen sich inkl. MwSt., sofern nicht anders angegeben.</p>
                                 <p><strong>4.</strong> Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</p>
                                 <p><strong>5.</strong> Dieser Kostenvoranschlag ist bis ${estimate.validUntil ? 
-                                  new Date(estimate.validUntil).toLocaleDateString('de-DE') : 'unbegrenzt'} gültig.</p>
+                                  format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt'} gültig.</p>
                               </div>
                             
                               ${estimate.notes ? `
@@ -1119,6 +1130,10 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                             });
                             return;
                           }
+                          
+                          // Aktuelles Datum formatieren
+                          const today = new Date();
+                          const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
                           
                           // HTML für Druckansicht generieren (gleich wie Drucken)
                           const html = `
@@ -1192,8 +1207,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 .auftragsnummer {
                                     text-align: center;
                                     font-size: 18px;
-                                    margin: 0 0 40px 0;
+                                    margin: 0 0 10px 0;
                                     color: #222;
+                                }
+                                
+                                .document-date {
+                                    text-align: center;
+                                    font-size: 14px;
+                                    margin: 0 0 40px 0;
+                                    color: #666;
                                 }
                                 
                                 .section {
@@ -1357,15 +1379,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 <div class="section-title">Kundeninformationen</div>
                                 <p class="customer-name">${customer ? `${customer.firstName} ${customer.lastName}` : 
                                    (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : 'Kunde'}</p>
-                                <p>${customer?.email || estimate.email || ''}</p>
-                                <p>${customer?.phone || estimate.phone || ''}</p>
-                                ${customer?.streetAddress ? 
-                                  `<p>${customer.streetAddress}</p>
-                                   <p>${customer.zipCode || ''} ${customer.city || ''}</p>` : ''}
+                                <p>${customer?.streetAddress || ''}</p>
+                                <p>${customer?.zipCode || ''} ${customer?.city || ''}</p>
+                                <p>Tel: ${customer?.phone || estimate.phone || ''}</p>
+                                <p>Email: ${customer?.email || estimate.email || ''}</p>
                               </div>
                             
                               <div class="document-title">Kostenvoranschlag</div>
                               <div class="auftragsnummer">${estimate.reference_number}</div>
+                              <div class="document-date">Erstellt am: ${todayFormatted}</div>
                             
                               <!-- Geräteinformationen -->
                               <div class="device-info-box">
@@ -1445,7 +1467,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                 <p><strong>3.</strong> Die im Kostenvoranschlag genannten Preise verstehen sich inkl. MwSt., sofern nicht anders angegeben.</p>
                                 <p><strong>4.</strong> Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</p>
                                 <p><strong>5.</strong> Dieser Kostenvoranschlag ist bis ${estimate.validUntil ? 
-                                  new Date(estimate.validUntil).toLocaleDateString('de-DE') : 'unbegrenzt'} gültig.</p>
+                                  format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt'} gültig.</p>
                               </div>
                             
                               ${estimate.notes ? `
