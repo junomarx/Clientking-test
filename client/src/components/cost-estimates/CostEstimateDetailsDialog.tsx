@@ -38,7 +38,8 @@ interface CostEstimateDetailsDialogProps {
 interface CostEstimate {
   id: number;
   reference_number: string;
-  customer_id: number;
+  customer_id?: number;
+  customerId?: number; // In der Detailansicht wird camelCase verwendet
   deviceType: string;
   brand: string;
   model: string;
@@ -61,6 +62,14 @@ interface CostEstimate {
   lastname?: string;
   email?: string;
   phone?: string;
+  // Kunde aus separatem API-Call
+  customer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 // Interface für Kostenvoranschlagsposten
@@ -246,11 +255,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                 {estimate.brand} {estimate.model} - {estimate.issue}
               </DialogDescription>
             </DialogHeader>
-            <div className="mt-2 text-sm">
-              <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">
-                Debug: Kundendaten: {JSON.stringify({firstname: estimate.firstname, lastname: estimate.lastname, customer_id: estimate.customer_id, email: estimate.email, phone: estimate.phone})}
-              </span>
-            </div>
+
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-4">
@@ -269,11 +274,11 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       <p className="font-medium">
                         {estimate.firstname || '-'} {estimate.lastname || '-'}
                       </p>
-                      {estimate.email && <p className="text-sm">Email: {estimate.email}</p>}
-                      {estimate.phone && <p className="text-sm">Tel: {estimate.phone}</p>}
+                      <p className="text-sm">Email: {estimate.email || '-'}</p>
+                      <p className="text-sm">Tel: {estimate.phone || '-'}</p>
                     </div>
                     <div className="mt-2">
-                      <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id}</p>
+                      <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
                     </div>
                   </CardContent>
                 </Card>
