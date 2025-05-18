@@ -17,7 +17,6 @@ import {
   insertUserBrandSchema,
   insertUserModelSchema,
   insertCostEstimateSchema,
-  insertCostEstimateItemSchema,
   repairStatuses,
   deviceTypes,
   type InsertEmailTemplate,
@@ -30,8 +29,7 @@ import {
   userDeviceTypes,
   userBrands,
   businessSettings,
-  costEstimates,
-  costEstimateItems
+  costEstimates
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -2574,7 +2572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Position eines Kostenvoranschlags erstellen
+  // Position eines Kostenvoranschlags erstellen (neue Implementierung mit JSONB)
   app.post("/api/cost-estimates/:id/items", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
@@ -2590,14 +2588,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
       }
       
-      // Validierung der Daten mit Zod
-      const data = insertCostEstimateItemSchema.parse({
-        ...req.body,
-        costEstimateId: id
-      });
+      // Validierung der Daten
+      const itemData = req.body;
       
-      // Position erstellen
-      const newItem = await storage.createCostEstimateItem(data, userId);
+      // Existierende Items parsen oder leeres Array initialisieren
+      let existingItems = [];
+      try {
+        if (existingEstimate.items) {
+          existingItems = JSON.parse(existingEstimate.items as string);
+        }
+      } catch (err) {
+        console.error("Fehler beim Parsen der vorhandenen Items:", err);
+      }
+      
+      // Neue eindeutige ID generieren
+      const maxId = existingItems.length > 0 
+        ? Math.max(...existingItems.map(item => Number(item.id || 0))) 
+        : 0;
+      const newItem = {
+        ...itemData,
+        id: maxId + 1
+      };
+      
+      // Item zur Liste hinzufügen und zurück in JSON konvertieren
+      existingItems.push(newItem);
+      
+      // Kostenvoranschlag aktualisieren
+      await storage.updateCostEstimate(id, {
+        items: JSON.stringify(existingItems)
+      }, userId);
       
       console.log(`Neue Position für Kostenvoranschlag ${id} erstellt von Benutzer ${userId}`);
       res.status(201).json(newItem);
@@ -2618,25 +2637,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Position eines Kostenvoranschlags löschen
-  app.delete("/api/cost-estimate-items/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+  // Position eines Kostenvoranschlags löschen (neue Implementierung mit JSONB)
+  app.delete("/api/cost-estimate-items/:itemId/estimate/:estimateId", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Ungültige Positions-ID" });
+      const itemId = parseInt(req.params.itemId);
+      const estimateId = parseInt(req.params.estimateId);
+      
+      if (isNaN(itemId) || isNaN(estimateId)) {
+        return res.status(400).json({ message: "Ungültige ID-Parameter" });
       }
       
       const userId = (req.user as any).id;
-      const success = await storage.deleteCostEstimateItem(id, userId);
       
-      if (!success) {
-        return res.status(404).json({ message: "Position konnte nicht gelöscht werden oder wurde nicht gefunden" });
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await storage.getCostEstimate(estimateId, userId);
+      if (!existingEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
       }
       
-      console.log(`Position ${id} gelöscht von Benutzer ${userId}`);
+      // Existierende Items parsen
+      let existingItems = [];
+      try {
+        if (existingEstimate.items) {
+          existingItems = JSON.parse(existingEstimate.items as string);
+        }
+      } catch (err) {
+        console.error("Fehler beim Parsen der vorhandenen Items:", err);
+        return res.status(500).json({ message: "Fehler beim Verarbeiten der Daten" });
+      }
+      
+      // Prüfen, ob das Item existiert
+      const itemIndex = existingItems.findIndex(item => item.id === itemId);
+      if (itemIndex === -1) {
+        return res.status(404).json({ message: "Position nicht gefunden" });
+      }
+      
+      // Item entfernen
+      existingItems.splice(itemIndex, 1);
+      
+      // Kostenvoranschlag aktualisieren
+      await storage.updateCostEstimate(estimateId, {
+        items: JSON.stringify(existingItems)
+      }, userId);
+      
+      console.log(`Position ${itemId} von Kostenvoranschlag ${estimateId} gelöscht von Benutzer ${userId}`);
       res.status(204).end();
     } catch (error) {
-      console.error(`Fehler beim Löschen der Position ${req.params.id}:`, error);
+      console.error(`Fehler beim Löschen der Position ${req.params.itemId}:`, error);
       res.status(500).json({ 
         message: "Fehler beim Löschen der Position",
         error: error instanceof Error ? error.message : String(error)
