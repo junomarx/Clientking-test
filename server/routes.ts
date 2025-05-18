@@ -2485,18 +2485,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Zusätzliche Validierung - Prüfe, ob der Kunde zum Shop des Benutzers gehört
       await validateCustomerBelongsToShop(data.customerId, (req.user as any).id);
       
-      // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
+      // MwSt korrekt berechnen - IMMER 20% im Bruttopreis enthalten (Österreich)
       // Bei einem Bruttopreis von 240€ sind das 40€ MwSt.
       let total = parseFloat(data.total?.replace(',', '.') || '0');
-      let taxRate = 20; // 20% MwSt für Österreich
+      const taxRate = 20; // FIX: Immer 20% MwSt für Österreich
       
       // MwSt berechnen: Bruttopreis enthält bereits die MwSt
       // MwSt = Bruttopreis - (Bruttopreis / (1 + Steuersatz%/100))
-      let taxAmount = total - (total / (1 + taxRate/100));
+      const taxAmount = total - (total / (1 + taxRate/100));
       
-      // Werte im data-Objekt aktualisieren
-      data.tax_rate = taxRate.toString();
+      // Werte im data-Objekt aktualisieren und fixieren
+      data.tax_rate = "20"; // FIX: Immer als String "20" speichern
       data.tax_amount = taxAmount.toFixed(2).replace('.', ',');
+      
+      console.log("Kostenvoranschlag Steuerberechnung:", {
+        total,
+        taxRate,
+        taxAmount: taxAmount.toFixed(2),
+        items: Array.isArray(data.items) ? data.items.length : (typeof data.items === 'string' ? 'JSON-String' : typeof data.items)
+      });
       
       console.log("Positionen vor dem Speichern:", data.items);
       
@@ -2650,11 +2657,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Existierende Items parsen oder leeres Array initialisieren
       let existingItems = [];
       try {
+        console.log("Vorhandene Items (Typ):", typeof existingEstimate.items);
+        console.log("Vorhandene Items (Wert):", existingEstimate.items);
+        
         if (existingEstimate.items) {
-          existingItems = JSON.parse(existingEstimate.items as string);
+          if (typeof existingEstimate.items === 'string') {
+            // String parsen
+            existingItems = JSON.parse(existingEstimate.items);
+          } else if (Array.isArray(existingEstimate.items)) {
+            // Array direkt verwenden
+            existingItems = existingEstimate.items;
+          } else if (typeof existingEstimate.items === 'object') {
+            // Objekt in Array umwandeln
+            existingItems = [existingEstimate.items];
+          }
         }
+        console.log("Verarbeitete existierende Items:", existingItems);
       } catch (err) {
         console.error("Fehler beim Parsen der vorhandenen Items:", err);
+        // Leeres Array beibehalten
+        existingItems = [];
       }
       
       // Neue eindeutige ID generieren
