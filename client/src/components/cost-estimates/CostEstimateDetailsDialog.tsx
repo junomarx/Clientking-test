@@ -100,6 +100,18 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     },
     enabled: !!estimateId && open
   });
+  
+  // Abfrage für den Kunden
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery({
+    queryKey: ['/api/customers', estimate?.customerId || estimate?.customer_id],
+    queryFn: async () => {
+      const custId = estimate?.customerId || estimate?.customer_id;
+      if (!custId) return null;
+      const response = await apiRequest('GET', `/api/customers/${custId}`);
+      return await response.json();
+    },
+    enabled: !!estimate && !!(estimate.customerId || estimate.customer_id) && open
+  });
 
   // Abfrage für die Kostenvoranschlagsposten
   const { data: items = [], isLoading: isLoadingItems } = useQuery({
@@ -272,10 +284,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <p className="font-medium">
-                        {estimate.firstname || '-'} {estimate.lastname || '-'}
+                        {/* Versuche verschiedene mögliche Formate für Kundendaten */}
+                        {customer ? `${customer.firstName || '-'} ${customer.lastName || '-'}` : 
+                         (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : '-'}
                       </p>
-                      <p className="text-sm">Email: {estimate.email || '-'}</p>
-                      <p className="text-sm">Tel: {estimate.phone || '-'}</p>
+                      <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
+                      <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
                     </div>
                     <div className="mt-2">
                       <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
