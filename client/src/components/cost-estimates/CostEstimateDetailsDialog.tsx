@@ -565,6 +565,13 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                         <CardTitle className="text-lg">Finanzübersicht</CardTitle>
                       </CardHeader>
                       <CardContent>
+                        <div className="mb-4">
+                          <p className="text-sm text-muted-foreground">Erstellt am</p>
+                          <p className="font-medium">
+                            {formatDate(estimate.created_at)}
+                          </p>
+                        </div>
+                        
                         {estimate.validUntil && (
                           <div className="mb-4">
                             <p className="text-sm text-muted-foreground">Gültig bis</p>
