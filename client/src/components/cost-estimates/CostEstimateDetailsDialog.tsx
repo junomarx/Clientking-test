@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { de } from "date-fns/locale";
+import { CostEstimatePrintButtons } from "./CostEstimateImprovedPrint";
 
 interface CostEstimateDetailsDialogProps {
   open: boolean;
@@ -733,9 +734,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                       )}
                       
                       {/* Druck- und Export-Optionen */}
+                      <CostEstimatePrintButtons 
+                        estimate={estimate}
+                        items={items}
+                        customer={customer}
+                      />
+                      {/* Alte Druckfunktion auskommentiert 
                       <Button 
                         variant="outline" 
-                        onClick={() => {
+                        onClick={() => {*/}
                           // Druckfunktion über ein neues Fenster öffnen
                           const printWindow = window.open('', '_blank');
                           if (!printWindow) {
