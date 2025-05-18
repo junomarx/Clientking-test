@@ -2565,7 +2565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         INSERT INTO cost_estimates (
           reference_number, customer_id, title, device_type, brand, model, 
           issue, status, created_at, updated_at, items, user_id, shop_id,
-          subtotal, tax_rate, tax_amount, total
+          subtotal, tax_rate, tax_amount, total, serial_number
         )
         VALUES (
           '${estimateNumber}', 
@@ -2584,7 +2584,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           '${data.subtotal}',    /* subtotal - Netto */
           '20',                  /* tax_rate - FEST 20% für Österreich */
           '${data.tax_amount}',  /* tax_amount - 20% MwSt */
-          '${data.total}'        /* total - Brutto */
+          '${data.total}',       /* total - Brutto */
+          ${data.serial_number ? `'${data.serial_number}'` : 'NULL'}
         )
         RETURNING *;
       `;
