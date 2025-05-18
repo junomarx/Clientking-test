@@ -2631,23 +2631,45 @@ export class DatabaseStorage implements IStorage {
 
       // Erstelle den Kostenvoranschlag mit Shop-ID und generierter Nummer
       // Sicherstellen, dass title und items immer gesetzt sind
-      const estimateData = {
-        ...estimate,
-        reference_number: estimateNumber,
-        title: estimate.title || "Kostenvoranschlag", // Standardtitel setzen, falls keiner vorhanden
-        items: estimate.items || [], // Leere Items-Liste setzen, falls keine vorhanden
-        userId,
-        shopId,
-      };
+      // Füge einen direkten SQL-Wert für 'items' ein, der JSONB sein muss
+      try {
+        const sql = `
+          INSERT INTO cost_estimates (
+            reference_number, customer_id, title, device_type, brand, model, 
+            issue, status, created_at, updated_at, items, user_id, shop_id
+          )
+          VALUES (
+            $1, $2, $3, $4, $5, $6, 
+            $7, $8, NOW(), NOW(), '[]'::jsonb, $9, $10
+          )
+          RETURNING *;
+        `;
+        
+        const result = await db.execute(sql, [
+          estimateNumber,
+          estimate.customerId,
+          estimate.title || "Kostenvoranschlag",
+          estimate.deviceType,
+          estimate.brand,
+          estimate.model,
+          estimate.issue,
+          "offen",
+          userId,
+          shopId
+        ]);
+        
+        if (result.rows && result.rows.length > 0) {
+          console.log(`Neuer Kostenvoranschlag ID ${result.rows[0].id} (${estimateNumber}) erstellt für Shop ${shopId}`);
+          return result.rows[0];
+        } else {
+          throw new Error("Keine Daten vom Insert zurückgegeben.");
+        }
+      } catch (err) {
+        console.error("Fehler beim SQL-Insert für Kostenvoranschlag:", err);
+        throw err;
+      }
 
-      // Kostenvoranschlag in die Datenbank einfügen
-      const [createdEstimate] = await db
-        .insert(costEstimates)
-        .values(estimateData)
-        .returning();
-
-      console.log(`Neuer Kostenvoranschlag ID ${createdEstimate.id} (${estimateNumber}) erstellt für Shop ${shopId}`);
-      return createdEstimate;
+      // Dieser Teil wird nicht mehr ausgeführt, da wir das Insert direkt per SQL machen
     } catch (error) {
       console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
       throw error;
