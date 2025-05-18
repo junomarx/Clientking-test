@@ -1,68 +1,76 @@
-// Druckfunktionen für Kostenvoranschläge
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
+// Druckfunktion für Kostenvoranschläge
 
-interface CostEstimatePosition {
+interface CostEstimateItem {
+  id?: number;
   description: string;
   quantity: number;
   unitPrice: string;
   totalPrice: string;
 }
 
-interface Customer {
-  firstName?: string;
-  lastName?: string;
-  streetAddress?: string;
-  zipCode?: string;
-  city?: string;
-}
-
-interface BusinessSettings {
-  businessName?: string;
+interface PrintCustomer {
+  name: string;
   streetAddress?: string;
   zipCode?: string;
   city?: string;
   phone?: string;
   email?: string;
-  logoUrl?: string;
 }
 
-interface CostEstimate {
-  reference_number: string;
-  created_at: string;
+interface PrintCostEstimateData {
+  companyName: string;
+  companyAddress: string;
+  companyCity: string;
+  companyPhone: string;
+  companyEmail: string;
+  referenceNumber: string;
+  customer: PrintCustomer;
   brand: string;
   model: string;
-  serial_number?: string;
+  serialNumber?: string;
   issue: string;
-  notes?: string;
+  items: CostEstimateItem[];
   subtotal: string;
-  tax_rate: number;
-  tax_amount: string;
+  taxRate: string;
+  taxAmount: string;
   total: string;
   validUntil?: string;
-  firstname?: string;
-  lastname?: string;
-  phone?: string;
-  email?: string;
+  notes?: string;
 }
 
-export function generatePrintHtml(
-  estimate: CostEstimate,
-  items: CostEstimatePosition[],
-  customer: Customer | null,
-  businessSettings: BusinessSettings | null
-): string {
-  // Aktuelles Datum formatieren
+/**
+ * Funktion zum Drucken eines Kostenvoranschlags in einem neuen Fenster
+ */
+export function printCostEstimate(data: PrintCostEstimateData): void {
+  // Druckfunktion über ein neues Fenster öffnen
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    console.error("Popup-Blocker verhindern das Öffnen des Druckfensters");
+    return;
+  }
+  
+  // Datum formatieren für "Gültig bis"
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'unbegrenzt';
+    try {
+      const date = new Date(dateString);
+      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+    } catch (error) {
+      return 'unbegrenzt';
+    }
+  };
+
+  // Heute formatieren
   const today = new Date();
-  const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
+  const todayFormatted = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
   
   // HTML für Druckansicht generieren
-  return `
+  const html = `
     <!DOCTYPE html>
     <html lang="de">
     <head>
       <meta charset="UTF-8">
-      <title>Kostenvoranschlag ${estimate.reference_number}</title>
+      <title>Kostenvoranschlag ${data.referenceNumber}</title>
       <style>
         @page {
             size: A4;
@@ -285,29 +293,28 @@ export function generatePrintHtml(
     <body>
       <div class="header">
         <div class="logo-container">
-            ${businessSettings?.logoUrl ? 
-              `<img src="${businessSettings.logoUrl}" alt="Firmenlogo" style="max-width: 100%; max-height: 100%;">` : 
-              'Firmenlogo'}
+            Firmenlogo
         </div>
         <div class="company-info">
-            <p class="company-name">${businessSettings?.businessName || 'Mac and PhoneDoc'}</p>
-            <p>${businessSettings?.streetAddress || 'Amerlingstraße 19'}<br>
-            ${businessSettings?.zipCode || '1060'} ${businessSettings?.city || 'Wien'}<br>
-            ${businessSettings?.phone || '+4314103511'}<br>
-            ${businessSettings?.email || 'office@macandphonedoc.at'}</p>
+            <p class="company-name">${data.companyName}</p>
+            <p>${data.companyAddress}<br>
+            ${data.companyCity}<br>
+            ${data.companyPhone}<br>
+            ${data.companyEmail}</p>
         </div>
       </div>
     
       <div class="customer-info">
         <div class="section-title">Kundeninformationen</div>
-        <p class="customer-name">${customer ? `${customer.firstName} ${customer.lastName}` : 
-          (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : 'Kunde'}</p>
-        <p>${customer?.streetAddress || ''}</p>
-        <p>${customer?.zipCode || ''} ${customer?.city || ''}</p>
+        <p class="customer-name">${data.customer.name}</p>
+        <p>${data.customer.streetAddress || ''}</p>
+        <p>${data.customer.zipCode || ''} ${data.customer.city || ''}</p>
+        <p>Tel: ${data.customer.phone || ''}</p>
+        <p>Email: ${data.customer.email || ''}</p>
       </div>
     
       <div class="document-title">Kostenvoranschlag</div>
-      <div class="auftragsnummer">${estimate.reference_number}</div>
+      <div class="auftragsnummer">${data.referenceNumber}</div>
       <div class="document-date">Erstellt am: ${todayFormatted}</div>
     
       <!-- Geräteinformationen -->
@@ -315,19 +322,19 @@ export function generatePrintHtml(
         <div class="info-column">
             <div class="info-item">
                 <div class="info-label">Hersteller</div>
-                <div class="info-value">${estimate.brand}</div>
+                <div class="info-value">${data.brand}</div>
             </div>
         </div>
         <div class="info-column">
             <div class="info-item">
                 <div class="info-label">Modell</div>
-                <div class="info-value">${estimate.model}</div>
+                <div class="info-value">${data.model}</div>
             </div>
         </div>
         <div class="info-column">
             <div class="info-item">
                 <div class="info-label">Seriennummer</div>
-                <div class="info-value">${estimate.serial_number || '-'}</div>
+                <div class="info-value">${data.serialNumber || '-'}</div>
             </div>
         </div>
       </div>
@@ -335,7 +342,7 @@ export function generatePrintHtml(
       <!-- Fehlerbeschreibung -->
       <div class="section">
         <div class="section-title">Fehlerbeschreibung</div>
-        <div class="box-content">${estimate.issue}</div>
+        <div class="box-content">${data.issue}</div>
       </div>
     
       <!-- Positionen -->
@@ -352,7 +359,7 @@ export function generatePrintHtml(
             </tr>
           </thead>
           <tbody>
-            ${items.map((item, index) => `
+            ${data.items.map((item, index) => `
               <tr>
                 <td>${index + 1}</td>
                 <td>${item.description}</td>
@@ -367,15 +374,15 @@ export function generatePrintHtml(
         <div class="price-summary">
           <div class="price-row">
             <span class="price-label">Zwischensumme:</span>
-            <span class="price-value">${estimate.subtotal} €</span>
+            <span class="price-value">${data.subtotal} €</span>
           </div>
           <div class="price-row">
-            <span class="price-label">MwSt (${estimate.tax_rate}%):</span>
-            <span class="price-value">${estimate.tax_amount} €</span>
+            <span class="price-label">MwSt (${data.taxRate}%):</span>
+            <span class="price-value">${data.taxAmount} €</span>
           </div>
           <div class="price-total">
             <span class="price-total-label">Gesamtbetrag:</span>
-            <span class="price-total-value">${estimate.total} €</span>
+            <span class="price-total-value">${data.total} €</span>
           </div>
         </div>
       </div>
@@ -387,39 +394,30 @@ export function generatePrintHtml(
         <p><strong>2.</strong> Sollte sich während der Reparatur ein erweiterter Schaden zeigen, wird der Kunde vorab kontaktiert.</p>
         <p><strong>3.</strong> Die im Kostenvoranschlag genannten Preise verstehen sich inkl. MwSt., sofern nicht anders angegeben.</p>
         <p><strong>4.</strong> Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</p>
-        <p><strong>5.</strong> Dieser Kostenvoranschlag ist bis ${estimate.validUntil ? 
-          format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt'} gültig.</p>
+        <p><strong>5.</strong> Dieser Kostenvoranschlag ist bis ${data.validUntil ? formatDate(data.validUntil) : 'unbegrenzt'} gültig.</p>
       </div>
     
-      ${estimate.notes ? `
+      ${data.notes ? `
       <div class="section">
         <div class="section-title">Zusätzliche Notizen</div>
-        <div class="box-content">${estimate.notes}</div>
+        <div class="box-content">${data.notes}</div>
       </div>
       ` : ''}
     </body>
     </html>
   `;
-}
-
-// Funktion zum Öffnen des Druckfensters
-export function openPrintWindow(html: string, autoPrint = false): Window | null {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    return null;
-  }
   
-  // HTML im neuen Fenster einfügen
+  // HTML im neuen Fenster einfügen und drucken
   printWindow.document.open();
   printWindow.document.write(html);
   printWindow.document.close();
   
-  // Warten bis Ressourcen geladen sind
-  if (autoPrint) {
-    printWindow.onload = () => {
-      printWindow.print();
-    };
-  }
-  
-  return printWindow;
+  // Warten bis Ressourcen geladen sind, dann drucken
+  printWindow.onload = () => {
+    printWindow.print();
+    // Optional: Fenster nach dem Drucken schließen
+    // printWindow.close();
+  };
 }
+
+export default printCostEstimate;
