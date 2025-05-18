@@ -354,7 +354,11 @@ export function NewCostEstimateDialog({
     // Positionen zum Datensatz hinzufügen
     const formData = {
       ...data,
-      items: items
+      items: items,
+      issue: data.issueDescription, // Umbenennung für API-Konformität
+      total: data.totalPrice, // Umbenennung für API-Konformität
+      tax_rate: "20", // Explizit 20% MwSt für Österreich
+      tax_amount: data.taxAmount
     };
     
     console.log("Formular-Daten:", formData);

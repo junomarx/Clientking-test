@@ -2641,8 +2641,8 @@ export class DatabaseStorage implements IStorage {
             ${userId}, 
             ${shopId},
             '${totalPrice}',    /* subtotal */
-            '${estimate.tax_rate || '20'}',  /* tax_rate (Standard: 20% für Österreich) */
-            '${estimate.tax_amount || (parseFloat(totalPrice) * 0.2).toFixed(2)}',  /* tax_amount */
+            '20',               /* tax_rate (Fix: Immer 20% für Österreich) */
+            '${(parseFloat(totalPrice) * 0.2).toFixed(2)}',  /* tax_amount (Fix: Immer 20% MwSt) */
             '${totalPrice}'     /* total */
           )
           RETURNING *;
