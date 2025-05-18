@@ -380,8 +380,9 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    // Wir definieren "items" für die Templates
+                    // Wir definieren sowohl "items" als auch "parsedItems" für die Templates
                     const items = parsedItems;
+                    console.log("Positionen für Druck:", items);
                     
                     // Druckfunktion über ein neues Fenster öffnen
                     const printWindow = window.open('', '_blank');
