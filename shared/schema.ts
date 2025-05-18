@@ -387,6 +387,8 @@ export const costEstimates = pgTable("cost_estimates", {
   tax_rate: text("tax_rate"),
   tax_amount: text("tax_amount"),
   total: text("total"),
+  // Positionen werden direkt als JSONB gespeichert
+  items: text("items").default('[]'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jeder Kostenvoranschlag gehört zu einem Benutzer/Unternehmen
