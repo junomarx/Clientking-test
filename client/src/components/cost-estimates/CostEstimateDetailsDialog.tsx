@@ -84,7 +84,10 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     queryFn: async () => {
       if (!estimateId) return null;
       const response = await apiRequest('GET', `/api/cost-estimates/${estimateId}`);
-      return await response.json();
+      const data = await response.json();
+      // Debug-Ausgabe
+      console.log("API-Antwort für Detailansicht:", data);
+      return data;
     },
     enabled: !!estimateId && open
   });
