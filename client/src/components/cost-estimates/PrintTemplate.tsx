@@ -29,7 +29,7 @@ export function generatePrintHtml({
   const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
-    : format(new Date(today.setMonth(today.getMonth() + 1)), 'dd.MM.yyyy', { locale: de });
+    : format(new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de });
   
   // Kundenanzeigename vorbereiten
   const customerName = customer 
@@ -314,7 +314,7 @@ export function generatePrintHtml({
         </div>
         
         <div class="note">
-          <p>Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 30 Tage'}.</p>
+          <p>Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 14 Tage'}.</p>
           <p>Mit freundlichen Grüßen,<br>${businessName}</p>
         </div>
       </div>
