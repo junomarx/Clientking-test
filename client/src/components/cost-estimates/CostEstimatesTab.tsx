@@ -18,20 +18,26 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 
-// Interface für Kostenvoranschläge
+// Interface für Kostenvoranschläge - angepasst an die Datenbankstruktur
 interface CostEstimate {
   id: number;
-  estimateNumber: string;
+  reference_number: string; // Angepasst an Datenbankfeldname
   customerId: number;
   deviceType: string;
-  manufacturer: string;
+  brand: string; // Ersetzt manufacturer
   model: string;
   issue: string;
-  estimatedCost: string;
   notes?: string;
+  title?: string;
+  description?: string;
+  serial_number?: string;
   status: string;
   convertedToRepair: boolean;
   validUntil?: string;
+  subtotal?: string;
+  tax_rate?: string;
+  tax_amount?: string;
+  total?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -272,7 +278,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                         <TableCell className="font-medium">
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger>{estimate.estimateNumber}</TooltipTrigger>
+                              <TooltipTrigger>{estimate.reference_number}</TooltipTrigger>
                               <TooltipContent>
                                 <p>Klicken Sie, um Details anzuzeigen</p>
                               </TooltipContent>
