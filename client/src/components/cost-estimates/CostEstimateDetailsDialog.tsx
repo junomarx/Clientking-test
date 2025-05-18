@@ -1116,7 +1116,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           };
                         }}
                       >
-                        <Printer className="h-4 w-4 mr-2" />
+                        <FileText className="h-4 w-4 mr-2" />
                         Drucken
                       </Button>
                       <Button 
