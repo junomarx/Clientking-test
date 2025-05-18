@@ -2637,12 +2637,12 @@ export class DatabaseStorage implements IStorage {
             'offen', 
             NOW(), 
             NOW(), 
-            '[]'::jsonb, 
+            '${JSON.stringify(estimate.items || [])}',
             ${userId}, 
             ${shopId},
             '${totalPrice}',    /* subtotal */
-            '19',               /* tax_rate (Standard: 19%) */
-            '${(parseFloat(totalPrice) * 0.19).toFixed(2)}',  /* tax_amount */
+            '${estimate.tax_rate || '20'}',  /* tax_rate (Standard: 20% für Österreich) */
+            '${estimate.tax_amount || (parseFloat(totalPrice) * 0.2).toFixed(2)}',  /* tax_amount */
             '${totalPrice}'     /* total */
           )
           RETURNING *;
