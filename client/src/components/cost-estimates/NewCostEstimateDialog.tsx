@@ -30,7 +30,9 @@ interface Customer {
 // Validierungsschema für das Formular
 const costEstimateSchema = z.object({
   // Kundenreferenz-ID
-  customerId: z.number().optional(),
+  customerId: z.number({
+    required_error: "Bitte wählen Sie einen Kunden aus"
+  }),
   
   // Titel und Beschreibung
   title: z.string().default("Kostenvoranschlag"),
@@ -88,7 +90,7 @@ export function NewCostEstimateDialog({
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
     defaultValues: {
-      customerId: undefined,
+      customerId: undefined as unknown as number, // Wird später durch einen echten Wert ersetzt
       title: "Kostenvoranschlag",
       firstName: "",
       lastName: "",
