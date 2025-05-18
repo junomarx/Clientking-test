@@ -154,8 +154,8 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
     
     const searchTermLower = searchTerm.toLowerCase();
     return (
-      estimate.estimateNumber.toLowerCase().includes(searchTermLower) ||
-      estimate.manufacturer.toLowerCase().includes(searchTermLower) ||
+      estimate.reference_number.toLowerCase().includes(searchTermLower) ||
+      estimate.brand.toLowerCase().includes(searchTermLower) ||
       estimate.model.toLowerCase().includes(searchTermLower) ||
       estimate.deviceType.toLowerCase().includes(searchTermLower)
     );
@@ -298,7 +298,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                           </TooltipProvider>
                         </TableCell>
                         <TableCell>
-                          {estimate.manufacturer} {estimate.model}
+                          {estimate.brand} {estimate.model}
                           <div className="text-xs text-muted-foreground">
                             {estimate.deviceType}
                           </div>
@@ -309,7 +309,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          {parseFloat(estimate.estimatedCost).toLocaleString('de-DE', {
+                          {parseFloat(estimate.total || "0").toLocaleString('de-DE', {
                             style: 'currency',
                             currency: 'EUR'
                           })}

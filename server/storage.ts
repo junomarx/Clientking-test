@@ -413,10 +413,14 @@ export class DatabaseStorage implements IStorage {
     console.log(`Abrufen aller Kostenvoranschläge für Shop ${shopId}`);
     
     try {
-      // Strenge Shop-Isolation: Nur Kostenvoranschläge aus dem eigenen Shop anzeigen
-      return await db.select().from(costEstimates)
-        .where(eq(costEstimates.shopId, shopId))
-        .orderBy(desc(costEstimates.createdAt));
+      // Verwende direkten SQL-Zugriff statt Drizzle, um Probleme mit Feldnamen zu vermeiden
+      const result = await pool.query(`
+        SELECT * FROM cost_estimates 
+        WHERE shop_id = $1
+        ORDER BY created_at DESC
+      `, [shopId]);
+      
+      return result.rows;
     } catch (error) {
       console.error("Fehler beim Abrufen der Kostenvoranschläge:", error);
       return [];
