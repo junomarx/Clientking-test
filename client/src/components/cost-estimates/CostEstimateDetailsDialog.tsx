@@ -616,6 +616,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           </div>
                         </div>
                       )}
+                      
+                      {typeof items === 'undefined' && !isLoadingItems && (
+                        <div className="flex justify-center items-center py-12">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                      )}
 
                       {items.length > 0 ? (
                         <Table>
@@ -629,7 +635,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {items.map((item: any, index: number) => (
+                            {items && items.map((item: CostEstimateItem, index: number) => (
                               <TableRow key={item.id || index}>
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell>{item.description}</TableCell>
