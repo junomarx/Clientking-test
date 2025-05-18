@@ -94,7 +94,7 @@ export function NewCostEstimateDialog({
       phone: "",
       email: "",
       deviceType: "",
-      manufacturer: "",
+      brand: "",
       model: "",
       serialNumber: "",
       issueDescription: "",
@@ -450,13 +450,13 @@ export function NewCostEstimateDialog({
                     form.setValue('deviceType', deviceType);
                     setSelectedDeviceTypeId(deviceTypeId);
                     // Zurücksetzen der abhängigen Felder bei Änderung
-                    form.setValue('manufacturer', '');
+                    form.setValue('brand', '');
                     form.setValue('model', '');
                     setSelectedBrandId(null);
                     setSelectedModelId(null);
                   }}
                   onBrandSelect={(brand, brandId) => {
-                    form.setValue('manufacturer', brand);
+                    form.setValue('brand', brand);
                     setSelectedBrandId(brandId);
                     // Zurücksetzen des Modells bei Änderung
                     form.setValue('model', '');
@@ -486,7 +486,7 @@ export function NewCostEstimateDialog({
                 
                 <FormField
                   control={form.control}
-                  name="manufacturer"
+                  name="brand"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
