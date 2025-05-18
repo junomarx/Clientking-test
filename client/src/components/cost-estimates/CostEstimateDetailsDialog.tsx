@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { format } from "date-fns";
 import { CalendarIcon, Pencil, Trash2, Printer, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,6 +46,8 @@ interface CostEstimate {
   total?: string;
   created_at: string;
   updated_at: string;
+  // Liste der Positionen (kann String oder Array sein)
+  items?: string | any[];
   // Kundenfelder aus dem JOIN
   firstname?: string;
   lastname?: string;
@@ -76,30 +78,40 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   const { toast } = useToast();
 
   // Kostenvoranschlag abrufen
-  const { data: estimate, isLoading } = useQuery<CostEstimate>({
+  const { data: estimate, isLoading, error: estimateError } = useQuery<CostEstimate>({
     queryKey: ['/api/cost-estimates', estimateId],
-    enabled: open && estimateId !== null,
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler beim Laden des Kostenvoranschlags",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    enabled: open && estimateId !== null
   });
 
-  // Kunde abrufen
-  const { data: customer } = useQuery({
-    queryKey: ['/api/customers', estimate?.customer_id || estimate?.customerId],
-    enabled: open && (estimate?.customer_id !== undefined || estimate?.customerId !== undefined),
-    onError: (error: Error) => {
+  // Fehlerbehandlung für Kostenvoranschlag
+  useEffect(() => {
+    if (estimateError) {
       toast({
-        title: "Fehler beim Laden der Kundendaten",
-        description: error.message,
+        title: "Fehler beim Laden des Kostenvoranschlags",
+        description: (estimateError as Error).message,
         variant: "destructive",
       });
     }
+  }, [estimateError, toast]);
+
+  // Kunde abrufen - Unterstützt beide Feldnamen
+  const customerId = estimate?.customer_id || estimate?.customerId;
+  
+  const { data: customer, error: customerError } = useQuery({
+    queryKey: ['/api/customers', customerId],
+    enabled: open && customerId !== undefined
   });
+  
+  // Fehlerbehandlung für Kundendaten
+  useEffect(() => {
+    if (customerError) {
+      toast({
+        title: "Fehler beim Laden der Kundendaten",
+        description: (customerError as Error).message,
+        variant: "destructive",
+      });
+    }
+  }, [customerError, toast]);
 
   // Positionen aus dem items-Feld des Kostenvoranschlags parsen
   const parsedItems = (() => {
@@ -147,17 +159,21 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   const customerPhone = customer?.phone || estimate?.phone || '';
 
   // Geschäftseinstellungen für das Logo abrufen
-  const { data: businessSettings } = useQuery({
+  const { data: businessSettings, error: settingsError } = useQuery({
     queryKey: ['/api/business-settings'],
-    enabled: open,
-    onError: (error: Error) => {
+    enabled: open
+  });
+  
+  // Fehlerbehandlung für Geschäftseinstellungen
+  useEffect(() => {
+    if (settingsError) {
       toast({
         title: "Fehler beim Laden der Geschäftseinstellungen",
-        description: error.message,
+        description: (settingsError as Error).message,
         variant: "destructive",
       });
     }
-  });
+  }, [settingsError, toast]);
 
   if (!open || !estimateId) return null;
 
