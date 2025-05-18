@@ -149,7 +149,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
     
     toast({
       title: "Kostenvoranschlag wird erstellt",
-      description: `Für ${data.firstName} ${data.lastName} - ${data.manufacturer} ${data.model}`,
+      description: `Für ${data.firstName} ${data.lastName} - ${data.brand} ${data.model}`,
     });
   };
 
