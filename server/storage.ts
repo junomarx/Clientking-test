@@ -2150,34 +2150,47 @@ export class DatabaseStorage implements IStorage {
     status: string,
     currentUserId?: number,
   ): Promise<CostEstimate | undefined> {
-    if (!currentUserId) {
-      return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
-    }
+    try {
+      if (!currentUserId) {
+        return undefined; // Wenn keine Benutzer-ID angegeben ist, gebe undefined zurück
+      }
 
-    // Benutzer holen, um Shop-ID zu erhalten
-    const currentUser = await this.getUser(currentUserId);
-    if (!currentUser) return undefined;
+      // Benutzer holen, um Shop-ID zu erhalten
+      const currentUser = await this.getUser(currentUserId);
+      if (!currentUser) return undefined;
 
-    // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
-    if (!currentUser.shopId) {
-      console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben statt Fallback auf Shop 1
+      if (!currentUser.shopId) {
+        console.warn(`❌ Benutzer ${currentUser.username} (ID: ${currentUser.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+
+      console.log(`Aktualisiere Status für Kostenvoranschlag ${id} auf "${status}" für Benutzer ${currentUserId}`);
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopIdValue = currentUser.shopId;
+      
+      // SQL direkt ausführen, um Probleme mit dem ORM zu vermeiden
+      const sql = `
+        UPDATE cost_estimates 
+        SET status = '${status}', updated_at = NOW() 
+        WHERE id = ${id} AND shop_id = ${shopIdValue}
+        RETURNING *
+      `;
+      
+      const result = await db.execute(sql);
+      
+      if (result.rows && result.rows.length > 0) {
+        console.log(`Status für Kostenvoranschlag ${id} erfolgreich auf "${status}" aktualisiert`);
+        return result.rows[0] as CostEstimate;
+      } else {
+        console.log(`Kostenvoranschlag ${id} nicht gefunden oder Benutzer hat keine Berechtigung`);
+        return undefined;
+      }
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Status für Kostenvoranschlag ${id}:`, error);
       return undefined;
     }
-
-    // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
-    const shopIdValue = currentUser.shopId;
-    const whereCondition = and(
-      eq(costEstimates.id, id),
-      eq(costEstimates.shopId, shopIdValue),
-    ) as SQL<unknown>;
-
-    const [updatedEstimate] = await db
-      .update(costEstimates)
-      .set(updateData)
-      .where(whereCondition)
-      .returning();
-
-    return updatedEstimate;
   }
 
   async deleteCostEstimate(

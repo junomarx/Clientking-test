@@ -2474,6 +2474,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Kostenvoranschlag-Status aktualisieren
+  app.patch("/api/cost-estimates/:id/status", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const status = req.body.status;
+      if (!status) {
+        return res.status(400).json({ message: "Status muss angegeben werden" });
+      }
+      
+      const userId = (req.user as any).id;
+      const updatedEstimate = await storage.updateCostEstimateStatus(id, status, userId);
+      
+      if (!updatedEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden oder keine Berechtigung" });
+      }
+      
+      return res.json({ success: true, status });
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Status für Kostenvoranschlag ${req.params.id}:`, error);
+      return res.status(500).json({ message: "Fehler beim Aktualisieren des Status" });
+    }
+  });
+  
   // Kostenvoranschlag aktualisieren
   app.put("/api/cost-estimates/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
