@@ -135,14 +135,14 @@ export interface IStorage {
   getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined>;
   getCostEstimateItems(costEstimateId: number, userId: number): Promise<CostEstimateItem[]>;
   createCostEstimate(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate>;
-  createCostEstimateItem(item: InsertCostEstimateItem, userId: number): Promise<CostEstimateItem>;
+  // Die Methode createCostEstimateItem wurde entfernt (JSON-basierte Implementierung)
   updateCostEstimate(
     id: number,
     estimate: Partial<InsertCostEstimate>,
     userId: number
   ): Promise<CostEstimate | undefined>;
   deleteCostEstimate(id: number, userId: number): Promise<boolean>;
-  deleteCostEstimateItem(id: number, userId: number): Promise<boolean>;
+  // Die Methode deleteCostEstimateItem wurde entfernt (JSON-basierte Implementierung)
 
   // Customer methods
   getAllCustomers(userId: number): Promise<Customer[]>;
@@ -487,47 +487,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  // Erste Implementierung wird genutzt - weiter unten ist die korrekte vorhanden  
-  async _createCostEstimate_old(estimate: InsertCostEstimate, userId: number): Promise<CostEstimate> {
-    const user = await this.getUser(userId);
-    if (!user) throw new Error("Benutzer nicht gefunden");
-    
-    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
-    const shopId = user.shopId || 1;
-    
-    // Generiere eine eindeutige Kostenvoranschlags-Nummer
-    // Format: KV-[Jahr 2-stellig][Monat 2-stellig]-[3-stellige fortlaufende Nummer]
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2); // Letzten 2 Stellen des Jahres
-    const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Monat mit führender 0
-    
-    // Zähle bestehende Kostenvoranschläge für diesen Monat
-    const countResult = await db.select({ count: db.fn.count() }).from(costEstimates)
-      .where(
-        and(
-          eq(costEstimates.shopId, shopId),
-          // Filter für den aktuellen Monat, falls gewünscht
-        )
-      );
-    
-    const count = Number(countResult[0]?.count || 0) + 1;
-    const sequentialNumber = count.toString().padStart(3, '0');
-    const estimateNumber = `KV-${year}${month}-${sequentialNumber}`;
-    
-    try {
-      const [newCostEstimate] = await db.insert(costEstimates).values({
-        ...estimate,
-        reference_number: estimateNumber, // Korrigiert: Verwende reference_number statt estimateNumber
-        shopId,
-        userId,
-      }).returning();
-      
-      return newCostEstimate;
-    } catch (error) {
-      console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
-      throw new Error("Fehler beim Erstellen des Kostenvoranschlags");
-    }
-  }
+  // Diese alte Implementierung wurde entfernt, da wir jetzt ein JSON-basiertes System verwenden
   
   // Die createCostEstimateItem-Funktion wurde entfernt.
   // Stattdessen werden die Items jetzt direkt im Kostenvoranschlag als JSON gespeichert.
