@@ -2428,7 +2428,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const userId = (req.user as any).id;
-      const items = await storage.getCostEstimateItems(id, userId);
+      console.log(`getCostEstimateItems: Abrufen der Positionen für Kostenvoranschlag ${id}`);
+      
+      // Kostenvoranschlag direkt abfragen
+      const estimate = await storage.getCostEstimate(id, userId);
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // Positionen direkt aus dem items Feld des Kostenvoranschlags extrahieren
+      let items = [];
+      try {
+        if (estimate.items) {
+          console.log("Items aus Datenbank (Typ: " + typeof estimate.items + "):", estimate.items);
+          if (typeof estimate.items === 'string') {
+            items = JSON.parse(estimate.items);
+          } else if (Array.isArray(estimate.items)) {
+            items = estimate.items;
+          } else if (typeof estimate.items === 'object') {
+            items = estimate.items;
+          }
+        }
+        console.log(`Items sind ${Array.isArray(items) ? "bereits ein Array" : "KEIN Array"} mit ${items ? items.length : 0} Elementen`);
+      } catch (err) {
+        console.error("Fehler beim Parsen der Items:", err);
+      }
       
       res.json(items);
     } catch (error) {
@@ -2464,7 +2488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
       // Bei einem Bruttopreis von 240€ sind das 40€ MwSt.
       let total = parseFloat(data.total?.replace(',', '.') || '0');
-      let taxRate = 20; // 20% MwSt
+      let taxRate = 20; // 20% MwSt für Österreich
       
       // MwSt berechnen: Bruttopreis enthält bereits die MwSt
       // MwSt = Bruttopreis - (Bruttopreis / (1 + Steuersatz%/100))
@@ -2472,7 +2496,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Werte im data-Objekt aktualisieren
       data.tax_rate = taxRate.toString();
-      data.tax_amount = taxAmount.toFixed(2);
+      data.tax_amount = taxAmount.toFixed(2).replace('.', ',');
+      
+      console.log("Positionen vor dem Speichern:", data.items);
       
       // Sicherstellen, dass items ein Array ist (falls nicht vom Frontend geliefert)
       if (!data.items) {
