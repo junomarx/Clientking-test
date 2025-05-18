@@ -142,6 +142,16 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     },
     enabled: !!estimateId && open
   });
+  
+  // Abfrage für die Geschäftseinstellungen mit Logo
+  const { data: businessSettings, isLoading: isLoadingBusinessSettings } = useQuery({
+    queryKey: ['/api/business-settings'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/business-settings`);
+      return await response.json();
+    },
+    enabled: open
+  });
 
   // Mutation für das Hinzufügen von Positionen
   const addItemMutation = useMutation({
@@ -754,11 +764,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                             estimate,
                             customer,
                             items,
-                            businessName: "Mac and PhoneDoc",
-                            businessAddress: "Amerlingstraße 19",
-                            businessZipCity: "1060 Wien",
-                            businessPhone: "+4314103511",
-                            businessEmail: "office@macandphonedoc.at"
+                            businessName: businessSettings?.businessName || "Mac and PhoneDoc",
+                            businessAddress: businessSettings?.streetAddress || "Amerlingstraße 19",
+                            businessZipCity: `${businessSettings?.zipCode || "1060"} ${businessSettings?.city || "Wien"}`,
+                            businessPhone: businessSettings?.phone || "+4314103511",
+                            businessEmail: businessSettings?.email || "office@macandphonedoc.at",
+                            logoUrl: businessSettings?.logoImage || null
                           });
                           
                           // HTML im neuen Fenster einfügen und drucken
