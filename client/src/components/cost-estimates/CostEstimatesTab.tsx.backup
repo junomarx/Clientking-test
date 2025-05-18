@@ -168,6 +168,11 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
     
     // Mutation aufrufen, um den Kostenvoranschlag zu speichern
     createCostEstimateMutation.mutate(data);
+    
+    toast({
+      title: "Kostenvoranschlag wird erstellt",
+      description: `Für ${data.firstName} ${data.lastName} - ${data.brand} ${data.model}`,
+    });
   };
 
   // Gefilterte Kostenvoranschläge basierend auf der Suche
