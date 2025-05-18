@@ -762,7 +762,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           // Debug-Ausgabe für Kundendaten
                           console.log("Customer data for print:", customer);
                           
-                          // HTML für Druckansicht generieren
+                          // Komplettes HTML für Druckansicht mit fester Adresse
                           const html = `
                             <!DOCTYPE html>
                             <html lang="de">
