@@ -32,6 +32,9 @@ const costEstimateSchema = z.object({
   // Kundenreferenz-ID
   customerId: z.number().optional(),
   
+  // Titel und Beschreibung
+  title: z.string().default("Kostenvoranschlag"),
+  
   // Kundendaten
   firstName: z.string().min(1, "Vorname ist erforderlich"),
   lastName: z.string().min(1, "Nachname ist erforderlich"),
@@ -86,6 +89,7 @@ export function NewCostEstimateDialog({
     resolver: zodResolver(costEstimateSchema),
     defaultValues: {
       customerId: undefined,
+      title: "Kostenvoranschlag",
       firstName: "",
       lastName: "",
       address: "",
