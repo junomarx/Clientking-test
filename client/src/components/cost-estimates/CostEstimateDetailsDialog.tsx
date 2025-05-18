@@ -258,9 +258,14 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   </CardHeader>
                   <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="font-medium">{estimate.firstname} {estimate.lastname}</p>
-                      {estimate.email && <p className="text-sm">{estimate.email}</p>}
-                      {estimate.phone && <p className="text-sm">{estimate.phone}</p>}
+                      <p className="font-medium">
+                        {estimate.firstname || '-'} {estimate.lastname || '-'}
+                      </p>
+                      {estimate.email && <p className="text-sm">Email: {estimate.email}</p>}
+                      {estimate.phone && <p className="text-sm">Tel: {estimate.phone}</p>}
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id}</p>
                     </div>
                   </CardContent>
                 </Card>
