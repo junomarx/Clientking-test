@@ -383,326 +383,326 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
       {/* Hauptdialog */}
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        {isLoadingEstimate ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : estimateError ? (
-          <div className="text-center py-8 text-red-600">
-            <ShieldAlert className="h-12 w-12 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold">Fehler beim Laden des Kostenvoranschlags</h3>
-            <p>Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support.</p>
-          </div>
-        ) : estimate ? (
-          <>
-            <DialogHeader>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <DialogTitle className="text-xl">
-                  Kostenvoranschlag {estimate.reference_number}
-                </DialogTitle>
-                <div className="flex items-center space-x-2">
-                  {getStatusBadge(estimate.status)}
-                  <span className="text-sm text-muted-foreground">
-                    {relativeTime(estimate.created_at)}
-                  </span>
+          {isLoadingEstimate ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : estimateError ? (
+            <div className="text-center py-8 text-red-600">
+              <ShieldAlert className="h-12 w-12 mx-auto mb-2" />
+              <h3 className="text-lg font-semibold">Fehler beim Laden des Kostenvoranschlags</h3>
+              <p>Bitte versuchen Sie es später erneut oder kontaktieren Sie den Support.</p>
+            </div>
+          ) : estimate ? (
+            <>
+              <DialogHeader>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                  <DialogTitle className="text-xl">
+                    Kostenvoranschlag {estimate.reference_number}
+                  </DialogTitle>
+                  <div className="flex items-center space-x-2">
+                    {getStatusBadge(estimate.status)}
+                    <span className="text-sm text-muted-foreground">
+                      {relativeTime(estimate.created_at)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <DialogDescription>
-                {estimate.brand} {estimate.model} - {estimate.issue}
-              </DialogDescription>
-              <div className="flex justify-end mt-2 space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.href = `/cost-estimates/edit/${estimateId}`}
-                >
-                  <Edit className="h-4 w-4 mr-1" /> Bearbeiten
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" /> Löschen
-                </Button>
-              </div>
-            </DialogHeader>
-
-
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="items">Positionen</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="details" className="space-y-4">
-                {/* Kundeninformationen */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Kundeninformationen</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">
-                        {/* Versuche verschiedene mögliche Formate für Kundendaten */}
-                        {customer ? `${customer.firstName || '-'} ${customer.lastName || '-'}` : 
-                         (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : '-'}
-                      </p>
-                      <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
-                      <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
-                      {customer?.streetAddress && (
-                        <>
-                          <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
-                          <p className="text-sm">{customer.streetAddress}</p>
-                          <p className="text-sm">{customer.zipCode} {customer.city}</p>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Geräteinformationen */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Geräteinformationen</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gerätetyp</p>
-                      <p className="font-medium">{estimate.deviceType}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Marke</p>
-                      <p className="font-medium">{estimate.brand}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Modell</p>
-                      <p className="font-medium">{estimate.model}</p>
-                    </div>
-                    {estimate.serial_number && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Seriennummer</p>
-                        <p className="font-medium">{estimate.serial_number}</p>
-                      </div>
-                    )}
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-muted-foreground">Fehlerbeschreibung</p>
-                      <p className="font-medium">{estimate.issue}</p>
-                    </div>
-                    {estimate.notes && (
-                      <div className="md:col-span-2">
-                        <p className="text-sm text-muted-foreground">Notizen</p>
-                        <p className="font-medium whitespace-pre-wrap">{estimate.notes}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Preisdetails */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Preisdetails</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">Zwischensumme</span>
-                      <span>{estimate.subtotal}</span>
-                    </div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-muted-foreground">MwSt ({estimate.tax_rate}%)</span>
-                      <span>{estimate.tax_amount}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
-                      <span>Gesamtbetrag</span>
-                      <span>{estimate.total}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Meta-Informationen */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Erstellt am</p>
-                      <p className="font-medium">{formatDate(estimate.created_at)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gültig bis</p>
-                      <p className="font-medium">
-                        {estimate.validUntil ? formatDate(estimate.validUntil) : "Kein Ablaufdatum"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <p className="font-medium">{getStatusBadge(estimate.status)}</p>
-                    </div>
-                    {estimate.status === 'angenommen' && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Angenommen am</p>
-                        <p className="font-medium">
-                          {estimate.accepted_at ? formatDate(estimate.accepted_at) : "Unbekannt"}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Aktionen */}
-                <div className="flex flex-col md:flex-row gap-2 justify-end mt-6">
+                <DialogDescription>
+                  {estimate.brand} {estimate.model} - {estimate.issue}
+                </DialogDescription>
+                <div className="flex justify-end mt-2 space-x-2">
                   <Button 
                     variant="outline" 
-                    className="w-full md:w-auto"
-                    onClick={() => onClose()}
+                    size="sm"
+                    onClick={() => window.location.href = `/cost-estimates/edit/${estimateId}`}
                   >
-                    Schließen
+                    <Edit className="h-4 w-4 mr-1" /> Bearbeiten
                   </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full md:w-auto flex items-center gap-2"
-                    onClick={() => window.print()}
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
                   >
-                    <Printer className="h-4 w-4" />
-                    Drucken
+                    <Trash2 className="h-4 w-4 mr-1" /> Löschen
                   </Button>
-
-                  {estimate.status === 'offen' && (
-                    <>
-                      <Button
-                        variant="destructive"
-                        className="w-full md:w-auto flex items-center gap-2"
-                        onClick={handleReject}
-                        disabled={updateStatusMutation.isPending}
-                      >
-                        {updateStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                        Ablehnen
-                      </Button>
-
-                      <Button
-                        variant="default"
-                        className="w-full md:w-auto flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                        onClick={handleAccept}
-                        disabled={updateStatusMutation.isPending}
-                      >
-                        {updateStatusMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                        Annehmen
-                      </Button>
-                    </>
-                  )}
-
-                  {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
-                    <Button
-                      variant="default"
-                      className="w-full md:w-auto flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                      onClick={handleConvertToRepair}
-                      disabled={convertToRepairMutation.isPending}
-                    >
-                      {convertToRepairMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpRight className="h-4 w-4" />}
-                      In Reparatur umwandeln
-                    </Button>
-                  )}
-
-                  {estimate.convertedToRepair && (
-                    <Button
-                      variant="outline"
-                      className="w-full md:w-auto flex items-center gap-2"
-                      disabled={true}
-                    >
-                      <FileText className="h-4 w-4" />
-                      In Reparatur umgewandelt
-                    </Button>
-                  )}
                 </div>
-              </TabsContent>
+              </DialogHeader>
 
-              <TabsContent value="items">
-                {isLoadingItems ? (
-                  <div className="flex justify-center items-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="items">Positionen</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="details" className="space-y-4">
+                  {/* Kundeninformationen */}
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Kundeninformationen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="font-medium">
+                          {/* Versuche verschiedene mögliche Formate für Kundendaten */}
+                          {customer ? `${customer.firstName || '-'} ${customer.lastName || '-'}` : 
+                           (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : '-'}
+                        </p>
+                        <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
+                        <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
+                        {customer?.streetAddress && (
+                          <>
+                            <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
+                            <p className="text-sm">{customer.streetAddress}</p>
+                            <p className="text-sm">{customer.zipCode} {customer.city}</p>
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Geräteinformationen */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Geräteinformationen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Gerätetyp</p>
+                        <p className="font-medium">{estimate.deviceType}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Marke</p>
+                        <p className="font-medium">{estimate.brand}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Modell</p>
+                        <p className="font-medium">{estimate.model}</p>
+                      </div>
+                      {estimate.serial_number && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Seriennummer</p>
+                          <p className="font-medium">{estimate.serial_number}</p>
+                        </div>
+                      )}
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-muted-foreground">Fehlerbeschreibung</p>
+                        <p className="font-medium">{estimate.issue}</p>
+                      </div>
+                      {estimate.notes && (
+                        <div className="md:col-span-2">
+                          <p className="text-sm text-muted-foreground">Notizen</p>
+                          <p className="font-medium whitespace-pre-wrap">{estimate.notes}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Aktionen */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Aktionen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                      {estimate.status === 'offen' && (
+                        <>
+                          <Button 
+                            onClick={handleAccept}
+                            disabled={updateStatusMutation.isPending}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Annehmen
+                          </Button>
+                          <Button 
+                            onClick={handleReject}
+                            disabled={updateStatusMutation.isPending}
+                            variant="destructive"
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Ablehnen
+                          </Button>
+                        </>
+                      )}
+                      
+                      {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
+                        <Button 
+                          onClick={handleConvertToRepair}
+                          disabled={convertToRepairMutation.isPending}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <RotateCw className="h-4 w-4 mr-2" />
+                          In Reparatur umwandeln
+                        </Button>
+                      )}
+                      
+                      {/* Druck- und Export-Optionen */}
+                      <Button variant="outline">
+                        <Printer className="h-4 w-4 mr-2" />
+                        Drucken
+                      </Button>
+                      <Button variant="outline">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Als PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Finanzdetails */}
+                  {estimate.subtotal && estimate.total && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Finanzübersicht</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {estimate.validUntil && (
+                          <div className="mb-4">
+                            <p className="text-sm text-muted-foreground">Gültig bis</p>
+                            <p className="font-medium">
+                              {formatDate(estimate.validUntil)}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col items-end mt-6 space-y-2">
+                          <div className="flex justify-between w-48">
+                            <span className="text-muted-foreground">Zwischensumme</span>
+                            <span>{estimate.subtotal}</span>
+                          </div>
+                          <div className="flex justify-between w-48">
+                            <span className="text-muted-foreground">MwSt ({estimate.tax_rate}%)</span>
+                            <span>{estimate.tax_amount}</span>
+                          </div>
+                          <div className="flex justify-between w-48 font-bold text-lg pt-2 border-t">
+                            <span>Gesamt</span>
+                            <span>{estimate.total}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="items" className="space-y-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle className="text-lg">Positionen</CardTitle>
                       <Button 
-                        variant="outline" 
-                        size="sm"
+                        size="sm" 
                         onClick={() => setShowAddItemForm(true)}
+                        disabled={showAddItemForm}
                       >
-                        Neue Position hinzufügen
+                        + Position hinzufügen
                       </Button>
                     </CardHeader>
                     <CardContent>
+                      {isLoadingItems ? (
+                        <div className="flex justify-center py-6">
+                          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : items.length === 0 ? (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <p>Keine Positionen vorhanden</p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[50px]">#</TableHead>
+                                <TableHead>Beschreibung</TableHead>
+                                <TableHead className="text-right">Menge</TableHead>
+                                <TableHead className="text-right">Einzelpreis</TableHead>
+                                <TableHead className="text-right">Gesamtpreis</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {items && items.map((item: CostEstimateItem, index: number) => (
+                                <TableRow key={item.id}>
+                                  <TableCell>{index + 1}</TableCell>
+                                  <TableCell>{item.description}</TableCell>
+                                  <TableCell className="text-right">{item.quantity}</TableCell>
+                                  <TableCell className="text-right">{item.unitPrice} €</TableCell>
+                                  <TableCell className="text-right">{item.totalPrice} €</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+
                       {showAddItemForm && (
-                        <div className="mb-6 p-4 border rounded-md bg-muted/20">
-                          <h3 className="text-md font-medium mb-3">Neue Position</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                            <div className="col-span-2">
-                              <label className="text-sm font-medium block mb-1">Beschreibung</label>
-                              <input 
-                                type="text" 
-                                className="w-full p-2 border rounded-md"
-                                value={newItem.description}
-                                onChange={(e) => setNewItem({...newItem, description: e.target.value})}
-                                placeholder="z.B. Display-Austausch"
-                              />
-                            </div>
+                        <div className="mt-4 p-4 border rounded-md space-y-4">
+                          <div>
+                            <label className="text-sm font-medium">Beschreibung</label>
+                            <input 
+                              type="text"
+                              className="w-full mt-1 p-2 border rounded-md"
+                              value={newItem.description}
+                              onChange={(e) => setNewItem({
+                                ...newItem,
+                                description: e.target.value
+                              })}
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                              <label className="text-sm font-medium block mb-1">Menge</label>
+                              <label className="text-sm font-medium">Menge</label>
                               <input 
-                                type="number" 
-                                className="w-full p-2 border rounded-md"
+                                type="number"
+                                className="w-full mt-1 p-2 border rounded-md"
+                                min="1"
                                 value={newItem.quantity}
                                 onChange={(e) => {
                                   const quantity = parseInt(e.target.value) || 1;
-                                  const unitPrice = parseFloat(newItem.unitPrice.replace(',', '.')) || 0;
-                                  const total = (quantity * unitPrice).toFixed(2).replace('.', ',');
+                                  const totalPrice = calculateItemTotal(quantity, newItem.unitPrice);
                                   setNewItem({
-                                    ...newItem, 
-                                    quantity, 
-                                    totalPrice: total
+                                    ...newItem,
+                                    quantity,
+                                    totalPrice
                                   });
                                 }}
-                                min="1"
                               />
                             </div>
                             <div>
-                              <label className="text-sm font-medium block mb-1">Einzelpreis (€)</label>
+                              <label className="text-sm font-medium">Einzelpreis (€)</label>
                               <input 
-                                type="text" 
-                                className="w-full p-2 border rounded-md"
+                                type="text"
+                                className="w-full mt-1 p-2 border rounded-md"
                                 value={newItem.unitPrice}
                                 onChange={(e) => {
-                                  const unitPrice = e.target.value.replace(',', '.');
-                                  if (!isNaN(parseFloat(unitPrice)) || unitPrice === '' || unitPrice === '.') {
-                                    const formattedPrice = unitPrice === '' ? '0' : unitPrice;
-                                    const quantity = newItem.quantity || 1;
-                                    const total = (quantity * parseFloat(formattedPrice)).toFixed(2).replace('.', ',');
-                                    
-                                    setNewItem({
-                                      ...newItem, 
-                                      unitPrice: e.target.value,
-                                      totalPrice: total
-                                    });
-                                  }
+                                  const unitPrice = e.target.value;
+                                  const totalPrice = calculateItemTotal(newItem.quantity, unitPrice);
+                                  setNewItem({
+                                    ...newItem,
+                                    unitPrice,
+                                    totalPrice
+                                  });
                                 }}
-                                placeholder="0,00"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Gesamtpreis (€)</label>
+                              <input 
+                                type="text"
+                                readOnly
+                                className="w-full mt-1 p-2 border rounded-md bg-muted"
+                                value={newItem.totalPrice}
                               />
                             </div>
                           </div>
-                          <div className="flex justify-between mt-2">
-                            <Button variant="ghost" onClick={() => setShowAddItemForm(false)}>
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setShowAddItemForm(false)}
+                            >
                               Abbrechen
                             </Button>
                             <Button 
-                              onClick={handleAddItem} 
-                              disabled={!newItem.description || parseFloat(newItem.unitPrice.replace(',', '.')) <= 0}
+                              onClick={handleAddItem}
+                              disabled={!newItem.description || addItemMutation.isPending}
                             >
                               {addItemMutation.isPending ? (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -712,68 +712,15 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           </div>
                         </div>
                       )}
-                      
-                      {typeof items === 'undefined' && !isLoadingItems && (
-                        <div className="flex justify-center items-center py-12">
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                      )}
-
-                      {items.length > 0 ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-[50px]">Pos.</TableHead>
-                              <TableHead>Beschreibung</TableHead>
-                              <TableHead className="text-center">Anzahl</TableHead>
-                              <TableHead className="text-right">Einzelpreis</TableHead>
-                              <TableHead className="text-right">Gesamtpreis</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {items && items.map((item: CostEstimateItem, index: number) => (
-                              <TableRow key={item.id || index}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell>{item.description}</TableCell>
-                                <TableCell className="text-center">{item.quantity}</TableCell>
-                                <TableCell className="text-right">{item.unitPrice}</TableCell>
-                                <TableCell className="text-right">{item.totalPrice}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-8 text-center">
-                          <p className="text-muted-foreground mb-2">Keine Positionen vorhanden</p>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Fügen Sie Positionen hinzu, um den Kostenvoranschlag zu detaillieren.
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex flex-col items-end mt-6 space-y-2">
-                        <div className="flex justify-between w-48">
-                          <span className="text-muted-foreground">Zwischensumme</span>
-                          <span>{estimate.subtotal}</span>
-                        </div>
-                        <div className="flex justify-between w-48">
-                          <span className="text-muted-foreground">MwSt ({estimate.tax_rate}%)</span>
-                          <span>{estimate.tax_amount}</span>
-                        </div>
-                        <div className="flex justify-between w-48 font-bold text-lg pt-2 border-t">
-                          <span>Gesamt</span>
-                          <span>{estimate.total}</span>
-                        </div>
-                      </div>
                     </CardContent>
                   </Card>
-                )}
-              </TabsContent>
-            </Tabs>
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+                </TabsContent>
+              </Tabs>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
