@@ -1379,8 +1379,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                                    (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : 'Kunde'}</p>
                                 <p>${customer?.streetAddress || ''}</p>
                                 <p>${customer?.zipCode || ''} ${customer?.city || ''}</p>
-                                <p>Tel: ${customer?.phone || estimate.phone || ''}</p>
-                                <p>Email: ${customer?.email || estimate.email || ''}</p>
                               </div>
                             
                               <div class="document-title">Kostenvoranschlag</div>
