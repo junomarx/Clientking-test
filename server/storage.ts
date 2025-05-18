@@ -469,32 +469,45 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      // Die Items sind direkt im Kostenvoranschlag als Text-Feld gespeichert
+      console.log(`getCostEstimate: Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}`);
+      console.log(`Items-Wert (Typ: ${typeof costEstimate.items}):`, costEstimate.items);
+      
+      // Die Items sind direkt im Kostenvoranschlag als JSONB-Feld gespeichert
       try {
         if (costEstimate.items) {
-          // Probleme behandeln: [object Object] und andere ungültige JSON-Formate
-          const itemsValue = costEstimate.items as string;
-          
           // Wenn der Wert bereits ein Array ist, verwende es direkt
-          if (Array.isArray(itemsValue)) {
-            return itemsValue;
+          if (Array.isArray(costEstimate.items)) {
+            console.log(`Items sind bereits ein Array mit ${costEstimate.items.length} Elementen`);
+            return costEstimate.items;
           }
           
           // Wenn der Wert "[object Object]" ist, setze es auf ein leeres Array
-          if (itemsValue === "[object Object]") {
-            console.log(`Ungültiges '[object Object]' in Kostenvoranschlag ${costEstimateId} gefunden, korrigiere zu []`);
+          if (costEstimate.items === "[object Object]" || costEstimate.items === '{}') {
+            console.log(`Ungültiges Format in Kostenvoranschlag ${costEstimateId} gefunden, korrigiere zu []`);
             // Aktualisiere den Eintrag in der Datenbank
             await this.updateCostEstimate(costEstimateId, { items: '[]' }, userId);
             return [];
           }
           
-          // Versuche, das items-Feld als JSON zu parsen
-          if (typeof itemsValue === 'string') {
-            return JSON.parse(itemsValue);
+          // Versuche, das items-Feld als JSON zu parsen, wenn es ein String ist
+          if (typeof costEstimate.items === 'string') {
+            try {
+              const parsedItems = JSON.parse(costEstimate.items);
+              console.log(`Items erfolgreich geparst: ${parsedItems.length} Elemente gefunden`);
+              return parsedItems;
+            } catch (e) {
+              console.error(`Fehler beim JSON-Parsen von Items: ${e.message}`);
+              if (costEstimate.items === '[]' || costEstimate.items === '') {
+                return [];
+              }
+            }
           }
           
-          // Wenn es bereits ein Objekt ist, stelle sicher, dass es ein Array ist
-          return Array.isArray(itemsValue) ? itemsValue : [];
+          // Wenn es ein Objekt ist, konvertiere es zu einem Array
+          if (typeof costEstimate.items === 'object' && costEstimate.items !== null) {
+            console.log(`Items sind ein Objekt, versuche Konvertierung zu Array`);
+            return Array.isArray(costEstimate.items) ? costEstimate.items : [];
+          }
         }
       } catch (parseError) {
         console.error(`Fehler beim Parsen der Items für Kostenvoranschlag ${costEstimateId}:`, parseError);
@@ -503,6 +516,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Fallback: Leeres Array zurückgeben, wenn keine Items vorhanden oder Parsing fehlschlägt
+      console.log(`Fallback: Leeres Array für Kostenvoranschlag ${costEstimateId}`);
       return [];
     } catch (error) {
       console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}:`, error);
