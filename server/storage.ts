@@ -472,11 +472,34 @@ export class DatabaseStorage implements IStorage {
       // Die Items sind direkt im Kostenvoranschlag als Text-Feld gespeichert
       try {
         if (costEstimate.items) {
+          // Probleme behandeln: [object Object] und andere ungültige JSON-Formate
+          const itemsValue = costEstimate.items as string;
+          
+          // Wenn der Wert bereits ein Array ist, verwende es direkt
+          if (Array.isArray(itemsValue)) {
+            return itemsValue;
+          }
+          
+          // Wenn der Wert "[object Object]" ist, setze es auf ein leeres Array
+          if (itemsValue === "[object Object]") {
+            console.log(`Ungültiges '[object Object]' in Kostenvoranschlag ${costEstimateId} gefunden, korrigiere zu []`);
+            // Aktualisiere den Eintrag in der Datenbank
+            await this.updateCostEstimate(costEstimateId, { items: '[]' }, userId);
+            return [];
+          }
+          
           // Versuche, das items-Feld als JSON zu parsen
-          return JSON.parse(costEstimate.items as string);
+          if (typeof itemsValue === 'string') {
+            return JSON.parse(itemsValue);
+          }
+          
+          // Wenn es bereits ein Objekt ist, stelle sicher, dass es ein Array ist
+          return Array.isArray(itemsValue) ? itemsValue : [];
         }
       } catch (parseError) {
         console.error(`Fehler beim Parsen der Items für Kostenvoranschlag ${costEstimateId}:`, parseError);
+        // Bei einem Parse-Fehler, aktualisiere die Datenbank mit einem leeren Array
+        await this.updateCostEstimate(costEstimateId, { items: '[]' }, userId);
       }
       
       // Fallback: Leeres Array zurückgeben, wenn keine Items vorhanden oder Parsing fehlschlägt
