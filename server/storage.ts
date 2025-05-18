@@ -2591,17 +2591,18 @@ export class DatabaseStorage implements IStorage {
       const month = String(date.getMonth() + 1).padStart(2, '0');
       
       // Hole den letzten Kostenvoranschlag des Monats mit SQL, da die db.query Methode Probleme hat
+      // Verwende reference_number statt estimate_number (korrekter Spaltenname)
       const pattern = `KV-${year}${month}-%`;
       const result = await pool.query(
-        `SELECT estimate_number FROM cost_estimates 
-         WHERE shop_id = $1 AND estimate_number LIKE $2 
+        `SELECT reference_number FROM cost_estimates 
+         WHERE shop_id = $1 AND reference_number LIKE $2 
          ORDER BY id DESC LIMIT 1`,
         [shopId, pattern]
       );
 
       let nextNumber = 1;
       if (result.rows.length > 0) {
-        const lastEstimateNumber = result.rows[0].estimate_number;
+        const lastEstimateNumber = result.rows[0].reference_number;
         const match = lastEstimateNumber.match(/KV-\d{4}-(\d{3})/);
         if (match && match[1]) {
           nextNumber = parseInt(match[1]) + 1;
@@ -2613,11 +2614,12 @@ export class DatabaseStorage implements IStorage {
       console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
 
       // Erstelle den Kostenvoranschlag mit Shop-ID und generierter Nummer
+      // Verwende reference_number statt estimateNumber (korrekter Spaltenname)
       const [createdEstimate] = await db
         .insert(costEstimates)
         .values({
           ...estimate,
-          estimateNumber,
+          reference_number: estimateNumber, // Hier wird der korrekte Spaltenname verwendet
           userId,
           shopId,
         })
