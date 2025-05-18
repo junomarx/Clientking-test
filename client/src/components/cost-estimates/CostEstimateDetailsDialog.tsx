@@ -759,6 +759,10 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                             return;
                           }
                           
+                          // Debug-Ausgabe: Prüfen, ob serial_number oder serialNumber existiert
+                          console.log("Estimate für Druck:", estimate);
+                          console.log("Seriennummer:", estimate.serial_number || estimate.serialNumber || "Keine Seriennummer gefunden");
+                          
                           // HTML für Druckansicht generieren mit unserer sauberen Funktion
                           const html = generatePrintHtml({
                             estimate,
