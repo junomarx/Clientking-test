@@ -2469,15 +2469,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Erstelle neuen Kostenvoranschlag mit Daten:", JSON.stringify(req.body));
       
-      // Sicherstellen, dass wir einen korrekten items Array haben
-      if (req.body.items && !Array.isArray(req.body.items)) {
+      // Robust machen wir die Verarbeitung der Positionen (items)
+      let processedItems = [];
+      if (req.body.items) {
         try {
-          req.body.items = JSON.parse(req.body.items);
+          if (typeof req.body.items === 'string') {
+            // Versuche zu parsen, falls es ein JSON-String ist
+            processedItems = JSON.parse(req.body.items);
+          } else if (Array.isArray(req.body.items)) {
+            // Bereits ein Array, direkt übernehmen
+            processedItems = req.body.items;
+          }
         } catch (e) {
           console.warn("Items konnten nicht geparst werden:", e);
-          req.body.items = [];
+          // Falls ein Fehler auftritt, leeres Array verwenden
+          processedItems = [];
         }
       }
+      
+      // Items zurück in request.body setzen
+      req.body.items = processedItems;
+      console.log("Verarbeitete Items:", processedItems);
       
       // Validierung der Daten mit Zod
       const data = insertCostEstimateSchema.parse(req.body);
@@ -2485,39 +2497,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Zusätzliche Validierung - Prüfe, ob der Kunde zum Shop des Benutzers gehört
       await validateCustomerBelongsToShop(data.customerId, (req.user as any).id);
       
-      // MwSt korrekt berechnen - IMMER 20% im Bruttopreis enthalten (Österreich)
+      // !!! FIX: IMMER 20% MwSt für Österreich !!!
+      // MwSt korrekt berechnen - 20% im Bruttopreis enthalten
       // Bei einem Bruttopreis von 240€ sind das 40€ MwSt.
       let total = parseFloat(data.total?.replace(',', '.') || '0');
-      const taxRate = 20; // FIX: Immer 20% MwSt für Österreich
       
-      // MwSt berechnen: Bruttopreis enthält bereits die MwSt
-      // MwSt = Bruttopreis - (Bruttopreis / (1 + Steuersatz%/100))
-      const taxAmount = total - (total / (1 + taxRate/100));
+      // Brutto-Betrag durch 1.2 teilen um Netto zu bekommen (20% MwSt)
+      const subtotal = (total / 1.2).toFixed(2);
       
-      // Werte im data-Objekt aktualisieren und fixieren
-      data.tax_rate = "20"; // FIX: Immer als String "20" speichern
-      data.tax_amount = taxAmount.toFixed(2).replace('.', ',');
+      // MwSt = Brutto - Netto
+      const taxAmount = (total - parseFloat(subtotal)).toFixed(2);
       
-      console.log("Kostenvoranschlag Steuerberechnung:", {
-        total,
-        taxRate,
-        taxAmount: taxAmount.toFixed(2),
+      // Werte im data-Objekt explizit aktualisieren und fixieren
+      data.subtotal = subtotal.replace('.', ',');
+      data.tax_rate = "20"; // !!! WICHTIG: Immer als String "20" speichern !!!
+      data.tax_amount = taxAmount.replace('.', ',');
+      data.total = total.toFixed(2).replace('.', ',');
+      
+      console.log("!!! Korrigierte MwSt-Berechnung !!!", {
+        brutto: total,
+        netto: subtotal,
+        mwst: taxAmount,
+        mwstRate: "20%",
         items: Array.isArray(data.items) ? data.items.length : (typeof data.items === 'string' ? 'JSON-String' : typeof data.items)
       });
       
-      console.log("Positionen vor dem Speichern:", data.items);
-      
-      // Sicherstellen, dass items ein Array ist (falls nicht vom Frontend geliefert)
-      if (!data.items) {
-        data.items = [];
-      }
-      
       // Kostenvoranschlag mit Shop-Isolation erstellen
       const userId = (req.user as any).id;
-      const newEstimate = await storage.createCostEstimate(data, userId);
       
-      console.log(`Neuer Kostenvoranschlag ${newEstimate.id} erstellt für Benutzer ${userId}`);
-      res.status(201).json(newEstimate);
+      // DIREKTES SQL AUSFÜHREN ANSTATT STORAGE FUNKTION ZU VERWENDEN
+      // Dies umgeht das Problem mit der falschen MwSt und fehlenden Positionen
+      
+      // Zuerst Shop-ID ermitteln
+      const shopIdResult = await db.execute(`
+        SELECT shop_id FROM users WHERE id = ${userId}
+      `);
+      const shopId = shopIdResult.rows[0]?.shop_id || 1;
+      
+      // Nächste Referenznummer generieren
+      const today = new Date();
+      const year = today.getFullYear().toString().slice(-2);
+      const month = (today.getMonth() + 1).toString().padStart(2, '0');
+      
+      const lastEstimateQuery = await db.execute(`
+        SELECT reference_number 
+        FROM cost_estimates 
+        WHERE shop_id = ${shopId} 
+        ORDER BY id DESC 
+        LIMIT 1
+      `);
+      
+      let nextNumber = 1;
+      if (lastEstimateQuery.rows.length > 0) {
+        const lastEstimateNumber = lastEstimateQuery.rows[0].reference_number;
+        const match = lastEstimateNumber.match(/KV-\d{4}-(\d{3})/);
+        if (match && match[1]) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      // Generiere die Kostenvoranschlagsnummer
+      const estimateNumber = `KV-${month}${year}-${String(nextNumber).padStart(3, '0')}`;
+      console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
+      
+      // Direktes SQL ohne Storage-Funktion
+      const sql = `
+        INSERT INTO cost_estimates (
+          reference_number, customer_id, title, device_type, brand, model, 
+          issue, status, created_at, updated_at, items, user_id, shop_id,
+          subtotal, tax_rate, tax_amount, total
+        )
+        VALUES (
+          '${estimateNumber}', 
+          ${data.customerId}, 
+          '${data.title || "Kostenvoranschlag"}', 
+          '${data.deviceType}', 
+          '${data.brand}', 
+          '${data.model}', 
+          '${data.issue || "Keine Angabe"}', 
+          'offen', 
+          NOW(), 
+          NOW(), 
+          '${JSON.stringify(data.items)}'::jsonb, 
+          ${userId}, 
+          ${shopId},
+          '${data.subtotal}',    /* subtotal - Netto */
+          '20',                  /* tax_rate - FEST 20% für Österreich */
+          '${data.tax_amount}',  /* tax_amount - 20% MwSt */
+          '${data.total}'        /* total - Brutto */
+        )
+        RETURNING *;
+      `;
+      
+      console.log("Direktes SQL ausführen:", sql);
+      const result = await db.execute(sql);
+      
+      if (result.rows && result.rows.length > 0) {
+        console.log(`Neuer Kostenvoranschlag ${result.rows[0].id} erstellt für Benutzer ${userId}`);
+        const newEstimate = result.rows[0];
+        
+        res.status(201).json(newEstimate);
+      } else {
+        throw new Error("Fehler beim Erstellen des Kostenvoranschlags: Keine Rückgabedaten");
+      }
     } catch (error) {
       console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
       
