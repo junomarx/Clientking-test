@@ -247,14 +247,7 @@ export function generatePrintHtml({
         <div class="document-title">Kostenvoranschlag</div>
         
         <div class="document-info">
-          <div class="section-title">Dokumentinformationen</div>
-          <div class="device-details">
-            <div>
-              <p><span class="label">Referenznummer:</span> <span class="value">${estimate.reference_number}</span></p>
-              <p><span class="label">Datum:</span> <span class="value">${todayFormatted}</span></p>
-              <p><span class="label">Gültig bis:</span> <span class="value">${validUntilFormatted}</span></p>
-            </div>
-          </div>
+          <p>Referenznummer: ${estimate.reference_number} | Datum: ${todayFormatted} | Gültig bis: ${validUntilFormatted}</p>
         </div>
         
         <div class="device-info">
