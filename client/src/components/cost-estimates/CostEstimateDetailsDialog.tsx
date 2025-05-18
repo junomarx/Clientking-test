@@ -24,9 +24,9 @@ import {
   ShieldAlert,
   Trash2,
   Edit,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -348,7 +348,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   if (!open) return null;
 
   return (
-    <>
+    <div>
       {/* Löschbestätigungsdialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
