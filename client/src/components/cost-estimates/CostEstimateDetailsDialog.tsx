@@ -147,7 +147,9 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   }
 
   // Statusfarbe basierend auf dem Status bestimmen
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'bg-gray-500';
+    
     switch (status.toLowerCase()) {
       case 'offen':
         return 'bg-yellow-500';
