@@ -2660,6 +2660,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Positionen eines Kostenvoranschlags abrufen
+  app.get("/api/cost-estimates/:id/items", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Prüfe, ob der Kostenvoranschlag existiert und zum Shop des Benutzers gehört
+      const existingEstimate = await storage.getCostEstimate(id, userId);
+      if (!existingEstimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // Existierende Items parsen oder leeres Array zurückgeben
+      let items = [];
+      try {
+        if (existingEstimate.items && existingEstimate.items !== '[]' && existingEstimate.items !== '') {
+          items = JSON.parse(existingEstimate.items as string);
+        }
+      } catch (err) {
+        console.error("Fehler beim Parsen der Items:", err);
+        return res.status(500).json({ message: "Fehler beim Verarbeiten der Daten" });
+      }
+      
+      console.log(`Positionen für Kostenvoranschlag ${id} abgerufen von Benutzer ${userId}`);
+      res.json(items);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Positionen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Position eines Kostenvoranschlags löschen (neue Implementierung mit JSONB)
   app.delete("/api/cost-estimate-items/:itemId/estimate/:estimateId", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
