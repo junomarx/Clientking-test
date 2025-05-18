@@ -395,18 +395,8 @@ export const costEstimates = pgTable("cost_estimates", {
   shopId: integer("shop_id").default(1),
 });
 
-// Position eines Kostenvoranschlags
-export const costEstimateItems = pgTable("cost_estimate_items", {
-  id: serial("id").primaryKey(),
-  costEstimateId: integer("cost_estimate_id").notNull().references(() => costEstimates.id),
-  description: text("description").notNull(),
-  quantity: integer("quantity").default(1).notNull(),
-  unitPrice: text("unit_price").notNull(),
-  totalPrice: text("total_price").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  // Jede Position gehört zu einem Shop (für Multi-Tenant-Isolation)
-  shopId: integer("shop_id").default(1),
-});
+// Hinweis: Die separate cost_estimate_items-Tabelle wird nicht mehr verwendet
+// Stattdessen werden die Items direkt im 'items'-JSONB-Feld der cost_estimates-Tabelle gespeichert
 
 // Schemas für Kostenvoranschläge
 export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
@@ -418,17 +408,19 @@ export const insertCostEstimateSchema = createInsertSchema(costEstimates).omit({
   // Keine zusätzlichen Validierungen nötig
 });
 
-export const insertCostEstimateItemSchema = createInsertSchema(costEstimateItems).omit({
-  id: true,
-  createdAt: true,
-});
-
 // Types für Kostenvoranschläge
 export type CostEstimate = typeof costEstimates.$inferSelect;
 export type InsertCostEstimate = z.infer<typeof insertCostEstimateSchema>;
 
-export type CostEstimateItem = typeof costEstimateItems.$inferSelect;
-export type InsertCostEstimateItem = z.infer<typeof insertCostEstimateItemSchema>;
+// Typ für die Items im JSONB-Feld (nicht mehr aus costEstimateItems abgeleitet)
+export type CostEstimateItem = {
+  id?: number;
+  description: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+};
+// Keine InsertCostEstimateItem mehr nötig, da wir die Items direkt im JSONB speichern
 
 // Beziehungen definieren - emailHistory zu repairs und emailTemplates
 export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({

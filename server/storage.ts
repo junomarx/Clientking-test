@@ -43,9 +43,7 @@ import {
   costEstimates,
   type CostEstimate,
   type InsertCostEstimate,
-  costEstimateItems,
   type CostEstimateItem,
-  type InsertCostEstimateItem,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -462,25 +460,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getCostEstimateItems(costEstimateId: number, userId: number): Promise<CostEstimateItem[]> {
-    const user = await this.getUser(userId);
-    if (!user) return [];
-    
-    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
-    const shopId = user.shopId || 1;
-    
-    // Zuerst überprüfen, ob der Kostenvoranschlag zum Shop des Benutzers gehört
-    const costEstimate = await this.getCostEstimate(costEstimateId, userId);
-    if (!costEstimate) return [];
-    
+  async getCostEstimateItems(costEstimateId: number, userId: number): Promise<any[]> {
     try {
-      return await db.select().from(costEstimateItems)
-        .where(
-          and(
-            eq(costEstimateItems.costEstimateId, costEstimateId),
-            eq(costEstimateItems.shopId, shopId)
-          )
-        );
+      // Prüfen, ob der Benutzer auf diesen Kostenvoranschlag zugreifen darf
+      const costEstimate = await this.getCostEstimate(costEstimateId, userId);
+      if (!costEstimate) {
+        console.log(`Kostenvoranschlag ${costEstimateId} nicht gefunden oder keine Berechtigung für Benutzer ${userId}`);
+        return [];
+      }
+      
+      // Die Items sind jetzt direkt im Kostenvoranschlag als JSONB-Feld gespeichert
+      // Wir geben einfach das items-Array aus dem Kostenvoranschlag zurück
+      return costEstimate.items || [];
     } catch (error) {
       console.error(`Fehler beim Abrufen der Positionen für Kostenvoranschlag ${costEstimateId}:`, error);
       return [];
