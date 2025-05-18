@@ -121,11 +121,13 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   
   // Kundendaten richtig extrahieren
   const customerName = customer 
-    ? `${customer.firstName || ''} ${customer.lastName || ''}`.trim() 
-    : `${estimate.firstname || ''} ${estimate.lastname || ''}`.trim() || 'Kein Kunde zugewiesen';
+    ? `${customer?.firstName || ''} ${customer?.lastName || ''}`.trim() 
+    : (estimate?.firstname && estimate?.lastname 
+        ? `${estimate.firstname} ${estimate.lastname}`.trim() 
+        : 'Kein Kunde zugewiesen');
   
-  const customerEmail = customer?.email || estimate.email || '';
-  const customerPhone = customer?.phone || estimate.phone || '';
+  const customerEmail = customer?.email || estimate?.email || '';
+  const customerPhone = customer?.phone || estimate?.phone || '';
 
   // Geschäftseinstellungen für das Logo abrufen
   const { data: businessSettings } = useQuery({
