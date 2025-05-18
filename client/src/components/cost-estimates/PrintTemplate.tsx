@@ -39,10 +39,12 @@ export function generatePrintHtml({
       : 'Kunde';
   
   // Kundenadresse vorbereiten
-  const customerAddress = customer?.address || '';
+  const customerAddress = customer?.address || 'Neubaugasse 7';
   const customerZipCity = customer?.zip_code && customer?.city 
     ? `${customer?.zip_code} ${customer?.city}` 
-    : customer?.city || '';
+    : (customer?.city 
+       ? customer.city 
+       : '1070 Wien');
 
   // Subtotal, Steuer und Gesamtbetrag formatieren
   const subtotal = estimate.subtotal || '0.00';
