@@ -113,8 +113,14 @@ export function generatePrintHtml({
           text-align: center;
           font-size: 20px;
           font-weight: bold;
-          margin: 20px 0;
+          margin: 20px 0 10px 0;
           color: #2a53a9;
+        }
+        
+        .reference-number {
+          text-align: center;
+          font-size: 14px;
+          margin-bottom: 20px;
         }
         
         .section-title {
@@ -245,9 +251,10 @@ export function generatePrintHtml({
         </div>
       
         <div class="document-title">Kostenvoranschlag</div>
+        <div class="reference-number">Referenznummer: ${estimate.reference_number}</div>
         
         <div class="document-info">
-          <p>Referenznummer: ${estimate.reference_number} | Datum: ${todayFormatted} | Gültig bis: ${validUntilFormatted}</p>
+          <p>Datum: ${todayFormatted} | Gültig bis: ${validUntilFormatted}</p>
         </div>
         
         <div class="device-info">
