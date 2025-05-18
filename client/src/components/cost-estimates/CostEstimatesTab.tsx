@@ -41,8 +41,8 @@ interface CostEstimate {
   createdAt: string;
   updatedAt: string;
   // Zusätzliche Kundenfelder vom JOIN
-  firstname?: string;
-  lastname?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   phone?: string;
 }
@@ -163,10 +163,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       estimate.brand?.toLowerCase().includes(searchTermLower) ||
       estimate.model?.toLowerCase().includes(searchTermLower) ||
       estimate.deviceType?.toLowerCase().includes(searchTermLower) ||
-      estimate.firstname?.toLowerCase().includes(searchTermLower) ||
-      estimate.lastname?.toLowerCase().includes(searchTermLower) ||
+      estimate.firstName?.toLowerCase().includes(searchTermLower) ||
+      estimate.lastName?.toLowerCase().includes(searchTermLower) ||
       estimate.email?.toLowerCase().includes(searchTermLower) ||
-      (estimate.firstname + " " + estimate.lastname)?.toLowerCase().includes(searchTermLower)
+      (estimate.firstName + " " + estimate.lastName)?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -319,7 +319,7 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">
-                            {estimate.firstname} {estimate.lastname}
+                            {estimate.firstName} {estimate.lastName}
                           </div>
                           {estimate.email && (
                             <div className="text-xs text-muted-foreground truncate max-w-[180px]">

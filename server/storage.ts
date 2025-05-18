@@ -417,8 +417,8 @@ export class DatabaseStorage implements IStorage {
       const result = await pool.query(`
         SELECT 
           ce.*,
-          c.first_name AS firstname,
-          c.last_name AS lastname,
+          c.first_name AS "firstName",
+          c.last_name AS "lastName",
           c.email,
           c.phone
         FROM cost_estimates ce
