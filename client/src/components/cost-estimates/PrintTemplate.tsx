@@ -313,7 +313,15 @@ export function generatePrintHtml({
         
         <div class="note">
           <p>Dieser Kostenvoranschlag ist unverbindlich und ${estimate.validUntil ? `gültig bis zum ${validUntilFormatted}` : 'gültig für 14 Tage'}.</p>
-          <p>Mit freundlichen Grüßen,<br>${businessName}</p>
+          
+          <ol style="font-size: 0.9em; color: #555; margin-top: 20px; padding-left: 20px;">
+            <li>Der Kostenvoranschlag basiert auf einer ersten Diagnose und kann sich bei tatsächlicher Durchführung ändern.</li>
+            <li>Sollte sich während der Reparatur ein erweiterter Schaden zeigen, wird der Kunde vorab kontaktiert.</li>
+            <li>Die im Kostenvoranschlag genannten Preise verstehen sich inkl. MwSt., sofern nicht anders angegeben.</li>
+            <li>Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</li>
+          </ol>
+          
+          <p style="margin-top: 20px;">Mit freundlichen Grüßen,<br>${businessName}</p>
         </div>
       </div>
     </body>
