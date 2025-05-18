@@ -267,11 +267,13 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                   {filteredEstimates.map((estimate) => {
                     // Status-Formatierung
                     const status = formatStatus(estimate.status);
-                    const createdDate = new Date(estimate.createdAt);
-                    const formattedDate = formatDistanceToNow(createdDate, { 
+                    // Sicherstellen, dass createdAt ein gültiges Datum ist
+                    const createdDate = estimate.createdAt ? new Date(estimate.createdAt) : new Date();
+                    const isValidDate = !isNaN(createdDate.getTime());
+                    const formattedDate = isValidDate ? formatDistanceToNow(createdDate, { 
                       addSuffix: true,
                       locale: de
-                    });
+                    }) : "Unbekanntes Datum";
                     
                     return (
                       <TableRow key={estimate.id}>

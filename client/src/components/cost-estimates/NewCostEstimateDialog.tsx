@@ -43,7 +43,7 @@ const costEstimateSchema = z.object({
   
   // Gerätedaten
   deviceType: z.string().min(1, "Gerätetyp ist erforderlich"),
-  manufacturer: z.string().min(1, "Hersteller ist erforderlich"),
+  brand: z.string().min(1, "Hersteller ist erforderlich"),
   model: z.string().min(1, "Modell ist erforderlich"),
   serialNumber: z.string().optional(),
   
@@ -281,7 +281,7 @@ export function NewCostEstimateDialog({
     // Erfolgsmeldung anzeigen
     toast({
       title: "Kostenvoranschlag erstellt",
-      description: `Für ${data.firstName} ${data.lastName} - ${data.manufacturer} ${data.model}`,
+      description: `Für ${data.firstName} ${data.lastName} - ${data.brand} ${data.model}`,
     });
     
     // Dialog schließen und Formular zurücksetzen
