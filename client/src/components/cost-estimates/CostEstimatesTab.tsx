@@ -307,10 +307,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
                     // Sicherstellen, dass created_at ein gültiges Datum ist
                     const createdDate = estimate.created_at ? new Date(estimate.created_at) : new Date();
                     const isValidDate = !isNaN(createdDate.getTime());
-                    const formattedDate = isValidDate ? formatDistanceToNow(createdDate, { 
-                      addSuffix: true,
-                      locale: de
-                    }) : "Unbekanntes Datum";
+                    // Jetzt formatieren wir ein festes Datum im Format DD.MM.YYYY statt einer relativen Zeit
+                    const formattedDate = isValidDate ? 
+                      `${createdDate.getDate().toString().padStart(2, '0')}.${(createdDate.getMonth() + 1).toString().padStart(2, '0')}.${createdDate.getFullYear()}` 
+                      : "Unbekanntes Datum";
                     
                     return (
                       <TableRow 
