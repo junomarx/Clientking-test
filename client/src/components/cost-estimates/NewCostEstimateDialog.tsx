@@ -330,19 +330,19 @@ export function NewCostEstimateDialog({
   
   // Summen berechnen
   const updateTotals = (currentItems: CostEstimateItem[]) => {
-    // Zwischensumme berechnen
-    const subtotal = currentItems.reduce((sum, item) => {
+    // Brutto-Gesamtsumme berechnen (da Positionen bereits Bruttopreise sind)
+    const total = currentItems.reduce((sum, item) => {
       return sum + parseFloat(item.totalPrice.replace(',', '.'));
     }, 0);
     
     // MwSt-Satz aus dem Formular holen
     const taxRate = parseFloat(form.getValues('taxRate'));
     
-    // MwSt-Betrag berechnen
-    const taxAmount = subtotal * taxRate / 100;
+    // Netto-Betrag berechnen (Brutto / (1 + taxRate/100))
+    const subtotal = total / (1 + taxRate/100);
     
-    // Gesamtbetrag berechnen
-    const total = subtotal + taxAmount;
+    // MwSt-Betrag berechnen (Brutto - Netto)
+    const taxAmount = total - subtotal;
     
     // Werte im Formular aktualisieren
     form.setValue('subtotal', subtotal.toFixed(2).replace('.', ','));

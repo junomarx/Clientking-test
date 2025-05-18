@@ -2613,9 +2613,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Item zur Liste hinzufügen und zurück in JSON konvertieren
       existingItems.push(newItem);
       
+      // Summen neu berechnen
+      let total = 0;
+      existingItems.forEach(item => {
+        // Komma durch Punkt ersetzen, um parseFloat zu ermöglichen
+        const itemTotal = parseFloat(item.totalPrice.replace(',', '.'));
+        if (!isNaN(itemTotal)) {
+          total += itemTotal;
+        }
+      });
+      
+      // Kostenvoranschlag aus Datenbank holen, um den Steuersatz zu erhalten
+      const estimate = await storage.getCostEstimate(id, userId);
+      const taxRate = parseFloat(estimate.tax_rate) || 20; // Standardwert 20% falls kein Steuersatz vorhanden
+      
+      // Netto-Betrag berechnen (Brutto / (1 + taxRate/100))
+      const subtotal = total / (1 + taxRate/100);
+      
+      // MwSt-Betrag berechnen (Brutto - Netto)
+      const taxAmount = total - subtotal;
+      
       // Kostenvoranschlag aktualisieren
       await storage.updateCostEstimate(id, {
-        items: JSON.stringify(existingItems)
+        items: JSON.stringify(existingItems),
+        subtotal: subtotal.toFixed(2),
+        tax_amount: taxAmount.toFixed(2),
+        total: total.toFixed(2)
       }, userId);
       
       console.log(`Neue Position für Kostenvoranschlag ${id} erstellt von Benutzer ${userId}`);

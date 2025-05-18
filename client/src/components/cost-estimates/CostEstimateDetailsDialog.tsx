@@ -172,16 +172,26 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     }
   });
   
+  // Funktion zum Berechnen des Gesamtpreises einer Position
+  const calculateItemTotal = (quantity: number, unitPrice: string): string => {
+    const price = parseFloat(unitPrice.replace(',', '.')) || 0;
+    const total = (quantity * price).toFixed(2).replace('.', ',');
+    return total;
+  };
+
   // Funktion zum Hinzufügen einer Position
   const handleAddItem = () => {
     if (!estimateId) return;
+    
+    // Sicherstellen, dass der Gesamtpreis korrekt berechnet wurde
+    const totalPrice = calculateItemTotal(newItem.quantity, newItem.unitPrice);
     
     // Formatierung für die API
     const itemToAdd = {
       description: newItem.description,
       quantity: newItem.quantity,
       unitPrice: newItem.unitPrice,
-      totalPrice: newItem.totalPrice,
+      totalPrice: totalPrice,
       position: items.length + 1
     };
     
