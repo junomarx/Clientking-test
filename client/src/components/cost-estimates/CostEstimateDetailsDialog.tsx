@@ -106,18 +106,35 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     if (!estimate?.items) return [];
     
     try {
-      // Prüfen, ob es sich um ein gültiges JSON handelt
+      console.log("Verarbeite items Feld vom Typ:", typeof estimate.items);
+      
+      // Wenn es ein String ist, versuchen wir zu parsen
       if (typeof estimate.items === 'string') {
-        return JSON.parse(estimate.items) || [];
-      } else if (Array.isArray(estimate.items)) {
+        console.log("Items als String:", estimate.items);
+        try {
+          const parsed = JSON.parse(estimate.items);
+          console.log("Erfolgreich geparste Items:", parsed);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (parseError) {
+          console.error("JSON Parse Fehler:", parseError);
+          return [];
+        }
+      } 
+      // Wenn es bereits ein Array ist
+      else if (Array.isArray(estimate.items)) {
+        console.log("Items bereits als Array", estimate.items);
         return estimate.items;
       }
+      // Fallback
+      console.log("Unbekanntes Format, kein String und kein Array");
       return [];
     } catch (e) {
-      console.error("Fehler beim Parsen der Items:", e);
+      console.error("Allgemeiner Fehler beim Verarbeiten der Items:", e);
       return [];
     }
   })();
+  
+  console.log("Finale geparste Items:", parsedItems);
   
   // Kundendaten richtig extrahieren
   const customerName = customer 
