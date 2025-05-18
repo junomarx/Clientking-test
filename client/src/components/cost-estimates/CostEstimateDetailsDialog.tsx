@@ -285,6 +285,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   // Hilfsfunktion für die Formatierung von Datum/Zeit
   const formatDate = (dateString: string) => {
     try {
+      if (!dateString) return "Kein Datum";
       const date = new Date(dateString);
       return format(date, 'dd.MM.yyyy HH:mm', { locale: de });
     } catch (error) {
@@ -295,6 +296,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
   // Hilfsfunktion für relative Zeitformatierung
   const relativeTime = (dateString: string) => {
     try {
+      if (!dateString) return "Kein Datum";
       const date = new Date(dateString);
       return formatDistanceToNow(date, { addSuffix: true, locale: de });
     } catch (error) {
@@ -410,22 +412,6 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                 <DialogDescription>
                   {estimate.brand} {estimate.model} - {estimate.issue}
                 </DialogDescription>
-                <div className="flex justify-end mt-2 space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.location.href = `/cost-estimates/edit/${estimateId}`}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Bearbeiten
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => setShowDeleteConfirm(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" /> Löschen
-                  </Button>
-                </div>
               </DialogHeader>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -547,6 +533,28 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                         <FileText className="h-4 w-4 mr-2" />
                         Als PDF
                       </Button>
+                      <div className="flex mt-4 space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            // Kostenvoranschlag öffnen und bearbeiten - derzeit keine direkte Bearbeitungsseite
+                            toast({
+                              title: "Bearbeitung",
+                              description: "Die Bearbeitungsfunktion ist in Arbeit und wird bald verfügbar sein.",
+                            });
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" /> Bearbeiten
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setShowDeleteConfirm(true)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" /> Löschen
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
 
