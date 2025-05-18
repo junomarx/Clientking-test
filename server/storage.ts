@@ -541,14 +541,7 @@ export class DatabaseStorage implements IStorage {
     if (!existingEstimate) return false;
     
     try {
-      // Zuerst alle zugehörigen Positionen löschen
-      await db.delete(costEstimateItems)
-        .where(
-          and(
-            eq(costEstimateItems.costEstimateId, id),
-            eq(costEstimateItems.shopId, shopId)
-          )
-        );
+      // Keine separaten Positionen mehr zu löschen, da diese jetzt direkt im Kostenvoranschlag gespeichert sind
       
       // Dann den Kostenvoranschlag selbst löschen
       const result = await db.delete(costEstimates)
@@ -566,29 +559,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async deleteCostEstimateItem(id: number, userId: number): Promise<boolean> {
-    const user = await this.getUser(userId);
-    if (!user) return false;
-    
-    // Ermittle die Shop-ID des Benutzers für DSGVO-konforme Isolation
-    const shopId = user.shopId || 1;
-    
-    try {
-      // Position löschen
-      const result = await db.delete(costEstimateItems)
-        .where(
-          and(
-            eq(costEstimateItems.id, id),
-            eq(costEstimateItems.shopId, shopId)
-          )
-        );
-      
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error(`Fehler beim Löschen der Kostenvoranschlagsposition ${id}:`, error);
-      return false;
-    }
-  }
+  // Die deleteCostEstimateItem-Methode wurde entfernt, da wir jetzt ein JSON-basiertes System verwenden
   // Session store
   sessionStore: session.Store;
   
