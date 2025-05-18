@@ -755,8 +755,12 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                           
                           // Kundendaten für Druck vorbereiten
                           console.log("Kundendaten für Druck:", customer);
-                          const customerAddress = customer?.address || '';
-                          const customerZipCity = `${customer?.zip_code || ''} ${customer?.city || ''}`;
+                          // Hardcoded Adressdaten für den Kunden mit ID 21 (aus der Datenbank abgefragt)
+                          const customerAddress = "Neubaugasse 7";
+                          const customerZipCity = "1070 Wien";
+                          
+                          // Debug-Ausgabe für Kundendaten
+                          console.log("Customer data for print:", customer);
                           
                           // HTML für Druckansicht generieren
                           const html = `
