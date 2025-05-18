@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileText, Search, Loader2 } from "lucide-react";
+import { Plus, FileText, Search, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { NewCostEstimateDialog } from "./NewCostEstimateDialog";
@@ -58,7 +58,7 @@ interface CostEstimateFormData {
   postalCode?: string;
   city?: string;
   deviceType: string;
-  manufacturer: string;
+  brand: string;
   model: string;
   serialNumber?: string;
   issueDescription: string;  // Entspricht "issue" im Backend
@@ -105,10 +105,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       const costEstimateData = {
         customerId: data.customerId,
         deviceType: data.deviceType,
-        manufacturer: data.manufacturer,
+        brand: data.brand, // Geändert von manufacturer zu brand
         model: data.model,
         issue: data.issueDescription, // Anpassung an Formularfeld
-        estimatedCost: data.totalPrice || "0", // Anpassung an Formularfeld
+        total: data.totalPrice || "0", // Geändert von estimatedCost zu total
         notes: data.notes || null,
         status: "offen", // Default-Status
       };
