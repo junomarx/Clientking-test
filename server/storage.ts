@@ -2630,15 +2630,19 @@ export class DatabaseStorage implements IStorage {
       console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
 
       // Erstelle den Kostenvoranschlag mit Shop-ID und generierter Nummer
-      // Verwende reference_number statt estimateNumber (korrekter Spaltenname)
+      // Sicherstellen, dass title immer gesetzt ist
+      const estimateData = {
+        ...estimate,
+        reference_number: estimateNumber,
+        title: estimate.title || "Kostenvoranschlag", // Standardtitel setzen, falls keiner vorhanden
+        userId,
+        shopId,
+      };
+
+      // Kostenvoranschlag in die Datenbank einfügen
       const [createdEstimate] = await db
         .insert(costEstimates)
-        .values({
-          ...estimate,
-          reference_number: estimateNumber, // Hier wird der korrekte Spaltenname verwendet
-          userId,
-          shopId,
-        })
+        .values(estimateData)
         .returning();
 
       console.log(`Neuer Kostenvoranschlag ID ${createdEstimate.id} (${estimateNumber}) erstellt für Shop ${shopId}`);
