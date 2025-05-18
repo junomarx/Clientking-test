@@ -101,18 +101,26 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     }
   });
 
-  // Positionen abrufen
-  const { data: items } = useQuery<CostEstimateItem[]>({
-    queryKey: ['/api/cost-estimates', estimateId, 'items'],
-    enabled: open && estimateId !== null,
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler beim Laden der Positionen",
-        description: error.message,
-        variant: "destructive",
-      });
+  // Positionen aus dem items-Feld des Kostenvoranschlags parsen
+  const parsedItems = (() => {
+    if (!estimate?.items) return [];
+    
+    try {
+      console.log("Items-String:", estimate.items);
+      // Prüfen, ob es sich um ein gültiges JSON handelt
+      if (typeof estimate.items === 'string') {
+        return JSON.parse(estimate.items) || [];
+      } else if (Array.isArray(estimate.items)) {
+        return estimate.items;
+      }
+      return [];
+    } catch (e) {
+      console.error("Fehler beim Parsen der Items:", e);
+      return [];
     }
-  });
+  })();
+    
+  console.log("Geparste Items:", parsedItems);
 
   // Geschäftseinstellungen für das Logo abrufen
   const { data: businessSettings } = useQuery({
@@ -278,7 +286,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
             <h3 className="text-sm font-medium mb-2">Finanzübersicht</h3>
             
             {/* Positionen */}
-            {items && items.length > 0 ? (
+            {parsedItems && parsedItems.length > 0 ? (
               <div className="rounded-md border mb-4">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
@@ -290,7 +298,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                     </tr>
                   </thead>
                   <tbody>
-                    {items && items.map((item: CostEstimateItem, index: number) => (
+                    {parsedItems.map((item, index) => (
                       <tr key={index} className="border-t">
                         <td className="py-2 px-4">{item.description}</td>
                         <td className="py-2 px-4 text-center">{item.quantity}</td>
