@@ -97,6 +97,12 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   const { data: costEstimates, isLoading, error } = useQuery<CostEstimate[]>({
     queryKey: ['/api/cost-estimates'],
     staleTime: 60000, // 1 Minute
+    onSuccess: (data) => {
+      // Debug-Ausgabe des ersten Elements
+      if (data && data.length > 0) {
+        console.log("API-Antwort für Kostenvoranschlag:", data[0]);
+      }
+    }
   });
 
   // Mutation für das Erstellen eines neuen Kostenvoranschlags
