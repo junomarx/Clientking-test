@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { DebugCostEstimates } from '../../debug-costestimates';
 
 // Interface für Kostenvoranschläge - angepasst an die Datenbankstruktur
 interface CostEstimate {
@@ -172,6 +173,8 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
 
   return (
     <div className="space-y-4">
+      {/* Debug-Komponente zur Fehlersuche */}
+      <DebugCostEstimates />
       {/* Kopfzeile mit Titel und Beschreibung */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
