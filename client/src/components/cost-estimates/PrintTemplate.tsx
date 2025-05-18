@@ -244,8 +244,8 @@ export function generatePrintHtml({
             Gültig bis: ${validUntilFormatted}</p>
           </div>
         </div>
-      
-        <div class="customer-info">
+        
+        <div class="customer-info" style="margin-top: -25px;">
           <div class="section-title">Kundeninformationen</div>
           <p class="customer-name">${customerName}</p>
           <p>${customerAddress}</p>
