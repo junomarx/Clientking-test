@@ -531,7 +531,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                         <div className="min-w-[200px]">
                           <p className="text-sm text-muted-foreground">Erstellt am</p>
                           <p className="font-medium">
-                            {formatDate(estimate.created_at)}
+                            {estimate.created_at ? format(new Date(estimate.created_at), 'dd.MM.yyyy HH:mm', { locale: de }) : "Kein Datum"}
                           </p>
                         </div>
                         
