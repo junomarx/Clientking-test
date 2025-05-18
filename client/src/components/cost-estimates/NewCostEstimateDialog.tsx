@@ -27,6 +27,14 @@ interface Customer {
   zipCode?: string;
 }
 
+// Interface für Kostenvoranschlagsposten
+interface CostEstimateItem {
+  description: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+}
+
 // Validierungsschema für das Formular
 const costEstimateSchema = z.object({
   // Kundenreferenz-ID
@@ -52,11 +60,13 @@ const costEstimateSchema = z.object({
   model: z.string().min(1, "Modell ist erforderlich"),
   serialNumber: z.string().optional(),
   
-  // Fehlerbeschreibung und Arbeiten
+  // Fehlerbeschreibung
   issueDescription: z.string().min(1, "Fehlerbeschreibung ist erforderlich"),
-  workToBeDone: z.string().min(1, "Durchzuführende Arbeiten ist erforderlich"),
   
   // Preisdaten
+  subtotal: z.string().min(1, "Zwischensumme ist erforderlich"),
+  taxRate: z.string().default("20"),
+  taxAmount: z.string().min(1, "MwSt-Betrag ist erforderlich"),
   totalPrice: z.string().min(1, "Gesamtpreis ist erforderlich")
 });
 
@@ -87,6 +97,16 @@ export function NewCostEstimateDialog({
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   
+  // Positionen-Stati
+  const [items, setItems] = useState<CostEstimateItem[]>([]);
+  const [showAddItemForm, setShowAddItemForm] = useState<boolean>(false);
+  const [newItem, setNewItem] = useState<CostEstimateItem>({
+    description: "",
+    quantity: 1,
+    unitPrice: "0,00",
+    totalPrice: "0,00"
+  });
+  
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
     defaultValues: {
@@ -104,8 +124,10 @@ export function NewCostEstimateDialog({
       model: "",
       serialNumber: "",
       issueDescription: "",
-      workToBeDone: "",
-      totalPrice: ""
+      subtotal: "0,00",
+      taxRate: "20",
+      taxAmount: "0,00",
+      totalPrice: "0,00"
     }
   });
   
@@ -276,8 +298,66 @@ export function NewCostEstimateDialog({
     }
   };
 
+  // Position hinzufügen
+  const handleAddItem = () => {
+    // Neue Position zur Liste der Positionen hinzufügen
+    const updatedItems = [...items, newItem];
+    setItems(updatedItems);
+    
+    // Formular zurücksetzen
+    setNewItem({
+      description: "",
+      quantity: 1,
+      unitPrice: "0,00",
+      totalPrice: "0,00"
+    });
+    
+    // Formular schließen
+    setShowAddItemForm(false);
+    
+    // Summen aktualisieren
+    updateTotals(updatedItems);
+  };
+  
+  // Position entfernen
+  const removeItem = (indexToRemove: number) => {
+    const updatedItems = items.filter((_, index) => index !== indexToRemove);
+    setItems(updatedItems);
+    
+    // Summen aktualisieren
+    updateTotals(updatedItems);
+  };
+  
+  // Summen berechnen
+  const updateTotals = (currentItems: CostEstimateItem[]) => {
+    // Zwischensumme berechnen
+    const subtotal = currentItems.reduce((sum, item) => {
+      return sum + parseFloat(item.totalPrice.replace(',', '.'));
+    }, 0);
+    
+    // MwSt-Satz aus dem Formular holen
+    const taxRate = parseFloat(form.getValues('taxRate'));
+    
+    // MwSt-Betrag berechnen
+    const taxAmount = subtotal * taxRate / 100;
+    
+    // Gesamtbetrag berechnen
+    const total = subtotal + taxAmount;
+    
+    // Werte im Formular aktualisieren
+    form.setValue('subtotal', subtotal.toFixed(2).replace('.', ','));
+    form.setValue('taxAmount', taxAmount.toFixed(2).replace('.', ','));
+    form.setValue('totalPrice', total.toFixed(2).replace('.', ','));
+  };
+
   const onSubmit = (data: CostEstimateFormData) => {
-    console.log("Formular-Daten:", data);
+    // Positionen zum Datensatz hinzufügen
+    const formData = {
+      ...data,
+      items: items
+    };
+    
+    console.log("Formular-Daten:", formData);
     
     // Kostenvoranschlag erstellen
     if (onCreateCostEstimate) {
@@ -292,6 +372,7 @@ export function NewCostEstimateDialog({
     
     // Dialog schließen und Formular zurücksetzen
     form.reset();
+    setItems([]);
     onClose();
   };
 
@@ -553,19 +634,170 @@ export function NewCostEstimateDialog({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="workToBeDone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Durchzuführende Arbeiten*</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} className="min-h-[100px]" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <FormLabel>Positionen*</FormLabel>
+                    <Button 
+                      type="button"
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setShowAddItemForm(true)}
+                    >
+                      Position hinzufügen
+                    </Button>
+                  </div>
+                  
+                  {showAddItemForm && (
+                    <div className="mb-6 p-4 border rounded-md bg-muted/20">
+                      <h3 className="text-md font-medium mb-3">Neue Position</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                        <div className="col-span-2">
+                          <label className="text-sm font-medium block mb-1">Beschreibung</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-2 border rounded-md"
+                            value={newItem.description}
+                            onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                            placeholder="z.B. Display-Austausch"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium block mb-1">Menge</label>
+                          <input 
+                            type="number" 
+                            className="w-full p-2 border rounded-md"
+                            value={newItem.quantity}
+                            onChange={(e) => {
+                              const quantity = parseInt(e.target.value) || 1;
+                              const unitPrice = parseFloat(newItem.unitPrice.replace(',', '.')) || 0;
+                              const total = (quantity * unitPrice).toFixed(2).replace('.', ',');
+                              setNewItem({
+                                ...newItem, 
+                                quantity, 
+                                totalPrice: total
+                              });
+                            }}
+                            min="1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium block mb-1">Einzelpreis (€) - Brutto</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-2 border rounded-md"
+                            value={newItem.unitPrice}
+                            onChange={(e) => {
+                              const unitPrice = e.target.value.replace(',', '.');
+                              if (!isNaN(parseFloat(unitPrice)) || unitPrice === '' || unitPrice === '.') {
+                                const formattedPrice = unitPrice === '' ? '0' : unitPrice;
+                                const quantity = newItem.quantity || 1;
+                                const total = (quantity * parseFloat(formattedPrice)).toFixed(2).replace('.', ',');
+                                
+                                setNewItem({
+                                  ...newItem, 
+                                  unitPrice: e.target.value,
+                                  totalPrice: total
+                                });
+                              }
+                            }}
+                            placeholder="0,00"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-between mt-2">
+                        <Button type="button" variant="ghost" onClick={() => setShowAddItemForm(false)}>
+                          Abbrechen
+                        </Button>
+                        <Button 
+                          type="button"
+                          onClick={handleAddItem} 
+                          disabled={!newItem.description || parseFloat(newItem.unitPrice.replace(',', '.')) <= 0}
+                        >
+                          Position hinzufügen
+                        </Button>
+                      </div>
+                    </div>
                   )}
-                />
+                  
+                  {items.length > 0 ? (
+                    <div className="border rounded-md overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="p-2 text-left">Pos.</th>
+                            <th className="p-2 text-left">Beschreibung</th>
+                            <th className="p-2 text-center">Menge</th>
+                            <th className="p-2 text-right">Einzelpreis</th>
+                            <th className="p-2 text-right">Gesamt</th>
+                            <th className="p-2 w-10"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {items.map((item, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="p-2 text-left">{index + 1}</td>
+                              <td className="p-2 text-left">{item.description}</td>
+                              <td className="p-2 text-center">{item.quantity}</td>
+                              <td className="p-2 text-right">{item.unitPrice}</td>
+                              <td className="p-2 text-right">{item.totalPrice}</td>
+                              <td className="p-2 text-center">
+                                <Button 
+                                  type="button"
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => removeItem(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 border rounded-md text-muted-foreground">
+                      Keine Positionen vorhanden. Fügen Sie Positionen hinzu, um den Kostenvoranschlag zu detaillieren.
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-end mt-4 space-y-2">
+                    <FormField
+                      control={form.control}
+                      name="subtotal"
+                      render={({ field }) => (
+                        <div className="flex justify-between w-48">
+                          <span className="text-muted-foreground">Zwischensumme</span>
+                          <span>{field.value}€</span>
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="taxRate"
+                      render={({ field }) => (
+                        <div className="flex justify-between w-48">
+                          <span className="text-muted-foreground">MwSt ({field.value}%)</span>
+                          <FormField
+                            control={form.control}
+                            name="taxAmount"
+                            render={({ field }) => <span>{field.value}€</span>}
+                          />
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="totalPrice"
+                      render={({ field }) => (
+                        <div className="flex justify-between w-48 font-bold text-lg pt-2 border-t">
+                          <span>Gesamt</span>
+                          <span>{field.value}€</span>
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
                 
                 <FormField
                   control={form.control}
