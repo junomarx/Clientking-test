@@ -658,20 +658,14 @@ export class EmailService {
         console.log('Keine Ersetzungsdaten für E-Mail-Vorlage gefunden oder ungültiges Format');
       }
       
-      // Wähle den richtigen SMTP-Transporter basierend auf isSystemEmail
-      // Default für Transporter ist immer der globale SMTP-Transporter
-      // Kann aber in Spezialfällen überschrieben werden
-      let transporter = this.smtpTransporter;
+      // Wähle den richtigen SMTP-Transporter basierend auf isSystemEmail oder forceUserId
+      let transporter: nodemailer.Transporter;
       let senderName: string;
       let senderEmail: string;
       
-      if (isSystemEmail && this.superadminEmailConfig) {
-        // Zentrale SMTP-Einstellungen verwenden (für System-E-Mails)
-        senderName = this.superadminEmailConfig.smtpSenderName;
-        senderEmail = this.superadminEmailConfig.smtpSenderEmail;
-        
-        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über zentrale SMTP-Konfiguration`);
-      } else if (forceUserId) {
+      // WICHTIG: Bei Statusänderungen wird immer forceUserId gesetzt,
+      // daher sollten wir hier den Benutzer-spezifischen Transporter priorisieren
+      if (forceUserId) {
         // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
         try {
           // Hole die Geschäftseinstellungen des Benutzers
@@ -685,10 +679,11 @@ export class EmailService {
             console.log(`Verwende benutzerspezifische SMTP-Einstellungen für Benutzer ${forceUserId}`);
             
             // Erstelle einen temporären Transporter für diesen Benutzer
+            const port = parseInt(businessSetting.smtpPort || '587');
             const userConfig = {
               host: businessSetting.smtpHost,
-              port: businessSetting.smtpPort || 587,
-              secure: (businessSetting.smtpPort || 587) === 465,
+              port: port,
+              secure: port === 465,
               auth: {
                 user: businessSetting.smtpUser,
                 pass: businessSetting.smtpPassword
@@ -697,22 +692,59 @@ export class EmailService {
               logger: true
             };
             
+            console.log("Erstelle Transporter mit folgenden Einstellungen:", {
+              host: businessSetting.smtpHost,
+              port: port,
+              secure: port === 465,
+              user: businessSetting.smtpUser
+            });
+            
             transporter = nodemailer.createTransport(userConfig);
             senderName = businessSetting.businessName || businessSetting.smtpSenderName || 'Handyshop';
             senderEmail = businessSetting.smtpUser;
             
             console.log(`Sende Benutzer-E-Mail mit Vorlage "${templateName}" über Benutzer-SMTP (${senderEmail})`);
           } else {
-            // KRITISCH: Keine E-Mail senden, wenn SMTP-Einstellungen fehlen
-            console.error(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen konfiguriert!`);
-            throw new Error(`Benutzer ${forceUserId} hat keine E-Mail-Einstellungen konfiguriert. E-Mail kann nicht gesendet werden.`);
+            // Fallback auf System-SMTP, wenn keine benutzer-spezifischen Einstellungen vorhanden sind
+            console.warn(`Benutzer ${forceUserId} hat keine vollständigen SMTP-Einstellungen. Verwende System-Einstellungen.`);
+            
+            if (this.smtpTransporter && process.env.SMTP_USER) {
+              transporter = this.smtpTransporter;
+              senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+              senderEmail = process.env.SMTP_USER;
+            } else if (this.superadminEmailConfig) {
+              // Wenn kein Shop-Transporter vorhanden ist, versuche den Superadmin-Transporter
+              transporter = this.smtpTransporter!;
+              senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
+              senderEmail = this.superadminEmailConfig.smtpSenderEmail || 'no-reply@example.com';
+            } else {
+              // Keine SMTP-Konfiguration vorhanden
+              throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
+            }
           }
         } catch (error) {
           console.error(`Fehler beim Laden oder Prüfen der SMTP-Einstellungen für Benutzer ${forceUserId}:`, error);
-          // Bei Benutzerprofil-E-Mails KEIN Fallback auf Standard-SMTP, 
-          // da dies zu verwirrenden E-Mail-Absendern führen würde
-          throw error;
+          // Wir versuchen trotzdem den System-SMTP zu verwenden
+          if (this.smtpTransporter && process.env.SMTP_USER) {
+            console.warn(`Fallback auf System-SMTP für Benutzer ${forceUserId}`);
+            transporter = this.smtpTransporter;
+            senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+            senderEmail = process.env.SMTP_USER;
+          } else {
+            throw new Error(`Keine SMTP-Einstellungen verfügbar für Benutzer ${forceUserId}`);
+          }
         }
+      } else if (isSystemEmail && this.superadminEmailConfig) {
+        // Zentrale SMTP-Einstellungen verwenden (für System-E-Mails)
+        if (!this.smtpTransporter) {
+          throw new Error("Superadmin-SMTP-Transporter nicht konfiguriert");
+        }
+        
+        transporter = this.smtpTransporter;
+        senderName = this.superadminEmailConfig.smtpSenderName || 'Handyshop System';
+        senderEmail = this.superadminEmailConfig.smtpSenderEmail || 'no-reply@example.com';
+        
+        console.log(`Sende System-E-Mail mit Vorlage "${templateName}" über zentrale SMTP-Konfiguration`);
       } else {
         // Shop-spezifische SMTP-Einstellungen verwenden
         if (!this.smtpTransporter) {
