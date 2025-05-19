@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SmtpTestDialog } from '../admin/SmtpTestDialog';
+import { UserSmtpTestDialog } from './UserSmtpTestDialog';
 
 // Schema für die E-Mail-Einstellungen
 const emailSettingsSchema = z.object({
@@ -32,6 +33,7 @@ export function EmailSettingsTab() {
   const { toast } = useToast();
   const [testEmailSent, setTestEmailSent] = useState(false);
   const [smtpTestDialogOpen, setSmtpTestDialogOpen] = useState(false);
+  const [userSmtpTestDialogOpen, setUserSmtpTestDialogOpen] = useState(false);
   
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<z.infer<typeof emailSettingsSchema>>({
@@ -328,8 +330,8 @@ export function EmailSettingsTab() {
         <EmailTemplateTab />
       </div>
       
-      {/* SMTP Test Dialog */}
-      <SmtpTestDialog
+      {/* Benutzerfreundlicher SMTP-Test-Dialog für alle Benutzer */}
+      <UserSmtpTestDialog
         open={smtpTestDialogOpen}
         onClose={() => setSmtpTestDialogOpen(false)}
         initialSettings={{
