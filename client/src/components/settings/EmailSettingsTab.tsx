@@ -333,7 +333,13 @@ export function EmailSettingsTab() {
       {/* Benutzerfreundlicher SMTP-Test-Dialog für alle Benutzer */}
       <UserSmtpTestDialog
         open={smtpTestDialogOpen}
-        onClose={() => setSmtpTestDialogOpen(false)}
+        onClose={() => {
+          // Wenn der Dialog geschlossen wird, aktualisieren wir die Geschäftseinstellungen
+          // Dies stellt sicher, dass die UI aktualisiert wird, wenn SMTP-Test-Einstellungen
+          // automatisch gespeichert wurden
+          queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
+          setSmtpTestDialogOpen(false);
+        }}
         initialSettings={{
           host: form.getValues("smtpHost") || '',
           port: form.getValues("smtpPort") || '587',

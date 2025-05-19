@@ -46,11 +46,28 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
       return response.json();
     },
     onSuccess: (data) => {
+      const settingsSaved = data.details?.settingsSaved;
+      const successMessage = data.success && settingsSaved 
+        ? data.message
+        : data.success && !settingsSaved
+          ? data.message
+          : "SMTP-Test fehlgeschlagen";
+          
       setTestResult({
         success: data.success,
-        message: data.message,
+        message: successMessage,
         details: data.details,
       });
+      
+      // Wenn der Test erfolgreich war und die Einstellungen gespeichert wurden,
+      // benachrichtigen wir die übergeordnete Komponente, dass die Einstellungen aktualisiert wurden
+      if (data.success && settingsSaved && typeof onClose === 'function') {
+        // Kurze Verzögerung, damit der Benutzer die Erfolgsmeldung sehen kann
+        setTimeout(() => {
+          onClose();
+          // Hier könnte man noch einen Refresh-Aufruf einfügen, um die Einstellungen in der UI zu aktualisieren
+        }, 2000);
+      }
     },
     onError: (error: any) => {
       setTestResult({
