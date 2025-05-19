@@ -2043,7 +2043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API für einfachen SMTP-Test für normale Benutzer
+  // API für einfachen SMTP-Test für normale Benutzer mit automatischem Speichern
   app.post('/api/user-smtp-test', isAuthenticated, async (req, res) => {
     try {
       const { host, port, user, password, sender, recipient } = req.body;
