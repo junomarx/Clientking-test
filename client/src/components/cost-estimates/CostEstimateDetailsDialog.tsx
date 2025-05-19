@@ -744,76 +744,23 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                         </Button>
                       )}
                       
-                      {/* Druck- und Export-Optionen */}
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          // Druckfunktion über ein neues Fenster öffnen
-                          const printWindow = window.open('', '_blank');
-                          if (!printWindow) {
-                            toast({
-                              title: "Fehler",
-                              description: "Popup-Blocker verhindern das Öffnen des Druckfensters. Bitte erlauben Sie Popups für diese Seite.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          
-                          // Debug-Ausgabe: Prüfen, ob serial_number oder serialNumber existiert
-                          console.log("Estimate für Druck:", estimate);
-                          console.log("Seriennummer:", estimate.serial_number || estimate.serialNumber || "Keine Seriennummer gefunden");
-                          
-                          // HTML für Druckansicht generieren mit unserer sauberen Funktion
-                          const html = generatePrintHtml({
-                            estimate,
-                            customer,
-                            items,
-                            businessName: businessSettings?.businessName || "Mac and PhoneDoc",
-                            businessAddress: businessSettings?.streetAddress || "Amerlingstraße 19",
-                            businessZipCity: `${businessSettings?.zipCode || "1060"} ${businessSettings?.city || "Wien"}`,
-                            businessPhone: businessSettings?.phone || "+4314103511",
-                            businessEmail: businessSettings?.email || "office@macandphonedoc.at",
-                            logoUrl: businessSettings?.logoImage || null
-                          });
-                          
-                          // HTML im neuen Fenster einfügen und drucken
-                          printWindow.document.open();
-                          printWindow.document.write(html);
-                          printWindow.document.close();
-                          
-                          // Warten bis Ressourcen geladen sind, dann drucken
-                          printWindow.onload = () => {
-                            printWindow.print();
-                            // Optional: Fenster nach dem Drucken schließen
-                            // printWindow.close();
-                          };
+                      {/* Druck-, Export- und E-Mail-Optionen */}
+                      <PrintButtons
+                        estimate={estimate}
+                        customer={customer || {
+                          firstName: estimate.firstname || "",
+                          lastName: estimate.lastname || "",
+                          email: estimate.email || "",
+                          phone: estimate.phone || ""
                         }}
-                      >
-                        <Printer className="h-4 w-4 mr-2" />
-                        Drucken
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          // Als PDF exportieren (öffnet ebenfalls die Druckansicht, aber mit PDF-Option)
-                          toast({
-                            title: "PDF-Export",
-                            description: "Wählen Sie 'Als PDF speichern' in den Druckoptionen, um den Kostenvoranschlag als PDF zu exportieren.",
-                          });
-                          
-                          const printWindow = window.open('', '_blank');
-                          if (!printWindow) {
-                            toast({
-                              title: "Fehler",
-                              description: "Popup-Blocker verhindern das Öffnen des PDF-Fensters. Bitte erlauben Sie Popups für diese Seite.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          
-                          // Aktuelles Datum formatieren
-                          const today = new Date();
-                          const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
+                        items={items}
+                        businessName={businessSettings?.businessName || "Mac and PhoneDoc"}
+                        businessAddress={businessSettings?.streetAddress || "Amerlingstraße 19"}
+                        businessZipCity={`${businessSettings?.zipCode || "1060"} ${businessSettings?.city || "Wien"}`}
+                        businessPhone={businessSettings?.phone || "+4314103511"}
+                        businessEmail={businessSettings?.email || "office@macandphonedoc.at"}
+                        logoUrl={businessSettings?.logoImage || null}
+                      />
                           
                           // HTML für Druckansicht generieren (gleich wie Drucken)
                           const html = `
