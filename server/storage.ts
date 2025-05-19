@@ -1433,6 +1433,30 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async createRepair(repair: Partial<InsertRepair>, userId?: number): Promise<Repair> {
+    try {
+      // Zeitstempel setzen
+      repair.created_at = repair.created_at || new Date();
+      repair.updated_at = repair.updated_at || new Date();
+      
+      // Standardstatus setzen, wenn nicht definiert
+      repair.status = repair.status || "eingegangen";
+      
+      console.log(`📝 Erstelle neue Reparatur:`, repair);
+      
+      // Reparatur in der Datenbank erstellen
+      const [newRepair] = await db
+        .insert(repairs)
+        .values(repair as InsertRepair)
+        .returning();
+      
+      return newRepair;
+    } catch (error) {
+      console.error("Fehler beim Erstellen einer Reparatur:", error);
+      throw error;
+    }
+  }
+  
   async getRepairsByCustomerId(customerId: number, userId: number): Promise<Repair[]> {
     try {
       console.log(`getRepairsByCustomerId: Abrufen der Reparaturen für Kunde ${customerId} (Benutzer ${userId})`);

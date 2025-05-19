@@ -2989,29 +2989,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prüfen, ob der Kostenvoranschlag bereits in einen Reparaturauftrag umgewandelt wurde
-      if (estimate.converted_to_repair) {
+      if (estimate.convertedToRepair) {
         return res.status(400).json({ 
           message: "Der Kostenvoranschlag wurde bereits in einen Reparaturauftrag umgewandelt" 
         });
       }
       
       // Reparatur erstellen
-      const insertRepair: Partial<InsertRepair> = {
-        reference_number: estimate.reference_number.replace('KV-', 'RA-'),
-        customer_id: estimate.customer_id || estimate.customerId,
-        device_type: estimate.device_type,
+      const insertRepair = {
+        reference_number: estimate.referenceNumber ? estimate.referenceNumber.replace('KV-', 'RA-') : `RA-${Date.now()}`,
+        customer_id: estimate.customerId,
+        device_type: estimate.deviceType,
         brand: estimate.brand,
         model: estimate.model,
-        serial_number: estimate.serial_number || estimate.serialNumber,
+        serial_number: estimate.serialNumber || estimate.serial_number,
         issue: estimate.issue,
-        notes: `Umgewandelt aus Kostenvoranschlag ${estimate.reference_number}`,
+        notes: `Umgewandelt aus Kostenvoranschlag ${estimate.referenceNumber || estimate.reference_number}`,
         status: 'angenommen',
         cost_estimate_id: estimate.id,
         estimated_price: estimate.total,
         created_at: new Date(),
         updated_at: new Date(),
         user_id: userId,
-        shop_id: (req.user as any).shop_id || (req.user as any).shopId
+        shop_id: (req.user as any).shopId
       };
       
       // Reparatur in der Datenbank erstellen
@@ -3023,8 +3023,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Kostenvoranschlag als umgewandelt markieren
       await storage.updateCostEstimate(id, {
-        converted_to_repair: true,
-        repair_id: repair.id
+        convertedToRepair: true,
+        repairId: repair.id
       }, userId);
       
       res.status(200).json({ success: true, repairId: repair.id });
