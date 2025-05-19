@@ -476,13 +476,14 @@ export class DatabaseStorage implements IStorage {
    */
   async generatePdfFromHtml(html: string, filename: string): Promise<Buffer | null> {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const os = require('os');
-      const pdf = require('html-pdf');
+      // Node.js-Module importieren (ES Module-Style)
+      const fs = await import('fs');
+      const path = await import('path');
+      const os = await import('os');
+      const htmlPdf = await import('html-pdf');
       
       // Temporären Dateinamen erstellen
-      const tempFilePath = path.join(os.tmpdir(), `${filename}_${Date.now()}.pdf`);
+      const tempFilePath = path.default.join(os.default.tmpdir(), `${filename}_${Date.now()}.pdf`);
       
       // PDF-Optionen
       const options = {
@@ -499,7 +500,7 @@ export class DatabaseStorage implements IStorage {
       
       // PDF erstellen und als Datei speichern
       await new Promise<void>((resolve, reject) => {
-        pdf.create(html, options).toFile(tempFilePath, (err: Error, res: any) => {
+        htmlPdf.default.create(html, options).toFile(tempFilePath, (err: Error, res: any) => {
           if (err) {
             console.error('Fehler beim Erstellen des PDFs:', err);
             reject(err);
@@ -511,10 +512,10 @@ export class DatabaseStorage implements IStorage {
       });
       
       // PDF-Datei aus Dateisystem lesen
-      const pdfBuffer = fs.readFileSync(tempFilePath);
+      const pdfBuffer = fs.default.readFileSync(tempFilePath);
       
       // PDF-Datei löschen
-      fs.unlinkSync(tempFilePath);
+      fs.default.unlinkSync(tempFilePath);
       
       return pdfBuffer;
     } catch (error) {
