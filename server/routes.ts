@@ -3400,6 +3400,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Neuer API-Endpunkt für SMTP-Test mit automatischem Speichern
+  app.post('/api/user-smtp-test-auto-save', isAuthenticated, async (req, res) => {
+    try {
+      const { host, port, user, password, sender, recipient } = req.body;
+      
+      if (!host || !port || !user || !password || !sender || !recipient) {
+        return res.status(400).json({
+          success: false,
+          message: 'Alle SMTP-Parameter müssen angegeben werden'
+        });
+      }
+      
+      // Benutzer-ID aus der Anfrage holen
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Benutzer-ID nicht gefunden'
+        });
+      }
+      
+      // Importiere die SMTP-Test- und Speicherfunktion
+      const { testAndSaveSmtpSettings } = await import('./smtp-auto-save');
+      
+      // Führe den SMTP-Test durch und speichere die Einstellungen bei Erfolg
+      const result = await testAndSaveSmtpSettings(
+        host, port, user, password, sender, recipient, userId
+      );
+      
+      // Wenn der Test erfolgreich war, gebe Erfolg zurück
+      if (result.success) {
+        return res.json(result);
+      } else {
+        // Bei Fehlern gebe einen Fehlerstatus zurück
+        return res.status(500).json(result);
+      }
+    } catch (error) {
+      console.error('Fehler bei SMTP-Test mit Auto-Save:', error);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Interner Serverfehler bei SMTP-Test mit Auto-Save'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
 

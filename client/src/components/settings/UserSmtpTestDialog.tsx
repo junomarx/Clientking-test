@@ -42,7 +42,8 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
 
   const testMutation = useMutation({
     mutationFn: async (testSettings: SmtpSettings) => {
-      const response = await apiRequest('POST', '/api/user-smtp-test', testSettings);
+      // Verwende den neuen API-Endpunkt für SMTP-Test mit automatischem Speichern
+      const response = await apiRequest('POST', '/api/user-smtp-test-auto-save', testSettings);
       return response.json();
     },
     onSuccess: (data) => {
@@ -83,6 +84,7 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
           <DialogTitle>SMTP-Verbindung testen</DialogTitle>
           <DialogDescription>
             Testen Sie Ihre SMTP-Einstellungen, um sicherzustellen, dass E-Mails korrekt versendet werden können.
+            Bei erfolgreichem Test werden diese Einstellungen automatisch in Ihren Geschäftseinstellungen gespeichert.
           </DialogDescription>
         </DialogHeader>
 
