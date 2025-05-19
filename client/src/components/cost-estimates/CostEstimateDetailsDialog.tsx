@@ -472,671 +472,319 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
                   <CardHeader>
                     <CardTitle className="text-lg">Kundeninformationen</CardTitle>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">
-                        {/* Versuche verschiedene mögliche Formate für Kundendaten */}
-                        {customer ? `${customer.firstName || '-'} ${customer.lastName || '-'}` : 
-                         (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : '-'}
-                      </p>
-                      <p className="text-sm">Email: {customer?.email || estimate.email || '-'}</p>
-                      <p className="text-sm">Tel: {customer?.phone || estimate.phone || '-'}</p>
-                      {customer?.streetAddress && (
-                        <>
-                          <p className="text-sm mt-2 text-muted-foreground">Adresse:</p>
-                          <p className="text-sm">{customer.streetAddress}</p>
-                          <p className="text-sm">{customer.zipCode} {customer.city}</p>
-                        </>
-                      )}
-                    </div>
-                    <div className="mt-2">
-                      <p className="text-xs text-muted-foreground">Kunde ID: {estimate.customer_id || estimate.customerId || '-'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Geräteinformationen */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Geräteinformationen</CardTitle>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gerätetyp</p>
-                      <p className="font-medium">{estimate.deviceType}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Marke</p>
-                      <p className="font-medium">{estimate.brand}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Modell</p>
-                      <p className="font-medium">{estimate.model}</p>
-                    </div>
-                    {estimate.serial_number && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Seriennummer</p>
-                        <p className="font-medium">{estimate.serial_number}</p>
+                  <CardContent>
+                    {isLoadingCustomer ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                       </div>
-                    )}
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-muted-foreground">Fehlerbeschreibung</p>
-                      <p className="font-medium">{estimate.issue}</p>
-                    </div>
-                    {estimate.notes && (
-                      <div className="md:col-span-2">
-                        <p className="text-sm text-muted-foreground">Notizen</p>
-                        <p className="font-medium whitespace-pre-wrap">{estimate.notes}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Finanzdetails mit integrierten Positionen */}
-                {estimate.subtotal && estimate.total && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Finanzübersicht</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-4 mb-4">
-                        <div className="min-w-[200px]">
-                          <p className="text-sm text-muted-foreground">Erstellt am</p>
-                          <p className="font-medium">
-                            {estimate.created_at ? format(new Date(estimate.created_at), 'dd.MM.yyyy HH:mm', { locale: de }) : "Kein Datum"}
-                          </p>
+                    ) : customer ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="font-semibold">Name:</p>
+                          <p>{customer.firstName} {customer.lastName}</p>
                         </div>
-                        
-                        {estimate.validUntil && (
-                          <div className="min-w-[200px]">
-                            <p className="text-sm text-muted-foreground">Gültig bis</p>
-                            <p className="font-medium">
-                              {formatDate(estimate.validUntil)}
-                            </p>
-                          </div>
-                        )}
+                        <div>
+                          <p className="font-semibold">E-Mail:</p>
+                          <p>{customer.email || "Keine E-Mail hinterlegt"}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">Telefon:</p>
+                          <p>{customer.phone || "Keine Telefonnummer hinterlegt"}</p>
+                        </div>
                       </div>
+                    ) : (
+                      <p className="text-muted-foreground italic">Keine Kundeninformationen verfügbar</p>
+                    )}
+                  </CardContent>
+                </Card>
 
-                      {/* Positionen */}
-                      <div className="mb-6">
-                        <div className="flex flex-row items-center justify-between mb-2">
-                          <h4 className="text-base font-medium">Positionen</h4>
+                {/* Tabs für Details und Positionen */}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="mb-2">
+                    <TabsTrigger value="details">Details</TabsTrigger>
+                    <TabsTrigger value="items">Positionen</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="details">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Gerätedetails</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="font-semibold">Gerätetyp:</p>
+                            <p>{estimate.deviceType}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Marke:</p>
+                            <p>{estimate.brand}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Modell:</p>
+                            <p>{estimate.model}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Seriennummer:</p>
+                            <p>{estimate.serial_number || "Nicht angegeben"}</p>
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <p className="font-semibold">Problembeschreibung:</p>
+                            <p>{estimate.description || estimate.issue || "Keine Beschreibung verfügbar"}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Erstellt am:</p>
+                            <p>{formatDate(estimate.created_at)}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Status:</p>
+                            <p>{getStatusBadge(estimate.status)}</p>
+                          </div>
+                          {estimate.convertedToRepair && (
+                            <div className="col-span-1 md:col-span-2">
+                              <Badge className="bg-blue-600">
+                                In Reparaturauftrag umgewandelt
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="items">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="text-lg">Positionen</CardTitle>
+                        {!showAddItemForm && (
                           <Button 
                             size="sm" 
                             onClick={() => setShowAddItemForm(true)}
-                            disabled={showAddItemForm}
+                            disabled={estimate.status === 'abgelehnt' || estimate.convertedToRepair}
                           >
-                            + Position hinzufügen
+                            <Edit className="h-4 w-4 mr-2" />
+                            Position hinzufügen
                           </Button>
-                        </div>
-
-                        {isLoadingItems ? (
-                          <div className="flex justify-center py-6">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : items.length === 0 ? (
-                          <div className="text-center py-6 text-muted-foreground">
-                            <p>Keine Positionen vorhanden</p>
-                          </div>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[50px]">#</TableHead>
-                                  <TableHead>Beschreibung</TableHead>
-                                  <TableHead className="text-right">Menge</TableHead>
-                                  <TableHead className="text-right">Einzelpreis</TableHead>
-                                  <TableHead className="text-right">Gesamtpreis</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {items && items.map((item: CostEstimateItem, index: number) => (
-                                  <TableRow key={item.id || index}>
-                                    <TableCell>{index + 1}</TableCell>
-                                    <TableCell>{item.description}</TableCell>
-                                    <TableCell className="text-right">{item.quantity}</TableCell>
-                                    <TableCell className="text-right">{item.unitPrice} €</TableCell>
-                                    <TableCell className="text-right">{item.totalPrice} €</TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
                         )}
-
+                      </CardHeader>
+                      <CardContent>
+                        {/* Formular zum Hinzufügen von Positionen */}
                         {showAddItemForm && (
-                          <div className="mt-4 p-4 border rounded-md space-y-4">
-                            <div>
-                              <label className="text-sm font-medium">Beschreibung</label>
-                              <input 
-                                type="text"
-                                className="w-full mt-1 p-2 border rounded-md"
-                                value={newItem.description}
-                                onChange={(e) => setNewItem({
-                                  ...newItem,
-                                  description: e.target.value
-                                })}
-                              />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <label className="text-sm font-medium">Menge</label>
+                          <div className="mb-6 border rounded-md p-4 bg-muted/20">
+                            <h4 className="font-medium mb-3">Neue Position hinzufügen</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                              <div className="md:col-span-6">
+                                <label className="text-sm font-medium mb-1 block">Beschreibung</label>
                                 <input 
-                                  type="number"
-                                  className="w-full mt-1 p-2 border rounded-md"
+                                  type="text" 
+                                  value={newItem.description}
+                                  onChange={(e) => setNewItem({...newItem, description: e.target.value})}
+                                  className="w-full p-2 border rounded-md"
+                                  placeholder="z.B. Displaytausch"
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium mb-1 block">Menge</label>
+                                <input 
+                                  type="number" 
                                   min="1"
                                   value={newItem.quantity}
                                   onChange={(e) => {
-                                    const quantity = parseInt(e.target.value) || 1;
-                                    const totalPrice = calculateItemTotal(quantity, newItem.unitPrice);
+                                    const quantity = parseInt(e.target.value);
                                     setNewItem({
-                                      ...newItem,
-                                      quantity,
-                                      totalPrice
+                                      ...newItem, 
+                                      quantity, 
+                                      totalPrice: calculateItemTotal(quantity, newItem.unitPrice)
                                     });
                                   }}
+                                  className="w-full p-2 border rounded-md"
                                 />
                               </div>
-                              <div>
-                                <label className="text-sm font-medium">Einzelpreis (€)</label>
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium mb-1 block">Einzelpreis (€)</label>
                                 <input 
-                                  type="text"
-                                  className="w-full mt-1 p-2 border rounded-md"
+                                  type="text" 
                                   value={newItem.unitPrice}
                                   onChange={(e) => {
                                     const unitPrice = e.target.value;
-                                    const totalPrice = calculateItemTotal(newItem.quantity, unitPrice);
                                     setNewItem({
-                                      ...newItem,
-                                      unitPrice,
-                                      totalPrice
+                                      ...newItem, 
+                                      unitPrice, 
+                                      totalPrice: calculateItemTotal(newItem.quantity, unitPrice)
                                     });
                                   }}
+                                  className="w-full p-2 border rounded-md"
+                                  placeholder="0,00"
                                 />
                               </div>
-                              <div>
-                                <label className="text-sm font-medium">Gesamtpreis (€)</label>
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium mb-1 block">Gesamtpreis (€)</label>
                                 <input 
-                                  type="text"
-                                  readOnly
-                                  className="w-full mt-1 p-2 border rounded-md bg-muted"
+                                  type="text" 
                                   value={newItem.totalPrice}
+                                  readOnly
+                                  className="w-full p-2 border rounded-md bg-gray-100"
                                 />
                               </div>
                             </div>
-                            <div className="flex justify-end space-x-2">
+                            <div className="flex justify-end mt-3 space-x-2">
                               <Button 
                                 variant="outline" 
+                                size="sm" 
                                 onClick={() => setShowAddItemForm(false)}
                               >
                                 Abbrechen
                               </Button>
                               <Button 
+                                size="sm"
                                 onClick={handleAddItem}
-                                disabled={!newItem.description || addItemMutation.isPending}
+                                disabled={!newItem.description || newItem.quantity < 1 || addItemMutation.isPending}
                               >
                                 {addItemMutation.isPending ? (
                                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 ) : null}
-                                Position hinzufügen
+                                Hinzufügen
                               </Button>
                             </div>
                           </div>
                         )}
-                      </div>
-
-                      {/* Zusammenfassung */}
-                      <div className="flex flex-col items-end mt-6 space-y-2">
-                        <div className="flex justify-between w-48">
-                          <span className="text-muted-foreground">Zwischensumme</span>
-                          <span>{estimate.subtotal}</span>
-                        </div>
-                        <div className="flex justify-between w-48">
-                          <span className="text-muted-foreground">MwSt ({estimate.tax_rate}%)</span>
-                          <span>{estimate.tax_amount}</span>
-                        </div>
-                        <div className="flex justify-between w-48 font-bold text-lg pt-2 border-t">
-                          <span>Gesamt</span>
-                          <span>{estimate.total}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Aktionen (zum Schluss) */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Aktionen</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {estimate.status === 'offen' && (
-                        <>
-                          <Button 
-                            onClick={handleAccept}
-                            disabled={updateStatusMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Annehmen
-                          </Button>
-                          <Button 
-                            onClick={handleReject}
-                            disabled={updateStatusMutation.isPending}
-                            variant="destructive"
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Ablehnen
-                          </Button>
-                        </>
-                      )}
-                      
-                      {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
+                        
+                        {/* Tabelle der Positionen */}
+                        {isLoadingItems ? (
+                          <div className="flex justify-center py-6">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : items.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Beschreibung</TableHead>
+                                  <TableHead className="text-right">Menge</TableHead>
+                                  <TableHead className="text-right">Einzelpreis (€)</TableHead>
+                                  <TableHead className="text-right">Gesamtpreis (€)</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {items.map((item) => (
+                                  <TableRow key={item.id}>
+                                    <TableCell>{item.description}</TableCell>
+                                    <TableCell className="text-right">{item.quantity}</TableCell>
+                                    <TableCell className="text-right">{item.unitPrice}</TableCell>
+                                    <TableCell className="text-right">{item.totalPrice}</TableCell>
+                                  </TableRow>
+                                ))}
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-right font-semibold">
+                                    Zwischensumme (netto):
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {estimate.subtotal || 0} €
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-right font-semibold">
+                                    MwSt. (20%):
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {estimate.tax_amount || 0} €
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell colSpan={3} className="text-right font-semibold">
+                                    Gesamtbetrag (inkl. MwSt.):
+                                  </TableCell>
+                                  <TableCell className="text-right font-bold">
+                                    {estimate.total || 0} €
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <FileText className="h-12 w-12 mx-auto mb-2 opacity-40" />
+                            <p>Keine Positionen vorhanden</p>
+                            {!estimate.convertedToRepair && estimate.status !== 'abgelehnt' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="mt-2" 
+                                onClick={() => setShowAddItemForm(true)}
+                              >
+                                Position hinzufügen
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+                
+                {/* Aktionen */}
+                <div className="flex justify-between items-center pt-2">
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={deleteMutation.isPending || estimate.convertedToRepair}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Löschen
+                  </Button>
+                  
+                  <div className="flex flex-wrap items-center gap-2">
+                    {estimate.status === 'offen' && (
+                      <>
                         <Button 
-                          onClick={handleConvertToRepair}
-                          disabled={convertToRepairMutation.isPending}
-                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={handleAccept}
+                          disabled={updateStatusMutation.isPending}
+                          className="bg-green-600 hover:bg-green-700"
                         >
-                          <RotateCw className="h-4 w-4 mr-2" />
-                          In Reparatur umwandeln
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Annehmen
                         </Button>
-                      )}
-                      
-                      {/* Druck-, Export- und E-Mail-Optionen */}
-                      <PrintButtons
-                        estimate={estimate}
-                        customer={customer || {
-                          firstName: estimate.firstname || "",
-                          lastName: estimate.lastname || "",
-                          email: estimate.email || "",
-                          phone: estimate.phone || ""
-                        }}
-                        items={items}
-                        businessName={businessSettings?.businessName || "Mac and PhoneDoc"}
-                        businessAddress={businessSettings?.streetAddress || "Amerlingstraße 19"}
-                        businessZipCity={`${businessSettings?.zipCode || "1060"} ${businessSettings?.city || "Wien"}`}
-                        businessPhone={businessSettings?.phone || "+4314103511"}
-                        businessEmail={businessSettings?.email || "office@macandphonedoc.at"}
-                        logoUrl={businessSettings?.logoImage || null}
-                      />
-                            <!DOCTYPE html>
-                            <html lang="de">
-                            <head>
-                              <meta charset="UTF-8">
-                              <title>Kostenvoranschlag ${estimate.reference_number}</title>
-                              <style>
-                                @page {
-                                    size: A4;
-                                    margin: 0;
-                                }
-                                
-                                html, body {
-                                    margin: 0;
-                                    padding: 0;
-                                    width: 210mm;
-                                    height: 297mm;
-                                    box-sizing: border-box;
-                                    font-family: Arial, sans-serif;
-                                    font-size: 12px;
-                                    color: #333;
-                                    background-color: white;
-                                }
-                                
-                                body {
-                                    padding: 20mm;
-                                }
-                                
-                                .header {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    margin-bottom: 40px;
-                                }
-                                
-                                .logo-container {
-                                    width: 200px;
-                                    border: 1px dashed #ccc;
-                                    padding: 10px;
-                                    text-align: center;
-                                    height: 60px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    font-style: italic;
-                                    color: #999;
-                                }
-                                
-                                .company-info {
-                                    text-align: right;
-                                    font-size: 12px;
-                                    color: #666;
-                                }
-                                
-                                .company-name {
-                                    font-weight: bold;
-                                    font-size: 16px;
-                                    color: #333;
-                                    margin-bottom: 5px;
-                                }
-                                
-                                .document-title {
-                                    text-align: center;
-                                    font-size: 24px;
-                                    font-weight: bold;
-                                    margin: 30px 0 10px 0;
-                                    color: #222;
-                                }
-                                
-                                .auftragsnummer {
-                                    text-align: center;
-                                    font-size: 18px;
-                                    margin: 0 0 10px 0;
-                                    color: #222;
-                                }
-                                
-                                .document-date {
-                                    text-align: center;
-                                    font-size: 14px;
-                                    margin: 0 0 40px 0;
-                                    color: #666;
-                                }
-                                
-                                .section {
-                                    margin-bottom: 20px;
-                                }
-                                
-                                .section-title {
-                                    font-weight: bold;
-                                    margin-bottom: 10px;
-                                    font-size: 14px;
-                                    color: #333;
-                                }
-                                
-                                .customer-info {
-                                    margin-bottom: 30px;
-                                }
-                                
-                                .customer-info p {
-                                    margin: 3px 0;
-                                }
-                                
-                                .customer-name {
-                                    font-weight: bold;
-                                    font-size: 16px;
-                                }
-                                
-                                .device-info-box {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    gap: 40px;
-                                    margin-bottom: 30px;
-                                    padding: 20px;
-                                    border: 1px solid #ccc;
-                                    border-radius: 8px;
-                                }
-                                
-                                .info-column {
-                                    flex: 1;
-                                }
-                                
-                                .info-item {
-                                    margin-bottom: 15px;
-                                }
-                                
-                                .info-label {
-                                    font-size: 11px;
-                                    color: #666;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    margin-bottom: 2px;
-                                }
-                                
-                                .info-value {
-                                    font-size: 14px;
-                                    font-weight: bold;
-                                    color: #222;
-                                }
-                                
-                                .box-content {
-                                    white-space: pre-line;
-                                    font-size: 13px;
-                                    color: #333;
-                                    margin-top: 5px;
-                                }
-                                
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin-bottom: 20px;
-                                }
-                                
-                                thead tr {
-                                    background-color: #f5f5f5;
-                                    border-bottom: 2px solid #ddd;
-                                }
-                                
-                                th, td {
-                                    padding: 8px;
-                                    text-align: left;
-                                    font-size: 12px;
-                                }
-                                
-                                th {
-                                    font-weight: bold;
-                                }
-                                
-                                tbody tr {
-                                    border-bottom: 1px solid #ddd;
-                                }
-                                
-                                .text-right {
-                                    text-align: right;
-                                }
-                                
-                                .price-summary {
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: flex-end;
-                                    margin-top: 20px;
-                                }
-                                
-                                .price-row {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    width: 200px;
-                                    margin-bottom: 5px;
-                                }
-                                
-                                .price-label {
-                                    font-size: 12px;
-                                    color: #666;
-                                }
-                                
-                                .price-value {
-                                    font-size: 12px;
-                                    font-weight: bold;
-                                }
-                                
-                                .price-total {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    width: 200px;
-                                    border-top: 1px solid #ddd;
-                                    padding-top: 5px;
-                                    margin-top: 5px;
-                                }
-                                
-                                .price-total-label {
-                                    font-size: 14px;
-                                    font-weight: bold;
-                                }
-                                
-                                .price-total-value {
-                                    font-size: 14px;
-                                    font-weight: bold;
-                                }
-                                
-                                @media print {
-                                    html, body {
-                                        width: 210mm;
-                                        height: 297mm;
-                                    }
-                                }
-                              </style>
-                            </head>
-                            <body>
-                              <div class="header">
-                                <div class="logo-container">
-                                    Firmenlogo
-                                </div>
-                                <div class="company-info">
-                                    <p class="company-name">Mac and PhoneDoc</p>
-                                    <p>Amerlingstraße 19<br>
-                                    1060 Wien<br>
-                                    +4314103511<br>
-                                    office@macandphonedoc.at</p>
-                                </div>
-                              </div>
-                            
-                              <div class="customer-info">
-                                <div class="section-title">Kundeninformationen</div>
-                                <p class="customer-name">${customer ? `${customer.firstName} ${customer.lastName}` : 
-                                   (estimate.firstname && estimate.lastname) ? `${estimate.firstname} ${estimate.lastname}` : 'Kunde'}</p>
-                                <p>${customer?.streetAddress || ''}</p>
-                                <p>${customer?.zipCode || ''} ${customer?.city || ''}</p>
-                              </div>
-                            
-                              <div class="document-title">Kostenvoranschlag</div>
-                              <div class="auftragsnummer">${estimate.reference_number}</div>
-                              <div class="document-date">Erstellt am: ${todayFormatted}</div>
-                            
-                              <!-- Geräteinformationen -->
-                              <div class="device-info-box">
-                                <div class="info-column">
-                                    <div class="info-item">
-                                        <div class="info-label">Hersteller</div>
-                                        <div class="info-value">${estimate.brand}</div>
-                                    </div>
-                                </div>
-                                <div class="info-column">
-                                    <div class="info-item">
-                                        <div class="info-label">Modell</div>
-                                        <div class="info-value">${estimate.model}</div>
-                                    </div>
-                                </div>
-                                <div class="info-column">
-                                    <div class="info-item">
-                                        <div class="info-label">Seriennummer</div>
-                                        <div class="info-value">${estimate.serial_number || '-'}</div>
-                                    </div>
-                                </div>
-                              </div>
-                            
-                              <!-- Fehlerbeschreibung -->
-                              <div class="section">
-                                <div class="section-title">Fehlerbeschreibung</div>
-                                <div class="box-content">${estimate.issue}</div>
-                              </div>
-                            
-                              <!-- Positionen -->
-                              <div class="section">
-                                <div class="section-title">Positionen</div>
-                                <table>
-                                  <thead>
-                                    <tr>
-                                      <th>#</th>
-                                      <th>Beschreibung</th>
-                                      <th class="text-right">Menge</th>
-                                      <th class="text-right">Einzelpreis</th>
-                                      <th class="text-right">Gesamtpreis</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    ${items.map((item, index) => `
-                                      <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${item.description}</td>
-                                        <td class="text-right">${item.quantity}</td>
-                                        <td class="text-right">${item.unitPrice} €</td>
-                                        <td class="text-right">${item.totalPrice} €</td>
-                                      </tr>
-                                    `).join('')}
-                                  </tbody>
-                                </table>
-                                
-                                <div class="price-summary">
-                                  <div class="price-row">
-                                    <span class="price-label">Zwischensumme:</span>
-                                    <span class="price-value">${estimate.subtotal} €</span>
-                                  </div>
-                                  <div class="price-row">
-                                    <span class="price-label">MwSt (${estimate.tax_rate}%):</span>
-                                    <span class="price-value">${estimate.tax_amount} €</span>
-                                  </div>
-                                  <div class="price-total">
-                                    <span class="price-total-label">Gesamtbetrag:</span>
-                                    <span class="price-total-value">${estimate.total} €</span>
-                                  </div>
-                                </div>
-                              </div>
-                            
-                              <!-- Hinweise -->
-                              <div class="section">
-                                <div class="section-title">Hinweise zum Kostenvoranschlag</div>
-                                <p><strong>1.</strong> Der Kostenvoranschlag basiert auf einer ersten Diagnose und kann sich bei tatsächlicher Durchführung ändern.</p>
-                                <p><strong>2.</strong> Sollte sich während der Reparatur ein erweiterter Schaden zeigen, wird der Kunde vorab kontaktiert.</p>
-                                <p><strong>3.</strong> Die im Kostenvoranschlag genannten Preise verstehen sich inkl. MwSt., sofern nicht anders angegeben.</p>
-                                <p><strong>4.</strong> Eine Bearbeitungsgebühr kann fällig werden, falls keine Reparatur beauftragt wird.</p>
-                                <p><strong>5.</strong> Dieser Kostenvoranschlag ist bis ${estimate.validUntil ? 
-                                  format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt'} gültig.</p>
-                              </div>
-                            
-                              ${estimate.notes ? `
-                              <div class="section">
-                                <div class="section-title">Zusätzliche Notizen</div>
-                                <div class="box-content">${estimate.notes}</div>
-                              </div>
-                              ` : ''}
-                            </body>
-                            </html>
-                          `;
-                          
-                          // HTML im neuen Fenster einfügen
-                          printWindow.document.open();
-                          printWindow.document.write(html);
-                          printWindow.document.close();
-                          
-                          // Warten bis Ressourcen geladen sind
-                          printWindow.onload = () => {
-                            // Hier keine automatische Druck-Aktion, da der Benutzer PDF auswählen soll
-                          };
-                        }}
-                      >
-                        <FileText className="h-4 w-4 mr-2" />
-                        Als PDF
-                      </Button>
+                        <Button 
+                          onClick={handleReject}
+                          disabled={updateStatusMutation.isPending}
+                          variant="destructive"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Ablehnen
+                        </Button>
+                      </>
+                    )}
+                    
+                    {estimate.status === 'angenommen' && !estimate.convertedToRepair && (
                       <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          // Kostenvoranschlag öffnen und bearbeiten - derzeit keine direkte Bearbeitungsseite
-                          toast({
-                            title: "Bearbeitung",
-                            description: "Die Bearbeitungsfunktion ist in Arbeit und wird bald verfügbar sein.",
-                          });
-                        }}
+                        onClick={handleConvertToRepair}
+                        disabled={convertToRepairMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
-                        <Edit className="h-4 w-4 mr-2" /> Bearbeiten
+                        <RotateCw className="h-4 w-4 mr-2" />
+                        In Reparatur umwandeln
                       </Button>
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => setShowDeleteConfirm(true)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" /> Löschen
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    )}
+                    
+                    {/* Druck-, Export- und E-Mail-Optionen */}
+                    <PrintButtons
+                      estimate={estimate}
+                      customer={customer || {
+                        firstName: estimate.firstname || "",
+                        lastName: estimate.lastname || "",
+                        email: estimate.email || "",
+                        phone: estimate.phone || ""
+                      }}
+                      items={items}
+                      businessName={businessSettings?.businessName || "Mac and PhoneDoc"}
+                      businessAddress={businessSettings?.streetAddress || "Amerlingstraße 19"}
+                      businessZipCity={`${businessSettings?.zipCode || "1060"} ${businessSettings?.city || "Wien"}`}
+                      businessPhone={businessSettings?.phone || "+4314103511"}
+                      businessEmail={businessSettings?.email || "office@macandphonedoc.at"}
+                      logoUrl={businessSettings?.logoImage || null}
+                    />
+                  </div>
+                </div>
               </div>
             </>
           ) : null}
@@ -1145,5 +793,3 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
     </div>
   );
 }
-
-export default CostEstimateDetailsDialog;
