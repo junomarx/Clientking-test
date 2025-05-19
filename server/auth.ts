@@ -44,15 +44,12 @@ export function setupAuth(app: Express) {
     console.warn('Warning: SESSION_SECRET is not set in production environment');
   }
 
-  // Session-Konfiguration ohne Datenbank-Store (als Fallback wegen Datenbankproblemen)
-  console.log('⚠️ Verwende einfachen Cookie-basierten Session-Store ohne Datenbank');
-  
   // Session-Konfiguration
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
     resave: true,
     saveUninitialized: true,
-    // Kein Store angegeben = Standard In-Memory Store von Express-Session
+    store: storage.sessionStore,
     name: 'handyshop.sid', // Anpassung des Cookie-Namens
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
@@ -71,319 +68,30 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        // Notfall-Superadmin für Probleme mit der Datenbank
-        // Versuche zuerst normale Authentifizierung
-        try {
-          const user = await storage.getUserByUsername(username);
-          if (user && (await comparePasswords(password, user.password))) {
-            console.log('Login erfolgreich für Benutzer', username);
-            return done(null, user);
-          }
-        } catch (dbError) {
-          console.error('Datenbankfehler beim Login-Versuch:', dbError);
-          // Bei Datenbankfehler: Prüfe auf Notfall-Anmeldeinformationen
-          // Aktiviere Notfallmodus nur bei Datenbankfehlern
-          if (username === 'superadmin' && password === 'handyshop-notfall-admin-2025') {
-            console.log('⚠️ NOTFALLMODUS: Notfall-Superadmin-Anmeldung aktiviert');
-            // Vollständiger Notfall-Superadmin mit allen erforderlichen Feldern
-            const emergencySuperadmin = {
-              id: 10,
-              username: 'superadmin',
-              email: 'superadmin@example.com',
-              password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
-              isActive: true,
-              isAdmin: true,
-              isSuperadmin: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              shopId: 10,
-              packageId: 'enterprise',
-              pricingPlan: 'enterprise',
-              featureOverrides: {
-                canManageDevices: true,
-                canManageEmailTemplates: true,
-                canManageGlobalSettings: true,
-                canManageUsers: true,
-                canSeeStatistics: true,
-                hasAdvancedRepairStatus: true
-              },
-              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-              companyName: 'System Administrator',
-              companyAddress: 'Systemadresse',
-              companyVatNumber: '0000000000',
-              companyPhone: '0000000000',
-              trialExpiresAt: null,
-              passwordResetToken: null,
-              passwordResetExpires: null,
-              lastLoginAt: new Date()
-            };
-            return done(null, emergencySuperadmin);
-          }
-          
-          // Macnphone-Superadmin Notfalllogin
-          if (username === 'macnphone' && password === 'handyshop-notfall-admin-2025') {
-            console.log('⚠️ NOTFALLMODUS: Macnphone-Superadmin-Notfallanmeldung aktiviert');
-            const emergencyMacnphoneSuperadmin = {
-              id: 3,
-              username: 'macnphone',
-              email: 'support@macnphone.de',
-              password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
-              isActive: true,
-              isAdmin: true,
-              isSuperadmin: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              shopId: 10,
-              packageId: 'enterprise',
-              pricingPlan: 'enterprise',
-              featureOverrides: {
-                canManageDevices: true,
-                canManageEmailTemplates: true,
-                canManageGlobalSettings: true,
-                canManageUsers: true,
-                canSeeStatistics: true,
-                hasAdvancedRepairStatus: true
-              },
-              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-              companyName: 'MacnPhone',
-              companyAddress: 'Macnphone-Adresse',
-              companyVatNumber: '0000000000',
-              companyPhone: '0000000000',
-              trialExpiresAt: null,
-              passwordResetToken: null,
-              passwordResetExpires: null,
-              lastLoginAt: new Date()
-            };
-            return done(null, emergencyMacnphoneSuperadmin);
-          }
-        }
-
-        // Versuche normalen Login mit Datenbankabfrage
-        try {
-          const user = await storage.getUserByUsername(username);
-          if (!user) {
-            return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-          }
-          
-          // Passwort überprüfen
-          if (!(await comparePasswords(password, user.password))) {
-            return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
-          }
-          
-          // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
-          if (!user.isActive && !user.isSuperadmin) {
-            return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
-          } 
-          
+        const user = await storage.getUserByUsername(username);
+        if (!user || !(await comparePasswords(password, user.password))) {
+          return done(null, false, { message: 'Ungültiger Benutzername oder Passwort' });
+        } 
+        // Überprüfe, ob der Benutzer aktiv ist (es sei denn, es ist ein Superadmin)
+        else if (!user.isActive && !user.isSuperadmin) {
+          return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
+        } 
+        else {
           return done(null, user);
-        } catch (dbError) {
-          console.error('Fehler bei der Benutzerabfrage:', dbError);
-          
-          // Neon-spezifischen Fehler erkennen
-          if (dbError.message && dbError.message.includes('Control plane request failed')) {
-            console.log('⚠️ Datenbank-Verbindungsprobleme erkannt');
-            
-            // Für bestimmte wichtige Benutzer (z.B. superadmin) ermöglichen wir den Notfallzugriff
-            if (username === 'admin' || username === 'superadmin') {
-              console.log('⚠️ Notfallzugriff für Admin-Benutzer bei Datenbankproblemen');
-              const emergencyAdmin = {
-                id: username === 'superadmin' ? 10 : 1, 
-                username: username,
-                email: `${username}@example.com`,
-                password: 'hashed-dummy-password',
-                isActive: true,
-                isAdmin: true,
-                isSuperadmin: username === 'superadmin',
-                createdAt: new Date(),
-                shopId: 10,
-                packageId: 'enterprise',
-                pricingPlan: 'enterprise',
-                featureOverrides: {
-                  canManageDevices: true,
-                  canManageEmailTemplates: true,
-                  canManageGlobalSettings: true,
-                  canManageUsers: true,
-                  canSeeStatistics: true,
-                  hasAdvancedRepairStatus: true
-                }
-              };
-              return done(null, emergencyAdmin);
-            }
-          }
-          
-          // Standardfall: Fehlermeldung an den Benutzer zurückgeben
-          return done(null, false, { 
-            message: 'Datenbankverbindungsprobleme. Bitte versuchen Sie es später erneut oder kontaktieren Sie den Administrator.' 
-          });
         }
       } catch (error) {
-        console.error('Unerwarteter Fehler bei der Authentifizierung:', error);
-        return done(null, false, { message: 'Ein unerwarteter Fehler ist aufgetreten.' });
+        return done(error);
       }
     }),
   );
 
-  passport.serializeUser((user, done) => {
-    // Wir speichern das gesamte Benutzerobjekt im Session-Store, wenn es sich um einen Notfall-Login handelt
-    // um Datenbankabfragen bei der Deserialisierung zu vermeiden
-    if (user.password === 'hashed-dummy-password') {
-      console.log(`⚠️ NOTFALLMODUS: Speichere Notfallbenutzer ${user.username} komplett in der Session`);
-      // Speichern des vollständigen Notfallbenutzers in der Session
-      done(null, { id: user.id, emergencyUser: user, isEmergency: true });
-    } else {
-      // Standard-Serialisierung mit nur der ID
-      done(null, { id: user.id, isEmergency: false });
-    }
-  });
-  
-  passport.deserializeUser(async (data: { id: number, emergencyUser?: any, isEmergency?: boolean }, done) => {
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
     try {
-      // Wenn es sich um einen expliziten Notfall-Benutzer handelt, diesen direkt zurückgeben
-      if (data.isEmergency && data.emergencyUser) {
-        console.log(`⚠️ NOTFALLMODUS: Lade Notfallbenutzer ${data.emergencyUser.username} aus der Session`);
-        return done(null, data.emergencyUser);
-      }
-      
-      // Versuche normalen Benutzer aus der Datenbank zu laden
-      try {
-        console.log(`Versuche Benutzer mit ID ${data.id} abzurufen...`);
-        const user = await storage.getUser(data.id);
-        if (user) {
-          return done(null, user);
-        }
-      } catch (dbError: any) {
-        console.error(`Fehler beim Abrufen des Benutzers mit ID ${data.id}:`, dbError);
-        
-        // Bei Datenbankfehlern: Fallback für wichtige Benutzer
-        const isNeonError = dbError.message && 
-           (dbError.message.includes('Control plane request failed') || 
-            dbError.message.includes('Connection terminated'));
-        
-        if (isNeonError) {
-          // Erweiterte Informationen zu Datenbankfehlern ausgeben
-          console.log('⚠️ NOTFALLMODUS: Datenbank-Verbindungsprobleme erkannt. Verwende Notfall-Benutzer-Cache.');
-          
-          // Superadmin-ID (10) ermöglicht Notfallzugriff
-          if (data.id === 10) {
-            console.log('⚠️ NOTFALLMODUS: Lade Superadmin-Notfallkonto');
-            
-            // Erzeuge Notfall-Superadmin mit allen erforderlichen Feldern
-            const emergencySuperAdmin = {
-              id: 10,
-              username: 'superadmin',
-              email: 'superadmin@example.com',
-              password: 'hashed-dummy-password',
-              isActive: true,
-              isAdmin: true,
-              isSuperadmin: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              shopId: 10,
-              packageId: 'enterprise',
-              pricingPlan: 'enterprise',
-              featureOverrides: {
-                canManageDevices: true,
-                canManageEmailTemplates: true,
-                canManageGlobalSettings: true,
-                canManageUsers: true,
-                canSeeStatistics: true,
-                hasAdvancedRepairStatus: true
-              },
-              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-              companyName: 'System Administrator',
-              companyAddress: 'Systemadresse',
-              companyVatNumber: '0000000000',
-              companyPhone: '0000000000',
-              trialExpiresAt: null,
-              passwordResetToken: null,
-              passwordResetExpires: null,
-              lastLoginAt: new Date()
-            };
-            return done(null, emergencySuperAdmin);
-          }
-          
-          // Macnphone-ID (3) erhält auch Notfallzugriff
-          if (data.id === 3) {
-            console.log('⚠️ NOTFALLMODUS: Lade Macnphone-Notfallkonto');
-            const emergencyMacnphone = {
-              id: 3,
-              username: 'macnphone',
-              email: 'support@macnphone.de',
-              password: 'hashed-dummy-password',
-              isActive: true,
-              isAdmin: true,
-              isSuperadmin: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              shopId: 10,
-              packageId: 'enterprise',
-              pricingPlan: 'enterprise',
-              featureOverrides: {
-                canManageDevices: true,
-                canManageEmailTemplates: true,
-                canManageGlobalSettings: true,
-                canManageUsers: true,
-                canSeeStatistics: true,
-                hasAdvancedRepairStatus: true
-              },
-              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-              companyName: 'MacnPhone',
-              companyAddress: 'Macnphone-Adresse',
-              companyVatNumber: '0000000000',
-              companyPhone: '0000000000',
-              trialExpiresAt: null,
-              passwordResetToken: null,
-              passwordResetExpires: null,
-              lastLoginAt: new Date()
-            };
-            return done(null, emergencyMacnphone);
-          }
-          
-          // Admin-ID (1) erhält auch Notfallzugriff
-          if (data.id === 1) {
-            console.log('⚠️ NOTFALLMODUS: Lade Admin-Notfallkonto');
-            const emergencyAdmin = {
-              id: 1,
-              username: 'admin',
-              email: 'admin@example.com',
-              password: 'hashed-dummy-password',
-              isActive: true,
-              isAdmin: true,
-              isSuperadmin: false,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              shopId: 1,
-              packageId: 'enterprise',
-              pricingPlan: 'enterprise',
-              featureOverrides: {
-                canManageDevices: true,
-                canManageEmailTemplates: true,
-                canManageGlobalSettings: false,
-                canManageUsers: true,
-                canSeeStatistics: true,
-                hasAdvancedRepairStatus: true
-              },
-              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-              companyName: 'Admin',
-              companyAddress: 'Adminadresse',
-              companyVatNumber: '0000000000',
-              companyPhone: '0000000000',
-              trialExpiresAt: null,
-              passwordResetToken: null,
-              passwordResetExpires: null,
-              lastLoginAt: new Date()
-            };
-            return done(null, emergencyAdmin);
-          }
-        }
-      }
-      
-      // Wenn kein Benutzer gefunden oder zugriffsberechtigt ist
-      console.log(`Kein Benutzer mit ID ${data.id} gefunden oder Zugriff verweigert`);
-      return done(null, false);
+      const user = await storage.getUser(id);
+      done(null, user);
     } catch (error) {
-      console.error('Unerwarteter Fehler bei der Benutzer-Deserialisierung:', error);
-      return done(error);
+      done(error);
     }
   });
 
@@ -561,42 +269,7 @@ export function setupAuth(app: Express) {
       }
       
       const userId = parseInt(tokenData[0]);
-      
-      // Verbesserte Fehlerbehandlung für Datenbankabfragen
-      let user;
-      try {
-        console.log(`Versuche Benutzer mit ID ${userId} abzurufen...`);
-        user = await storage.getUser(userId);
-      } catch (dbError) {
-        console.error(`Fehler beim Abrufen des Benutzers mit ID ${userId}:`, dbError);
-        
-        // Spezielle Behandlung für Datenbankfehler
-        if (dbError.message && dbError.message.includes('Control plane request failed')) {
-          console.log('Erkannt: Control plane request Fehler, versuche erneut nach Verzögerung...');
-          
-          // Kurze Verzögerung vor erneutem Versuch
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          try {
-            user = await storage.getUser(userId);
-            console.log(`Zweiter Versuch für Benutzer ${userId} erfolgreich!`);
-          } catch (retryError) {
-            console.error('Auch zweiter Versuch fehlgeschlagen:', retryError);
-            
-            // Für Superadmin (ID 10) temporäre Notfall-Anmeldung ermöglichen
-            if (userId === 10) {
-              console.log('⚠️ Notfall-Zugriff für Superadmin (ID 10) bei Datenbankproblemen gewährt');
-              user = {
-                id: 10,
-                username: 'admin',
-                isActive: true,
-                isAdmin: true,
-                isSuperadmin: true
-              } as any;
-            }
-          }
-        }
-      }
+      const user = await storage.getUser(userId);
       
       if (!user || (!user.isActive && !user.isSuperadmin)) {
         return res.sendStatus(401);
@@ -615,29 +288,6 @@ export function setupAuth(app: Express) {
       return next();
     } catch (error) {
       console.error("Token authentication error:", error);
-      
-      // Versuche Token zu extrahieren für Notfall-Login
-      try {
-        const token = authHeader.split(' ')[1];
-        const tokenData = Buffer.from(token, 'base64').toString().split(':');
-        const userId = parseInt(tokenData[0]);
-        
-        // Notfallzugriff für Superadmin bei Datenbankproblemen (nur ID 10)
-        if (userId === 10) {
-          console.log('⚠️ Notfall-Zugriff für Superadmin (ID 10) im Catch-Block gewährt');
-          req.user = {
-            id: 10,
-            username: 'admin',
-            isActive: true,
-            isAdmin: true,
-            isSuperadmin: true
-          } as any;
-          return next();
-        }
-      } catch (tokenError) {
-        console.error('Fehler beim Extrahieren des Tokens für Notfallzugriff:', tokenError);
-      }
-      
       return res.sendStatus(401);
     }
   };

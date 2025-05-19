@@ -76,28 +76,15 @@ export async function testAndSaveSmtpSettings(
         throw new Error('Geschäftseinstellungen nicht gefunden');
       }
       
-      // SMTP-Einstellungen aktualisieren - mit Debug-Ausgaben
-      console.log(`SMTP-Einstellungen vor dem Speichern:`, {
-        host,
-        port,
-        user,
-        sender
-      });
-      
-      const updatedSettings = await storage.updateBusinessSettings({
+      // SMTP-Einstellungen aktualisieren
+      await storage.updateBusinessSettings({
         ...userSettings,
         smtpHost: host,
-        smtpPort: port, // Stellen Sie sicher, dass der Port als String übergeben wird
+        smtpPort: port,
         smtpUser: user,
         smtpPassword: password,
         smtpSenderName: sender
       }, userId);
-      
-      console.log(`SMTP-Einstellungen wurden aktualisiert:`, {
-        host: updatedSettings.smtpHost,
-        port: updatedSettings.smtpPort,
-        user: updatedSettings.smtpUser
-      });
       
       console.log(`SMTP-Einstellungen für Benutzer ${userId} erfolgreich aktualisiert.`);
       

@@ -79,107 +79,56 @@ export class EmailService {
   private async initSuperadminSmtpTransporter() {
     try {
       // Lade die globalen E-Mail-Einstellungen aus der Datenbank
-      try {
-        const [settings] = await db
-          .select()
-          .from(superadminEmailSettings)
-          .where(eq(superadminEmailSettings.isActive, true))
-          .limit(1);
-        
-        if (settings) {
-          // Speichern der Konfiguration für spätere Verwendung
-          this.superadminEmailConfig = settings;
-          
-          // Erstelle den Transporter mit den globalen Einstellungen für ALLE System-E-Mails
-          let portNum = 587;
-          try {
-            portNum = typeof settings.smtpPort === 'string' 
-              ? parseInt(settings.smtpPort) 
-              : settings.smtpPort || 587;
-          } catch (e) {
-            console.warn(`Konnte SMTP-Port nicht parsen, verwende Standard-Port 587: ${e}`);
-          }
-          
-          const config = {
-            host: settings.smtpHost,
-            port: portNum,
-            secure: portNum === 465, // true für 465, false für andere Ports
-            auth: {
-              user: settings.smtpUser,
-              pass: settings.smtpPassword
-            },
-            // Debug-Optionen aktivieren
-            debug: true,
-            logger: true
-          };
-          
-          console.log('Zentrale SMTP-Konfiguration für System-E-Mails:', {
-            host: config.host,
-            port: config.port,
-            secure: config.secure,
-            auth: { user: config.auth.user, pass: '********' },
-            sender: settings.smtpSenderEmail
-          });
-          
-          // Verwende nur noch einen einzigen Transporter für alle System-E-Mails
-          this.smtpTransporter = nodemailer.createTransport(config);
-          
-          console.log(`Zentraler SMTP-Transporter für System-E-Mails wurde initialisiert (Host: ${settings.smtpHost})`);
-          return;
-        }
-      } catch (dbError) {
-        console.error('Fehler beim Abrufen der E-Mail-Einstellungen aus der Datenbank:', dbError);
-        console.log('Versuche Fallback-Konfiguration für SMTP zu verwenden...');
+      const [settings] = await db
+        .select()
+        .from(superadminEmailSettings)
+        .where(eq(superadminEmailSettings.isActive, true))
+        .limit(1);
+      
+      if (!settings) {
+        console.warn('Keine aktiven globalen E-Mail-Einstellungen in der Datenbank gefunden');
+        console.warn('E-Mail-Versand ist deaktiviert, bis gültige SMTP-Einstellungen konfiguriert werden');
+        return;
       }
       
-      // Wenn keine Datenbankeinstellungen verfügbar sind oder ein Fehler auftrat,
-      // versuche die Umgebungsvariablen als Fallback zu verwenden
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-        console.log('Verwende Umgebungsvariablen für SMTP-Konfiguration als Fallback');
-        
-        // Erstelle eine einfache Konfiguration aus den Umgebungsvariablen
-        const fallbackConfig = {
-          id: 0,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isActive: true,
-          smtpHost: process.env.SMTP_HOST,
-          smtpPort: process.env.SMTP_PORT || "587",
-          smtpUser: process.env.SMTP_USER,
-          smtpPassword: process.env.SMTP_PASSWORD,
-          smtpSenderEmail: process.env.SMTP_USER,
-          smtpSenderName: 'Handyshop Verwaltung'
-        };
-        
-        this.superadminEmailConfig = fallbackConfig;
-        
-        // Erstelle den Transporter
-        const portNum = parseInt(fallbackConfig.smtpPort as string) || 587;
-        const config = {
-          host: fallbackConfig.smtpHost,
-          port: portNum,
-          secure: portNum === 465,
-          auth: {
-            user: fallbackConfig.smtpUser,
-            pass: fallbackConfig.smtpPassword
-          },
-          debug: true,
-          logger: true
-        };
-        
-        console.log('Fallback SMTP-Konfiguration aus Umgebungsvariablen:', {
-          host: config.host,
-          port: config.port,
-          secure: config.secure,
-          auth: { user: config.auth.user, pass: '********' }
-        });
-        
-        this.smtpTransporter = nodemailer.createTransport(config);
-        console.log(`Fallback SMTP-Transporter wurde initialisiert (Host: ${fallbackConfig.smtpHost})`);
-      } else {
-        console.warn('Keine SMTP-Konfiguration verfügbar - weder in Datenbank noch in Umgebungsvariablen');
-        this.smtpTransporter = null;
+      // Speichern der Konfiguration für spätere Verwendung
+      this.superadminEmailConfig = settings;
+      
+      // Erstelle den Transporter mit den globalen Einstellungen für ALLE System-E-Mails
+      let portNum = 587;
+      try {
+        portNum = typeof settings.smtpPort === 'string' 
+          ? parseInt(settings.smtpPort) 
+          : settings.smtpPort || 587;
+      } catch (e) {
+        console.warn(`Konnte SMTP-Port nicht parsen, verwende Standard-Port 587: ${e}`);
       }
+      
+      const config = {
+        host: settings.smtpHost,
+        port: portNum,
+        secure: portNum === 465, // true für 465, false für andere Ports
+        auth: {
+          user: settings.smtpUser,
+          pass: settings.smtpPassword
+        },
+        // Debug-Optionen aktivieren
+        debug: true,
+        logger: true
+      };
+      
+      console.log('Zentrale SMTP-Konfiguration für System-E-Mails:', {
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        auth: { user: config.auth.user, pass: '********' },
+        sender: settings.smtpSenderEmail
+      });
+      
+      // Verwende nur noch einen einzigen Transporter für alle System-E-Mails
+      this.smtpTransporter = nodemailer.createTransport(config);
+      
+      console.log(`Zentraler SMTP-Transporter für System-E-Mails wurde initialisiert (Host: ${settings.smtpHost})`);
     } catch (error) {
       console.error('Fehler beim Initialisieren des zentralen SMTP-Transporters:', error);
       this.smtpTransporter = null;

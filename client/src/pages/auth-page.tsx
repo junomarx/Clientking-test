@@ -48,15 +48,6 @@ export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [location] = useLocation();
   const [isSuperadminLogin, setIsSuperadminLogin] = useState(false);
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const tabsRef = useRef<HTMLDivElement>(null);
-  
-  // Redirect wenn bereits eingeloggt
-  if (user) {
-    return <Redirect to="/app" />;
-  }
   
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -66,6 +57,28 @@ export default function AuthPage() {
     },
   });
   
+  // Prüfen ob der "superadmin" Parameter in der URL vorhanden ist
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isSuperadmin = params.get('superadmin') === 'true';
+    setIsSuperadminLogin(isSuperadmin);
+    
+    if (isSuperadmin) {
+      // Voreintragen der Superadmin-Zugangsdaten
+      loginForm.setValue('username', 'macnphone');
+      // Passwort hier absichtlich nicht vorausgefüllt - aus Sicherheitsgründen
+      // loginForm.setValue('password', '...'); 
+      
+      // Zeige Focus auf Passwortfeld
+      setTimeout(() => {
+        const passwordInput = document.querySelector('input[type="password"]');
+        if (passwordInput) {
+          (passwordInput as HTMLInputElement).focus();
+        }
+      }, 100);
+    }
+  }, [location, loginForm]);
+
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -80,34 +93,10 @@ export default function AuthPage() {
     },
   });
   
-  // Prüfen ob der "superadmin" Parameter in der URL vorhanden ist
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isSuperadmin = params.get('superadmin') === 'true';
-    const isEmergency = params.get('emergency') === 'true';
-    
-    setIsSuperadminLogin(isSuperadmin);
-    setIsEmergencyMode(isEmergency);
-    
-    if (isSuperadmin) {
-      // Voreintragen der Superadmin-Zugangsdaten
-      loginForm.setValue('username', 'macnphone');
-    }
-    
-    if (isEmergency) {
-      // Voreintragen der Notfall-Zugangsdaten
-      loginForm.setValue('username', 'superadmin');
-      // Passwort muss manuell eingegeben werden
-    }
-    
-    // Zeige Focus auf Passwortfeld
-    setTimeout(() => {
-      const passwordInput = document.querySelector('input[type="password"]');
-      if (passwordInput) {
-        (passwordInput as HTMLInputElement).focus();
-      }
-    }, 100);
-  }, [location, loginForm]);
+  // Redirect wenn bereits eingeloggt
+  if (user) {
+    return <Redirect to="/app" />;
+  }
   
   function onLoginSubmit(data: LoginFormValues) {
     console.log('Login-Versuch mit Benutzer:', data.username);
@@ -124,7 +113,10 @@ export default function AuthPage() {
     }, 1000);
   }
   
-  // State für Dialog und Tab-Steuerung bereits oben definiert
+  // State für Dialog und Tab-Steuerung
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+  const tabsRef = useRef<HTMLDivElement>(null);
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
@@ -234,18 +226,7 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <div className="space-y-6">
                   <div className="text-center mb-8">
-                    {isEmergencyMode ? (
-                      <>
-                        <div className="flex items-center justify-center mb-2">
-                          <ShieldAlert className="h-8 w-8 text-orange-500 mr-2" />
-                          <h2 className="text-2xl font-semibold text-orange-600">Notfall-Login</h2>
-                        </div>
-                        <p className="text-gray-500 text-sm mt-2">
-                          Notfallzugang bei Datenbankproblemen.
-                          <br />Bitte geben Sie das Notfall-Passwort ein.
-                        </p>
-                      </>
-                    ) : isSuperadminLogin ? (
+                    {isSuperadminLogin ? (
                       <>
                         <div className="flex items-center justify-center mb-2">
                           <ShieldAlert className="h-8 w-8 text-red-500 mr-2" />

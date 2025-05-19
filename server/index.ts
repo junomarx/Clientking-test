@@ -1,12 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-// Migration temporär deaktiviert wegen Datenbankverbindungsproblemen
-// import addSecondSignatureColumns from "./add-second-signature";
+import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
-// Migration temporär deaktiviert wegen Datenbankverbindungsproblemen
-// import "./add-creation-month-column";
+import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
 import { addFeatureOverridesColumn } from "./add-feature-overrides-column";
 import { addPackageTables } from "./add-package-tables";
@@ -77,11 +75,26 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Migrationen temporär deaktiviert wegen Datenbankverbindungsproblemen
-    console.log("Migrationen wurden übersprungen, um den Server zu starten.");
+    // Führe die Migrationen aus
+    await addSecondSignatureColumns();
+    await addPricingPlanColumn();
+    await addCompanySloganVatColumns();
+    await addShopIdColumn();
+    await addFeatureOverridesColumn();
+    await addPackageTables(); // Neue Migration für das Paketsystem
+    await addSuperadminColumn(); // Migration für Superadmin-Rolle
+    await addDeviceIssuesFields(); // Migration für erweiterte Fehlerkatalog-Felder
+    await addHiddenDeviceTypesTable(); // Migration für ausgeblendete Standard-Gerätetypen
+    await addBrandIdToModels(); // Migration für brandId-Spalte in userModels
+    await addPrintTemplatesTable(); // Migration für Druckvorlagen-Tabelle
+    await addErrorCatalogEntriesTable(); // Migration für neue Fehlerkatalog-Tabelle
+    await addGameconsoleToErrorCatalog(); // Migration für Spielekonsole-Spalte im Fehlerkatalog
+    await addEmailTemplateTypeColumn(); // Migration für E-Mail-Vorlagentypen
+    await addSupportAccessTable(); // Migration für Support-Zugriffsprotokolle (DSGVO-Konformität)
+    await addSupportRequestStatus(); // Migration für Support-Anfrage-Status (DSGVO-Genehmigungsworkflow)
     
-    // Das Überspringen der Migrationen kann dazu führen, dass einige Tabellen oder Spalten fehlen.
-    // Dies ist nur eine temporäre Lösung, um die App zu starten und die SMTP-Funktionalität zu testen.
+    // Synchronisiere E-Mail-Vorlagen beim Server-Start
+    await syncEmailTemplates();
     
     const server = await registerRoutes(app);
 
