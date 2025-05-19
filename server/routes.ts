@@ -698,6 +698,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // E-Mail senden
               const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
+              
+              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
+              if (emailSent) {
+                res.setHeader('X-Email-Sent', 'true');
+                res.setHeader('X-Email-Status', 'success');
+              } else {
+                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
+                res.setHeader('X-Email-Sent', 'false');
+                res.setHeader('X-Email-Status', 'error');
+              }
             } else {
               console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
             }
@@ -725,9 +735,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables);
               console.log("E-Mail gesendet:", emailSent);
               
-              // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
+              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
               if (emailSent) {
                 res.setHeader('X-Email-Sent', 'true');
+                res.setHeader('X-Email-Status', 'success');
+              } else {
+                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
+                res.setHeader('X-Email-Sent', 'false');
+                res.setHeader('X-Email-Status', 'error');
               }
             } else {
               console.log("Keine passende E-Mail-Vorlage für 'Ersatzteil eingetroffen' gefunden");
