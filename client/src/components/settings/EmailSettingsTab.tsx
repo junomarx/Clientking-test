@@ -10,9 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, Mail, Send } from 'lucide-react';
+import { Save, Mail, Send, RefreshCw, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { EmailTemplateTab } from './EmailTemplateTab';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SmtpTestDialog } from '../admin/SmtpTestDialog';
 
 // Schema für die E-Mail-Einstellungen
 const emailSettingsSchema = z.object({
@@ -28,6 +31,7 @@ export function EmailSettingsTab() {
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
   const [testEmailSent, setTestEmailSent] = useState(false);
+  const [smtpTestDialogOpen, setSmtpTestDialogOpen] = useState(false);
   
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<z.infer<typeof emailSettingsSchema>>({
@@ -282,25 +286,36 @@ export function EmailSettingsTab() {
                       )}
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-9 text-xs"
-                    onClick={handleSendTestEmail}
-                    disabled={sendTestEmailMutation.isPending || testEmailSent}
-                  >
-                    {sendTestEmailMutation.isPending ? (
-                      <Mail className="h-3 w-3 mr-1 animate-spin" />
-                    ) : testEmailSent ? (
-                      <Send className="h-3 w-3 mr-1 text-green-500" />
-                    ) : (
-                      <Mail className="h-3 w-3 mr-1" />
-                    )}
-                    {testEmailSent ? "Gesendet!" : "Test-E-Mail senden"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full h-9 text-xs"
+                      onClick={handleSendTestEmail}
+                      disabled={sendTestEmailMutation.isPending || testEmailSent}
+                    >
+                      {sendTestEmailMutation.isPending ? (
+                        <Mail className="h-3 w-3 mr-1 animate-spin" />
+                      ) : testEmailSent ? (
+                        <Send className="h-3 w-3 mr-1 text-green-500" />
+                      ) : (
+                        <Mail className="h-3 w-3 mr-1" />
+                      )}
+                      {testEmailSent ? "Gesendet!" : "Standard Test"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="h-9 text-xs"
+                      onClick={() => setSmtpTestDialogOpen(true)}
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Erweiterter Test
+                    </Button>
+                  </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Senden Sie eine Test-E-Mail, um Ihre SMTP-Einstellungen zu überprüfen.
+                  Senden Sie eine Test-E-Mail, um Ihre SMTP-Einstellungen zu überprüfen oder nutzen Sie den erweiterten Test für mehr Kontrolle.
                 </p>
               </div>
             </CardContent>
@@ -312,6 +327,20 @@ export function EmailSettingsTab() {
       <div className="mt-6 md:mt-8">
         <EmailTemplateTab />
       </div>
+      
+      {/* SMTP Test Dialog */}
+      <SmtpTestDialog
+        open={smtpTestDialogOpen}
+        onClose={() => setSmtpTestDialogOpen(false)}
+        initialSettings={{
+          host: form.getValues("smtpHost") || '',
+          port: form.getValues("smtpPort") || '587',
+          user: form.getValues("smtpUser") || '',
+          password: form.getValues("smtpPassword") || '',
+          sender: form.getValues("smtpSenderName") || 'Handyshop Verwaltung',
+          recipient: form.getValues("testEmailRecipient") || '',
+        }}
+      />
     </div>
   );
 }
