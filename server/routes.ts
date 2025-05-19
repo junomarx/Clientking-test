@@ -43,6 +43,7 @@ import { eq, and, sql, gte, lt } from "drizzle-orm";
 import { emailService } from "./email-service";
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
+import nodemailer from "nodemailer";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -127,6 +128,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up superadmin routes
   registerSuperadminRoutes(app);
   
+  // API für SMTP-Test
+  app.post('/api/smtp-test', isAuthenticated, async (req, res) => {
+    try {
+      if (!req.user.isAdmin && !req.user.isSuperadmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Nur Administratoren können SMTP-Einstellungen testen'
+        });
+      }
+      
+      const { host, port, user, password, sender, recipient } = req.body;
+      
+      console.log('SMTP Test mit folgenden Parametern:');
+      console.log(`Host: ${host}, Port: ${port}, Benutzer: ${user}`);
+      
+      if (!host || !port || !user || !password || !sender || !recipient) {
+        return res.status(400).json({
+          success: false,
+          message: 'Alle SMTP-Parameter müssen angegeben werden'
+        });
+      }
+      
+      // Erstelle einen temporären Transporter zum Testen
+      const transporter = nodemailer.createTransport({
+        host,
+        port: parseInt(port),
+        secure: parseInt(port) === 465,
+        auth: {
+          user,
+          pass: password
+        },
+        debug: true,
+        logger: true,
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      
+      try {
+        // Explizit die Verbindung testen
+        console.log('SMTP-Verbindungstest wird gestartet...');
+        await transporter.verify();
+        console.log('SMTP-Verbindungstest erfolgreich');
+        
+        // Test-E-Mail senden
+        const info = await transporter.sendMail({
+          from: `"${sender}" <${user}>`,
+          to: recipient,
+          subject: 'SMTP-Test von Handyshop Verwaltung',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #4f46e5;">SMTP-Test erfolgreich!</h2>
+              <p>Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.</p>
+              <p>Details der Konfiguration:</p>
+              <ul>
+                <li>Host: ${host}</li>
+                <li>Port: ${port}</li>
+                <li>Benutzer: ${user}</li>
+                <li>Absender: ${sender}</li>
+              </ul>
+              <p>Gesendet: ${new Date().toLocaleString('de-DE')}</p>
+            </div>
+          `,
+          text: `SMTP-Test erfolgreich! Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.`
+        });
+        
+        console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+        
+        return res.json({
+          success: true,
+          message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet.',
+          details: {
+            messageId: info.messageId,
+            response: info.response
+          }
+        });
+      } catch (error) {
+        console.error('SMTP-Test fehlgeschlagen:', error);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'SMTP-Test fehlgeschlagen',
+          error: {
+            name: error.name,
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode,
+            command: error.command
+          }
+        });
+      } finally {
+        // Transporter schließen
+        transporter.close();
+      }
+    } catch (error) {
+      console.error('Fehler beim SMTP-Test:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Fehler beim SMTP-Test',
+        error: error.message
+      });
+    }
+  });
+  
+  // API zum Speichern neuer SMTP-Einstellungen
+  app.post('/api/smtp-settings', isAuthenticated, async (req, res) => {
+    try {
+      if (!req.user.isAdmin && !req.user.isSuperadmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Nur Administratoren können SMTP-Einstellungen ändern'
+        });
+      }
+      
+      const { host, port, user, password, sender_name, sender_email } = req.body;
+      
+      if (!host || !port || !user || !password || !sender_name || !sender_email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Alle SMTP-Parameter müssen angegeben werden'
+        });
+      }
+      
+      // Aktualisiere die SMTP-Einstellungen in der Datenbank
+      const success = await emailService.updateSuperadminSmtpSettings({
+        smtpHost: host,
+        smtpPort: port,
+        smtpUser: user,
+        smtpPassword: password,
+        smtpSenderName: sender_name,
+        smtpSenderEmail: sender_email,
+        isActive: true
+      });
+      
+      if (success) {
+        return res.json({
+          success: true,
+          message: 'SMTP-Einstellungen wurden erfolgreich aktualisiert'
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          message: 'SMTP-Einstellungen konnten nicht aktualisiert werden'
+        });
+      }
+    } catch (error) {
+      console.error('Fehler beim Speichern der SMTP-Einstellungen:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Fehler beim Speichern der SMTP-Einstellungen',
+        error: error.message
+      });
+    }
+  });
   // Set up superadmin print templates routes
   registerSuperadminPrintTemplatesRoutes(app);
   
