@@ -10,14 +10,10 @@ export async function handleUserSmtpTest(req: Request, res: Response) {
   try {
     let { host, port, user, password, sender, recipient } = req.body;
     
-    // HINWEIS: Direkte Überschreibung für temporären Fix des Email-Problems
-    host = 'smtp.world4you.com';
-    port = '587';
-    user = 'office@connect7.at';
-    password = 'Masterneo-1';
+    // Benutze die vom Benutzer angegebenen Einstellungen für den SMTP-Test
+    // (Keine Überschreibung mehr, sodass die Benutzer ihre eigenen Einstellungen testen können)
     
-    console.log('⚠️ WICHTIG: SMTP-Test wurde mit festen Anmeldedaten überschrieben!');
-    console.log('SMTP-Test von normalem Benutzer mit folgenden Parametern:');
+    console.log('SMTP-Test mit den vom Benutzer angegebenen Einstellungen:');
     console.log(`Host: ${host}, Port: ${port}, Benutzer: ${user}`);
     
     if (!host || !port || !user || !password || !sender || !recipient) {

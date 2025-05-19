@@ -16,9 +16,9 @@ import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
 // Debug-Konstante, um alle SMTP-Anfragen mit diesen Einstellungen zu überschreiben
-// WICHTIG: Nur für Entwicklung/Debugging verwenden!
+// WICHTIG: Diese Option wird nur verwendet, wenn keine benutzer- oder shopspezifischen Einstellungen vorhanden sind
 const DEBUG_FORCE_SMTP = {
-  enabled: true,
+  enabled: false, // Auf false gesetzt, damit benutzerindividuelle Einstellungen verwendet werden
   user: 'office@connect7.at',
   password: 'Masterneo-1',
   host: 'smtp.world4you.com',
@@ -716,45 +716,26 @@ export class EmailService {
             // Erstelle einen temporären Transporter für diesen Benutzer
             const port = parseInt(businessSetting.smtpPort || '587');
             
-            // Verwende fest kodierte SMTP-Daten für Debugging, wenn DEBUG_FORCE_SMTP aktiviert ist
-            let userConfig;
-            if (DEBUG_FORCE_SMTP.enabled) {
-              userConfig = {
-                host: DEBUG_FORCE_SMTP.host,
-                port: DEBUG_FORCE_SMTP.port,
-                secure: DEBUG_FORCE_SMTP.port === 465,
-                auth: {
-                  user: DEBUG_FORCE_SMTP.user,
-                  pass: DEBUG_FORCE_SMTP.password
-                },
-                // Erweiterte Optionen für zuverlässigere Verbindungen
-                connectionTimeout: 10000, // 10 Sekunden
-                tls: {
-                  rejectUnauthorized: false // Ignoriere TLS-Zertifikatsfehler (für Entwicklung)
-                },
-                debug: true,
-                logger: true
-              };
-              console.log(`ACHTUNG: Verwende DEBUG_FORCE_SMTP Einstellungen für E-Mail-Versand`);
-              console.log(`Debug SMTP-Benutzer: ${DEBUG_FORCE_SMTP.user}`);
-            } else {
-              userConfig = {
-                host: businessSetting.smtpHost,
-                port: port,
-                secure: port === 465,
-                auth: {
-                  user: businessSetting.smtpUser,
-                  pass: businessSetting.smtpPassword
-                },
-                // Erweiterte Optionen für zuverlässigere Verbindungen
-                connectionTimeout: 10000, // 10 Sekunden
-                tls: {
-                  rejectUnauthorized: false // Ignoriere TLS-Zertifikatsfehler (für Entwicklung)
-                },
-                debug: true,
-                logger: true
-              };
-            }
+            // Immer die Benutzer-SMTP-Einstellungen verwenden, Debug-Option nur als Fallback
+            let userConfig = {
+              host: businessSetting.smtpHost,
+              port: port,
+              secure: port === 465,
+              auth: {
+                user: businessSetting.smtpUser,
+                pass: businessSetting.smtpPassword
+              },
+              // Erweiterte Optionen für zuverlässigere Verbindungen
+              connectionTimeout: 10000, // 10 Sekunden
+              tls: {
+                rejectUnauthorized: false // Ignoriere TLS-Zertifikatsfehler (für Entwicklung)
+              },
+              debug: true,
+              logger: true
+            };
+            
+            console.log(`Benutze individuelle SMTP-Einstellungen für Benutzer ${forceUserId}`);
+            console.log(`SMTP-Benutzer: ${businessSetting.smtpUser}, Host: ${businessSetting.smtpHost}, Port: ${port}`);
             
             // Zeige immer die tatsächlich verwendeten Einstellungen
             console.log("Erstelle Transporter mit folgenden Einstellungen:", {
