@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '@/lib/queryClient';
-import { Loader2, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Send, AlertCircle, CheckCircle2, Save } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 export interface SmtpSettings {
   host: string;
@@ -39,6 +40,37 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
     message: string;
     details?: any;
   } | null>(null);
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Mutation zum manuellen Speichern der SMTP-Einstellungen
+  const saveMutation = useMutation({
+    mutationFn: async (saveSettings: SmtpSettings) => {
+      const response = await apiRequest('POST', '/api/update-business-settings', {
+        smtpHost: saveSettings.host,
+        smtpPort: saveSettings.port,
+        smtpUser: saveSettings.user,
+        smtpPassword: saveSettings.password,
+        smtpSenderName: saveSettings.sender
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/business-settings'] });
+      toast({
+        title: "Einstellungen gespeichert",
+        description: "Ihre SMTP-Einstellungen wurden erfolgreich gespeichert.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler beim Speichern",
+        description: `Die Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
 
   const testMutation = useMutation({
     mutationFn: async (testSettings: SmtpSettings) => {
@@ -73,8 +105,12 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
   const handleTest = () => {
     testMutation.mutate(settings);
   };
+  
+  const handleSave = () => {
+    saveMutation.mutate(settings);
+  };
 
-  const isLoading = testMutation.isPending;
+  const isLoading = testMutation.isPending || saveMutation.isPending;
   const isValid = settings.host && settings.port && settings.user && settings.password && settings.sender && settings.recipient;
 
   return (
@@ -187,7 +223,7 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex-shrink-0 sm:justify-between">
+        <DialogFooter className="flex-shrink-0 sm:justify-between gap-2">
           <Button 
             variant="ghost" 
             onClick={onClose} 
@@ -195,23 +231,49 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
           >
             Schließen
           </Button>
-          <Button
-            onClick={handleTest}
-            disabled={!isValid || isLoading}
-            className="min-w-[160px]"
-          >
-            {testMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Wird getestet...
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                SMTP-Test starten
-              </>
+          
+          <div className="flex gap-2">
+            {/* Speichern-Button, aktiviert wenn gültige Einstellungen vorhanden sind */}
+            {testResult && testResult.success && (
+              <Button
+                onClick={handleSave}
+                disabled={!isValid || saveMutation.isPending}
+                variant="outline"
+                className="min-w-[160px]"
+              >
+                {saveMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird gespeichert...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    SMTP-Einstellungen speichern
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
+            
+            {/* Test-Button */}
+            <Button
+              onClick={handleTest}
+              disabled={!isValid || isLoading}
+              className="min-w-[160px]"
+            >
+              {testMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird getestet...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  SMTP-Test starten
+                </>
+              )}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
