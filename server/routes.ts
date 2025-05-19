@@ -2971,6 +2971,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Kostenvoranschlag in Reparaturauftrag umwandeln
+  // Kostenvoranschlag per E-Mail senden
+  app.post("/api/cost-estimates/:id/send-email", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { email, subject, content } = req.body;
+      
+      // Überprüfen, ob alle erforderlichen Daten vorhanden sind
+      if (!email || !subject || !content) {
+        return res.status(400).json({ 
+          message: "E-Mail-Adresse, Betreff und Inhalt sind erforderlich" 
+        });
+      }
+      
+      // Kostenvoranschlag abrufen für Berechtigungsprüfung
+      const estimate = await storage.getCostEstimate(id, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // HTML in PDF umwandeln mit html-pdf
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+      const pdf = require('html-pdf');
+      
+      // Temporären Dateinamen erstellen
+      const tempFilePath = path.join(os.tmpdir(), `Kostenvoranschlag_${estimate.reference_number}_${Date.now()}.pdf`);
+      
+      // PDF-Optionen
+      const options = {
+        format: 'A4',
+        border: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        }
+      };
+      
+      // PDF erstellen und als Datei speichern
+      await new Promise<void>((resolve, reject) => {
+        pdf.create(content, options).toFile(tempFilePath, (err: Error, res: any) => {
+          if (err) {
+            console.error('Fehler beim Erstellen des PDFs:', err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      
+      // PDF-Datei aus Dateisystem lesen
+      const pdfBuffer = fs.readFileSync(tempFilePath);
+      
+      // PDF-Datei löschen
+      fs.unlinkSync(tempFilePath);
+      
+      // E-Mail-Service importieren
+      const { emailService } = require('./email-service');
+      
+      // Geschäftseinstellungen für den Absender abrufen
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // E-Mail-Absender-Informationen festlegen
+      const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
+      
+      // E-Mail mit PDF-Anhang senden
+      const mailOptions = {
+        from: senderName,
+        to: email,
+        subject: subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #4f46e5;">Kostenvoranschlag ${estimate.reference_number}</h2>
+            <p>Sehr geehrte(r) Kunde/Kundin,</p>
+            <p>anbei erhalten Sie den angeforderten Kostenvoranschlag für Ihre Reparatur.</p>
+            <p>Bei Fragen oder zur Beauftragung kontaktieren Sie uns bitte.</p>
+            <p>Mit freundlichen Grüßen,</p>
+            <p><strong>${senderName}</strong></p>
+          </div>
+        `,
+        text: `Kostenvoranschlag ${estimate.reference_number}\n\nSehr geehrte(r) Kunde/Kundin,\n\nanbei erhalten Sie den angeforderten Kostenvoranschlag für Ihre Reparatur.\n\nBei Fragen oder zur Beauftragung kontaktieren Sie uns bitte.\n\nMit freundlichen Grüßen,\n${senderName}`,
+        attachments: [{
+          filename: `Kostenvoranschlag_${estimate.reference_number}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }]
+      };
+      
+      // E-Mail senden
+      await emailService.sendRawEmail(mailOptions, userId);
+      
+      // Erfolgreichen Versand protokollieren
+      await db.insert(emailHistory).values({
+        type: 'cost_estimate',
+        recipientEmail: email,
+        subject: subject,
+        referenceId: estimate.id,
+        userId: userId,
+        shopId: (req.user as any).shopId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      
+      res.status(200).json({ success: true, message: "Kostenvoranschlag wurde per E-Mail gesendet" });
+    } catch (error) {
+      console.error("Fehler beim Senden des Kostenvoranschlags per E-Mail:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden des Kostenvoranschlags per E-Mail",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.post("/api/cost-estimates/:id/convert-to-repair", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
