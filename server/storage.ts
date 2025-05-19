@@ -726,7 +726,8 @@ export class DatabaseStorage implements IStorage {
     userId?: number;
   }): Promise<boolean> {
     try {
-      const { emailService } = require('./email-service');
+      // E-Mail-Service ist bereits am Anfang der Datei importiert
+      // kein erneuter Import notwendig
       
       console.log(`Sende E-Mail mit Anhang an ${options.to}`);
       
