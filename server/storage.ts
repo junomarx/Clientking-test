@@ -1433,21 +1433,36 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createRepair(repair: Partial<InsertRepair>, userId?: number): Promise<Repair> {
+  async createRepair(repair: Partial<InsertRepair> | any, userId?: number): Promise<Repair> {
     try {
-      // Zeitstempel setzen
-      repair.created_at = repair.created_at || new Date();
-      repair.updated_at = repair.updated_at || new Date();
+      // Konvertiere von camelCase zu snake_case für die Datenbank
+      const dbRepair: any = {
+        // Standardwerte für Timestamps
+        created_at: new Date(),
+        updated_at: new Date(),
+        
+        // Konvertiere Felder von camelCase zu snake_case
+        reference_number: repair.reference_number || repair.referenceNumber,
+        customer_id: repair.customer_id || repair.customerId,
+        device_type: repair.device_type || repair.deviceType,
+        brand: repair.brand,
+        model: repair.model,
+        serial_number: repair.serial_number || repair.serialNumber,
+        issue: repair.issue,
+        notes: repair.notes,
+        status: repair.status || "eingegangen",
+        cost_estimate_id: repair.cost_estimate_id || repair.costEstimateId,
+        estimated_price: repair.estimated_price || repair.estimatedPrice,
+        user_id: repair.user_id || repair.userId || userId,
+        shop_id: repair.shop_id || repair.shopId
+      };
       
-      // Standardstatus setzen, wenn nicht definiert
-      repair.status = repair.status || "eingegangen";
-      
-      console.log(`📝 Erstelle neue Reparatur:`, repair);
+      console.log(`📝 Erstelle neue Reparatur (konvertiert für DB):`, dbRepair);
       
       // Reparatur in der Datenbank erstellen
       const [newRepair] = await db
         .insert(repairs)
-        .values(repair as InsertRepair)
+        .values(dbRepair)
         .returning();
       
       return newRepair;

@@ -2995,23 +2995,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Debug-Ausgabe für Kunden-ID
+      console.log("Kostenvoranschlag Daten:", {
+        id: estimate.id,
+        customerId: estimate.customerId,
+        customer_id: estimate.customer_id,
+        referenceNumber: estimate.referenceNumber,
+        reference_number: estimate.reference_number,
+        allKeys: Object.keys(estimate)
+      });
+      
+      // Kunden-ID bestimmen - der Wert könnte in verschiedenen Properties stehen
+      const customerId = estimate.customerId || estimate.customer_id;
+      if (!customerId) {
+        return res.status(400).json({ message: "Keine Kunden-ID im Kostenvoranschlag gefunden" });
+      }
+      
       // Reparatur erstellen
       const insertRepair = {
-        reference_number: estimate.referenceNumber ? estimate.referenceNumber.replace('KV-', 'RA-') : `RA-${Date.now()}`,
-        customer_id: estimate.customerId,
-        device_type: estimate.deviceType,
+        reference_number: estimate.referenceNumber ? estimate.referenceNumber.replace('KV-', 'RA-') : 
+                          (estimate.reference_number ? estimate.reference_number.replace('KV-', 'RA-') : 
+                          `RA-${Date.now()}`),
+        customerId: customerId, // Hier den richtigen Feldnamen verwenden
+        deviceType: estimate.deviceType || estimate.device_type,
         brand: estimate.brand,
         model: estimate.model,
-        serial_number: estimate.serialNumber || estimate.serial_number,
+        serialNumber: estimate.serialNumber || estimate.serial_number,
         issue: estimate.issue,
         notes: `Umgewandelt aus Kostenvoranschlag ${estimate.referenceNumber || estimate.reference_number}`,
         status: 'angenommen',
-        cost_estimate_id: estimate.id,
-        estimated_price: estimate.total,
-        created_at: new Date(),
-        updated_at: new Date(),
-        user_id: userId,
-        shop_id: (req.user as any).shopId
+        costEstimateId: estimate.id,
+        estimatedPrice: estimate.total,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: userId,
+        shopId: (req.user as any).shopId
       };
       
       // Reparatur in der Datenbank erstellen
