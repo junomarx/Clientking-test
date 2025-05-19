@@ -128,15 +128,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up superadmin routes
   registerSuperadminRoutes(app);
   
-  // API für SMTP-Test
+  // API für SMTP-Test - Für alle Benutzer zugänglich
   app.post('/api/smtp-test', isAuthenticated, async (req, res) => {
     try {
-      if (!req.user.isAdmin && !req.user.isSuperadmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Nur Administratoren können SMTP-Einstellungen testen'
-        });
-      }
+      // Die Einschränkung auf Administratoren wurde entfernt, damit alle Benutzer
+      // ihre eigenen E-Mail-Einstellungen testen können
       
       const { host, port, user, password, sender, recipient } = req.body;
       
@@ -234,15 +230,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API zum Speichern neuer SMTP-Einstellungen
+  // API zum Speichern neuer SMTP-Einstellungen - Für alle Benutzer zugänglich
   app.post('/api/smtp-settings', isAuthenticated, async (req, res) => {
     try {
-      if (!req.user.isAdmin && !req.user.isSuperadmin) {
-        return res.status(403).json({
-          success: false,
-          message: 'Nur Administratoren können SMTP-Einstellungen ändern'
-        });
-      }
+      // Die Einschränkung auf Administratoren wurde entfernt, damit alle Benutzer
+      // ihre eigenen SMTP-Einstellungen verwalten können
       
       const { host, port, user, password, sender_name, sender_email } = req.body;
       
