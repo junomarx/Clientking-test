@@ -20,7 +20,7 @@ import SMTPTransport from 'nodemailer/lib/smtp-transport';
 const DEBUG_FORCE_SMTP = {
   enabled: true,
   user: 'office@connect7.at',
-  password: 'MasterPass2024',
+  password: 'Masterneo-1',
   host: 'smtp.world4you.com',
   port: 587
 };
