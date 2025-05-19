@@ -2992,59 +2992,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
       }
       
-      // HTML in PDF umwandeln mit html-pdf
-      const fs = require('fs');
-      const path = require('path');
-      const os = require('os');
-      const pdf = require('html-pdf');
+      console.log(`Sende Kostenvoranschlag ${estimate.reference_number} per E-Mail an ${email}`);
       
-      // Temporären Dateinamen erstellen
-      const tempFilePath = path.join(os.tmpdir(), `Kostenvoranschlag_${estimate.reference_number}_${Date.now()}.pdf`);
+      // PDF generieren aus HTML-Inhalt
+      const pdfBuffer = await storage.generatePdfFromHtml(content, `Kostenvoranschlag_${estimate.reference_number}`);
       
-      // PDF-Optionen
-      const options = {
-        format: 'A4',
-        border: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
-        }
-      };
-      
-      // PDF erstellen und als Datei speichern
-      await new Promise<void>((resolve, reject) => {
-        pdf.create(content, options).toFile(tempFilePath, (err: Error, res: any) => {
-          if (err) {
-            console.error('Fehler beim Erstellen des PDFs:', err);
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-      
-      // PDF-Datei aus Dateisystem lesen
-      const pdfBuffer = fs.readFileSync(tempFilePath);
-      
-      // PDF-Datei löschen
-      fs.unlinkSync(tempFilePath);
-      
-      // E-Mail-Service importieren
-      const { emailService } = require('./email-service');
+      if (!pdfBuffer) {
+        return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
+      }
       
       // Geschäftseinstellungen für den Absender abrufen
       const businessSettings = await storage.getBusinessSettings(userId);
       
       // E-Mail-Absender-Informationen festlegen
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
+      const senderEmail = businessSettings?.businessEmail || process.env.SMTP_USER || 'no-reply@example.com';
       
       // E-Mail mit PDF-Anhang senden
-      const mailOptions = {
-        from: senderName,
+      const emailSent = await storage.sendEmailWithAttachment({
         to: email,
+        from: `"${senderName}" <${senderEmail}>`,
         subject: subject,
-        html: `
+        htmlBody: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #4f46e5;">Kostenvoranschlag ${estimate.reference_number}</h2>
             <p>Sehr geehrte(r) Kunde/Kundin,</p>
@@ -3054,27 +3023,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <p><strong>${senderName}</strong></p>
           </div>
         `,
-        text: `Kostenvoranschlag ${estimate.reference_number}\n\nSehr geehrte(r) Kunde/Kundin,\n\nanbei erhalten Sie den angeforderten Kostenvoranschlag für Ihre Reparatur.\n\nBei Fragen oder zur Beauftragung kontaktieren Sie uns bitte.\n\nMit freundlichen Grüßen,\n${senderName}`,
+        textBody: `Kostenvoranschlag ${estimate.reference_number}\n\nSehr geehrte(r) Kunde/Kundin,\n\nanbei erhalten Sie den angeforderten Kostenvoranschlag für Ihre Reparatur.\n\nBei Fragen oder zur Beauftragung kontaktieren Sie uns bitte.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
           filename: `Kostenvoranschlag_${estimate.reference_number}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
-        }]
-      };
+        }],
+        userId: userId
+      });
       
-      // E-Mail senden
-      await emailService.sendRawEmail(mailOptions, userId);
+      if (!emailSent) {
+        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      }
       
       // Erfolgreichen Versand protokollieren
-      await db.insert(emailHistory).values({
+      await storage.logEmailHistory({
         type: 'cost_estimate',
         recipientEmail: email,
         subject: subject,
         referenceId: estimate.id,
         userId: userId,
-        shopId: (req.user as any).shopId,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        shopId: (req.user as any).shopId
       });
       
       res.status(200).json({ success: true, message: "Kostenvoranschlag wurde per E-Mail gesendet" });

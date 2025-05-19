@@ -399,7 +399,211 @@ function convertToUser(row: any): User {
   };
 }
 
+export interface IStorage {
+  // Benutzer-Verwaltung
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+  
+  // Kunden-Verwaltung
+  getAllCustomers(userId: number): Promise<Customer[]>;
+  getCustomer(id: number, userId: number): Promise<Customer | undefined>;
+  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  updateCustomer(id: number, customer: Partial<Customer>, userId: number): Promise<Customer | undefined>;
+  deleteCustomer(id: number, userId: number): Promise<boolean>;
+  
+  // Reparatur-Verwaltung
+  getAllRepairs(userId: number): Promise<Repair[]>;
+  getRepair(id: number, userId: number): Promise<Repair | undefined>;
+  getRepairsByCustomer(customerId: number, userId: number): Promise<Repair[]>;
+  createRepair(repair: InsertRepair): Promise<Repair>;
+  updateRepair(id: number, repair: Partial<Repair>, userId: number): Promise<Repair | undefined>;
+  updateRepairStatus(id: number, status: string, userId: number): Promise<Repair | undefined>;
+  deleteRepair(id: number, userId: number): Promise<boolean>;
+  
+  // Geschäftseinstellungen
+  getBusinessSettings(userId: number): Promise<BusinessSettings | undefined>;
+  createOrUpdateBusinessSettings(settings: InsertBusinessSettings): Promise<BusinessSettings>;
+  
+  // E-Mail-Vorlagen und E-Mail-Versand
+  getAllEmailTemplates(userId?: number): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number, userId?: number): Promise<EmailTemplate | undefined>;
+  createEmailTemplate(template: InsertEmailTemplate, userId?: number): Promise<EmailTemplate>;
+  updateEmailTemplate(id: number, template: Partial<EmailTemplate>, userId?: number): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number, userId?: number): Promise<boolean>;
+  sendEmailWithTemplate(templateId: number, recipientEmail: string, variables: Record<string, string>, userId?: number): Promise<boolean>;
+  sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>, attachments?: any[], isSystemEmail?: boolean, userId?: number): Promise<boolean>;
+  
+  // Kostenvoranschläge
+  getAllCostEstimates(userId: number): Promise<CostEstimate[]>;
+  getCostEstimate(id: number, userId: number): Promise<CostEstimate | undefined>;
+  createCostEstimate(estimate: InsertCostEstimate): Promise<CostEstimate>;
+  updateCostEstimate(id: number, estimate: Partial<CostEstimate>, userId: number): Promise<CostEstimate | undefined>;
+  deleteCostEstimate(id: number, userId: number): Promise<boolean>;
+  updateCostEstimateStatus(id: number, status: string, userId: number): Promise<CostEstimate | undefined>;
+  
+  // E-Mail mit Anhang senden
+  sendEmailWithAttachment(options: {
+    to: string;
+    from: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+    attachments?: Array<{
+      filename: string;
+      content: Buffer;
+      contentType: string;
+    }>;
+    userId?: number;
+  }): Promise<boolean>;
+  
+  // PDF aus HTML generieren
+  generatePdfFromHtml(html: string, filename: string): Promise<Buffer | null>;
+  
+  // E-Mail-Verlauf protokollieren
+  logEmailHistory(data: Partial<InsertEmailHistory>): Promise<EmailHistory | undefined>;
+}
+
 export class DatabaseStorage implements IStorage {
+  
+  /**
+   * Generiert eine PDF-Datei aus HTML-Inhalt
+   * @param html HTML-Inhalt, der in eine PDF-Datei umgewandelt werden soll
+   * @param filename Name der Datei (ohne Erweiterung)
+   * @returns Buffer mit PDF-Inhalt oder null bei Fehler
+   */
+  async generatePdfFromHtml(html: string, filename: string): Promise<Buffer | null> {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+      const pdf = require('html-pdf');
+      
+      // Temporären Dateinamen erstellen
+      const tempFilePath = path.join(os.tmpdir(), `${filename}_${Date.now()}.pdf`);
+      
+      // PDF-Optionen
+      const options = {
+        format: 'A4',
+        border: {
+          top: '20mm',
+          right: '20mm',
+          bottom: '20mm',
+          left: '20mm'
+        }
+      };
+      
+      console.log(`Erstelle PDF-Datei ${tempFilePath} aus HTML-Inhalt`);
+      
+      // PDF erstellen und als Datei speichern
+      await new Promise<void>((resolve, reject) => {
+        pdf.create(html, options).toFile(tempFilePath, (err: Error, res: any) => {
+          if (err) {
+            console.error('Fehler beim Erstellen des PDFs:', err);
+            reject(err);
+          } else {
+            console.log('PDF erfolgreich erstellt:', res);
+            resolve();
+          }
+        });
+      });
+      
+      // PDF-Datei aus Dateisystem lesen
+      const pdfBuffer = fs.readFileSync(tempFilePath);
+      
+      // PDF-Datei löschen
+      fs.unlinkSync(tempFilePath);
+      
+      return pdfBuffer;
+    } catch (error) {
+      console.error('Fehler bei der PDF-Generierung:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Sendet eine E-Mail mit Anhang
+   * @param options Optionen für die E-Mail (Empfänger, Betreff, Inhalt, Anhänge)
+   * @returns true bei Erfolg, false bei Fehler
+   */
+  async sendEmailWithAttachment(options: {
+    to: string;
+    from: string;
+    subject: string;
+    htmlBody: string;
+    textBody: string;
+    attachments?: Array<{
+      filename: string;
+      content: Buffer;
+      contentType: string;
+    }>;
+    userId?: number;
+  }): Promise<boolean> {
+    try {
+      const { emailService } = require('./email-service');
+      
+      console.log(`Sende E-Mail mit Anhang an ${options.to}`);
+      
+      const mailOptions = {
+        from: options.from,
+        to: options.to,
+        subject: options.subject,
+        html: options.htmlBody,
+        text: options.textBody,
+        attachments: options.attachments || []
+      };
+      
+      // E-Mail mit Anhang über den E-Mail-Service senden
+      const success = await emailService.sendRawEmail(mailOptions, options.userId);
+      
+      if (success) {
+        console.log('E-Mail mit Anhang erfolgreich gesendet');
+      } else {
+        console.error('Fehler beim Senden der E-Mail mit Anhang');
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Fehler beim Senden der E-Mail mit Anhang:', error);
+      return false;
+    }
+  }
+  
+  /**
+   * Protokolliert eine gesendete E-Mail im E-Mail-Verlauf
+   * @param data Daten für den E-Mail-Verlaufseintrag
+   * @returns E-Mail-Verlaufseintrag oder undefined bei Fehler
+   */
+  async logEmailHistory(data: Partial<InsertEmailHistory>): Promise<EmailHistory | undefined> {
+    try {
+      // Aktuelle Zeit für createdAt/updatedAt
+      const now = new Date();
+      
+      // Sicherstellen, dass alle erforderlichen Felder vorhanden sind
+      const insertData: InsertEmailHistory = {
+        type: data.type || 'custom',
+        recipientEmail: data.recipientEmail || '',
+        subject: data.subject || '',
+        referenceId: data.referenceId || 0,
+        userId: data.userId || 0,
+        shopId: data.shopId || 0,
+        createdAt: now,
+        updatedAt: now
+      };
+      
+      // E-Mail-Verlauf in der Datenbank speichern
+      const [emailHistoryEntry] = await db.insert(emailHistory).values(insertData).returning();
+      
+      console.log('E-Mail-Verlaufseintrag erstellt:', emailHistoryEntry);
+      
+      return emailHistoryEntry;
+    } catch (error) {
+      console.error('Fehler beim Protokollieren des E-Mail-Verlaufs:', error);
+      return undefined;
+    }
+  }
   // Kostenvoranschläge Methoden
   async getAllCostEstimates(userId: number): Promise<CostEstimate[]> {
     const user = await this.getUser(userId);

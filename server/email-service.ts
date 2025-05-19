@@ -332,6 +332,83 @@ export class EmailService {
   }
   
   /**
+   * Sendet eine E-Mail mit Anhang
+   * @param options Die E-Mail-Optionen mit Anhang
+   * @param userId Benutzer-ID für shop-spezifische E-Mail-Einstellungen
+   */
+  async sendRawEmail(options: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    attachments?: Array<{
+      filename: string;
+      content: Buffer;
+      contentType: string;
+    }>;
+  }, userId?: number): Promise<boolean> {
+    try {
+      console.log(`Sende E-Mail mit Anhang an ${options.to}...`);
+      
+      if (!this.smtpTransporter) {
+        console.log('Kein SMTP-Transporter vorhanden, versuche Initialisierung...');
+        // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
+        await this.initSuperadminSmtpTransporter();
+        
+        if (!this.smtpTransporter) {
+          console.error('Initialisierung des SMTP-Transporters fehlgeschlagen');
+          throw new Error('Kein SMTP-Transporter konfiguriert');
+        }
+      }
+      
+      // Für die E-Mail-Adresse des Absenders - verwende die global konfigurierte wenn vorhanden
+      let senderEmail;
+      let senderName;
+      
+      if (this.superadminEmailConfig) {
+        senderName = this.superadminEmailConfig.smtpSenderName;
+        senderEmail = this.superadminEmailConfig.smtpSenderEmail;
+      } else {
+        // Fallback auf Umgebungsvariablen
+        senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
+        senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
+      }
+      
+      // Wenn options.from bereits eine E-Mail-Adresse enthält, nutze diese
+      // Sonst formatiere mit dem Absendernamen
+      const fromField = options.from.includes('@') 
+        ? options.from 
+        : `"${options.from || senderName}" <${senderEmail}>`;
+      
+      console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
+      
+      const mailOptions = {
+        from: fromField,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        attachments: options.attachments || []
+      };
+      
+      console.log('Sende E-Mail mit folgenden Optionen:', {
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        attachments: mailOptions.attachments.map(a => a.filename)
+      });
+      
+      const info = await this.smtpTransporter.sendMail(mailOptions);
+      console.log('E-Mail erfolgreich gesendet:', info.messageId);
+      
+      return true;
+    } catch (error) {
+      console.error('Fehler beim Senden der E-Mail mit Anhang:', error);
+      return false;
+    }
+  }
+
+  /**
    * Sendet eine Test-E-Mail mit den shop-spezifischen SMTP-Einstellungen
    * Diese Methode testet die Konfiguration für shop-spezifische E-Mails
    */
