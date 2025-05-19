@@ -628,7 +628,7 @@ export class DatabaseStorage implements IStorage {
       
       // Betreff und Inhalt mit Variablen ersetzen
       let subject = template.subject || '';
-      let content = template.body || ''; // Fix: Using body instead of content field
+      let body = template.body || ''; // Verwende das tatsächliche Feld 'body' aus der Datenbank
       
       console.log(`Verarbeite E-Mail-Vorlage "${template.name}" mit Variablen:`, variables);
       
@@ -636,7 +636,7 @@ export class DatabaseStorage implements IStorage {
       for (const [key, value] of Object.entries(variables)) {
         const placeholder = new RegExp(`{{${key}}}`, 'g');
         subject = subject.replace(placeholder, value);
-        content = content.replace(placeholder, value);
+        body = body.replace(placeholder, value);
       }
       
       console.log(`E-Mail wird gesendet an ${recipientEmail} mit Betreff: "${subject}"`);
@@ -645,7 +645,7 @@ export class DatabaseStorage implements IStorage {
       const success = await emailService.sendEmail({
         to: recipientEmail,
         subject: subject,
-        html: content
+        html: body // Verwende 'body' statt 'content' für den E-Mail-Text
       });
       
       return success;
