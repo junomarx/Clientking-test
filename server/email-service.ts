@@ -668,11 +668,13 @@ export class EmailService {
       if (forceUserId) {
         // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
         try {
-          // Hole die Geschäftseinstellungen des Benutzers
+          // Hole die NEUESTEN Geschäftseinstellungen des Benutzers mit ORDER BY id DESC
           const [businessSetting] = await db
             .select()
             .from(businessSettings)
-            .where(eq(businessSettings.userId, forceUserId));
+            .where(eq(businessSettings.userId, forceUserId))
+            .orderBy(desc(businessSettings.id))
+            .limit(1);
           
           // Wichtig: Die SMTP-Einstellungen müssen komplett sein, sonst keine E-Mail senden
           if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
