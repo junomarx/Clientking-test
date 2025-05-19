@@ -1445,10 +1445,10 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`Ungültige Kunden-ID: ${repair.customer_id || repair.customerId}`);
       }
       
-      // Die SQL-Anweisung vorbereiten
+      // Die SQL-Anweisung vorbereiten - Anpassung an tatsächliche Spaltenstruktur
       const query = `
         INSERT INTO repairs (
-          reference_number, 
+          order_code, 
           customer_id, 
           device_type, 
           brand, 
@@ -1461,10 +1461,9 @@ export class DatabaseStorage implements IStorage {
           updated_at, 
           user_id, 
           shop_id,
-          cost_estimate_id,
-          estimated_price
+          estimated_cost
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
         )
         RETURNING *
       `;
@@ -1487,7 +1486,7 @@ export class DatabaseStorage implements IStorage {
       
       console.log("Eingefügte Kunden-ID:", customerId);
       
-      // Die Anfrage ausführen
+      // Die Anfrage ausführen mit korrekter Anzahl an Parametern
       const result = await pool.query(query, [
         referenceNumber,
         customerId,
@@ -1502,7 +1501,6 @@ export class DatabaseStorage implements IStorage {
         updatedAt,
         userIdValue,
         shopId,
-        costEstimateId,
         estimatedPrice
       ]);
       
