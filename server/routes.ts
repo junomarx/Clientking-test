@@ -2970,6 +2970,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Kostenvoranschlag in Reparaturauftrag umwandeln
+  app.post("/api/cost-estimates/:id/convert-to-repair", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Kostenvoranschlags-ID" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Kostenvoranschlag abrufen
+      const estimate = await storage.getCostEstimate(id, userId);
+      
+      if (!estimate) {
+        return res.status(404).json({ message: "Kostenvoranschlag nicht gefunden" });
+      }
+      
+      // Prüfen, ob der Kostenvoranschlag bereits in einen Reparaturauftrag umgewandelt wurde
+      if (estimate.converted_to_repair) {
+        return res.status(400).json({ 
+          message: "Der Kostenvoranschlag wurde bereits in einen Reparaturauftrag umgewandelt" 
+        });
+      }
+      
+      // Reparatur erstellen
+      const insertRepair: Partial<InsertRepair> = {
+        reference_number: estimate.reference_number.replace('KV-', 'RA-'),
+        customer_id: estimate.customer_id || estimate.customerId,
+        device_type: estimate.device_type,
+        brand: estimate.brand,
+        model: estimate.model,
+        serial_number: estimate.serial_number || estimate.serialNumber,
+        issue: estimate.issue,
+        notes: `Umgewandelt aus Kostenvoranschlag ${estimate.reference_number}`,
+        status: 'angenommen',
+        cost_estimate_id: estimate.id,
+        estimated_price: estimate.total,
+        created_at: new Date(),
+        updated_at: new Date(),
+        user_id: userId,
+        shop_id: (req.user as any).shop_id || (req.user as any).shopId
+      };
+      
+      // Reparatur in der Datenbank erstellen
+      const repair = await storage.createRepair(insertRepair);
+      
+      if (!repair) {
+        return res.status(500).json({ message: "Fehler beim Erstellen der Reparatur" });
+      }
+      
+      // Kostenvoranschlag als umgewandelt markieren
+      await storage.updateCostEstimate(id, {
+        converted_to_repair: true,
+        repair_id: repair.id
+      }, userId);
+      
+      res.status(200).json({ success: true, repairId: repair.id });
+    } catch (error) {
+      console.error("Fehler beim Umwandeln des Kostenvoranschlags in eine Reparatur:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Umwandeln des Kostenvoranschlags in eine Reparatur",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
