@@ -72,79 +72,82 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         // Notfall-Superadmin für Probleme mit der Datenbank
-        // Erlaubt den Login mit dem superadmin-Konto, wenn die Datenbank nicht erreichbar ist
-        if (username === 'superadmin' && password === 'handyshop-notfall-admin-2025') {
-          console.log('⚠️ NOTFALLMODUS: Notfall-Superadmin-Anmeldung aktiviert');
-          // Vollständiger Notfall-Superadmin mit allen erforderlichen Feldern
-          const emergencySuperadmin = {
-            id: 10,
-            username: 'superadmin',
-            email: 'superadmin@example.com',
-            password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
-            isActive: true,
-            isAdmin: true,
-            isSuperadmin: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            shopId: 10,
-            packageId: 'enterprise',
-            pricingPlan: 'enterprise',
-            featureOverrides: {
-              canManageDevices: true,
-              canManageEmailTemplates: true,
-              canManageGlobalSettings: true,
-              canManageUsers: true,
-              canSeeStatistics: true,
-              hasAdvancedRepairStatus: true
-            },
-            // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-            companyName: 'System Administrator',
-            companyAddress: 'Systemadresse',
-            companyVatNumber: '0000000000',
-            companyPhone: '0000000000',
-            trialExpiresAt: null,
-            passwordResetToken: null,
-            passwordResetExpires: null,
-            lastLoginAt: new Date()
-          };
-          return done(null, emergencySuperadmin);
-        }
-        
-        // Macnphone-Superadmin Notfalllogin
-        if (username === 'macnphone' && password === 'handyshop-notfall-admin-2025') {
-          console.log('⚠️ NOTFALLMODUS: Macnphone-Superadmin-Notfallanmeldung aktiviert');
-          const emergencyMacnphoneSuperadmin = {
-            id: 3,
-            username: 'macnphone',
-            email: 'support@macnphone.de',
-            password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
-            isActive: true,
-            isAdmin: true,
-            isSuperadmin: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            shopId: 10,
-            packageId: 'enterprise',
-            pricingPlan: 'enterprise',
-            featureOverrides: {
-              canManageDevices: true,
-              canManageEmailTemplates: true,
-              canManageGlobalSettings: true,
-              canManageUsers: true,
-              canSeeStatistics: true,
-              hasAdvancedRepairStatus: true
-            },
-            // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
-            companyName: 'MacnPhone',
-            companyAddress: 'Macnphone-Adresse',
-            companyVatNumber: '0000000000',
-            companyPhone: '0000000000',
-            trialExpiresAt: null,
-            passwordResetToken: null,
-            passwordResetExpires: null,
-            lastLoginAt: new Date()
-          };
-          return done(null, emergencyMacnphoneSuperadmin);
+        // Notfalllogin deaktiviert - normale Benutzerauthentifizierung wird verwendet
+        // Der Notfalllogin-Code wird beibehalten, aber durch frühe Rückgabe deaktiviert
+        if (false) { // Ändere auf 'if (true)' um den Notfallmodus wieder zu aktivieren
+          if (username === 'superadmin' && password === 'handyshop-notfall-admin-2025') {
+            console.log('⚠️ NOTFALLMODUS: Notfall-Superadmin-Anmeldung aktiviert');
+            // Vollständiger Notfall-Superadmin mit allen erforderlichen Feldern
+            const emergencySuperadmin = {
+              id: 10,
+              username: 'superadmin',
+              email: 'superadmin@example.com',
+              password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
+              isActive: true,
+              isAdmin: true,
+              isSuperadmin: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              shopId: 10,
+              packageId: 'enterprise',
+              pricingPlan: 'enterprise',
+              featureOverrides: {
+                canManageDevices: true,
+                canManageEmailTemplates: true,
+                canManageGlobalSettings: true,
+                canManageUsers: true,
+                canSeeStatistics: true,
+                hasAdvancedRepairStatus: true
+              },
+              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+              companyName: 'System Administrator',
+              companyAddress: 'Systemadresse',
+              companyVatNumber: '0000000000',
+              companyPhone: '0000000000',
+              trialExpiresAt: null,
+              passwordResetToken: null,
+              passwordResetExpires: null,
+              lastLoginAt: new Date()
+            };
+            return done(null, emergencySuperadmin);
+          }
+          
+          // Macnphone-Superadmin Notfalllogin
+          if (username === 'macnphone' && password === 'handyshop-notfall-admin-2025') {
+            console.log('⚠️ NOTFALLMODUS: Macnphone-Superadmin-Notfallanmeldung aktiviert');
+            const emergencyMacnphoneSuperadmin = {
+              id: 3,
+              username: 'macnphone',
+              email: 'support@macnphone.de',
+              password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
+              isActive: true,
+              isAdmin: true,
+              isSuperadmin: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              shopId: 10,
+              packageId: 'enterprise',
+              pricingPlan: 'enterprise',
+              featureOverrides: {
+                canManageDevices: true,
+                canManageEmailTemplates: true,
+                canManageGlobalSettings: true,
+                canManageUsers: true,
+                canSeeStatistics: true,
+                hasAdvancedRepairStatus: true
+              },
+              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+              companyName: 'MacnPhone',
+              companyAddress: 'Macnphone-Adresse',
+              companyVatNumber: '0000000000',
+              companyPhone: '0000000000',
+              trialExpiresAt: null,
+              passwordResetToken: null,
+              passwordResetExpires: null,
+              lastLoginAt: new Date()
+            };
+            return done(null, emergencyMacnphoneSuperadmin);
+          }
         }
 
         // Versuche normalen Login mit Datenbankabfrage
