@@ -44,12 +44,15 @@ export function setupAuth(app: Express) {
     console.warn('Warning: SESSION_SECRET is not set in production environment');
   }
 
+  // Session-Konfiguration ohne Datenbank-Store (als Fallback wegen Datenbankproblemen)
+  console.log('⚠️ Verwende einfachen Cookie-basierten Session-Store ohne Datenbank');
+  
   // Session-Konfiguration
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
     resave: true,
     saveUninitialized: true,
-    store: storage.sessionStore,
+    // Kein Store angegeben = Standard In-Memory Store von Express-Session
     name: 'handyshop.sid', // Anpassung des Cookie-Namens
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
