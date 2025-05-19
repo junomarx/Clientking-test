@@ -74,16 +74,18 @@ export function setupAuth(app: Express) {
         // Notfall-Superadmin für Probleme mit der Datenbank
         // Erlaubt den Login mit dem superadmin-Konto, wenn die Datenbank nicht erreichbar ist
         if (username === 'superadmin' && password === 'handyshop-notfall-admin-2025') {
-          console.log('⚠️ Notfall-Superadmin-Anmeldung verwendet (wegen Datenbankproblemen)');
+          console.log('⚠️ NOTFALLMODUS: Notfall-Superadmin-Anmeldung aktiviert');
+          // Vollständiger Notfall-Superadmin mit allen erforderlichen Feldern
           const emergencySuperadmin = {
             id: 10,
             username: 'superadmin',
             email: 'superadmin@example.com',
-            password: 'hashed-dummy-password',
+            password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
             isActive: true,
             isAdmin: true,
             isSuperadmin: true,
             createdAt: new Date(),
+            updatedAt: new Date(),
             shopId: 10,
             packageId: 'enterprise',
             pricingPlan: 'enterprise',
@@ -94,9 +96,55 @@ export function setupAuth(app: Express) {
               canManageUsers: true,
               canSeeStatistics: true,
               hasAdvancedRepairStatus: true
-            }
+            },
+            // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+            companyName: 'System Administrator',
+            companyAddress: 'Systemadresse',
+            companyVatNumber: '0000000000',
+            companyPhone: '0000000000',
+            trialExpiresAt: null,
+            passwordResetToken: null,
+            passwordResetExpires: null,
+            lastLoginAt: new Date()
           };
           return done(null, emergencySuperadmin);
+        }
+        
+        // Macnphone-Superadmin Notfalllogin
+        if (username === 'macnphone' && password === 'handyshop-notfall-admin-2025') {
+          console.log('⚠️ NOTFALLMODUS: Macnphone-Superadmin-Notfallanmeldung aktiviert');
+          const emergencyMacnphoneSuperadmin = {
+            id: 3,
+            username: 'macnphone',
+            email: 'support@macnphone.de',
+            password: 'hashed-dummy-password', // Wird nie zum Vergleich verwendet
+            isActive: true,
+            isAdmin: true,
+            isSuperadmin: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            shopId: 10,
+            packageId: 'enterprise',
+            pricingPlan: 'enterprise',
+            featureOverrides: {
+              canManageDevices: true,
+              canManageEmailTemplates: true,
+              canManageGlobalSettings: true,
+              canManageUsers: true,
+              canSeeStatistics: true,
+              hasAdvancedRepairStatus: true
+            },
+            // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+            companyName: 'MacnPhone',
+            companyAddress: 'Macnphone-Adresse',
+            companyVatNumber: '0000000000',
+            companyPhone: '0000000000',
+            trialExpiresAt: null,
+            passwordResetToken: null,
+            passwordResetExpires: null,
+            lastLoginAt: new Date()
+          };
+          return done(null, emergencyMacnphoneSuperadmin);
         }
 
         // Versuche normalen Login mit Datenbankabfrage
@@ -168,19 +216,20 @@ export function setupAuth(app: Express) {
     // Wir speichern das gesamte Benutzerobjekt im Session-Store, wenn es sich um einen Notfall-Login handelt
     // um Datenbankabfragen bei der Deserialisierung zu vermeiden
     if (user.password === 'hashed-dummy-password') {
-      console.log(`Speichere Notfallbenutzer ${user.username} komplett in der Session`);
-      done(null, { id: user.id, emergencyUser: user });
+      console.log(`⚠️ NOTFALLMODUS: Speichere Notfallbenutzer ${user.username} komplett in der Session`);
+      // Speichern des vollständigen Notfallbenutzers in der Session
+      done(null, { id: user.id, emergencyUser: user, isEmergency: true });
     } else {
       // Standard-Serialisierung mit nur der ID
-      done(null, { id: user.id });
+      done(null, { id: user.id, isEmergency: false });
     }
   });
   
-  passport.deserializeUser(async (data: { id: number, emergencyUser?: any }, done) => {
+  passport.deserializeUser(async (data: { id: number, emergencyUser?: any, isEmergency?: boolean }, done) => {
     try {
-      // Wenn es sich um einen Notfall-Benutzer handelt, diesen direkt zurückgeben
-      if (data.emergencyUser) {
-        console.log(`Lade Notfallbenutzer ${data.emergencyUser.username} aus der Session`);
+      // Wenn es sich um einen expliziten Notfall-Benutzer handelt, diesen direkt zurückgeben
+      if (data.isEmergency && data.emergencyUser) {
+        console.log(`⚠️ NOTFALLMODUS: Lade Notfallbenutzer ${data.emergencyUser.username} aus der Session`);
         return done(null, data.emergencyUser);
       }
       
@@ -195,12 +244,19 @@ export function setupAuth(app: Express) {
         console.error(`Fehler beim Abrufen des Benutzers mit ID ${data.id}:`, dbError);
         
         // Bei Datenbankfehlern: Fallback für wichtige Benutzer
-        if (dbError.message && dbError.message.includes('Control plane request failed')) {
+        const isNeonError = dbError.message && 
+           (dbError.message.includes('Control plane request failed') || 
+            dbError.message.includes('Connection terminated'));
+        
+        if (isNeonError) {
+          // Erweiterte Informationen zu Datenbankfehlern ausgeben
+          console.log('⚠️ NOTFALLMODUS: Datenbank-Verbindungsprobleme erkannt. Verwende Notfall-Benutzer-Cache.');
+          
           // Superadmin-ID (10) ermöglicht Notfallzugriff
           if (data.id === 10) {
-            console.log('Verwende Fallback-Abfrage für Benutzer...');
+            console.log('⚠️ NOTFALLMODUS: Lade Superadmin-Notfallkonto');
             
-            // Erzeuge Notfall-Superadmin
+            // Erzeuge Notfall-Superadmin mit allen erforderlichen Feldern
             const emergencySuperAdmin = {
               id: 10,
               username: 'superadmin',
@@ -210,6 +266,7 @@ export function setupAuth(app: Express) {
               isAdmin: true,
               isSuperadmin: true,
               createdAt: new Date(),
+              updatedAt: new Date(),
               shopId: 10,
               packageId: 'enterprise',
               pricingPlan: 'enterprise',
@@ -220,13 +277,60 @@ export function setupAuth(app: Express) {
                 canManageUsers: true,
                 canSeeStatistics: true,
                 hasAdvancedRepairStatus: true
-              }
+              },
+              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+              companyName: 'System Administrator',
+              companyAddress: 'Systemadresse',
+              companyVatNumber: '0000000000',
+              companyPhone: '0000000000',
+              trialExpiresAt: null,
+              passwordResetToken: null,
+              passwordResetExpires: null,
+              lastLoginAt: new Date()
             };
             return done(null, emergencySuperAdmin);
           }
           
+          // Macnphone-ID (3) erhält auch Notfallzugriff
+          if (data.id === 3) {
+            console.log('⚠️ NOTFALLMODUS: Lade Macnphone-Notfallkonto');
+            const emergencyMacnphone = {
+              id: 3,
+              username: 'macnphone',
+              email: 'support@macnphone.de',
+              password: 'hashed-dummy-password',
+              isActive: true,
+              isAdmin: true,
+              isSuperadmin: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              shopId: 10,
+              packageId: 'enterprise',
+              pricingPlan: 'enterprise',
+              featureOverrides: {
+                canManageDevices: true,
+                canManageEmailTemplates: true,
+                canManageGlobalSettings: true,
+                canManageUsers: true,
+                canSeeStatistics: true,
+                hasAdvancedRepairStatus: true
+              },
+              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+              companyName: 'MacnPhone',
+              companyAddress: 'Macnphone-Adresse',
+              companyVatNumber: '0000000000',
+              companyPhone: '0000000000',
+              trialExpiresAt: null,
+              passwordResetToken: null,
+              passwordResetExpires: null,
+              lastLoginAt: new Date()
+            };
+            return done(null, emergencyMacnphone);
+          }
+          
           // Admin-ID (1) erhält auch Notfallzugriff
           if (data.id === 1) {
+            console.log('⚠️ NOTFALLMODUS: Lade Admin-Notfallkonto');
             const emergencyAdmin = {
               id: 1,
               username: 'admin',
@@ -236,6 +340,7 @@ export function setupAuth(app: Express) {
               isAdmin: true,
               isSuperadmin: false,
               createdAt: new Date(),
+              updatedAt: new Date(),
               shopId: 1,
               packageId: 'enterprise',
               pricingPlan: 'enterprise',
@@ -246,7 +351,16 @@ export function setupAuth(app: Express) {
                 canManageUsers: true,
                 canSeeStatistics: true,
                 hasAdvancedRepairStatus: true
-              }
+              },
+              // Diese Felder wurden hinzugefügt, um Typkompatibilität sicherzustellen
+              companyName: 'Admin',
+              companyAddress: 'Adminadresse',
+              companyVatNumber: '0000000000',
+              companyPhone: '0000000000',
+              trialExpiresAt: null,
+              passwordResetToken: null,
+              passwordResetExpires: null,
+              lastLoginAt: new Date()
             };
             return done(null, emergencyAdmin);
           }
