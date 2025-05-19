@@ -21,7 +21,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Einfache Pool-Konfiguration mit minimalen Parametern
-export const pool = new Pool({
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 1 // Nur eine Verbindung erlauben für Stabilität
 });
@@ -32,7 +32,7 @@ pool.on('error', (err) => {
 });
 
 // Drizzle ORM mit Pool und Schema konfigurieren
-export const db = drizzle(pool, { schema });
+const db = drizzle(pool, { schema });
 
 // Hilfsfunktion zum Verzögern
 function sleep(ms: number) {
@@ -40,7 +40,7 @@ function sleep(ms: number) {
 }
 
 // Robuste Abfragefunktion für wichtige Operationen
-export async function executeWithRetry(query: any, retries = 1) {
+async function executeWithRetry(query: any, retries = 1) {
   let lastError;
   
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -60,3 +60,5 @@ export async function executeWithRetry(query: any, retries = 1) {
   
   throw lastError;
 }
+
+export { pool, db, executeWithRetry };
