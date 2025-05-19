@@ -669,12 +669,35 @@ export class EmailService {
         // Versuche, die benutzer-spezifischen SMTP-Einstellungen zu verwenden
         try {
           // Hole die NEUESTEN Geschäftseinstellungen des Benutzers mit ORDER BY id DESC
+          console.log(`Suche die neuesten SMTP-Einstellungen für Benutzer ID ${forceUserId}`);
+          
+          // Holen wir uns zunächst ALLE Einstellungen zur Diagnose
+          const allSettings = await db
+            .select()
+            .from(businessSettings)
+            .where(eq(businessSettings.userId, forceUserId));
+            
+          console.log(`Gefundene SMTP-Einstellungen für Benutzer ${forceUserId}:`, 
+            allSettings.map(s => ({
+              id: s.id,
+              user: s.smtpUser,
+              host: s.smtpHost,
+              // Wir zeigen nur die ersten Zeichen des Passworts aus Sicherheitsgründen
+              pass: s.smtpPassword ? s.smtpPassword.substring(0, 3) + '***' : null
+            }))
+          );
+          
+          // Jetzt holen wir das neueste Setting mit ORDER BY und LIMIT
           const [businessSetting] = await db
             .select()
             .from(businessSettings)
             .where(eq(businessSettings.userId, forceUserId))
             .orderBy(desc(businessSettings.id))
             .limit(1);
+            
+          if (businessSetting) {
+            console.log(`Ausgewählte Einstellung mit ID ${businessSetting.id} und SMTP-Benutzer ${businessSetting.smtpUser}`);
+          }
           
           // Wichtig: Die SMTP-Einstellungen müssen komplett sein, sonst keine E-Mail senden
           if (businessSetting && businessSetting.smtpHost && businessSetting.smtpUser && businessSetting.smtpPassword) {
