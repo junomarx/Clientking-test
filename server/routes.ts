@@ -2101,14 +2101,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
         
-        return res.json({
-          success: true,
-          message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet.',
-          details: {
-            messageId: info.messageId,
-            response: info.response
+        // Erfolgreiche SMTP-Einstellungen automatisch in den Geschäftseinstellungen speichern
+        try {
+          // Benutzer-ID aus der Anfrage holen
+          const userId = (req.user as any)?.id;
+          if (!userId) {
+            throw new Error('Benutzer-ID nicht gefunden');
           }
-        });
+          
+          // Aktuelle Geschäftseinstellungen des Benutzers holen
+          const userSettings = await storage.getBusinessSettings(userId);
+          if (!userSettings) {
+            throw new Error('Geschäftseinstellungen nicht gefunden');
+          }
+          
+          // SMTP-Einstellungen aktualisieren
+          await storage.updateBusinessSettings({
+            ...userSettings,
+            smtpHost: host,
+            smtpPort: port.toString(),
+            smtpUser: user,
+            smtpPassword: password,
+            smtpSenderName: sender
+          }, userId);
+          
+          console.log(`SMTP-Einstellungen für Benutzer ${userId} erfolgreich aktualisiert.`);
+          
+          return res.json({
+            success: true,
+            message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet. Die SMTP-Einstellungen wurden automatisch in Ihren Geschäftseinstellungen gespeichert.',
+            details: {
+              messageId: info.messageId,
+              response: info.response,
+              settingsSaved: true
+            }
+          });
+        } catch (saveError) {
+          console.error('Fehler beim Speichern der SMTP-Einstellungen:', saveError);
+          
+          // Test war erfolgreich, aber Speichern der Einstellungen fehlgeschlagen
+          return res.json({
+            success: true,
+            message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet, aber die Einstellungen konnten nicht automatisch gespeichert werden: ' + (saveError as Error).message,
+            details: {
+              messageId: info.messageId,
+              response: info.response,
+              settingsSaved: false
+            }
+          });
+        }
       } catch (error) {
         console.error('SMTP-Test fehlgeschlagen:', error);
         
