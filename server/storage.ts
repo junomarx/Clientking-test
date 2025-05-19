@@ -89,6 +89,15 @@ export interface IStorage {
   ): Promise<User | undefined>;
   updateUserPassword(id: number, newPassword: string): Promise<boolean>;
   
+  // E-Mail-Methoden
+  getAllEmailTemplates(userId: number): Promise<EmailTemplate[]>;
+  getEmailTemplate(id: number, userId: number): Promise<EmailTemplate | undefined>;
+  createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
+  updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined>;
+  deleteEmailTemplate(id: number): Promise<boolean>;
+  sendEmailWithTemplate(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean>;
+  sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean>;
+  
   /**
    * Löscht einen Benutzer aus dem System
    * @param id Die ID des zu löschenden Benutzers
@@ -467,6 +476,180 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  
+  // Implementierung der E-Mail-Methoden
+  
+  /**
+   * Holt alle E-Mail-Vorlagen für einen bestimmten Benutzer
+   * @param userId ID des Benutzers
+   * @returns Liste aller E-Mail-Vorlagen des Benutzers
+   */
+  async getAllEmailTemplates(userId: number): Promise<EmailTemplate[]> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      
+      const shopId = user.shopId || 1;
+      
+      // Alle E-Mail-Vorlagen des Shops abrufen
+      const templates = await db
+        .select()
+        .from(emailTemplates)
+        .where(eq(emailTemplates.shopId, shopId))
+        .orderBy(desc(emailTemplates.id));
+      
+      return templates;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der E-Mail-Vorlagen:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Holt eine spezifische E-Mail-Vorlage
+   * @param id ID der E-Mail-Vorlage
+   * @param userId ID des anfragenden Benutzers (für Shop-Isolation)
+   * @returns Die E-Mail-Vorlage oder undefined, wenn nicht gefunden
+   */
+  async getEmailTemplate(id: number, userId: number): Promise<EmailTemplate | undefined> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      const shopId = user.shopId || 1;
+      
+      // E-Mail-Vorlage abrufen (nur wenn sie zum Shop des Benutzers gehört)
+      const [template] = await db
+        .select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.id, id),
+          eq(emailTemplates.shopId, shopId)
+        ));
+      
+      return template;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen der E-Mail-Vorlage ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Erstellt eine neue E-Mail-Vorlage
+   * @param template Daten der neuen E-Mail-Vorlage
+   * @returns Die erstellte E-Mail-Vorlage
+   */
+  async createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate> {
+    try {
+      const [newTemplate] = await db
+        .insert(emailTemplates)
+        .values(template)
+        .returning();
+      
+      return newTemplate;
+    } catch (error) {
+      console.error('Fehler beim Erstellen der E-Mail-Vorlage:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Aktualisiert eine bestehende E-Mail-Vorlage
+   * @param id ID der zu aktualisierenden E-Mail-Vorlage
+   * @param template Neue Daten für die E-Mail-Vorlage
+   * @returns Die aktualisierte E-Mail-Vorlage oder undefined bei Fehler
+   */
+  async updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined> {
+    try {
+      const [updatedTemplate] = await db
+        .update(emailTemplates)
+        .set(template)
+        .where(eq(emailTemplates.id, id))
+        .returning();
+      
+      return updatedTemplate;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren der E-Mail-Vorlage ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Löscht eine E-Mail-Vorlage
+   * @param id ID der zu löschenden E-Mail-Vorlage
+   * @returns true, wenn erfolgreich gelöscht, sonst false
+   */
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(emailTemplates)
+        .where(eq(emailTemplates.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error(`Fehler beim Löschen der E-Mail-Vorlage ${id}:`, error);
+      return false;
+    }
+  }
+  
+  /**
+   * Sendet eine E-Mail mit einer Vorlage
+   * @param templateId ID der zu verwendenden E-Mail-Vorlage
+   * @param recipientEmail E-Mail-Adresse des Empfängers
+   * @param variables Variablen, die in der Vorlage ersetzt werden sollen
+   * @returns true, wenn erfolgreich gesendet, sonst false
+   */
+  async sendEmailWithTemplate(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean> {
+    return this.sendEmailWithTemplateById(templateId, recipientEmail, variables);
+  }
+  
+  /**
+   * Sendet eine E-Mail mit einer Vorlage anhand ihrer ID
+   * @param templateId ID der zu verwendenden E-Mail-Vorlage
+   * @param recipientEmail E-Mail-Adresse des Empfängers
+   * @param variables Variablen, die in der Vorlage ersetzt werden sollen
+   * @returns true, wenn erfolgreich gesendet, sonst false
+   */
+  async sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean> {
+    try {
+      // E-Mail-Vorlage abrufen
+      const [template] = await db
+        .select()
+        .from(emailTemplates)
+        .where(eq(emailTemplates.id, templateId));
+      
+      if (!template) {
+        console.error(`E-Mail-Vorlage mit ID ${templateId} nicht gefunden`);
+        return false;
+      }
+      
+      // Betreff und Inhalt mit Variablen ersetzen
+      let subject = template.subject || '';
+      let content = template.content || '';
+      
+      // Variablen in Betreff und Inhalt ersetzen
+      for (const [key, value] of Object.entries(variables)) {
+        const placeholder = new RegExp(`{{${key}}}`, 'g');
+        subject = subject.replace(placeholder, value);
+        content = content.replace(placeholder, value);
+      }
+      
+      // E-Mail senden
+      const success = await emailService.sendEmail({
+        to: recipientEmail,
+        subject: subject,
+        html: content
+      });
+      
+      return success;
+    } catch (error) {
+      console.error(`Fehler beim Senden der E-Mail mit Vorlage ${templateId}:`, error);
+      return false;
+    }
+  }
   
   /**
    * Generiert eine PDF-Datei aus HTML-Inhalt
