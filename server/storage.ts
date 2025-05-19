@@ -628,7 +628,9 @@ export class DatabaseStorage implements IStorage {
       
       // Betreff und Inhalt mit Variablen ersetzen
       let subject = template.subject || '';
-      let content = template.content || '';
+      let content = template.body || ''; // Fix: Using body instead of content field
+      
+      console.log(`Verarbeite E-Mail-Vorlage "${template.name}" mit Variablen:`, variables);
       
       // Variablen in Betreff und Inhalt ersetzen
       for (const [key, value] of Object.entries(variables)) {
@@ -636,6 +638,8 @@ export class DatabaseStorage implements IStorage {
         subject = subject.replace(placeholder, value);
         content = content.replace(placeholder, value);
       }
+      
+      console.log(`E-Mail wird gesendet an ${recipientEmail} mit Betreff: "${subject}"`);
       
       // E-Mail senden
       const success = await emailService.sendEmail({
