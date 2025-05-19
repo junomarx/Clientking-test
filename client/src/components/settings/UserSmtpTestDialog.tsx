@@ -47,7 +47,7 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
   // Mutation zum manuellen Speichern der SMTP-Einstellungen
   const saveMutation = useMutation({
     mutationFn: async (saveSettings: SmtpSettings) => {
-      const response = await apiRequest('POST', '/api/update-business-settings', {
+      const response = await apiRequest('POST', '/api/business-settings', {
         smtpHost: saveSettings.host,
         smtpPort: saveSettings.port,
         smtpUser: saveSettings.user,
@@ -121,6 +121,7 @@ export function UserSmtpTestDialog({ open, onClose, initialSettings = {} }: User
           <DialogDescription>
             Testen Sie Ihre SMTP-Einstellungen, um sicherzustellen, dass E-Mails korrekt versendet werden können.
             Bei erfolgreichem Test werden diese Einstellungen automatisch in Ihren Geschäftseinstellungen gespeichert.
+            Falls die automatische Speicherung nicht funktioniert, können Sie nach dem erfolgreichen Test die "SMTP-Einstellungen speichern"-Schaltfläche verwenden.
           </DialogDescription>
         </DialogHeader>
 
