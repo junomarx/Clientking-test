@@ -35,7 +35,6 @@ const registerSchema = z.object({
   companyAddress: z.string().min(2, "Bitte geben Sie eine Adresse ein."),
   companyVatNumber: z.string().min(2, "Bitte geben Sie eine USt-IdNr. ein."),
   companyPhone: z.string().min(2, "Bitte geben Sie eine Telefonnummer ein."),
-  // companyEmail-Feld entfernt, da nicht benötigt
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein.",
   path: ["confirmPassword"],
@@ -80,7 +79,7 @@ export default function AuthPage() {
     },
   });
   
-  // Prüfen ob der "superadmin" Parameter in der URL vorhanden ist
+  // Prüfen ob der "superadmin" oder "emergency" Parameter in der URL vorhanden ist
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const isSuperadmin = params.get('superadmin') === 'true';
@@ -123,8 +122,6 @@ export default function AuthPage() {
       }
     }, 1000);
   }
-  
-  // State für Dialog und Tab-Steuerung bereits oben definiert
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
@@ -180,6 +177,7 @@ export default function AuthPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="grid md:grid-cols-2 w-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Hero section - Left side with blue background */}
@@ -313,9 +311,11 @@ export default function AuthPage() {
                       
                       <Button 
                         type="submit" 
-                        className={`w-full h-12 ${isSuperadminLogin 
-                          ? "bg-red-500 hover:bg-red-600" 
-                          : "bg-blue-500 hover:bg-blue-600"} text-white rounded-full mt-6`}
+                        className={`w-full h-12 ${isEmergencyMode 
+                          ? "bg-orange-500 hover:bg-orange-600" 
+                          : isSuperadminLogin 
+                            ? "bg-red-500 hover:bg-red-600" 
+                            : "bg-blue-500 hover:bg-blue-600"} text-white rounded-full mt-6`}
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -325,8 +325,13 @@ export default function AuthPage() {
                           </>
                         ) : (
                           <>
+                            {isEmergencyMode && <ShieldAlert className="mr-2 h-4 w-4" />}
                             {isSuperadminLogin && <ShieldAlert className="mr-2 h-4 w-4" />}
-                            {isSuperadminLogin ? "Als Superadmin anmelden" : "Anmelden"}
+                            {isEmergencyMode 
+                              ? "Notfall-Login" 
+                              : isSuperadminLogin 
+                                ? "Als Superadmin anmelden" 
+                                : "Anmelden"}
                           </>
                         )}
                       </Button>
@@ -401,21 +406,68 @@ export default function AuthPage() {
                             )}
                           />
                         </div>
-                      </div>
-                      
-                      <div className="pt-4">
-                        <h3 className="text-base font-medium text-gray-700 mb-3">Firmeninformationen</h3>
                         
-                        <div className="space-y-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  type="email" 
+                                  placeholder="E-Mail-Adresse *" 
+                                  {...field} 
+                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="companyName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Firmenname *" 
+                                  {...field} 
+                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="companyAddress"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Adresse *" 
+                                  {...field} 
+                                  className="h-12 px-4 border-gray-200 focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                             control={registerForm.control}
-                            name="email"
+                            name="companyVatNumber"
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
                                   <Input 
-                                    type="email" 
-                                    placeholder="Ihre E-Mail-Adresse *" 
+                                    placeholder="USt-IdNr. *" 
                                     {...field} 
                                     className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                   />
@@ -427,12 +479,12 @@ export default function AuthPage() {
                           
                           <FormField
                             control={registerForm.control}
-                            name="companyName"
+                            name="companyPhone"
                             render={({ field }) => (
                               <FormItem>
                                 <FormControl>
                                   <Input 
-                                    placeholder="Firmenname *" 
+                                    placeholder="Telefonnummer *" 
                                     {...field} 
                                     className="h-12 px-4 border-gray-200 focus:border-blue-500"
                                   />
@@ -441,67 +493,7 @@ export default function AuthPage() {
                               </FormItem>
                             )}
                           />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="companyAddress"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Adresse *" 
-                                    {...field} 
-                                    className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField
-                              control={registerForm.control}
-                              name="companyVatNumber"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="USt-IdNr. *" 
-                                      {...field} 
-                                      className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="companyPhone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Telefon *" 
-                                      {...field} 
-                                      className="h-12 px-4 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          {/* Geschäfts-E-Mail-Feld entfernt */}
                         </div>
-                      </div>
-                      
-                      <div className="text-sm text-gray-500 mt-4">
-                        <p className="mb-2">Hinweis: Nach der Registrierung muss Ihr Konto von einem Administrator freigeschaltet werden, bevor Sie sich anmelden können.</p>
-                        <p>Alle Felder sind Pflichtfelder.</p>
                       </div>
                       
                       <Button 
@@ -515,7 +507,7 @@ export default function AuthPage() {
                             Wird registriert...
                           </>
                         ) : (
-                          "Registrieren"
+                          "Konto erstellen"
                         )}
                       </Button>
                     </form>
