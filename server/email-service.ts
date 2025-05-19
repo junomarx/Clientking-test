@@ -688,6 +688,11 @@ export class EmailService {
                 user: businessSetting.smtpUser,
                 pass: businessSetting.smtpPassword
               },
+              // Erweiterte Optionen für zuverlässigere Verbindungen
+              connectionTimeout: 10000, // 10 Sekunden
+              tls: {
+                rejectUnauthorized: false // Ignoriere TLS-Zertifikatsfehler (für Entwicklung)
+              },
               debug: true,
               logger: true
             };
