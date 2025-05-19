@@ -3422,13 +3422,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Importiere die SMTP-Test- und Speicherfunktion
-      const { testAndSaveSmtpSettings } = await import('./smtp-auto-save');
+      // Führe den SMTP-Test direkt durch (ohne dynamischen Import)
+      // Erstelle einen temporären Transporter zum Testen
+      const transporter = nodemailer.createTransport({
+        host,
+        port: parseInt(port),
+        secure: parseInt(port) === 465,
+        auth: {
+          user,
+          pass: password
+        },
+        debug: true,
+        logger: true
+      });
       
-      // Führe den SMTP-Test durch und speichere die Einstellungen bei Erfolg
-      const result = await testAndSaveSmtpSettings(
-        host, port, user, password, sender, recipient, userId
-      );
+      console.log('SMTP-Verbindungstest wird gestartet...');
+      await transporter.verify();
+      console.log('SMTP-Verbindungstest erfolgreich');
+      
+      // Test-E-Mail senden
+      const info = await transporter.sendMail({
+        from: `"${sender}" <${user}>`,
+        to: recipient,
+        subject: 'SMTP-Test von Handyshop Verwaltung',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #4f46e5;">SMTP-Test erfolgreich!</h2>
+            <p>Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.</p>
+            <p>Details der Konfiguration:</p>
+            <ul>
+              <li>Host: ${host}</li>
+              <li>Port: ${port}</li>
+              <li>Benutzer: ${user}</li>
+              <li>Absender: ${sender}</li>
+            </ul>
+            <p>Gesendet: ${new Date().toLocaleString('de-DE')}</p>
+          </div>
+        `,
+        text: `SMTP-Test erfolgreich! Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.`
+      });
+      
+      console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+      
+      // Aktuelle Geschäftseinstellungen des Benutzers holen
+      const userSettings = await storage.getBusinessSettings(userId);
+      if (!userSettings) {
+        throw new Error('Geschäftseinstellungen nicht gefunden');
+      }
+      
+      // SMTP-Einstellungen aktualisieren
+      await storage.updateBusinessSettings({
+        ...userSettings,
+        smtpHost: host,
+        smtpPort: port,
+        smtpUser: user,
+        smtpPassword: password,
+        smtpSenderName: sender
+      }, userId);
+      
+      console.log(`SMTP-Einstellungen für Benutzer ${userId} erfolgreich aktualisiert.`);
+      
+      // Erfolgreicher Test mit automatischem Speichern
+      const result = {
+        success: true,
+        message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet. Die SMTP-Einstellungen wurden automatisch in Ihren Geschäftseinstellungen gespeichert.',
+        details: {
+          messageId: info.messageId,
+          response: info.response,
+          settingsSaved: true
+        }
+      };
       
       // Wenn der Test erfolgreich war, gebe Erfolg zurück
       if (result.success) {
