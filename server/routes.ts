@@ -2028,6 +2028,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API für einfachen SMTP-Test für normale Benutzer
+  app.post('/api/user-smtp-test', isAuthenticated, async (req, res) => {
+    try {
+      const { host, port, user, password, sender, recipient } = req.body;
+      
+      console.log('SMTP-Test von normalem Benutzer mit folgenden Parametern:');
+      console.log(`Host: ${host}, Port: ${port}, Benutzer: ${user}`);
+      
+      if (!host || !port || !user || !password || !sender || !recipient) {
+        return res.status(400).json({
+          success: false,
+          message: 'Alle SMTP-Parameter müssen angegeben werden'
+        });
+      }
+      
+      // Erstelle einen temporären Transporter zum Testen
+      const transporter = nodemailer.createTransport({
+        host,
+        port: parseInt(port),
+        secure: parseInt(port) === 465,
+        auth: {
+          user,
+          pass: password
+        },
+        debug: true,
+        logger: true
+      });
+      
+      try {
+        // Explizit die Verbindung testen
+        console.log('SMTP-Verbindungstest wird gestartet...');
+        await transporter.verify();
+        console.log('SMTP-Verbindungstest erfolgreich');
+        
+        // Test-E-Mail senden
+        const info = await transporter.sendMail({
+          from: `"${sender}" <${user}>`,
+          to: recipient,
+          subject: 'SMTP-Test von Handyshop Verwaltung',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #4f46e5;">SMTP-Test erfolgreich!</h2>
+              <p>Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.</p>
+              <p>Details der Konfiguration:</p>
+              <ul>
+                <li>Host: ${host}</li>
+                <li>Port: ${port}</li>
+                <li>Benutzer: ${user}</li>
+                <li>Absender: ${sender}</li>
+              </ul>
+              <p>Gesendet: ${new Date().toLocaleString('de-DE')}</p>
+            </div>
+          `,
+          text: `SMTP-Test erfolgreich! Diese E-Mail bestätigt, dass Ihre SMTP-Konfiguration korrekt ist und E-Mails versendet werden können.`
+        });
+        
+        console.log('Test-E-Mail erfolgreich gesendet:', info.messageId);
+        
+        return res.json({
+          success: true,
+          message: 'SMTP-Test erfolgreich! E-Mail wurde an ' + recipient + ' gesendet.',
+          details: {
+            messageId: info.messageId,
+            response: info.response
+          }
+        });
+      } catch (error) {
+        console.error('SMTP-Test fehlgeschlagen:', error);
+        
+        return res.status(500).json({
+          success: false,
+          message: 'SMTP-Test fehlgeschlagen',
+          error: {
+            name: error.name,
+            message: error.message,
+            code: error.code,
+            response: error.response,
+            responseCode: error.responseCode,
+            command: error.command
+          }
+        });
+      } finally {
+        // Transporter schließen
+        transporter.close();
+      }
+    } catch (error) {
+      console.error('Fehler beim SMTP-Test:', error);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Fehler beim SMTP-Test',
+        error: error.message
+      });
+    }
+  });
+
   app.post("/api/send-email", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const { templateId, to, variables } = req.body;
