@@ -72,9 +72,17 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         // Notfall-Superadmin für Probleme mit der Datenbank
-        // Notfalllogin deaktiviert - normale Benutzerauthentifizierung wird verwendet
-        // Der Notfalllogin-Code wird beibehalten, aber durch frühe Rückgabe deaktiviert
-        if (false) { // Ändere auf 'if (true)' um den Notfallmodus wieder zu aktivieren
+        // Versuche zuerst normale Authentifizierung
+        try {
+          const user = await storage.getUserByUsername(username);
+          if (user && (await comparePasswords(password, user.password))) {
+            console.log('Login erfolgreich für Benutzer', username);
+            return done(null, user);
+          }
+        } catch (dbError) {
+          console.error('Datenbankfehler beim Login-Versuch:', dbError);
+          // Bei Datenbankfehler: Prüfe auf Notfall-Anmeldeinformationen
+          // Aktiviere Notfallmodus nur bei Datenbankfehlern
           if (username === 'superadmin' && password === 'handyshop-notfall-admin-2025') {
             console.log('⚠️ NOTFALLMODUS: Notfall-Superadmin-Anmeldung aktiviert');
             // Vollständiger Notfall-Superadmin mit allen erforderlichen Feldern
