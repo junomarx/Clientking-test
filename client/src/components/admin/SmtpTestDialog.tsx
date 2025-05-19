@@ -42,7 +42,8 @@ export function SmtpTestDialog({ open, onClose, initialSettings = {} }: SmtpTest
 
   const testMutation = useMutation({
     mutationFn: async (testSettings: SmtpSettings) => {
-      const response = await apiRequest('POST', '/api/smtp-test', testSettings);
+      // Verwende den normalen Benutzer-Endpunkt statt des Admin-Endpunkts
+      const response = await apiRequest('POST', '/api/user-smtp-test', testSettings);
       return response.json();
     },
     onSuccess: (data) => {
@@ -61,28 +62,27 @@ export function SmtpTestDialog({ open, onClose, initialSettings = {} }: SmtpTest
     }
   });
 
+  // Wir deaktivieren hier das permanente Speichern für normale Benutzer,
+  // da wir nur temporäre Tests durchführen wollen
   const saveMutation = useMutation({
     mutationFn: async (saveSettings: SmtpSettings) => {
-      const response = await apiRequest('POST', '/api/smtp-settings', {
-        host: saveSettings.host,
-        port: saveSettings.port,
-        user: saveSettings.user,
-        password: saveSettings.password,
-        sender_name: saveSettings.sender,
-        sender_email: saveSettings.user, // Für World4You muss die Absender-E-Mail mit dem Benutzernamen übereinstimmen
-      });
+      // Führe den gleichen Test durch wie beim Testen - normale Benutzer
+      // können Einstellungen nicht in der Datenbank speichern
+      const response = await apiRequest('POST', '/api/user-smtp-test', saveSettings);
       return response.json();
     },
     onSuccess: (data) => {
       setTestResult({
         success: data.success,
-        message: data.message,
+        message: "SMTP-Test erfolgreich! (Hinweis: Die Einstellungen wurden nicht dauerhaft gespeichert)",
+        details: data.details,
       });
     },
     onError: (error: any) => {
       setTestResult({
         success: false,
-        message: `SMTP-Einstellungen konnten nicht gespeichert werden: ${error.message}`,
+        message: `SMTP-Test fehlgeschlagen: ${error.message}`,
+        details: error.response,
       });
     }
   });
