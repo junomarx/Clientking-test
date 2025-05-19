@@ -1435,37 +1435,80 @@ export class DatabaseStorage implements IStorage {
 
   async createRepair(repair: Partial<InsertRepair> | any, userId?: number): Promise<Repair> {
     try {
-      // Konvertiere von camelCase zu snake_case für die Datenbank
-      const dbRepair: any = {
-        // Standardwerte für Timestamps
-        created_at: new Date(),
-        updated_at: new Date(),
-        
-        // Konvertiere Felder von camelCase zu snake_case
-        reference_number: repair.reference_number || repair.referenceNumber,
-        customer_id: repair.customer_id || repair.customerId,
-        device_type: repair.device_type || repair.deviceType,
-        brand: repair.brand,
-        model: repair.model,
-        serial_number: repair.serial_number || repair.serialNumber,
-        issue: repair.issue,
-        notes: repair.notes,
-        status: repair.status || "eingegangen",
-        cost_estimate_id: repair.cost_estimate_id || repair.costEstimateId,
-        estimated_price: repair.estimated_price || repair.estimatedPrice,
-        user_id: repair.user_id || repair.userId || userId,
-        shop_id: repair.shop_id || repair.shopId
-      };
+      // Direkter SQL-Zugriff für mehr Kontrolle
+      // Wir verwenden direkte SQL-Anweisung, um sicherzustellen, dass die Daten korrekt formatiert werden
+      console.log(`📝 Reparatur-Daten vor der Erstellung:`, repair);
       
-      console.log(`📝 Erstelle neue Reparatur (konvertiert für DB):`, dbRepair);
+      // Sicherstellen, dass die Kunden-ID als Zahl vorliegt
+      const customerId = parseInt(String(repair.customer_id || repair.customerId), 10);
+      if (isNaN(customerId)) {
+        throw new Error(`Ungültige Kunden-ID: ${repair.customer_id || repair.customerId}`);
+      }
       
-      // Reparatur in der Datenbank erstellen
-      const [newRepair] = await db
-        .insert(repairs)
-        .values(dbRepair)
-        .returning();
+      // Die SQL-Anweisung vorbereiten
+      const query = `
+        INSERT INTO repairs (
+          reference_number, 
+          customer_id, 
+          device_type, 
+          brand, 
+          model, 
+          serial_number, 
+          issue, 
+          notes, 
+          status, 
+          created_at, 
+          updated_at, 
+          user_id, 
+          shop_id,
+          cost_estimate_id,
+          estimated_price
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+        )
+        RETURNING *
+      `;
       
-      return newRepair;
+      // Die Parameter vorbereiten
+      const referenceNumber = repair.reference_number || repair.referenceNumber || `RA-${Date.now()}`;
+      const deviceType = repair.device_type || repair.deviceType || "Smartphone";
+      const brand = repair.brand || "";
+      const model = repair.model || "";
+      const serialNumber = repair.serial_number || repair.serialNumber || null;
+      const issue = repair.issue || "";
+      const notes = repair.notes || `Umgewandelt aus Kostenvoranschlag ${repair.reference_number || repair.referenceNumber}`;
+      const status = repair.status || "eingegangen";
+      const createdAt = repair.created_at || repair.createdAt || new Date();
+      const updatedAt = repair.updated_at || repair.updatedAt || new Date();
+      const userIdValue = repair.user_id || repair.userId || userId || null;
+      const shopId = repair.shop_id || repair.shopId || 1; // Fallback auf Shop 1
+      const costEstimateId = repair.cost_estimate_id || repair.costEstimateId || null;
+      const estimatedPrice = repair.estimated_price || repair.estimatedPrice || "0,00";
+      
+      console.log("Eingefügte Kunden-ID:", customerId);
+      
+      // Die Anfrage ausführen
+      const result = await pool.query(query, [
+        referenceNumber,
+        customerId,
+        deviceType,
+        brand,
+        model,
+        serialNumber,
+        issue,
+        notes,
+        status,
+        createdAt,
+        updatedAt,
+        userIdValue,
+        shopId,
+        costEstimateId,
+        estimatedPrice
+      ]);
+      
+      console.log("Reparatur erfolgreich erstellt:", result.rows[0]);
+      
+      return result.rows[0];
     } catch (error) {
       console.error("Fehler beim Erstellen einer Reparatur:", error);
       throw error;
