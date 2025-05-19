@@ -47,15 +47,23 @@ export function AdminProtectedRoute({ path, children }: { path: string; children
     );
   }
 
-  if (!user.isAdmin) {
+  // Statt den alten Admin-Bereich anzuzeigen, leiten wir zum neuen Superadmin-Bereich weiter,
+  // wenn der Benutzer Superadmin-Rechte hat
+  if (user.isSuperadmin) {
     return (
       <Route path={path}>
-        <Redirect to="/app" />
+        <Redirect to="/superadmin" />
       </Route>
     );
   }
-
-  return <Route path={path}>{children}</Route>;
+  
+  // Wenn der Benutzer ein gewöhnlicher Admin (aber kein Superadmin) ist,
+  // leiten wir zum Home-Bereich weiter, da der alte Admin-Bereich nicht mehr benötigt wird
+  return (
+    <Route path={path}>
+      <Redirect to="/app" />
+    </Route>
+  );
 }
 
 export function SuperadminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {
