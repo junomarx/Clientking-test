@@ -695,9 +695,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (pickupTemplate) {
               console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
               
-              // E-Mail senden
-              const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables);
-              console.log("E-Mail gesendet:", emailSent);
+              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
+              const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables, undefined, false, userId);
+              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
               
               // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
               if (emailSent) {
@@ -731,9 +731,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (sparepartTemplate) {
               console.log(`E-Mail-Vorlage gefunden: ${sparepartTemplate.name}`);
               
-              // E-Mail senden
-              const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables);
-              console.log("E-Mail gesendet:", emailSent);
+              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
+              const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables, undefined, false, userId);
+              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
               
               // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
               if (emailSent) {
