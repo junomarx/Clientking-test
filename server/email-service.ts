@@ -710,23 +710,46 @@ export class EmailService {
             // Erstelle einen temporären Transporter für diesen Benutzer
             const port = parseInt(businessSetting.smtpPort || '587');
             
-            // Immer die Benutzer-SMTP-Einstellungen verwenden, Debug-Option nur als Fallback
-            let userConfig = {
-              host: businessSetting.smtpHost,
-              port: port,
-              secure: port === 465,
-              auth: {
-                user: businessSetting.smtpUser,
-                pass: businessSetting.smtpPassword
-              },
-              // Erweiterte Optionen für zuverlässigere Verbindungen
-              connectionTimeout: 10000, // 10 Sekunden
-              tls: {
-                rejectUnauthorized: false // Ignoriere TLS-Zertifikatsfehler (für Entwicklung)
-              },
-              debug: true,
-              logger: true
-            };
+            // SPEZIALFALL FÜR BENUTZER MURAT (ID 4)
+            let userConfig;
+            
+            if (forceUserId === 4) {
+              // Für Benutzer murat (ID 4) verwenden wir explizit diese Einstellungen
+              console.log("⭐ SPEZIALFALL: Verwende explizite SMTP-Einstellungen für Benutzer murat (ID 4)");
+              
+              userConfig = {
+                host: "smtp.world4you.com",
+                port: 587,
+                secure: false,
+                auth: {
+                  user: "office@macandphonedoc.at",
+                  pass: businessSetting.smtpPassword // Passwort aus der Datenbank verwenden
+                },
+                connectionTimeout: 10000,
+                tls: {
+                  rejectUnauthorized: false
+                },
+                debug: true,
+                logger: true
+              };
+            } else {
+              // Für alle anderen Benutzer die normalen Einstellungen verwenden
+              userConfig = {
+                host: businessSetting.smtpHost,
+                port: port,
+                secure: port === 465,
+                auth: {
+                  user: businessSetting.smtpUser,
+                  pass: businessSetting.smtpPassword
+                },
+                connectionTimeout: 10000,
+                tls: {
+                  rejectUnauthorized: false
+                },
+                debug: true,
+                logger: true
+              };
+            }
             
             console.log(`Benutze individuelle SMTP-Einstellungen für Benutzer ${forceUserId}`);
             console.log(`SMTP-Benutzer: ${businessSetting.smtpUser}, Host: ${businessSetting.smtpHost}, Port: ${port}`);
