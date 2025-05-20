@@ -68,6 +68,7 @@ import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { emailService } from "./email-service";
+import { userEmailService } from "./user-specific-email-service.js";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -613,7 +614,7 @@ export class DatabaseStorage implements IStorage {
    * @param variables Variablen, die in der Vorlage ersetzt werden sollen
    * @returns true, wenn erfolgreich gesendet, sonst false
    */
-  async sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean> {
+  async sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>, attachments?: any[], isSystemEmail: boolean = false, userId?: number): Promise<boolean> {
     try {
       // E-Mail-Vorlage abrufen
       const [template] = await db
@@ -628,7 +629,7 @@ export class DatabaseStorage implements IStorage {
       
       // Betreff und Inhalt mit Variablen ersetzen
       let subject = template.subject || '';
-      let body = template.body || ''; // Verwende das tatsächliche Feld 'body' aus der Datenbank
+      let body = template.body || '';
       
       console.log(`Verarbeite E-Mail-Vorlage "${template.name}" mit Variablen:`, variables);
       
@@ -641,14 +642,54 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`E-Mail wird gesendet an ${recipientEmail} mit Betreff: "${subject}"`);
       
-      // E-Mail senden
-      const success = await emailService.sendEmail({
+      // Wenn es sich um eine System-E-Mail handelt oder kein Benutzer angegeben ist,
+      // verwenden wir den globalen E-Mail-Service
+      if (isSystemEmail || !userId) {
+        console.log(`Verwende globalen E-Mail-Service für ${isSystemEmail ? 'System-E-Mail' : 'E-Mail ohne Benutzer-ID'}`);
+        const success = await emailService.sendEmail({
+          to: recipientEmail,
+          subject: subject,
+          html: body,
+          attachments: attachments
+        });
+        
+        return success;
+      }
+      
+      // Ansonsten verwenden wir den benutzerindividuellen E-Mail-Service
+      console.log(`Verwende benutzerindividuellen E-Mail-Service für Benutzer ${userId}`);
+      
+      // Protokolliere, welcher E-Mail-Service für welchen Benutzer verwendet wird
+      if (userId === 4) {
+        console.log(`Verwende spezielle E-Mail-Einstellungen für Benutzer 'murat' (ID 4)`);
+      }
+      
+      const result = await userEmailService.sendEmail(userId, {
         to: recipientEmail,
         subject: subject,
-        html: body // Verwende 'body' statt 'content' für den E-Mail-Text
+        html: body,
+        text: body.replace(/<[^>]*>/g, ''), // Text aus HTML generieren
+        attachments: attachments
       });
       
-      return success;
+      // E-Mail-Verlaufseintrag erstellen
+      try {
+        await db.insert(emailHistory).values({
+          templateId: templateId,
+          recipientEmail: recipientEmail,
+          subject: subject,
+          userId: userId,
+          variables: Object.entries(variables).map(([key, value]) => `${key}=${value}`),
+          sentAt: new Date(),
+          success: result.success
+        });
+        console.log(`E-Mail-Verlaufseintrag für Benutzer ${userId} erstellt`);
+      } catch (historyError) {
+        console.error(`Fehler beim Erstellen des E-Mail-Verlaufseintrags:`, historyError);
+        // Fehler beim Speichern des Verlaufs sollten nicht den Erfolg des E-Mail-Versands beeinflussen
+      }
+      
+      return result.success;
     } catch (error) {
       console.error(`Fehler beim Senden der E-Mail mit Vorlage ${templateId}:`, error);
       return false;
