@@ -50,6 +50,10 @@ class UserSpecificEmailService {
           },
           tls: {
             rejectUnauthorized: false
+          },
+          // Wichtige Konfiguration für World4You-Server
+          envelope: {
+            from: 'office@macandphonedoc.at' // Muss mit auth.user übereinstimmen
           }
         };
       }
@@ -175,14 +179,14 @@ class UserSpecificEmailService {
         console.log(`Verwende Shop-E-Mail als Absender: ${mailOptions.from}`);
       }
       
-      // Für Benutzer "murat" (ID 4): verwende spezielle From-Adresse, die den Server-Einschränkungen entspricht
+      // Für Benutzer "murat" (ID 4): verwende seine eigenen E-Mail-Einstellungen
       if (userId === 4) {
-        // WICHTIG: Die E-Mail-Adresse muss @connect7.at sein, aber wir können den Anzeigenamen beliebig gestalten
-        mailOptions.from = '"Mac & Phone Doc | office@macandphonedoc.at" <office@connect7.at>';
+        // Die Absenderadresse muss mit der Authentifizierungsadresse übereinstimmen
+        mailOptions.from = '"Mac & Phone Doc" <office@macandphonedoc.at>';
         console.log(`Spezieller Absender für Benutzer murat: ${mailOptions.from}`);
         
-        // Sorge dafür, dass immer die erlaubte E-Mail-Adresse für SMTP-Authentifizierung genutzt wird
-        const transporter = await this.getTransporter(null);
+        // Hole den Transporter mit den richtigen Einstellungen für diesen Benutzer
+        const transporter = await this.getTransporter(userId);
         return transporter.sendMail(mailOptions);
       }
       
