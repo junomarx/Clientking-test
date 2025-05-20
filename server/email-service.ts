@@ -710,26 +710,22 @@ export class EmailService {
             // Erstelle einen temporären Transporter für diesen Benutzer
             const port = parseInt(businessSetting.smtpPort || '587');
             
-            // Gemeinsame Konfiguration für alle Benutzer basierend auf Datenbankeinstellungen
-            let userConfig;
-             
-            // Verwende für alle Benutzer die normalen Einstellungen
-              userConfig = {
-                host: businessSetting.smtpHost,
-                port: port,
-                secure: port === 465,
-                auth: {
-                  user: businessSetting.smtpUser,
-                  pass: businessSetting.smtpPassword
-                },
-                connectionTimeout: 10000,
-                tls: {
-                  rejectUnauthorized: false
-                },
-                debug: true,
-                logger: true
-              };
-            }
+            // Konfiguration für alle Benutzer basierend auf Datenbankeinstellungen
+            const userConfig = {
+              host: businessSetting.smtpHost,
+              port: port,
+              secure: port === 465,
+              auth: {
+                user: businessSetting.smtpUser,
+                pass: businessSetting.smtpPassword
+              },
+              connectionTimeout: 10000,
+              tls: {
+                rejectUnauthorized: false
+              },
+              debug: true,
+              logger: true
+            };
             
             console.log(`Benutze individuelle SMTP-Einstellungen für Benutzer ${forceUserId}`);
             console.log(`SMTP-Benutzer: ${businessSetting.smtpUser}, Host: ${businessSetting.smtpHost}, Port: ${port}`);
