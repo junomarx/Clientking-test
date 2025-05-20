@@ -428,10 +428,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Versuche Kunde ${id} zu aktualisieren mit Daten:`, req.body);
+      
       const customerData = insertCustomerSchema.partial().parse(req.body);
+      console.log("Daten nach Zod-Validierung:", customerData);
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      console.log(`Aktualisierung für Kunde ${id} durch Benutzer ${userId}`);
       
       // Benutzer abrufen, um die Shop-ID zu bekommen
       const [user] = await db.select().from(users).where(eq(users.id, userId));
@@ -439,6 +443,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn(`⚠️ DSGVO-Schutz: Keine Shop-ID für Benutzer ${userId} gefunden`);
         return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
       }
+      
+      console.log(`Benutzer ${userId} (${user.username}) hat Shop-ID ${user.shopId}`);
       
       // Prüfen, ob der Kunde zum Shop des Benutzers gehört
       const [existingCustomer] = await db
@@ -452,26 +458,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
       if (!existingCustomer) {
+        console.warn(`Kunde ${id} gehört nicht zu Shop ${user.shopId} von Benutzer ${userId}`);
         return res.status(404).json({ message: "Customer not found" });
       }
       
-      // DSGVO-konforme Kundenaktualisierung mit expliziter Shop-ID-Prüfung
-      const [customer] = await db
-        .update(customers)
-        .set({
-          ...customerData,
-          updatedAt: new Date()
-        })
-        .where(
-          and(
-            eq(customers.id, id),
-            eq(customers.shopId, user.shopId)
-          )
-        )
-        .returning();
+      console.log(`Bestehendes Kundenobjekt gefunden:`, existingCustomer);
       
-      console.log(`✅ DSGVO-konform: Kunde ${customer.firstName} ${customer.lastName} (ID: ${id}) für Shop ${user.shopId} aktualisiert`);
-      res.json(customer);
+      try {
+        // DSGVO-konforme Kundenaktualisierung mit expliziter Shop-ID-Prüfung
+        const [customer] = await db
+          .update(customers)
+          .set({
+            ...customerData,
+            updatedAt: new Date()
+          })
+          .where(
+            and(
+              eq(customers.id, id),
+              eq(customers.shopId, user.shopId)
+            )
+          )
+          .returning();
+        
+        console.log(`✅ DSGVO-konform: Kunde ${customer.firstName} ${customer.lastName} (ID: ${id}) für Shop ${user.shopId} aktualisiert`);
+        res.json(customer);
+      } catch (dbError) {
+        console.error("Fehler bei der Datenbankaktualisierung:", dbError);
+        return res.status(500).json({ message: "Database update failed", error: dbError.message });
+      }
     } catch (error) {
       console.error("Fehler beim Aktualisieren eines Kunden:", error);
       if (error instanceof ZodError) {
