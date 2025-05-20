@@ -175,10 +175,15 @@ class UserSpecificEmailService {
         console.log(`Verwende Shop-E-Mail als Absender: ${mailOptions.from}`);
       }
       
-      // Für Benutzer "murat" (ID 4): erzwinge immer die korrekte E-Mail-Adresse
-      if (userId === 4 && !mailOptions.from) {
+      // Für Benutzer "murat" (ID 4): verwende spezielle From-Adresse, aber connect7.at für Authentifizierung
+      if (userId === 4) {
+        // Die E-Mail zeigt macandphonedoc.at als Absender, wird aber über connect7.at gesendet
         mailOptions.from = '"murat Shop" <office@macandphonedoc.at>';
-        console.log(`Erzwungener Absender für Benutzer murat: ${mailOptions.from}`);
+        console.log(`Spezieller Absender für Benutzer murat: ${mailOptions.from}`);
+        
+        // Sorge dafür, dass immer die erlaubte E-Mail-Adresse für SMTP-Authentifizierung genutzt wird
+        const transporter = await this.getTransporter(null);
+        return transporter.sendMail(mailOptions);
       }
       
       // Wenn immer noch keine From-Adresse vorhanden ist, verwende die Standard-E-Mail
