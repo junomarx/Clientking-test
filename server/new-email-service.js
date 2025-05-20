@@ -180,10 +180,17 @@ class EmailService {
         logger.info(`Verwende Shop-E-Mail als Absender: ${mailOptions.from}`);
       }
       
+      // Ermittle SMTP-Konfiguration, um die Benutzeradresse zu erhalten
+      const config = await this.getSmtpConfig(userId);
+      
       // Spezielle Behandlung für Benutzer "murat" (ID 4)
-      if (userId === 4 && !mailOptions.from) {
-        mailOptions.from = '"murat Shop" <office@macandphonedoc.at>';
-        logger.info(`Überschreibe Absender für Benutzer murat: ${mailOptions.from}`);
+      if (userId === 4 && !mailOptions.from && config) {
+        const shopName = settings?.businessName || username;
+        // Priorität: SMTP-Benutzer verwenden (wenn vorhanden)
+        const emailAddress = config.auth.user;
+        
+        mailOptions.from = `"${shopName}" <${emailAddress}>`;
+        logger.info(`Spezieller Absender für Benutzer murat: "${shopName}" <${emailAddress}>`);
       }
       
       // Stelle sicher, dass eine Absenderadresse vorhanden ist

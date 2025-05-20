@@ -362,6 +362,3 @@ class UserSpecificEmailService {
 
 // Singleton-Instanz exportieren
 export const userEmailService = new UserSpecificEmailService();
-
-// Singleton-Instanz exportieren
-export const userEmailService = new UserSpecificEmailService();
