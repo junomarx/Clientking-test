@@ -25,6 +25,9 @@ class UserSpecificEmailService {
       },
       tls: {
         rejectUnauthorized: false
+      },
+      envelope: {
+        from: process.env.SMTP_USER || 'office@connect7.at' // Wichtig für manche E-Mail-Server
       }
     };
   }
@@ -36,28 +39,6 @@ class UserSpecificEmailService {
    */
   async getUserSmtpConfig(userId) {
     try {
-      // Spezielle Hardcoded-Konfiguration für Benutzer 'murat' (ID: 4)
-      // Diese MUSS als erstes geprüft werden, um immer die richtigen Einstellungen zu verwenden
-      if (userId === 4) {
-        console.log('Verwende spezielle SMTP-Konfiguration für Benutzer murat (ID 4)');
-        return {
-          host: 'smtp.world4you.com',
-          port: 587,
-          secure: false,
-          auth: {
-            user: 'office@macandphonedoc.at',
-            pass: '#M@candPh0n3D0C!'
-          },
-          tls: {
-            rejectUnauthorized: false
-          },
-          // Wichtige Konfiguration für World4You-Server
-          envelope: {
-            from: 'office@macandphonedoc.at' // Muss mit auth.user übereinstimmen
-          }
-        };
-      }
-      
       // Hole die neueste Geschäftseinstellung dieses Benutzers
       const [settings] = await db
         .select()
@@ -66,39 +47,47 @@ class UserSpecificEmailService {
         .orderBy(desc(businessSettings.updatedAt))
         .limit(1);
       
+      // Wenn keine Einstellungen gefunden wurden, verwende die Standardkonfiguration
       if (!settings) {
         console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden, verwende Standardkonfiguration`);
         return this.defaultConfig;
       }
       
-      // Überprüfe, ob die SMTP-Einstellungen vollständig sind
-      if (!settings.smtpHost || !settings.smtpUser || !settings.smtpPassword) {
-        console.log(`Unvollständige SMTP-Einstellungen für Benutzer ${userId}, verwende Standardkonfiguration`);
-        return this.defaultConfig;
-      }
-      
-      // Parse Port als Zahl
-      let port = 587;
-      try {
-        port = typeof settings.smtpPort === 'string' ? 
-          parseInt(settings.smtpPort) : 
-          settings.smtpPort || 587;
-      } catch (e) {
-        console.warn(`Konnte SMTP-Port nicht parsen für Benutzer ${userId}, verwende Standard-Port 587`);
-      }
-      
-      return {
-        host: settings.smtpHost,
-        port: port,
-        secure: port === 465, // true für 465, false für andere Ports
-        auth: {
-          user: settings.smtpUser,
-          pass: settings.smtpPassword
-        },
-        tls: {
-          rejectUnauthorized: false
+      // Wenn alle SMTP-Einstellungen vorhanden sind, verwende diese
+      if (settings.smtpHost && settings.smtpUser && settings.smtpPassword) {
+        console.log(`Verwende SMTP-Einstellungen aus Geschäftseinstellungen für Benutzer ${userId}: ${settings.smtpUser}`);
+        
+        // Parse Port als Zahl
+        let port = 587;
+        try {
+          port = typeof settings.smtpPort === 'string' ? 
+            parseInt(settings.smtpPort) : 
+            settings.smtpPort || 587;
+        } catch (e) {
+          console.warn(`Konnte SMTP-Port nicht parsen für Benutzer ${userId}, verwende Standard-Port 587`);
         }
-      };
+        
+        // Konfiguration mit der richtigen Envelope-Adresse
+        return {
+          host: settings.smtpHost,
+          port: port,
+          secure: port === 465, // true für 465, false für andere Ports
+          auth: {
+            user: settings.smtpUser,
+            pass: settings.smtpPassword
+          },
+          tls: {
+            rejectUnauthorized: false
+          },
+          envelope: {
+            from: settings.smtpUser // Wichtig: Muss mit auth.user übereinstimmen
+          }
+        };
+      }
+      
+      // Wenn SMTP-Einstellungen unvollständig sind, verwende die Standardkonfiguration
+      console.log(`Unvollständige SMTP-Einstellungen für Benutzer ${userId}, verwende Standardkonfiguration`);
+      return this.defaultConfig;
     } catch (error) {
       console.error(`Fehler beim Laden der SMTP-Konfiguration für Benutzer ${userId}:`, error);
       return this.defaultConfig;
@@ -158,9 +147,10 @@ class UserSpecificEmailService {
    */
   async sendEmail(userId, mailOptions) {
     try {
-      // Hole Benutzername für Logs
+      // Hole Benutzername und SMTP-Konfiguration für Logs und Benachrichtigung
       const [user] = await db.select().from(users).where(eq(users.id, userId));
       const username = user ? user.username : `Unbekannter Benutzer (ID: ${userId})`;
+      const config = await this.getUserSmtpConfig(userId);
       
       console.log(`Bereite E-Mail-Versand für Benutzer ${username} (ID: ${userId}) vor`);
       
@@ -172,43 +162,32 @@ class UserSpecificEmailService {
         .orderBy(desc(businessSettings.updatedAt))
         .limit(1);
       
-      // Wenn keine From-Adresse angegeben wurde, verwende die aus den Einstellungen
-      if (!mailOptions.from && settings && settings.email) {
-        const shopName = settings.businessName || username;
-        mailOptions.from = `"${shopName}" <${settings.email}>`;
-        console.log(`Verwende Shop-E-Mail als Absender: ${mailOptions.from}`);
-      }
-      
-      // Für Benutzer "murat" (ID 4): verwende seine eigenen E-Mail-Einstellungen
-      if (userId === 4) {
-        // Die Absenderadresse muss mit der Authentifizierungsadresse übereinstimmen
-        mailOptions.from = '"Mac & Phone Doc" <office@macandphonedoc.at>';
-        console.log(`Spezieller Absender für Benutzer murat: ${mailOptions.from}`);
-        
-        // Hole den Transporter mit den richtigen Einstellungen für diesen Benutzer
-        const transporter = await this.getTransporter(userId);
-        return transporter.sendMail(mailOptions);
-      }
-      
-      // Wenn immer noch keine From-Adresse vorhanden ist, verwende die Standard-E-Mail
+      // Wenn keine From-Adresse angegeben wurde, verwende die aus den Einstellungen oder SMTP-Konfiguration
       if (!mailOptions.from) {
-        // Hole die Standardkonfiguration aus dem Transport-Objekt
-        const config = await this.getUserSmtpConfig(userId);
-        mailOptions.from = `"${username}" <${config.auth.user}>`;
-        console.log(`Verwende Standard-Absender: ${mailOptions.from}`);
+        const shopName = settings?.businessName || username;
+        // Priorität: 1. E-Mail aus Geschäftseinstellungen, 2. SMTP-Benutzer aus Konfiguration
+        const emailAddress = settings?.email || config.auth.user;
+        
+        mailOptions.from = `"${shopName}" <${emailAddress}>`;
+        console.log(`Verwende E-Mail als Absender: ${mailOptions.from}`);
+        
+        // Füge einen 'X-Sent-With' Header hinzu, um zu zeigen, welche E-Mail für den Versand verwendet wird
+        mailOptions.headers = mailOptions.headers || {};
+        mailOptions.headers["X-Sent-With"] = config.auth.user;
       }
       
       // Hole den Transporter für diesen Benutzer
       const transporter = await this.getTransporter(userId);
       
       // Sende die E-Mail
-      console.log(`Sende E-Mail an: ${mailOptions.to}`);
+      console.log(`Sende E-Mail an: ${mailOptions.to} mit Absender ${mailOptions.from}`);
       const info = await transporter.sendMail(mailOptions);
       
       console.log(`E-Mail erfolgreich gesendet: ${info.messageId}`);
       return { 
         success: true, 
-        messageId: info.messageId 
+        messageId: info.messageId,
+        sentWith: config.auth.user
       };
     } catch (error) {
       console.error(`Fehler beim E-Mail-Versand für Benutzer ${userId}:`, error);
@@ -218,10 +197,12 @@ class UserSpecificEmailService {
         console.log(`Versuche Fallback mit Standard-SMTP für Benutzer ${userId}`);
         const defaultTransporter = nodemailer.createTransport(this.defaultConfig);
         
-        // Entferne möglicherweise ungültige From-Adresse
-        if (mailOptions.from && mailOptions.from.includes('macandphonedoc.at')) {
-          mailOptions.from = `"Handyshop Verwaltung" <${this.defaultConfig.auth.user}>`;
-        }
+        // Stelle sicher, dass die From-Adresse mit der Auth-Adresse übereinstimmt
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
+        const username = user ? user.username : `Benutzer ${userId}`;
+        
+        // Aktualisiere die From-Adresse auf die Standard-SMTP-Adresse
+        mailOptions.from = `"${username}" <${this.defaultConfig.auth.user}>`;
         
         const info = await defaultTransporter.sendMail(mailOptions);
         
@@ -229,7 +210,8 @@ class UserSpecificEmailService {
         return { 
           success: true, 
           messageId: info.messageId, 
-          usedFallback: true 
+          usedFallback: true,
+          sentWith: this.defaultConfig.auth.user
         };
       } catch (fallbackError) {
         console.error(`Auch Fallback-Versand fehlgeschlagen:`, fallbackError);
@@ -278,7 +260,8 @@ class UserSpecificEmailService {
       console.log(`SMTP-Verbindungstest für Benutzer ${userId} erfolgreich`);
       return { 
         success: true, 
-        message: 'SMTP-Verbindung erfolgreich hergestellt' 
+        message: 'SMTP-Verbindung erfolgreich hergestellt',
+        smtpUser: config.auth.user
       };
     } catch (error) {
       console.error(`SMTP-Verbindungstest für Benutzer ${userId} fehlgeschlagen:`, error);
@@ -304,10 +287,14 @@ class UserSpecificEmailService {
       
       // Wenn Test-Konfiguration vorhanden, erstelle einen temporären Transporter
       let transporter;
+      let config;
+      
       if (testConfig) {
         transporter = nodemailer.createTransport(testConfig);
         await transporter.verify();
+        config = testConfig;
       } else {
+        config = await this.getUserSmtpConfig(userId);
         transporter = await this.getTransporter(userId);
       }
       
@@ -320,13 +307,10 @@ class UserSpecificEmailService {
         .limit(1);
       
       const shopName = settings?.businessName || username;
-      const senderEmail = testConfig?.auth?.user || 
-                           settings?.email || 
-                           (await this.getUserSmtpConfig(userId)).auth.user;
       
       // Erstelle die Test-E-Mail
       const mailOptions = {
-        from: `"${shopName} (Test)" <${senderEmail}>`,
+        from: `"${shopName} (Test)" <${config.auth.user}>`,
         to: testEmail,
         subject: 'SMTP-Test für Handyshop Verwaltung',
         html: `
@@ -340,9 +324,9 @@ class UserSpecificEmailService {
             <p>Die SMTP-Verbindung funktioniert einwandfrei mit folgenden Einstellungen:</p>
             
             <ul>
-              <li><strong>Host:</strong> ${testConfig?.host || settings?.smtpHost || (await this.getUserSmtpConfig(userId)).host}</li>
-              <li><strong>Port:</strong> ${testConfig?.port || settings?.smtpPort || (await this.getUserSmtpConfig(userId)).port}</li>
-              <li><strong>Benutzer:</strong> ${testConfig?.auth?.user || settings?.smtpUser || (await this.getUserSmtpConfig(userId)).auth.user}</li>
+              <li><strong>Host:</strong> ${config.host}</li>
+              <li><strong>Port:</strong> ${config.port}</li>
+              <li><strong>Benutzer:</strong> ${config.auth.user}</li>
             </ul>
             
             <p>Wenn Sie diese E-Mail erhalten haben, ist Ihre E-Mail-Konfiguration korrekt.</p>
@@ -363,7 +347,8 @@ class UserSpecificEmailService {
       return { 
         success: true, 
         message: 'Test-E-Mail erfolgreich gesendet',
-        messageId: info.messageId
+        messageId: info.messageId,
+        smtpUser: config.auth.user
       };
     } catch (error) {
       console.error(`Fehler beim Senden der Test-E-Mail für Benutzer ${userId}:`, error);
@@ -374,6 +359,9 @@ class UserSpecificEmailService {
     }
   }
 }
+
+// Singleton-Instanz exportieren
+export const userEmailService = new UserSpecificEmailService();
 
 // Singleton-Instanz exportieren
 export const userEmailService = new UserSpecificEmailService();
