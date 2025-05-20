@@ -15,15 +15,9 @@ import { storage } from './storage';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-// Debug-Konstante, um alle SMTP-Anfragen mit diesen Einstellungen zu überschreiben
-// WICHTIG: Diese Option wird nur verwendet, wenn keine benutzer- oder shopspezifischen Einstellungen vorhanden sind
-const DEBUG_FORCE_SMTP = {
-  enabled: false, // Auf false gesetzt, damit benutzerindividuelle Einstellungen verwendet werden
-  user: 'office@connect7.at',
-  password: 'Masterneo-1',
-  host: 'smtp.world4you.com',
-  port: 587
-};
+// Debug-Konstante wurde entfernt, damit immer die tatsächlich konfigurierten Benutzereinstellungen verwendet werden
+// Bei Problemen mit der E-Mail-Konfiguration hier NICHT eingreifen, stattdessen die Logs analysieren
+// und die tatsächliche Konfiguration in der Datenbank korrigieren
 
 /**
  * E-Mail-Service für die Verwaltung von E-Mail-Vorlagen und den Versand von E-Mails über SMTP
