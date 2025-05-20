@@ -66,11 +66,14 @@ export function ChangeStatusDialog({
 
   // SMTP-Infos basierend auf Geschäftseinstellungen ermitteln
   React.useEffect(() => {
-    if (businessSettings && businessSettings.email) {
-      setSmtpInfo(businessSettings.email);
-    } else if (businessSettings && businessSettings.smtpUser) {
+    if (businessSettings && businessSettings.smtpUser) {
+      // Priorität 1: SMTP-Benutzer aus den Einstellungen
       setSmtpInfo(businessSettings.smtpUser);
+    } else if (businessSettings && businessSettings.email) {
+      // Priorität 2: E-Mail aus den Geschäftseinstellungen 
+      setSmtpInfo(businessSettings.email);
     } else {
+      // Fallback
       setSmtpInfo('office@connect7.at');
     }
   }, [businessSettings]);

@@ -165,8 +165,8 @@ class UserSpecificEmailService {
       // Wenn keine From-Adresse angegeben wurde, verwende die aus den Einstellungen oder SMTP-Konfiguration
       if (!mailOptions.from) {
         const shopName = settings?.businessName || username;
-        // Priorität: 1. E-Mail aus Geschäftseinstellungen, 2. SMTP-Benutzer aus Konfiguration
-        const emailAddress = settings?.email || config.auth.user;
+        // Priorität umgekehrt: 1. SMTP-Benutzer aus Konfiguration, 2. E-Mail aus Geschäftseinstellungen
+        const emailAddress = config.auth.user || settings?.email;
         
         mailOptions.from = `"${shopName}" <${emailAddress}>`;
         console.log(`Verwende E-Mail als Absender: ${mailOptions.from}`);
