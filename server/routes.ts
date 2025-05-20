@@ -507,12 +507,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paramCounter++;
         }
         
-        // Füge das updated_at Feld hinzu
-        updateFields.push(`updated_at = $${paramCounter}`);
-        updateValues.push(new Date());
-        paramCounter++;
+        // Keine updated_at Spalte in der Datenbank, also überspringen wir es
         
-        // SQL-Abfrage erstellen
+        // SQL-Abfrage erstellen - keine updated_at Spalte in der Abfrage verwenden
         const updateQuery = `
           UPDATE customers 
           SET ${updateFields.join(', ')} 
