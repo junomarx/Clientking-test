@@ -6,7 +6,7 @@ import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from 
 // Import der Middleware für die Prüfung der Trial-Version
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
-import { db } from './db';
+import { db, pool } from './db';
 import { eq } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
@@ -512,16 +512,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateValues.push(new Date());
         paramCounter++;
         
-        // Bedingungen für das Update (DSGVO-konform)
-        updateFields.push(`WHERE id = $${paramCounter} AND shop_id = $${paramCounter + 1}`);
-        updateValues.push(id, user.shopId);
-        
         // SQL-Abfrage erstellen
         const updateQuery = `
           UPDATE customers 
           SET ${updateFields.join(', ')} 
+          WHERE id = $${paramCounter} AND shop_id = $${paramCounter + 1}
           RETURNING *
         `;
+        updateValues.push(id, user.shopId);
         
         console.log("SQL Update-Abfrage:", updateQuery);
         console.log("Update-Parameter:", updateValues);
