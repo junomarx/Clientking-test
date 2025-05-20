@@ -828,6 +828,13 @@ export class EmailService {
       console.log(`Sende ${isSystemEmail ? 'System' : 'Kunden'}-E-Mail von: "${senderName}" <${senderEmail}> an: ${recipientEmail}`);
       
       // Erstelle E-Mail-Optionen mit den ausgewählten SMTP-Einstellungen
+      
+      // SPEZIALFALL FÜR BENUTZER MURAT (ID 4): Erzwinge E-Mail-Adresse macandphonedoc.at
+      if (forceUserId === 4) {
+        senderEmail = "office@macandphonedoc.at";
+        console.log("🔒 WICHTIG: Erzwinge E-Mail-Adresse 'office@macandphonedoc.at' für Benutzer murat (ID 4)");
+      }
+      
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipientEmail,
