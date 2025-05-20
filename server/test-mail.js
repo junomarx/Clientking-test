@@ -14,7 +14,7 @@ async function main() {
       secure: false,
       auth: {
         user: 'office@macandphonedoc.at',
-        pass: 'Lesve6m82' // Passwort aus den Datenbankeinstellungen
+        pass: 'Das-neue-korrigierte-Passwort' // Korrigiertes Passwort
       },
       connectionTimeout: 10000,
       tls: {
