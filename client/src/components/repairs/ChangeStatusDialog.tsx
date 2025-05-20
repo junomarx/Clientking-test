@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import type { SubmitHandler } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -23,9 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { AlertCircle, Mail, Star } from 'lucide-react';
+import { AlertCircle, Mail, Star, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Form schema
 const statusSchema = z.object({
@@ -54,6 +56,24 @@ export function ChangeStatusDialog({
 }: ChangeStatusDialogProps) {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [smtpInfo, setSmtpInfo] = useState<string | null>(null);
+  
+  // Abfrage der SMTP-Einstellungen für den Benutzer
+  const { data: businessSettings } = useQuery({
+    queryKey: ['/api/business-settings'],
+    enabled: open && !!user,
+  });
+
+  // SMTP-Infos basierend auf Geschäftseinstellungen ermitteln
+  React.useEffect(() => {
+    if (businessSettings && businessSettings.email) {
+      setSmtpInfo(businessSettings.email);
+    } else if (businessSettings && businessSettings.smtpUser) {
+      setSmtpInfo(businessSettings.smtpUser);
+    } else {
+      setSmtpInfo('office@connect7.at');
+    }
+  }, [businessSettings]);
   
   // Ist der Benutzer auf Professional oder höher?
   const isProfessionalOrHigher = user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise';
@@ -182,24 +202,37 @@ export function ChangeStatusDialog({
                     {getEmailLabel()}
                   </div>
                 ) : (
-                  <FormField
-                    control={form.control}
-                    name="sendEmail"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          {getEmailLabel()}
-                        </div>
-                      </FormItem>
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="sendEmail"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            {getEmailLabel()}
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    {form.watch('sendEmail') && smtpInfo && (
+                      <Alert variant="outline" className="bg-muted/50">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>E-Mail-Absender</AlertTitle>
+                        <AlertDescription>
+                          Die E-Mail wird mit <strong>{smtpInfo}</strong> als Absender versendet. 
+                          Sie können die E-Mail-Einstellungen in den Geschäftseinstellungen ändern.
+                        </AlertDescription>
+                      </Alert>
                     )}
-                  />
+                  </>
                 )}
               </div>
             )}
