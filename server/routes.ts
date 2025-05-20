@@ -465,23 +465,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Bestehendes Kundenobjekt gefunden:`, existingCustomer);
       
       try {
-        // DSGVO-konforme Kundenaktualisierung mit expliziter Shop-ID-Prüfung
-        const [customer] = await db
-          .update(customers)
-          .set({
-            ...customerData,
-            updatedAt: new Date()
-          })
-          .where(
-            and(
-              eq(customers.id, id),
-              eq(customers.shopId, user.shopId)
-            )
-          )
-          .returning();
+        // Direkter SQL-Ansatz für die Aktualisierung, der robuster gegen ORM-Probleme ist
+        const updateFields = [];
+        const updateValues = [];
+        let paramCounter = 1;
         
-        console.log(`✅ DSGVO-konform: Kunde ${customer.firstName} ${customer.lastName} (ID: ${id}) für Shop ${user.shopId} aktualisiert`);
-        res.json(customer);
+        // Füge nur die bereitgestellten Felder zum Update hinzu
+        if (customerData.firstName !== undefined) {
+          updateFields.push(`first_name = $${paramCounter}`);
+          updateValues.push(customerData.firstName);
+          paramCounter++;
+        }
+        
+        if (customerData.lastName !== undefined) {
+          updateFields.push(`last_name = $${paramCounter}`);
+          updateValues.push(customerData.lastName);
+          paramCounter++;
+        }
+        
+        if (customerData.email !== undefined) {
+          updateFields.push(`email = $${paramCounter}`);
+          updateValues.push(customerData.email);
+          paramCounter++;
+        }
+        
+        if (customerData.phone !== undefined) {
+          updateFields.push(`phone = $${paramCounter}`);
+          updateValues.push(customerData.phone);
+          paramCounter++;
+        }
+        
+        if (customerData.address !== undefined) {
+          updateFields.push(`address = $${paramCounter}`);
+          updateValues.push(customerData.address);
+          paramCounter++;
+        }
+        
+        if (customerData.notes !== undefined) {
+          updateFields.push(`notes = $${paramCounter}`);
+          updateValues.push(customerData.notes);
+          paramCounter++;
+        }
+        
+        // Füge das updated_at Feld hinzu
+        updateFields.push(`updated_at = $${paramCounter}`);
+        updateValues.push(new Date());
+        paramCounter++;
+        
+        // Bedingungen für das Update (DSGVO-konform)
+        updateFields.push(`WHERE id = $${paramCounter} AND shop_id = $${paramCounter + 1}`);
+        updateValues.push(id, user.shopId);
+        
+        // SQL-Abfrage erstellen
+        const updateQuery = `
+          UPDATE customers 
+          SET ${updateFields.join(', ')} 
+          RETURNING *
+        `;
+        
+        console.log("SQL Update-Abfrage:", updateQuery);
+        console.log("Update-Parameter:", updateValues);
+        
+        // SQL-Abfrage ausführen
+        const result = await pool.query(updateQuery, updateValues);
+        
+        if (result.rows.length === 0) {
+          return res.status(404).json({ message: "Customer not found or update failed" });
+        }
+        
+        const customer = result.rows[0];
+        console.log(`✅ DSGVO-konform: Kunde ${customer.first_name} ${customer.last_name} (ID: ${id}) für Shop ${user.shopId} aktualisiert`);
+        
+        // Konvertiere Snake-Case-Eigenschaften zu CamelCase für die Antwort
+        const formattedCustomer = {
+          id: customer.id,
+          firstName: customer.first_name,
+          lastName: customer.last_name,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+          notes: customer.notes,
+          createdAt: customer.created_at,
+          updatedAt: customer.updated_at,
+          shopId: customer.shop_id,
+          userId: customer.user_id
+        };
+        
+        res.json(formattedCustomer);
       } catch (dbError) {
         console.error("Fehler bei der Datenbankaktualisierung:", dbError);
         return res.status(500).json({ message: "Database update failed", error: dbError.message });
