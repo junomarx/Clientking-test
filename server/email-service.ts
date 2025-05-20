@@ -710,30 +710,10 @@ export class EmailService {
             // Erstelle einen temporären Transporter für diesen Benutzer
             const port = parseInt(businessSetting.smtpPort || '587');
             
-            // SPEZIALFALL FÜR BENUTZER MURAT (ID 4)
+            // Gemeinsame Konfiguration für alle Benutzer basierend auf Datenbankeinstellungen
             let userConfig;
-            
-            if (forceUserId === 4) {
-              // Für Benutzer murat (ID 4) verwenden wir explizit diese Einstellungen
-              console.log("⭐ SPEZIALFALL: Verwende explizite SMTP-Einstellungen für Benutzer murat (ID 4)");
-              
-              userConfig = {
-                host: "smtp.world4you.com",
-                port: 587,
-                secure: false,
-                auth: {
-                  user: "office@macandphonedoc.at",
-                  pass: businessSetting.smtpPassword // Passwort aus der Datenbank verwenden
-                },
-                connectionTimeout: 10000,
-                tls: {
-                  rejectUnauthorized: false
-                },
-                debug: true,
-                logger: true
-              };
-            } else {
-              // Für alle anderen Benutzer die normalen Einstellungen verwenden
+             
+            // Verwende für alle Benutzer die normalen Einstellungen
               userConfig = {
                 host: businessSetting.smtpHost,
                 port: port,
