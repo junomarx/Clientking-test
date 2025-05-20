@@ -433,15 +433,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Kunde mit Benutzerkontext aktualisieren
-      const customer = await storage.updateCustomer(id, customerData, userId);
+      // Benutzer abrufen, um die Shop-ID zu bekommen
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user || !user.shopId) {
+        console.warn(`⚠️ DSGVO-Schutz: Keine Shop-ID für Benutzer ${userId} gefunden`);
+        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+      }
       
-      if (!customer) {
+      // Prüfen, ob der Kunde zum Shop des Benutzers gehört
+      const [existingCustomer] = await db
+        .select()
+        .from(customers)
+        .where(
+          and(
+            eq(customers.id, id),
+            eq(customers.shopId, user.shopId)
+          )
+        );
+        
+      if (!existingCustomer) {
         return res.status(404).json({ message: "Customer not found" });
       }
       
+      // DSGVO-konforme Kundenaktualisierung mit expliziter Shop-ID-Prüfung
+      const [customer] = await db
+        .update(customers)
+        .set({
+          ...customerData,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            eq(customers.id, id),
+            eq(customers.shopId, user.shopId)
+          )
+        )
+        .returning();
+      
+      console.log(`✅ DSGVO-konform: Kunde ${customer.firstName} ${customer.lastName} (ID: ${id}) für Shop ${user.shopId} aktualisiert`);
       res.json(customer);
     } catch (error) {
+      console.error("Fehler beim Aktualisieren eines Kunden:", error);
       if (error instanceof ZodError) {
         return res.status(400).json({ message: "Invalid customer data", errors: error.errors });
       }
