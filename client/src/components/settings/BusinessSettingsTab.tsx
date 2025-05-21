@@ -164,6 +164,7 @@ export function BusinessSettingsTab() {
         smtpUser: settings.smtpUser === null ? undefined : settings.smtpUser,
         smtpPassword: settings.smtpPassword === null ? undefined : settings.smtpPassword,
         smtpSenderName: settings.smtpSenderName === null ? undefined : settings.smtpSenderName,
+        openingHours: settings.openingHours === null ? undefined : settings.openingHours,
         reviewLink: settings.reviewLink === null ? undefined : settings.reviewLink
       };
       
