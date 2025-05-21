@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Save, RefreshCw, Loader2 } from 'lucide-react';
 import { EmailTemplateTab } from './EmailTemplateTab';
 import { UserSmtpTestDialog } from './UserSmtpTestDialog';
+import { Separator } from '@/components/ui/separator';
 
 // Schema für die E-Mail-Einstellungen
 const emailSettingsSchema = z.object({
