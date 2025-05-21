@@ -4,7 +4,8 @@
  */
 import { Request, Response, Router } from "express";
 import { storage } from "./storage";
-import { isAuthenticated } from "./middleware/auth";
+// Import the authentication middleware from the routes file where it's defined
+import { isAuthenticated } from "./routes";
 
 const router = Router();
 

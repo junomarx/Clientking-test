@@ -44,6 +44,9 @@ app.use(fileUpload({
   useTempFiles: false // Benutze den Speicher für kleine Dateien
 }));
 
+// E-Mail-Trigger-Routen registrieren
+app.use(emailTriggerRoutes);
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
