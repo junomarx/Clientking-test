@@ -44,6 +44,9 @@ import {
   type CostEstimate,
   type InsertCostEstimate,
   type CostEstimateItem,
+  emailTriggers,
+  type EmailTrigger,
+  type InsertEmailTrigger,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -96,6 +99,14 @@ export interface IStorage {
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: number, template: Partial<EmailTemplate>): Promise<EmailTemplate | undefined>;
   deleteEmailTemplate(id: number): Promise<boolean>;
+  
+  // Email Trigger methods
+  getAllEmailTriggers(userId: number): Promise<EmailTrigger[]>;
+  getEmailTrigger(id: number, userId: number): Promise<EmailTrigger | undefined>;
+  getEmailTriggerByStatus(status: string, userId: number): Promise<EmailTrigger | undefined>;
+  createEmailTrigger(trigger: InsertEmailTrigger): Promise<EmailTrigger>;
+  updateEmailTrigger(id: number, trigger: Partial<EmailTrigger>): Promise<EmailTrigger | undefined>;
+  deleteEmailTrigger(id: number): Promise<boolean>;
   sendEmailWithTemplate(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean>;
   sendEmailWithTemplateById(templateId: number, recipientEmail: string, variables: Record<string, string>): Promise<boolean>;
   

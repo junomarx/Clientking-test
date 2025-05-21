@@ -370,6 +370,27 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 export type EmailHistory = typeof emailHistory.$inferSelect;
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 
+// E-Mail-Trigger für Statusänderungen
+export const emailTriggers = pgTable("email_triggers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").default(1),
+  repairStatus: text("repair_status").notNull(), // Status, bei dem die E-Mail ausgelöst wird
+  emailTemplateId: integer("email_template_id").notNull().references(() => emailTemplates.id),
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertEmailTriggerSchema = createInsertSchema(emailTriggers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type EmailTrigger = typeof emailTriggers.$inferSelect;
+export type InsertEmailTrigger = z.infer<typeof insertEmailTriggerSchema>;
+
 // Kostenvoranschläge
 export const costEstimates = pgTable("cost_estimates", {
   id: serial("id").primaryKey(),
