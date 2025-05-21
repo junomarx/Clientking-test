@@ -117,6 +117,14 @@ export function ChangeStatusDialog({
                           currentSelectedStatus === 'ersatzteil_eingetroffen' ||
                           currentSelectedStatus === 'abgeholt';
   
+  // Prüfen, ob für den aktuellen Status ein E-Mail-Trigger konfiguriert ist
+  const hasEmailTrigger = React.useMemo(() => {
+    if (!emailTriggers || !Array.isArray(emailTriggers)) return false;
+    return emailTriggers.some(trigger => 
+      trigger.repairStatus === currentSelectedStatus && trigger.active
+    );
+  }, [emailTriggers, currentSelectedStatus]);
+  
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
     if (currentSelectedStatus === 'abgeholt') {
@@ -178,7 +186,17 @@ export function ChangeStatusDialog({
       return;
     }
     
-    onUpdateStatus(repairId, data.status, data.sendEmail);
+    // Prüfen, ob ein automatischer E-Mail-Trigger aktiv ist
+    const sendEmail = hasEmailTrigger ? true : data.sendEmail || false;
+    
+    onUpdateStatus(repairId, data.status, sendEmail);
+    
+    if (hasEmailTrigger) {
+      toast({
+        title: 'E-Mail wird gesendet',
+        description: `Eine automatische E-Mail-Benachrichtigung für den Status "${statusLabels[data.status]}" wird gesendet.`,
+      });
+    }
   }
   
   return (
@@ -218,8 +236,19 @@ export function ChangeStatusDialog({
                 </FormItem>
               )}
             />
+
+            {hasEmailTrigger && (
+              <Alert className="mt-2 mb-2">
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Automatische E-Mail-Benachrichtigung</AlertTitle>
+                <AlertDescription>
+                  Für den Status "{statusLabels[currentSelectedStatus]}" wurde eine automatische E-Mail-Benachrichtigung konfiguriert. 
+                  Die E-Mail wird automatisch an den Kunden gesendet.
+                </AlertDescription>
+              </Alert>
+            )}
             
-            {showEmailOption && (
+            {showEmailOption && !hasEmailTrigger && (
               <div className="space-y-4">
                 {currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher ? (
                   <div className="rounded-md border p-4">
