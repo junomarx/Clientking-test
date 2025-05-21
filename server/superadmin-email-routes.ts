@@ -552,6 +552,16 @@ async function createCustomerEmailTemplates(
       }
     });
     
+    // Deduplizierung: Normalisieren der Vorlagennamen für die Prüfung
+    const normalizedTemplateNameMap = new Map();
+    
+    // Alle existierenden Vorlagen mit normalisierten Namen sammeln
+    existingTemplates.forEach(template => {
+      // Entferne [GLOBAL] Präfix für Vergleiche
+      const normalizedName = template.name.replace(/^\[GLOBAL\]\s*/, '');
+      normalizedTemplateNameMap.set(normalizedName, template);
+    });
+    
     // Alle Vorlagen durchgehen, entweder aktualisieren oder neu erstellen
     for (const template of relevantTemplates) {
       // Überspringe "Reparatur abgeschlossen", wenn "Reparatur abholbereit" bereits existiert
@@ -561,9 +571,13 @@ async function createCustomerEmailTemplates(
         continue;
       }
       
-      const existingTemplate = existingTemplateMap.get(template.name);
+      // Normalisierter Vorlagenname (ohne [GLOBAL] Präfix)
+      const normalizedTemplateName = template.name.replace(/^\[GLOBAL\]\s*/, '');
       
-      if (existingTemplate) {
+      // Überprüfen, ob wir bereits eine Vorlage mit diesem Namen haben (egal ob mit [GLOBAL] Präfix oder nicht)
+      const matchingTemplate = normalizedTemplateNameMap.get(normalizedTemplateName);
+      
+      if (matchingTemplate) {
         // Wenn forceUpdate aktiviert ist, aktualisiere die Vorlage
         if (forceUpdate) {
           // Auch hier überprüfen, ob wir "Reparatur abgeschlossen" aktualisieren sollen
@@ -580,12 +594,12 @@ async function createCustomerEmailTemplates(
               updatedAt: now,
               type: template.type || 'customer' // Stellen sicher, dass der Typ übernommen wird
             })
-            .where(eq(emailTemplates.id, existingTemplate.id));
+            .where(eq(emailTemplates.id, matchingTemplate.id));
           
-          console.log(`E-Mail-Vorlage '${template.name}' wurde aktualisiert für Benutzer ${userId}`);
+          console.log(`E-Mail-Vorlage '${matchingTemplate.name}' wurde aktualisiert für Benutzer ${userId}`);
           templatesProcessed++;
         } else {
-          console.log(`E-Mail-Vorlage '${template.name}' existiert bereits für Benutzer ${userId}`);
+          console.log(`E-Mail-Vorlage '${matchingTemplate.name}' existiert bereits für Benutzer ${userId}`);
         }
       } else {
         // Überprüfen, ob "Reparatur abgeschlossen" neu erstellt werden soll
@@ -594,9 +608,21 @@ async function createCustomerEmailTemplates(
           continue;
         }
         
+        // Prüfen, ob bereits eine ähnliche Vorlage existiert (mit oder ohne [GLOBAL]-Präfix)
+        const existingTemplatesWithSimilarName = existingTemplates.filter(existing => {
+          const normalizedExistingName = existing.name.replace(/^\[GLOBAL\]\s*/, '');
+          return normalizedExistingName === normalizedTemplateName;
+        });
+        
+        if (existingTemplatesWithSimilarName.length > 0) {
+          console.log(`Vorlage '${normalizedTemplateName}' existiert bereits in einer anderen Form für Benutzer ${userId}, überspringe Erstellung.`);
+          continue;
+        }
+        
         // Neue Vorlage erstellen
         await db.insert(emailTemplates).values({
-          name: template.name,
+          // Wir verwenden den Namen ohne [GLOBAL]-Präfix für den Benutzer
+          name: normalizedTemplateName,
           subject: template.subject,
           body: template.body,
           variables: template.variables || [],
@@ -607,7 +633,7 @@ async function createCustomerEmailTemplates(
           type: template.type || 'customer'
         });
         
-        console.log(`E-Mail-Vorlage '${template.name}' wurde erstellt für Benutzer ${userId}`);
+        console.log(`E-Mail-Vorlage '${normalizedTemplateName}' wurde erstellt für Benutzer ${userId}`);
         templatesProcessed++;
       }
     }
