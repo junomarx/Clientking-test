@@ -4,18 +4,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, RefreshCw, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Save, RefreshCw, Loader2 } from 'lucide-react';
 import { EmailTemplateTab } from './EmailTemplateTab';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { SmtpTestDialog } from '../admin/SmtpTestDialog';
 import { UserSmtpTestDialog } from './UserSmtpTestDialog';
 
 // Schema für die E-Mail-Einstellungen
