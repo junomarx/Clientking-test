@@ -464,7 +464,7 @@ export default function SuperadminEmailTab() {
                     <Input
                       id="smtpUser"
                       name="smtpUser"
-                      placeholder="info@ihredomain.de"
+                      placeholder="ihre@email.de"
                       value={emailSettings.smtpUser}
                       onChange={handleSmtpChange}
                     />
@@ -476,18 +476,18 @@ export default function SuperadminEmailTab() {
                       id="smtpPassword"
                       name="smtpPassword"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder="••••••••••••"
                       value={emailSettings.smtpPassword}
                       onChange={handleSmtpChange}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="smtpSenderName">Absendername</Label>
+                    <Label htmlFor="smtpSenderName">Absender-Name</Label>
                     <Input
                       id="smtpSenderName"
                       name="smtpSenderName"
-                      placeholder="Handyshop Support"
+                      placeholder="Handyshop Verwaltung"
                       value={emailSettings.smtpSenderName}
                       onChange={handleSmtpChange}
                     />
@@ -498,7 +498,7 @@ export default function SuperadminEmailTab() {
                     <Input
                       id="smtpSenderEmail"
                       name="smtpSenderEmail"
-                      placeholder="info@ihredomain.de"
+                      placeholder="noreply@meinshop.de"
                       value={emailSettings.smtpSenderEmail}
                       onChange={handleSmtpChange}
                     />
@@ -506,409 +506,475 @@ export default function SuperadminEmailTab() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={handleSendTestEmail}
-                disabled={saveSmtpConfigMutation.isPending || sendTestEmailMutation.isPending}
-              >
-                {sendTestEmailMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
-                Test-E-Mail senden
-              </Button>
-              
-              <Button 
-                onClick={handleSaveSmtpConfig}
-                disabled={saveSmtpConfigMutation.isPending}
-              >
-                {saveSmtpConfigMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Einstellungen speichern
-              </Button>
+            <CardFooter className="flex justify-between flex-col sm:flex-row gap-2">
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  onClick={handleSaveSmtpConfig}
+                  disabled={saveSmtpConfigMutation.isPending}
+                  className="w-full sm:w-auto"
+                >
+                  {saveSmtpConfigMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  <Save className="mr-2 h-4 w-4" />
+                  Einstellungen speichern
+                </Button>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full sm:w-auto"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Test-E-Mail senden
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Test-E-Mail senden</DialogTitle>
+                      <DialogDescription>
+                        Senden Sie eine Test-E-Mail, um die SMTP-Konfiguration zu überprüfen.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="testEmail">E-Mail-Adresse</Label>
+                        <Input
+                          id="testEmail"
+                          placeholder="empfaenger@beispiel.de"
+                          value={templateTestEmail}
+                          onChange={(e) => setTemplateTestEmail(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleSendTestEmail} disabled={sendTestEmailMutation.isPending}>
+                        {sendTestEmailMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Send className="mr-2 h-4 w-4" />
+                        Test-E-Mail senden
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardFooter>
           </Card>
         </TabsContent>
-        
-        {/* Superadmin SMTP Tab wurde entfernt und mit dem globalen SMTP Tab zusammengeführt */}
         
         {/* E-Mail-Vorlagen Tab */}
         <TabsContent value="templates">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <FileText className="h-5 w-5 mr-2" />
-                  <CardTitle>E-Mail-Vorlagen</CardTitle>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <FileText className="h-5 w-5 mr-2" />
+                    E-Mail-Vorlagen
+                  </CardTitle>
+                  <CardDescription>
+                    Verwalten Sie zentrale E-Mail-Vorlagen, die allen Shops zur Verfügung stehen.
+                  </CardDescription>
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
                     onClick={() => createDefaultTemplatesMutation.mutate()}
                     disabled={createDefaultTemplatesMutation.isPending}
+                    variant="outline"
+                    className="w-full sm:w-auto"
                   >
-                    {createDefaultTemplatesMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Mail className="h-4 w-4 mr-2" />
-                    )}
-                    App-Standardvorlagen
+                    {createDefaultTemplatesMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Check className="mr-2 h-4 w-4" />
+                    Standard-Vorlagen erstellen
                   </Button>
-                  <Button onClick={() => setIsCreateTemplateOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Neue Vorlage
-                  </Button>
+                  
+                  <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full sm:w-auto">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Neue Vorlage
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Neue E-Mail-Vorlage erstellen</DialogTitle>
+                        <DialogDescription>
+                          Erstellen Sie eine neue E-Mail-Vorlage für das System.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="templateName" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="templateName"
+                            placeholder="z.B. Bestellung bestätigt"
+                            className="col-span-3"
+                            value={newTemplate.name}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="templateType" className="text-right">
+                            Typ
+                          </Label>
+                          <div className="col-span-3 flex items-center space-x-4">
+                            <input
+                              type="radio"
+                              id="templateTypeApp"
+                              name="templateType"
+                              className={radioStyle}
+                              checked={newTemplate.type === 'app'}
+                              onChange={() => setNewTemplate(prev => ({ ...prev, type: 'app' }))}
+                            />
+                            <Label htmlFor="templateTypeApp" className="cursor-pointer">
+                              System-Vorlage (für App)
+                            </Label>
+                            
+                            <input
+                              type="radio"
+                              id="templateTypeCustomer"
+                              name="templateType"
+                              className={radioStyle}
+                              checked={newTemplate.type === 'customer'}
+                              onChange={() => setNewTemplate(prev => ({ ...prev, type: 'customer' }))}
+                            />
+                            <Label htmlFor="templateTypeCustomer" className="cursor-pointer">
+                              Kunden-Vorlage
+                            </Label>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="templateSubject" className="text-right">
+                            Betreff
+                          </Label>
+                          <Input
+                            id="templateSubject"
+                            placeholder="z.B. Ihre Bestellung wurde bestätigt"
+                            className="col-span-3"
+                            value={newTemplate.subject}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, subject: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-4 gap-4">
+                          <Label htmlFor="templateBody" className="text-right pt-2">
+                            Inhalt
+                          </Label>
+                          <Textarea
+                            id="templateBody"
+                            placeholder="E-Mail-Inhalt mit Variablen wie {{kundenname}}"
+                            className="col-span-3 h-64"
+                            value={newTemplate.body}
+                            onChange={(e) => setNewTemplate(prev => ({ ...prev, body: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-4 gap-4">
+                          <Label className="text-right pt-2">
+                            Variablen
+                          </Label>
+                          <div className="col-span-3 flex flex-wrap gap-2">
+                            {newTemplate.variables.length > 0 ? (
+                              newTemplate.variables.map((variable, index) => (
+                                <Badge key={index} variant="outline">
+                                  {variable}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                Keine Variablen. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsCreateTemplateOpen(false)}
+                        >
+                          Abbrechen
+                        </Button>
+                        <Button
+                          onClick={handleCreateTemplate}
+                          disabled={createTemplateMutation.isPending}
+                        >
+                          {createTemplateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Vorlage erstellen
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
-              <CardDescription>
-                Verwalten Sie E-Mail-Vorlagen für verschiedene Benachrichtigungen. Sie können Variablen wie {`{{kundenname}}`} verwenden, die beim Versand automatisch ersetzt werden.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Vorlagetypen-Tabs */}
-              <Tabs defaultValue={templateType} className="mt-4" onValueChange={(value) => setTemplateType(value as 'app' | 'customer')}>
-                <TabsList>
-                  <TabsTrigger value="app">System-Vorlagen</TabsTrigger>
-                  <TabsTrigger value="customer">Kunden-Vorlagen</TabsTrigger>
-                </TabsList>
-              </Tabs>
               
-              {/* Vorlagentabelle */}
-              <div className="mt-4 overflow-x-auto">
-                {isLoadingTemplates ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : emailTemplates && emailTemplates.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <colgroup>
-                        <col className="w-[20%] min-w-[120px]" />
-                        <col className="w-[25%] min-w-[140px]" />
-                        <col className="w-[25%] min-w-[140px]" />
-                        <col className="w-[15%] min-w-[100px]" />
-                        <col className="w-[15%] min-w-[100px]" />
-                      </colgroup>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead className="hidden sm:table-cell">Betreff</TableHead>
-                          <TableHead className="hidden md:table-cell">Variablen</TableHead>
-                          <TableHead className="hidden md:table-cell">Zuletzt aktualisiert</TableHead>
-                          <TableHead className="text-right">Aktionen</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {emailTemplates
-                          .filter(template => templateType === 'app' ? 
-                            (!template.type || template.type === 'app') : 
-                            template.type === 'customer'
-                          )
-                          .map((template) => (
-                            <TableRow key={template.id}>
-                              <TableCell className="font-medium">{template.name}</TableCell>
-                              <TableCell className="hidden sm:table-cell">{template.subject}</TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                <div className="flex flex-wrap gap-1">
-                                  {template.variables && template.variables.map((variable, index) => (
-                                    <Badge key={index} variant="outline">{variable}</Badge>
-                                  ))}
-                                  {(!template.variables || template.variables.length === 0) && 
-                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                                  }
-                                </div>
-                              </TableCell>
-                              <TableCell className="hidden md:table-cell">
-                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                              </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title="Test-E-Mail mit dieser Vorlage senden"
-                                  onClick={() => {
-                                    setTemplateToTest(template);
-                                    setTemplateTestEmail('');
-                                    setTemplateTestDialogOpen(true);
-                                  }}
-                                >
-                                  <Send className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  title="Vorlage bearbeiten"
-                                  onClick={() => handleEditTemplate(template)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  title="Vorlage löschen"
-                                  onClick={() => handleDeleteTemplate(template.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      {emailTemplates.filter(template => templateType === 'app' ? 
-                        (!template.type || template.type === 'app') : 
-                        template.type === 'customer'
-                      ).length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-4">
-                            Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden
+              {/* Tabs für Email-Vorlagentypen */}
+              <div className="mt-4">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger
+                    value="app"
+                    className={templateType === 'app' ? 'bg-primary text-primary-foreground' : ''}
+                    onClick={() => setTemplateType('app')}
+                  >
+                    System-Vorlagen
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="customer"
+                    className={templateType === 'customer' ? 'bg-primary text-primary-foreground' : ''}
+                    onClick={() => setTemplateType('customer')}
+                  >
+                    Kunden-Vorlagen
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              {isLoadingTemplates ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : emailTemplates && emailTemplates.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <colgroup>
+                      <col className="w-[25%] min-w-[150px]" />
+                      <col className="w-[15%] min-w-[100px]" />
+                      <col className="w-[40%] min-w-[200px]" />
+                      <col className="w-[10%] min-w-[100px]" />
+                      <col className="w-[10%] min-w-[100px]" />
+                    </colgroup>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead className="hidden sm:table-cell">Betreff</TableHead>
+                        <TableHead className="hidden md:table-cell">Variablen</TableHead>
+                        <TableHead className="hidden md:table-cell">Zuletzt aktualisiert</TableHead>
+                        <TableHead className="text-right">Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {emailTemplates.map((template) => (
+                        <TableRow key={template.id}>
+                          <TableCell className="font-medium">{template.name}</TableCell>
+                          <TableCell className="hidden sm:table-cell text-muted-foreground">
+                            {template.subject.length > 30 ? `${template.subject.substring(0, 30)}...` : template.subject}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {template.variables && template.variables.length > 0 ? (
+                                template.variables.slice(0, 3).map((variable, index) => (
+                                  <Badge key={index} variant="outline">{variable}</Badge>
+                                ))
+                              ) : (
+                                <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                              )}
+                              {template.variables && template.variables.length > 3 && (
+                                <Badge variant="outline">+{template.variables.length - 3} weitere</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleEditTemplate(template)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleDeleteTemplate(template.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleSendTemplateTestEmail(template)}
+                              >
+                                <MailCheck className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
-                      )}
+                      ))}
                     </TableBody>
                   </Table>
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-muted-foreground">
-                      Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden.
-                    </p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden. 
+                    Erstellen Sie eine neue Vorlage oder klicken Sie auf "Standard-Vorlagen erstellen".
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
+          
+          {/* Vorlagen-Test Dialog */}
+          <Dialog open={templateTestDialogOpen} onOpenChange={setTemplateTestDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Test-E-Mail senden</DialogTitle>
+                <DialogDescription>
+                  Senden Sie eine Test-E-Mail mit der ausgewählten Vorlage "{templateToTest?.name}".
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="testTemplateEmail">E-Mail-Adresse</Label>
+                  <Input
+                    id="testTemplateEmail"
+                    placeholder="empfaenger@beispiel.de"
+                    value={templateTestEmail}
+                    onChange={(e) => setTemplateTestEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTemplateTestDialogOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button onClick={handleSendTemplateTest} disabled={sendTemplateTestEmailMutation.isPending}>
+                  {sendTemplateTestEmailMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  <Send className="mr-2 h-4 w-4" />
+                  Test-E-Mail senden
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Vorlagen bearbeiten Dialog */}
+          <Dialog open={isEditTemplateOpen} onOpenChange={setIsEditTemplateOpen}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>E-Mail-Vorlage bearbeiten</DialogTitle>
+                <DialogDescription>
+                  Bearbeiten Sie die ausgewählte E-Mail-Vorlage.
+                </DialogDescription>
+              </DialogHeader>
+              {selectedTemplate && (
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="editTemplateName" className="text-right">
+                      Name
+                    </Label>
+                    <Input
+                      id="editTemplateName"
+                      className="col-span-3"
+                      value={selectedTemplate.name}
+                      onChange={(e) => setSelectedTemplate({...selectedTemplate, name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="editTemplateType" className="text-right">
+                      Typ
+                    </Label>
+                    <div className="col-span-3 flex items-center space-x-4">
+                      <input
+                        type="radio"
+                        id="editTemplateTypeApp"
+                        name="editTemplateType"
+                        className={radioStyle}
+                        checked={selectedTemplate.type === 'app'}
+                        onChange={() => setSelectedTemplate({...selectedTemplate, type: 'app'})}
+                      />
+                      <Label htmlFor="editTemplateTypeApp" className="cursor-pointer">
+                        System-Vorlage (für App)
+                      </Label>
+                      
+                      <input
+                        type="radio"
+                        id="editTemplateTypeCustomer"
+                        name="editTemplateType"
+                        className={radioStyle}
+                        checked={selectedTemplate.type === 'customer' || !selectedTemplate.type}
+                        onChange={() => setSelectedTemplate({...selectedTemplate, type: 'customer'})}
+                      />
+                      <Label htmlFor="editTemplateTypeCustomer" className="cursor-pointer">
+                        Kunden-Vorlage
+                      </Label>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="editTemplateSubject" className="text-right">
+                      Betreff
+                    </Label>
+                    <Input
+                      id="editTemplateSubject"
+                      className="col-span-3"
+                      value={selectedTemplate.subject}
+                      onChange={(e) => setSelectedTemplate({...selectedTemplate, subject: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-4">
+                    <Label htmlFor="editTemplateBody" className="text-right pt-2">
+                      Inhalt
+                    </Label>
+                    <Textarea
+                      id="editTemplateBody"
+                      className="col-span-3 h-64"
+                      value={selectedTemplate.body}
+                      onChange={(e) => setSelectedTemplate({...selectedTemplate, body: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-4 gap-4">
+                    <Label className="text-right pt-2">
+                      Variablen
+                    </Label>
+                    <div className="col-span-3 flex flex-wrap gap-2">
+                      {selectedTemplate.variables && selectedTemplate.variables.length > 0 ? (
+                        selectedTemplate.variables.map((variable, index) => (
+                          <Badge key={index} variant="outline">
+                            {variable}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          Keine Variablen. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditTemplateOpen(false)}
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  onClick={handleUpdateTemplate}
+                  disabled={updateTemplateMutation.isPending}
+                >
+                  {updateTemplateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Vorlage speichern
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
       </Tabs>
-      
-      {/* Dialog zum Erstellen einer neuen Vorlage */}
-      <Dialog open={isCreateTemplateOpen} onOpenChange={setIsCreateTemplateOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>Neue E-Mail-Vorlage erstellen</DialogTitle>
-            <DialogDescription>
-              Erstellen Sie eine neue E-Mail-Vorlage für das System. Diese Vorlage wird allen Benutzern zur Verfügung stehen.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="templateName" className="text-right">
-                Vorlagenname
-              </Label>
-              <Input
-                id="templateName"
-                value={newTemplate.name}
-                onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="templateSubject" className="text-right">
-                Betreff
-              </Label>
-              <Input
-                id="templateSubject"
-                value={newTemplate.subject}
-                onChange={(e) => setNewTemplate({ ...newTemplate, subject: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label htmlFor="templateBody" className="text-right pt-2">
-                Inhalt
-              </Label>
-              <Textarea
-                id="templateBody"
-                value={newTemplate.body}
-                onChange={(e) => setNewTemplate({ ...newTemplate, body: e.target.value })}
-                className="col-span-3 min-h-[250px]"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="newTemplateType" className="text-right">Typ</Label>
-              <div className="col-span-3">
-                <select
-                  id="newTemplateType"
-                  value={newTemplate.type}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, type: e.target.value as 'app' | 'customer' })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="app">System-Vorlage</option>
-                  <option value="customer">Kunden-Vorlage</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <Label className="text-right pt-2">
-                Erkannte Variablen
-              </Label>
-              <div className="col-span-3 flex flex-wrap gap-2">
-                {newTemplate.variables.length > 0 ? (
-                  newTemplate.variables.map((variable, index) => (
-                    <Badge key={index} variant="outline">{variable}</Badge>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground text-sm">Keine Variablen erkannt</span>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateTemplateOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={handleCreateTemplate}
-              disabled={createTemplateMutation.isPending || !newTemplate.name || !newTemplate.subject || !newTemplate.body}
-            >
-              {createTemplateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4 mr-2" />
-              )}
-              Vorlage erstellen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Dialog zum Bearbeiten einer Vorlage */}
-      <Dialog open={isEditTemplateOpen} onOpenChange={setIsEditTemplateOpen}>
-        <DialogContent className="sm:max-w-[625px]">
-          <DialogHeader>
-            <DialogTitle>E-Mail-Vorlage bearbeiten</DialogTitle>
-            <DialogDescription>
-              Bearbeiten Sie die ausgewählte E-Mail-Vorlage.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTemplate && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="editTemplateName" className="text-right">
-                  Vorlagenname
-                </Label>
-                <Input
-                  id="editTemplateName"
-                  value={selectedTemplate.name}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, name: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="editTemplateSubject" className="text-right">
-                  Betreff
-                </Label>
-                <Input
-                  id="editTemplateSubject"
-                  value={selectedTemplate.subject}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, subject: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label htmlFor="editTemplateBody" className="text-right pt-2">
-                  Inhalt
-                </Label>
-                <Textarea
-                  id="editTemplateBody"
-                  value={selectedTemplate.body}
-                  onChange={(e) => setSelectedTemplate({ ...selectedTemplate, body: e.target.value })}
-                  className="col-span-3 min-h-[250px]"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="editTemplateType" className="text-right">Typ</Label>
-                <div className="col-span-3">
-                  <select
-                    id="editTemplateType"
-                    value={selectedTemplate.type}
-                    onChange={(e) => setSelectedTemplate({ ...selectedTemplate, type: e.target.value as 'app' | 'customer' })}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="app">System-Vorlage</option>
-                    <option value="customer">Kunden-Vorlage</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right pt-2">
-                  Erkannte Variablen
-                </Label>
-                <div className="col-span-3 flex flex-wrap gap-2">
-                  {selectedTemplate.variables.length > 0 ? (
-                    selectedTemplate.variables.map((variable, index) => (
-                      <Badge key={index} variant="outline">{variable}</Badge>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground text-sm">Keine Variablen erkannt</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={handleUpdateTemplate}
-              disabled={updateTemplateMutation.isPending || !selectedTemplate?.name || !selectedTemplate?.subject || !selectedTemplate?.body}
-            >
-              {updateTemplateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Änderungen speichern
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Dialog für Vorlage-Test-E-Mail */}
-      <Dialog open={templateTestDialogOpen} onOpenChange={setTemplateTestDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Test-E-Mail mit Vorlage senden</DialogTitle>
-            <DialogDescription>
-              Geben Sie eine E-Mail-Adresse ein, an die eine Test-E-Mail mit der Vorlage "{templateToTest?.name}" gesendet werden soll.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="test-email">E-Mail-Adresse</Label>
-              <Input
-                id="test-email"
-                placeholder="example@example.com"
-                value={templateTestEmail}
-                onChange={(e) => setTemplateTestEmail(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTemplateTestDialogOpen(false)}>Abbrechen</Button>
-            <Button onClick={handleSendTemplateTest} disabled={!templateTestEmail || sendTemplateTestEmailMutation.isPending}>
-              {sendTemplateTestEmailMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Senden...
-                </>
-              ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Test-E-Mail senden
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -335,27 +335,28 @@ export default function SuperadminPrintTemplatesTab() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleEditTemplate(template)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-destructive"
-                          onClick={() => handleDeleteTemplate(template.id)}
-                          disabled={deleteTemplateMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleEditTemplate(template)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive"
+                            onClick={() => handleDeleteTemplate(template.id)}
+                            disabled={deleteTemplateMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-8">
               <FileCode className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -411,19 +412,17 @@ export default function SuperadminPrintTemplatesTab() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="templateType">Typ</Label>
-                  <Select
-                    value={newTemplate.type}
+                  <Label htmlFor="templateType">Vorlagentyp</Label>
+                  <Select 
+                    value={newTemplate.type} 
                     onValueChange={(value) => setNewTemplate({ ...newTemplate, type: value })}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Wählen Sie einen Typ" />
+                    <SelectTrigger id="templateType">
+                      <SelectValue placeholder="Vorlagentyp auswählen" />
                     </SelectTrigger>
                     <SelectContent>
                       {templateTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -431,46 +430,41 @@ export default function SuperadminPrintTemplatesTab() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="templateContent">HTML-Inhalt</Label>
+                <Label htmlFor="templateContent">Inhalt der Vorlage</Label>
                 <Textarea
                   id="templateContent"
-                  rows={20}
-                  placeholder="<html>...</html>"
+                  placeholder="HTML-Vorlage mit Variablen in doppelten geschweiften Klammern, z.B. {{geschaeftsname}}"
+                  className="min-h-[300px] font-mono text-sm"
                   value={newTemplate.content}
                   onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
-                  className="font-mono text-sm"
                 />
-                <p className="text-sm text-muted-foreground">
-                  Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{businessName}}`}, {`{{customerName}}`}, etc.
-                </p>
               </div>
               
-              {newTemplate.variables.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Erkannte Variablen</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {newTemplate.variables.map((variable, index) => (
-                      <Badge key={index} variant="secondary">
-                        {variable}
-                      </Badge>
-                    ))}
-                  </div>
+              <div className="space-y-2">
+                <Label>Erkannte Variablen</Label>
+                <div className="p-2 border rounded bg-muted/20 min-h-[40px]">
+                  {newTemplate.variables && newTemplate.variables.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {newTemplate.variables.map((variable, index) => (
+                        <Badge key={index} variant="outline">{variable}</Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Keine Variablen erkannt. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateTemplateOpen(false)}>Abbrechen</Button>
-            <Button 
-              onClick={handleCreateTemplate}
-              disabled={createTemplateMutation.isPending}
-            >
-              {createTemplateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4 mr-2" />
-              )}
+            <Button variant="outline" onClick={() => setIsCreateTemplateOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleCreateTemplate} disabled={createTemplateMutation.isPending}>
+              {createTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Vorlage erstellen
             </Button>
           </DialogFooter>
@@ -483,7 +477,7 @@ export default function SuperadminPrintTemplatesTab() {
           <DialogHeader>
             <DialogTitle>Druckvorlage bearbeiten</DialogTitle>
             <DialogDescription>
-              Ändern Sie die Vorlage nach Ihren Wünschen. Variablen werden automatisch erkannt.
+              Bearbeiten Sie die ausgewählte Druckvorlage.
             </DialogDescription>
           </DialogHeader>
           
@@ -501,19 +495,17 @@ export default function SuperadminPrintTemplatesTab() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="editTemplateType">Typ</Label>
-                    <Select
-                      value={selectedTemplate.type}
+                    <Label htmlFor="editTemplateType">Vorlagentyp</Label>
+                    <Select 
+                      value={selectedTemplate.type} 
                       onValueChange={(value) => setSelectedTemplate({ ...selectedTemplate, type: value })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Wählen Sie einen Typ" />
+                      <SelectTrigger id="editTemplateType">
+                        <SelectValue placeholder="Vorlagentyp auswählen" />
                       </SelectTrigger>
                       <SelectContent>
                         {templateTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
+                          <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -521,46 +513,41 @@ export default function SuperadminPrintTemplatesTab() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="editTemplateContent">HTML-Inhalt</Label>
+                  <Label htmlFor="editTemplateContent">Inhalt der Vorlage</Label>
                   <Textarea
                     id="editTemplateContent"
-                    rows={20}
+                    className="min-h-[300px] font-mono text-sm"
                     value={selectedTemplate.content}
                     onChange={(e) => setSelectedTemplate({ ...selectedTemplate, content: e.target.value })}
-                    className="font-mono text-sm"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Verwenden Sie {`{{variableName}}`} für dynamische Inhalte, z.B. {`{{businessName}}`}, {`{{customerName}}`}, etc.
-                  </p>
                 </div>
                 
-                {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Erkannte Variablen</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTemplate.variables.map((variable, index) => (
-                        <Badge key={index} variant="secondary">
-                          {variable}
-                        </Badge>
-                      ))}
-                    </div>
+                <div className="space-y-2">
+                  <Label>Erkannte Variablen</Label>
+                  <div className="p-2 border rounded bg-muted/20 min-h-[40px]">
+                    {selectedTemplate.variables && selectedTemplate.variables.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedTemplate.variables.map((variable, index) => (
+                          <Badge key={index} variant="outline">{variable}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Keine Variablen erkannt. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>Abbrechen</Button>
-            <Button 
-              onClick={handleUpdateTemplate}
-              disabled={updateTemplateMutation.isPending}
-            >
-              {updateTemplateMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
+            <Button variant="outline" onClick={() => setIsEditTemplateOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleUpdateTemplate} disabled={updateTemplateMutation.isPending}>
+              {updateTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Änderungen speichern
             </Button>
           </DialogFooter>
