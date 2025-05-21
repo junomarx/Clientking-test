@@ -688,7 +688,7 @@ export default function SuperadminEmailTab() {
                               ))
                             ) : (
                               <span className="text-sm text-muted-foreground">
-                                Keine Variablen. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                                Keine Variablen. Fügen Sie Variablen im Format {`{{variableName}}`} zum Inhalt hinzu.
                               </span>
                             )}
                           </div>
@@ -949,7 +949,7 @@ export default function SuperadminEmailTab() {
                         ))
                       ) : (
                         <span className="text-sm text-muted-foreground">
-                          Keine Variablen. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                          Keine Variablen. Fügen Sie Variablen im Format {`{{variableName}}`} zum Inhalt hinzu.
                         </span>
                       )}
                     </div>

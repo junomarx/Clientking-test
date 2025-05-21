@@ -451,7 +451,7 @@ export default function SuperadminPrintTemplatesTab() {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Keine Variablen erkannt. Fügen Sie Variablen im Format {{variableName}} zum Inhalt hinzu.
+                      Keine Variablen erkannt. Fügen Sie Variablen im Format {`{{variableName}}`} zum Inhalt hinzu.
                     </p>
                   )}
                 </div>
