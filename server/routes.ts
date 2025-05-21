@@ -787,6 +787,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "kostenvoranschlag": repair.estimatedCost || "Nicht angegeben",
           "geschaeftsname": businessSettings?.businessName || "Handyshop",
           "abholzeit": "ab sofort", // kann später angepasst werden
+          // Fehlende Variablen hinzufügen
+          "reparaturarbeit": repair.description || repair.issue || "Reparatur des Geräts",
+          "oeffnungszeiten": businessSettings?.openingHours || "Montag bis Freitag, 9:00 - 18:00 Uhr",
           // Wichtig: userId und repairId für die Datenisolierung und E-Mail-Verlauf hinzufügen
           "userId": userId.toString(),
           "repairId": repair.id.toString()
