@@ -3498,16 +3498,18 @@ export class DatabaseStorage implements IStorage {
       
       const shopId = user.shopId;
       
-      const [trigger] = await db
-        .select()
-        .from(emailTriggers)
-        .where(and(
-          eq(emailTriggers.repairStatus, status),
-          eq(emailTriggers.shopId, shopId),
-          eq(emailTriggers.active, true)
-        ));
-        
-      return trigger;
+      // Direkte SQL-Abfrage verwenden, um die repair_status Spalte korrekt anzusprechen
+      const result = await db.execute(`
+        SELECT * FROM email_triggers 
+        WHERE repair_status = $1 AND shop_id = $2 AND active = true
+        LIMIT 1
+      `, [status, shopId]);
+      
+      if (result.rows && result.rows.length > 0) {
+        return result.rows[0] as EmailTrigger;
+      }
+      
+      return undefined;
     } catch (error) {
       console.error(`Fehler beim Abrufen des E-Mail-Triggers für Status ${status}:`, error);
       return undefined;
@@ -3520,55 +3522,16 @@ export class DatabaseStorage implements IStorage {
    * @param userId ID des Benutzers
    * @returns Der erstellte E-Mail-Trigger
    */
-  async createEmailTrigger(trigger: InsertEmailTrigger, userId: number): Promise<EmailTrigger> {
+  async createEmailTrigger(data: any): Promise<EmailTrigger | undefined> {
     try {
-      // Shop-ID des Benutzers ermitteln
-      const user = await this.getUser(userId);
-      if (!user) throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      // Daten extrahieren
+      const { userId, repair_status, emailTemplateId, active } = data;
       
-      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, Fehler werfen
-      if (!user.shopId) {
-        throw new Error(`Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Trigger kann nicht erstellt werden`);
+      if (!userId) {
+        console.error("Fehler: Keine userId angegeben beim Erstellen des E-Mail-Triggers");
+        return undefined;
       }
       
-      // Setze userId und shopId
-      const triggerData = {
-        ...trigger,
-        userId,
-        shopId: user.shopId
-      };
-      
-      // Eventuell vorhandenen Trigger für diesen Status deaktivieren
-      await db
-        .update(emailTriggers)
-        .set({ active: false })
-        .where(and(
-          eq(emailTriggers.repairStatus, trigger.repairStatus),
-          eq(emailTriggers.shopId, user.shopId)
-        ));
-      
-      // Neuen Trigger erstellen
-      const [newTrigger] = await db
-        .insert(emailTriggers)
-        .values(triggerData)
-        .returning();
-        
-      return newTrigger;
-    } catch (error) {
-      console.error('Fehler beim Erstellen des E-Mail-Triggers:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Aktualisiert einen E-Mail-Trigger
-   * @param id ID des zu aktualisierenden E-Mail-Triggers
-   * @param trigger Zu aktualisierende Daten
-   * @param userId ID des Benutzers
-   * @returns Der aktualisierte E-Mail-Trigger oder undefined
-   */
-  async updateEmailTrigger(id: number, trigger: Partial<InsertEmailTrigger>, userId: number): Promise<EmailTrigger | undefined> {
-    try {
       // Shop-ID des Benutzers ermitteln
       const user = await this.getUser(userId);
       if (!user) return undefined;
@@ -3581,17 +3544,121 @@ export class DatabaseStorage implements IStorage {
       
       const shopId = user.shopId;
       
-      // Aktualisieren des Triggers
-      const [updatedTrigger] = await db
-        .update(emailTriggers)
-        .set(trigger)
-        .where(and(
-          eq(emailTriggers.id, id),
-          eq(emailTriggers.shopId, shopId)
-        ))
-        .returning();
+      // Eventuell vorhandenen Trigger für diesen Status deaktivieren
+      await db.execute(`
+        UPDATE email_triggers 
+        SET active = false 
+        WHERE repair_status = $1 AND shop_id = $2
+      `, [repair_status, shopId]);
+      
+      // SQL-Query direkt ausführen, um Spaltennamenproblem zu umgehen
+      const result = await db.execute(`
+        INSERT INTO email_triggers (
+          repair_status, 
+          email_template_id, 
+          active, 
+          user_id, 
+          shop_id,
+          created_at,
+          updated_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, NOW(), NOW()
+        ) RETURNING *
+      `, [repair_status, emailTemplateId, active ?? true, userId, shopId]);
+      
+      if (result.rows && result.rows.length > 0) {
+        console.log(`E-Mail-Trigger für Status "${repair_status}" erstellt`);
+        return result.rows[0] as EmailTrigger;
+      } else {
+        return undefined;
+      }
+    } catch (error) {
+      console.error("Fehler beim Erstellen des E-Mail-Triggers:", error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Aktualisiert einen E-Mail-Trigger
+   * @param id ID des zu aktualisierenden E-Mail-Triggers
+   * @param trigger Zu aktualisierende Daten
+   * @param userId ID des Benutzers
+   * @returns Der aktualisierte E-Mail-Trigger oder undefined
+   */
+  async updateEmailTrigger(id: number, data: any): Promise<EmailTrigger | undefined> {
+    try {
+      // Daten extrahieren
+      const { userId, repair_status, emailTemplateId, active } = data;
+      
+      if (!userId) {
+        console.error("Fehler: Keine userId angegeben beim Aktualisieren des E-Mail-Triggers");
+        return undefined;
+      }
+      
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      const shopId = user.shopId;
+      
+      // SQL-Update-Query direkt ausführen, um Spaltennamenproblem zu umgehen
+      let updateFields = [];
+      let params = [id, shopId]; // id und shopId sind immer die ersten beiden Parameter
+      let paramCounter = 3; // Start bei 3 für weitere Parameter
+      
+      // Dynamisch die SET-Klausel bauen
+      if (repair_status !== undefined) {
+        updateFields.push(`repair_status = $${paramCounter++}`);
+        params.push(repair_status);
+      }
+      
+      if (emailTemplateId !== undefined) {
+        updateFields.push(`email_template_id = $${paramCounter++}`);
+        params.push(emailTemplateId);
+      }
+      
+      if (active !== undefined) {
+        updateFields.push(`active = $${paramCounter++}`);
+        params.push(active);
+      }
+      
+      // Immer das Update-Datum aktualisieren
+      updateFields.push(`updated_at = NOW()`);
+      
+      // Wenn nichts zu aktualisieren ist, einfach den aktuellen Trigger zurückgeben
+      if (updateFields.length === 1) { // Nur updated_at, nichts wirklich Neues
+        const existingTrigger = await db.execute(
+          `SELECT * FROM email_triggers WHERE id = $1 AND shop_id = $2`,
+          [id, shopId]
+        );
         
-      return updatedTrigger;
+        if (existingTrigger.rows && existingTrigger.rows.length > 0) {
+          return existingTrigger.rows[0] as EmailTrigger;
+        }
+        return undefined;
+      }
+      
+      // SQL-Query ausführen
+      const result = await db.execute(`
+        UPDATE email_triggers 
+        SET ${updateFields.join(', ')} 
+        WHERE id = $1 AND shop_id = $2
+        RETURNING *
+      `, params);
+      
+      if (result.rows && result.rows.length > 0) {
+        console.log(`E-Mail-Trigger mit ID ${id} aktualisiert`);
+        return result.rows[0] as EmailTrigger;
+      } else {
+        console.warn(`Kein E-Mail-Trigger mit ID ${id} für Shop ${shopId} gefunden oder nichts zu aktualisieren`);
+        return undefined;
+      }
     } catch (error) {
       console.error(`Fehler beim Aktualisieren des E-Mail-Triggers ${id}:`, error);
       return undefined;

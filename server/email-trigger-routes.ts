@@ -105,11 +105,13 @@ router.post("/api/email-triggers", isAuthenticated, async (req: Request, res: Re
       return res.status(404).json({ error: "Email template not found" });
     }
     
+    // WICHTIG: Die Spalte heißt "repair_status", nicht "status" - anpassen
     const trigger = await storage.createEmailTrigger({
-      repairStatus,
+      repair_status: repairStatus, // DIE KORREKTUR: repair_status statt repairStatus
       emailTemplateId,
       active: active !== undefined ? active : true,
-    }, userId);
+      userId // Wichtig: userId mit übergeben
+    });
     
     return res.status(201).json(trigger);
   } catch (error) {
@@ -137,10 +139,11 @@ router.patch("/api/email-triggers/:id", isAuthenticated, async (req: Request, re
     const { repairStatus, emailTemplateId, active } = req.body;
     
     const updatedTrigger = await storage.updateEmailTrigger(id, {
-      repairStatus,
+      repair_status: repairStatus, // WICHTIG: repair_status statt repairStatus
       emailTemplateId,
       active,
-    }, userId);
+      userId // Wichtig: userId mit übergeben
+    });
     
     if (!updatedTrigger) {
       return res.status(404).json({ error: "Email trigger not found or could not be updated" });
