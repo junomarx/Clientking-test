@@ -1892,8 +1892,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
-      const templates = await storage.getAllEmailTemplates(userId);
-      return res.status(200).json(templates);
+      const allTemplates = await storage.getAllEmailTemplates(userId);
+      
+      // Filtere Duplikate, indem globale Vorlagen entfernt werden, wenn eine benutzerspezifische
+      // Vorlage mit dem gleichen Namen (ohne "[GLOBAL]" Präfix) existiert
+      const userTemplateNames = new Set();
+      const userTemplates = allTemplates.filter(template => template.userId === userId);
+      
+      // Sammle zuerst alle Namen der benutzerspezifischen Vorlagen
+      userTemplates.forEach(template => {
+        userTemplateNames.add(template.name);
+      });
+      
+      // Filtere globale Vorlagen, deren Namen (ohne "[GLOBAL]") schon in benutzerspezifischen Vorlagen existieren
+      const filteredTemplates = allTemplates.filter(template => {
+        // Für benutzerspezifische Vorlagen immer true
+        if (template.userId === userId) return true;
+        
+        // Für globale Vorlagen prüfen, ob der Name (ohne "[GLOBAL]") schon in benutzerspezifischen Vorlagen existiert
+        const globalTemplateName = template.name.replace(/^\[GLOBAL\]\s*/, '');
+        return !userTemplateNames.has(globalTemplateName);
+      });
+      
+      return res.status(200).json(filteredTemplates);
     } catch (error) {
       console.error("Error retrieving email templates:", error);
       return res.status(500).json({ error: "Internal server error" });
