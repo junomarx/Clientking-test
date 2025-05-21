@@ -568,12 +568,18 @@ export function registerSuperadminRoutes(app: Express) {
           const repairIds = customerRepairs.map(repair => repair.id);
           
           // Lösche alle verknüpften Daten zu den Reparaturen
-          // Alle FK-Beziehungen behandeln
-          await db.delete(costEstimates).where(inArray(costEstimates.repairId, repairIds));
-          await db.delete(emailHistory).where(inArray(emailHistory.repairId, repairIds));
+          // Alle FK-Beziehungen behandeln - für jede Reparatur einzeln löschen
+          for (const repairId of repairIds) {
+            // Lösche alle verknüpften Kosten-Schätzungen
+            await db.delete(costEstimates).where(eq(costEstimates.repairId, repairId));
+            // Lösche alle verknüpften E-Mail-Verläufe
+            await db.delete(emailHistory).where(eq(emailHistory.repairId, repairId));
+          }
           
-          // Jetzt die Reparaturen löschen
-          await db.delete(repairs).where(inArray(repairs.customerId, customerIds));
+          // Jetzt die Reparaturen löschen - einzeln für jede KundenID
+          for (const customerId of customerIds) {
+            await db.delete(repairs).where(eq(repairs.customerId, customerId));
+          }
         }
         
         // Jetzt die Kunden löschen
