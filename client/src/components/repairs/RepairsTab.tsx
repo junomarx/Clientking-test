@@ -454,6 +454,13 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
         {/* Desktop Tabelle (nur auf größeren Bildschirmen anzeigen) */}
         <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full rounded-lg overflow-hidden shadow-sm">
+            <colgroup>
+              <col className="w-auto sm:w-[15%]" />
+              <col className="w-auto sm:w-[30%]" />
+              <col className="w-auto sm:w-[20%]" />
+              <col className="w-auto sm:w-[15%]" />
+              <col className="w-auto sm:w-[20%]" />
+            </colgroup>
             <thead>
               <tr className="bg-primary text-white">
                 <th className="py-3 px-4 text-left">Nr</th>
