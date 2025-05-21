@@ -317,7 +317,7 @@ export const defaultCustomerEmailTemplates: DefaultEmailTemplate[] = [
     type: 'customer'
   },
   {
-    name: "Ersatzteil eingetroffen",
+    name: "[GLOBAL] Ersatzteil eingetroffen",
     subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
