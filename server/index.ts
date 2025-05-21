@@ -21,9 +21,10 @@ import { syncEmailTemplates } from "./sync-email-templates";
 import { addSupportAccessTable } from "./add-support-access-table";
 import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
+import disableArchiveScript from "./disable-archive-script";
 
-// Prevent the Archiviert text spam by commenting out this import
-// "../archive-completed-template" gets imported automatically somewhere in the codebase
+// Disable the archive spam in console logs
+disableArchiveScript();
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
 if (!process.env.SMTP_SENDER_EMAIL) {
