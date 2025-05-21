@@ -716,7 +716,7 @@ export class DatabaseStorage implements IStorage {
             shop_id
           ) VALUES ($1, $2, $3, $4, $5, $6, $7)
         `, values);
-        });
+        
         console.log(`E-Mail-Verlaufseintrag für Benutzer ${userId} erstellt`);
       } catch (historyError) {
         console.error(`Fehler beim Erstellen des E-Mail-Verlaufseintrags:`, historyError);

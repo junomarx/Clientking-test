@@ -375,10 +375,10 @@ export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 // E-Mail-Trigger für Statusänderungen
 export const emailTriggers = pgTable("email_triggers", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").references(() => users.id),
   shopId: integer("shop_id").default(1),
-  repairStatus: text("repair_status").notNull(), // Status, bei dem die E-Mail ausgelöst wird
-  emailTemplateId: integer("email_template_id").notNull().references(() => emailTemplates.id),
+  repair_status: text("repair_status").notNull(), // Status, bei dem die E-Mail ausgelöst wird
+  emailTemplateId: integer("email_template_id").references(() => emailTemplates.id),
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -805,14 +805,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Prüfe E-Mail-Trigger für Status "${status}"...`);
           
           try {
-            // Prüfen, ob ein Trigger für diesen Status existiert
-            const trigger = await storage.getEmailTriggerByStatus(status, userId);
+            // Prüfen, ob ein Trigger für diesen Status existiert - SQL direkt ausführen
+            const triggerResult = await db.execute(
+              `SELECT * FROM email_triggers 
+               WHERE repair_status = $1 
+                 AND shop_id = $2 
+                 AND active = true
+               LIMIT 1`, 
+              [status, user.shopId]);
             
-            if (trigger && trigger.active && trigger.emailTemplateId) {
-              console.log(`E-Mail-Trigger gefunden: Status "${status}" verwendet Vorlage ID ${trigger.emailTemplateId}`);
+            if (triggerResult.rows && triggerResult.rows.length > 0) {
+              const trigger = triggerResult.rows[0];
+              console.log(`E-Mail-Trigger gefunden: Status "${status}" verwendet Vorlage ID ${trigger.email_template_id}`);
               
               // E-Mail senden mit der konfigurierten Vorlage aus dem Trigger
-              const emailSent = await storage.sendEmailWithTemplateById(trigger.emailTemplateId, customer.email, variables, undefined, false, userId);
+              const emailSent = await storage.sendEmailWithTemplateById(trigger.email_template_id, customer.email, variables, undefined, false, userId);
               console.log(`E-Mail gesendet für Benutzer ${userId} via Trigger: ${emailSent}`);
               
               // Erfolgsmeldung oder Fehlermeldung zurückgeben

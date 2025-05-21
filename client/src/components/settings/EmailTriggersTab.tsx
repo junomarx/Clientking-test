@@ -42,8 +42,8 @@ interface EmailTemplate {
 
 interface EmailTrigger {
   id: number;
-  repairStatus: string;
-  emailTemplateId: number;
+  repair_status: string;
+  email_template_id: number;
   active: boolean;
 }
 
@@ -190,7 +190,7 @@ export function EmailTriggersTab() {
 
   // Überprüfen, ob ein Status bereits einen Trigger hat
   const getUsedStatuses = () => {
-    return triggers.map((trigger) => trigger.repairStatus);
+    return triggers.map((trigger) => trigger.repair_status);
   };
 
   // Verfügbare Status-Optionen (die noch nicht verwendet werden)
