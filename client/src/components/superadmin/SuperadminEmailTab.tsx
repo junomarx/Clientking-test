@@ -567,7 +567,7 @@ export default function SuperadminEmailTab() {
         <TabsContent value="templates">
           <Card>
             <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center">
                     <FileText className="h-5 w-5 mr-2" />
