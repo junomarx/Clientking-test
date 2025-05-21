@@ -113,7 +113,7 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
           variant="default"
           className="flex items-center gap-2"
         >
-          <Plus className="h-4 w-4" /> +Neuer Kunde
+          <Plus className="h-4 w-4" /> Neuer Kunde
         </Button>
       </div>
       
