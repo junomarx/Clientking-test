@@ -1894,25 +1894,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // userId an die Methode übergeben, um shop-basierte Filterung zu ermöglichen
       const allTemplates = await storage.getAllEmailTemplates(userId);
       
-      // Filtere Duplikate, indem globale Vorlagen entfernt werden, wenn eine benutzerspezifische
-      // Vorlage mit dem gleichen Namen (ohne "[GLOBAL]" Präfix) existiert
-      const userTemplateNames = new Set();
-      const userTemplates = allTemplates.filter(template => template.userId === userId);
+      // Sammle zuerst alle Vorlagen nach Namen für die Deduplizierung
+      const dedupMap = new Map();
       
-      // Sammle zuerst alle Namen der benutzerspezifischen Vorlagen
-      userTemplates.forEach(template => {
-        userTemplateNames.add(template.name);
+      // Erste Iteration: Finde benutzerspezifische Vorlagen und speichere sie in der Map
+      allTemplates.forEach(template => {
+        const baseName = template.name.replace(/^\[GLOBAL\]\s*/, '');
+        // Wenn es eine benutzerspezifische Vorlage ist, immer bevorzugen
+        if (template.userId === userId) {
+          dedupMap.set(baseName, template);
+        }
       });
       
-      // Filtere globale Vorlagen, deren Namen (ohne "[GLOBAL]") schon in benutzerspezifischen Vorlagen existieren
-      const filteredTemplates = allTemplates.filter(template => {
-        // Für benutzerspezifische Vorlagen immer true
-        if (template.userId === userId) return true;
-        
-        // Für globale Vorlagen prüfen, ob der Name (ohne "[GLOBAL]") schon in benutzerspezifischen Vorlagen existiert
-        const globalTemplateName = template.name.replace(/^\[GLOBAL\]\s*/, '');
-        return !userTemplateNames.has(globalTemplateName);
+      // Zweite Iteration: Füge globale Vorlagen hinzu, aber nur wenn keine benutzerspezifische existiert
+      allTemplates.forEach(template => {
+        const baseName = template.name.replace(/^\[GLOBAL\]\s*/, '');
+        // Wenn es eine globale Vorlage ist, nur hinzufügen wenn keine benutzerspezifische existiert
+        if (template.userId !== userId && !dedupMap.has(baseName)) {
+          dedupMap.set(baseName, template);
+        }
       });
+      
+      // Map in eine Liste konvertieren
+      const filteredTemplates = Array.from(dedupMap.values());
+      
+      console.log(`Für Benutzer ${userId} wurden ${allTemplates.length} Vorlagen auf ${filteredTemplates.length} dedupliziert`);
       
       return res.status(200).json(filteredTemplates);
     } catch (error) {
