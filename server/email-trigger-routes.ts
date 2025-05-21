@@ -87,8 +87,8 @@ router.get("/api/email-triggers/status/:status", isAuthenticated, async (req: Re
 router.post("/api/email-triggers", isAuthenticated, async (req: Request, res: Response) => {
   try {
     // Einfache Validierung
-    const { repairStatus, emailTemplateId, active } = req.body;
-    if (!repairStatus || !emailTemplateId) {
+    const { repair_status, email_template_id, active } = req.body;
+    if (!repair_status || !email_template_id) {
       return res.status(400).json({ error: "Repair status and email template ID are required" });
     }
     
@@ -100,15 +100,15 @@ router.post("/api/email-triggers", isAuthenticated, async (req: Request, res: Re
     }
     
     // Optional: Überprüfen, ob die Vorlage existiert
-    const template = await storage.getEmailTemplate(emailTemplateId, userId);
+    const template = await storage.getEmailTemplate(email_template_id, userId);
     if (!template) {
       return res.status(404).json({ error: "Email template not found" });
     }
     
     // WICHTIG: Die Spalte heißt "repair_status", nicht "status" - anpassen
     const trigger = await storage.createEmailTrigger({
-      repair_status: repairStatus, // DIE KORREKTUR: repair_status statt repairStatus
-      emailTemplateId,
+      repair_status, 
+      email_template_id,
       active: active !== undefined ? active : true,
       userId // Wichtig: userId mit übergeben
     });
@@ -136,11 +136,11 @@ router.patch("/api/email-triggers/:id", isAuthenticated, async (req: Request, re
     }
     
     // Aktualisierbare Felder
-    const { repairStatus, emailTemplateId, active } = req.body;
+    const { repair_status, email_template_id, active } = req.body;
     
     const updatedTrigger = await storage.updateEmailTrigger(id, {
-      repair_status: repairStatus, // WICHTIG: repair_status statt repairStatus
-      emailTemplateId,
+      repair_status,
+      email_template_id,
       active,
       userId // Wichtig: userId mit übergeben
     });

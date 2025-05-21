@@ -379,8 +379,8 @@ export function EmailTriggersTab() {
                 onClick={() => {
                   setIsCreating(false);
                   setNewTrigger({
-                    repairStatus: "",
-                    emailTemplateId: 0,
+                    repair_status: "",
+                    email_template_id: 0,
                     active: true,
                   });
                 }}
@@ -390,8 +390,8 @@ export function EmailTriggersTab() {
               <Button
                 onClick={handleCreateTrigger}
                 disabled={
-                  !newTrigger.repairStatus ||
-                  !newTrigger.emailTemplateId ||
+                  !newTrigger.repair_status ||
+                  !newTrigger.email_template_id ||
                   createMutation.isPending
                 }
               >
