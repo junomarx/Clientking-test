@@ -3539,7 +3539,7 @@ export class DatabaseStorage implements IStorage {
   async createEmailTrigger(data: any): Promise<EmailTrigger | undefined> {
     try {
       // Daten extrahieren
-      const { userId, repair_status, emailTemplateId, active } = data;
+      const { userId, repair_status, email_template_id, active } = data;
       
       if (!userId) {
         console.error("Fehler: Keine userId angegeben beim Erstellen des E-Mail-Triggers");
@@ -3578,7 +3578,7 @@ export class DatabaseStorage implements IStorage {
         ) VALUES (
           $1, $2, $3, $4, $5, NOW(), NOW()
         ) RETURNING *
-      `, [repair_status, emailTemplateId, active ?? true, userId, shopId]);
+      `, [repair_status, email_template_id, active ?? true, userId, shopId]);
       
       if (result.rows && result.rows.length > 0) {
         console.log(`E-Mail-Trigger für Status "${repair_status}" erstellt`);
