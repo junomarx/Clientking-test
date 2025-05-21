@@ -560,26 +560,23 @@ export function registerSuperadminRoutes(app: Express) {
         const customerIds = userCustomers.map(customer => customer.id);
         
         // Verknüpfte Reparaturen für diese Kunden suchen und löschen
-        const customerRepairs = await db.select().from(repairs).where(inArray(repairs.customerId, customerIds));
-        if (customerRepairs.length > 0) {
-          console.log(`Lösche ${customerRepairs.length} Reparaturen der Kunden des Benutzers ${userId}...`);
+        console.log(`Lösche Reparaturen der Kunden des Benutzers ${userId}...`);
+        
+        // Direkter Datenbankzugriff über SQL-Query für bessere Kontrolle
+        for (const customerId of customerIds) {
+          // Reparaturen für diesen Kunden finden
+          const customerRepairs = await db.select().from(repairs).where(eq(repairs.customerId, customerId));
           
-          // Sammle Reparatur IDs
-          const repairIds = customerRepairs.map(repair => repair.id);
-          
-          // Lösche alle verknüpften Daten zu den Reparaturen
-          // Alle FK-Beziehungen behandeln - für jede Reparatur einzeln löschen
-          for (const repairId of repairIds) {
-            // Lösche alle verknüpften Kosten-Schätzungen
-            await db.delete(costEstimates).where(eq(costEstimates.repairId, repairId));
-            // Lösche alle verknüpften E-Mail-Verläufe
-            await db.delete(emailHistory).where(eq(emailHistory.repairId, repairId));
+          for (const repair of customerRepairs) {
+            // Zuerst abhängige Kosten-Schätzungen löschen
+            await db.delete(costEstimates).where(eq(costEstimates.repairId, repair.id));
+            
+            // Dann abhängige Email-Historie löschen
+            await db.delete(emailHistory).where(eq(emailHistory.repairId, repair.id));
           }
           
-          // Jetzt die Reparaturen löschen - einzeln für jede KundenID
-          for (const customerId of customerIds) {
-            await db.delete(repairs).where(eq(repairs.customerId, customerId));
-          }
+          // Dann alle Reparaturen dieses Kunden löschen
+          await db.delete(repairs).where(eq(repairs.customerId, customerId));
         }
         
         // Jetzt die Kunden löschen
