@@ -48,8 +48,8 @@ interface EmailTrigger {
 }
 
 interface NewTriggerFormData {
-  repairStatus: string;
-  emailTemplateId: number;
+  repair_status: string;
+  email_template_id: number;
   active: boolean;
 }
 
@@ -58,8 +58,8 @@ export function EmailTriggersTab() {
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [newTrigger, setNewTrigger] = useState<NewTriggerFormData>({
-    repairStatus: "",
-    emailTemplateId: 0,
+    repair_status: "",
+    email_template_id: 0,
     active: true,
   });
 
@@ -95,8 +95,8 @@ export function EmailTriggersTab() {
       });
       setIsCreating(false);
       setNewTrigger({
-        repairStatus: "",
-        emailTemplateId: 0,
+        repair_status: "",
+        email_template_id: 0,
         active: true,
       });
     },
@@ -170,13 +170,13 @@ export function EmailTriggersTab() {
   const handleTemplateChange = (triggerId: number, templateId: number) => {
     updateMutation.mutate({
       id: triggerId,
-      data: { emailTemplateId: templateId },
+      data: { email_template_id: templateId },
     });
   };
 
   // Neuen Trigger erstellen
   const handleCreateTrigger = () => {
-    if (!newTrigger.repairStatus || !newTrigger.emailTemplateId) {
+    if (!newTrigger.repair_status || !newTrigger.email_template_id) {
       toast({
         title: "Eingabe fehlt",
         description: "Bitte wählen Sie einen Status und eine E-Mail-Vorlage aus.",
@@ -252,19 +252,19 @@ export function EmailTriggersTab() {
                   className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border rounded-md"
                 >
                   <div className="flex flex-col">
-                    <span className="font-medium">{getStatusLabel(trigger.repairStatus)}</span>
+                    <span className="font-medium">{getStatusLabel(trigger.repair_status)}</span>
                     <span className="text-sm text-muted-foreground">
                       Status: {trigger.active ? "Aktiv" : "Inaktiv"}
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                     <Select
-                      value={trigger.emailTemplateId.toString()}
+                      value={trigger.email_template_id?.toString() || ""}
                       onValueChange={(value) => handleTemplateChange(trigger.id, parseInt(value))}
                     >
                       <SelectTrigger className="w-full sm:w-[250px]">
                         <SelectValue placeholder="Vorlage auswählen">
-                          {getTemplateName(trigger.emailTemplateId)}
+                          {getTemplateName(trigger.email_template_id || 0)}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -311,11 +311,11 @@ export function EmailTriggersTab() {
             <h3 className="text-lg font-semibold">Neue Benachrichtigung hinzufügen</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="repairStatus">Reparaturstatus</Label>
+                <Label htmlFor="repair_status">Reparaturstatus</Label>
                 <Select
-                  value={newTrigger.repairStatus}
+                  value={newTrigger.repair_status}
                   onValueChange={(value) =>
-                    setNewTrigger({ ...newTrigger, repairStatus: value })
+                    setNewTrigger({ ...newTrigger, repair_status: value })
                   }
                 >
                   <SelectTrigger>
@@ -331,17 +331,17 @@ export function EmailTriggersTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="emailTemplateId">E-Mail-Vorlage</Label>
+                <Label htmlFor="email_template_id">E-Mail-Vorlage</Label>
                 <Select
                   value={
-                    newTrigger.emailTemplateId
-                      ? newTrigger.emailTemplateId.toString()
+                    newTrigger.email_template_id
+                      ? newTrigger.email_template_id.toString()
                       : ""
                   }
                   onValueChange={(value) =>
                     setNewTrigger({
                       ...newTrigger,
-                      emailTemplateId: parseInt(value),
+                      email_template_id: parseInt(value),
                     })
                   }
                 >
