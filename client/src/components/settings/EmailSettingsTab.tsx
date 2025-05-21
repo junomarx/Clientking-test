@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, Mail, Send, RefreshCw, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Save, RefreshCw, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { EmailTemplateTab } from './EmailTemplateTab';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -31,9 +31,7 @@ const emailSettingsSchema = z.object({
 export function EmailSettingsTab() {
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
-  const [testEmailSent, setTestEmailSent] = useState(false);
   const [smtpTestDialogOpen, setSmtpTestDialogOpen] = useState(false);
-  const [userSmtpTestDialogOpen, setUserSmtpTestDialogOpen] = useState(false);
   
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<z.infer<typeof emailSettingsSchema>>({
@@ -100,60 +98,9 @@ export function EmailSettingsTab() {
     },
   });
 
-  // Mutation für das Senden einer Test-E-Mail
-  const sendTestEmailMutation = useMutation({
-    mutationFn: async (emailAddress: string) => {
-      const response = await apiRequest("POST", "/api/send-test-email", {
-        recipient: emailAddress
-      });
-      
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Test-E-Mail gesendet!",
-        description: "Bitte überprüfen Sie Ihren Posteingang.",
-        duration: 3000,
-      });
-      setTestEmailSent(true);
-      
-      // Nach 5 Sekunden zurücksetzen
-      setTimeout(() => setTestEmailSent(false), 5000);
-    },
-    onError: (error) => {
-      toast({
-        title: "E-Mail konnte nicht gesendet werden!",
-        description: `Fehler: ${error.message}`,
-        variant: "destructive",
-        duration: 4000,
-      });
-    },
-  });
-
   // Formular absenden
   function onSubmit(data: z.infer<typeof emailSettingsSchema>) {
     updateMutation.mutate(data);
-  }
-
-  // Test-E-Mail senden
-  function handleSendTestEmail() {
-    const emailAddress = form.getValues("testEmailRecipient");
-    
-    if (!emailAddress) {
-      toast({
-        title: "Fehler!",
-        description: "Bitte geben Sie eine E-Mail-Adresse für die Test-E-Mail ein.",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-    
-    sendTestEmailMutation.mutate(emailAddress);
   }
 
   if (isLoading) {
@@ -288,36 +235,20 @@ export function EmailSettingsTab() {
                       )}
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full h-9 text-xs"
-                      onClick={handleSendTestEmail}
-                      disabled={sendTestEmailMutation.isPending || testEmailSent}
-                    >
-                      {sendTestEmailMutation.isPending ? (
-                        <Mail className="h-3 w-3 mr-1 animate-spin" />
-                      ) : testEmailSent ? (
-                        <Send className="h-3 w-3 mr-1 text-green-500" />
-                      ) : (
-                        <Mail className="h-3 w-3 mr-1" />
-                      )}
-                      {testEmailSent ? "Gesendet!" : "Standard Test"}
-                    </Button>
+                  <div className="flex">
                     <Button
                       type="button"
                       variant="secondary"
-                      className="h-9 text-xs"
+                      className="h-9 text-xs w-full"
                       onClick={() => setSmtpTestDialogOpen(true)}
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
-                      Erweiterter Test
+                      SMTP-Test
                     </Button>
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Senden Sie eine Test-E-Mail, um Ihre SMTP-Einstellungen zu überprüfen oder nutzen Sie den erweiterten Test für mehr Kontrolle.
+                  Testen Sie Ihre SMTP-Einstellungen mit vollständiger Kontrolle über alle Parameter.
                 </p>
               </div>
             </CardContent>
@@ -330,7 +261,7 @@ export function EmailSettingsTab() {
         <EmailTemplateTab />
       </div>
       
-      {/* Benutzerfreundlicher SMTP-Test-Dialog für alle Benutzer */}
+      {/* SMTP-Test-Dialog */}
       <UserSmtpTestDialog
         open={smtpTestDialogOpen}
         onClose={() => {
