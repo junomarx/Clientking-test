@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 
 import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ import {
   Percent,
   MonitorSmartphone,
   Terminal,
+  Trash2,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Feature, FeatureOverrides } from "@/lib/permissions";
@@ -58,6 +60,7 @@ interface UserDetailsDialogProps {
   userId: number | null;
   onToggleActive?: (userId: number) => void;
   onEdit?: (userId: number) => void;
+  onDelete?: (userId: number) => void;
 }
 
 type UserResponse = {
@@ -101,8 +104,10 @@ type BusinessSettings = {
   updatedAt?: string;
 };
 
-export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit }: UserDetailsDialogProps) {
+export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit, onDelete }: UserDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState('details');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   // Dialog schließen mit Verzögerung für Animationen
@@ -183,6 +188,37 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
     onError: (error: Error) => {
       toast({
         title: "Fehler beim Ändern des Benutzerstatus",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Benutzer löschen
+  const deleteUserMutation = useMutation({
+    mutationFn: async (id: number) => {
+      setIsDeleting(true);
+      const response = await apiRequest("DELETE", `/api/admin/users/${id}`);
+      if (!response.ok) {
+        throw new Error(`Fehler beim Löschen des Benutzers: ${response.statusText}`);
+      }
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Benutzer gelöscht",
+        description: "Der Benutzer wurde erfolgreich gelöscht.",
+      });
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+      onClose();
+      if (onDelete) onDelete(userId);
+    },
+    onError: (error: Error) => {
+      setIsDeleting(false);
+      toast({
+        title: "Fehler beim Löschen des Benutzers",
         description: error.message,
         variant: "destructive",
       });
