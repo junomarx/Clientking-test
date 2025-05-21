@@ -4,8 +4,13 @@
  */
 import { Request, Response, Router } from "express";
 import { storage } from "./storage";
-// Import the authentication middleware from the routes file where it's defined
-import { isAuthenticated } from "./routes";
+// Define the authentication middleware locally to avoid circular dependencies
+const isAuthenticated = (req: Request, res: Response, next: Function) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+};
 
 const router = Router();
 
