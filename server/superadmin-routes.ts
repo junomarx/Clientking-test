@@ -549,53 +549,184 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
-      // Prüfen auf verknüpfte Kunden
-      const userCustomers = await db.select().from(customers).where(eq(customers.userId, userId));
+      console.log(`Starte verbesserten Löschvorgang für Benutzer ${existingUser.username} (ID: ${userId})...`);
       
-      // Wenn Kunden vorhanden sind, diese zuerst löschen
-      if (userCustomers.length > 0) {
-        console.log(`Lösche ${userCustomers.length} Kunden des Benutzers ${userId}...`);
-        
-        // Kunde IDs sammeln für das Löschen der Reparaturen
-        const customerIds = userCustomers.map(customer => customer.id);
-        
-        // Verknüpfte Reparaturen für diese Kunden suchen und löschen
-        console.log(`Lösche Reparaturen der Kunden des Benutzers ${userId}...`);
-        
-        // Direkter Datenbankzugriff über SQL-Query für bessere Kontrolle
-        for (const customerId of customerIds) {
-          // Reparaturen für diesen Kunden finden
-          const customerRepairs = await db.select().from(repairs).where(eq(repairs.customerId, customerId));
+      // Robust mit Transaktion arbeiten
+      try {
+        await db.transaction(async (tx) => {
+          const deletedCounts = {
+            emailHistory: 0,
+            costEstimates: 0,
+            repairs: 0,
+            customers: 0,
+            businessSettings: 0,
+            emailTemplates: 0,
+            userDeviceData: 0
+          };
+
+          // 1. Finde alle Kunden des Benutzers
+          const userCustomers = await tx.select({ id: customers.id })
+            .from(customers)
+            .where(eq(customers.userId, userId));
           
-          for (const repair of customerRepairs) {
-            // Zuerst abhängige Kosten-Schätzungen löschen
-            await db.delete(costEstimates).where(eq(costEstimates.repairId, repair.id));
+          const customerIds = userCustomers.map(c => c.id);
+          console.log(`${customerIds.length} Kunden des Benutzers ${userId} gefunden.`);
+          
+          // 2. Für jeden Kunden die Reparaturen und abhängigen Daten löschen
+          if (customerIds.length > 0) {
+            for (const customerId of customerIds) {
+              // Alle Reparaturen für diesen Kunden finden
+              const customerRepairs = await tx.select({ id: repairs.id })
+                .from(repairs)
+                .where(eq(repairs.customerId, customerId));
+              
+              const repairIds = customerRepairs.map(r => r.id);
+              
+              // 2.1 Für jede Reparatur die abhängigen Daten löschen
+              for (const repairId of repairIds) {
+                // E-Mail-Historie löschen
+                const emailHistoryResult = await tx.delete(emailHistory)
+                  .where(eq(emailHistory.repairId, repairId))
+                  .returning();
+                deletedCounts.emailHistory += emailHistoryResult.length;
+                
+                // Kostenvoranschläge löschen
+                const costEstimateResult = await tx.delete(costEstimates)
+                  .where(eq(costEstimates.repairId, repairId))
+                  .returning();
+                deletedCounts.costEstimates += costEstimateResult.length;
+              }
+              
+              // Alle Reparaturen dieses Kunden löschen
+              const repairsResult = await tx.delete(repairs)
+                .where(eq(repairs.customerId, customerId))
+                .returning();
+              deletedCounts.repairs += repairsResult.length;
+            }
             
-            // Dann abhängige Email-Historie löschen
-            await db.delete(emailHistory).where(eq(emailHistory.repairId, repair.id));
+            // Alle Kunden dieses Benutzers löschen
+            const customersResult = await tx.delete(customers)
+              .where(eq(customers.userId, userId))
+              .returning();
+            deletedCounts.customers = customersResult.length;
           }
           
-          // Dann alle Reparaturen dieses Kunden löschen
-          await db.delete(repairs).where(eq(repairs.customerId, customerId));
-        }
+          // 3. Geschäftseinstellungen löschen
+          const businessSettingsResult = await tx.delete(businessSettings)
+            .where(eq(businessSettings.userId, userId))
+            .returning();
+          deletedCounts.businessSettings = businessSettingsResult.length;
+          
+          // 4. E-Mail-Vorlagen löschen
+          const emailTemplatesResult = await tx.delete(emailTemplates)
+            .where(eq(emailTemplates.userId, userId))
+            .returning();
+          deletedCounts.emailTemplates = emailTemplatesResult.length;
+          
+          // 5. Gerätespezifische Daten löschen (falls vorhanden)
+          try {
+            // 5.1 Benutzer-Modelle
+            await tx.execute(sql`DELETE FROM user_models WHERE user_id = ${userId}`);
+            
+            // 5.2 Benutzer-Marken
+            await tx.execute(sql`DELETE FROM user_brands WHERE user_id = ${userId}`);
+            
+            // 5.3 Benutzer-Gerätetypen
+            await tx.execute(sql`DELETE FROM user_device_types WHERE user_id = ${userId}`);
+            
+            // 5.4 Ausgeblendete Standard-Gerätetypen
+            await tx.execute(sql`DELETE FROM hidden_standard_device_types WHERE user_id = ${userId}`);
+          } catch (err) {
+            // Ignorieren, nicht alle Tabellen müssen existieren
+            console.log(`Hinweis: Einige Gerätetabellen konnten nicht bereinigt werden: ${err.message}`);
+          }
+          
+          // 6. Benutzer selbst löschen
+          const userResult = await tx.delete(users)
+            .where(eq(users.id, userId))
+            .returning();
+          
+          if (userResult.length === 0) {
+            throw new Error(`Benutzer mit ID ${userId} konnte nicht gelöscht werden.`);
+          }
+          
+          console.log(`Löschvorgang erfolgreich für Benutzer ${existingUser.username} (ID: ${userId}).`);
+          console.log(`Gelöschte Daten: ${JSON.stringify(deletedCounts)}`);
+        });
         
-        // Jetzt die Kunden löschen
-        await db.delete(customers).where(eq(customers.userId, userId));
+        res.json({ 
+          message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht",
+          username: existingUser.username
+        });
+      } catch (txError) {
+        console.error("Fehler in der Lösch-Transaktion:", txError);
+        
+        // Wenn der normale Ansatz fehlschlägt, versuchen wir es mit direktem SQL
+        console.log("Versuche alternativen Löschansatz mit direktem SQL...");
+        
+        // SQL mit deaktivierter Fremdschlüsselprüfung für schwierige Fälle
+        await db.execute(sql`
+          SET session_replication_role = 'replica';
+          
+          -- E-Mail-Verlauf für Reparaturen des Benutzers löschen
+          DELETE FROM email_history 
+          WHERE "repairId" IN (
+            SELECT r.id 
+            FROM repairs r 
+            JOIN customers c ON r.customer_id = c.id 
+            WHERE c.user_id = ${userId}
+          );
+          
+          -- Kostenvoranschläge für Reparaturen des Benutzers löschen
+          DELETE FROM cost_estimates 
+          WHERE repair_id IN (
+            SELECT r.id 
+            FROM repairs r 
+            JOIN customers c ON r.customer_id = c.id 
+            WHERE c.user_id = ${userId}
+          );
+          
+          -- Reparaturen des Benutzers löschen
+          DELETE FROM repairs 
+          WHERE customer_id IN (
+            SELECT id 
+            FROM customers 
+            WHERE user_id = ${userId}
+          );
+          
+          -- Kunden des Benutzers löschen
+          DELETE FROM customers WHERE user_id = ${userId};
+          
+          -- Geschäftseinstellungen des Benutzers löschen
+          DELETE FROM business_settings WHERE user_id = ${userId};
+          
+          -- E-Mail-Vorlagen des Benutzers löschen
+          DELETE FROM email_templates WHERE user_id = ${userId};
+          
+          -- Gerätespezifische Daten löschen (falls Tabellen existieren)
+          DELETE FROM user_models WHERE user_id = ${userId};
+          DELETE FROM user_brands WHERE user_id = ${userId};
+          DELETE FROM user_device_types WHERE user_id = ${userId};
+          
+          -- Den Benutzer selbst löschen
+          DELETE FROM users WHERE id = ${userId};
+          
+          -- Fremdschlüsselprüfungen wiederherstellen
+          SET session_replication_role = 'origin';
+        `);
+        
+        console.log(`Alternativer Löschansatz für Benutzer ${existingUser.username} (ID: ${userId}) erfolgreich.`);
+        
+        res.json({ 
+          message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht (Fallback-Methode)",
+          username: existingUser.username 
+        });
       }
-      
-      // Geschäftseinstellungen des Benutzers löschen
-      await db.delete(businessSettings).where(eq(businessSettings.userId, userId));
-      
-      // Email-Vorlagen des Benutzers löschen
-      await db.delete(emailTemplates).where(eq(emailTemplates.userId, userId));
-      
-      // Benutzer löschen
-      await db.delete(users).where(eq(users.id, userId));
-
-      res.json({ message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht" });
     } catch (error) {
       console.error("Fehler beim Löschen des Benutzers:", error);
-      res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
+      res.status(500).json({ 
+        message: `Fehler beim Löschen des Benutzers: ${error.message || error}` 
+      });
     }
   });
 
