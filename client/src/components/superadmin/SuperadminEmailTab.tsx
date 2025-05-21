@@ -828,9 +828,14 @@ export default function SuperadminEmailTab() {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
-                    Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden. 
-                    Erstellen Sie eine neue Vorlage oder klicken Sie auf "Standard-Vorlagen erstellen".
+                    Keine {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen gefunden.
                   </p>
+                  {emailTemplates && emailTemplates.length > 0 && (
+                    <div className="mt-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
+                      <p className="text-yellow-700 font-medium">Es sind Vorlagen vorhanden, aber sie wurden noch nicht als {templateType === 'app' ? 'System' : 'Kunden'}-Vorlagen klassifiziert.</p>
+                      <p className="text-yellow-600 mt-2">Vorlagen müssen mit dem richtigen Typ erstellt werden. Klicken Sie auf "Standard-Vorlagen erstellen", um neue Standard-Vorlagen zu generieren.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
