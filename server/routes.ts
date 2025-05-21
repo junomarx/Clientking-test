@@ -795,126 +795,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "repairId": repair.id.toString()
         };
         
-        // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if ((status === "fertig" || status === "abholbereit") && sendEmail === true && customer.email) {
-          console.log("E-Mail-Benachrichtigung wird vorbereitet...");
-          
-          try {
-            // Suche nach einer E-Mail-Vorlage mit name "fertig"
-            const templates = await storage.getAllEmailTemplates(userId);
-            const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
-                                                     t.name.toLowerCase().includes("abholbereit") ||
-                                                     t.name.toLowerCase().includes("abholung"));
-            
-            if (pickupTemplate) {
-              console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
-              
-              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
-              const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables, undefined, false, userId);
-              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
-              
-              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
-              if (emailSent) {
-                res.setHeader('X-Email-Sent', 'true');
-                res.setHeader('X-Email-Status', 'success');
-              } else {
-                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
-                res.setHeader('X-Email-Sent', 'false');
-                res.setHeader('X-Email-Status', 'error');
-              }
-            } else {
-              console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
-            }
-          } catch (emailError) {
-            console.error("Fehler beim Senden der E-Mail:", emailError);
-            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
-          }
+        // Die automatische E-Mail-Versendung bei Statusänderung wurde entfernt.
+        // E-Mails werden jetzt getrennt vom Status-Update-Prozess gesendet.
+        if (sendEmail === true) {
+          console.log("Hinweis: Automatische E-Mail-Benachrichtigungen bei Statusänderungen wurden deaktiviert.");
+          res.setHeader('X-Email-Sent', 'false');
+          res.setHeader('X-Email-Status', 'disabled');
         }
         
-        // Wenn Status auf "ersatzteil_eingetroffen" gesetzt wird und sendEmail=true, dann E-Mail senden
-        if (status === "ersatzteil_eingetroffen" && sendEmail === true && customer.email) {
-          console.log("E-Mail-Benachrichtigung für Ersatzteillieferung wird vorbereitet...");
-          
-          try {
-            // Suche nach einer E-Mail-Vorlage mit name "ersatzteil"
-            const templates = await storage.getAllEmailTemplates(userId);
-            const sparepartTemplate = templates.find(t => t.name.toLowerCase().includes("ersatzteil") || 
-                                                      t.name.toLowerCase().includes("ersatz") ||
-                                                      t.name.toLowerCase().includes("teil"));
-            
-            if (sparepartTemplate) {
-              console.log(`E-Mail-Vorlage gefunden: ${sparepartTemplate.name}`);
-              
-              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
-              const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables, undefined, false, userId);
-              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
-              
-              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
-              if (emailSent) {
-                res.setHeader('X-Email-Sent', 'true');
-                res.setHeader('X-Email-Status', 'success');
-              } else {
-                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
-                res.setHeader('X-Email-Sent', 'false');
-                res.setHeader('X-Email-Status', 'error');
-              }
-            } else {
-              console.log("Keine passende E-Mail-Vorlage für 'Ersatzteil eingetroffen' gefunden");
-              console.log("Erstelle Standard-Ersatzteil-Vorlage...");
-              
-              // Erstelle eine Standard-Vorlage, wenn keine vorhanden ist
-              try {
-                // Erstelle die E-Mail-Vorlage
-                const templateData: InsertEmailTemplate = {
-                  name: "Ersatzteil eingetroffen",
-                  subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
-                  body: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                      <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
-                    </div>
-                    
-                    <p>Sehr geehrte(r) {{kundenname}},</p>
-                    
-                    <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für Ihre Reparatur eingetroffen ist.</p>
-                    
-                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                      <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
-                      <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
-                      <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
-                    </div>
-                    
-                    <p>Wir werden nun umgehend mit der Reparatur fortfahren und Sie informieren, sobald Ihr Gerät wieder abholbereit ist.</p>
-                    
-                    <p>Falls Sie Fragen haben, können Sie uns gerne kontaktieren.</p>
-                    
-                    <p>Mit freundlichen Grüßen,<br>
-                    Ihr Team von {{geschaeftsname}}</p>
-                  </div>
-                  `,
-                  userId
-                };
-                
-                const newTemplate = await storage.createEmailTemplate(templateData);
-                
-                console.log("Neue E-Mail-Vorlage erstellt:", newTemplate);
-                
-                // E-Mail mit der neuen Vorlage senden
-                const emailSent = await storage.sendEmailWithTemplate(newTemplate.id, customer.email, variables);
-                console.log("E-Mail gesendet:", emailSent);
-                
-                // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
-                if (emailSent) {
-                  res.setHeader('X-Email-Sent', 'true');
-                }
-              } catch (templateError) {
-                console.error("Fehler beim Erstellen der E-Mail-Vorlage:", templateError);
-              }
-            }
-          } catch (emailError) {
-            console.error("Fehler beim Senden der E-Mail:", emailError);
-            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
-          }
+        // Die automatische E-Mail-Versendung bei "Ersatzteil eingetroffen" wurde entfernt.
+        // E-Mails werden jetzt getrennt vom Status-Update-Prozess über eine 
+        // spezielle E-Mail-Funktionalität gesendet.
+        if (status === "ersatzteil_eingetroffen" && sendEmail === true) {
+          console.log("Hinweis: Automatische E-Mail-Benachrichtigungen bei Statusänderungen wurden deaktiviert.");
+          res.setHeader('X-Email-Sent', 'false');
+          res.setHeader('X-Email-Status', 'disabled');
         }
         
         // SMS-Funktionalität wurde auf Kundenwunsch entfernt
