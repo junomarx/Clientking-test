@@ -2,15 +2,12 @@
  * E-Mail-Trigger-Routen - Ermöglicht die Konfiguration, welche E-Mail-Vorlage
  * bei welchem Reparaturstatus automatisch gesendet werden soll
  */
-import { Request, Response, Router } from "express";
+import { Request, Response, Router, NextFunction } from "express";
 import { storage } from "./storage";
-// Define the authentication middleware locally to avoid circular dependencies
-const isAuthenticated = (req: Request, res: Response, next: Function) => {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.status(401).json({ message: "Unauthorized" });
-};
+import passport from "passport";
+
+// Import the actual authentication middleware from routes.ts to avoid duplication
+import { isAuthenticated } from "./routes";
 
 const router = Router();
 
