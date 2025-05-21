@@ -579,45 +579,53 @@ export default function SuperadminEmailTab() {
               </Tabs>
               
               {/* Vorlagentabelle */}
-              <div className="mt-4">
+              <div className="mt-4 overflow-x-auto">
                 {isLoadingTemplates ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : emailTemplates && emailTemplates.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Betreff</TableHead>
-                        <TableHead>Variablen</TableHead>
-                        <TableHead>Zuletzt aktualisiert</TableHead>
-                        <TableHead className="text-right">Aktionen</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {emailTemplates
-                        .filter(template => templateType === 'app' ? 
-                          (!template.type || template.type === 'app') : 
-                          template.type === 'customer'
-                        )
-                        .map((template) => (
-                          <TableRow key={template.id}>
-                            <TableCell className="font-medium">{template.name}</TableCell>
-                            <TableCell>{template.subject}</TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {template.variables && template.variables.map((variable, index) => (
-                                  <Badge key={index} variant="outline">{variable}</Badge>
-                                ))}
-                                {(!template.variables || template.variables.length === 0) && 
-                                  <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                                }
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                            </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <colgroup>
+                        <col className="w-[20%] min-w-[120px]" />
+                        <col className="w-[25%] min-w-[140px]" />
+                        <col className="w-[25%] min-w-[140px]" />
+                        <col className="w-[15%] min-w-[100px]" />
+                        <col className="w-[15%] min-w-[100px]" />
+                      </colgroup>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead className="hidden sm:table-cell">Betreff</TableHead>
+                          <TableHead className="hidden md:table-cell">Variablen</TableHead>
+                          <TableHead className="hidden md:table-cell">Zuletzt aktualisiert</TableHead>
+                          <TableHead className="text-right">Aktionen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {emailTemplates
+                          .filter(template => templateType === 'app' ? 
+                            (!template.type || template.type === 'app') : 
+                            template.type === 'customer'
+                          )
+                          .map((template) => (
+                            <TableRow key={template.id}>
+                              <TableCell className="font-medium">{template.name}</TableCell>
+                              <TableCell className="hidden sm:table-cell">{template.subject}</TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                <div className="flex flex-wrap gap-1">
+                                  {template.variables && template.variables.map((variable, index) => (
+                                    <Badge key={index} variant="outline">{variable}</Badge>
+                                  ))}
+                                  {(!template.variables || template.variables.length === 0) && 
+                                    <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                                  }
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                              </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end space-x-2">
                                 <Button
