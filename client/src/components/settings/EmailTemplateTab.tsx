@@ -36,6 +36,7 @@ export function EmailTemplateTab() {
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
+  const [isRestoreAlertOpen, setIsRestoreAlertOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
@@ -307,7 +308,7 @@ export function EmailTemplateTab() {
         <h2 className="font-semibold text-lg">E-Mail Vorlagen</h2>
         <div className="flex space-x-2">
           <Button 
-            onClick={() => restoreCustomerTemplatesMutation.mutate()} 
+            onClick={() => setIsRestoreAlertOpen(true)} 
             size="sm" 
             variant="outline" 
             disabled={restoreCustomerTemplatesMutation.isPending}
@@ -554,6 +555,33 @@ export function EmailTemplateTab() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Alert Dialog für Wiederherstellung der Standardvorlagen */}
+      <AlertDialog open={isRestoreAlertOpen} onOpenChange={setIsRestoreAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Standardvorlagen wiederherstellen</AlertDialogTitle>
+            <AlertDialogDescription>
+              <div className="space-y-2">
+                <p>Achtung: Bei dieser Aktion werden alle vorhandenen E-Mail-Vorlagen mit den Standardvorlagen <strong>überschrieben</strong>, wenn sie den gleichen Namen haben.</p>
+                <p>Alle Ihre eigenen Anpassungen an den Standardvorlagen gehen dabei verloren.</p>
+                <p>Möchten Sie trotzdem fortfahren?</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                setIsRestoreAlertOpen(false);
+                restoreCustomerTemplatesMutation.mutate();
+              }}
+            >
+              Ja, Standardvorlagen wiederherstellen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
