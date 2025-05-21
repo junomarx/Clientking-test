@@ -263,6 +263,9 @@ export const businessSettings = pgTable("business_settings", {
   // Link für Kundenbewertungen
   reviewLink: text("review_link"),         // Link für Bewertungen (z.B. Google, Facebook, Yelp)
   
+  // Öffnungszeiten des Geschäfts - werden in E-Mail-Vorlagen verwendet
+  openingHours: text("opening_hours"),     // Öffnungszeiten (z.B. "Mo-Fr 9:00-18:00, Sa 9:00-13:00")
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),

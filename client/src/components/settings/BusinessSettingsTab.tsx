@@ -26,6 +26,8 @@ const businessSettingsSchema = z.object({
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),
+  // Öffnungszeiten für E-Mail-Vorlagen
+  openingHours: z.string().optional(),
   receiptWidth: z.enum(["58mm", "80mm"]),
   // SMTP-Einstellungen
   smtpSenderName: z.string().optional(),
@@ -70,6 +72,8 @@ export function BusinessSettingsTab() {
       email: "",
       website: "",
       logoImage: "",
+      // Öffnungszeiten für E-Mail-Vorlagen
+      openingHours: "",
       receiptWidth: "80mm",
       // SMTP-Einstellungen
       smtpSenderName: "",
@@ -394,6 +398,20 @@ export function BusinessSettingsTab() {
                       <FormLabel className="text-sm">Website</FormLabel>
                       <FormControl>
                         <Input placeholder="www.handyshop.at" {...field} className="h-9 text-sm" />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="openingHours"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Öffnungszeiten</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Mo-Fr 09:00-18:00, Sa 09:00-13:00" {...field} className="h-9 text-sm" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
