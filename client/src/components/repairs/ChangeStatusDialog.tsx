@@ -198,15 +198,7 @@ export function ChangeStatusDialog({
               )}
             />
             
-            {/* Hinweis zu deaktivierter automatischer E-Mail-Versendung */}
-            <Alert variant="outline" className="bg-amber-50 border-amber-200">
-              <Info className="h-4 w-4 text-amber-500" />
-              <AlertTitle className="text-amber-700">Neue E-Mail-Funktion</AlertTitle>
-              <AlertDescription className="text-amber-700">
-                Das automatische Senden von E-Mails bei Statusänderungen wurde deaktiviert. 
-                Bitte verwenden Sie stattdessen die separate E-Mail-Funktion über den "E-Mail" Knopf im Reparaturmenü.
-              </AlertDescription>
-            </Alert>
+            {/* Der Hinweis zur deaktivierten automatischen E-Mail-Versendung wurde entfernt */}
             
             {showEmailOption && currentSelectedStatus === 'abgeholt' && (
               <div className="space-y-4">
