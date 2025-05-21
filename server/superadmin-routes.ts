@@ -13,6 +13,7 @@ import {
   hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries, businessSettings,
   costEstimates, emailHistory, emailTemplates
 } from "@shared/schema";
+import { deleteUserCompletely } from './user-deletion-service';
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
 
