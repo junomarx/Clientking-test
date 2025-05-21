@@ -715,23 +715,32 @@ export default function SuperadminEmailTab() {
               </div>
               
               {/* Tabs für Email-Vorlagentypen */}
-              <div className="mt-4">
-                <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger
-                    value="app"
-                    className={templateType === 'app' ? 'bg-primary text-primary-foreground' : ''}
-                    onClick={() => setTemplateType('app')}
-                  >
-                    System-Vorlagen
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="customer"
-                    className={templateType === 'customer' ? 'bg-primary text-primary-foreground' : ''}
-                    onClick={() => setTemplateType('customer')}
-                  >
-                    Kunden-Vorlagen
-                  </TabsTrigger>
-                </TabsList>
+              <div className="mt-4 max-w-full">
+                <div className="bg-muted p-2 rounded-md">
+                  <p className="text-sm text-muted-foreground mb-2 font-medium">Vorlagentyp auswählen:</p>
+                  <TabsList className="w-full grid grid-cols-2 gap-2">
+                    <TabsTrigger
+                      value="app"
+                      className={`${templateType === 'app' ? 'bg-primary text-primary-foreground' : ''} text-center px-2 py-1.5`}
+                      onClick={() => setTemplateType('app')}
+                    >
+                      <span className="flex items-center justify-center">
+                        <FileText className="h-4 w-4 mr-1" />
+                        System-Vorlagen
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="customer"
+                      className={`${templateType === 'customer' ? 'bg-primary text-primary-foreground' : ''} text-center px-2 py-1.5`}
+                      onClick={() => setTemplateType('customer')}
+                    >
+                      <span className="flex items-center justify-center">
+                        <Mail className="h-4 w-4 mr-1" />
+                        Kunden-Vorlagen
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
               </div>
             </CardHeader>
             
