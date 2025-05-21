@@ -112,11 +112,11 @@ export default function SuperadminEmailTab() {
     }
   });
 
-  // E-Mail-Vorlagen abrufen mit Typ-Filter
+  // E-Mail-Vorlagen abrufen (ohne Typ-Filter zunächst)
   const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError, refetch: refetchTemplates } = useQuery<EmailTemplate[]>({
-    queryKey: ['/api/superadmin/email/templates', templateType],
+    queryKey: ['/api/superadmin/email/templates'],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/superadmin/email/templates?type=${templateType}`);
+      const response = await apiRequest('GET', '/api/superadmin/email/templates');
       return await response.json();
     }
   });
