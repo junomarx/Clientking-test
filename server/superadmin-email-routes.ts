@@ -1079,15 +1079,24 @@ export function registerSuperadminEmailRoutes(app: Express) {
       
       // Filter-Optionen
       if (typeFilter) {
-        // Nach Typ filtern (app oder customer)
-        queryBuilder = db
-          .select()
-          .from(emailTemplates)
-          .where(and(
-            isNull(emailTemplates.userId),
-            eq(emailTemplates.shopId, 0),
-            eq(emailTemplates.type, typeFilter)
-          ));
+        if (typeFilter === 'app') {
+          // Für System-Vorlagen weiterhin nur globale Vorlagen anzeigen
+          queryBuilder = db
+            .select()
+            .from(emailTemplates)
+            .where(and(
+              isNull(emailTemplates.userId),
+              eq(emailTemplates.shopId, 0),
+              eq(emailTemplates.type, typeFilter)
+            ));
+        } else if (typeFilter === 'customer') {
+          // Für Kunden-Vorlagen werden vorrangig globale angezeigt, aber auch andere vom Typ "customer"
+          // Die Bedingung wurde gelockert, damit mehr Kunden-Vorlagen sichtbar werden
+          queryBuilder = db
+            .select()
+            .from(emailTemplates)
+            .where(eq(emailTemplates.type, typeFilter));
+        }
       }
       
       // Sortieren nach Update-Datum (neueste zuerst)
