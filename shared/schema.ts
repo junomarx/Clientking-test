@@ -694,4 +694,4 @@ export const insertSupportAccessLogSchema = createInsertSchema(supportAccessLogs
 export type SupportAccessLog = typeof supportAccessLogs.$inferSelect;
 export type InsertSupportAccessLog = z.infer<typeof insertSupportAccessLogSchema>;
 
-// Hinweis: Die E-Mail-Trigger-Tabelle ist bereits an anderer Stelle im Code definiert
+// Hinweis: Die E-Mail-Trigger-Tabelle ist bereits weiter oben im Code definiert (Zeile ~376)
