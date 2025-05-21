@@ -829,9 +829,9 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         open={isDetailsDialogOpen} 
         onClose={() => setIsDetailsDialogOpen(false)} 
         userId={selectedUserId}
-        onEdit={(userId) => {
+        onEdit={(user) => {
           setIsDetailsDialogOpen(false);
-          handleEditUser(userId);
+          handleEditUser(user);
         }}
         onToggleActive={(userId) => toggleActivationMutation.mutate(userId)}
         onDelete={(userId) => {

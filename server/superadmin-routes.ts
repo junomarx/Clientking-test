@@ -10,7 +10,8 @@ import { count, eq, and, or, sql } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
-  hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries, businessSettings
+  hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries, businessSettings,
+  feedbacks, costEstimates, emailHistory, emailTemplates
 } from "@shared/schema";
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
@@ -548,10 +549,48 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
+      // Prüfen auf verknüpfte Kunden
+      const userCustomers = await db.select().from(customers).where(eq(customers.userId, userId));
+      
+      // Wenn Kunden vorhanden sind, diese zuerst löschen
+      if (userCustomers.length > 0) {
+        console.log(`Lösche ${userCustomers.length} Kunden des Benutzers ${userId}...`);
+        
+        // Kunde IDs sammeln für das Löschen der Reparaturen
+        const customerIds = userCustomers.map(customer => customer.id);
+        
+        // Verknüpfte Reparaturen für diese Kunden suchen und löschen
+        const customerRepairs = await db.select().from(repairs).where(inArray(repairs.customerId, customerIds));
+        if (customerRepairs.length > 0) {
+          console.log(`Lösche ${customerRepairs.length} Reparaturen der Kunden des Benutzers ${userId}...`);
+          
+          // Sammle Reparatur IDs
+          const repairIds = customerRepairs.map(repair => repair.id);
+          
+          // Lösche alle verknüpften Daten zu den Reparaturen (z.B. Feedback, etc.)
+          // Alle FK-Beziehungen behandeln
+          await db.delete(feedbacks).where(inArray(feedbacks.repairId, repairIds));
+          await db.delete(costEstimates).where(inArray(costEstimates.repairId, repairIds));
+          await db.delete(emailHistory).where(inArray(emailHistory.repairId, repairIds));
+          
+          // Jetzt die Reparaturen löschen
+          await db.delete(repairs).where(inArray(repairs.customerId, customerIds));
+        }
+        
+        // Jetzt die Kunden löschen
+        await db.delete(customers).where(eq(customers.userId, userId));
+      }
+      
+      // Geschäftseinstellungen des Benutzers löschen
+      await db.delete(businessSettings).where(eq(businessSettings.userId, userId));
+      
+      // Email-Vorlagen des Benutzers löschen
+      await db.delete(emailTemplates).where(eq(emailTemplates.userId, userId));
+      
       // Benutzer löschen
       await db.delete(users).where(eq(users.id, userId));
 
-      res.json({ message: "Benutzer erfolgreich gelöscht" });
+      res.json({ message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht" });
     } catch (error) {
       console.error("Fehler beim Löschen des Benutzers:", error);
       res.status(500).json({ message: "Fehler beim Löschen des Benutzers" });
