@@ -241,9 +241,26 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
     return null;
   }
 
+  if (!open) return null;
+
+  // Zwei separate Komponenten rendert: DeleteConfirmDialog und Dialog
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <>
+      {showDeleteDialog && user && (
+        <DeleteConfirmDialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={() => {
+            if (userId) deleteUserMutation.mutate(userId);
+          }}
+          title="Benutzer löschen"
+          description={`Sind Sie sicher, dass Sie den Benutzer ${user.username} löschen möchten? Alle zugehörigen Daten werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.`}
+          isDeleting={isDeleting}
+          itemName="Benutzer"
+        />
+      )}
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
@@ -586,10 +603,46 @@ export function UserDetailsDialog({ open, onClose, userId, onToggleActive, onEdi
           </TabsContent>
         </Tabs>
         
-        <DialogFooter>
+        <DialogFooter className="gap-2 flex-col sm:flex-row">
           <Button variant="outline" onClick={handleClose}>
             Schließen
           </Button>
+          {user && (
+            <>
+              {onEdit && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => onEdit(user.id)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Bearbeiten
+                </Button>
+              )}
+              {onToggleActive && (
+                <Button
+                  variant={user.isActive ? "outline" : "default"}
+                  onClick={() => toggleActiveMutation.mutate(user.id)}
+                  disabled={toggleActiveMutation.isPending}
+                >
+                  {toggleActiveMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <ThumbsUp className="h-4 w-4 mr-2" />
+                  )}
+                  {user.isActive ? "Deaktivieren" : "Aktivieren"}
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Löschen
+                </Button>
+              )}
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
