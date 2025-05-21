@@ -3409,6 +3409,229 @@ export class DatabaseStorage implements IStorage {
       };
     }
   }
+
+  // E-Mail-Trigger-Methoden
+  
+  /**
+   * Ruft alle E-Mail-Trigger für einen Benutzer ab
+   * @param userId ID des Benutzers
+   * @returns Array mit allen E-Mail-Triggern des Benutzers
+   */
+  async getAllEmailTriggers(userId: number): Promise<EmailTrigger[]> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+      
+      const shopId = user.shopId;
+      
+      const triggers = await db
+        .select()
+        .from(emailTriggers)
+        .where(eq(emailTriggers.shopId, shopId));
+        
+      return triggers;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der E-Mail-Trigger:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Ruft einen einzelnen E-Mail-Trigger anhand seiner ID ab
+   * @param id ID des E-Mail-Triggers
+   * @param userId ID des Benutzers
+   * @returns Der E-Mail-Trigger oder undefined
+   */
+  async getEmailTrigger(id: number, userId: number): Promise<EmailTrigger | undefined> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      const shopId = user.shopId;
+      
+      const [trigger] = await db
+        .select()
+        .from(emailTriggers)
+        .where(and(
+          eq(emailTriggers.id, id),
+          eq(emailTriggers.shopId, shopId)
+        ));
+        
+      return trigger;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des E-Mail-Triggers ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Ruft einen E-Mail-Trigger anhand des Reparaturstatus ab
+   * @param status Der Reparaturstatus
+   * @param userId ID des Benutzers
+   * @returns Der E-Mail-Trigger oder undefined
+   */
+  async getEmailTriggerByStatus(status: string, userId: number): Promise<EmailTrigger | undefined> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      const shopId = user.shopId;
+      
+      const [trigger] = await db
+        .select()
+        .from(emailTriggers)
+        .where(and(
+          eq(emailTriggers.repairStatus, status),
+          eq(emailTriggers.shopId, shopId),
+          eq(emailTriggers.active, true)
+        ));
+        
+      return trigger;
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des E-Mail-Triggers für Status ${status}:`, error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Erstellt einen neuen E-Mail-Trigger
+   * @param trigger Daten des zu erstellenden E-Mail-Triggers
+   * @param userId ID des Benutzers
+   * @returns Der erstellte E-Mail-Trigger
+   */
+  async createEmailTrigger(trigger: InsertEmailTrigger, userId: number): Promise<EmailTrigger> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, Fehler werfen
+      if (!user.shopId) {
+        throw new Error(`Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Trigger kann nicht erstellt werden`);
+      }
+      
+      // Setze userId und shopId
+      const triggerData = {
+        ...trigger,
+        userId,
+        shopId: user.shopId
+      };
+      
+      // Eventuell vorhandenen Trigger für diesen Status deaktivieren
+      await db
+        .update(emailTriggers)
+        .set({ active: false })
+        .where(and(
+          eq(emailTriggers.repairStatus, trigger.repairStatus),
+          eq(emailTriggers.shopId, user.shopId)
+        ));
+      
+      // Neuen Trigger erstellen
+      const [newTrigger] = await db
+        .insert(emailTriggers)
+        .values(triggerData)
+        .returning();
+        
+      return newTrigger;
+    } catch (error) {
+      console.error('Fehler beim Erstellen des E-Mail-Triggers:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Aktualisiert einen E-Mail-Trigger
+   * @param id ID des zu aktualisierenden E-Mail-Triggers
+   * @param trigger Zu aktualisierende Daten
+   * @param userId ID des Benutzers
+   * @returns Der aktualisierte E-Mail-Trigger oder undefined
+   */
+  async updateEmailTrigger(id: number, trigger: Partial<InsertEmailTrigger>, userId: number): Promise<EmailTrigger | undefined> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      const shopId = user.shopId;
+      
+      // Aktualisieren des Triggers
+      const [updatedTrigger] = await db
+        .update(emailTriggers)
+        .set(trigger)
+        .where(and(
+          eq(emailTriggers.id, id),
+          eq(emailTriggers.shopId, shopId)
+        ))
+        .returning();
+        
+      return updatedTrigger;
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des E-Mail-Triggers ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Löscht einen E-Mail-Trigger
+   * @param id ID des zu löschenden E-Mail-Triggers
+   * @param userId ID des Benutzers
+   * @returns true bei Erfolg, false bei Misserfolg
+   */
+  async deleteEmailTrigger(id: number, userId: number): Promise<boolean> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return false;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, false zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+      
+      const shopId = user.shopId;
+      
+      // Löschen des Triggers
+      const result = await db
+        .delete(emailTriggers)
+        .where(and(
+          eq(emailTriggers.id, id),
+          eq(emailTriggers.shopId, shopId)
+        ));
+        
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error(`Fehler beim Löschen des E-Mail-Triggers ${id}:`, error);
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
