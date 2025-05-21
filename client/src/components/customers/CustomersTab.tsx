@@ -9,9 +9,10 @@ import { Plus, Search } from 'lucide-react';
 
 interface CustomersTabProps {
   onNewOrder: () => void;
+  onNewCustomer?: () => void; // Optionaler Handler für das Hinzufügen eines neuen Kunden
 }
 
-export function CustomersTab({ onNewOrder }: CustomersTabProps) {
+export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false);
@@ -87,11 +88,11 @@ export function CustomersTab({ onNewOrder }: CustomersTabProps) {
       <div className="flex justify-between items-center p-6">
         <h2 className="text-xl font-semibold text-primary">Kundenübersicht</h2>
         <Button
-          onClick={onNewOrder}
+          onClick={onNewCustomer || onNewOrder} /* Verwende onNewCustomer falls vorhanden, sonst onNewOrder */
           variant="default"
           className="flex items-center gap-2"
         >
-          <Plus className="h-4 w-4" /> Neuer Auftrag
+          <Plus className="h-4 w-4" /> +Neuer Kunde
         </Button>
       </div>
       
