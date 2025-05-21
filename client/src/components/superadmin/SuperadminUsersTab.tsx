@@ -268,6 +268,12 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   // Mutation zum Löschen eines Benutzers
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
+      // Zeige Toast-Nachricht, dass der Löschvorgang gestartet wurde
+      toast({
+        title: "Löschvorgang gestartet",
+        description: "Der Benutzer wird gelöscht. Dieser Vorgang kann einige Momente dauern...",
+      });
+      
       await apiRequest("DELETE", `/api/superadmin/users/${userId}`);
     },
     onSuccess: () => {
