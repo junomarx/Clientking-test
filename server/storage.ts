@@ -694,14 +694,28 @@ export class DatabaseStorage implements IStorage {
       
       // E-Mail-Verlaufseintrag erstellen
       try {
-        await db.insert(emailHistory).values({
-          templateId: templateId,
-          recipientEmail: recipientEmail,
-          subject: subject,
-          userId: userId,
-          variables: Object.entries(variables).map(([key, value]) => `${key}=${value}`),
-          sentAt: new Date(),
-          success: result.success
+        // E-Mail-Verlaufseintrag mit direktem SQL erstellen (wegen Schema-Unterschieden)
+        const values = [
+          repairId,
+          templateId,
+          subject,
+          recipientEmail,
+          result.success ? 'success' : 'failed',
+          userId,
+          shopId || 1
+        ];
+        
+        await db.execute(`
+          INSERT INTO email_history (
+            repair_id,
+            email_template_id,
+            subject,
+            recipient,
+            status,
+            user_id,
+            shop_id
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `, values);
         });
         console.log(`E-Mail-Verlaufseintrag für Benutzer ${userId} erstellt`);
       } catch (historyError) {
@@ -3499,11 +3513,11 @@ export class DatabaseStorage implements IStorage {
       const shopId = user.shopId;
       
       // Direkte SQL-Abfrage verwenden, um die repair_status Spalte korrekt anzusprechen
-      const result = await db.execute(`
-        SELECT * FROM email_triggers 
-        WHERE repair_status = $1 AND shop_id = $2 AND active = true
-        LIMIT 1
-      `, [status, shopId]);
+      const result = await db.execute(
+        `SELECT * FROM email_triggers 
+         WHERE repair_status = $1 AND shop_id = $2 AND active = true
+         LIMIT 1`, 
+        [status, shopId]);
       
       if (result.rows && result.rows.length > 0) {
         return result.rows[0] as EmailTrigger;
