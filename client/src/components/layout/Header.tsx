@@ -232,21 +232,6 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                   </nav>
                   
                   <div className="p-4 border-t">
-                    {/* Login als Superadmin Macnphone - nur anzeigen für Admins und Superadmins */}
-                    {user && (user.isAdmin || user.isSuperadmin) && (
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start mb-2 bg-red-50 hover:bg-red-100 border-red-200"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          window.location.href = "/auth?superadmin=true";
-                        }}
-                      >
-                        <Shield className="h-5 w-5 mr-2 text-red-500" />
-                        <span className="text-red-500 font-medium">Login als macnphone</span>
-                      </Button>
-                    )}
-                    
                     {/* Admin-Bereich-Button */}
                     {user && user.isAdmin && (
                       <Button 
