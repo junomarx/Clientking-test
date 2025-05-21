@@ -112,7 +112,7 @@ export function NewCustomerDialog({ open, onClose, onCustomerCreated }: NewCusto
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Neuen Kunden anlegen</DialogTitle>
           <DialogDescription>
