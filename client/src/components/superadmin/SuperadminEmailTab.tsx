@@ -769,7 +769,9 @@ export default function SuperadminEmailTab() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {emailTemplates.map((template) => (
+                      {emailTemplates
+                        .filter(template => template.type === templateType)
+                        .map((template) => (
                         <TableRow key={template.id}>
                           <TableCell className="font-medium">{template.name}</TableCell>
                           <TableCell className="hidden sm:table-cell text-muted-foreground">
