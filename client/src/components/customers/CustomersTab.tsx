@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Customer, Repair } from '@shared/schema';
 import { CustomerDetailDialog } from './CustomerDetailDialog';
+import { NewCustomerDialog } from './NewCustomerDialog';
 
 import { Plus, Search } from 'lucide-react';
 
@@ -16,6 +17,7 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false);
+  const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers']
@@ -82,13 +84,32 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
   const handleNewRepairForCustomer = () => {
     onNewOrder(); // Stattdessen den vom Parent übergebenen Handler aufrufen
   };
+  
+  const handleOpenNewCustomerDialog = () => {
+    setIsNewCustomerDialogOpen(true);
+  };
+  
+  const handleCloseNewCustomerDialog = () => {
+    setIsNewCustomerDialogOpen(false);
+  };
+  
+  const handleCustomerCreated = (customerId: number) => {
+    // Optional: Hier könnte man nach Erstellung des Kunden direkt den Kundendetaildialog öffnen
+    // setSelectedCustomerId(customerId);
+    // setIsCustomerDetailOpen(true);
+    
+    // Oder einen externen Handler aufrufen, falls vorhanden
+    if (onNewCustomer) {
+      onNewCustomer();
+    }
+  };
 
   return (
     <div>
       <div className="flex justify-between items-center p-6">
         <h2 className="text-xl font-semibold text-primary">Kundenübersicht</h2>
         <Button
-          onClick={onNewCustomer || onNewOrder} /* Verwende onNewCustomer falls vorhanden, sonst onNewOrder */
+          onClick={handleOpenNewCustomerDialog}
           variant="default"
           className="flex items-center gap-2"
         >
@@ -207,6 +228,12 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
         onNewOrder={handleNewRepairForCustomer}
       />
 
+      {/* New Customer Dialog */}
+      <NewCustomerDialog
+        open={isNewCustomerDialogOpen}
+        onClose={handleCloseNewCustomerDialog}
+        onCustomerCreated={handleCustomerCreated}
+      />
 
     </div>
   );
