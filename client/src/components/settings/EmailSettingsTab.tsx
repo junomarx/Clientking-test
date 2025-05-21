@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Save, Mail, Send, RefreshCw, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { EmailTemplateTab } from './EmailTemplateTab';
+import { EmailTriggersTab } from './EmailTriggersTab';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

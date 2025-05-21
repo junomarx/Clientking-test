@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
+import emailTriggerRoutes from "./email-trigger-routes";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
