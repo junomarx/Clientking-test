@@ -330,6 +330,12 @@ export function EmailSettingsTab() {
       <div className="mt-6 md:mt-8">
         <EmailTemplateTab />
       </div>
+
+      {/* E-Mail-Trigger für Statusänderungen */}
+      <div className="mt-6 md:mt-8">
+        <h2 className="text-xl font-bold mb-4">E-Mail-Benachrichtigungen bei Statusänderungen</h2>
+        <EmailTriggersTab />
+      </div>
       
       {/* Benutzerfreundlicher SMTP-Test-Dialog für alle Benutzer */}
       <UserSmtpTestDialog
