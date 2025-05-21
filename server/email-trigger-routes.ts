@@ -86,8 +86,13 @@ router.get("/api/email-triggers/status/:status", isAuthenticated, async (req: Re
 // Einen neuen E-Mail-Trigger erstellen
 router.post("/api/email-triggers", isAuthenticated, async (req: Request, res: Response) => {
   try {
+    // Log für Debugging
+    console.log("Erhaltene Daten für E-Mail-Trigger:", JSON.stringify(req.body));
+    
     // Einfache Validierung
     const { repair_status, email_template_id, active } = req.body;
+    console.log(`Extrahierte Werte: repair_status=${repair_status}, email_template_id=${email_template_id}, active=${active}`);
+    
     if (!repair_status || !email_template_id) {
       return res.status(400).json({ error: "Repair status and email template ID are required" });
     }
