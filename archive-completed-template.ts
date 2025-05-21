@@ -106,5 +106,5 @@ async function main() {
   }
 }
 
-// Ausführung des Skripts
-main();
+// Skript wird nicht mehr automatisch ausgeführt
+// main();

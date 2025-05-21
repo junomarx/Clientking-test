@@ -6,6 +6,8 @@ import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from 
 // Import der Middleware für die Prüfung der Trial-Version
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
+// Import email trigger routes
+import emailTriggerRoutes from './email-trigger-routes';
 import { db, pool } from './db';
 import { eq } from 'drizzle-orm';
 import { 

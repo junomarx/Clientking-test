@@ -22,6 +22,9 @@ import { addSupportAccessTable } from "./add-support-access-table";
 import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
 
+// Prevent the Archiviert text spam by commenting out this import
+// "../archive-completed-template" gets imported automatically somewhere in the codebase
+
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
 if (!process.env.SMTP_SENDER_EMAIL) {
   process.env.SMTP_SENDER_EMAIL = "noreply@phonerepair.at";
