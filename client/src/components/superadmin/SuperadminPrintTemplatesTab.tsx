@@ -292,41 +292,49 @@ export default function SuperadminPrintTemplatesTab() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : printTemplates && printTemplates.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Typ</TableHead>
-                  <TableHead>Variablen</TableHead>
-                  <TableHead>Zuletzt aktualisiert</TableHead>
-                  <TableHead className="text-right">Aktionen</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {printTemplates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell className="font-medium">{template.name}</TableCell>
-                    <TableCell>{getTemplateTypeLabel(template.type)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {template.variables && template.variables.length > 0 ? (
-                          template.variables.slice(0, 3).map((variable, index) => (
-                            <Badge key={index} variant="outline">{variable}</Badge>
-                          ))
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Keine Variablen</span>
-                        )}
-                        {template.variables && template.variables.length > 3 && (
-                          <Badge variant="outline">+{template.variables.length - 3} weitere</Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(template.updatedAt).toLocaleDateString('de-DE')}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
+            <div className="overflow-x-auto">
+              <Table>
+                <colgroup>
+                  <col className="w-[25%] min-w-[120px]" />
+                  <col className="w-[15%] min-w-[100px]" />
+                  <col className="w-[30%] min-w-[150px]" />
+                  <col className="w-[15%] min-w-[100px]" />
+                  <col className="w-[15%] min-w-[100px]" />
+                </colgroup>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Typ</TableHead>
+                    <TableHead className="hidden md:table-cell">Variablen</TableHead>
+                    <TableHead className="hidden md:table-cell">Zuletzt aktualisiert</TableHead>
+                    <TableHead className="text-right">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {printTemplates.map((template) => (
+                    <TableRow key={template.id}>
+                      <TableCell className="font-medium">{template.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{getTemplateTypeLabel(template.type)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {template.variables && template.variables.length > 0 ? (
+                            template.variables.slice(0, 3).map((variable, index) => (
+                              <Badge key={index} variant="outline">{variable}</Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Keine Variablen</span>
+                          )}
+                          {template.variables && template.variables.length > 3 && (
+                            <Badge variant="outline">+{template.variables.length - 3} weitere</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {new Date(template.updatedAt).toLocaleDateString('de-DE')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => handleEditTemplate(template)}
