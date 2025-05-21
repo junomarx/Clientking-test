@@ -281,30 +281,7 @@ export const insertBusinessSettingsSchema = createInsertSchema(businessSettings)
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
 
-// Email Triggers table - verbindet Reparaturstatus mit E-Mail-Vorlagen
-export const emailTriggers = pgTable("email_triggers", {
-  id: serial("id").primaryKey(),
-  repairStatus: text("repair_status").notNull(), // Status, bei dem die E-Mail gesendet wird
-  emailTemplateId: integer("email_template_id").notNull(), // Welche Vorlage soll verwendet werden
-  active: boolean("active").default(true), // Ist dieser Trigger aktiv
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  // Jeder Trigger gehört zu einem Benutzer/Unternehmen
-  userId: integer("user_id").references(() => users.id),
-  // Jeder Trigger gehört zu einem Shop (für Multi-Tenant-Isolation)
-  shopId: integer("shop_id").default(1),
-});
-
-export const insertEmailTriggerSchema = createInsertSchema(emailTriggers).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  userId: true,
-  shopId: true,
-});
-
-export type EmailTrigger = typeof emailTriggers.$inferSelect;
-export type InsertEmailTrigger = z.infer<typeof insertEmailTriggerSchema>;
+// Hinweis: Die E-Mail-Trigger-Tabelle ist bereits weiter unten im Code definiert
 
 // Kundenfeedback Tabelle
 export const feedbacks = pgTable("feedbacks", {

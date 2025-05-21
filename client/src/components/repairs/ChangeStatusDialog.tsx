@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import type { SubmitHandler } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 import {
   Dialog,
@@ -24,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { AlertCircle, Mail, Star, Info } from 'lucide-react';
+import { AlertCircle, Mail, Star, Info, CheckCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -38,6 +39,20 @@ const statusSchema = z.object({
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
+
+interface EmailTrigger {
+  id: number;
+  repairStatus: string;
+  emailTemplateId: number;
+  active: boolean;
+}
+
+interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  body: string;
+}
 
 interface ChangeStatusDialogProps {
   open: boolean;
@@ -61,6 +76,12 @@ export function ChangeStatusDialog({
   // Abfrage der SMTP-Einstellungen für den Benutzer
   const { data: businessSettings } = useQuery({
     queryKey: ['/api/business-settings'],
+    enabled: open && !!user,
+  });
+  
+  // Abfrage der E-Mail-Trigger für Reparaturstatus-Änderungen
+  const { data: emailTriggers = [] } = useQuery({
+    queryKey: ['/api/email-triggers'],
     enabled: open && !!user,
   });
 
