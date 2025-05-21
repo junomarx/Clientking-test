@@ -84,7 +84,14 @@ export function EmailTriggersTab() {
   // Erstellen eines neuen Triggers
   const createMutation = useMutation({
     mutationFn: async (trigger: NewTriggerFormData) => {
-      const res = await apiRequest("POST", "/api/email-triggers", trigger);
+      // Ensure we're sending the exact field names the server expects
+      const payload = {
+        repair_status: trigger.repair_status,
+        email_template_id: trigger.email_template_id,
+        active: trigger.active
+      };
+      console.log("Sending exact payload:", JSON.stringify(payload));
+      const res = await apiRequest("POST", "/api/email-triggers", payload);
       return await res.json();
     },
     onSuccess: () => {
