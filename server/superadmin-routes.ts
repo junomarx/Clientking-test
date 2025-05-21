@@ -550,203 +550,28 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
-      console.log(`Starte verbesserten Löschvorgang für Benutzer ${existingUser.username} (ID: ${userId})...`);
+      console.log(`Starte Löschvorgang für Benutzer ${existingUser.username} (ID: ${userId})...`);
       
-      // Robust mit Transaktion arbeiten
       try {
-        await db.transaction(async (tx) => {
-          const deletedCounts = {
-            emailHistory: 0,
-            costEstimates: 0,
-            repairs: 0,
-            customers: 0,
-            businessSettings: 0,
-            emailTemplates: 0,
-            userDeviceData: 0
-          };
-
-          // 1. Finde alle Kunden des Benutzers
-          const userCustomers = await tx.select({ id: customers.id })
-            .from(customers)
-            .where(eq(customers.userId, userId));
-          
-          const customerIds = userCustomers.map(c => c.id);
-          console.log(`${customerIds.length} Kunden des Benutzers ${userId} gefunden.`);
-          
-          // 2. Für jeden Kunden die Reparaturen und abhängigen Daten löschen
-          if (customerIds.length > 0) {
-            for (const customerId of customerIds) {
-              // Alle Reparaturen für diesen Kunden finden
-              const customerRepairs = await tx.select({ id: repairs.id })
-                .from(repairs)
-                .where(eq(repairs.customerId, customerId));
-              
-              const repairIds = customerRepairs.map(r => r.id);
-              
-              // 2.1 Für jede Reparatur die abhängigen Daten löschen
-              for (const repairId of repairIds) {
-                // E-Mail-Historie löschen
-                const emailHistoryResult = await tx.delete(emailHistory)
-                  .where(eq(emailHistory.repairId, repairId))
-                  .returning();
-                deletedCounts.emailHistory += emailHistoryResult.length;
-                
-                // Kostenvoranschläge löschen
-                const costEstimateResult = await tx.delete(costEstimates)
-                  .where(eq(costEstimates.repairId, repairId))
-                  .returning();
-                deletedCounts.costEstimates += costEstimateResult.length;
-              }
-              
-              // Alle Reparaturen dieses Kunden löschen
-              const repairsResult = await tx.delete(repairs)
-                .where(eq(repairs.customerId, customerId))
-                .returning();
-              deletedCounts.repairs += repairsResult.length;
-            }
-            
-            // Alle Kunden dieses Benutzers löschen
-            const customersResult = await tx.delete(customers)
-              .where(eq(customers.userId, userId))
-              .returning();
-            deletedCounts.customers = customersResult.length;
-          }
-          
-          // 3. Geschäftseinstellungen löschen
-          const businessSettingsResult = await tx.delete(businessSettings)
-            .where(eq(businessSettings.userId, userId))
-            .returning();
-          deletedCounts.businessSettings = businessSettingsResult.length;
-          
-          // 4. E-Mail-Vorlagen löschen
-          const emailTemplatesResult = await tx.delete(emailTemplates)
-            .where(eq(emailTemplates.userId, userId))
-            .returning();
-          deletedCounts.emailTemplates = emailTemplatesResult.length;
-          
-          // 5. Gerätespezifische Daten löschen (falls vorhanden)
-          try {
-            // 5.1 Benutzer-Modelle
-            await tx.execute(sql`DELETE FROM user_models WHERE user_id = ${userId}`);
-            
-            // 5.2 Benutzer-Marken
-            await tx.execute(sql`DELETE FROM user_brands WHERE user_id = ${userId}`);
-            
-            // 5.3 Benutzer-Gerätetypen
-            await tx.execute(sql`DELETE FROM user_device_types WHERE user_id = ${userId}`);
-            
-            // 5.4 Ausgeblendete Standard-Gerätetypen
-            await tx.execute(sql`DELETE FROM hidden_standard_device_types WHERE user_id = ${userId}`);
-          } catch (err) {
-            // Ignorieren, nicht alle Tabellen müssen existieren
-            console.log(`Hinweis: Einige Gerätetabellen konnten nicht bereinigt werden: ${err.message}`);
-          }
-          
-          // 6. Benutzer selbst löschen
-          const userResult = await tx.delete(users)
-            .where(eq(users.id, userId))
-            .returning();
-          
-          if (userResult.length === 0) {
-            throw new Error(`Benutzer mit ID ${userId} konnte nicht gelöscht werden.`);
-          }
-          
-          console.log(`Löschvorgang erfolgreich für Benutzer ${existingUser.username} (ID: ${userId}).`);
-          console.log(`Gelöschte Daten: ${JSON.stringify(deletedCounts)}`);
-        });
+        // Benutzer über den dedizierten Löschdienst löschen
+        await deleteUserCompletely(userId);
+        
+        console.log(`Benutzer ${existingUser.username} (ID: ${userId}) erfolgreich gelöscht.`);
         
         res.json({ 
           message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht",
           username: existingUser.username
         });
-      } catch (txError) {
-        console.error("Fehler in der Lösch-Transaktion:", txError);
-        
-        // Wenn der normale Ansatz fehlschlägt, versuchen wir es mit einzelnen SQL-Befehlen
-        console.log("Versuche alternativen Löschansatz mit einzelnen SQL-Befehlen...");
-        
-        try {
-          // Deaktiviere temporär Fremdschlüsselprüfungen
-          await db.execute(sql`SET session_replication_role = 'replica'`);
-          
-          console.log(`Lösche abhängige Daten für Benutzer ${existingUser.username} (ID: ${userId})...`);
-          
-          // 1. E-Mail-Verlauf für Reparaturen des Benutzers löschen
-          await db.execute(sql`
-            DELETE FROM email_history 
-            WHERE "repairId" IN (
-              SELECT r.id 
-              FROM repairs r 
-              JOIN customers c ON r.customer_id = c.id 
-              WHERE c.user_id = ${userId}
-            )
-          `);
-          
-          // 2. Kostenvoranschläge für Reparaturen des Benutzers löschen
-          await db.execute(sql`
-            DELETE FROM cost_estimates 
-            WHERE repair_id IN (
-              SELECT r.id 
-              FROM repairs r 
-              JOIN customers c ON r.customer_id = c.id 
-              WHERE c.user_id = ${userId}
-            )
-          `);
-          
-          // 3. Reparaturen des Benutzers löschen
-          await db.execute(sql`
-            DELETE FROM repairs 
-            WHERE customer_id IN (
-              SELECT id 
-              FROM customers 
-              WHERE user_id = ${userId}
-            )
-          `);
-          
-          // 4. Kunden des Benutzers löschen
-          await db.execute(sql`DELETE FROM customers WHERE user_id = ${userId}`);
-          
-          // 5. Geschäftseinstellungen des Benutzers löschen
-          await db.execute(sql`DELETE FROM business_settings WHERE user_id = ${userId}`);
-          
-          // 6. E-Mail-Vorlagen des Benutzers löschen
-          await db.execute(sql`DELETE FROM email_templates WHERE user_id = ${userId}`);
-          
-          // 7. Gerätespezifische Daten löschen (falls vorhanden)
-          try {
-            await db.execute(sql`DELETE FROM user_models WHERE user_id = ${userId}`);
-            await db.execute(sql`DELETE FROM user_brands WHERE user_id = ${userId}`);
-            await db.execute(sql`DELETE FROM user_device_types WHERE user_id = ${userId}`);
-            await db.execute(sql`DELETE FROM hidden_standard_device_types WHERE user_id = ${userId}`);
-          } catch (deviceError) {
-            console.log(`Hinweis: Fehler beim Löschen von Gerätedaten (nicht kritisch): ${deviceError.message}`);
-          }
-          
-          // 8. Den Benutzer selbst löschen
-          await db.execute(sql`DELETE FROM users WHERE id = ${userId}`);
-          
-          // 9. Fremdschlüsselprüfungen wiederherstellen
-          await db.execute(sql`SET session_replication_role = 'origin'`);
-          
-          console.log(`Alternativer Löschansatz für Benutzer ${existingUser.username} (ID: ${userId}) erfolgreich.`);
-        } catch (sqlError) {
-          // Stelle sicher, dass Fremdschlüsselprüfungen in jedem Fall wiederhergestellt werden
-          try {
-            await db.execute(sql`SET session_replication_role = 'origin'`);
-          } catch {}
-          
-          throw new Error(`SQL-Fehler beim alternativen Löschansatz: ${sqlError.message}`);
-        }
-        
-        res.json({ 
-          message: "Benutzer und alle zugehörigen Daten erfolgreich gelöscht (Fallback-Methode)",
-          username: existingUser.username 
+      } catch (error) {
+        console.error("Fehler beim Löschen des Benutzers:", error);
+        res.status(500).json({ 
+          message: `Fehler beim Löschen des Benutzers: ${error.message || String(error)}` 
         });
       }
     } catch (error) {
-      console.error("Fehler beim Löschen des Benutzers:", error);
+      console.error("Fehler beim Verarbeiten der Anfrage:", error);
       res.status(500).json({ 
-        message: `Fehler beim Löschen des Benutzers: ${error.message || error}` 
+        message: `Fehler beim Verarbeiten der Anfrage: ${error.message || String(error)}` 
       });
     }
   });
