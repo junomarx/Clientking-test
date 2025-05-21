@@ -124,6 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Diese Middleware hängt automatisch die Shop-ID des angemeldeten Benutzers an alle Anfragen an
   app.use(attachShopId);
   
+  // Registriere die Email-Trigger-Routen
+  app.use(emailTriggerRoutes);
+  
   // Set up admin routes
   registerAdminRoutes(app);
   
