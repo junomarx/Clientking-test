@@ -3653,18 +3653,17 @@ export class DatabaseStorage implements IStorage {
       
       const shopId = user.shopId;
       
-      // Trigger für den angegebenen Status und Shop abrufen
-      const triggers = await db
-        .select()
-        .from(emailTriggers)
-        .where(and(
-          eq(emailTriggers.status, status),
-          eq(emailTriggers.shopId, shopId)
-        ));
+      // Wichtig: Die Spalte heißt repair_status, nicht status!
+      // SQL direkt verwenden, um das Schema-Problem zu umgehen
+      const result = await db.execute(`
+        SELECT * FROM email_triggers 
+        WHERE repair_status = $1 AND shop_id = $2
+        LIMIT 1
+      `, [status, shopId]);
       
-      if (triggers.length > 0) {
+      if (result.rows && result.rows.length > 0) {
         console.log(`E-Mail-Trigger für Status "${status}" und Shop ${shopId} gefunden`);
-        return triggers[0];
+        return result.rows[0] as EmailTrigger;
       } else {
         console.log(`Kein E-Mail-Trigger für Status "${status}" und Shop ${shopId} gefunden`);
         return undefined;

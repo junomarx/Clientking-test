@@ -693,3 +693,24 @@ export const insertSupportAccessLogSchema = createInsertSchema(supportAccessLogs
 
 export type SupportAccessLog = typeof supportAccessLogs.$inferSelect;
 export type InsertSupportAccessLog = z.infer<typeof insertSupportAccessLogSchema>;
+
+// E-Mail-Trigger Tabelle für automatische E-Mails bei Statusänderungen
+export const emailTriggers = pgTable("email_triggers", {
+  id: serial("id").primaryKey(),
+  repair_status: varchar("repair_status").notNull(), // Wichtig: heißt repair_status, nicht status!
+  emailTemplateId: integer("email_template_id").references(() => emailTemplates.id),
+  active: boolean("active").default(true).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  shopId: integer("shop_id").default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertEmailTriggerSchema = createInsertSchema(emailTriggers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type EmailTrigger = typeof emailTriggers.$inferSelect;
+export type InsertEmailTrigger = z.infer<typeof insertEmailTriggerSchema>;
