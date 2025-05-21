@@ -11,7 +11,7 @@ import {
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
   hiddenStandardDeviceTypes, deviceIssues, errorCatalogEntries, businessSettings,
-  feedbacks, costEstimates, emailHistory, emailTemplates
+  costEstimates, emailHistory, emailTemplates
 } from "@shared/schema";
 import { UploadedFile } from "express-fileupload";
 import { inArray } from "drizzle-orm";
@@ -567,9 +567,8 @@ export function registerSuperadminRoutes(app: Express) {
           // Sammle Reparatur IDs
           const repairIds = customerRepairs.map(repair => repair.id);
           
-          // Lösche alle verknüpften Daten zu den Reparaturen (z.B. Feedback, etc.)
+          // Lösche alle verknüpften Daten zu den Reparaturen
           // Alle FK-Beziehungen behandeln
-          await db.delete(feedbacks).where(inArray(feedbacks.repairId, repairIds));
           await db.delete(costEstimates).where(inArray(costEstimates.repairId, repairIds));
           await db.delete(emailHistory).where(inArray(emailHistory.repairId, repairIds));
           
