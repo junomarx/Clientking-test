@@ -184,7 +184,10 @@ export function EmailTriggersTab() {
       });
       return;
     }
-
+    
+    // Hier die Daten loggen, um zu sehen, was genau gesendet wird
+    console.log("Sende E-Mail-Trigger-Daten:", JSON.stringify(newTrigger));
+    
     createMutation.mutate(newTrigger);
   };
 
