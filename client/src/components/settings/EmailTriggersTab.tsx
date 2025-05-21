@@ -79,9 +79,6 @@ export function EmailTriggersTab() {
     error: triggersError,
   } = useQuery<EmailTrigger[]>({
     queryKey: ["/api/email-triggers"],
-    onSuccess: (data) => {
-      console.log("Geladene Trigger:", data);
-    },
   });
 
   // Erstellen eines neuen Triggers
