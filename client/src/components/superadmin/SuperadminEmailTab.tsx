@@ -112,11 +112,11 @@ export default function SuperadminEmailTab() {
     }
   });
 
-  // E-Mail-Vorlagen abrufen (ohne Typ-Filter zunächst)
+  // E-Mail-Vorlagen abrufen mit Typ-Filter, abhängig vom aktuell gewählten Typ
   const { data: emailTemplates, isLoading: isLoadingTemplates, error: templatesError, refetch: refetchTemplates } = useQuery<EmailTemplate[]>({
-    queryKey: ['/api/superadmin/email/templates'],
+    queryKey: ['/api/superadmin/email/templates', templateType],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/superadmin/email/templates');
+      const response = await apiRequest('GET', `/api/superadmin/email/templates?type=${templateType}`);
       return await response.json();
     }
   });
@@ -769,9 +769,7 @@ export default function SuperadminEmailTab() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {emailTemplates
-                        .filter(template => template.type === templateType)
-                        .map((template) => (
+                      {emailTemplates?.map((template) => (
                         <TableRow key={template.id}>
                           <TableCell className="font-medium">{template.name}</TableCell>
                           <TableCell className="hidden sm:table-cell text-muted-foreground">
