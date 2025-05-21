@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 import { Save, Building } from 'lucide-react';
 
 // Schema für die Geschäftseinstellungen
@@ -412,7 +413,11 @@ export function BusinessSettingsTab() {
                     <FormItem className="w-full">
                       <FormLabel className="text-sm">Öffnungszeiten</FormLabel>
                       <FormControl>
-                        <Input placeholder="Mo-Fr 09:00-18:00, Sa 09:00-13:00" {...field} className="h-9 text-sm" />
+                        <Input 
+                          placeholder="Mo-Fr: 9-18 Uhr, Sa: 9-13 Uhr" 
+                          {...field} 
+                          className="h-9 text-sm" 
+                        />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
