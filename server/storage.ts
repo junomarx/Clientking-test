@@ -636,8 +636,17 @@ export class DatabaseStorage implements IStorage {
       // Variablen in Betreff und Inhalt ersetzen
       for (const [key, value] of Object.entries(variables)) {
         const placeholder = new RegExp(`{{${key}}}`, 'g');
-        subject = subject.replace(placeholder, value);
-        body = body.replace(placeholder, value);
+        
+        // Spezielles Handling für Öffnungszeiten - Semikolons in Zeilenumbrüche umwandeln
+        let processedValue = value;
+        if (key === 'oeffnungszeiten' && typeof value === 'string') {
+          // Ersetze alle Semikolons durch HTML-Zeilenumbrüche
+          processedValue = value.replace(/;/g, '<br>');
+          console.log(`Öffnungszeiten mit Zeilenumbrüchen formatiert: ${processedValue}`);
+        }
+        
+        subject = subject.replace(placeholder, processedValue);
+        body = body.replace(placeholder, processedValue);
       }
       
       console.log(`E-Mail wird gesendet an ${recipientEmail} mit Betreff: "${subject}"`);
