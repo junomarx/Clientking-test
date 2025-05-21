@@ -825,15 +825,19 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       </Dialog>
 
       {/* Benutzerdetails Dialog */}
-      <UserDetailsDialog 
+      <SimpleUserDetailsDialog 
         open={isDetailsDialogOpen} 
-        onOpenChange={setIsDetailsDialogOpen} 
+        onClose={() => setIsDetailsDialogOpen(false)} 
         userId={selectedUserId}
-        onEdit={(user) => {
+        onEdit={(userId) => {
           setIsDetailsDialogOpen(false);
-          handleEditUser(user);
+          handleEditUser(userId);
         }}
-        onActivate={(userId) => toggleActivationMutation.mutate(userId)}
+        onToggleActive={(userId) => toggleActivationMutation.mutate(userId)}
+        onDelete={(userId) => {
+          setIsDetailsDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['/api/superadmin/users'] });
+        }}
       />
     </div>
   );
