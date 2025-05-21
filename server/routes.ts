@@ -46,7 +46,7 @@ import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middlewar
 import nodemailer from "nodemailer";
 
 // Middleware to check if user is authenticated
-async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+export async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
   const customUserId = req.headers['x-user-id'];
   if (customUserId) {
