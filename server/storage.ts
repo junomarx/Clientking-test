@@ -3632,6 +3632,48 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+  
+  /**
+   * Ruft einen E-Mail-Trigger für einen bestimmten Reparaturstatus ab
+   * @param status Der Reparaturstatus, für den ein Trigger abgerufen werden soll
+   * @param userId ID des Benutzers
+   * @returns Der gefundene E-Mail-Trigger oder undefined wenn keiner gefunden wurde
+   */
+  async getEmailTriggerByStatus(status: string, userId: number): Promise<EmailTrigger | undefined> {
+    try {
+      // Shop-ID des Benutzers ermitteln
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      // DSGVO-Schutz: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      const shopId = user.shopId;
+      
+      // Trigger für den angegebenen Status und Shop abrufen
+      const triggers = await db
+        .select()
+        .from(emailTriggers)
+        .where(and(
+          eq(emailTriggers.status, status),
+          eq(emailTriggers.shopId, shopId)
+        ));
+      
+      if (triggers.length > 0) {
+        console.log(`E-Mail-Trigger für Status "${status}" und Shop ${shopId} gefunden`);
+        return triggers[0];
+      } else {
+        console.log(`Kein E-Mail-Trigger für Status "${status}" und Shop ${shopId} gefunden`);
+        return undefined;
+      }
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des E-Mail-Triggers für Status "${status}":`, error);
+      return undefined;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
