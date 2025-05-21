@@ -281,8 +281,6 @@ export const insertBusinessSettingsSchema = createInsertSchema(businessSettings)
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type InsertBusinessSettings = z.infer<typeof insertBusinessSettingsSchema>;
 
-// Hinweis: Die E-Mail-Trigger-Tabelle ist bereits weiter unten im Code definiert
-
 // Kundenfeedback Tabelle
 export const feedbacks = pgTable("feedbacks", {
   id: serial("id").primaryKey(),
@@ -371,27 +369,6 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 
 export type EmailHistory = typeof emailHistory.$inferSelect;
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
-
-// E-Mail-Trigger für Statusänderungen
-export const emailTriggers = pgTable("email_triggers", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  shopId: integer("shop_id").default(1),
-  repair_status: text("repair_status").notNull(), // Status, bei dem die E-Mail ausgelöst wird
-  emailTemplateId: integer("email_template_id").references(() => emailTemplates.id),
-  active: boolean("active").default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const insertEmailTriggerSchema = createInsertSchema(emailTriggers).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type EmailTrigger = typeof emailTriggers.$inferSelect;
-export type InsertEmailTrigger = z.infer<typeof insertEmailTriggerSchema>;
 
 // Kostenvoranschläge
 export const costEstimates = pgTable("cost_estimates", {
@@ -693,5 +670,3 @@ export const insertSupportAccessLogSchema = createInsertSchema(supportAccessLogs
 
 export type SupportAccessLog = typeof supportAccessLogs.$inferSelect;
 export type InsertSupportAccessLog = z.infer<typeof insertSupportAccessLogSchema>;
-
-// Hinweis: Die E-Mail-Trigger-Tabelle ist bereits weiter oben im Code definiert (Zeile ~376)

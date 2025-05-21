@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import type { SubmitHandler } from 'react-hook-form';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -25,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { AlertCircle, Mail, Star, Info, CheckCircle } from 'lucide-react';
+import { AlertCircle, Mail, Star, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -39,20 +38,6 @@ const statusSchema = z.object({
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
-
-interface EmailTrigger {
-  id: number;
-  repairStatus: string;
-  emailTemplateId: number;
-  active: boolean;
-}
-
-interface EmailTemplate {
-  id: number;
-  name: string;
-  subject: string;
-  body: string;
-}
 
 interface ChangeStatusDialogProps {
   open: boolean;
@@ -76,12 +61,6 @@ export function ChangeStatusDialog({
   // Abfrage der SMTP-Einstellungen für den Benutzer
   const { data: businessSettings } = useQuery({
     queryKey: ['/api/business-settings'],
-    enabled: open && !!user,
-  });
-  
-  // Abfrage der E-Mail-Trigger für Reparaturstatus-Änderungen
-  const { data: emailTriggers = [] } = useQuery({
-    queryKey: ['/api/email-triggers'],
     enabled: open && !!user,
   });
 
@@ -116,14 +95,6 @@ export function ChangeStatusDialog({
   const showEmailOption = currentSelectedStatus === 'fertig' || 
                           currentSelectedStatus === 'ersatzteil_eingetroffen' ||
                           currentSelectedStatus === 'abgeholt';
-  
-  // Prüfen, ob für den aktuellen Status ein E-Mail-Trigger konfiguriert ist
-  const hasEmailTrigger = React.useMemo(() => {
-    if (!emailTriggers || !Array.isArray(emailTriggers)) return false;
-    return emailTriggers.some(trigger => 
-      trigger.repairStatus === currentSelectedStatus && trigger.active
-    );
-  }, [emailTriggers, currentSelectedStatus]);
   
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
@@ -186,17 +157,7 @@ export function ChangeStatusDialog({
       return;
     }
     
-    // Prüfen, ob ein automatischer E-Mail-Trigger aktiv ist
-    const sendEmail = hasEmailTrigger ? true : data.sendEmail || false;
-    
-    onUpdateStatus(repairId, data.status, sendEmail);
-    
-    if (hasEmailTrigger) {
-      toast({
-        title: 'E-Mail wird gesendet',
-        description: `Eine automatische E-Mail-Benachrichtigung für den Status "${statusLabels[data.status]}" wird gesendet.`,
-      });
-    }
+    onUpdateStatus(repairId, data.status, data.sendEmail);
   }
   
   return (
@@ -236,19 +197,8 @@ export function ChangeStatusDialog({
                 </FormItem>
               )}
             />
-
-            {hasEmailTrigger && (
-              <Alert className="mt-2 mb-2">
-                <CheckCircle className="h-4 w-4" />
-                <AlertTitle>Automatische E-Mail-Benachrichtigung</AlertTitle>
-                <AlertDescription>
-                  Für den Status "{statusLabels[currentSelectedStatus]}" wurde eine automatische E-Mail-Benachrichtigung konfiguriert. 
-                  Die E-Mail wird automatisch an den Kunden gesendet.
-                </AlertDescription>
-              </Alert>
-            )}
             
-            {showEmailOption && !hasEmailTrigger && (
+            {showEmailOption && (
               <div className="space-y-4">
                 {currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher ? (
                   <div className="rounded-md border p-4">

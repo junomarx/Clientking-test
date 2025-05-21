@@ -6,8 +6,6 @@ import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from 
 // Import der Middleware für die Prüfung der Trial-Version
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
-// Import email trigger routes
-import emailTriggerRoutes from './email-trigger-routes';
 import { db, pool } from './db';
 import { eq } from 'drizzle-orm';
 import { 
@@ -48,7 +46,7 @@ import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middlewar
 import nodemailer from "nodemailer";
 
 // Middleware to check if user is authenticated
-export async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   // Prüfe auf benutzerdefinierte User-ID im Header (für direktes Debugging)
   const customUserId = req.headers['x-user-id'];
   if (customUserId) {
@@ -123,9 +121,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Globale Middleware für Shop-Isolation registrieren
   // Diese Middleware hängt automatisch die Shop-ID des angemeldeten Benutzers an alle Anfragen an
   app.use(attachShopId);
-  
-  // Registriere die Email-Trigger-Routen
-  app.use(emailTriggerRoutes);
   
   // Set up admin routes
   registerAdminRoutes(app);
@@ -800,139 +795,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "repairId": repair.id.toString()
         };
         
-        // E-Mail-Benachrichtigung basierend auf E-Mail-Trigger senden
-        if (sendEmail === true && customer.email) {
-          console.log(`Prüfe E-Mail-Trigger für Status "${status}"...`);
+        // Wenn Status auf "fertig"/"abholbereit" gesetzt wird und sendEmail=true, dann E-Mail senden
+        if ((status === "fertig" || status === "abholbereit") && sendEmail === true && customer.email) {
+          console.log("E-Mail-Benachrichtigung wird vorbereitet...");
           
           try {
-            // Prüfen, ob ein Trigger für diesen Status existiert - SQL direkt ausführen
-            const triggerResult = await db.execute(
-              `SELECT * FROM email_triggers 
-               WHERE repair_status = $1 
-                 AND shop_id = $2 
-                 AND active = true
-               LIMIT 1`, 
-              [status, user.shopId]);
+            // Suche nach einer E-Mail-Vorlage mit name "fertig"
+            const templates = await storage.getAllEmailTemplates(userId);
+            const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
+                                                     t.name.toLowerCase().includes("abholbereit") ||
+                                                     t.name.toLowerCase().includes("abholung"));
             
-            if (triggerResult.rows && triggerResult.rows.length > 0) {
-              const trigger = triggerResult.rows[0];
-              console.log(`E-Mail-Trigger gefunden: Status "${status}" verwendet Vorlage ID ${trigger.email_template_id}`);
+            if (pickupTemplate) {
+              console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
               
-              // E-Mail senden mit der konfigurierten Vorlage aus dem Trigger
-              const emailSent = await storage.sendEmailWithTemplateById(trigger.email_template_id, customer.email, variables, undefined, false, userId);
-              console.log(`E-Mail gesendet für Benutzer ${userId} via Trigger: ${emailSent}`);
+              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
+              const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables, undefined, false, userId);
+              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
               
-              // Erfolgsmeldung oder Fehlermeldung zurückgeben
+              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
               if (emailSent) {
                 res.setHeader('X-Email-Sent', 'true');
                 res.setHeader('X-Email-Status', 'success');
               } else {
+                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
                 res.setHeader('X-Email-Sent', 'false');
                 res.setHeader('X-Email-Status', 'error');
               }
             } else {
-              console.log(`Kein aktiver E-Mail-Trigger für Status "${status}" gefunden, verwende Fallback-Methode.`);
+              console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
+            }
+          } catch (emailError) {
+            console.error("Fehler beim Senden der E-Mail:", emailError);
+            // Wir werfen hier keinen Fehler, damit der Status trotzdem aktualisiert wird
+          }
+        }
+        
+        // Wenn Status auf "ersatzteil_eingetroffen" gesetzt wird und sendEmail=true, dann E-Mail senden
+        if (status === "ersatzteil_eingetroffen" && sendEmail === true && customer.email) {
+          console.log("E-Mail-Benachrichtigung für Ersatzteillieferung wird vorbereitet...");
+          
+          try {
+            // Suche nach einer E-Mail-Vorlage mit name "ersatzteil"
+            const templates = await storage.getAllEmailTemplates(userId);
+            const sparepartTemplate = templates.find(t => t.name.toLowerCase().includes("ersatzteil") || 
+                                                      t.name.toLowerCase().includes("ersatz") ||
+                                                      t.name.toLowerCase().includes("teil"));
+            
+            if (sparepartTemplate) {
+              console.log(`E-Mail-Vorlage gefunden: ${sparepartTemplate.name}`);
               
-              // Fallback-Logik für bestimmte Stati
-              if ((status === "fertig" || status === "abholbereit") && customer.email) {
-                console.log("E-Mail-Benachrichtigung für Abholen wird vorbereitet (Fallback)...");
+              // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
+              const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables, undefined, false, userId);
+              console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
+              
+              // Erfolgsmeldung oder Fehlermeldung zurückgeben, die im Frontend als Toast angezeigt wird
+              if (emailSent) {
+                res.setHeader('X-Email-Sent', 'true');
+                res.setHeader('X-Email-Status', 'success');
+              } else {
+                // Auch wenn die E-Mail nicht gesendet werden konnte, geben wir eine Rückmeldung
+                res.setHeader('X-Email-Sent', 'false');
+                res.setHeader('X-Email-Status', 'error');
+              }
+            } else {
+              console.log("Keine passende E-Mail-Vorlage für 'Ersatzteil eingetroffen' gefunden");
+              console.log("Erstelle Standard-Ersatzteil-Vorlage...");
+              
+              // Erstelle eine Standard-Vorlage, wenn keine vorhanden ist
+              try {
+                // Erstelle die E-Mail-Vorlage
+                const templateData: InsertEmailTemplate = {
+                  name: "Ersatzteil eingetroffen",
+                  subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
+                  body: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                      <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
+                    </div>
+                    
+                    <p>Sehr geehrte(r) {{kundenname}},</p>
+                    
+                    <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für Ihre Reparatur eingetroffen ist.</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                      <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
+                      <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
+                      <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
+                    </div>
+                    
+                    <p>Wir werden nun umgehend mit der Reparatur fortfahren und Sie informieren, sobald Ihr Gerät wieder abholbereit ist.</p>
+                    
+                    <p>Falls Sie Fragen haben, können Sie uns gerne kontaktieren.</p>
+                    
+                    <p>Mit freundlichen Grüßen,<br>
+                    Ihr Team von {{geschaeftsname}}</p>
+                  </div>
+                  `,
+                  userId
+                };
                 
-                // Suche nach einer E-Mail-Vorlage mit name "fertig" oder "abholbereit"
-                const templates = await storage.getAllEmailTemplates(userId);
-                const pickupTemplate = templates.find(t => t.name.toLowerCase().includes("fertig") || 
-                                                         t.name.toLowerCase().includes("abholbereit") ||
-                                                         t.name.toLowerCase().includes("abholung"));
+                const newTemplate = await storage.createEmailTemplate(templateData);
                 
-                if (pickupTemplate) {
-                  console.log(`E-Mail-Vorlage gefunden: ${pickupTemplate.name}`);
-                  
-                  // E-Mail senden mit der BenutzerID, damit benutzerindividuelle E-Mail-Einstellungen verwendet werden
-                  const emailSent = await storage.sendEmailWithTemplateById(pickupTemplate.id, customer.email, variables, undefined, false, userId);
-                  console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
-                  
-                  if (emailSent) {
-                    res.setHeader('X-Email-Sent', 'true');
-                    res.setHeader('X-Email-Status', 'success');
-                  } else {
-                    res.setHeader('X-Email-Sent', 'false');
-                    res.setHeader('X-Email-Status', 'error');
-                  }
-                } else {
-                  console.log("Keine passende E-Mail-Vorlage für 'Fertig/Abholbereit' gefunden");
+                console.log("Neue E-Mail-Vorlage erstellt:", newTemplate);
+                
+                // E-Mail mit der neuen Vorlage senden
+                const emailSent = await storage.sendEmailWithTemplate(newTemplate.id, customer.email, variables);
+                console.log("E-Mail gesendet:", emailSent);
+                
+                // Erfolgsmeldung zurückgeben, die im Frontend als Toast angezeigt wird
+                if (emailSent) {
+                  res.setHeader('X-Email-Sent', 'true');
                 }
-              } 
-              else if (status === "ersatzteil_eingetroffen" && customer.email) {
-                console.log("E-Mail-Benachrichtigung für Ersatzteillieferung wird vorbereitet (Fallback)...");
-                
-                // Suche nach einer E-Mail-Vorlage mit name "ersatzteil"
-                const templates = await storage.getAllEmailTemplates(userId);
-                const sparepartTemplate = templates.find(t => t.name.toLowerCase().includes("ersatzteil") || 
-                                                          t.name.toLowerCase().includes("ersatz") ||
-                                                          t.name.toLowerCase().includes("teil"));
-                
-                if (sparepartTemplate) {
-                  console.log(`E-Mail-Vorlage gefunden: ${sparepartTemplate.name}`);
-                  
-                  // E-Mail senden mit der BenutzerID
-                  const emailSent = await storage.sendEmailWithTemplateById(sparepartTemplate.id, customer.email, variables, undefined, false, userId);
-                  console.log("E-Mail gesendet für Benutzer", userId, ":", emailSent);
-                  
-                  if (emailSent) {
-                    res.setHeader('X-Email-Sent', 'true');
-                    res.setHeader('X-Email-Status', 'success');
-                  } else {
-                    res.setHeader('X-Email-Sent', 'false');
-                    res.setHeader('X-Email-Status', 'error');
-                  }
-                } else {
-                  console.log("Keine passende E-Mail-Vorlage für 'Ersatzteil eingetroffen' gefunden");
-                  console.log("Erstelle Standard-Ersatzteil-Vorlage...");
-                  
-                  // Erstelle eine Standard-Vorlage, wenn keine vorhanden ist
-                  try {
-                    const templateData: InsertEmailTemplate = {
-                      name: "Ersatzteil eingetroffen",
-                      subject: "Ersatzteil für Ihre Reparatur ist eingetroffen",
-                      body: `
-                      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                          <h2 style="color: #10b981;">Gute Neuigkeiten!</h2>
-                        </div>
-                        
-                        <p>Sehr geehrte(r) {{kundenname}},</p>
-                        
-                        <p>wir freuen uns, Ihnen mitteilen zu können, dass das bestellte Ersatzteil für Ihre Reparatur eingetroffen ist.</p>
-                        
-                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                          <p style="margin: 5px 0;"><strong>Gerät:</strong> {{hersteller}} {{geraet}}</p>
-                          <p style="margin: 5px 0;"><strong>Auftragsnummer:</strong> {{auftragsnummer}}</p>
-                          <p style="margin: 5px 0;"><strong>Beschreibung:</strong> {{fehler}}</p>
-                        </div>
-                        
-                        <p>Wir werden nun umgehend mit der Reparatur fortfahren und Sie informieren, sobald Ihr Gerät wieder abholbereit ist.</p>
-                        
-                        <p>Falls Sie Fragen haben, können Sie uns gerne kontaktieren.</p>
-                        
-                        <p>Mit freundlichen Grüßen,<br>
-                        Ihr Team von {{geschaeftsname}}</p>
-                      </div>
-                      `,
-                      userId
-                    };
-                    
-                    const newTemplate = await storage.createEmailTemplate(templateData);
-                    console.log("Neue E-Mail-Vorlage erstellt:", newTemplate);
-                    
-                    // E-Mail mit der neuen Vorlage senden
-                    const emailSent = await storage.sendEmailWithTemplate(newTemplate.id, customer.email, variables);
-                    
-                    if (emailSent) {
-                      res.setHeader('X-Email-Sent', 'true');
-                    }
-                  } catch (templateError) {
-                    console.error("Fehler beim Erstellen der E-Mail-Vorlage:", templateError);
-                  }
-                }
+              } catch (templateError) {
+                console.error("Fehler beim Erstellen der E-Mail-Vorlage:", templateError);
               }
             }
           } catch (emailError) {

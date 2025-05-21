@@ -329,23 +329,6 @@ export function EmailSettingsTab() {
       <div className="mt-6 md:mt-8">
         <EmailTemplateTab />
       </div>
-
-      {/* E-Mail-Trigger für Statusänderungen - temporär deaktiviert */}
-      <div className="mt-6 md:mt-8">
-        <h2 className="text-xl font-bold mb-4">E-Mail-Benachrichtigungen bei Statusänderungen</h2>
-        <Card className="mb-4 md:mb-6">
-          <CardContent className="p-4 md:p-6 pt-4 md:pt-6">
-            <div className="text-center p-6">
-              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-amber-500" />
-              <h3 className="text-lg font-semibold mb-2">Funktion temporär deaktiviert</h3>
-              <p className="text-sm text-gray-500">
-                Die automatischen E-Mail-Benachrichtigungen bei Statusänderungen stehen aktuell nicht zur Verfügung. 
-                Sie können weiterhin manuell E-Mails über die Reparatur-Detailseite versenden.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
       
       {/* Benutzerfreundlicher SMTP-Test-Dialog für alle Benutzer */}
       <UserSmtpTestDialog

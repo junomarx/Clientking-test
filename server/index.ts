@@ -3,7 +3,6 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import addSecondSignatureColumns from "./add-second-signature";
 import { addPricingPlanColumn } from "./add-pricing-plan-column";
-import emailTriggerRoutes from "./email-trigger-routes";
 import { addCompanySloganVatColumns } from "./add-company-slogan-vat-columns";
 import "./add-creation-month-column";
 import { addShopIdColumn } from "./add-shop-id-column";
@@ -21,10 +20,6 @@ import { syncEmailTemplates } from "./sync-email-templates";
 import { addSupportAccessTable } from "./add-support-access-table";
 import { addSupportRequestStatus } from "./add-support-request-status";
 import fileUpload from "express-fileupload";
-import disableArchiveScript from "./disable-archive-script";
-
-// Disable the archive spam in console logs
-disableArchiveScript();
 
 // Setze globale SMTP-Absender-E-Mail wenn nicht vorhanden
 if (!process.env.SMTP_SENDER_EMAIL) {
@@ -47,9 +42,6 @@ app.use(fileUpload({
   createParentPath: true, // Erstellt fehlende Verzeichnisse automatisch
   useTempFiles: false // Benutze den Speicher für kleine Dateien
 }));
-
-// E-Mail-Trigger-Routen registrieren
-app.use(emailTriggerRoutes);
 
 app.use((req, res, next) => {
   const start = Date.now();
