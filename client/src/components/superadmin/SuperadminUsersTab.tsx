@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { UserDetailsDialog } from './UserDetailsDialog';
+import { SimpleUserDetailsDialog } from '../admin/SimpleUserDetailsDialog';
 import { 
   Card, 
   CardContent, 
