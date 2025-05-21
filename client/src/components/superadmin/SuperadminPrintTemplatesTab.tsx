@@ -258,27 +258,31 @@ export default function SuperadminPrintTemplatesTab() {
       
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center">
               <FileCode className="h-5 w-5 mr-2" />
               <CardTitle>Druckvorlagen</CardTitle>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button 
+                className="text-xs sm:text-sm flex-1 sm:flex-none"
                 variant="outline" 
                 onClick={() => createDefaultTemplatesMutation.mutate()}
                 disabled={createDefaultTemplatesMutation.isPending}
               >
                 {createDefaultTemplatesMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-4 w-4 mr-1 sm:mr-2 animate-spin" />
                 ) : (
-                  <FileBadge className="h-4 w-4 mr-2" />
+                  <FileBadge className="h-4 w-4 mr-1 sm:mr-2" />
                 )}
-                Standard-Druckvorlagen
+                <span className="whitespace-nowrap">Standard-Vorlagen</span>
               </Button>
-              <Button onClick={() => setIsCreateTemplateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Neue Vorlage
+              <Button 
+                className="text-xs sm:text-sm flex-1 sm:flex-none"
+                onClick={() => setIsCreateTemplateOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="whitespace-nowrap">Neue Vorlage</span>
               </Button>
             </div>
           </div>
