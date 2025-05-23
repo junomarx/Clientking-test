@@ -371,8 +371,16 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
 
   // Benutzerdaten aktualisieren
   const handleUpdateUser = () => {
-    if (selectedUser) {
+    if (selectedUser && selectedUser.id) {
+      console.log("Aktualisiere Benutzer:", selectedUser.id, editForm);
       updateUserMutation.mutate({ userId: selectedUser.id, data: editForm });
+    } else {
+      console.error("Keine gültige Benutzer-ID gefunden:", selectedUser);
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Keine gültige Benutzer-ID gefunden. Bitte versuchen Sie es erneut.",
+      });
     }
   };
 
