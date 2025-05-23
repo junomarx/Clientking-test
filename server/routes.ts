@@ -118,15 +118,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
+  // Set up superadmin routes FIRST (before middleware that might interfere)
+  registerSuperadminRoutes(app);
+  
   // Globale Middleware für Shop-Isolation registrieren
   // Diese Middleware hängt automatisch die Shop-ID des angemeldeten Benutzers an alle Anfragen an
   app.use(attachShopId);
   
   // Set up admin routes
   registerAdminRoutes(app);
-  
-  // Set up superadmin routes
-  registerSuperadminRoutes(app);
   
   // API für SMTP-Test - Für alle Benutzer zugänglich
   app.post('/api/smtp-test', isAuthenticated, async (req, res) => {
