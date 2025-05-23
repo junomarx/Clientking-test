@@ -568,6 +568,35 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // Benutzer deaktivieren
+  app.post("/api/superadmin/users/:id/deactivate", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+
+      // Benutzer deaktivieren
+      const [updatedUser] = await db
+        .update(users)
+        .set({ isActive: false })
+        .where(eq(users.id, userId))
+        .returning({
+          id: users.id,
+          isActive: users.isActive,
+          shopId: users.shopId,
+          username: users.username,
+          email: users.email
+        });
+
+      console.log(`Benutzer ${updatedUser.username} wurde deaktiviert`);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Fehler beim Deaktivieren des Benutzers:", error);
+      res.status(500).json({ message: "Fehler beim Deaktivieren des Benutzers" });
+    }
+  });
+
   // Benutzer löschen
   app.delete("/api/superadmin/users/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {
