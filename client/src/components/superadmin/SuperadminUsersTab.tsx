@@ -359,7 +359,25 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       }
     };
     
-    fetchUserBusinessSettings(user.id);
+    // Erst Benutzer setzen, dann Geschäftseinstellungen laden
+    if (user && user.id) {
+      console.log("Lade Geschäftseinstellungen für Benutzer ID:", user.id);
+      fetchUserBusinessSettings(user.id);
+    } else {
+      console.error("Keine gültige Benutzer-ID gefunden:", user);
+      // Trotzdem Formular mit verfügbaren Daten füllen
+      setEditForm({
+        isAdmin: user.isAdmin,
+        packageId: user.packageId,
+        shopId: user.shopId,
+        email: user.email,
+        companyName: user.companyName,
+        companyAddress: user.companyAddress,
+        companyVatNumber: user.companyVatNumber,
+        companyPhone: user.companyPhone,
+        companyEmail: user.companyEmail,
+      });
+    }
     setIsEditDialogOpen(true);
   };
   
