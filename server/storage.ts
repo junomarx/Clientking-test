@@ -1513,7 +1513,10 @@ export class DatabaseStorage implements IStorage {
 
       const [newUser] = await db
         .insert(users)
-        .values(userWithoutShopId) // Ohne Shop-ID!
+        .values({
+          ...userWithoutShopId,
+          shopId: null  // Explizit NULL setzen
+        })
         .returning();
       
       return newUser;
