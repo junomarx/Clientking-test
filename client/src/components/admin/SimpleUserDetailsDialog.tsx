@@ -21,7 +21,7 @@ interface UserDetailsDialogProps {
   onClose: () => void;
   userId: number | null;
   onToggleActive?: (userId: number) => void;
-  onEdit?: (userId: number) => void;
+  onEdit?: (user: UserResponse) => void;
   onDelete?: (userId: number) => void;
 }
 
@@ -236,7 +236,7 @@ export function SimpleUserDetailsDialog({ open, onClose, userId, onToggleActive,
                 {onEdit && (
                   <Button 
                     variant="outline" 
-                    onClick={() => onEdit(user.id)}
+                    onClick={() => onEdit(user)}
                   >
                     <Pencil className="h-4 w-4 mr-2" />
                     Bearbeiten
