@@ -31,6 +31,14 @@ type UserResponse = {
   email: string;
   isActive: boolean;
   isAdmin: boolean;
+  isSuperadmin: boolean;
+  pricingPlan: string | null;
+  shopId: number | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+  activatedAt: string | null;
+  trialExpiresAt: string | null;
+  featureOverrides: any;
 };
 
 export function SimpleUserDetailsDialog({ open, onClose, userId, onToggleActive, onEdit, onDelete }: UserDetailsDialogProps) {
@@ -179,9 +187,46 @@ export function SimpleUserDetailsDialog({ open, onClose, userId, onToggleActive,
                 </div>
               </DialogHeader>
 
-              <div className="py-4">
-                <h3 className="text-lg font-medium">Benutzerinformationen</h3>
-                <p className="mt-2 text-sm">E-Mail: {user.email}</p>
+              <div className="py-4 space-y-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Benutzerinformationen</h3>
+                  <div className="grid grid-cols-1 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium">E-Mail:</span>
+                      <span>{user.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Shop-ID:</span>
+                      <span>{user.shopId || 'Nicht zugewiesen'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Preisplan:</span>
+                      <span>{user.pricingPlan || 'Nicht festgelegt'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Registriert:</span>
+                      <span>{new Date(user.createdAt).toLocaleDateString('de-DE')}</span>
+                    </div>
+                    {user.activatedAt && (
+                      <div className="flex justify-between">
+                        <span className="font-medium">Aktiviert:</span>
+                        <span>{new Date(user.activatedAt).toLocaleDateString('de-DE')}</span>
+                      </div>
+                    )}
+                    {user.lastLoginAt && (
+                      <div className="flex justify-between">
+                        <span className="font-medium">Letzter Login:</span>
+                        <span>{new Date(user.lastLoginAt).toLocaleDateString('de-DE')}</span>
+                      </div>
+                    )}
+                    {user.trialExpiresAt && (
+                      <div className="flex justify-between">
+                        <span className="font-medium">Demo läuft ab:</span>
+                        <span>{new Date(user.trialExpiresAt).toLocaleDateString('de-DE')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
               <DialogFooter className="gap-2 flex-col sm:flex-row">
