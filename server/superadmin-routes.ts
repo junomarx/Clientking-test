@@ -473,14 +473,25 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
-      // Status umkehren
+      const newStatus = !user.isActive;
+      let updateData: any = { isActive: newStatus };
+
+      // Wenn der Benutzer aktiviert wird und noch keine Shop-ID hat, weise eine zu
+      if (newStatus && !user.shopId) {
+        const nextShopId = await storage.getNextShopId();
+        updateData.shopId = nextShopId;
+        console.log(`Benutzer ${user.username} wird aktiviert und erhält Shop-ID ${nextShopId}`);
+      }
+
+      // Status umkehren (und ggf. Shop-ID zuweisen)
       const [updatedUser] = await db
         .update(users)
-        .set({ isActive: !user.isActive })
+        .set(updateData)
         .where(eq(users.id, userId))
         .returning({
           id: users.id,
           isActive: users.isActive,
+          shopId: users.shopId,
           username: users.username,
           email: users.email
         });
