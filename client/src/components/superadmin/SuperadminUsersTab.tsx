@@ -168,7 +168,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   const toggleActivationMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await apiRequest(
-        "PATCH",
+        "POST",
         `/api/superadmin/users/${userId}/activate`
       );
       return await response.json();

@@ -459,7 +459,7 @@ export function registerSuperadminRoutes(app: Express) {
   });
 
   // Benutzer aktivieren/deaktivieren
-  app.patch("/api/superadmin/users/:id/activate", isSuperadmin, async (req: Request, res: Response) => {
+  app.post("/api/superadmin/users/:id/activate", isSuperadmin, async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.id);
       if (isNaN(userId)) {
@@ -473,31 +473,35 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
 
-      const newStatus = !user.isActive;
-      let updateData: any = { isActive: newStatus };
+      console.log(`Aktivierung für Benutzer ${user.username}: aktueller Status = ${user.isActive}, shopId = ${user.shopId}`);
 
-      // Wenn der Benutzer aktiviert wird und noch keine Shop-ID hat, weise eine zu
-      if (newStatus && !user.shopId) {
+      // Für inaktive Benutzer: Aktivieren und Shop-ID zuweisen
+      if (!user.isActive) {
         const nextShopId = await storage.getNextShopId();
-        updateData.shopId = nextShopId;
+        const updateData = { 
+          isActive: true,
+          shopId: nextShopId,
+          activatedAt: new Date()
+        };
         console.log(`Benutzer ${user.username} wird aktiviert und erhält Shop-ID ${nextShopId}`);
-      }
+        console.log(`Update-Daten für ${user.username}:`, updateData);
 
-      // Status umkehren (und ggf. Shop-ID zuweisen)
-      const [updatedUser] = await db
-        .update(users)
-        .set(updateData)
-        .where(eq(users.id, userId))
-        .returning({
-          id: users.id,
-          isActive: users.isActive,
-          shopId: users.shopId,
-          username: users.username,
-          email: users.email
-        });
+        // Status umkehren (und ggf. Shop-ID zuweisen)
+        const [updatedUser] = await db
+          .update(users)
+          .set(updateData)
+          .where(eq(users.id, userId))
+          .returning({
+            id: users.id,
+            isActive: users.isActive,
+            shopId: users.shopId,
+            username: users.username,
+            email: users.email
+          });
 
-      // Wenn der Benutzer aktiviert wurde, sende eine Benachrichtigungs-E-Mail
-      if (updatedUser.isActive) {
+        console.log(`Benutzer ${updatedUser.username} erfolgreich aktiviert! Neue Shop-ID: ${updatedUser.shopId}`);
+
+        // E-Mail-Benachrichtigung senden
         try {
           console.log(`Sende Aktivierungsbenachrichtigung an Benutzer ${updatedUser.username} (${updatedUser.email})`);
           
@@ -538,9 +542,25 @@ export function registerSuperadminRoutes(app: Express) {
           console.error("Fehler beim Senden der Aktivierungsbenachrichtigung:", emailError);
           // Wir lassen den Endpunkt trotzdem erfolgreich zurückgeben, auch wenn die E-Mail fehlschlägt
         }
-      }
 
-      res.json(updatedUser);
+        res.json(updatedUser);
+      } else {
+        // Für bereits aktive Benutzer: Deaktivieren
+        const [updatedUser] = await db
+          .update(users)
+          .set({ isActive: false })
+          .where(eq(users.id, userId))
+          .returning({
+            id: users.id,
+            isActive: users.isActive,
+            shopId: users.shopId,
+            username: users.username,
+            email: users.email
+          });
+
+        console.log(`Benutzer ${updatedUser.username} wurde deaktiviert`);
+        res.json(updatedUser);
+      }
     } catch (error) {
       console.error("Fehler beim Ändern des Aktivierungsstatus:", error);
       res.status(500).json({ message: "Fehler beim Ändern des Aktivierungsstatus" });
