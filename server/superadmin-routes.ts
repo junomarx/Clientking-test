@@ -590,7 +590,8 @@ export function registerSuperadminRoutes(app: Express) {
         });
 
       console.log(`Benutzer ${updatedUser.username} wurde deaktiviert`);
-      res.json(updatedUser);
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(updatedUser);
     } catch (error) {
       console.error("Fehler beim Deaktivieren des Benutzers:", error);
       res.status(500).json({ message: "Fehler beim Deaktivieren des Benutzers" });
