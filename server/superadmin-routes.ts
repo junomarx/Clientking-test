@@ -481,7 +481,8 @@ export function registerSuperadminRoutes(app: Express) {
         const updateData = { 
           isActive: true,
           shopId: nextShopId,
-          activatedAt: new Date()
+          activatedAt: new Date(),
+          pricingPlan: 'demo'  // Automatisch Demo-Paket zuweisen
         };
         console.log(`Benutzer ${user.username} wird aktiviert und erhält Shop-ID ${nextShopId}`);
         console.log(`Update-Daten für ${user.username}:`, updateData);
