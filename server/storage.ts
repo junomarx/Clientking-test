@@ -1482,8 +1482,30 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Generiere die nächste verfügbare Shop-ID
+  async getNextShopId(): Promise<number> {
+    try {
+      const result = await db
+        .select({ maxShopId: sql<number>`COALESCE(MAX(shop_id), 0)` })
+        .from(users)
+        .where(isNotNull(users.shopId));
+      
+      const maxShopId = result[0]?.maxShopId || 0;
+      return maxShopId + 1;
+    } catch (error) {
+      console.error("Fehler beim Generieren der nächsten Shop-ID:", error);
+      return 1; // Fallback auf 1, falls ein Fehler auftritt
+    }
+  }
+
   async createUser(user: InsertUser): Promise<User> {
     try {
+      // Wenn keine Shop-ID angegeben ist, generiere automatisch die nächste
+      if (!user.shopId) {
+        user.shopId = await this.getNextShopId();
+        console.log(`Neue Shop-ID ${user.shopId} für Benutzer ${user.username} generiert`);
+      }
+
       const [newUser] = await db
         .insert(users)
         .values(user)
