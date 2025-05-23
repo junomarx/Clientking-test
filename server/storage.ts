@@ -1487,14 +1487,19 @@ export class DatabaseStorage implements IStorage {
     try {
       const result = await db
         .select({ maxShopId: sql<number>`COALESCE(MAX(shop_id), 0)` })
-        .from(users)
-        .where(isNotNull(users.shopId));
+        .from(users);
       
       const maxShopId = result[0]?.maxShopId || 0;
-      return maxShopId + 1;
+      const nextShopId = maxShopId + 1;
+      
+      console.log(`Aktuelle maximale Shop-ID: ${maxShopId}, neue Shop-ID wird: ${nextShopId}`);
+      return nextShopId;
     } catch (error) {
       console.error("Fehler beim Generieren der nächsten Shop-ID:", error);
-      return 1; // Fallback auf 1, falls ein Fehler auftritt
+      // Sicherer Fallback: Finde die höchste bestehende Shop-ID und füge 1 hinzu
+      const allUsers = await db.select({ shopId: users.shopId }).from(users).where(isNotNull(users.shopId));
+      const maxId = Math.max(...allUsers.map(u => u.shopId || 0));
+      return maxId + 1;
     }
   }
 

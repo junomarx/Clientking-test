@@ -142,6 +142,10 @@ export function setupAuth(app: Express) {
       
       console.log(`Neuer Benutzer ${username} erhält Demo-Paket mit Ablaufdatum ${trialExpiresAt.toISOString()}`);
 
+      // Generiere automatisch die nächste verfügbare Shop-ID
+      const nextShopId = await storage.getNextShopId();
+      console.log(`Generiere neue Shop-ID ${nextShopId} für Benutzer ${username}`);
+
       // Erstelle einen neuen Benutzer (standardmäßig inaktiv)
       const user = await storage.createUser({
         ...req.body,
@@ -150,7 +154,8 @@ export function setupAuth(app: Express) {
         isAdmin: false,   // Standardmäßig kein Administrator
         pricingPlan: "demo", // Demo-Plan (für Abwärtskompatibilität)
         packageId: demoPackage?.id, // Verknüpfung mit dem Demo-Paket
-        trialExpiresAt  // Ablaufdatum für die Testversion
+        trialExpiresAt,  // Ablaufdatum für die Testversion
+        shopId: nextShopId  // Verwende die generierte Shop-ID
       });
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können
