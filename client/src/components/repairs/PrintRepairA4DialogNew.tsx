@@ -30,19 +30,19 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const [generatedPdf, setGeneratedPdf] = useState<jsPDF | null>(null);
 
   // Daten für die Reparatur laden
-  const { data: repair, isLoading, error } = useQuery({
+  const { data: repair, isLoading, error } = useQuery<any>({
     queryKey: ["/api/repairs", repairId],
     enabled: !!repairId && open,
   });
 
   // Kundendaten laden
-  const { data: customer } = useQuery({
+  const { data: customer } = useQuery<any>({
     queryKey: ["/api/customers", repair?.customerId],
     enabled: !!repair?.customerId,
   });
 
   // Geschäftseinstellungen laden
-  const { data: businessSettings } = useQuery({
+  const { data: businessSettings } = useQuery<any>({
     queryKey: ["/api/business-settings"],
     enabled: open,
   });
