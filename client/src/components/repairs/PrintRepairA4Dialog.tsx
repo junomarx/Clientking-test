@@ -144,16 +144,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // PDF mit optimierter Qualität generieren (Balance zwischen Qualität und Größe)
+      // PDF mit komprimierter Qualität für E-Mail-Versand
       const canvas = await html2canvas(content, {
-        scale: 1.5, // Optimierte Qualität für E-Mail
+        scale: 1.0, // Normale Qualität für kleinere Dateigröße
         logging: false,
         useCORS: true,
         allowTaint: true,
       });
       
-      // A4 Format: 210 x 297 mm
-      const imgData = canvas.toDataURL('image/png');
+      // A4 Format: 210 x 297 mm - JPEG für kleinere Dateigröße
+      const imgData = canvas.toDataURL('image/jpeg', 0.8); // JPEG mit 80% Qualität
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -167,8 +167,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Bild mit Rändern platzieren
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      // Bild mit Rändern platzieren (JPEG Format)
+      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       
       // PDF als Base64 konvertieren
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
