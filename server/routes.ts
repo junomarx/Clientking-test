@@ -2500,20 +2500,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📧 Betreff: ${subject}`);
       console.log(`📧 Anhang: ${fileName}.pdf (${pdfBuffer.length} bytes)`);
       
-      // E-Mail direkt mit funktionierenden SMTP-Einstellungen senden (wie bei Statusmails)
-      const emailSent = await storage.sendEmailNotification(
-        repairId,
-        customerEmail,
-        subject,
-        emailContent,
-        userId,
-        null, // Keine Vorlage-ID bei PDF-E-Mails
-        [{
+      // E-Mail mit exakt derselben Methode wie bei Kostenvoranschlägen senden
+      const emailSent = await storage.sendEmailWithAttachment({
+        to: customerEmail,
+        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
+        subject: subject,
+        htmlBody: emailContent,
+        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${businessSettings?.businessName || 'Handyshop'}`,
+        attachments: [{
           filename: `${fileName}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
-        }]
-      );
+        }],
+        userId: userId
+      });
       
       console.log(`📧 E-Mail-Versand Ergebnis: ${emailSent ? 'ERFOLGREICH' : 'FEHLGESCHLAGEN'}`);
       
