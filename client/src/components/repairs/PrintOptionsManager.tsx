@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { PrintOptionsDialog } from './PrintOptionsDialog';
 import { PrintRepairDialog } from './NewPrintRepairDialog';
 import { PrintLabelDialog } from './PrintLabelDialog';
-import { PrintRepairA4Dialog } from './PrintRepairA4Dialog';
+import { PrintRepairA4Dialog } from './PrintRepairA4DialogNew';
 
 // Kontext für globale Druckoptionen
 type PrintManagerContextType = {
