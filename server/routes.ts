@@ -2436,13 +2436,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      console.log(`📧 Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
+      console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
       
-      // PDF generieren aus HTML-Inhalt (wie bei Kostenvoranschlägen)
-      const fileName = `Reparaturauftrag_${orderCode || repairId}_${customerName.replace(/\s+/g, '_')}`;
-      
-      console.log(`🔄 Generiere PDF aus HTML-Inhalt...`);
-      const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, fileName);
+      // PDF generieren aus HTML-Inhalt
+      const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, `Reparaturauftrag_${orderCode || repairId}`);
       
       if (!pdfBuffer) {
         console.error('❌ PDF-Generierung fehlgeschlagen');
@@ -2464,6 +2461,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "E-Mail-Konfiguration unvollständig. Bitte konfigurieren Sie die SMTP-Einstellungen." 
         });
       }
+      
+      // Geschäftseinstellungen für den Absender abrufen
+      const businessSettings = await storage.getBusinessSettings(userId);
       
       // E-Mail-Betreff und -Inhalt
       const subject = `Reparaturauftrag ${orderCode || `#${repairId}`} - ${businessSettings?.businessName || 'Handyshop'}`;
