@@ -722,7 +722,59 @@ export class DatabaseStorage implements IStorage {
       // Temporären Dateinamen erstellen
       const tempFilePath = path.default.join(os.default.tmpdir(), `${filename}_${Date.now()}.pdf`);
       
-      // PDF-Optionen für A4-Format optimiert
+      // A4-HTML mit enforced Styling vorbereiten
+      const styledHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              width: 170mm !important;
+              max-width: 170mm !important;
+              min-height: 257mm;
+              font-size: 12px;
+              line-height: 1.4;
+            }
+            * { 
+              box-sizing: border-box; 
+              max-width: 170mm;
+            }
+            .container {
+              width: 170mm !important;
+              max-width: 170mm !important;
+            }
+            h1, h2, h3 { 
+              color: #333; 
+              margin-bottom: 10px;
+            }
+            h1 { font-size: 18px; }
+            h2 { font-size: 16px; }
+            h3 { font-size: 14px; }
+            p { margin: 5px 0; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 8px; 
+              text-align: left;
+              word-wrap: break-word;
+            }
+            .header { margin-bottom: 20px; }
+            .footer { margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            ${html}
+          </div>
+        </body>
+        </html>
+      `;
+
+      // PDF-Optionen für A4-Format erzwungen
       const options = {
         format: 'A4',
         orientation: 'portrait',
@@ -732,14 +784,15 @@ export class DatabaseStorage implements IStorage {
           bottom: '10mm',
           left: '10mm'
         },
-        height: '297mm',
         width: '210mm',
+        height: '297mm',
         type: 'pdf',
-        quality: '75',
-        renderDelay: 1000,
+        timeout: 30000,
+        renderDelay: 2000,
         phantomArgs: [
           '--load-images=yes',
-          '--local-storage-path=' + os.default.tmpdir(),
+          '--local-storage-quota=10000000',
+          '--disk-cache=no'
         ]
       };
       
@@ -747,7 +800,7 @@ export class DatabaseStorage implements IStorage {
       
       // PDF erstellen und als Datei speichern
       await new Promise<void>((resolve, reject) => {
-        htmlPdf.default.create(html, options).toFile(tempFilePath, (err: Error, res: any) => {
+        htmlPdf.default.create(styledHtml, options).toFile(tempFilePath, (err: Error, res: any) => {
           if (err) {
             console.error('Fehler beim Erstellen des PDFs:', err);
             reject(err);

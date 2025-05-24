@@ -2417,16 +2417,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reparaturauftrag per E-Mail senden - EXAKTE KOPIE der funktionierenden Kostenvoranschlag-Funktion
+  // Reparaturauftrag per E-Mail senden - mit hochwertigem client-generiertem PDF
   app.post("/api/send-repair-pdf-email", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const { repairId, customerEmail, customerName, htmlContent, orderCode } = req.body;
+      const { repairId, customerEmail, customerName, pdfData, orderCode } = req.body;
       const userId = (req.user as any).id;
       
       // Überprüfen, ob alle erforderlichen Daten vorhanden sind
-      if (!repairId || !customerEmail || !htmlContent) {
+      if (!repairId || !customerEmail || !pdfData) {
         return res.status(400).json({ 
-          message: "Reparatur-ID, E-Mail-Adresse und Inhalt sind erforderlich" 
+          message: "Reparatur-ID, E-Mail-Adresse und PDF-Daten sind erforderlich" 
         });
       }
       
@@ -2439,11 +2439,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
       
-      // PDF generieren aus HTML-Inhalt
-      const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, `Reparaturauftrag_${orderCode || repairId}`);
+      // PDF-Buffer aus Base64-Daten erstellen
+      const pdfBuffer = Buffer.from(pdfData, 'base64');
       
-      if (!pdfBuffer) {
-        return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        return res.status(500).json({ message: "Fehler beim Verarbeiten der PDF-Daten" });
       }
       
       // Geschäftseinstellungen für den Absender abrufen
