@@ -519,16 +519,11 @@ export default function AuthPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  placeholder="Telefon *" 
-                                  {...field} 
-                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                />
-                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                  📱
-                                </div>
-                              </div>
+                              <Input 
+                                placeholder="Telefon *" 
+                                {...field} 
+                                className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -542,17 +537,12 @@ export default function AuthPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  type="email"
-                                  placeholder="E-Mail Adresse *" 
-                                  {...field} 
-                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                />
-                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                  @
-                                </div>
-                              </div>
+                              <Input 
+                                type="email"
+                                placeholder="E-Mail Adresse *" 
+                                {...field} 
+                                className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                              />
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-gray-500 mt-1 italic">
@@ -569,16 +559,11 @@ export default function AuthPage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <div className="relative">
-                                <Input 
-                                  placeholder="Benutzername *" 
-                                  {...field} 
-                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                />
-                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                  👤
-                                </div>
-                              </div>
+                              <Input 
+                                placeholder="Benutzername *" 
+                                {...field} 
+                                className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                              />
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-gray-500 mt-1 italic">
@@ -596,17 +581,12 @@ export default function AuthPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <div className="relative">
-                                  <Input 
-                                    type="password"
-                                    placeholder="Passwort *" 
-                                    {...field} 
-                                    className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                  />
-                                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                    👁️
-                                  </div>
-                                </div>
+                                <Input 
+                                  type="password"
+                                  placeholder="Passwort *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -619,17 +599,12 @@ export default function AuthPage() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <div className="relative">
-                                  <Input 
-                                    type="password"
-                                    placeholder="Passwort wiederholen *" 
-                                    {...field} 
-                                    className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                  />
-                                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                    🔒
-                                  </div>
-                                </div>
+                                <Input 
+                                  type="password"
+                                  placeholder="Passwort wiederholen *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
