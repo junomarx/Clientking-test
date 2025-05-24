@@ -3527,8 +3527,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Neuer Endpunkt für A4-PDF E-Mail-Versand
-  app.post("/api/send-repair-email", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+  app.post("/api/send-repair-email", async (req: Request, res: Response) => {
     try {
+      // Benutzer-Authentifizierung prüfen
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
+      }
+
       const { repairId, recipient, pdfBase64, filename } = req.body;
       
       if (!repairId || !recipient || !pdfBase64 || !filename) {
@@ -3536,6 +3541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = (req.user as any).id;
+      console.log(`E-Mail-Versand für Reparatur ${repairId} von Benutzer ${userId} an ${recipient}`);
       
       // Reparatur abrufen
       const repair = await storage.getRepair(repairId, userId);
@@ -3543,8 +3549,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
 
-      // E-Mail senden
-      const emailSent = await emailService.sendEmailWithPDFAttachment({
+      // E-Mail senden mit der korrekten Funktion
+      const emailSent = await emailService.sendEmail({
         to: recipient,
         subject: `Reparaturauftrag ${repair.orderCode}`,
         text: `Anbei finden Sie Ihren Reparaturauftrag ${repair.orderCode}.`,
@@ -3559,9 +3565,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!emailSent) {
+        console.error("E-Mail-Service gab false zurück");
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
 
+      console.log(`E-Mail erfolgreich gesendet für Reparatur ${repair.orderCode}`);
       res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
     } catch (error) {
       console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
