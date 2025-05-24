@@ -444,7 +444,7 @@ export class EmailService {
       } else {
         // Fallback auf Umgebungsvariablen
         senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-        senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
+        senderEmail = 'office@connect7.at';
       }
       
       // Wenn options.from bereits eine E-Mail-Adresse enthält, nutze diese
