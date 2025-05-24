@@ -2416,6 +2416,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PDF per E-Mail senden
+  app.post("/api/send-repair-pdf-email", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const { repairId, customerEmail, customerName, pdfData, fileName, orderCode } = req.body;
+      
+      if (!repairId || !customerEmail || !pdfData || !fileName) {
+        return res.status(400).json({ message: "Fehlende Parameter für PDF-E-Mail-Versand" });
+      }
+      
+      // Benutzer-ID aus der Authentifizierung abrufen
+      const userId = (req.user as any).id;
+      
+      // Reparatur und Geschäftsdaten laden
+      const repair = await storage.getRepair(repairId, userId);
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      // PDF-Daten von Base64 zu Buffer konvertieren
+      const pdfBuffer = Buffer.from(pdfData, 'base64');
+      
+      // E-Mail-Betreff und -Inhalt
+      const subject = `Reparaturauftrag ${orderCode || `#${repairId}`} - ${businessSettings?.businessName || 'Handyshop'}`;
+      
+      const emailContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Ihr Reparaturauftrag</h2>
+          
+          <p>Liebe/r ${customerName},</p>
+          
+          <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
+          
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <strong>Auftragsnummer:</strong> ${orderCode || `#${repairId}`}<br>
+            <strong>Gerät:</strong> ${repair.brand} ${repair.model}<br>
+            <strong>Problem:</strong> ${repair.issue}
+          </div>
+          
+          <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <strong>${businessSettings?.businessName || 'Handyshop'}</strong><br>
+            ${businessSettings?.phone ? `Tel: ${businessSettings.phone}<br>` : ''}
+            ${businessSettings?.email ? `E-Mail: ${businessSettings.email}<br>` : ''}
+            ${businessSettings?.streetAddress ? `${businessSettings.streetAddress}<br>` : ''}
+            ${businessSettings?.zipCode && businessSettings?.city ? `${businessSettings.zipCode} ${businessSettings.city}` : ''}
+          </div>
+        </div>
+      `;
+      
+      // E-Mail senden mit PDF-Anhang
+      const emailResult = await emailService.sendEmail(
+        customerEmail,
+        subject,
+        emailContent,
+        userId,
+        [{
+          filename: fileName,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }]
+      );
+      
+      if (emailResult.success) {
+        console.log(`✅ PDF-E-Mail erfolgreich an ${customerEmail} gesendet für Reparatur ${repairId}`);
+        res.json({ 
+          success: true, 
+          message: `PDF wurde erfolgreich an ${customerEmail} gesendet` 
+        });
+      } else {
+        console.error(`❌ Fehler beim Senden der PDF-E-Mail:`, emailResult.error);
+        res.status(500).json({ 
+          message: "Fehler beim Senden der E-Mail", 
+          error: emailResult.error 
+        });
+      }
+      
+    } catch (error) {
+      console.error("Error sending PDF email:", error);
+      res.status(500).json({ message: "Fehler beim Senden der PDF-E-Mail" });
+    }
+  });
+
   // SMS-Endpunkt wurde auf Kundenwunsch entfernt
 
   // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur

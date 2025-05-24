@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, Mail, FileDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -120,6 +120,89 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       toast({
         title: "Fehler",
         description: "Das PDF konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // PDF per E-Mail senden
+  const handleSendPdfEmail = async () => {
+    if (!document.getElementById('a4-print-content') || !customer?.email) return;
+    
+    setIsGeneratingPdf(true);
+    
+    try {
+      const content = document.getElementById('a4-print-content');
+      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
+      
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        height: content.scrollHeight,
+        windowHeight: content.scrollHeight,
+        onclone: (document, element) => {
+          element.style.maxHeight = 'none';
+          element.style.height = 'auto';
+          element.style.overflow = 'visible';
+        }
+      });
+      
+      // PDF erstellen
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const margin = 10;
+      const pageWidth = 210;
+      const imgWidth = pageWidth - (2 * margin);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      
+      // PDF als Base64 für E-Mail
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+      
+      const orderCode = repair?.orderCode || repairId;
+      const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
+      const fileName = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
+      
+      // E-Mail senden
+      const response = await fetch('/api/send-repair-pdf-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          repairId: repairId,
+          customerEmail: customer.email,
+          customerName: customerName,
+          pdfData: pdfBase64,
+          fileName: fileName,
+          orderCode: orderCode
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('E-Mail konnte nicht versendet werden');
+      }
+
+      toast({
+        title: "E-Mail versendet",
+        description: `Das PDF wurde erfolgreich an ${customer.email} gesendet.`,
+      });
+      
+    } catch (err) {
+      console.error('Fehler beim Versenden der E-Mail:', err);
+      toast({
+        title: "Fehler",
+        description: "Die E-Mail konnte nicht versendet werden.",
         variant: "destructive",
       });
     } finally {
@@ -498,7 +581,29 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                       PDF wird erstellt...
                     </>
                   ) : (
-                    <>PDF herunterladen</>
+                    <>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      PDF herunterladen
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={handleSendPdfEmail}
+                  disabled={isGeneratingPdf || !customer?.email}
+                  variant="outline"
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird versendet...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      PDF per E-Mail senden
+                    </>
                   )}
                 </Button>
                 
