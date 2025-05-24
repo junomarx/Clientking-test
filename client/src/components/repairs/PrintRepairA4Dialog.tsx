@@ -25,6 +25,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const { toast } = useToast();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [printReady, setPrintReady] = useState(false);
+  const [showActionDialog, setShowActionDialog] = useState(false);
+  const [generatedPdf, setGeneratedPdf] = useState<jsPDF | null>(null);
   
   // Daten für die Reparatur laden
   const { data: repair, isLoading, error } = useQuery({
