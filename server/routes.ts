@@ -3549,13 +3549,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
 
+      // Debug: Auftragscode überprüfen
+      console.log(`Reparatur Details:`, {
+        id: repair.id,
+        orderCode: repair.orderCode,
+        reference_number: repair.reference_number,
+        allKeys: Object.keys(repair)
+      });
+
+      // Korrekten Auftragscode ermitteln
+      const correctOrderCode = repair.orderCode || repair.reference_number || `RA-${repair.id}`;
+      
       // E-Mail über Storage-Service senden (der die korrekte E-Mail-API verwendet)
       const emailSent = await storage.sendEmailWithAttachment({
         to: recipient,
         from: `Handyshop <office@connect7.at>`,
-        subject: `Reparaturauftrag ${repair.orderCode}`,
-        htmlBody: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${repair.orderCode}</strong>.</p>`,
-        textBody: `Anbei finden Sie Ihren Reparaturauftrag ${repair.orderCode}.`,
+        subject: `Reparaturauftrag ${correctOrderCode}`,
+        htmlBody: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${correctOrderCode}</strong>.</p>`,
+        textBody: `Anbei finden Sie Ihren Reparaturauftrag ${correctOrderCode}.`,
         attachments: [{
           filename: filename,
           content: Buffer.from(pdfBase64, 'base64'),
