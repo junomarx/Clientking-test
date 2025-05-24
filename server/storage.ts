@@ -722,15 +722,25 @@ export class DatabaseStorage implements IStorage {
       // Temporären Dateinamen erstellen
       const tempFilePath = path.default.join(os.default.tmpdir(), `${filename}_${Date.now()}.pdf`);
       
-      // PDF-Optionen
+      // PDF-Optionen für A4-Format optimiert
       const options = {
         format: 'A4',
+        orientation: 'portrait',
         border: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
-        }
+          top: '10mm',
+          right: '10mm',
+          bottom: '10mm',
+          left: '10mm'
+        },
+        height: '297mm',
+        width: '210mm',
+        type: 'pdf',
+        quality: '75',
+        renderDelay: 1000,
+        phantomArgs: [
+          '--load-images=yes',
+          '--local-storage-path=' + os.default.tmpdir(),
+        ]
       };
       
       console.log(`Erstelle PDF-Datei ${tempFilePath} aus HTML-Inhalt`);
