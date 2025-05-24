@@ -309,160 +309,150 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         {printReady ? (
           <div className="space-y-4">
             {/* A4 Druckinhalt */}
-            <div 
-              id="a4-print-content" 
-              className="bg-white p-8 border border-gray-200 rounded-lg mx-auto"
-              style={{ 
-                width: '210mm', 
-                minHeight: '297mm',
-                fontSize: '12px',
-                lineHeight: '1.4',
-                fontFamily: 'Arial, sans-serif'
-              }}
-            >
-              {/* Header mit Logo und Geschäftsdaten */}
-              <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-gray-900">
-                <div className="flex-1">
-                  {businessSettings?.logoUrl && (
+            <div id="a4-print-content" className="bg-white text-black p-8 sm:p-10 md:p-12 rounded-md">
+              <style dangerouslySetInnerHTML={{ __html: `
+                @media print {
+                  body {
+                    padding: 0;
+                  }
+                  @page {
+                    size: A4;
+                    margin: 1cm;
+                  }
+                }
+              `}} />
+              
+              {/* Header mit Logo und Firmendaten */}
+              <div className="flex justify-between items-start mb-10">
+                <div className="w-[200px] p-3 text-center h-[60px] flex items-center justify-center">
+                  {businessSettings?.logoImage ? (
                     <img 
-                      src={businessSettings.logoUrl} 
-                      alt="Firmenlogo" 
-                      className="mb-3"
-                      style={{ maxHeight: '15mm', objectFit: 'contain' }}
+                      src={businessSettings.logoImage} 
+                      alt={businessSettings.businessName}
+                      className="max-h-[60px] max-w-[180px] object-contain"
+                      onError={(e) => {
+                        console.error('Fehler beim Laden des Logos in A4:', e);
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          e.currentTarget.parentElement.innerHTML = '<span class="text-gray-400 italic">Logo konnte nicht geladen werden</span>';
+                        }
+                      }}
+                      loading="eager"
                     />
+                  ) : (
+                    <span className="text-transparent">Logo nicht verfügbar</span>
                   )}
-                  <div className="text-lg font-bold">{businessSettings?.businessName || 'Handyreparatur Service'}</div>
-                  {businessSettings?.address && <div>{businessSettings.address}</div>}
-                  {(businessSettings?.zipCode || businessSettings?.city) && (
-                    <div>{businessSettings?.zipCode} {businessSettings?.city}</div>
-                  )}
-                  {businessSettings?.phone && <div>Tel: {businessSettings.phone}</div>}
-                  {businessSettings?.email && <div>E-Mail: {businessSettings.email}</div>}
                 </div>
                 
-                <div className="text-right">
-                  <div className="text-2xl font-bold mb-2">REPARATURAUFTRAG</div>
-                  <div className="text-lg font-semibold">Nr: {repair.orderCode}</div>
-                  <div className="text-sm">Datum: {formatDate(repair.createdAt)}</div>
+                <div className="text-right text-sm text-gray-600">
+                  <p className="text-base font-bold text-gray-800 mb-1">{businessSettings?.businessName || 'Handyshop Verwaltung'}</p>
+                  <p>{businessSettings?.streetAddress || 'Amerlingstraße 19'}<br />
+                  {businessSettings?.zipCode || '1060'} {businessSettings?.city || 'Wien'}<br />
+                  {businessSettings?.phone || '+4314103511'}<br />
+                  {businessSettings?.email || 'office@macandphonedoc.at'}</p>
                 </div>
               </div>
 
-              {/* Kundendaten */}
-              <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Kundendaten</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div><strong>Name:</strong> {customer.firstName} {customer.lastName}</div>
-                    <div><strong>Telefon:</strong> {customer.phone || 'k.A.'}</div>
-                    <div><strong>E-Mail:</strong> {customer.email || 'k.A.'}</div>
-                  </div>
-                  <div>
-                    {customer.address && <div><strong>Adresse:</strong> {customer.address}</div>}
-                    {(customer.zipCode || customer.city) && (
-                      <div><strong>Ort:</strong> {customer.zipCode} {customer.city}</div>
-                    )}
+              {/* Kundeninformationen */}
+              <div className="mb-8">
+                <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
+                <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
+                <p>{customer.street || ''}</p>
+                <p>{customer.zipCode || ''} {customer.city || ''}</p>
+              </div>
+              
+              {/* Dokumententitel und Auftragsnummer */}
+              <div className="text-center mb-10">
+                <h1 className="text-2xl font-bold mb-2">Reparaturauftrag</h1>
+                <div className="text-lg">{repair.orderCode}</div>
+              </div>
+              
+              {/* Gerätedaten & Reparaturdetails Box */}
+              <div className="border border-gray-300 rounded-lg bg-gray-50 p-5 mb-8 flex gap-10">
+                <div className="flex-1">
+                  <div className="text-sm font-bold mb-3">Gerätedaten</div>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Gerätetyp:</span> {repair.deviceType}</div>
+                    <div><span className="font-medium">Marke:</span> {repair.brand}</div>
+                    <div><span className="font-medium">Modell:</span> {repair.model}</div>
+                    <div><span className="font-medium">Telefon:</span> {customer.phone || 'k.A.'}</div>
+                    <div><span className="font-medium">E-Mail:</span> {customer.email || 'k.A.'}</div>
                   </div>
                 </div>
-              </div>
-
-              {/* Geräteinformationen */}
-              <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Geräteinformationen</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div><strong>Gerätetyp:</strong> {repair.deviceType}</div>
-                    <div><strong>Marke:</strong> {repair.brand}</div>
-                    <div><strong>Modell:</strong> {repair.model}</div>
-                  </div>
-                  <div>
-                    <div><strong>Problem:</strong> {repair.issue}</div>
-                    <div><strong>Status:</strong> {repair.status}</div>
+                
+                <div className="flex-1">
+                  <div className="text-sm font-bold mb-3">Reparaturdetails</div>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Problem:</span> {repair.issue}</div>
+                    <div><span className="font-medium">Status:</span> {repair.status}</div>
+                    <div><span className="font-medium">Abgegeben am:</span> {formatDate(repair.createdAt)}</div>
                     {repair.estimatedCost && (
-                      <div><strong>Kostenvoranschlag:</strong> {repair.estimatedCost}€</div>
+                      <div><span className="font-medium">Kostenvoranschlag:</span> €{repair.estimatedCost}</div>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Beschreibung */}
+              {/* Fehlerbeschreibung */}
               {repair.description && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Problembeschreibung</h3>
-                  <div className="border border-gray-300 p-3 min-h-[60px] whitespace-pre-wrap">
+                <div className="mb-8">
+                  <div className="text-sm font-bold mb-2">Fehlerbeschreibung</div>
+                  <div className="border border-gray-300 rounded p-3 min-h-[80px] bg-white text-sm">
                     {repair.description}
                   </div>
                 </div>
               )}
 
-              {/* Notizen */}
-              {repair.notes && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Interne Notizen</h3>
-                  <div className="border border-gray-300 p-3 min-h-[60px] whitespace-pre-wrap">
-                    {repair.notes}
-                  </div>
-                </div>
-              )}
-
               {/* Unterschriftenbereich */}
-              <div className="mt-8">
-                <h3 className="font-bold text-lg mb-4">Unterschriften</h3>
-                <div className="flex justify-between gap-8">
+              <div className="border-t-2 border-gray-300 pt-8 mt-16">
+                <div className="flex justify-between gap-16">
                   <div className="flex-1 text-center">
-                    <p className="font-bold mb-2">Gerät abgegeben</p>
+                    <p className="font-bold mb-4">Gerät abgegeben</p>
                     {repair.dropoffSignature ? (
                       <>
-                        <div className="h-[40px] flex items-center justify-center">
+                        <div className="h-[60px] flex items-center justify-center mb-2">
                           <img 
                             src={repair.dropoffSignature} 
                             alt="Unterschrift bei Abgabe" 
-                            className="max-h-[40px] object-contain"
+                            className="max-h-[60px] object-contain"
                           />
                         </div>
-                        <div className="border-t border-gray-900 mt-1"></div>
-                        <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                        <div className="border-t border-gray-900 mt-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
                         <div className="text-xs text-gray-600 mt-1">
                           {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
-                          <span>Keine Unterschrift vorhanden</span>
-                        </div>
-                        <div className="border-t border-gray-900 mt-1"></div>
-                        <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
-                        <div className="text-xs text-gray-600 mt-1">
-                          {formatDate(repair.createdAt)}
-                        </div>
+                        <div className="h-[60px] border-b border-gray-900 mb-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                        <div className="text-xs text-gray-600 mt-1">{formatDate(repair.createdAt)}</div>
                       </>
                     )}
                   </div>
                   
                   <div className="flex-1 text-center">
-                    <p className="font-bold mb-2">Gerät abgeholt</p>
+                    <p className="font-bold mb-4">Gerät abgeholt</p>
                     {repair.pickupSignature ? (
                       <>
-                        <div className="h-[40px] flex items-center justify-center">
+                        <div className="h-[60px] flex items-center justify-center mb-2">
                           <img 
                             src={repair.pickupSignature} 
                             alt="Unterschrift bei Abholung" 
-                            className="max-h-[40px] object-contain"
+                            className="max-h-[60px] object-contain"
                           />
                         </div>
-                        <div className="border-t border-gray-900 mt-1"></div>
-                        <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                        <div className="border-t border-gray-900 mt-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
                         <div className="text-xs text-gray-600 mt-1">
                           {repair.pickupSignedAt && formatDate(repair.pickupSignedAt)}
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
-                          <span>Keine Unterschrift vorhanden</span>
-                        </div>
-                        <div className="border-t border-gray-900 mt-1"></div>
-                        <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                        <div className="h-[60px] border-b border-gray-900 mb-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
                         <div className="text-xs text-gray-600 mt-1"></div>
                       </>
                     )}
