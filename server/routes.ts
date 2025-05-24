@@ -2533,6 +2533,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test-E-Mail-Endpunkt zur Überprüfung der SMTP-Konfiguration
+  app.post("/api/test-email", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { testEmail } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ message: "Test-E-Mail-Adresse erforderlich" });
+      }
+      
+      const userId = (req.user as any).id;
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Einfache Test-E-Mail ohne PDF
+      const testSubject = "Test-E-Mail von Handyshop Verwaltung";
+      const testContent = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Test-E-Mail</h2>
+          <p>Diese E-Mail wurde erfolgreich von Ihrem Handyshop-System versendet.</p>
+          <p>Zeitstempel: ${new Date().toLocaleString('de-DE')}</p>
+          <p>Von: ${businessSettings?.businessName || 'Handyshop'}</p>
+        </div>
+      `;
+      
+      console.log(`🧪 Sende Test-E-Mail an ${testEmail}`);
+      
+      const emailSent = await storage.sendEmailWithAttachment({
+        to: testEmail,
+        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
+        subject: testSubject,
+        htmlBody: testContent,
+        textBody: `Test-E-Mail von ${businessSettings?.businessName || 'Handyshop'}\n\nDiese E-Mail wurde erfolgreich versendet.\nZeitstempel: ${new Date().toLocaleString('de-DE')}`,
+        attachments: [],
+        userId: userId
+      });
+      
+      console.log(`🧪 Test-E-Mail Ergebnis: ${emailSent ? 'ERFOLGREICH' : 'FEHLGESCHLAGEN'}`);
+      
+      if (emailSent) {
+        res.json({ 
+          success: true, 
+          message: `Test-E-Mail wurde an ${testEmail} gesendet` 
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Test-E-Mail konnte nicht gesendet werden" 
+        });
+      }
+      
+    } catch (error) {
+      console.error("Fehler beim Senden der Test-E-Mail:", error);
+      res.status(500).json({ message: "Fehler beim Senden der Test-E-Mail" });
+    }
+  });
+
   // SMS-Endpunkt wurde auf Kundenwunsch entfernt
 
   // API-Endpunkt zum Abrufen des E-Mail-Verlaufs für eine Reparatur
