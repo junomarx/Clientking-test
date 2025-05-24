@@ -2500,15 +2500,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📧 Betreff: ${subject}`);
       console.log(`📧 Anhang: ${fileName}.pdf (${pdfBuffer.length} bytes)`);
       
-      // E-Mail mit exakt derselben Methode wie bei Kostenvoranschlägen senden
+      // Geschäftseinstellungen für den Absender abrufen (EXAKT wie bei Kostenvoranschlägen)
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // E-Mail-Absender-Informationen festlegen (EXAKT wie bei Kostenvoranschlägen)
+      const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
+      const senderEmail = businessSettings?.businessEmail || process.env.SMTP_USER || 'no-reply@example.com';
+      
+      // E-Mail mit PDF-Anhang senden (EXAKT IDENTISCH mit Kostenvoranschlag-Funktion)
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
-        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
+        from: `"${senderName}" <${senderEmail}>`,
         subject: subject,
-        htmlBody: emailContent,
-        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${businessSettings?.businessName || 'Handyshop'}`,
+        htmlBody: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || `#${repairId}`}</h2>
+            <p>Liebe/r ${customerName},</p>
+            <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
+            <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+            <p>Mit freundlichen Grüßen,</p>
+            <p><strong>${senderName}</strong></p>
+          </div>
+        `,
+        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
-          filename: `${fileName}.pdf`,
+          filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }],
