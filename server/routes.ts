@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import * as emailService from "./email-service";
 // Import der Berechtigungsprüfung aus permissions.ts
 import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from './permissions';
 // Import der Middleware für die Prüfung der Trial-Version
@@ -2499,20 +2500,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📧 Betreff: ${subject}`);
       console.log(`📧 Anhang: ${fileName}.pdf (${pdfBuffer.length} bytes)`);
       
-      // E-Mail mit PDF-Anhang über den gleichen Service wie Statusmails senden
-      const emailResult = await emailService.sendEmail(
+      // E-Mail direkt mit funktionierenden SMTP-Einstellungen senden (wie bei Statusmails)
+      const emailSent = await storage.sendEmailNotification(
+        repairId,
         customerEmail,
         subject,
         emailContent,
         userId,
+        null, // Keine Vorlage-ID bei PDF-E-Mails
         [{
           filename: `${fileName}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }]
       );
-      
-      const emailSent = emailResult.success;
       
       console.log(`📧 E-Mail-Versand Ergebnis: ${emailSent ? 'ERFOLGREICH' : 'FEHLGESCHLAGEN'}`);
       
