@@ -45,6 +45,7 @@ const registerSchema = z.object({
   email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein."),
   
   // Login-Daten
+  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben."),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
@@ -104,6 +105,7 @@ export default function AuthPage() {
       website: "",
       companyPhone: "",
       email: "",
+      username: "",
       password: "",
       confirmPassword: "",
     },
@@ -556,6 +558,33 @@ export default function AuthPage() {
                             <p className="text-sm text-gray-500 mt-1 flex items-center">
                               <span className="mr-2">ℹ️</span>
                               An die angegebene E-Mail Adresse schicken wir Ihnen eine Bestätigungsmail.
+                            </p>
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Benutzername */}
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder="Benutzername *" 
+                                  {...field} 
+                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                  👤
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-sm text-gray-500 mt-1 flex items-center">
+                              <span className="mr-2">ℹ️</span>
+                              Wird für den Login benötigt. Kann nach der Registrierung nicht mehr geändert werden.
                             </p>
                           </FormItem>
                         )}
