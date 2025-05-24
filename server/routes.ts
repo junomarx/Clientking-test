@@ -2451,7 +2451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // E-Mail-Absender-Informationen festlegen
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
-      const senderEmail = businessSettings?.businessEmail || process.env.SMTP_USER || 'no-reply@example.com';
+      const senderEmail = 'office@connect7.at';
       
       const subject = `Reparaturauftrag ${orderCode || `#${repairId}`}`;
       
