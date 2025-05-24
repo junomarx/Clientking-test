@@ -144,16 +144,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // Exakt gleiche PDF-Generierung wie beim Download
+      // Optimierte PDF-Generierung für E-Mail (kleinere Größe)
       const canvas = await html2canvas(content, {
-        scale: 2,
+        scale: 1, // Reduzierte Qualität für kleinere Dateigröße
         logging: false,
         useCORS: true,
         allowTaint: true,
       });
       
-      // Exakt gleiche PDF-Erstellung wie beim Download
-      const imgData = canvas.toDataURL('image/png');
+      // PDF mit JPEG-Komprimierung für E-Mail
+      const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG mit 70% Qualität
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -166,7 +166,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const imgWidth = pageWidth - (2 * margin);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       
       // PDF als Base64 für E-Mail-Versand
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
