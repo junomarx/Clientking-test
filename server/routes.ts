@@ -2436,14 +2436,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
+      console.log(`📧 Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
       
       // PDF generieren aus HTML-Inhalt (wie bei Kostenvoranschlägen)
       const fileName = `Reparaturauftrag_${orderCode || repairId}_${customerName.replace(/\s+/g, '_')}`;
+      
+      console.log(`🔄 Generiere PDF aus HTML-Inhalt...`);
       const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, fileName);
       
       if (!pdfBuffer) {
+        console.error('❌ PDF-Generierung fehlgeschlagen');
         return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
+      }
+      
+      console.log(`✅ PDF erfolgreich generiert (${pdfBuffer.length} bytes)`);
+      
+      // Überprüfe SMTP-Konfiguration vor dem Versand
+      const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD;
+      if (!smtpConfigured) {
+        console.error('❌ SMTP-Konfiguration unvollständig');
+        console.error('Fehlende Umgebungsvariablen:', {
+          SMTP_HOST: !!process.env.SMTP_HOST,
+          SMTP_USER: !!process.env.SMTP_USER,
+          SMTP_PASSWORD: !!process.env.SMTP_PASSWORD
+        });
+        return res.status(500).json({ 
+          message: "E-Mail-Konfiguration unvollständig. Bitte konfigurieren Sie die SMTP-Einstellungen." 
+        });
       }
       
       // E-Mail-Betreff und -Inhalt
@@ -2475,6 +2494,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
       `;
       
+      console.log(`📤 Bereite E-Mail-Versand vor...`);
+      console.log(`📧 Empfänger: ${customerEmail}`);
+      console.log(`📧 Betreff: ${subject}`);
+      console.log(`📧 Anhang: ${fileName}.pdf (${pdfBuffer.length} bytes)`);
+      
       // E-Mail mit PDF-Anhang senden (wie bei Kostenvoranschlägen)
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
@@ -2490,7 +2514,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: userId
       });
       
+      console.log(`📧 E-Mail-Versand Ergebnis: ${emailSent ? 'ERFOLGREICH' : 'FEHLGESCHLAGEN'}`);
+      
       if (!emailSent) {
+        console.error('❌ E-Mail-Versand fehlgeschlagen');
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
       
