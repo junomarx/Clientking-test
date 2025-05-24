@@ -51,7 +51,8 @@ import {
   Pencil,
   Store,
   Search,
-  Info
+  Info,
+  FileText
 } from 'lucide-react';
 
 // Benutzer-Typ ohne Passwort
@@ -569,6 +570,16 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       <div className="text-sm text-muted-foreground">{user.email}</div>
                     </div>
                     <div className="flex space-x-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedUserId(user.id);
+                          setIsUserDetailsDialogOpen(true);
+                        }}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
