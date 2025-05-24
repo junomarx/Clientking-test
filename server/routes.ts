@@ -2416,12 +2416,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PDF per E-Mail senden
+  // PDF per E-Mail senden (wie bei Kostenvoranschlägen)
   app.post("/api/send-repair-pdf-email", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const { repairId, customerEmail, customerName, pdfData, fileName, orderCode } = req.body;
+      const { repairId, customerEmail, customerName, htmlContent, orderCode } = req.body;
       
-      if (!repairId || !customerEmail || !pdfData || !fileName) {
+      if (!repairId || !customerEmail || !htmlContent) {
         return res.status(400).json({ message: "Fehlende Parameter für PDF-E-Mail-Versand" });
       }
       
@@ -2436,15 +2436,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      // PDF-Daten von Base64 zu Buffer konvertieren
-      const pdfBuffer = Buffer.from(pdfData, 'base64');
+      console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
+      
+      // PDF generieren aus HTML-Inhalt (wie bei Kostenvoranschlägen)
+      const fileName = `Reparaturauftrag_${orderCode || repairId}_${customerName.replace(/\s+/g, '_')}`;
+      const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, fileName);
+      
+      if (!pdfBuffer) {
+        return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
+      }
       
       // E-Mail-Betreff und -Inhalt
       const subject = `Reparaturauftrag ${orderCode || `#${repairId}`} - ${businessSettings?.businessName || 'Handyshop'}`;
       
       const emailContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Ihr Reparaturauftrag</h2>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || `#${repairId}`}</h2>
           
           <p>Liebe/r ${customerName},</p>
           
@@ -2458,42 +2465,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
           
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-            <strong>${businessSettings?.businessName || 'Handyshop'}</strong><br>
-            ${businessSettings?.phone ? `Tel: ${businessSettings.phone}<br>` : ''}
-            ${businessSettings?.email ? `E-Mail: ${businessSettings.email}<br>` : ''}
-            ${businessSettings?.streetAddress ? `${businessSettings.streetAddress}<br>` : ''}
-            ${businessSettings?.zipCode && businessSettings?.city ? `${businessSettings.zipCode} ${businessSettings.city}` : ''}
-          </div>
+          <p>Mit freundlichen Grüßen,</p>
+          <p><strong>${businessSettings?.businessName || 'Handyshop'}</strong></p>
+          
+          ${businessSettings?.phone ? `<p>Tel: ${businessSettings.phone}</p>` : ''}
+          ${businessSettings?.email ? `<p>E-Mail: ${businessSettings.email}</p>` : ''}
+          ${businessSettings?.streetAddress ? `<p>${businessSettings.streetAddress}</p>` : ''}
+          ${businessSettings?.zipCode && businessSettings?.city ? `<p>${businessSettings.zipCode} ${businessSettings.city}</p>` : ''}
         </div>
       `;
       
-      // E-Mail senden mit PDF-Anhang
-      const emailResult = await emailService.sendEmail(
-        customerEmail,
-        subject,
-        emailContent,
-        userId,
-        [{
-          filename: fileName,
+      // E-Mail mit PDF-Anhang senden (wie bei Kostenvoranschlägen)
+      const emailSent = await storage.sendEmailWithAttachment({
+        to: customerEmail,
+        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER || 'no-reply@example.com'}>`,
+        subject: subject,
+        htmlBody: emailContent,
+        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${businessSettings?.businessName || 'Handyshop'}`,
+        attachments: [{
+          filename: `${fileName}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
-        }]
-      );
+        }],
+        userId: userId
+      });
       
-      if (emailResult.success) {
-        console.log(`✅ PDF-E-Mail erfolgreich an ${customerEmail} gesendet für Reparatur ${repairId}`);
-        res.json({ 
-          success: true, 
-          message: `PDF wurde erfolgreich an ${customerEmail} gesendet` 
-        });
-      } else {
-        console.error(`❌ Fehler beim Senden der PDF-E-Mail:`, emailResult.error);
-        res.status(500).json({ 
-          message: "Fehler beim Senden der E-Mail", 
-          error: emailResult.error 
-        });
+      if (!emailSent) {
+        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
+      
+      console.log(`✅ PDF-E-Mail erfolgreich an ${customerEmail} gesendet für Reparatur ${repairId}`);
+      res.json({ 
+        success: true, 
+        message: `PDF wurde erfolgreich an ${customerEmail} gesendet` 
+      });
       
     } catch (error) {
       console.error("Error sending PDF email:", error);
