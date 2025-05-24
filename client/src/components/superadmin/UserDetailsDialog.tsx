@@ -1,506 +1,441 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
-} from "@/components/ui/dialog";
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Package, User, BusinessSettings } from "@shared/schema";
-import {
-  User as UserIcon,
-  Building2,
+  User,
   Mail,
+  MapPin,
+  Building,
   Phone,
-  Package as PackageIcon,
   Calendar,
-  Store,
-  CircleUserRound,
-  BadgeCheck,
-  BadgeX,
-  Loader2,
-  FileCog,
-  ShoppingCart,
-  ReceiptText,
+  Clock,
+  Tag,
+  Euro,
+  FileText,
+  Package,
   Settings,
-  Shield,
   Globe,
-  Star,
-  Pencil,
+  Printer,
+  Palette,
+  Shield,
+  Users,
+  AlertCircle,
+  CheckCircle,
+  X
 } from 'lucide-react';
 
 interface UserDetailsDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   userId: number | null;
-  onEdit?: (user: User) => void;
-  onActivate?: (userId: number) => void;
+  onEdit?: (id: number) => void;
 }
 
-export function UserDetailsDialog({ open, onOpenChange, userId, onEdit, onActivate }: UserDetailsDialogProps) {
-  const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
-  const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null);
-  
+interface UserWithBusinessSettings {
+  id: number;
+  username: string;
+  email: string;
+  isActive: boolean;
+  isAdmin: boolean;
+  isSuperadmin: boolean;
+  pricingPlan: string | null;
+  shopId: number | null;
+  createdAt: string;
+  trialExpiresAt: string | null;
+  businessSettings?: {
+    businessName: string;
+    ownerFirstName: string;
+    ownerLastName: string;
+    streetAddress: string;
+    zipCode: string;
+    city: string;
+    email: string | null;
+    phone: string | null;
+    websiteUrl: string | null;
+    businessSlogan: string | null;
+    vatNumber: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    logoUrl: string | null;
+    printLogo: boolean;
+    printCompanyInfo: boolean;
+    printOwnerInfo: boolean;
+    smtpHost: string | null;
+    smtpPort: number | null;
+    smtpUser: string | null;
+    smtpPassword: string | null;
+    smtpSecure: boolean;
+    senderEmail: string | null;
+    senderName: string | null;
+    openingHours: string | null;
+  };
+}
+
+export function UserDetailsDialog({ open, onClose, userId, onEdit }: UserDetailsDialogProps) {
+  const [user, setUser] = useState<UserWithBusinessSettings | null>(null);
+
   // Dialog schließen mit Verzögerung für Animationen
-  const handleClose = (openState: boolean) => {
-    onOpenChange(openState);
-    // Kurze Verzögerung, um Flackern zu vermeiden
-    if (!openState) {
-      setTimeout(() => {
-        setUser(null);
-      }, 300);
-    }
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+      setUser(null);
+    }, 300);
   };
-  
-  // Benutzerinformationen abrufen
-  const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
-    queryKey: ['/api/superadmin/users'],
+
+  // Benutzer und Geschäftseinstellungen abrufen
+  const { data: userData } = useQuery<UserWithBusinessSettings>({
+    queryKey: ['/api/superadmin/users', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('Keine Benutzer-ID');
+      const response = await apiRequest('GET', `/api/superadmin/users/${userId}`);
+      return response.json();
+    },
     enabled: open && userId !== null,
   });
-  
-  // Paketinformationen abrufen
-  const { data: packages, isLoading: isLoadingPackages } = useQuery<Package[]>({ 
-    queryKey: ['/api/superadmin/packages'],
+
+  // Geschäftseinstellungen für den Benutzer abrufen
+  const { data: businessSettings } = useQuery({
+    queryKey: ['/api/superadmin/user-business-settings', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('Keine Benutzer-ID');
+      const response = await apiRequest('GET', `/api/superadmin/user-business-settings/${userId}`);
+      return response.json();
+    },
     enabled: open && userId !== null,
   });
-  
-  // Individuelle Geschäftseinstellungen des Benutzers abrufen
-  const fetchUserBusinessSettings = async (userId: number) => {
-    if (!userId) return;
-    
-    try {
-      // Benutze den apiRequest aus der queryClient-Library statt fetch direkt
-      // Dies stellt sicher, dass notwendige Authentifizierungsinformationen mitgesendet werden
-      const response = await fetch(`/api/superadmin/user-business-settings/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Superadmin-ID als Header für direkte Authentifizierung
-          'X-User-ID': '10'  // Hardcoded ID des Superadmins (macnphone)
-        },
-        credentials: 'include'
-      });
-      
-      console.log(`API-Anfrage für Geschäftseinstellungen: Status ${response.status}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Business settings für Benutzer", userId, "geladen:", data);
-        setBusinessSettings(data);
-      } else if (response.status === 404) {
-        // Wenn keine Geschäftsdaten gefunden werden (404), einfach null setzen ohne Fehler anzuzeigen
-        console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} gefunden.`);
-        setBusinessSettings(null);
-      } else {
-        // Bei anderen Fehlern, versuche den Response-Text zu lesen
-        const errorText = await response.text();
-        console.error(`Fehler ${response.status}: ${errorText}`);
-        setBusinessSettings(null);
-      }
-    } catch (error) {
-      console.error('Fehler beim Abrufen der Geschäftseinstellungen:', error);
-      // Keine Fehlermeldung mehr anzeigen, stattdessen einfach businessSettings auf null setzen
-      setBusinessSettings(null);
-    }
-  };
-  
-  // Setze den ausgewählten Benutzer, wenn sich die ID ändert oder die Benutzerdaten geladen werden
+
+  // Benutzer setzen, wenn Daten verfügbar sind
   useEffect(() => {
-    if (open && userId && users) {
-      const selectedUser = users.find(u => u.id === userId);
-      if (selectedUser) {
-        setUser(selectedUser);
-        
-        // Geschäftseinstellungen direkt über die Benutzer-ID abrufen
-        fetchUserBusinessSettings(selectedUser.id);
-      }
+    if (userData && businessSettings) {
+      setUser({
+        ...userData,
+        businessSettings
+      });
+    } else if (userData) {
+      setUser(userData);
     }
-  }, [open, userId, users]);
-  
+  }, [userData, businessSettings]);
+
   // Formatiere das Datum im deutschen Format
-  const formatDate = (dateString: string | Date) => {
-    const date = dateString instanceof Date ? dateString : new Date(dateString);
-    return format(date, 'dd. MMMM yyyy', { locale: de });
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd. MMMM yyyy', { locale: de });
   };
-  
-  if (!open) return null;
-  
-  if (isLoadingUsers || !user) {
+
+  // Formatiere das Datum und die Uhrzeit
+  const formatDateTime = (dateString: string) => {
+    return format(new Date(dateString), 'dd. MMMM yyyy, HH:mm', { locale: de });
+  };
+
+  // Status-Badge für Benutzer
+  const getUserStatusBadge = (isActive: boolean, isAdmin: boolean, isSuperadmin: boolean) => {
+    if (isSuperadmin) {
+      return <Badge variant="destructive" className="bg-purple-500 hover:bg-purple-600"><Shield className="h-3 w-3 mr-1" />Superadmin</Badge>;
+    }
+    if (isAdmin) {
+      return <Badge variant="secondary" className="bg-blue-500 hover:bg-blue-600 text-white"><Users className="h-3 w-3 mr-1" />Admin</Badge>;
+    }
+    if (isActive) {
+      return <Badge variant="default" className="bg-green-500 hover:bg-green-600"><CheckCircle className="h-3 w-3 mr-1" />Aktiv</Badge>;
+    }
+    return <Badge variant="destructive"><X className="h-3 w-3 mr-1" />Inaktiv</Badge>;
+  };
+
+  // Paket-Badge
+  const getPackageBadge = (pricingPlan: string | null) => {
+    const plan = pricingPlan || 'demo';
+    const colors = {
+      demo: 'bg-gray-500',
+      professional: 'bg-blue-500',
+      enterprise: 'bg-purple-500'
+    };
+    const labels = {
+      demo: 'Demo',
+      professional: 'Professional',
+      enterprise: 'Enterprise'
+    };
+    
+    return (
+      <Badge className={`${colors[plan as keyof typeof colors] || colors.demo} hover:opacity-80 text-white`}>
+        <Package className="h-3 w-3 mr-1" />
+        {labels[plan as keyof typeof labels] || plan}
+      </Badge>
+    );
+  };
+
+  if (!user) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Benutzerdetails
-            </DialogTitle>
-            <DialogDescription>
-              Lade Benutzerinformationen...
-            </DialogDescription>
+            <DialogTitle>Benutzerdetails werden geladen...</DialogTitle>
           </DialogHeader>
-          <div className="py-6">
-            <Skeleton className="w-full h-64" />
+          <div className="flex items-center justify-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </DialogContent>
       </Dialog>
     );
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            {user.isAdmin ? <Shield className="h-5 w-5 text-blue-500" /> : <UserIcon className="h-5 w-5" />}
-            {user.username}
+          <DialogTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            Benutzerdetails: {user.username}
           </DialogTitle>
           <DialogDescription>
-            Vollständige Informationen zum Benutzer und Geschäftsangaben
+            Vollständige Übersicht aller Benutzerinformationen und Geschäftseinstellungen
           </DialogDescription>
         </DialogHeader>
-        
-        <Tabs defaultValue="details" className="w-full mt-4">
-          <TabsList className="grid grid-cols-2 md:grid-cols-3 mb-4">
-            <TabsTrigger value="details">Benutzerdetails</TabsTrigger>
-            <TabsTrigger value="business">Geschäftsangaben</TabsTrigger>
-            <TabsTrigger value="statistics">Statistiken</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Allgemeine Benutzerinformationen */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Allgemeine Informationen</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-2">
-                    <UserIcon className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.username}</p>
-                      <p className="text-sm text-muted-foreground">Benutzername</p>
-                    </div>
+
+        <div className="space-y-6">
+          {/* Benutzer-Grundinformationen */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  Benutzerinformationen
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">Status:</span>
+                    {getUserStatusBadge(user.isActive, user.isAdmin, user.isSuperadmin)}
                   </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <Mail className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.email}</p>
-                      <p className="text-sm text-muted-foreground">E-Mail-Adresse</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400 w-20">Paket:</span>
+                    {getPackageBadge(user.pricingPlan)}
                   </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <Store className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{user.shopId || 'Kein Shop zugewiesen'}</p>
-                      <p className="text-sm text-muted-foreground">Shop-ID</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">{user.email}</span>
                   </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <Calendar className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{formatDate(user.createdAt)}</p>
-                      <p className="text-sm text-muted-foreground">Erstellungsdatum</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">Shop-ID: {user.shopId || 'Nicht zugewiesen'}</span>
                   </div>
-                </CardContent>
-              </Card>
-              
-              {/* Status und Rollen */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Status und Berechtigungen</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-2">
-                    <CircleUserRound className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">
-                        {user.isActive ? (
-                          <Badge variant="outline" className="bg-green-100 text-green-700 hover:bg-green-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Aktiv
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-red-100 text-red-700 hover:bg-red-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg> Inaktiv
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">Aktivierungsstatus</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm">Registriert: {formatDate(user.createdAt)}</span>
                   </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <Shield className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">
-                        {user.isAdmin ? (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Admin
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">
-                            <CircleUserRound className="h-3 w-3 mr-1" /> Benutzer
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">Benutzerrolle</p>
+                  {user.trialExpiresAt && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm">Trial läuft ab: {formatDateTime(user.trialExpiresAt)}</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2">
-                    <PackageIcon className="h-4 w-4 mt-1 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">
-                        {user.packageId ? (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                            <PackageIcon className="h-3 w-3 mr-1" />
-                            {isLoadingPackages 
-                              ? 'Lade...' 
-                              : packages?.find(p => p.id === user.packageId)?.name || `Paket ${user.packageId}`}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-                            Kein Paket
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">Abonniertes Paket</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="business" className="space-y-6">
-            {user.companyName || user.companyAddress || user.companyPhone || user.companyEmail || businessSettings ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Firma und Kontakt */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Firmeninformationen</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start gap-2">
-                      <Building2 className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.companyName || (businessSettings?.businessName) || 'Nicht angegeben'}</p>
-                        <p className="text-sm text-muted-foreground">Firmenname</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2">
-                      <Store className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium whitespace-pre-line">{user.companyAddress || (businessSettings?.streetAddress ? `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}` : null) || 'Nicht angegeben'}</p>
-                        <p className="text-sm text-muted-foreground">Firmenadresse</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2">
-                      <ReceiptText className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.companyVatNumber || (businessSettings?.vatNumber) || 'Nicht angegeben'}</p>
-                        <p className="text-sm text-muted-foreground">USt-IdNr.</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Geschäftseinstellungen */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Kontaktdaten</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start gap-2">
-                      <Phone className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.companyPhone || (businessSettings?.phone) || 'Nicht angegeben'}</p>
-                        <p className="text-sm text-muted-foreground">Telefonnummer</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-2">
-                      <Mail className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">{user.companyEmail || (businessSettings?.email) || 'Nicht angegeben'}</p>
-                        <p className="text-sm text-muted-foreground">Firmen-E-Mail</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Weitere Geschäftseinstellungen */}
-                {businessSettings && (
-                  <Card className="md:col-span-2">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Weitere Geschäftseinstellungen</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-start gap-2">
-                          <Settings className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{businessSettings.companySlogan || 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">Firmenslogan</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <FileCog className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{businessSettings.vatNumber || 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">USt-IdNr.</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <Globe className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{businessSettings.website || 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">Webseite</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2">
-                          <Star className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{businessSettings.reviewLink || 'Nicht angegeben'}</p>
-                            <p className="text-sm text-muted-foreground">Bewertungslink</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                  )}
+                </div>
               </div>
-            ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/60" />
-                  <p className="mt-4 text-lg font-medium">Keine Geschäftsangaben vorhanden</p>
-                  <p className="text-muted-foreground mt-1">Für diesen Benutzer wurden noch keine Geschäftsangaben hinterlegt.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="statistics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Benutzerstatistiken</CardTitle>
-                <CardDescription>Übersicht über die Aktivitäten des Benutzers</CardDescription>
-              </CardHeader>
-              <CardContent className="py-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <div className="flex items-center">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      <span>Gesamtzahl der Reparaturen</span>
+            </div>
+
+            {/* Geschäftsinformationen */}
+            {user.businessSettings && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Building className="h-4 w-4 text-blue-600" />
+                    Geschäftsinformationen
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium">{user.businessSettings.businessName}</span>
                     </div>
-                    <span className="font-medium">Wird geladen...</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mr-2"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg>
-                      <span>Letzte Anmeldung</span>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">{user.businessSettings.ownerFirstName} {user.businessSettings.ownerLastName}</span>
                     </div>
-                    <span className="font-medium">Wird geladen...</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>Mitglied seit</span>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">
+                        {user.businessSettings.streetAddress}<br />
+                        {user.businessSettings.zipCode} {user.businessSettings.city}
+                      </span>
                     </div>
-                    <span className="font-medium">{formatDate(user.createdAt)}</span>
+                    {user.businessSettings.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{user.businessSettings.phone}</span>
+                      </div>
+                    )}
+                    {user.businessSettings.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{user.businessSettings.email}</span>
+                      </div>
+                    )}
+                    {user.businessSettings.websiteUrl && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm">{user.businessSettings.websiteUrl}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Aktionen */}
-        <DialogFooter className="pt-6 border-t mt-6">
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
-            {onEdit && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // Geschäftsdaten aus den business_settings übernehmen, falls vorhanden
-                  if (businessSettings) {
-                    // Benutzer mit business_settings-Daten anreichern
-                    const userWithBusinessData = {
-                      ...user,
-                      // Unternehmensdaten aus businessSettings übernehmen
-                      companyName: user.companyName || businessSettings.businessName || '',
-                      companyAddress: user.companyAddress || 
-                        (businessSettings.streetAddress ? 
-                          `${businessSettings.streetAddress}, ${businessSettings.zipCode} ${businessSettings.city}` : ''),
-                      companyVatNumber: user.companyVatNumber || businessSettings.vatNumber || businessSettings.taxId || '',
-                      companyPhone: user.companyPhone || businessSettings.phone || '',
-                      companyEmail: user.companyEmail || businessSettings.email || ''
-                    };
-                    onEdit(userWithBusinessData);
-                  } else {
-                    onEdit(user);
-                  }
-                }}
-                className="flex items-center gap-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg> Bearbeiten
-              </Button>
+              </div>
             )}
-            
-            {onActivate && (
-              <Button
-                variant={user.isActive ? "outline" : "default"}
-                onClick={() => onActivate(user.id)}
-                className="flex items-center gap-1"
-              >
-                {user.isActive ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m15 9-6 6"></path><path d="m9 9 6 6"></path></svg> Deaktivieren
-                  </>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg> Aktivieren
-                  </>
-                )}
-              </Button>
-            )}
-            
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="ml-auto"
-            >
-              Schließen
-            </Button>
           </div>
+
+          <Separator />
+
+          {/* Weitere Geschäftseinstellungen */}
+          {user.businessSettings && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Druckeinstellungen */}
+              <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Printer className="h-4 w-4 text-green-600" />
+                  Druckeinstellungen
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Logo drucken:</span>
+                    <Badge variant={user.businessSettings.printLogo ? "default" : "secondary"}>
+                      {user.businessSettings.printLogo ? "Ja" : "Nein"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Firmeninfo drucken:</span>
+                    <Badge variant={user.businessSettings.printCompanyInfo ? "default" : "secondary"}>
+                      {user.businessSettings.printCompanyInfo ? "Ja" : "Nein"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Inhaberinfo drucken:</span>
+                    <Badge variant={user.businessSettings.printOwnerInfo ? "default" : "secondary"}>
+                      {user.businessSettings.printOwnerInfo ? "Ja" : "Nein"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Design & Branding */}
+              <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-purple-600" />
+                  Design & Branding
+                </h3>
+                <div className="space-y-3">
+                  {user.businessSettings.businessSlogan && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Slogan:</span>
+                      <p className="text-sm italic">"{user.businessSettings.businessSlogan}"</p>
+                    </div>
+                  )}
+                  {user.businessSettings.vatNumber && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">USt-IdNr:</span>
+                      <span className="text-sm ml-2">{user.businessSettings.vatNumber}</span>
+                    </div>
+                  )}
+                  {user.businessSettings.primaryColor && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Primärfarbe:</span>
+                      <div
+                        className="w-6 h-6 rounded border"
+                        style={{ backgroundColor: user.businessSettings.primaryColor }}
+                      ></div>
+                      <span className="text-sm">{user.businessSettings.primaryColor}</span>
+                    </div>
+                  )}
+                  {user.businessSettings.secondaryColor && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Sekundärfarbe:</span>
+                      <div
+                        className="w-6 h-6 rounded border"
+                        style={{ backgroundColor: user.businessSettings.secondaryColor }}
+                      ></div>
+                      <span className="text-sm">{user.businessSettings.secondaryColor}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* E-Mail-Einstellungen */}
+              <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-orange-600" />
+                  E-Mail-Einstellungen
+                </h3>
+                <div className="space-y-2">
+                  {user.businessSettings.smtpHost && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">SMTP-Host:</span>
+                      <span className="text-sm ml-2">{user.businessSettings.smtpHost}</span>
+                    </div>
+                  )}
+                  {user.businessSettings.smtpPort && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">SMTP-Port:</span>
+                      <span className="text-sm ml-2">{user.businessSettings.smtpPort}</span>
+                    </div>
+                  )}
+                  {user.businessSettings.senderEmail && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Absender-E-Mail:</span>
+                      <span className="text-sm ml-2">{user.businessSettings.senderEmail}</span>
+                    </div>
+                  )}
+                  {user.businessSettings.senderName && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Absender-Name:</span>
+                      <span className="text-sm ml-2">{user.businessSettings.senderName}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">SSL/TLS:</span>
+                    <Badge variant={user.businessSettings.smtpSecure ? "default" : "secondary"}>
+                      {user.businessSettings.smtpSecure ? "Aktiviert" : "Deaktiviert"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Öffnungszeiten */}
+              {user.businessSettings.openingHours && (
+                <div className="bg-indigo-50 dark:bg-indigo-950 p-4 rounded-lg">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-indigo-600" />
+                    Öffnungszeiten
+                  </h3>
+                  <div className="text-sm whitespace-pre-line">
+                    {user.businessSettings.openingHours}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="flex justify-between">
+          <div className="flex gap-2">
+            {onEdit && (
+              <Button onClick={() => onEdit(user.id)} variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Bearbeiten
+              </Button>
+            )}
+          </div>
+          <Button onClick={handleClose} variant="secondary">
+            <X className="h-4 w-4 mr-2" />
+            Schließen
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

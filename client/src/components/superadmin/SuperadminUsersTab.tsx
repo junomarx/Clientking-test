@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { SimpleUserDetailsDialog } from '../admin/SimpleUserDetailsDialog';
+import { UserDetailsDialog } from './UserDetailsDialog';
 import { 
   Card, 
   CardContent, 
@@ -99,6 +100,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isUserDetailsDialogOpen, setIsUserDetailsDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(initialSelectedUserId || null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -528,6 +530,16 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setIsUserDetailsDialogOpen(true);
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1" /> Vollständig
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleShowUserDetails(user.id)}
                           >
                             <Info className="h-3 w-3 mr-1" /> Details
@@ -872,7 +884,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         </DialogContent>
       </Dialog>
 
-      {/* Benutzerdetails Dialog */}
+      {/* Benutzerdetails Dialog (Simple) */}
       <SimpleUserDetailsDialog 
         open={isDetailsDialogOpen} 
         onClose={() => setIsDetailsDialogOpen(false)} 
@@ -885,6 +897,20 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         onDelete={(userId) => {
           setIsDetailsDialogOpen(false);
           queryClient.invalidateQueries({ queryKey: ['/api/superadmin/users'] });
+        }}
+      />
+
+      {/* Vollständige Benutzerdetails Dialog */}
+      <UserDetailsDialog 
+        open={isUserDetailsDialogOpen} 
+        onClose={() => setIsUserDetailsDialogOpen(false)} 
+        userId={selectedUserId}
+        onEdit={(userId) => {
+          setIsUserDetailsDialogOpen(false);
+          const userToEdit = users?.find(u => u.id === userId);
+          if (userToEdit) {
+            handleEditUser(userToEdit);
+          }
         }}
       />
     </div>
