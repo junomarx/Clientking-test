@@ -486,7 +486,14 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow 
+                      key={user.id} 
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setIsUserDetailsDialogOpen(true);
+                      }}
+                    >
                       <TableCell>{user.id}</TableCell>
                       <TableCell>{user.username}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -528,27 +535,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setIsUserDetailsDialogOpen(true);
-                            }}
-                          >
-                            <FileText className="h-3 w-3 mr-1" /> Vollständig
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleShowUserDetails(user.id)}
-                          >
-                            <Info className="h-3 w-3 mr-1" /> Details
-                          </Button>
                           <Button 
                             size="sm" 
                             variant="destructive"
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteUser(user.id);
+                            }}
                           >
                             Löschen
                           </Button>
@@ -563,7 +556,14 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             {/* Mobile-Karten (nur auf kleinen Bildschirmen) */}
             <div className="md:hidden space-y-4">
               {filteredUsers.map((user) => (
-                <div key={user.id} className="border rounded-lg p-4 space-y-3">
+                <div 
+                  key={user.id} 
+                  className="border rounded-lg p-4 space-y-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900"
+                  onClick={() => {
+                    setSelectedUserId(user.id);
+                    setIsUserDetailsDialogOpen(true);
+                  }}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-medium text-lg">{user.username}</div>
@@ -573,24 +573,10 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setIsUserDetailsDialogOpen(true);
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditUser(user);
                         }}
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleShowUserDetails(user.id)}
-                      >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEditUser(user)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
