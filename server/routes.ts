@@ -2429,9 +2429,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Reparatur und Geschäftsdaten laden
+      // Reparatur abrufen für Berechtigungsprüfung
       const repair = await storage.getRepair(repairId, userId);
-      const businessSettings = await storage.getBusinessSettings(userId);
       
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
@@ -2534,19 +2533,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📧 E-Mail-Versand Ergebnis: ${emailSent ? 'ERFOLGREICH' : 'FEHLGESCHLAGEN'}`);
       
       if (!emailSent) {
-        console.error('❌ E-Mail-Versand fehlgeschlagen');
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
       
-      console.log(`✅ PDF-E-Mail erfolgreich an ${customerEmail} gesendet für Reparatur ${repairId}`);
-      res.json({ 
-        success: true, 
-        message: `PDF wurde erfolgreich an ${customerEmail} gesendet` 
-      });
-      
+      res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
     } catch (error) {
-      console.error("Error sending PDF email:", error);
-      res.status(500).json({ message: "Fehler beim Senden der PDF-E-Mail" });
+      console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden des Reparaturauftrags per E-Mail",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
