@@ -144,9 +144,9 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // PDF mit derselben Qualität wie beim Download generieren
+      // PDF mit optimierter Qualität generieren (Balance zwischen Qualität und Größe)
       const canvas = await html2canvas(content, {
-        scale: 2, // Höhere Qualität
+        scale: 1.5, // Optimierte Qualität für E-Mail
         logging: false,
         useCORS: true,
         allowTaint: true,
