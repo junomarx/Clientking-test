@@ -97,28 +97,55 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Überprüfe die erforderlichen Felder
+      // Alle Registrierungsfelder extrahieren
       const { 
+        // Benutzer-Grunddaten
         username, 
         password, 
         email, 
+        
+        // Geschäftsdaten für users Tabelle
         companyName,
         companyAddress,
         companyVatNumber,
-        companyPhone
+        companyPhone,
+        companyEmail,
+        
+        // Erweiterte Geschäftseinstellungen für business_settings Tabelle
+        businessName,
+        ownerFirstName,
+        ownerLastName,
+        taxId,
+        vatNumber,
+        companySlogan,
+        streetAddress,
+        city,
+        zipCode,
+        country,
+        phone,
+        businessEmail,
+        website,
+        openingHours
       } = req.body;
       
-      // Überprüfe alle erforderlichen Felder (Basis-Informationen)
+      // Überprüfe erforderliche Basis-Felder
       if (!username || !password || !email || !companyName) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle erforderlichen Felder aus (Benutzername, Passwort, E-Mail, Firmenname)" 
+          message: "Bitte füllen Sie alle erforderlichen Basis-Felder aus (Benutzername, Passwort, E-Mail, Firmenname)" 
         });
       }
       
-      // Überprüfe alle erforderlichen Geschäftsdaten
-      if (!companyAddress || !companyVatNumber || !companyPhone) {
+      // Überprüfe erforderliche Geschäftsdaten
+      if (!companyAddress || !companyVatNumber || !companyPhone || !companyEmail) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle Geschäftsdaten aus (Adresse, USt-IdNr., Telefon)" 
+          message: "Bitte füllen Sie alle erforderlichen Geschäftsdaten aus (Adresse, USt-IdNr., Telefon, Geschäfts-E-Mail)" 
+        });
+      }
+      
+      // Überprüfe erweiterte Pflichtfelder
+      if (!businessName || !ownerFirstName || !ownerLastName || !streetAddress || !city || !zipCode || !country) {
+        return res.status(400).json({ 
+          message: "Bitte füllen Sie alle erforderlichen Unternehmensfelder aus (Unternehmensname, Inhaber-Name, vollständige Adresse)" 
         });
       }
       
@@ -145,14 +172,52 @@ export function setupAuth(app: Express) {
       // Erstelle einen neuen Benutzer (standardmäßig inaktiv)
       // Die Shop-ID wird automatisch in createUser() generiert
       const user = await storage.createUser({
-        ...req.body,
+        username,
         password: await hashPassword(password),
+        email,
+        companyName,
+        companyAddress,
+        companyVatNumber,
+        companyPhone,
+        companyEmail,
         isActive: false,  // Benutzer müssen vom Admin aktiviert werden
         isAdmin: false,   // Standardmäßig kein Administrator
         pricingPlan: "demo", // Demo-Plan (für Abwärtskompatibilität)
         packageId: demoPackage?.id, // Verknüpfung mit dem Demo-Paket
         trialExpiresAt  // Ablaufdatum für die Testversion
       });
+
+      console.log(`✅ Benutzer ${username} erfolgreich erstellt mit Shop-ID ${user.shopId}`);
+
+      // Erstelle vollständige Geschäftseinstellungen für den neuen Benutzer
+      try {
+        const businessSettingsData = {
+          businessName: businessName || companyName,
+          ownerFirstName,
+          ownerLastName,
+          taxId: taxId || "",
+          vatNumber: vatNumber || companyVatNumber,
+          companySlogan: companySlogan || "",
+          streetAddress,
+          city,
+          zipCode,
+          country: country || "Österreich",
+          phone: phone || companyPhone,
+          email: businessEmail || companyEmail || email,
+          website: website || "",
+          colorTheme: "blue",
+          receiptWidth: "80mm",
+          openingHours: openingHours || "",
+          userId: user.id,
+          shopId: user.shopId
+        };
+
+        await storage.updateBusinessSettings(businessSettingsData, user.id);
+        console.log(`✅ Geschäftseinstellungen für Benutzer ${username} erstellt`);
+      } catch (businessSettingsError) {
+        console.error(`❌ Fehler beim Erstellen der Geschäftseinstellungen für Benutzer ${username}:`, businessSettingsError);
+        // Weiter fortfahren, auch wenn Geschäftseinstellungen fehlschlagen
+      }
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können
       try {
