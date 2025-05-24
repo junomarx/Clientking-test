@@ -160,13 +160,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         filename: `${repair.orderCode || `Reparaturauftrag_${repairId}`}.pdf`
       });
 
-      if (response.ok) {
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
         toast({
           title: "E-Mail gesendet",
           description: `Das Reparaturauftrag-PDF wurde erfolgreich an ${customer.email} gesendet.`,
         });
       } else {
-        throw new Error('E-Mail konnte nicht gesendet werden');
+        throw new Error(result.message || 'E-Mail konnte nicht gesendet werden');
       }
       
     } catch (err) {
