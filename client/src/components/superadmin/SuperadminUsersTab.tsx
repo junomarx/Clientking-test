@@ -168,10 +168,10 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   const toggleActivationMutation = useMutation({
     mutationFn: async (userId: number) => {
       // Erst prüfen, ob der Benutzer aktiv ist
-      const { data: users } = await queryClient.ensureQueryData({
+      const usersData = await queryClient.ensureQueryData({
         queryKey: ["/api/superadmin/users"]
       });
-      const user = users.find((u: any) => u.id === userId);
+      const user = usersData?.find((u: any) => u.id === userId);
       
       if (user?.isActive) {
         // Benutzer deaktivieren
