@@ -116,7 +116,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
       const userToShow = users.find(user => user.id === initialSelectedUserId);
       if (userToShow) {
         setSelectedUserId(initialSelectedUserId);
-        setIsDetailsDialogOpen(true);
+        setIsUserDetailsDialogOpen(true); // Verwende das neue Dialog
       }
     }
   }, [initialSelectedUserId, users]);
@@ -130,7 +130,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           const userToShow = users.find(user => user.id === event.detail.userId);
           if (userToShow) {
             setSelectedUserId(event.detail.userId);
-            setIsDetailsDialogOpen(true);
+            setIsUserDetailsDialogOpen(true);
           }
         }
       }
