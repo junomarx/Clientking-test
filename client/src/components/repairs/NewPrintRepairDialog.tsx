@@ -276,8 +276,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     // Reparatur-Platzhalter
     repairId: repair?.orderCode || `#${repair?.id}`,
     orderCode: repair?.orderCode || `#${repair?.id}`,
-    currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
-    creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    currentDate: repair?.createdAt ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    creationDate: repair?.createdAt ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
     completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
     
     // Kunden-Platzhalter
