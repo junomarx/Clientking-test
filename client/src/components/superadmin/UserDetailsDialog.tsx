@@ -32,6 +32,7 @@ interface UserDetailsDialogProps {
   onClose: () => void;
   userId: number | null;
   onEdit?: (id: number) => void;
+  onToggleActive?: (userId: number) => void;
 }
 
 interface UserWithBusinessSettings {
@@ -74,7 +75,7 @@ function getUserStatusBadge(isActive: boolean, isAdmin: boolean, isSuperadmin: b
   return <Badge variant="outline" className="flex items-center gap-1 text-red-600"><XCircle className="h-3 w-3" />Inaktiv</Badge>;
 }
 
-export function UserDetailsDialog({ open, onClose, userId, onEdit }: UserDetailsDialogProps) {
+export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActive }: UserDetailsDialogProps) {
   const { data: user, isLoading, error } = useQuery<UserWithBusinessSettings>({
     queryKey: [`/api/superadmin/users/${userId}`],
     enabled: open && !!userId,
@@ -242,15 +243,27 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit }: UserDetails
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose}>
-            Schließen
-          </Button>
-          {onEdit && (
-            <Button onClick={() => onEdit(user.id)}>
-              Bearbeiten
+        <div className="flex justify-between items-center pt-4 border-t">
+          <div className="flex space-x-2">
+            {onToggleActive && (
+              <Button 
+                variant={user.isActive ? "destructive" : "default"}
+                onClick={() => onToggleActive(user.id)}
+              >
+                {user.isActive ? "Deaktivieren" : "Aktivieren"}
+              </Button>
+            )}
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleClose}>
+              Schließen
             </Button>
-          )}
+            {onEdit && (
+              <Button onClick={() => onEdit(user.id)}>
+                Bearbeiten
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

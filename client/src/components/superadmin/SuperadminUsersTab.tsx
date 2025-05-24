@@ -909,6 +909,9 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             handleEditUser(userToEdit);
           }
         }}
+        onToggleActive={(userId) => {
+          toggleActivationMutation.mutate(userId);
+        }}
       />
     </div>
   );
