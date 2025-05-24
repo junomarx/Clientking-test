@@ -31,13 +31,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
   // Daten für die Reparatur laden
   const { data: repair, isLoading, error } = useQuery<any>({
-    queryKey: [`/api/repairs/${repairId}`],
+    queryKey: ["/api/repairs", repairId],
     enabled: !!repairId && open,
   });
 
   // Kundendaten laden
   const { data: customer } = useQuery<any>({
-    queryKey: [`/api/customers/${repair?.customerId}`],
+    queryKey: ["/api/customers", repair?.customerId],
     enabled: !!repair?.customerId,
   });
 

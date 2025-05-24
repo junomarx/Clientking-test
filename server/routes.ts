@@ -3549,16 +3549,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
 
-      // E-Mail senden mit der korrekten Funktion
-      const emailSent = await emailService.sendEmail({
+      // E-Mail über Storage-Service senden (der die korrekte E-Mail-API verwendet)
+      const emailSent = await storage.sendEmailWithAttachment({
         to: recipient,
+        from: `Handyshop <office@connect7.at>`,
         subject: `Reparaturauftrag ${repair.orderCode}`,
-        text: `Anbei finden Sie Ihren Reparaturauftrag ${repair.orderCode}.`,
-        html: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${repair.orderCode}</strong>.</p>`,
+        htmlBody: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${repair.orderCode}</strong>.</p>`,
+        textBody: `Anbei finden Sie Ihren Reparaturauftrag ${repair.orderCode}.`,
         attachments: [{
           filename: filename,
-          content: pdfBase64,
-          encoding: 'base64',
+          content: Buffer.from(pdfBase64, 'base64'),
           contentType: 'application/pdf'
         }],
         userId: userId
