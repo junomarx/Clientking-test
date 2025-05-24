@@ -2497,14 +2497,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`📤 Bereite E-Mail-Versand vor...`);
       console.log(`📧 Empfänger: ${customerEmail}`);
       console.log(`📧 Betreff: ${subject}`);
-      console.log(`📧 Anhang: ${fileName}.pdf (${pdfBuffer.length} bytes)`);
+      console.log(`📧 Anhang: Reparaturauftrag_${orderCode || repairId}.pdf (${pdfBuffer.length} bytes)`);
       
-      // Geschäftseinstellungen für den Absender abrufen (EXAKT wie bei Kostenvoranschlägen)
-      const businessSettings = await storage.getBusinessSettings(userId);
-      
-      // E-Mail-Absender-Informationen festlegen (EXAKT wie bei Kostenvoranschlägen)
+      // E-Mail-Absender-Informationen festlegen
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
-      const senderEmail = businessSettings?.businessEmail || process.env.SMTP_USER || 'no-reply@example.com';
+      const senderEmail = businessSettings?.email || process.env.SMTP_USER || 'no-reply@example.com';
       
       // E-Mail mit PDF-Anhang senden (EXAKT IDENTISCH mit Kostenvoranschlag-Funktion)
       const emailSent = await storage.sendEmailWithAttachment({
