@@ -173,6 +173,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       // PDF als Base64 konvertieren
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
       
+      console.log('PDF generiert, Größe:', pdfBase64.length, 'Zeichen');
+      
       const orderCode = repair?.orderCode || repairId;
       const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
       
