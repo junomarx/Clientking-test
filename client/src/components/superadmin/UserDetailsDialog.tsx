@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -248,7 +249,15 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
             {onToggleActive && (
               <Button 
                 variant={user.isActive ? "destructive" : "default"}
-                onClick={() => onToggleActive(user.id)}
+                onClick={() => {
+                  onToggleActive(user.id);
+                  // Cache invalidieren, damit die Daten neu geladen werden
+                  setTimeout(() => {
+                    queryClient.invalidateQueries({ queryKey: [`/api/superadmin/users/${user.id}`] });
+                    queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${user.id}`] });
+                    queryClient.invalidateQueries({ queryKey: ['/api/superadmin/users'] });
+                  }, 500);
+                }}
               >
                 {user.isActive ? "Deaktivieren" : "Aktivieren"}
               </Button>
