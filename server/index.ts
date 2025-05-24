@@ -32,10 +32,10 @@ if (!process.env.SMTP_SENDER_NAME) {
 }
 
 const app = express();
-// Erhöhe die maximale Größe für JSON-Anfragen auf 10 MB
-app.use(express.json({ limit: '10mb' }));
-// Erhöhe die maximale Größe für URL-codierte Anfragen auf 10 MB
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+// Erhöhe die maximale Größe für JSON-Anfragen auf 50 MB (für PDF-Upload)
+app.use(express.json({ limit: '50mb' }));
+// Erhöhe die maximale Größe für URL-codierte Anfragen auf 50 MB
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 // Füge das File-Upload-Middleware hinzu
 app.use(fileUpload({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB maximale Dateigröße
