@@ -144,8 +144,58 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // HTML-Inhalt extrahieren (wie ursprünglich geplant)
-      const htmlContent = content.outerHTML;
+      // HTML-Inhalt mit allen Styles extrahieren
+      const styles = Array.from(document.styleSheets)
+        .map(styleSheet => {
+          try {
+            return Array.from(styleSheet.cssRules)
+              .map(rule => rule.cssText)
+              .join('\n');
+          } catch (e) {
+            return '';
+          }
+        })
+        .join('\n');
+
+      const htmlContent = `
+        <style>
+          ${styles}
+          /* Zusätzliche PDF-spezifische Styles */
+          body { 
+            font-family: Arial, sans-serif !important; 
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+            margin: 0 !important;
+            padding: 20px !important;
+          }
+          .container {
+            max-width: 170mm !important;
+            width: 170mm !important;
+          }
+          table { 
+            border-collapse: collapse !important; 
+            width: 100% !important; 
+          }
+          th, td { 
+            border: 1px solid #ddd !important; 
+            padding: 8px !important; 
+            text-align: left !important; 
+          }
+          h1, h2, h3 { 
+            margin-bottom: 10px !important; 
+          }
+          .text-center { text-align: center !important; }
+          .font-bold { font-weight: bold !important; }
+          .text-xl { font-size: 1.25rem !important; }
+          .text-lg { font-size: 1.125rem !important; }
+          .mb-4 { margin-bottom: 1rem !important; }
+          .mb-6 { margin-bottom: 1.5rem !important; }
+          .p-4 { padding: 1rem !important; }
+          .border { border: 1px solid #ddd !important; }
+          .bg-gray-50 { background-color: #f9fafb !important; }
+        </style>
+        ${content.outerHTML}
+      `;
       
       const orderCode = repair?.orderCode || repairId;
       const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
