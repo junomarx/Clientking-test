@@ -97,57 +97,49 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Alle Registrierungsfelder extrahieren
+      // Vereinfachte Registrierungsfelder extrahieren
       const { 
-        // Benutzer-Grunddaten
-        username, 
-        password, 
-        email, 
-        
-        // Geschäftsdaten für users Tabelle
-        companyName,
-        companyAddress,
-        companyVatNumber,
-        companyPhone,
-        companyEmail,
-        
-        // Erweiterte Geschäftseinstellungen für business_settings Tabelle
-        businessName,
+        // Persönliche Daten
         ownerFirstName,
         ownerLastName,
-        taxId,
-        vatNumber,
-        companySlogan,
+        
+        // Adressdaten
         streetAddress,
-        city,
+        houseNumber,
         zipCode,
+        city,
         country,
-        phone,
-        businessEmail,
+        
+        // Firmen- und Kontaktdaten
+        companyName,
         website,
-        openingHours
+        companyPhone,
+        email,
+        
+        // Login-Daten
+        password
       } = req.body;
       
-      // Überprüfe erforderliche Basis-Felder
-      if (!username || !password || !email || !companyName) {
+      // Überprüfe erforderliche Felder
+      if (!ownerFirstName || !ownerLastName || !streetAddress || !houseNumber || !zipCode || !city || !country) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle erforderlichen Basis-Felder aus (Benutzername, Passwort, E-Mail, Firmenname)" 
+          message: "Bitte füllen Sie alle Adressdaten aus (Name, Straße, Hausnummer, PLZ, Ort, Land)" 
         });
       }
       
-      // Überprüfe erforderliche Geschäftsdaten
-      if (!companyAddress || !companyVatNumber || !companyPhone || !companyEmail) {
+      if (!companyName || !companyPhone || !email || !password) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle erforderlichen Geschäftsdaten aus (Adresse, USt-IdNr., Telefon, Geschäfts-E-Mail)" 
+          message: "Bitte füllen Sie alle erforderlichen Felder aus (Firma, Telefon, E-Mail, Passwort)" 
         });
       }
       
-      // Überprüfe erweiterte Pflichtfelder
-      if (!businessName || !ownerFirstName || !ownerLastName || !streetAddress || !city || !zipCode || !country) {
-        return res.status(400).json({ 
-          message: "Bitte füllen Sie alle erforderlichen Unternehmensfelder aus (Unternehmensname, Inhaber-Name, vollständige Adresse)" 
-        });
-      }
+      // Automatisch Benutzername aus Firmennamen generieren
+      const username = companyName.toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // Nur Buchstaben und Zahlen
+        .substring(0, 20); // Maximal 20 Zeichen
+      
+      // Vollständige Adresse zusammenstellen
+      const companyAddress = `${streetAddress} ${houseNumber}, ${zipCode} ${city}, ${country}`;
       
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
@@ -177,14 +169,8 @@ export function setupAuth(app: Express) {
         email,
         companyName,
         companyAddress,
-        companyVatNumber,
         companyPhone,
-        companyEmail,
-        isActive: false,  // Benutzer müssen vom Admin aktiviert werden
-        isAdmin: false,   // Standardmäßig kein Administrator
-        pricingPlan: "demo", // Demo-Plan (für Abwärtskompatibilität)
-        packageId: demoPackage?.id, // Verknüpfung mit dem Demo-Paket
-        trialExpiresAt  // Ablaufdatum für die Testversion
+        companyEmail: email // Verwende dieselbe E-Mail für Geschäft
       });
 
       console.log(`✅ Benutzer ${username} erfolgreich erstellt mit Shop-ID ${user.shopId}`);
@@ -192,22 +178,22 @@ export function setupAuth(app: Express) {
       // Erstelle vollständige Geschäftseinstellungen für den neuen Benutzer
       try {
         const businessSettingsData = {
-          businessName: businessName || companyName,
+          businessName: companyName,
           ownerFirstName,
           ownerLastName,
-          taxId: taxId || "",
-          vatNumber: vatNumber || companyVatNumber,
-          companySlogan: companySlogan || "",
-          streetAddress,
+          taxId: "", // Leer lassen für spätere Eingabe
+          vatNumber: "", // Leer lassen für spätere Eingabe
+          companySlogan: "", // Leer lassen für optionale Eingabe
+          streetAddress: `${streetAddress} ${houseNumber}`,
           city,
           zipCode,
           country: country || "Österreich",
-          phone: phone || companyPhone,
-          email: businessEmail || companyEmail || email,
+          phone: companyPhone,
+          email: email,
           website: website || "",
           colorTheme: "blue",
           receiptWidth: "80mm",
-          openingHours: openingHours || "",
+          openingHours: "", // Leer lassen für spätere Eingabe
           userId: user.id,
           shopId: user.shopId
         };

@@ -25,36 +25,28 @@ const loginSchema = z.object({
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
 });
 
-// Register schema - erweitert um alle Geschäftseinstellungsfelder
+// Register schema - vereinfacht basierend auf dem gewünschten Design
 const registerSchema = z.object({
-  // Benutzer-Grunddaten
-  username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben."),
-  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
-  confirmPassword: z.string(),
+  // Persönliche Daten
+  ownerFirstName: z.string().min(2, "Vorname ist erforderlich."),
+  ownerLastName: z.string().min(2, "Nachname ist erforderlich."),
+  
+  // Adressdaten
+  streetAddress: z.string().min(2, "Straße ist erforderlich."),
+  houseNumber: z.string().min(1, "Hausnummer ist erforderlich."),
+  zipCode: z.string().min(2, "PLZ ist erforderlich."),
+  city: z.string().min(2, "Ort ist erforderlich."),
+  country: z.string().min(2, "Land ist erforderlich.").default("Österreich"),
+  
+  // Firmen- und Kontaktdaten
+  companyName: z.string().min(2, "Firmenname ist erforderlich."),
+  website: z.string().optional(),
+  companyPhone: z.string().min(2, "Telefonnummer ist erforderlich."),
   email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein."),
   
-  // Geschäftsdaten (für users Tabelle)
-  companyName: z.string().min(2, "Bitte geben Sie einen Firmennamen ein."),
-  companyAddress: z.string().min(2, "Bitte geben Sie eine Adresse ein."),
-  companyVatNumber: z.string().min(2, "Bitte geben Sie eine USt-IdNr. ein."),
-  companyPhone: z.string().min(2, "Bitte geben Sie eine Telefonnummer ein."),
-  companyEmail: z.string().email("Bitte geben Sie eine gültige Geschäfts-E-Mail ein."),
-  
-  // Erweiterte Geschäftseinstellungen (für business_settings Tabelle)
-  businessName: z.string().min(2, "Unternehmensname ist erforderlich."),
-  ownerFirstName: z.string().min(2, "Vorname des Inhabers ist erforderlich."),
-  ownerLastName: z.string().min(2, "Nachname des Inhabers ist erforderlich."),
-  taxId: z.string().optional(),
-  vatNumber: z.string().optional(),
-  companySlogan: z.string().optional(),
-  streetAddress: z.string().min(2, "Straße und Hausnummer sind erforderlich."),
-  city: z.string().min(2, "Ort ist erforderlich."),
-  zipCode: z.string().min(2, "PLZ ist erforderlich."),
-  country: z.string().min(2, "Land ist erforderlich.").default("Österreich"),
-  phone: z.string().optional(),
-  businessEmail: z.string().email().optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  openingHours: z.string().optional(),
+  // Login-Daten
+  password: z.string().min(6, "Passwort muss mindestens 6 Zeichen haben."),
+  confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwörter stimmen nicht überein.",
   path: ["confirmPassword"],
@@ -101,14 +93,19 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
+      ownerFirstName: "",
+      ownerLastName: "",
+      streetAddress: "",
+      houseNumber: "",
+      zipCode: "",
+      city: "",
+      country: "Österreich",
+      companyName: "",
+      website: "",
+      companyPhone: "",
+      email: "",
       password: "",
       confirmPassword: "",
-      email: "",
-      companyName: "",
-      companyAddress: "",
-      companyVatNumber: "",
-      companyPhone: "",
     },
   });
   
@@ -340,230 +337,52 @@ export default function AuthPage() {
                   <div className="text-center mb-6">
                     <h2 className="text-2xl font-semibold text-gray-800">Neues Konto erstellen</h2>
                     <p className="text-gray-500 text-sm mt-2">
-                      Registrieren Sie Ihren Handyshop vollständig mit allen Geschäftsdaten.
+                      Registrieren Sie Ihren Handyshop mit den wichtigsten Daten.
                     </p>
                   </div>
                   
                   <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
-                      {/* Benutzer-Grunddaten */}
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Anmeldedaten</h3>
-                        <div className="space-y-3">
-                          <FormField
-                            control={registerForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Benutzername *" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="password"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      type="password" 
-                                      placeholder="Passwort *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="confirmPassword"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      type="password" 
-                                      placeholder="Passwort bestätigen *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    type="email" 
-                                    placeholder="Ihre E-Mail-Adresse *" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-5">
+                      {/* Name */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="ownerFirstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Vorname *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="ownerLastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Nachname *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
 
-                      {/* Firmen-Grunddaten */}
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Firmenangaben</h3>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="companyName"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Firmenname *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="businessName"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Unternehmensname *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="companySlogan"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Firmenslogan (optional)" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="companyVatNumber"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="USt-IdNr. *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="taxId"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="ATU Nummer (optional)" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Inhaber-Daten */}
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Inhaber-Daten</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                          <FormField
-                            control={registerForm.control}
-                            name="ownerFirstName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Vorname des Inhabers *" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="ownerLastName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Nachname des Inhabers *" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Adress-Daten */}
-                      <div className="bg-yellow-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Geschäftsadresse</h3>
-                        <div className="space-y-3">
+                      {/* Adresse */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-2">
                           <FormField
                             control={registerForm.control}
                             name="streetAddress"
@@ -571,80 +390,9 @@ export default function AuthPage() {
                               <FormItem>
                                 <FormControl>
                                   <Input 
-                                    placeholder="Straße und Hausnummer *" 
+                                    placeholder="Strasse *" 
                                     {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div className="grid grid-cols-3 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="zipCode"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="PLZ *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="city"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Ort *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="country"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Land *" 
-                                      {...field} 
-                                      defaultValue="Österreich"
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="companyAddress"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Vollständige Adresse *" 
-                                    {...field} 
-                                    className="h-11 px-3 border-gray-200 focus:border-blue-500"
+                                    className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -652,122 +400,214 @@ export default function AuthPage() {
                             )}
                           />
                         </div>
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="houseNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Hausnr. *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
 
-                      {/* Kontaktdaten */}
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">Kontaktdaten</h3>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="companyPhone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Geschäftstelefon *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="phone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Weitere Telefonnummer (optional)" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="companyEmail"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      type="email"
-                                      placeholder="Geschäfts-E-Mail *" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="businessEmail"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      type="email"
-                                      placeholder="Weitere E-Mail (optional)" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField
-                              control={registerForm.control}
-                              name="website"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Website (optional)" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            
-                            <FormField
-                              control={registerForm.control}
-                              name="openingHours"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input 
-                                      placeholder="Öffnungszeiten (optional)" 
-                                      {...field} 
-                                      className="h-11 px-3 border-gray-200 focus:border-blue-500"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="zipCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Postleitzahl *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Ort *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Land *" 
+                                  {...field} 
+                                  defaultValue="Österreich"
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Firma */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="companyName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Firma *" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="website"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Website" 
+                                  {...field} 
+                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Telefon */}
+                      <FormField
+                        control={registerForm.control}
+                        name="companyPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  placeholder="Telefon *" 
+                                  {...field} 
+                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                  📱
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* E-Mail */}
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <div className="relative">
+                                <Input 
+                                  type="email"
+                                  placeholder="E-Mail Adresse *" 
+                                  {...field} 
+                                  className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                />
+                                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                  @
+                                </div>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-sm text-gray-500 mt-1 flex items-center">
+                              <span className="mr-2">ℹ️</span>
+                              An die angegebene E-Mail Adresse schicken wir Ihnen eine Bestätigungsmail.
+                            </p>
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Passwort */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <div className="relative">
+                                  <Input 
+                                    type="password"
+                                    placeholder="Passwort *" 
+                                    {...field} 
+                                    className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                  />
+                                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    👁️
+                                  </div>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="confirmPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <div className="relative">
+                                  <Input 
+                                    type="password"
+                                    placeholder="Passwort wiederholen *" 
+                                    {...field} 
+                                    className="h-14 px-4 pr-12 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                                  />
+                                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    🔒
+                                  </div>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                       
                       <div className="text-sm text-gray-500 mt-4">
