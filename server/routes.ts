@@ -2425,6 +2425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Überprüfen, ob alle erforderlichen Daten vorhanden sind
       if (!repairId || !customerEmail || !pdfData) {
+        console.log('Fehlende Daten:', { repairId: !!repairId, customerEmail: !!customerEmail, pdfData: !!pdfData });
         return res.status(400).json({ 
           message: "Reparatur-ID, E-Mail-Adresse und PDF-Daten sind erforderlich" 
         });
