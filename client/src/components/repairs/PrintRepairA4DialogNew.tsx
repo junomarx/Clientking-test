@@ -120,49 +120,56 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
   // E-Mail-Versand mit optimierter PDF-Größe
   const handleSendEmail = async () => {
-    if (!generatedPdf || !customer?.email) return;
+    if (!customer?.email) {
+      toast({
+        title: "E-Mail-Fehler",
+        description: "Keine E-Mail-Adresse für diesen Kunden hinterlegt.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generatedPdf) {
+      toast({
+        title: "E-Mail-Fehler", 
+        description: "Bitte erstellen Sie zuerst ein PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
-      // Für E-Mail: PDF mit reduzierter Qualität neu erstellen
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
+      // Vereinfachte E-Mail mit bereits generiertem PDF
+      const pdfBase64 = generatedPdf.output('datauristring').split(',')[1];
       
-      const canvas = await html2canvas(content, {
-        scale: 1, // Reduzierte Qualität für kleinere Dateigröße
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
+      console.log('Sende E-Mail für Reparatur:', repair.id, 'an:', customer.email);
       
-      // PDF mit JPEG-Komprimierung für E-Mail
-      const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG mit 70% Qualität
-      const emailPdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      const margin = 10;
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const imgWidth = pageWidth - (2 * margin);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      emailPdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
-      
-      // PDF als Base64 für E-Mail-Versand
-      const pdfBase64 = emailPdf.output('datauristring').split(',')[1];
-      
-      const response = await apiRequest('POST', '/api/send-repair-email', {
-        repairId: repair.id,
-        recipient: customer.email,
-        pdfBase64,
-        filename: `${repair.orderCode || `Reparaturauftrag_${repairId}`}.pdf`
+      const response = await fetch('/api/send-repair-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          repairId: repair.id,
+          recipient: customer.email,
+          pdfBase64,
+          filename: `${repair.orderCode || `Reparaturauftrag_${repairId}`}.pdf`
+        })
       });
 
-      const result = await response.json();
+      console.log('Response status:', response.status);
       
-      if (response.ok && result.success) {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error(`Server-Fehler: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('E-Mail Result:', result);
+      
+      if (result.success) {
         toast({
           title: "E-Mail gesendet",
           description: `Das Reparaturauftrag-PDF wurde erfolgreich an ${customer.email} gesendet.`,
@@ -175,7 +182,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       console.error('Fehler beim E-Mail-Versand:', err);
       toast({
         title: "E-Mail-Fehler",
-        description: "Die E-Mail konnte nicht gesendet werden.",
+        description: `Fehler beim E-Mail-Versand: ${err.message}`,
         variant: "destructive",
       });
     }
