@@ -2417,17 +2417,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Reparaturauftrag per E-Mail senden - mit hochwertigem client-generiertem PDF
+  // Reparaturauftrag per E-Mail senden - mit server-seitiger PDF-Generierung
   app.post("/api/send-repair-pdf-email", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const { repairId, customerEmail, customerName, pdfData, orderCode } = req.body;
+      const { repairId, customerEmail, customerName, htmlContent, orderCode } = req.body;
       const userId = (req.user as any).id;
       
       // Überprüfen, ob alle erforderlichen Daten vorhanden sind
-      if (!repairId || !customerEmail || !pdfData) {
-        console.log('Fehlende Daten:', { repairId: !!repairId, customerEmail: !!customerEmail, pdfData: !!pdfData });
+      if (!repairId || !customerEmail || !htmlContent) {
+        console.log('Fehlende Daten:', { repairId: !!repairId, customerEmail: !!customerEmail, htmlContent: !!htmlContent });
         return res.status(400).json({ 
-          message: "Reparatur-ID, E-Mail-Adresse und PDF-Daten sind erforderlich" 
+          message: "Reparatur-ID, E-Mail-Adresse und HTML-Inhalt sind erforderlich" 
         });
       }
       
@@ -2440,11 +2440,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
       
-      // PDF-Buffer aus Base64-Daten erstellen
-      const pdfBuffer = Buffer.from(pdfData, 'base64');
+      // PDF aus HTML-Inhalt generieren (mit optimierter A4-Formatierung)
+      const pdfBuffer = await storage.generatePdfFromHtml(htmlContent, `Reparaturauftrag_${orderCode || repairId}`);
       
-      if (!pdfBuffer || pdfBuffer.length === 0) {
-        return res.status(500).json({ message: "Fehler beim Verarbeiten der PDF-Daten" });
+      if (!pdfBuffer) {
+        return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
       }
       
       // Geschäftseinstellungen für den Absender abrufen

@@ -127,7 +127,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
 
-  // PDF per E-Mail senden (gleiche Qualität wie Download)
+  // PDF per E-Mail senden (HTML an Server senden)
   const handleSendPdfEmail = async () => {
     if (!customer?.email) {
       toast({
@@ -144,41 +144,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // PDF mit komprimierter Qualität für E-Mail-Versand
-      const canvas = await html2canvas(content, {
-        scale: 1.0, // Normale Qualität für kleinere Dateigröße
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
-      
-      // A4 Format: 210 x 297 mm - JPEG für kleinere Dateigröße
-      const imgData = canvas.toDataURL('image/jpeg', 0.8); // JPEG mit 80% Qualität
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
-      const margin = 10; // 1cm Ränder in mm
-      const pageWidth = 210; // A4 Breite in mm
-      const pageHeight = 297; // A4 Höhe in mm
-      const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Bild mit Rändern platzieren (JPEG Format)
-      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
-      
-      // PDF als Base64 konvertieren
-      const pdfBase64 = pdf.output('datauristring').split(',')[1];
-      
-      console.log('PDF generiert, Größe:', pdfBase64.length, 'Zeichen');
+      // HTML-Inhalt extrahieren (wie ursprünglich geplant)
+      const htmlContent = content.outerHTML;
       
       const orderCode = repair?.orderCode || repairId;
       const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
       
-      // PDF-Daten an Server senden
+      // HTML-Inhalt an Server senden (Original-Methode)
       const response = await fetch('/api/send-repair-pdf-email', {
         method: 'POST',
         headers: {
@@ -188,7 +160,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
           repairId: repairId,
           customerEmail: customer.email,
           customerName: customerName,
-          pdfData: pdfBase64,
+          htmlContent: htmlContent,
           orderCode: orderCode
         }),
       });
