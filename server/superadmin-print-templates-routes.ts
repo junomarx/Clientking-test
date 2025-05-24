@@ -55,7 +55,7 @@ const defaultPrintTemplates = [
     .text-sm { font-size: 8pt; }
     .text-xs { font-size: 7pt; }
     .info-row { display: flex; justify-content: space-between; margin: 2px 0; }
-    .logo { max-width: 100%; height: auto; max-height: 30mm; }
+    .logo { max-width: 100%; height: auto; max-height: 15mm; }
   </style>
 </head>
 <body>
@@ -141,7 +141,7 @@ Abholung des oben genannten Geräts.</p>
     .text-sm { font-size: 9pt; }
     .text-xs { font-size: 8pt; }
     .info-row { display: flex; justify-content: space-between; margin: 3px 0; }
-    .logo { max-width: 100%; height: auto; max-height: 30mm; }
+    .logo { max-width: 100%; height: auto; max-height: 15mm; }
   </style>
 </head>
 <body>

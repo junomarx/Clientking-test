@@ -59,7 +59,7 @@ export function BonReceipt80mm({
           <img 
             src={firmenlogo} 
             alt={firmenname || "Firmenlogo"}
-            style={{maxWidth: '100%', height: 'auto', maxHeight: '30mm', display: 'block', margin: '0 auto'}}
+            style={{maxWidth: '100%', height: 'auto', maxHeight: '15mm', display: 'block', margin: '0 auto'}}
             onError={(e) => {
               console.error('Fehler beim Laden des Logos in der 80mm Quittung:', e);
               e.currentTarget.style.display = 'none';
