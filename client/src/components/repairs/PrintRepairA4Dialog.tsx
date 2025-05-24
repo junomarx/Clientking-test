@@ -127,7 +127,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
 
-  // PDF per E-Mail senden (HTML an Server senden)
+  // PDF per E-Mail senden (gleiche Generierung wie Download, aber E-Mail-Versand)
   const handleSendPdfEmail = async () => {
     if (!customer?.email) {
       toast({
@@ -144,63 +144,37 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // HTML-Inhalt mit allen Styles extrahieren
-      const styles = Array.from(document.styleSheets)
-        .map(styleSheet => {
-          try {
-            return Array.from(styleSheet.cssRules)
-              .map(rule => rule.cssText)
-              .join('\n');
-          } catch (e) {
-            return '';
-          }
-        })
-        .join('\n');
-
-      const htmlContent = `
-        <style>
-          ${styles}
-          /* Zusätzliche PDF-spezifische Styles */
-          body { 
-            font-family: Arial, sans-serif !important; 
-            font-size: 12px !important;
-            line-height: 1.4 !important;
-            margin: 0 !important;
-            padding: 20px !important;
-          }
-          .container {
-            max-width: 170mm !important;
-            width: 170mm !important;
-          }
-          table { 
-            border-collapse: collapse !important; 
-            width: 100% !important; 
-          }
-          th, td { 
-            border: 1px solid #ddd !important; 
-            padding: 8px !important; 
-            text-align: left !important; 
-          }
-          h1, h2, h3 { 
-            margin-bottom: 10px !important; 
-          }
-          .text-center { text-align: center !important; }
-          .font-bold { font-weight: bold !important; }
-          .text-xl { font-size: 1.25rem !important; }
-          .text-lg { font-size: 1.125rem !important; }
-          .mb-4 { margin-bottom: 1rem !important; }
-          .mb-6 { margin-bottom: 1.5rem !important; }
-          .p-4 { padding: 1rem !important; }
-          .border { border: 1px solid #ddd !important; }
-          .bg-gray-50 { background-color: #f9fafb !important; }
-        </style>
-        ${content.outerHTML}
-      `;
+      // Exakt gleiche PDF-Generierung wie beim Download
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      // Exakt gleiche PDF-Erstellung wie beim Download
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const imgWidth = pageWidth - (2 * margin);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      
+      // PDF als Base64 für E-Mail-Versand
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
       
       const orderCode = repair?.orderCode || repairId;
       const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
       
-      // HTML-Inhalt an Server senden (Original-Methode)
+      // PDF-Daten an Server senden (wie früher geplant)
       const response = await fetch('/api/send-repair-pdf-email', {
         method: 'POST',
         headers: {
@@ -210,7 +184,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
           repairId: repairId,
           customerEmail: customer.email,
           customerName: customerName,
-          htmlContent: htmlContent,
+          pdfData: pdfBase64,
           orderCode: orderCode
         }),
       });
