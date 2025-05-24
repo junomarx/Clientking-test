@@ -555,8 +555,7 @@ export default function AuthPage() {
                               </div>
                             </FormControl>
                             <FormMessage />
-                            <p className="text-sm text-gray-500 mt-1 flex items-center">
-                              <span className="mr-2">ℹ️</span>
+                            <p className="text-xs text-gray-500 mt-1 italic">
                               An die angegebene E-Mail Adresse schicken wir Ihnen eine Bestätigungsmail.
                             </p>
                           </FormItem>
@@ -582,8 +581,7 @@ export default function AuthPage() {
                               </div>
                             </FormControl>
                             <FormMessage />
-                            <p className="text-sm text-gray-500 mt-1 flex items-center">
-                              <span className="mr-2">ℹ️</span>
+                            <p className="text-xs text-gray-500 mt-1 italic">
                               Wird für den Login benötigt. Kann nach der Registrierung nicht mehr geändert werden.
                             </p>
                           </FormItem>
