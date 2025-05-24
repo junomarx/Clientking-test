@@ -3526,6 +3526,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Neuer Endpunkt für A4-PDF E-Mail-Versand
+  app.post("/api/send-repair-email", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const { repairId, recipient, pdfBase64, filename } = req.body;
+      
+      if (!repairId || !recipient || !pdfBase64 || !filename) {
+        return res.status(400).json({ message: "Fehlende Parameter" });
+      }
+
+      const userId = (req.user as any).id;
+      
+      // Reparatur abrufen
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // E-Mail senden
+      const emailSent = await emailService.sendEmailWithPDFAttachment({
+        to: recipient,
+        subject: `Reparaturauftrag ${repair.orderCode}`,
+        text: `Anbei finden Sie Ihren Reparaturauftrag ${repair.orderCode}.`,
+        html: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${repair.orderCode}</strong>.</p>`,
+        attachments: [{
+          filename: filename,
+          content: pdfBase64,
+          encoding: 'base64',
+          contentType: 'application/pdf'
+        }],
+        userId: userId
+      });
+
+      if (!emailSent) {
+        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+      }
+
+      res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
+    } catch (error) {
+      console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden des Reparaturauftrags per E-Mail",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.post("/api/cost-estimates/:id/convert-to-repair", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
