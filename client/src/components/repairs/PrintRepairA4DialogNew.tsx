@@ -137,6 +137,12 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       });
       return;
     }
+
+    // Sofort Feedback geben
+    toast({
+      title: "E-Mail wird gesendet...",
+      description: "Das PDF wird gerade an den Kunden gesendet. Bitte warten Sie einen Moment.",
+    });
     
     try {
       // Vereinfachte E-Mail mit bereits generiertem PDF
@@ -144,12 +150,17 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       console.log('Sende E-Mail für Reparatur:', repair.id, 'an:', customer.email);
       
+      // Timeout für längere E-Mail-Operationen erhöhen
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 Sekunden Timeout
+      
       const response = await fetch('/api/send-repair-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        signal: controller.signal,
         body: JSON.stringify({
           repairId: repair.id,
           recipient: customer.email,
@@ -158,6 +169,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         })
       });
 
+      clearTimeout(timeoutId);
       console.log('Response status:', response.status);
       
       if (!response.ok) {
@@ -171,20 +183,29 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       if (result.success) {
         toast({
-          title: "E-Mail gesendet",
+          title: "✅ E-Mail erfolgreich gesendet!",
           description: `Das Reparaturauftrag-PDF wurde erfolgreich an ${customer.email} gesendet.`,
         });
       } else {
         throw new Error(result.message || 'E-Mail konnte nicht gesendet werden');
       }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Fehler beim E-Mail-Versand:', err);
-      toast({
-        title: "E-Mail-Fehler",
-        description: `Fehler beim E-Mail-Versand: ${err.message}`,
-        variant: "destructive",
-      });
+      
+      if (err.name === 'AbortError') {
+        toast({
+          title: "E-Mail-Timeout",
+          description: "Die E-Mail-Sendung dauert länger als erwartet. Sie wird im Hintergrund fortgesetzt.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "E-Mail-Fehler",
+          description: `Fehler beim E-Mail-Versand: ${err.message}`,
+          variant: "destructive",
+        });
+      }
     }
     
     setShowActionDialog(false);
