@@ -3560,128 +3560,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Korrekten Auftragscode ermitteln
       const correctOrderCode = repair.orderCode || repair.reference_number || `RA-${repair.id}`;
       
-      // Kunden- und Geschäftsdaten für das Template abrufen
-      const customer = await storage.getCustomer(repair.customerId, userId);
-      const businessSettings = await storage.getBusinessSettings(userId);
-      
-      if (!customer) {
-        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      // Verwende das ursprüngliche E-Mail-Template-System
+      try {
+        // A4 Druckvorlage für E-Mail verwenden
+        const templateResponse = await fetch(`http://localhost:${process.env.PORT || 5000}/api/print-templates/repair_a4_document`);
+        let emailTemplate = '';
+        
+        if (templateResponse.ok) {
+          const templateData = await templateResponse.json();
+          emailTemplate = templateData.content;
+        } else {
+          // Fallback auf Standard-Template
+          emailTemplate = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>Reparaturauftrag {{orderCode}}</h2>
+              <p>Sehr geehrte/r {{customerName}},</p>
+              <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
+              <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0;">
+                <h3>Reparaturdetails:</h3>
+                <p><strong>Gerät:</strong> {{brand}} {{model}}</p>
+                <p><strong>Problem:</strong> {{issue}}</p>
+                <p><strong>Abgabedatum:</strong> {{createdDate}}</p>
+                <p><strong>Preis:</strong> {{estimatedCost}}</p>
+              </div>
+              <div style="margin-top: 30px;">
+                <h3>Kundenadresse:</h3>
+                <p>{{customerName}}<br>{{customerAddress}}</p>
+              </div>
+              <div style="margin-top: 20px;">
+                <p>{{businessName}}<br>{{businessAddress}}</p>
+              </div>
+              <p>Mit freundlichen Grüßen<br>Ihr {{businessName}} Team</p>
+            </div>`;
+        }
+
+        // Template-Variablen ersetzen
+        const customer = await storage.getCustomer(repair.customerId, userId);
+        const businessSettings = await storage.getBusinessSettings(userId);
+        
+        if (!customer) {
+          return res.status(404).json({ message: "Kunde nicht gefunden" });
+        }
+
+        const templateVariables = {
+          orderCode: correctOrderCode,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerAddress: `${customer.address || ''}\n${customer.zipCode || ''} ${customer.city || ''}`.trim(),
+          brand: repair.brand,
+          model: repair.model,
+          issue: repair.issue,
+          createdDate: new Date(repair.createdAt).toLocaleDateString('de-DE'),
+          estimatedCost: repair.estimatedCost ? `${repair.estimatedCost}€` : 'Nach Diagnose',
+          businessName: businessSettings?.businessName || 'Handyshop',
+          businessAddress: `${businessSettings?.streetAddress || ''}\n${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}`.trim()
+        };
+
+        // Ersetze alle Template-Variablen
+        let processedTemplate = emailTemplate;
+        Object.entries(templateVariables).forEach(([key, value]) => {
+          const regex = new RegExp(`{{${key}}}`, 'g');
+          processedTemplate = processedTemplate.replace(regex, value.toString());
+        });
+
+        // E-Mail senden
+        const emailSent = await storage.sendEmailWithAttachment({
+          to: recipient,
+          from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
+          subject: `Reparaturauftrag ${correctOrderCode}`,
+          htmlBody: processedTemplate,
+          textBody: `Reparaturauftrag ${correctOrderCode}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nMit freundlichen Grüßen\nIhr ${businessSettings?.businessName || 'Handyshop'} Team`,
+          attachments: [{
+            filename: filename,
+            content: Buffer.from(pdfBase64, 'base64'),
+            contentType: 'application/pdf'
+          }],
+          userId: userId
+        });
+
+        if (!emailSent) {
+          console.error("E-Mail-Service gab false zurück");
+          return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+        }
+
+        console.log(`E-Mail erfolgreich gesendet für Reparatur ${correctOrderCode}`);
+        res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
+      } catch (templateError) {
+        console.error("Fehler beim Verarbeiten des E-Mail-Templates:", templateError);
+        return res.status(500).json({ message: "Fehler beim Verarbeiten des E-Mail-Templates" });
       }
-
-      // E-Mail mit vollständigem Template senden
-      const emailSent = await storage.sendEmailWithAttachment({
-        to: recipient,
-        from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
-        subject: `Reparaturauftrag ${correctOrderCode}`,
-        htmlBody: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #4f46e5; margin: 0;">Reparaturauftrag ${correctOrderCode}</h1>
-            </div>
-            
-            <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
-            
-            <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument. Hier sind die wichtigsten Details:</p>
-            
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #4f46e5;">Gerätedaten:</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Marke:</td>
-                  <td style="padding: 8px 0;">${repair.brand}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Modell:</td>
-                  <td style="padding: 8px 0;">${repair.model}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
-                  <td style="padding: 8px 0;">${repair.issue}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
-                  <td style="padding: 8px 0;">${new Date(repair.createdAt).toLocaleDateString('de-DE')}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
-                  <td style="padding: 8px 0;">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <p>Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.</p>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <h3 style="margin-top: 0; color: #4f46e5;">Kundenadresse:</h3>
-              <p style="margin: 0;"><strong>${customer.firstName} ${customer.lastName}</strong></p>
-              ${customer.address ? `<p style="margin: 5px 0;">${customer.address}</p>` : ''}
-              ${customer.zipCode && customer.city ? `<p style="margin: 5px 0;">${customer.zipCode} ${customer.city}</p>` : ''}
-              ${customer.phone ? `<p style="margin: 5px 0;">Tel: ${customer.phone}</p>` : ''}
-              ${customer.email ? `<p style="margin: 5px 0;">E-Mail: ${customer.email}</p>` : ''}
-            </div>
-            
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0;"><strong>${businessSettings?.businessName || 'Handyshop'}</strong></p>
-              ${businessSettings?.streetAddress ? `<p style="margin: 5px 0;">${businessSettings.streetAddress}</p>` : ''}
-              ${businessSettings?.zipCode && businessSettings?.city ? `<p style="margin: 5px 0;">${businessSettings.zipCode} ${businessSettings.city}</p>` : ''}
-              ${businessSettings?.phone ? `<p style="margin: 5px 0;">Tel: ${businessSettings.phone}</p>` : ''}
-              ${businessSettings?.email ? `<p style="margin: 5px 0;">E-Mail: ${businessSettings.email}</p>` : ''}
-              ${businessSettings?.openingHours ? `<p style="margin: 5px 0; font-size: 14px; color: #666;">Öffnungszeiten: ${businessSettings.openingHours}</p>` : ''}
-            </div>
-            
-            <p style="margin-top: 20px; font-size: 14px; color: #666;">
-              Mit freundlichen Grüßen<br>
-              Ihr ${businessSettings?.businessName || 'Handyshop'} Team
-            </p>
-          </div>
-        `,
-        textBody: `
-Reparaturauftrag ${correctOrderCode}
-
-Sehr geehrte/r ${customer.firstName} ${customer.lastName},
-
-anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.
-
-Gerätedaten:
-- Marke: ${repair.brand}
-- Modell: ${repair.model}
-- Problem: ${repair.issue}
-- Abgabedatum: ${new Date(repair.createdAt).toLocaleDateString('de-DE')}
-- Geschätzter Preis: ${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}
-
-Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
-
-Kundenadresse:
-${customer.firstName} ${customer.lastName}
-${customer.address || ''}
-${customer.zipCode && customer.city ? customer.zipCode + ' ' + customer.city : ''}
-${customer.phone ? 'Tel: ' + customer.phone : ''}
-${customer.email ? 'E-Mail: ' + customer.email : ''}
-
-${businessSettings?.businessName || 'Handyshop'}
-${businessSettings?.streetAddress || ''}
-${businessSettings?.zipCode && businessSettings?.city ? businessSettings.zipCode + ' ' + businessSettings.city : ''}
-${businessSettings?.phone ? 'Tel: ' + businessSettings.phone : ''}
-${businessSettings?.email ? 'E-Mail: ' + businessSettings.email : ''}
-
-Mit freundlichen Grüßen
-Ihr ${businessSettings?.businessName || 'Handyshop'} Team
-        `,
-        attachments: [{
-          filename: filename,
-          content: Buffer.from(pdfBase64, 'base64'),
-          contentType: 'application/pdf'
-        }],
-        userId: userId
-      });
-
-      if (!emailSent) {
-        console.error("E-Mail-Service gab false zurück");
-        return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
-      }
-
-      console.log(`E-Mail erfolgreich gesendet für Reparatur ${correctOrderCode}`);
-      res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
     } catch (error) {
       console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
       res.status(500).json({ 
