@@ -2463,86 +2463,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // E-Mail mit PDF-Anhang und dem neuen, detaillierten Template senden
+      // E-Mail mit der neuen, professionellen HTML-Vorlage senden
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
         from: `"${senderName}" <${senderEmail}>`,
         subject: subject,
         htmlBody: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag ${orderCode || `#${repairId}`}</h1>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Reparaturauftrag</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        .logo-container {
+            width: 200px;
+            border: 1px dashed #ccc;
+            padding: 10px;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: #999;
+        }
+        .company-info {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+        .company-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .document-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 30px 0 10px 0;
+            color: #222;
+        }
+        .auftragsnummer {
+            text-align: center;
+            font-size: 18px;
+            margin: 0 0 40px 0;
+            color: #222;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .customer-info {
+            margin-bottom: 30px;
+        }
+        .customer-info p {
+            margin: 3px 0;
+        }
+        .customer-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .device-repair-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .info-column {
+            flex: 1;
+        }
+        .info-item {
+            margin-bottom: 15px;
+        }
+        .info-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #222;
+        }
+        .repair-terms-box {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .repair-terms-box p {
+            margin: 8px 0;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            ${businessSettings?.logoImage || 'Logo'}
+        </div>
+        <div class="company-info">
+            <p class="company-name">${businessSettings?.businessName || 'Handyshop'}</p>
+            <p>${businessSettings?.streetAddress || ''}<br>
+            ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
+            ${businessSettings?.phone || ''}<br>
+            ${businessSettings?.email || ''}</p>
+        </div>
+    </div>
+
+    <div class="customer-info">
+        <div class="section-title">Kundeninformationen</div>
+        <p class="customer-name">${customer.firstName || ''} ${customer.lastName || ''}</p>
+        <p>${customer.address || ''}</p>
+        <p>${(customer.zipCode || '') + ' ' + (customer.city || '')}</p>
+    </div>
+
+    <div class="document-title">Reparaturauftrag</div>
+    <div class="auftragsnummer">${orderCode || `#${repairId}`}</div>
+
+    <div class="device-repair-box">
+        <div class="info-column">
+            <div class="info-item">
+                <div class="info-label">Hersteller</div>
+                <div class="info-value">${repair.brand}</div>
             </div>
-            
-            <p style="margin-bottom: 20px;">Sehr geehrte/r ${customer.firstName || ''} ${customer.lastName || ''},</p>
-            
-            <p style="margin-bottom: 20px;">anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
-            
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
-              <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Reparaturdetails:</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Gerät:</td>
-                  <td style="padding: 8px 0;">${repair.brand} ${repair.model}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
-                  <td style="padding: 8px 0;">${repair.issue}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
-                  <td style="padding: 8px 0;">${new Date(repair.createdAt).toLocaleDateString('de-DE')}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
-                  <td style="padding: 8px 0;">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</td>
-                </tr>
-              </table>
+            <div class="info-item">
+                <div class="info-label">Modell</div>
+                <div class="info-value">${repair.model}</div>
             </div>
-            
-            <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-              <h3 style="margin-top: 0; color: #d97706; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
-              <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #92400e;">
-                <li style="margin-bottom: 8px;">Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
-                <li style="margin-bottom: 8px;">Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
-                <li style="margin-bottom: 8px;">Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
-                <li style="margin-bottom: 8px;">Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
-                <li style="margin-bottom: 8px;">Garantie: 3 Monate auf durchgeführte Reparaturen</li>
-                <li style="margin-bottom: 8px;">Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
-              </ul>
+        </div>
+        <div class="info-column">
+            <div class="info-item">
+                <div class="info-label">Schaden / Fehler</div>
+                <div class="info-value">${repair.issue}</div>
             </div>
-            
-            <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
-              <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
-              <p style="margin: 0; line-height: 1.5;">
-                <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong><br>
-                ${customer.address || 'Adresse nicht angegeben'}<br>
-                ${(customer.zipCode || '') + ' ' + (customer.city || '')}<br>
-                ${customer.phone ? 'Tel: ' + customer.phone + '<br>' : ''}
-                ${customer.email ? 'E-Mail: ' + customer.email : ''}
-              </p>
+            <div class="info-item">
+                <div class="info-label">Kosten</div>
+                <div class="info-value">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</div>
             </div>
-            
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-              <p style="margin: 0; line-height: 1.5;">
-                <strong>${businessSettings?.businessName || 'Handyshop'}</strong><br>
-                ${businessSettings?.streetAddress || ''}<br>
-                ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
-                ${businessSettings?.phone ? 'Tel: ' + businessSettings.phone : ''}<br>
-                ${businessSettings?.email ? 'E-Mail: ' + businessSettings.email : ''}<br>
-                ${businessSettings?.openingHours ? 'Öffnungszeiten: ' + businessSettings.openingHours : ''}
-              </p>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666; font-size: 14px;">
-              Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
-            </p>
-            
-            <p style="margin-top: 20px; font-weight: bold;">
-              Mit freundlichen Grüßen<br>
-              Ihr ${businessSettings?.businessName || 'Handyshop'} Team
-            </p>
-          </div>
+        </div>
+    </div>
+
+    <div class="section repair-terms-box">
+        <div class="section-title">Reparaturbedingungen</div>
+        <p><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
+        <p><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
+        <p><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
+        <p><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
+        <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
+        <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
+    </div>
+
+    <p style="margin-top: 30px; font-size: 12px; color: #666;">
+        Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+    </p>
+    
+    <p style="margin-top: 20px; font-weight: bold; font-size: 14px;">
+        Mit freundlichen Grüßen<br>
+        Ihr ${businessSettings?.businessName || 'Handyshop'} Team
+    </p>
+</body>
+</html>
         `,
         textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName || 'Kunde/Kundin'},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
