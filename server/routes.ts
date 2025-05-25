@@ -3570,27 +3570,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const templateData = await templateResponse.json();
           emailTemplate = templateData.content;
         } else {
-          // Fallback auf Standard-Template
+          // Verwende das ursprüngliche vollständige Template mit Reparaturbedingungen
           emailTemplate = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2>Reparaturauftrag {{orderCode}}</h2>
-              <p>Sehr geehrte/r {{customerName}},</p>
-              <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
-              <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0;">
-                <h3>Reparaturdetails:</h3>
-                <p><strong>Gerät:</strong> {{brand}} {{model}}</p>
-                <p><strong>Problem:</strong> {{issue}}</p>
-                <p><strong>Abgabedatum:</strong> {{createdDate}}</p>
-                <p><strong>Preis:</strong> {{estimatedCost}}</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag {{orderCode}}</h1>
               </div>
-              <div style="margin-top: 30px;">
-                <h3>Kundenadresse:</h3>
-                <p>{{customerName}}<br>{{customerAddress}}</p>
+              
+              <p style="margin-bottom: 20px;">Sehr geehrte/r {{customerName}},</p>
+              
+              <p style="margin-bottom: 20px;">anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
+              
+              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
+                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Reparaturdetails:</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold; width: 40%;">Gerät:</td>
+                    <td style="padding: 8px 0;">{{brand}} {{model}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
+                    <td style="padding: 8px 0;">{{issue}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
+                    <td style="padding: 8px 0;">{{createdDate}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
+                    <td style="padding: 8px 0;">{{estimatedCost}}</td>
+                  </tr>
+                </table>
               </div>
-              <div style="margin-top: 20px;">
-                <p>{{businessName}}<br>{{businessAddress}}</p>
+              
+              <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                <h3 style="margin-top: 0; color: #f59e0b; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                  <li>Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
+                  <li>Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
+                  <li>Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
+                  <li>Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
+                  <li>Garantie: 3 Monate auf durchgeführte Reparaturen</li>
+                  <li>Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
+                </ul>
               </div>
-              <p>Mit freundlichen Grüßen<br>Ihr {{businessName}} Team</p>
+              
+              <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
+                <p style="margin: 0; line-height: 1.5;">
+                  <strong>{{customerName}}</strong><br>
+                  {{customerAddress}}<br>
+                  {{customerPhone}}<br>
+                  {{customerEmail}}
+                </p>
+              </div>
+              
+              <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                <p style="margin: 0; line-height: 1.5;">
+                  <strong>{{businessName}}</strong><br>
+                  {{businessAddress}}<br>
+                  Tel: {{businessPhone}}<br>
+                  E-Mail: {{businessEmail}}<br>
+                  {{businessHours}}
+                </p>
+              </div>
+              
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+              </p>
+              
+              <p style="margin-top: 20px; font-weight: bold;">
+                Mit freundlichen Grüßen<br>
+                Ihr {{businessName}} Team
+              </p>
             </div>`;
         }
 
@@ -3605,14 +3657,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const templateVariables = {
           orderCode: correctOrderCode,
           customerName: `${customer.firstName} ${customer.lastName}`,
-          customerAddress: `${customer.address || ''}\n${customer.zipCode || ''} ${customer.city || ''}`.trim(),
+          customerAddress: `${customer.address || ''}${customer.zipCode || customer.city ? '\n' + (customer.zipCode || '') + ' ' + (customer.city || '') : ''}`.trim(),
+          customerPhone: customer.phone ? `Tel: ${customer.phone}` : '',
+          customerEmail: customer.email ? `E-Mail: ${customer.email}` : '',
           brand: repair.brand,
           model: repair.model,
           issue: repair.issue,
           createdDate: new Date(repair.createdAt).toLocaleDateString('de-DE'),
           estimatedCost: repair.estimatedCost ? `${repair.estimatedCost}€` : 'Nach Diagnose',
           businessName: businessSettings?.businessName || 'Handyshop',
-          businessAddress: `${businessSettings?.streetAddress || ''}\n${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}`.trim()
+          businessAddress: `${businessSettings?.streetAddress || ''}${businessSettings?.zipCode || businessSettings?.city ? '\n' + (businessSettings?.zipCode || '') + ' ' + (businessSettings?.city || '') : ''}`.trim(),
+          businessPhone: businessSettings?.phone || '',
+          businessEmail: businessSettings?.email || '',
+          businessHours: businessSettings?.openingHours ? `Öffnungszeiten: ${businessSettings.openingHours}` : ''
         };
 
         // Ersetze alle Template-Variablen
