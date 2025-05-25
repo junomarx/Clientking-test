@@ -2459,6 +2459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Kunde und vollständige Daten abrufen für das neue Template
       const customer = await storage.getCustomer(repair.customerId, userId);
       if (!customer) {
+        console.log(`Kunde ${repair.customerId} nicht gefunden für Reparatur ${repairId}`);
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
