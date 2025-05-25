@@ -3611,7 +3611,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
                 <p style="margin: 0; line-height: 1.5;">
                   <strong>{{customerName}}</strong><br>
-                  {{customerAddress}}<br>
+                  {{customerStreetAddress}}<br>
+                  {{customerZipCity}}<br>
                   {{customerPhone}}<br>
                   {{customerEmail}}
                 </p>
@@ -3649,7 +3650,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const templateVariables = {
           orderCode: correctOrderCode,
           customerName: `${customer.firstName} ${customer.lastName}`,
-          customerAddress: `${customer.address || ''}${customer.zipCode || customer.city ? '\n' + (customer.zipCode || '') + ' ' + (customer.city || '') : ''}`.trim(),
+          customerStreetAddress: customer.address || '',
+          customerZipCity: `${customer.zipCode || ''} ${customer.city || ''}`.trim(),
           customerPhone: customer.phone ? `Tel: ${customer.phone}` : '',
           customerEmail: customer.email ? `E-Mail: ${customer.email}` : '',
           brand: repair.brand,
