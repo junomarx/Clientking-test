@@ -3604,7 +3604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
-                  <td style="padding: 8px 0;">${repair.estimatedPrice ? repair.estimatedPrice + '€' : 'Nach Diagnose'}</td>
+                  <td style="padding: 8px 0;">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</td>
                 </tr>
               </table>
             </div>
@@ -3638,7 +3638,7 @@ Gerätedaten:
 - Modell: ${repair.model}
 - Problem: ${repair.issue}
 - Abgabedatum: ${new Date(repair.createdAt).toLocaleDateString('de-DE')}
-- Geschätzter Preis: ${repair.estimatedPrice ? repair.estimatedPrice + '€' : 'Nach Diagnose'}
+- Geschätzter Preis: ${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}
 
 Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
 
@@ -3664,7 +3664,7 @@ Ihr ${businessSettings?.businessName || 'Handyshop'} Team
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
 
-      console.log(`E-Mail erfolgreich gesendet für Reparatur ${repair.orderCode}`);
+      console.log(`E-Mail erfolgreich gesendet für Reparatur ${correctOrderCode}`);
       res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
     } catch (error) {
       console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
