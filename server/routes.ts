@@ -2456,19 +2456,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const subject = `Reparaturauftrag ${orderCode || `#${repairId}`}`;
       
-      // E-Mail mit PDF-Anhang senden
+      // Kunde und vollständige Daten abrufen für das neue Template
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+
+      // E-Mail mit PDF-Anhang und dem neuen, detaillierten Template senden
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
         from: `"${senderName}" <${senderEmail}>`,
         subject: subject,
         htmlBody: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || `#${repairId}`}</h2>
-            <p>Liebe/r ${customerName || 'Kunde/Kundin'},</p>
-            <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
-            <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
-            <p>Mit freundlichen Grüßen,</p>
-            <p><strong>${senderName}</strong></p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag ${orderCode || `#${repairId}`}</h1>
+            </div>
+            
+            <p style="margin-bottom: 20px;">Sehr geehrte/r ${customer.firstName || ''} ${customer.lastName || ''},</p>
+            
+            <p style="margin-bottom: 20px;">anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
+              <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Reparaturdetails:</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Gerät:</td>
+                  <td style="padding: 8px 0;">${repair.brand} ${repair.model}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
+                  <td style="padding: 8px 0;">${repair.issue}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
+                  <td style="padding: 8px 0;">${new Date(repair.createdAt).toLocaleDateString('de-DE')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
+                  <td style="padding: 8px 0;">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+              <h3 style="margin-top: 0; color: #d97706; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
+              <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #92400e;">
+                <li style="margin-bottom: 8px;">Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
+                <li style="margin-bottom: 8px;">Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
+                <li style="margin-bottom: 8px;">Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
+                <li style="margin-bottom: 8px;">Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
+                <li style="margin-bottom: 8px;">Garantie: 3 Monate auf durchgeführte Reparaturen</li>
+                <li style="margin-bottom: 8px;">Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
+              </ul>
+            </div>
+            
+            <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
+              <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
+              <p style="margin: 0; line-height: 1.5;">
+                <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong><br>
+                ${customer.address || 'Adresse nicht angegeben'}<br>
+                ${(customer.zipCode || '') + ' ' + (customer.city || '')}<br>
+                ${customer.phone ? 'Tel: ' + customer.phone + '<br>' : ''}
+                ${customer.email ? 'E-Mail: ' + customer.email : ''}
+              </p>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+              <p style="margin: 0; line-height: 1.5;">
+                <strong>${businessSettings?.businessName || 'Handyshop'}</strong><br>
+                ${businessSettings?.streetAddress || ''}<br>
+                ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
+                ${businessSettings?.phone ? 'Tel: ' + businessSettings.phone : ''}<br>
+                ${businessSettings?.email ? 'E-Mail: ' + businessSettings.email : ''}<br>
+                ${businessSettings?.openingHours ? 'Öffnungszeiten: ' + businessSettings.openingHours : ''}
+              </p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+              Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+            </p>
+            
+            <p style="margin-top: 20px; font-weight: bold;">
+              Mit freundlichen Grüßen<br>
+              Ihr ${businessSettings?.businessName || 'Handyshop'} Team
+            </p>
           </div>
         `,
         textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName || 'Kunde/Kundin'},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
