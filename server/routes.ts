@@ -3606,24 +3606,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               </div>
               
               <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                <h3 style="margin-top: 0; color: #f59e0b; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
-                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                  <li>Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
-                  <li>Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
-                  <li>Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
-                  <li>Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
-                  <li>Garantie: 3 Monate auf durchgeführte Reparaturen</li>
-                  <li>Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
+                <h3 style="margin-top: 0; color: #d97706; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
+                <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8; color: #92400e;">
+                  <li style="margin-bottom: 8px;">Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
+                  <li style="margin-bottom: 8px;">Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
+                  <li style="margin-bottom: 8px;">Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
+                  <li style="margin-bottom: 8px;">Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
+                  <li style="margin-bottom: 8px;">Garantie: 3 Monate auf durchgeführte Reparaturen</li>
+                  <li style="margin-bottom: 8px;">Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
                 </ul>
               </div>
               
               <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
                 <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
                 <p style="margin: 0; line-height: 1.5;">
-                  <strong>${customer.firstName} ${customer.lastName}</strong><br>
-                  ${customer.address || ''}<br>
-                  ${customer.zipCode || ''} ${customer.city || ''}<br>
-                  ${customer.phone ? 'Tel: ' + customer.phone : ''}<br>
+                  <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong><br>
+                  ${customer.address || 'Adresse nicht angegeben'}<br>
+                  ${(customer.zipCode || '') + ' ' + (customer.city || '')}<br>
+                  ${customer.phone ? 'Tel: ' + customer.phone + '<br>' : ''}
                   ${customer.email ? 'E-Mail: ' + customer.email : ''}
                 </p>
               </div>
