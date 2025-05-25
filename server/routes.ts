@@ -3560,13 +3560,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Korrekten Auftragscode ermitteln
       const correctOrderCode = repair.orderCode || repair.reference_number || `RA-${repair.id}`;
       
-      // E-Mail über Storage-Service senden (der die korrekte E-Mail-API verwendet)
+      // Kunden- und Geschäftsdaten für das Template abrufen
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+
+      // E-Mail mit vollständigem Template senden
       const emailSent = await storage.sendEmailWithAttachment({
         to: recipient,
-        from: `Handyshop <office@connect7.at>`,
+        from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
         subject: `Reparaturauftrag ${correctOrderCode}`,
-        htmlBody: `<p>Anbei finden Sie Ihren Reparaturauftrag <strong>${correctOrderCode}</strong>.</p>`,
-        textBody: `Anbei finden Sie Ihren Reparaturauftrag ${correctOrderCode}.`,
+        htmlBody: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #4f46e5; margin: 0;">Reparaturauftrag ${correctOrderCode}</h1>
+            </div>
+            
+            <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
+            
+            <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument. Hier sind die wichtigsten Details:</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #4f46e5;">Gerätedaten:</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Marke:</td>
+                  <td style="padding: 8px 0;">${repair.brand}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Modell:</td>
+                  <td style="padding: 8px 0;">${repair.model}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
+                  <td style="padding: 8px 0;">${repair.issue}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
+                  <td style="padding: 8px 0;">${new Date(repair.createdAt).toLocaleDateString('de-DE')}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
+                  <td style="padding: 8px 0;">${repair.estimatedPrice ? repair.estimatedPrice + '€' : 'Nach Diagnose'}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <p>Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.</p>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0;"><strong>${businessSettings?.businessName || 'Handyshop'}</strong></p>
+              ${businessSettings?.streetAddress ? `<p style="margin: 5px 0;">${businessSettings.streetAddress}</p>` : ''}
+              ${businessSettings?.zipCode && businessSettings?.city ? `<p style="margin: 5px 0;">${businessSettings.zipCode} ${businessSettings.city}</p>` : ''}
+              ${businessSettings?.phone ? `<p style="margin: 5px 0;">Tel: ${businessSettings.phone}</p>` : ''}
+              ${businessSettings?.email ? `<p style="margin: 5px 0;">E-Mail: ${businessSettings.email}</p>` : ''}
+              ${businessSettings?.openingHours ? `<p style="margin: 5px 0; font-size: 14px; color: #666;">Öffnungszeiten: ${businessSettings.openingHours}</p>` : ''}
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+              Mit freundlichen Grüßen<br>
+              Ihr ${businessSettings?.businessName || 'Handyshop'} Team
+            </p>
+          </div>
+        `,
+        textBody: `
+Reparaturauftrag ${correctOrderCode}
+
+Sehr geehrte/r ${customer.firstName} ${customer.lastName},
+
+anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.
+
+Gerätedaten:
+- Marke: ${repair.brand}
+- Modell: ${repair.model}
+- Problem: ${repair.issue}
+- Abgabedatum: ${new Date(repair.createdAt).toLocaleDateString('de-DE')}
+- Geschätzter Preis: ${repair.estimatedPrice ? repair.estimatedPrice + '€' : 'Nach Diagnose'}
+
+Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+
+${businessSettings?.businessName || 'Handyshop'}
+${businessSettings?.streetAddress || ''}
+${businessSettings?.zipCode && businessSettings?.city ? businessSettings.zipCode + ' ' + businessSettings.city : ''}
+${businessSettings?.phone ? 'Tel: ' + businessSettings.phone : ''}
+${businessSettings?.email ? 'E-Mail: ' + businessSettings.email : ''}
+
+Mit freundlichen Grüßen
+Ihr ${businessSettings?.businessName || 'Handyshop'} Team
+        `,
         attachments: [{
           filename: filename,
           content: Buffer.from(pdfBase64, 'base64'),
