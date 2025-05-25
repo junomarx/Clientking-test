@@ -3560,86 +3560,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Korrekten Auftragscode ermitteln
       const correctOrderCode = repair.orderCode || repair.reference_number || `RA-${repair.id}`;
       
-      // Verwende das ursprüngliche E-Mail-Template-System
+      // E-Mail mit PDF senden
       try {
-        // Direkt das vollständige Template verwenden (ohne Server-Anfrage)
-        const emailTemplate = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag {{orderCode}}</h1>
-              </div>
-              
-              <p style="margin-bottom: 20px;">Sehr geehrte/r {{customerName}},</p>
-              
-              <p style="margin-bottom: 20px;">anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
-              
-              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
-                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Reparaturdetails:</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold; width: 40%;">Gerät:</td>
-                    <td style="padding: 8px 0;">{{brand}} {{model}}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
-                    <td style="padding: 8px 0;">{{issue}}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
-                    <td style="padding: 8px 0;">{{createdDate}}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
-                    <td style="padding: 8px 0;">{{estimatedCost}}</td>
-                  </tr>
-                </table>
-              </div>
-              
-              <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                <h3 style="margin-top: 0; color: #f59e0b; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
-                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                  <li>Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
-                  <li>Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
-                  <li>Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
-                  <li>Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
-                  <li>Garantie: 3 Monate auf durchgeführte Reparaturen</li>
-                  <li>Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
-                </ul>
-              </div>
-              
-              <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
-                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
-                <p style="margin: 0; line-height: 1.5;">
-                  <strong>{{customerName}}</strong><br>
-                  {{customerStreetAddress}}<br>
-                  {{customerZipCity}}<br>
-                  {{customerPhone}}<br>
-                  {{customerEmail}}
-                </p>
-              </div>
-              
-              <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-                <p style="margin: 0; line-height: 1.5;">
-                  <strong>{{businessName}}</strong><br>
-                  {{businessAddress}}<br>
-                  Tel: {{businessPhone}}<br>
-                  E-Mail: {{businessEmail}}<br>
-                  {{businessHours}}
-                </p>
-              </div>
-              
-              <p style="margin-top: 30px; color: #666; font-size: 14px;">
-                Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
-              </p>
-              
-              <p style="margin-top: 20px; font-weight: bold;">
-                Mit freundlichen Grüßen<br>
-                Ihr {{businessName}} Team
-              </p>
-            </div>`;
-        }
-
-        // Template-Variablen ersetzen
         const customer = await storage.getCustomer(repair.customerId, userId);
         const businessSettings = await storage.getBusinessSettings(userId);
         
@@ -3647,38 +3569,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Kunde nicht gefunden" });
         }
 
-        const templateVariables = {
-          orderCode: correctOrderCode,
-          customerName: `${customer.firstName} ${customer.lastName}`,
-          customerStreetAddress: customer.address || '',
-          customerZipCity: `${customer.zipCode || ''} ${customer.city || ''}`.trim(),
-          customerPhone: customer.phone ? `Tel: ${customer.phone}` : '',
-          customerEmail: customer.email ? `E-Mail: ${customer.email}` : '',
-          brand: repair.brand,
-          model: repair.model,
-          issue: repair.issue,
-          createdDate: new Date(repair.createdAt).toLocaleDateString('de-DE'),
-          estimatedCost: repair.estimatedCost ? `${repair.estimatedCost}€` : 'Nach Diagnose',
-          businessName: businessSettings?.businessName || 'Handyshop',
-          businessAddress: `${businessSettings?.streetAddress || ''}${businessSettings?.zipCode || businessSettings?.city ? '\n' + (businessSettings?.zipCode || '') + ' ' + (businessSettings?.city || '') : ''}`.trim(),
-          businessPhone: businessSettings?.phone || '',
-          businessEmail: businessSettings?.email || '',
-          businessHours: businessSettings?.openingHours ? `Öffnungszeiten: ${businessSettings.openingHours}` : ''
-        };
-
-        // Ersetze alle Template-Variablen
-        let processedTemplate = emailTemplate;
-        Object.entries(templateVariables).forEach(([key, value]) => {
-          const regex = new RegExp(`{{${key}}}`, 'g');
-          processedTemplate = processedTemplate.replace(regex, value.toString());
-        });
-
-        // E-Mail senden
         const emailSent = await storage.sendEmailWithAttachment({
           to: recipient,
           from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
           subject: `Reparaturauftrag ${correctOrderCode}`,
-          htmlBody: processedTemplate,
+          htmlBody: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>Reparaturauftrag ${correctOrderCode}</h2>
+              <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
+              <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
+              <p>Mit freundlichen Grüßen<br>Ihr ${businessSettings?.businessName || 'Handyshop'} Team</p>
+            </div>
+          `,
           textBody: `Reparaturauftrag ${correctOrderCode}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nMit freundlichen Grüßen\nIhr ${businessSettings?.businessName || 'Handyshop'} Team`,
           attachments: [{
             filename: filename,
@@ -3695,9 +3597,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`E-Mail erfolgreich gesendet für Reparatur ${correctOrderCode}`);
         res.status(200).json({ success: true, message: "Reparaturauftrag wurde per E-Mail gesendet" });
-      } catch (templateError) {
-        console.error("Fehler beim Verarbeiten des E-Mail-Templates:", templateError);
-        return res.status(500).json({ message: "Fehler beim Verarbeiten des E-Mail-Templates" });
+      } catch (emailError) {
+        console.error("Fehler beim Senden der E-Mail:", emailError);
+        return res.status(500).json({ message: "Fehler beim Senden der E-Mail" });
       }
     } catch (error) {
       console.error("Fehler beim Senden des Reparaturauftrags per E-Mail:", error);
