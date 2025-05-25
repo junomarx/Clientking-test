@@ -3612,6 +3612,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <p>Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <h3 style="margin-top: 0; color: #4f46e5;">Kundenadresse:</h3>
+              <p style="margin: 0;"><strong>${customer.firstName} ${customer.lastName}</strong></p>
+              ${customer.address ? `<p style="margin: 5px 0;">${customer.address}</p>` : ''}
+              ${customer.zipCode && customer.city ? `<p style="margin: 5px 0;">${customer.zipCode} ${customer.city}</p>` : ''}
+              ${customer.phone ? `<p style="margin: 5px 0;">Tel: ${customer.phone}</p>` : ''}
+              ${customer.email ? `<p style="margin: 5px 0;">E-Mail: ${customer.email}</p>` : ''}
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0;"><strong>${businessSettings?.businessName || 'Handyshop'}</strong></p>
               ${businessSettings?.streetAddress ? `<p style="margin: 5px 0;">${businessSettings.streetAddress}</p>` : ''}
               ${businessSettings?.zipCode && businessSettings?.city ? `<p style="margin: 5px 0;">${businessSettings.zipCode} ${businessSettings.city}</p>` : ''}
@@ -3641,6 +3650,13 @@ Gerätedaten:
 - Geschätzter Preis: ${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}
 
 Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+
+Kundenadresse:
+${customer.firstName} ${customer.lastName}
+${customer.address || ''}
+${customer.zipCode && customer.city ? customer.zipCode + ' ' + customer.city : ''}
+${customer.phone ? 'Tel: ' + customer.phone : ''}
+${customer.email ? 'E-Mail: ' + customer.email : ''}
 
 ${businessSettings?.businessName || 'Handyshop'}
 ${businessSettings?.streetAddress || ''}
