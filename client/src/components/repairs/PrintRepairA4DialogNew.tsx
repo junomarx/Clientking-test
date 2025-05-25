@@ -140,8 +140,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
     // Sofort Feedback geben
     toast({
-      title: "E-Mail wird gesendet...",
-      description: "Das PDF wird gerade an den Kunden gesendet. Bitte warten Sie einen Moment.",
+      title: "📧 E-Mail wird gesendet...",
+      description: "Das PDF wird gerade an den Kunden gesendet. Dies kann bis zu 10 Sekunden dauern.",
     });
     
     try {
