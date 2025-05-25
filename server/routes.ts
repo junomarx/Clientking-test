@@ -3562,16 +3562,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verwende das ursprüngliche E-Mail-Template-System
       try {
-        // A4 Druckvorlage für E-Mail verwenden
-        const templateResponse = await fetch(`http://localhost:${process.env.PORT || 5000}/api/print-templates/repair_a4_document`);
-        let emailTemplate = '';
-        
-        if (templateResponse.ok) {
-          const templateData = await templateResponse.json();
-          emailTemplate = templateData.content;
-        } else {
-          // Verwende das ursprüngliche vollständige Template mit Reparaturbedingungen
-          emailTemplate = `
+        // Direkt das vollständige Template verwenden (ohne Server-Anfrage)
+        const emailTemplate = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
               <div style="text-align: center; margin-bottom: 30px;">
                 <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag {{orderCode}}</h1>
