@@ -3574,11 +3574,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
           from: `${businessSettings?.businessName || 'Handyshop'} <office@connect7.at>`,
           subject: `Reparaturauftrag ${correctOrderCode}`,
           htmlBody: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2>Reparaturauftrag ${correctOrderCode}</h2>
-              <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
-              <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.</p>
-              <p>Mit freundlichen Grüßen<br>Ihr ${businessSettings?.businessName || 'Handyshop'} Team</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Reparaturauftrag ${correctOrderCode}</h1>
+              </div>
+              
+              <p style="margin-bottom: 20px;">Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
+              
+              <p style="margin-bottom: 20px;">anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
+              
+              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
+                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Reparaturdetails:</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold; width: 40%;">Gerät:</td>
+                    <td style="padding: 8px 0;">${repair.brand} ${repair.model}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Problem:</td>
+                    <td style="padding: 8px 0;">${repair.issue}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Abgabedatum:</td>
+                    <td style="padding: 8px 0;">${new Date(repair.createdAt).toLocaleDateString('de-DE')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold;">Geschätzter Preis:</td>
+                    <td style="padding: 8px 0;">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div style="background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                <h3 style="margin-top: 0; color: #f59e0b; font-size: 18px;">Wichtige Reparaturbedingungen:</h3>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                  <li>Die Reparatur erfolgt nach einer kostenlosen Diagnose</li>
+                  <li>Bei Kostenvoranschlag über 50€ ist eine Anzahlung erforderlich</li>
+                  <li>Nicht abgeholte Geräte werden nach 6 Monaten entsorgt</li>
+                  <li>Keine Haftung für Datenverlust - Datensicherung vor Abgabe empfohlen</li>
+                  <li>Garantie: 3 Monate auf durchgeführte Reparaturen</li>
+                  <li>Bei Nichtdurchführung der Reparatur: Diagnosekosten 25€</li>
+                </ul>
+              </div>
+              
+              <div style="margin-top: 30px; padding: 20px; background-color: #f1f5f9; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #2563eb; font-size: 18px;">Kundenadresse:</h3>
+                <p style="margin: 0; line-height: 1.5;">
+                  <strong>${customer.firstName} ${customer.lastName}</strong><br>
+                  ${customer.address || ''}<br>
+                  ${customer.zipCode || ''} ${customer.city || ''}<br>
+                  ${customer.phone ? 'Tel: ' + customer.phone : ''}<br>
+                  ${customer.email ? 'E-Mail: ' + customer.email : ''}
+                </p>
+              </div>
+              
+              <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+                <p style="margin: 0; line-height: 1.5;">
+                  <strong>${businessSettings?.businessName || 'Handyshop'}</strong><br>
+                  ${businessSettings?.streetAddress || ''}<br>
+                  ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
+                  ${businessSettings?.phone ? 'Tel: ' + businessSettings.phone : ''}<br>
+                  ${businessSettings?.email ? 'E-Mail: ' + businessSettings.email : ''}<br>
+                  ${businessSettings?.openingHours ? 'Öffnungszeiten: ' + businessSettings.openingHours : ''}
+                </p>
+              </div>
+              
+              <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
+              </p>
+              
+              <p style="margin-top: 20px; font-weight: bold;">
+                Mit freundlichen Grüßen<br>
+                Ihr ${businessSettings?.businessName || 'Handyshop'} Team
+              </p>
             </div>
           `,
           textBody: `Reparaturauftrag ${correctOrderCode}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nMit freundlichen Grüßen\nIhr ${businessSettings?.businessName || 'Handyshop'} Team`,
