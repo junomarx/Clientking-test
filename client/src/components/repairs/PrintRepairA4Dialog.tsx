@@ -96,36 +96,28 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const imgWidth = pageWidth - (2 * margin);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Falls das Bild höher als die Seite ist, auf mehrere Seiten aufteilen
-      if (imgHeight > pageHeight - (2 * margin)) {
-        const pageImgHeight = pageHeight - (2 * margin);
-        const totalPages = Math.ceil(imgHeight / pageImgHeight);
+      // Immer auf eine A4-Seite skalieren - keine Aufteilung
+      const maxHeight = pageHeight - (2 * margin);
+      let finalImgWidth = imgWidth;
+      let finalImgHeight = imgHeight;
+      
+      // Falls das Bild zu hoch ist, proportional skalieren
+      if (imgHeight > maxHeight) {
+        finalImgHeight = maxHeight;
+        finalImgWidth = (canvas.width * maxHeight) / canvas.height;
         
-        for (let i = 0; i < totalPages; i++) {
-          if (i > 0) pdf.addPage();
-          
-          const sourceY = (canvas.height / totalPages) * i;
-          const sourceHeight = canvas.height / totalPages;
-          
-          // Canvas-Bereich für diese Seite extrahieren
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          pageCtx?.drawImage(
-            canvas, 
-            0, sourceY, canvas.width, sourceHeight,
-            0, 0, canvas.width, sourceHeight
-          );
-          
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.85);
-          pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
+        // Falls nach der Höhenskalierung die Breite zu groß ist, nochmal anpassen
+        if (finalImgWidth > imgWidth) {
+          finalImgWidth = imgWidth;
+          finalImgHeight = (canvas.height * imgWidth) / canvas.width;
         }
-      } else {
-        // Bild passt auf eine Seite
-        pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       }
+      
+      // Bild zentriert auf der Seite platzieren
+      const xOffset = margin + (imgWidth - finalImgWidth) / 2;
+      const yOffset = margin;
+      
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
       
       // PDF speichern mit aussagekräftigem Dateinamen
       const orderCode = repair?.orderCode || repairId;
@@ -195,36 +187,28 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const imgWidth = pageWidth - (2 * margin);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Falls das Bild höher als die Seite ist, auf mehrere Seiten aufteilen
-      if (imgHeight > pageHeight - (2 * margin)) {
-        const pageImgHeight = pageHeight - (2 * margin);
-        const totalPages = Math.ceil(imgHeight / pageImgHeight);
+      // Immer auf eine A4-Seite skalieren - keine Aufteilung (E-Mail-Version)
+      const maxHeight = pageHeight - (2 * margin);
+      let finalImgWidth = imgWidth;
+      let finalImgHeight = imgHeight;
+      
+      // Falls das Bild zu hoch ist, proportional skalieren
+      if (imgHeight > maxHeight) {
+        finalImgHeight = maxHeight;
+        finalImgWidth = (canvas.width * maxHeight) / canvas.height;
         
-        for (let i = 0; i < totalPages; i++) {
-          if (i > 0) pdf.addPage();
-          
-          const sourceY = (canvas.height / totalPages) * i;
-          const sourceHeight = canvas.height / totalPages;
-          
-          // Canvas-Bereich für diese Seite extrahieren
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          pageCtx?.drawImage(
-            canvas, 
-            0, sourceY, canvas.width, sourceHeight,
-            0, 0, canvas.width, sourceHeight
-          );
-          
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.75);
-          pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, pageImgHeight);
+        // Falls nach der Höhenskalierung die Breite zu groß ist, nochmal anpassen
+        if (finalImgWidth > imgWidth) {
+          finalImgWidth = imgWidth;
+          finalImgHeight = (canvas.height * imgWidth) / canvas.width;
         }
-      } else {
-        // Bild passt auf eine Seite
-        pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
       }
+      
+      // Bild zentriert auf der Seite platzieren
+      const xOffset = margin + (imgWidth - finalImgWidth) / 2;
+      const yOffset = margin;
+      
+      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
       
       // PDF als Base64 für E-Mail-Versand
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
