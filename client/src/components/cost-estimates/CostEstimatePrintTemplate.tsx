@@ -31,6 +31,7 @@ interface CostEstimatePrintTemplateProps {
   validUntil?: string;
   notes?: string;
   companyLogo?: string;
+  createdAt?: string;
 }
 
 export const CostEstimatePrintTemplate: React.FC<CostEstimatePrintTemplateProps> = ({
@@ -55,6 +56,7 @@ export const CostEstimatePrintTemplate: React.FC<CostEstimatePrintTemplateProps>
   validUntil,
   notes,
   companyLogo,
+  createdAt,
 }) => {
   // Datum formatieren für "Gültig bis"
   const formatDate = (dateString?: string) => {
@@ -67,9 +69,12 @@ export const CostEstimatePrintTemplate: React.FC<CostEstimatePrintTemplateProps>
     }
   };
 
-  // Heutiges Datum für die Erstellung
-  const today = new Date();
-  const todayFormatted = `${today.getDate().toString().padStart(2, '0')}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getFullYear()}`;
+  // Erstellungsdatum des Kostenvoranschlags formatieren
+  const createdDate = createdAt ? new Date(createdAt) : new Date();
+  const isValidDate = !isNaN(createdDate.getTime());
+  const createdDateFormatted = isValidDate ? 
+    `${createdDate.getDate().toString().padStart(2, '0')}.${(createdDate.getMonth() + 1).toString().padStart(2, '0')}.${createdDate.getFullYear()}` 
+    : "Unbekanntes Datum";
 
   return (
     <div className="print-container" style={{ fontFamily: 'Arial, sans-serif', width: '100%', maxWidth: '210mm', margin: '0 auto', padding: '20mm', color: '#333', backgroundColor: 'white' }}>
@@ -97,7 +102,7 @@ export const CostEstimatePrintTemplate: React.FC<CostEstimatePrintTemplateProps>
 
       <div className="document-title" style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', margin: '30px 0 10px 0', color: '#222' }}>Kostenvoranschlag</div>
       <div className="auftragsnummer" style={{ textAlign: 'center', fontSize: '18px', margin: '0 0 20px 0', color: '#222' }}>{referenceNumber}</div>
-      <div style={{ textAlign: 'center', fontSize: '14px', margin: '0 0 40px 0', color: '#666' }}>Erstellt am: {todayFormatted}</div>
+      <div style={{ textAlign: 'center', fontSize: '14px', margin: '0 0 40px 0', color: '#666' }}>Erstellt am: {createdDateFormatted}</div>
 
       {/* Geräteinformationen (einziger Abschnitt mit Rahmen) */}
       <div className="device-info-box" style={{ display: 'flex', justifyContent: 'space-between', gap: '40px', marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
