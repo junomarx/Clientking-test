@@ -213,12 +213,22 @@ export const users = pgTable("users", {
   companyVatNumber: text("company_vat_number"),            // USt-IdNr.
   companyPhone: text("company_phone"),                     // Geschäftstelefon
   companyEmail: text("company_email"),                     // Geschäfts-E-Mail
+  // Zusätzliche Registrierungsfelder
+  ownerFirstName: text("owner_first_name"),                // Vorname des Geschäftsinhabers
+  ownerLastName: text("owner_last_name"),                  // Nachname des Geschäftsinhabers
+  streetAddress: text("street_address"),                   // Straße und Hausnummer
+  zipCode: text("zip_code"),                              // Postleitzahl
+  city: text("city"),                                     // Stadt
+  country: text("country"),                               // Land
+  taxId: text("tax_id"),                                  // UID/Steuernummer
+  website: text("website"),                               // Website
   resetToken: text("reset_token"),                         // Token für Passwort-Zurücksetzung
   resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
   trialExpiresAt: timestamp("trial_expires_at"),           // Ablaufdatum des Demo-Zugangs (nur für Demo-Paket)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Erweiterte Registrierungsdaten für das vollständige Geschäftsprofil
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -228,6 +238,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
   companyVatNumber: true,
   companyPhone: true,
   companyEmail: true,
+}).extend({
+  // Zusätzliche Felder für die Registrierung
+  ownerFirstName: z.string().min(1, "Vorname ist erforderlich"),
+  ownerLastName: z.string().min(1, "Nachname ist erforderlich"),
+  streetAddress: z.string().min(1, "Straße und Hausnummer sind erforderlich"),
+  zipCode: z.string().min(1, "Postleitzahl ist erforderlich"),
+  city: z.string().min(1, "Stadt ist erforderlich"),
+  country: z.string().optional(),
+  taxId: z.string().min(1, "UID/Steuernummer ist erforderlich"),
+  website: z.string().optional(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

@@ -50,6 +50,51 @@ async function hashPassword(password: string) {
  */
 export function registerSuperadminRoutes(app: Express) {
   
+  // Abrufen der Registrierungsdaten eines Benutzers aus der users-Tabelle
+  app.get("/api/superadmin/user-registration-data/:userId", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
+      
+      if (!req.user) {
+        return res.status(401).json({ message: "Nicht angemeldet" });
+      }
+      
+      console.log(`Superadmin ruft Registrierungsdaten für Benutzer ${userId} ab`);
+      
+      // Benutzer mit allen Registrierungsdaten holen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Registrierungsdaten aus der users-Tabelle extrahieren
+      const registrationData = {
+        businessName: user.companyName || "Nicht angegeben",
+        ownerFirstName: user.ownerFirstName || "",
+        ownerLastName: user.ownerLastName || "",
+        streetAddress: user.streetAddress || "",
+        zipCode: user.zipCode || "",
+        city: user.city || "",
+        country: user.country || "",
+        email: user.email || "",
+        phone: user.companyPhone || "",
+        taxId: user.taxId || "",
+        website: user.website || "",
+        vatNumber: user.companyVatNumber || ""
+      };
+      
+      console.log(`Registrierungsdaten für Benutzer ${user.username} abgerufen:`, registrationData);
+      res.json(registrationData);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Registrierungsdaten:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Registrierungsdaten" });
+    }
+  });
+
   // Abrufen der Geschäftseinstellungen eines Benutzers anhand seiner Benutzer-ID
   app.get("/api/superadmin/user-business-settings/:userId", isSuperadmin, async (req: Request, res: Response) => {
     try {
@@ -71,13 +116,32 @@ export function registerSuperadminRoutes(app: Express) {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      // Geschäftseinstellungen für diesen Benutzer abrufen
+      // Für inaktive Benutzer: Zeige die Registrierungsdaten aus der users-Tabelle
+      if (!user.isActive) {
+        const registrationData = {
+          businessName: user.companyName || "Nicht angegeben",
+          ownerFirstName: user.ownerFirstName || "",
+          ownerLastName: user.ownerLastName || "",
+          streetAddress: user.streetAddress || "",
+          zipCode: user.zipCode || "",
+          city: user.city || "",
+          country: user.country || "",
+          email: user.email || "",
+          phone: user.companyPhone || "",
+          taxId: user.taxId || "",
+          website: user.website || "",
+          vatNumber: user.companyVatNumber || ""
+        };
+        
+        console.log(`Registrierungsdaten für inaktiven Benutzer ${user.username} abgerufen`);
+        return res.json(registrationData);
+      }
+      
+      // Für aktive Benutzer: Geschäftseinstellungen abrufen
       const settings = await storage.getBusinessSettings(userId);
       
       if (!settings) {
-        // Wenn keine Einstellungen gefunden wurden, senden wir eine leere Antwort mit Status 200
-        // um zu zeigen, dass die Anfrage erfolgreich war, aber keine Daten verfügbar sind
-        console.log(`Keine Geschäftseinstellungen für Benutzer ${userId} (${user.username}) gefunden.`);
+        console.log(`Keine Geschäftseinstellungen für aktiven Benutzer ${userId} (${user.username}) gefunden.`);
         return res.status(200).json(null);
       }
       

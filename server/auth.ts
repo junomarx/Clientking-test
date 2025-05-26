@@ -177,8 +177,7 @@ export function setupAuth(app: Express) {
       
       console.log(`Neuer Benutzer ${username} erhält Demo-Paket mit Ablaufdatum ${trialExpiresAt.toISOString()}`);
 
-      // Erstelle einen neuen Benutzer (standardmäßig inaktiv)
-      // Die Shop-ID wird automatisch in createUser() generiert
+      // Erstelle einen neuen Benutzer mit ALLEN Registrierungsdaten auf einmal
       const user = await storage.createUser({
         username,
         password: await hashPassword(password),
@@ -186,33 +185,20 @@ export function setupAuth(app: Express) {
         companyName,
         companyAddress,
         companyPhone,
-        companyEmail: email // Verwende dieselbe E-Mail für Geschäft
+        companyEmail: email,
+        companyVatNumber: companyVatNumber || "",
+        ownerFirstName,
+        ownerLastName,
+        streetAddress,
+        zipCode,
+        city,
+        country: country || "Österreich",
+        taxId: taxId || "",
+        website: website || ""
       });
 
-      console.log(`✅ Benutzer ${username} erfolgreich erstellt mit Shop-ID ${user.shopId}`);
-
-      // Speichere die Registrierungsdaten temporär im Benutzer-Objekt
-      // Die Geschäftseinstellungen werden erst bei der Aktivierung erstellt
-      try {
-        console.log(`📋 Registrierungsdaten für Benutzer ${username} gespeichert (Geschäftseinstellungen werden bei Aktivierung erstellt)`);
-        await storage.updateUser(user.id, {
-          companyName,
-          companyPhone,
-          companyEmail: email,
-          ownerFirstName,
-          ownerLastName,
-          streetAddress,
-          zipCode,
-          city,
-          country: country || "Österreich",
-          taxId: taxId || "",
-          website: website || ""
-        });
-        console.log(`✅ Registrierungsdaten für Benutzer ${username} erfolgreich gespeichert`);
-      } catch (updateError) {
-        console.error(`❌ Fehler beim Aktualisieren der Benutzerdaten für ${username}:`, updateError);
-        // Weiter fortfahren, auch wenn die Aktualisierung fehlschlägt
-      }
+      console.log(`✅ Benutzer ${username} mit allen Geschäftsdaten erfolgreich erstellt (inaktiv, wartet auf Aktivierung)`);
+      console.log(`📋 Gespeicherte Daten: ${companyName}, ${ownerFirstName} ${ownerLastName}, ${streetAddress}, ${zipCode} ${city}`);
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können
       try {
