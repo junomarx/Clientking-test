@@ -200,10 +200,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Alle Gerätetypen laden
       const deviceTypes = await db.select().from(userDeviceTypes);
       
-      // Daten manuell zusammenführen mit korrekter Zuordnung
+      // Daten manuell zusammenführen mit Debug-Ausgabe
       const formattedModels = models.map(model => {
         const brand = brands.find(b => b.id === model.brandId);
         const deviceType = brand ? deviceTypes.find(dt => dt.id === brand.deviceTypeId) : null;
+        
+        // Debug-Ausgabe für die erste Zuordnung
+        if (model.id === 1235) { // iPhone 6 als Test
+          console.log(`DEBUG: Model ${model.name} (ID: ${model.id})`);
+          console.log(`  Brand ID: ${model.brandId}`);
+          console.log(`  Found Brand:`, brand);
+          console.log(`  Device Type ID: ${brand?.deviceTypeId}`);
+          console.log(`  Found Device Type:`, deviceType);
+        }
         
         return {
           id: model.id,
