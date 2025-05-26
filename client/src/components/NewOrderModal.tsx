@@ -828,21 +828,31 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       };
       
       console.log("Sende Reparaturdaten mit Kunden-ID:", repairData.customerId);
+      console.log("Vollständige Daten:", JSON.stringify(repairData, null, 2));
       
-      // Speichern des Gerätehierarchie mit der Datenbank-API
-      // aber nur wenn der Benutzer Admin ist (Bugi, ID 3)
-      if (repairData.model && repairData.deviceType && repairData.brand && isAdmin) {
-        // Da wir jetzt den GlobalDeviceSelector verwenden, wird keine automatische Speicherung mehr benötigt
-        // Die Geräte werden vom Superadmin verwaltet
-        console.log("Repair wird mit globalen Gerätedaten erstellt:", {
-          deviceType: repairData.deviceType,
-          brand: repairData.brand,
-          model: repairData.model,
-          deviceTypeId: selectedDeviceTypeId,
-          brandId: selectedBrandId,
-          modelId: selectedModelId
-        });
+      // Validierung vor dem Senden
+      if (!repairData.customerId) {
+        console.error("Fehler: Keine Kunden-ID");
+        throw new Error("Bitte wählen Sie einen Kunden aus oder erstellen Sie einen neuen");
       }
+      if (!repairData.deviceType) {
+        console.error("Fehler: Kein Gerätetyp");
+        throw new Error("Bitte wählen Sie einen Gerätetyp aus");
+      }
+      if (!repairData.brand) {
+        console.error("Fehler: Kein Hersteller");
+        throw new Error("Bitte wählen Sie einen Hersteller aus");
+      }
+      if (!repairData.model) {
+        console.error("Fehler: Kein Modell");
+        throw new Error("Bitte wählen Sie ein Modell aus");
+      }
+      if (!repairData.issue) {
+        console.error("Fehler: Keine Fehlerbeschreibung");
+        throw new Error("Bitte geben Sie eine Fehlerbeschreibung ein");
+      }
+      
+      console.log("Alle Validierungen bestanden, sende Daten...");
       
       // Auftrag erstellen
       await createRepairMutation.mutateAsync(repairData);
