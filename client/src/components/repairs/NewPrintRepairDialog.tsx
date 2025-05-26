@@ -281,16 +281,16 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     deviceBrand: repair?.brand || "",
     deviceModel: repair?.model || "",
     deviceIssue: repair?.issue || "",
-    estimatedCost: repair?.estimatedCost || "",
-    businessSlogan: businessSettings?.slogan || "",
+    estimatedCost: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    businessSlogan: businessSettings?.companySlogan || "",
     vatNumber: businessSettings?.vatNumber || "",
-    websiteUrl: businessSettings?.websiteUrl || "",
+    websiteUrl: businessSettings?.website || "",
     logoUrl: businessSettings?.logoImage || "",
     additionalNotes: repair?.notes || "",
     deviceSerial: repair?.serialNumber || "",
-    deviceImei: repair?.imei || "",
-    estimatedCompletionDate: repair?.estimatedCompletionDate ? 
-      format(new Date(repair.estimatedCompletionDate), 'dd.MM.yyyy', { locale: de }) : ""
+    deviceImei: repair?.serialNumber || "",
+    estimatedCompletionDate: repair?.completionDate ? 
+      format(new Date(repair.completionDate), 'dd.MM.yyyy', { locale: de }) : ""
   };
 
   if (!open) return null;
@@ -322,39 +322,45 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     <BonReceipt58mm 
                       firmenlogo={businessSettings?.logoImage || undefined}
                       firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={`${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`}
+                      firmenadresse={`${businessSettings?.streetAddress || ""}`}
+                      firmenplz={businessSettings?.zipCode || ""}
+                      firmenort={businessSettings?.city || ""}
                       firmentelefon={businessSettings?.phone || ""}
                       auftragsnummer={repair?.orderCode || repair?.id?.toString() || ""}
-                      datum={new Date().toLocaleDateString('de-DE')}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE')}
                       kundenname={customer ? `${customer.firstName} ${customer.lastName}` : ""}
                       kundentelefon={customer?.phone || ""}
-                      geraetetyp={repair?.deviceType || ""}
+                      kundenemail={customer?.email || ""}
                       hersteller={repair?.brand || ""}
                       modell={repair?.model || ""}
                       problem={repair?.issue || ""}
-                      geschaetzte_kosten={repair?.estimatedCost || ""}
-                      firmenschlagwort={businessSettings?.slogan || ""}
-                      ust_nummer={businessSettings?.vatNumber || ""}
-                      website={businessSettings?.websiteUrl || ""}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
+                      imei={repair?.serialNumber || ""}
+                      signatur_dropoff={repair?.dropoffSignature || ""}
+                      signatur_pickup={repair?.pickupSignature || ""}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     />
                   ) : (
                     <BonReceipt80mm 
                       firmenlogo={businessSettings?.logoImage || undefined}
                       firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={`${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`}
+                      firmenadresse={`${businessSettings?.streetAddress || ""}`}
+                      firmenplz={businessSettings?.zipCode || ""}
+                      firmenort={businessSettings?.city || ""}
                       firmentelefon={businessSettings?.phone || ""}
                       auftragsnummer={repair?.orderCode || repair?.id?.toString() || ""}
-                      datum={new Date().toLocaleDateString('de-DE')}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE')}
                       kundenname={customer ? `${customer.firstName} ${customer.lastName}` : ""}
                       kundentelefon={customer?.phone || ""}
-                      geraetetyp={repair?.deviceType || ""}
+                      kundenemail={customer?.email || ""}
                       hersteller={repair?.brand || ""}
                       modell={repair?.model || ""}
                       problem={repair?.issue || ""}
-                      geschaetzte_kosten={repair?.estimatedCost || ""}
-                      firmenschlagwort={businessSettings?.slogan || ""}
-                      ust_nummer={businessSettings?.vatNumber || ""}
-                      website={businessSettings?.websiteUrl || ""}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
+                      imei={repair?.serialNumber || ""}
+                      signatur_dropoff={repair?.dropoffSignature || ""}
+                      signatur_pickup={repair?.pickupSignature || ""}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""}
                     />
                   )
                 )}
