@@ -1222,7 +1222,8 @@ export function registerSuperadminRoutes(app: Express) {
       let existingCount = 0;
       
       // Modelle einfügen
-      for (const modelName of models) {
+      for (const model of models) {
+        const modelName = typeof model === 'string' ? model : model.name;
         try {
           // Prüfen, ob das Modell bereits existiert
           const existingModel = await db.select().from(userModels)
