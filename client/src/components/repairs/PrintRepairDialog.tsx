@@ -259,38 +259,47 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                 {templateContent ? (
                   <div 
                     dangerouslySetInnerHTML={{
-                      __html: applyTemplateVariables(templateContent, {
-                        businessName: settings?.businessName || "Handyshop Verwaltung",
-                        businessAddress: `${settings?.streetAddress || ""}, ${settings?.zipCode || ""} ${settings?.city || ""}`,
-                        businessPhone: settings?.phone || "",
-                        businessEmail: settings?.email || "",
-                        businessLogo: settings?.logoImage || "",
-                        orderCode: repair?.orderCode || repair?.id?.toString() || "",
-                        repairId: repair?.orderCode || repair?.id?.toString() || "",
-                        creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE'),
-                        currentDate: new Date().toLocaleDateString('de-DE'),
-                        customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
-                        customerPhone: customer?.phone || "",
-                        customerEmail: customer?.email || "",
-                        deviceType: repair?.deviceType || "",
-                        deviceBrand: repair?.brand || "",
-                        deviceModel: repair?.model || "",
-                        deviceIssue: repair?.issue ? repair.issue : '',
-                        deviceImei: repair?.serialNumber || "",
+                      __html: (() => {
+                        const variables = {
+                          businessName: settings?.businessName || "Handyshop Verwaltung",
+                          businessAddress: `${settings?.streetAddress || ""}, ${settings?.zipCode || ""} ${settings?.city || ""}`,
+                          businessPhone: settings?.phone || "",
+                          businessEmail: settings?.email || "",
+                          businessLogo: settings?.logoImage || "",
+                          orderCode: repair?.orderCode || repair?.id?.toString() || "",
+                          repairId: repair?.orderCode || repair?.id?.toString() || "",
+                          creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE'),
+                          currentDate: new Date().toLocaleDateString('de-DE'),
+                          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
+                          customerPhone: customer?.phone || "",
+                          customerEmail: customer?.email || "",
+                          deviceType: repair?.deviceType || "",
+                          deviceBrand: repair?.brand || "",
+                          deviceModel: repair?.model || "",
+                          deviceIssue: repair?.issue ? repair.issue : '',
+                          deviceImei: repair?.serialNumber || "",
+                          
+                          // Preis-Platzhalter mit korrekten Namen aus der Template
+                          estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost} €` : "",
+                          finalPrice: "",
+                          preis: repair?.estimatedCost ? `${repair.estimatedCost} €` : "",
+                          
+                          // Unterschriften
+                          customerSignature: repair?.dropoffSignature || "",
+                          secondSignature: repair?.pickupSignature || "",
+                          completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+                          
+                          // Zusätzliche Platzhalter für Kompatibilität
+                          logoUrl: settings?.logoImage || ""
+                        };
                         
-                        // Preis-Platzhalter mit korrekten Namen aus der Template
-                        estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-                        finalPrice: "",
-                        preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        // Debug-Output für die Template-Variablen
+                        console.log('Template-Variablen für Bondruck:', variables);
+                        console.log('Repair estimatedCost:', repair?.estimatedCost);
+                        console.log('Generated estimatedPrice:', variables.estimatedPrice);
                         
-                        // Unterschriften
-                        customerSignature: repair?.dropoffSignature || "",
-                        secondSignature: repair?.pickupSignature || "",
-                        completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
-                        
-                        // Zusätzliche Platzhalter für Kompatibilität
-                        logoUrl: settings?.logoImage || ""
-                      })
+                        return applyTemplateVariables(templateContent, variables);
+                      })()
                     }}
                   />
                 ) : settings?.receiptWidth === '58mm' ? (
