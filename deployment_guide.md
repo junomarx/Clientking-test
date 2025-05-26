@@ -1,234 +1,213 @@
-# Handy-Reparaturshop - Deployment Guide
+# Deployment-Anleitung für Handyshop Verwaltung
 
-## Überblick
+## Vollständige App auf Ihrer Domain deployen
 
-Diese Anleitung zeigt, wie die Anwendung auf einer eigenen Domain gehostet werden kann. Die Anwendung besteht aus zwei Teilen:
+### 1. Vorbereitung für Production Build
 
-1. **Frontend**: React-Anwendung mit Vite erstellt
-2. **Backend**: Node.js Express-Server, der die API bereitstellt
+```bash
+# Browserslist aktualisieren
+npx update-browserslist-db@latest
 
-## Vorbereitung: Deployment-Paket direkt von Replit herunterladen
-
-Die einfachste Möglichkeit, alle Dateien zu bekommen, ist:
-
-1. Im Replit-Interface oben links auf das Dreipunkt-Menü klicken
-2. "Download as zip" wählen, um das gesamte Projekt herunterzuladen
-3. Die heruntergeladene ZIP-Datei auf Ihrem Computer entpacken
-
-## Schnellstart: Deployment-Paket manuell erstellen
-
-Um ein Deployment-Paket manuell vorzubereiten, folgen Sie diesen Schritten:
-
-1. Erstellen Sie einen neuen Ordner `deployment`
-2. Kopieren Sie folgende Ordner und Dateien in diesen Ordner:
-   - `client/` (Frontend-Quellcode)
-   - `server/` (Backend-Code)
-   - `shared/` (Gemeinsam genutzte Dateien)
-   - `package.json` und `package-lock.json` (für Abhängigkeiten)
-
-3. Erstellen Sie eine Datei `.env.example` im `deployment`-Ordner mit folgendem Inhalt:
-
+# Production Build erstellen
+NODE_ENV=production npm run build
 ```
-# Datenbankverbindung
-DATABASE_URL=postgresql://username:password@hostname:port/database
 
-# SMTP Konfiguration
-SMTP_HOST=your-smtp-host
+### 2. Umgebungsvariablen für Production
+
+Erstellen Sie eine `.env.production` Datei:
+
+```env
+# Datenbank
+DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+PGDATABASE=ihr_database_name
+PGHOST=ihr_database_host
+PGPASSWORD=ihr_database_password
+PGPORT=5432
+PGUSER=ihr_database_user
+
+# E-Mail (Brevo/SMTP)
+BREVO_API_KEY=ihr_brevo_api_key
+SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
-SMTP_USER=your-smtp-user
-SMTP_PASSWORD=your-smtp-passwordapi-key
+SMTP_USER=ihr_smtp_user
+SMTP_PASSWORD=ihr_smtp_password
 
-# Session Secret (für Sicherheit)
-SESSION_SECRET=replace-with-a-long-random-string
+# Session Secret (generieren Sie einen sicheren String)
+SESSION_SECRET=ihr_sehr_sicherer_session_schluessel_hier
+
+# Domain-spezifische Einstellungen
+NODE_ENV=production
+PORT=5000
 ```
 
-4. Komprimieren Sie den `deployment`-Ordner zu einer ZIP-Datei
-5. Übertragen Sie diese ZIP-Datei auf Ihren Server
+### 3. Server-Konfiguration für Ihre Domain
 
-Mit diesem manuellen Ansatz wird der Quellcode direkt auf den Server übertragen, und der Build erfolgt auf dem Server selbst.
-
-## Schritt 1: Produktionsbuild erstellen (Alternative)
-
-### Frontend und Backend bauen
+#### Option A: Direktes Node.js Deployment
 
 ```bash
-npm run build
+# Nach dem Build:
+node dist/index.js
 ```
 
-Dies erstellt:
-- Frontend-Assets in `dist/public`
-- Backend-Code in `dist/index.js`
-
-## Schritt 2: Konfiguration für Ihre Domain
-
-### Option 1: Vollständige Anwendung hosten (empfohlen)
-
-Wenn Sie die vollständige Anwendung mit Frontend und Backend auf Ihrem Server hosten möchten:
-
-1. Kopieren Sie das gesamte `dist`-Verzeichnis auf Ihren Server
-2. Installieren Sie die Abhängigkeiten auf dem Server:
+#### Option B: PM2 Process Manager (empfohlen)
 
 ```bash
-npm install --production
+# PM2 installieren
+npm install -g pm2
+
+# App starten
+pm2 start dist/index.js --name handyshop-app
+
+# Auto-restart bei Server-Neustart
+pm2 startup
+pm2 save
 ```
 
-3. Erstellen Sie eine `.env`-Datei auf dem Server mit Ihren Umgebungsvariablen:
+### 4. Nginx Reverse Proxy Konfiguration
 
-```
-DATABASE_URL=postgresql://username:password@hostname:port/database
-SMTP_HOST=your-smtp-host
-SMTP_PORT=587
-SMTP_USER=your-smtp-user
-SMTP_PASSWORD=your-smtp-password
-BREVO_API_KEY=your-brevo-api-key
-```
-
-4. Starten Sie den Server mit dem bereitgestellten Startskript:
-
-```bash
-node server.js
-```
-
-Oder direkt mit:
-
-```bash
-NODE_ENV=production node server/index.js
-```
-
-5. Verwenden Sie einen Reverse-Proxy wie Nginx oder Apache, um Anfragen von Ihrer Domain an den Server weiterzuleiten.
-
-### Option 2: Nur Frontend hosten (mit separater API-Bereitstellung)
-
-Wenn Sie nur das Frontend auf einem statischen Hosting-Dienst bereitstellen möchten und das Backend separat hosten:
-
-1. Erstellen Sie eine `.env`-Datei im Projektroot mit:
-
-```
-VITE_API_URL=https://your-api-domain.com
-```
-
-2. Passen Sie die Datei `client/src/lib/queryClient.ts` an, um die API-URL zu verwenden:
-
-```typescript
-import { QueryClient } from "@tanstack/react-query";
-
-const API_URL = import.meta.env.VITE_API_URL || "";
-
-export const queryClient = new QueryClient();
-
-export function getQueryFn(options?: { on401?: "throw" | "returnNull" }) {
-  return async function queryFn({ queryKey }: { queryKey: string[] }): Promise<any> {
-    const path = queryKey[0];
-    const response = await fetch(`${API_URL}${path}`);
-    
-    if (response.status === 401) {
-      if (options?.on401 === "returnNull") return null;
-      throw new Error("Nicht angemeldet");
-    }
-    
-    if (!response.ok) {
-      throw new Error(`API-Fehler: ${response.status}`);
-    }
-    
-    return response.json();
-  };
-}
-
-export async function apiRequest(method: string, path: string, body?: any) {
-  const response = await fetch(`${API_URL}${path}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
-  
-  return response;
-}
-```
-
-3. Führen Sie den Build aus:
-
-```bash
-npm run build
-```
-
-4. Kopieren Sie nur den Inhalt von `dist/public` auf Ihren statischen Hosting-Dienst
-
-## Schritt 3: Datenbank-Setup
-
-Stellen Sie sicher, dass eine PostgreSQL-Datenbank auf Ihrem Server eingerichtet ist:
-
-1. Erstellen Sie eine neue Datenbank für die Anwendung
-2. Verwenden Sie denselben Verbindungsstring für die `DATABASE_URL` in der `.env`-Datei
-3. Migrationsscripts werden automatisch beim ersten Start der Anwendung ausgeführt
-
-## Schritt 4: Domain-Konfiguration
-
-### Nginx Konfiguration (Beispiel)
+Erstellen Sie `/etc/nginx/sites-available/handyshop`:
 
 ```nginx
 server {
     listen 80;
-    server_name your-domain.com;
+    server_name ihre-domain.com www.ihre-domain.com;
+    
+    # Weiterleitung zu HTTPS
+    return 301 https://$server_name$request_uri;
+}
 
+server {
+    listen 443 ssl http2;
+    server_name ihre-domain.com www.ihre-domain.com;
+    
+    # SSL Zertifikate (Let's Encrypt empfohlen)
+    ssl_certificate /etc/letsencrypt/live/ihre-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ihre-domain.com/privkey.pem;
+    
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # Proxy zu Node.js App
     location / {
         proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
+    }
+    
+    # Static Assets Caching
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        proxy_pass http://localhost:5000;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
     }
 }
 ```
 
-### Apache Konfiguration (Beispiel)
-
-```apache
-<VirtualHost *:80>
-    ServerName your-domain.com
-    
-    ProxyRequests Off
-    ProxyPreserveHost On
-    ProxyVia Full
-    
-    <Proxy *>
-        Require all granted
-    </Proxy>
-    
-    ProxyPass / http://localhost:5000/
-    ProxyPassReverse / http://localhost:5000/
-</VirtualHost>
-```
-
-## Schritt 5: SSL-Zertifikat (optional, aber empfohlen)
-
-Verwenden Sie Let's Encrypt, um ein kostenloses SSL-Zertifikat für Ihre Domain zu erhalten.
+### 5. SSL Zertifikat mit Let's Encrypt
 
 ```bash
-sudo apt install certbot
-sudo certbot --nginx -d your-domain.com
+# Certbot installieren
+sudo apt install certbot python3-certbot-nginx
+
+# SSL Zertifikat erstellen
+sudo certbot --nginx -d ihre-domain.com -d www.ihre-domain.com
+
+# Auto-renewal testen
+sudo certbot renew --dry-run
 ```
 
-## Schritt 6: PM2 für Prozessverwaltung (optional, aber empfohlen)
+### 6. Deployment-Skript
 
-Installieren Sie PM2, um sicherzustellen, dass Ihre Anwendung nach einem Neustart oder Absturz automatisch neu gestartet wird:
+Erstellen Sie `deploy.sh`:
 
 ```bash
-npm install -g pm2
-pm2 start dist/index.js --name handyshop
-pm2 startup
-pm2 save
+#!/bin/bash
+
+echo "🚀 Deployment der Handyshop Verwaltung startet..."
+
+# Git Pull
+git pull origin main
+
+# Dependencies installieren
+npm ci --production=false
+
+# Build erstellen
+NODE_ENV=production npm run build
+
+# PM2 App neustarten
+pm2 restart handyshop-app
+
+# Nginx neuladen
+sudo nginx -t && sudo systemctl reload nginx
+
+echo "✅ Deployment erfolgreich abgeschlossen!"
+echo "🌐 App verfügbar unter: https://ihre-domain.com"
 ```
 
-## Fehlerbehebung
+### 7. Datenbank Migration
 
-1. **Datenbankfehler**: Stellen Sie sicher, dass die korrekte `DATABASE_URL` in der `.env`-Datei angegeben ist
-2. **CORS-Fehler**: Wenn Sie Frontend und Backend separat hosten, müssen Sie CORS-Header konfigurieren
-3. **Session-Cookie-Fehler**: Stellen Sie sicher, dass die Domain in der Session-Konfiguration richtig eingestellt ist
+```bash
+# Drizzle Push für Production
+npm run db:push
+```
+
+### 8. Firewall Konfiguration
+
+```bash
+# UFW Firewall
+sudo ufw allow 22    # SSH
+sudo ufw allow 80    # HTTP
+sudo ufw allow 443   # HTTPS
+sudo ufw enable
+```
+
+### 9. Monitoring & Logs
+
+```bash
+# PM2 Logs anzeigen
+pm2 logs handyshop-app
+
+# PM2 Status
+pm2 status
+
+# Nginx Logs
+sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/access.log
+```
+
+### 10. Backup-Strategie
+
+```bash
+# Datenbank Backup (PostgreSQL)
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Automatisches Backup (Crontab)
+0 2 * * * /usr/bin/pg_dump $DATABASE_URL > /backup/handyshop_$(date +\%Y\%m\%d).sql
+```
+
+## Wichtige Sicherheitshinweise
+
+1. **Session Secret**: Verwenden Sie einen kryptographisch sicheren, zufälligen String
+2. **Datenbankzugriff**: Nutzen Sie SSL-Verbindungen
+3. **HTTPS**: Obligatorisch für Production
+4. **Updates**: Halten Sie Node.js und alle Dependencies aktuell
+5. **Monitoring**: Überwachen Sie Server-Performance und Logs
 
 ## Support
 
-Bei Fragen oder Problemen wenden Sie sich an Ihren Entwickler oder erstellen Sie ein Issue im GitHub-Repository.
+Bei Problemen während des Deployments:
+1. Prüfen Sie die PM2 Logs: `pm2 logs`
+2. Prüfen Sie die Nginx Logs: `sudo tail -f /var/log/nginx/error.log`
+3. Prüfen Sie die Datenbankverbindung
+4. Stellen Sie sicher, dass alle Umgebungsvariablen korrekt gesetzt sind
+
+Ihre Handyshop Verwaltung ist nach diesem Setup vollständig produktionsbereit! 🎉
