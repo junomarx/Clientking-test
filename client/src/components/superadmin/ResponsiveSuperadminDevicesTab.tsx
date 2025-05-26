@@ -903,8 +903,11 @@ export default function ResponsiveSuperadminDevicesTab() {
     console.log("Bereite Import vor:", { models, brandId: selectedBrandForBulk });
     
     importBulkModelsMutation.mutate({
-      models,
-      brandId: parseInt(selectedBrandForBulk.toString()) // Sicherstellen dass es eine Zahl ist
+      brandId: parseInt(selectedBrandForBulk.toString()), // Sicherstellen dass es eine Zahl ist
+      models: models.map(modelName => ({
+        name: modelName.trim(),
+        brandId: parseInt(selectedBrandForBulk.toString())
+      }))
     });
   };
 
