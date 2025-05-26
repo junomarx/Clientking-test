@@ -103,6 +103,7 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
   const remainingPlaceholders = result.match(/{{[^}]+}}/g);
   if (remainingPlaceholders) {
     console.warn('Nicht ersetzte Platzhalter:', remainingPlaceholders);
+    console.log('Verfügbare Variablen:', Object.keys(variables));
   }
   
   return result;
