@@ -295,6 +295,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
     estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
     finalPrice: "", // finalPrice ist derzeit kein Teil des Repair-Objekts
+    depositAmount: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
+    anzahlung: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
     
     // Zusätzliche Platzhalter für Kompatibilität
     logoUrl: businessSettings?.logoImage || "",
