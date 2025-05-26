@@ -1,0 +1,63 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 10
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+ResponsiveSuperadminDevicesTab.tsx:149 Geladene Marken: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:150 Anzahl Marken: 37
+ResponsiveSuperadminDevicesTab.tsx:139 Geladene Benutzer-Gerätetypen: (5) [{…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:160 Geladene Modelle: (306) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+ResponsiveSuperadminDevicesTab.tsx:129 Geladene Gerätetypen: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx:1435 DeviceTypesList im Modell-Bulk-Import: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx:1468 BrandsData im Bulk-Import: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:1469 Ausgewählter Gerätetyp: null
+ResponsiveSuperadminDevicesTab.tsx:1485 Gefilterte Marken: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:1435 DeviceTypesList im Modell-Bulk-Import: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx:1468 BrandsData im Bulk-Import: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:1469 Ausgewählter Gerätetyp: null
+ResponsiveSuperadminDevicesTab.tsx:1485 Gefilterte Marken: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:1435 DeviceTypesList im Modell-Bulk-Import: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx:1468 BrandsData im Bulk-Import: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx:1469 Ausgewählter Gerätetyp: Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Samsung: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Google: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Xiaomi: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Huawei: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand OnePlus: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Sony: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Motorola: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Nokia: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Samsung: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Microsoft: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Lenovo: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Huawei: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Amazon: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Apple: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Dell: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand HP: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Lenovo: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Asus: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Acer: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand MSI: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Razer: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Apple: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Samsung: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Garmin: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Fitbit: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Amazfit: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Huawei: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Sony: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Nintendo: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Oppo: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Realme: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Vivo: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Honor: deviceTypeName=undefined, selected=Smartphone
+2ResponsiveSuperadminDevicesTab.tsx:1481 Brand Xiaomi: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Withings: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1481 Brand Microsoft: deviceTypeName=undefined, selected=Smartphone
+ResponsiveSuperadminDevicesTab.tsx:1485 Gefilterte Marken: []
