@@ -186,7 +186,7 @@ export function setupAuth(app: Express) {
         companyAddress,
         companyPhone,
         companyEmail: email,
-        companyVatNumber: "",
+        companyVatNumber: taxId || "",
         ownerFirstName,
         ownerLastName,
         streetAddress,
