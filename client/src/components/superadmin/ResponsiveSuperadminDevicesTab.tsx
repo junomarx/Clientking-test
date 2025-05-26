@@ -1452,7 +1452,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                         
                         if (!brandsData || brandsData.length === 0) {
                           return (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-brands" disabled>
                               Keine Hersteller verfügbar
                             </SelectItem>
                           );
@@ -1468,7 +1468,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                         
                         if (filteredBrands.length === 0) {
                           return (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-match" disabled>
                               Keine Hersteller für {selectedModelDeviceType} gefunden
                             </SelectItem>
                           );
