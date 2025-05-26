@@ -147,7 +147,8 @@ export default function ResponsiveSuperadminDevicesTab() {
       const response = await apiRequest('GET', '/api/superadmin/brands');
       const data = await response.json();
       console.log("Geladene Marken:", data);
-      return data;
+      console.log("Anzahl Marken:", data?.length || 0);
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -1445,13 +1446,40 @@ export default function ResponsiveSuperadminDevicesTab() {
                       <SelectValue placeholder="Bitte wählen Sie einen Hersteller" />
                     </SelectTrigger>
                     <SelectContent>
-                      {brandsData
-                        .filter((brand: Brand) => !selectedModelDeviceType || brand.deviceTypeName === selectedModelDeviceType)
-                        .map((brand: Brand) => (
-                        <SelectItem key={brand.id} value={brand.id.toString()}>
-                          {brand.name} ({brand.deviceTypeName})
-                        </SelectItem>
-                      ))}
+                      {(() => {
+                        console.log("BrandsData im Bulk-Import:", brandsData);
+                        console.log("Ausgewählter Gerätetyp:", selectedModelDeviceType);
+                        
+                        if (!brandsData || brandsData.length === 0) {
+                          return (
+                            <SelectItem value="" disabled>
+                              Keine Hersteller verfügbar
+                            </SelectItem>
+                          );
+                        }
+                        
+                        const filteredBrands = brandsData.filter((brand: Brand) => {
+                          if (!selectedModelDeviceType) return true;
+                          console.log(`Brand ${brand.name}: deviceTypeName=${brand.deviceTypeName}, selected=${selectedModelDeviceType}`);
+                          return brand.deviceTypeName === selectedModelDeviceType;
+                        });
+                        
+                        console.log("Gefilterte Marken:", filteredBrands);
+                        
+                        if (filteredBrands.length === 0) {
+                          return (
+                            <SelectItem value="" disabled>
+                              Keine Hersteller für {selectedModelDeviceType} gefunden
+                            </SelectItem>
+                          );
+                        }
+                        
+                        return filteredBrands.map((brand: Brand) => (
+                          <SelectItem key={brand.id} value={brand.id.toString()}>
+                            {brand.name} ({brand.deviceTypeName || 'Unbekannt'})
+                          </SelectItem>
+                        ));
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>
