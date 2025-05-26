@@ -59,42 +59,174 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   }, [open]); // Nur bei Änderungen an 'open' ausführen
   
-  // Generiert ein PDF zum Herunterladen
+  // Generiert ein PDF zum Herunterladen - optimierte Version für kleinere Dateigröße
   const generatePDF = async () => {
-    if (!document.getElementById('a4-print-content')) return;
+    if (!repair || !customer) return;
     
     setIsGeneratingPdf(true);
     
     try {
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
-      
-      const canvas = await html2canvas(content, {
-        scale: 2, // Höhere Qualität
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
-      
-      // A4 Format: 210 x 297 mm
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
-      const margin = 10; // 1cm Ränder in mm
-      const pageWidth = 210; // A4 Breite in mm
-      const pageHeight = 297; // A4 Höhe in mm
-      const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Margin und Layout-Konstanten
+      const margin = 20;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const contentWidth = pageWidth - (2 * margin);
+      let yPos = margin;
       
-      // Bild mit Rändern platzieren
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      // Schriftarten definieren
+      pdf.setFont('helvetica');
       
-      // PDF speichern mit aussagekräftigem Dateinamen
+      // Header mit Firmenlogo-Platzhalter und Firmendaten
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
+      pdf.text(businessName, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const address = `${businessSettings?.streetAddress || 'Amerlingstraße 19'}`;
+      const cityLine = `${businessSettings?.zipCode || '1060'} ${businessSettings?.city || 'Wien'}`;
+      const phone = businessSettings?.phone || '+4314103511';
+      const email = businessSettings?.email || 'office@macandphonedoc.at';
+      
+      pdf.text(address, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(cityLine, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(phone, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(email, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 20;
+      
+      // Kundeninformationen
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Kundeninformationen', margin, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(16);
+      pdf.text(`${customer.firstName} ${customer.lastName}`, margin, yPos);
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      if (customer.address) {
+        pdf.text(customer.address, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.zipCode || customer.city) {
+        pdf.text(`${customer.zipCode || ''} ${customer.city || ''}`, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.phone) {
+        pdf.text(`Tel: ${customer.phone}`, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.email) {
+        pdf.text(`E-Mail: ${customer.email}`, margin, yPos);
+        yPos += 6;
+      }
+      yPos += 15;
+      
+      // Dokumententitel
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Reparaturauftrag', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+      
+      pdf.setFontSize(18);
+      pdf.text(repair.orderCode, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 20;
+      
+      // Geräteinformationen in einem Rahmen
+      const boxY = yPos;
+      pdf.rect(margin, boxY, contentWidth, 30);
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('HERSTELLER', margin + 5, yPos);
+      pdf.text('MODELL', margin + 70, yPos);
+      pdf.text('SCHADEN / FEHLER', margin + 135, yPos);
+      yPos += 8;
+      
+      pdf.setFont('helvetica', 'normal');
+      const brand = repair.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : repair.manufacturer || '-';
+      pdf.text(brand, margin + 5, yPos);
+      pdf.text(repair.model || '-', margin + 70, yPos);
+      
+      // Fehler-Text kann lang sein, daher splitten
+      const issueText = repair.issue || 'Keine Angabe';
+      const issueLines = pdf.splitTextToSize(issueText, 55);
+      pdf.text(issueLines, margin + 135, yPos);
+      yPos += Math.max(8, issueLines.length * 5);
+      
+      yPos = boxY + 35; // Nach dem Rahmen
+      
+      // Reparaturkosten
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REPARATURKOSTEN', margin + 5, yPos);
+      yPos += 6;
+      pdf.setFont('helvetica', 'normal');
+      const cost = repair.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : 'Auf Anfrage';
+      pdf.text(cost, margin + 5, yPos);
+      yPos += 20;
+      
+      // Reparaturbedingungen
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Reparaturbedingungen', margin, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const conditions = [
+        '1. Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.',
+        '2. Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.',
+        '3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.',
+        '4. Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.',
+        '5. Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.',
+        '6. Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.'
+      ];
+      
+      conditions.forEach(condition => {
+        const lines = pdf.splitTextToSize(condition, contentWidth);
+        pdf.text(lines, margin, yPos);
+        yPos += lines.length * 5 + 3;
+      });
+      
+      // Unterschriftsbereiche
+      yPos += 20;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Reparaturauftrag erteilt', margin + 30, yPos, { align: 'center' });
+      pdf.text('Gerät abgeholt', pageWidth - margin - 30, yPos, { align: 'center' });
+      
+      yPos += 20;
+      // Unterschriftslinien
+      pdf.line(margin, yPos, margin + 80, yPos);
+      pdf.line(pageWidth - margin - 80, yPos, pageWidth - margin, yPos);
+      
+      yPos += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text(`${customer.firstName} ${customer.lastName}`, margin + 40, yPos, { align: 'center' });
+      pdf.text(`${customer.firstName} ${customer.lastName}`, pageWidth - margin - 40, yPos, { align: 'center' });
+      
+      yPos += 5;
+      const currentDate = formatDate(new Date().toISOString());
+      pdf.text(currentDate, margin + 40, yPos, { align: 'center' });
+      if (repair.pickupSignedAt) {
+        pdf.text(formatDate(repair.pickupSignedAt), pageWidth - margin - 40, yPos, { align: 'center' });
+      }
+      
+      // PDF speichern
       const orderCode = repair?.orderCode || repairId;
       const customerName = customer ? `${customer.lastName}_${customer.firstName}` : 'Kunde';
       const fileName = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
@@ -103,7 +235,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       toast({
         title: "PDF erstellt",
-        description: "Das PDF wurde erfolgreich erstellt und heruntergeladen.",
+        description: "Das PDF wurde erfolgreich erstellt und heruntergeladen (optimierte Größe).",
       });
     } catch (err) {
       console.error('Fehler beim Generieren des PDFs:', err);
@@ -117,7 +249,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
 
-  // PDF per E-Mail senden (gleiche Generierung wie Download, aber E-Mail-Versand)
+  // PDF per E-Mail senden - optimierte Version für kleinere Dateigröße
   const handleSendPdfEmail = async () => {
     if (!customer?.email) {
       toast({
@@ -128,35 +260,141 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       return;
     }
     
+    if (!repair || !customer) return;
+    
     setIsGeneratingPdf(true);
     
     try {
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
-      
-      // Optimierte PDF-Generierung für E-Mail (kleinere Größe)
-      const canvas = await html2canvas(content, {
-        scale: 1, // Reduzierte Qualität für kleinere Dateigröße
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-      });
-      
-      // PDF mit JPEG-Komprimierung für E-Mail
-      const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG mit 70% Qualität
+      // Gleiche optimierte PDF-Generierung wie für Download - direkt als Text ohne Bilder
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
+      // Margin und Layout-Konstanten
+      const margin = 20;
       const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      const imgWidth = pageWidth - (2 * margin);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const contentWidth = pageWidth - (2 * margin);
+      let yPos = margin;
       
-      pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+      // Schriftarten definieren
+      pdf.setFont('helvetica');
+      
+      // Header mit Firmendaten
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
+      pdf.text(businessName, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const address = `${businessSettings?.streetAddress || 'Amerlingstraße 19'}`;
+      const cityLine = `${businessSettings?.zipCode || '1060'} ${businessSettings?.city || 'Wien'}`;
+      const phone = businessSettings?.phone || '+4314103511';
+      const email = businessSettings?.email || 'office@macandphonedoc.at';
+      
+      pdf.text(address, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(cityLine, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(phone, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 6;
+      pdf.text(email, pageWidth - margin, yPos, { align: 'right' });
+      yPos += 20;
+      
+      // Kundeninformationen
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Kundeninformationen', margin, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(16);
+      pdf.text(`${customer.firstName} ${customer.lastName}`, margin, yPos);
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      if (customer.address) {
+        pdf.text(customer.address, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.zipCode || customer.city) {
+        pdf.text(`${customer.zipCode || ''} ${customer.city || ''}`, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.phone) {
+        pdf.text(`Tel: ${customer.phone}`, margin, yPos);
+        yPos += 6;
+      }
+      if (customer.email) {
+        pdf.text(`E-Mail: ${customer.email}`, margin, yPos);
+        yPos += 6;
+      }
+      yPos += 15;
+      
+      // Dokumententitel
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Reparaturauftrag', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 15;
+      
+      pdf.setFontSize(18);
+      pdf.text(repair.orderCode, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 20;
+      
+      // Geräteinformationen in einem Rahmen
+      const boxY = yPos;
+      pdf.rect(margin, boxY, contentWidth, 30);
+      yPos += 8;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('HERSTELLER', margin + 5, yPos);
+      pdf.text('MODELL', margin + 70, yPos);
+      pdf.text('SCHADEN / FEHLER', margin + 135, yPos);
+      yPos += 8;
+      
+      pdf.setFont('helvetica', 'normal');
+      const brand = repair.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : repair.manufacturer || '-';
+      pdf.text(brand, margin + 5, yPos);
+      pdf.text(repair.model || '-', margin + 70, yPos);
+      
+      const issueText = repair.issue || 'Keine Angabe';
+      const issueLines = pdf.splitTextToSize(issueText, 55);
+      pdf.text(issueLines, margin + 135, yPos);
+      yPos = boxY + 35;
+      
+      // Reparaturkosten
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REPARATURKOSTEN', margin + 5, yPos);
+      yPos += 6;
+      pdf.setFont('helvetica', 'normal');
+      const cost = repair.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : 'Auf Anfrage';
+      pdf.text(cost, margin + 5, yPos);
+      yPos += 20;
+      
+      // Reparaturbedingungen (verkürzt für E-Mail)
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Reparaturbedingungen', margin, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const conditions = [
+        '1. Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen.',
+        '2. Für etwaige Datenverluste wird keine Haftung übernommen.',
+        '3. Die Gewährleistung beträgt 6 Monate auf die ausgeführten Arbeiten.',
+        '4. Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert werden.'
+      ];
+      
+      conditions.forEach(condition => {
+        const lines = pdf.splitTextToSize(condition, contentWidth);
+        pdf.text(lines, margin, yPos);
+        yPos += lines.length * 5 + 3;
+      });
       
       // PDF als Base64 für E-Mail-Versand
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
