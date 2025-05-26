@@ -887,6 +887,8 @@ export default function ResponsiveSuperadminDevicesTab() {
   };
 
   const handleBulkImportModels = () => {
+    console.log("Bulk-Import-Versuch:", { bulkModelText, selectedBrandForBulk });
+    
     if (!bulkModelText || !selectedBrandForBulk) {
       toast({
         title: "Fehler",
@@ -896,11 +898,13 @@ export default function ResponsiveSuperadminDevicesTab() {
       return;
     }
     
-    const models = bulkModelText.split('\n');
+    const models = bulkModelText.split('\n').filter(model => model.trim() !== '');
+    
+    console.log("Bereite Import vor:", { models, brandId: selectedBrandForBulk });
     
     importBulkModelsMutation.mutate({
       models,
-      brandId: selectedBrandForBulk
+      brandId: parseInt(selectedBrandForBulk.toString()) // Sicherstellen dass es eine Zahl ist
     });
   };
 
