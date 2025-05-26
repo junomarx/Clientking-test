@@ -198,60 +198,38 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
               </h3>
               {settings && Object.keys(settings).length > 0 ? (
                 <div className="space-y-3">
-                  {settings.businessName && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
-                      <p className="text-sm">{settings.businessName}</p>
-                    </div>
-                  )}
-                  {settings.ownerFirstName && settings.ownerLastName && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Inhaber:</span>
-                      <p className="text-sm">{settings.ownerFirstName} {settings.ownerLastName}</p>
-                    </div>
-                  )}
-                  {settings.streetAddress && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Adresse:</span>
-                      <p className="text-sm">{settings.streetAddress}</p>
-                    </div>
-                  )}
-                  {(settings.zipCode || settings.city) && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
-                      <p className="text-sm">{settings.zipCode} {settings.city}</p>
-                    </div>
-                  )}
-                  {settings.country && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Land:</span>
-                      <p className="text-sm">{settings.country}</p>
-                    </div>
-                  )}
-                  {settings.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{settings.phone}</span>
-                    </div>
-                  )}
-                  {settings.taxId && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">UID:</span>
-                      <p className="text-sm">{settings.taxId}</p>
-                    </div>
-                  )}
-                  {settings.vatNumber && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">USt-IdNr:</span>
-                      <p className="text-sm">{settings.vatNumber}</p>
-                    </div>
-                  )}
-                  {settings.website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{settings.website}</span>
-                    </div>
-                  )}
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
+                    <p className="text-sm">{settings.businessName || "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Inhaber:</span>
+                    <p className="text-sm">{settings.ownerFirstName && settings.ownerLastName ? `${settings.ownerFirstName} ${settings.ownerLastName}` : "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Adresse:</span>
+                    <p className="text-sm">{settings.streetAddress || "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
+                    <p className="text-sm">{settings.zipCode || settings.city ? `${settings.zipCode || ""} ${settings.city || ""}`.trim() : "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Land:</span>
+                    <p className="text-sm">{settings.country || "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Telefon:</span>
+                    <p className="text-sm">{settings.phone || "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">UID:</span>
+                    <p className="text-sm">{settings.taxId || "Nicht angegeben"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Website:</span>
+                    <p className="text-sm">{settings.website || "Nicht angegeben"}</p>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>
