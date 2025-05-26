@@ -26,7 +26,7 @@ export function generatePrintHtml({
 }: PrintTemplateProps): string {
   // Formatiere die Datumsangaben - verwende Erstellungsdatum statt aktuelles Datum
   const createdDate = estimate.created_at ? new Date(estimate.created_at) : new Date();
-  const todayFormatted = format(createdDate, 'dd.MM.yyyy', { locale: de });
+  const createdDateFormatted = format(createdDate, 'dd.MM.yyyy', { locale: de });
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
     : format(new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de });
@@ -240,7 +240,7 @@ export function generatePrintHtml({
             ${businessZipCity}<br>
             ${businessPhone}<br>
             ${businessEmail}</p>
-            <p style="margin-top: 12px;">Datum: ${todayFormatted}<br>
+            <p style="margin-top: 12px;">Datum: ${createdDateFormatted}<br>
             Gültig bis: ${validUntilFormatted}</p>
           </div>
         </div>
