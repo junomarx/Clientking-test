@@ -41,9 +41,12 @@ export async function exportAsPdf(content: string, filename: string = 'Kostenvor
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
     tempDiv.style.top = '0';
-    tempDiv.style.width = '210mm'; // A4 Breite
+    tempDiv.style.width = '794px'; // A4 Breite in Pixel (210mm)
     tempDiv.style.backgroundColor = '#ffffff';
-    tempDiv.style.padding = '20mm';
+    tempDiv.style.padding = '40px'; // Padding in Pixel
+    tempDiv.style.fontFamily = 'Arial, sans-serif';
+    tempDiv.style.fontSize = '14px';
+    tempDiv.style.lineHeight = '1.4';
     
     document.body.appendChild(tempDiv);
     
@@ -52,13 +55,15 @@ export async function exportAsPdf(content: string, filename: string = 'Kostenvor
     
     // Erstelle Canvas vom HTML-Inhalt
     const canvas = await html2canvas(tempDiv, {
-      scale: 1.2, // Optimierte Skalierung für gute Qualität und kleine Dateigröße
+      scale: 2.0, // Höhere Skalierung für bessere A4-Größe
       logging: false,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       imageTimeout: 10000,
       removeContainer: true,
+      width: 794, // A4 Breite
+      height: 1123, // A4 Höhe
     });
     
     // Entferne temporäres Element
