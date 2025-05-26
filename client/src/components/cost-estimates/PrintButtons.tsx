@@ -47,22 +47,40 @@ export function PrintButtons({
   };
   
   // Generiere den PDF-Export
-  const handleExportPdf = () => {
-    const printContent = generatePrintHtml({
-      estimate,
-      customer,
-      items,
-      businessName,
-      businessAddress,
-      businessZipCity,
-      businessPhone,
-      businessEmail,
-      logoUrl
-    });
-    
-    // Dateiname generieren
-    const filename = `Kostenvoranschlag_${estimate.reference_number || 'Export'}`;
-    exportAsPdf(printContent, filename);
+  const handleExportPdf = async () => {
+    try {
+      toast({
+        title: "PDF wird erstellt...",
+        description: "Bitte warten Sie einen Moment.",
+      });
+      
+      const printContent = generatePrintHtml({
+        estimate,
+        customer,
+        items,
+        businessName,
+        businessAddress,
+        businessZipCity,
+        businessPhone,
+        businessEmail,
+        logoUrl
+      });
+      
+      // Dateiname generieren
+      const filename = `Kostenvoranschlag_${estimate.reference_number || 'Export'}`;
+      await exportAsPdf(printContent, filename);
+      
+      toast({
+        title: "PDF erstellt",
+        description: "Das PDF wurde erfolgreich heruntergeladen.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Das PDF konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Per E-Mail senden
