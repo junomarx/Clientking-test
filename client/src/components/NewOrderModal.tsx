@@ -809,9 +809,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Log der ausgewählten Geräte-Daten
       console.log("GlobalDeviceSelector ausgewählte Werte:");
-      console.log("- deviceType:", data.deviceType, "ID:", selectedDeviceTypeId);
-      console.log("- brand:", data.brand, "ID:", selectedBrandId);
-      console.log("- model:", data.model, "ID:", selectedModelId);
+      console.log("- deviceType:", data.deviceType);
+      console.log("- brand:", data.brand);
+      console.log("- model:", data.model);
       
       const repairData = {
         customerId: customerId,

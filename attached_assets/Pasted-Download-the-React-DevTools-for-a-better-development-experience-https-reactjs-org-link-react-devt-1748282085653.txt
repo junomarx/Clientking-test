@@ -1,0 +1,67 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx?t=1748281741475:428 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+Home.tsx:77 Event für Neuer Auftrag empfangen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx?t=1748281741475:471 Found 2 matching customers for Hasan Bugi
+NewOrderModal.tsx?t=1748281741475:400 Unbekannter Gerätetyp für Fehlerkatalog: s, verwende "smartphone"
+NewOrderModal.tsx?t=1748281741475:403 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx?t=1748281741475:418 Gerätetyp geändert, lade Fehlerkatalog neu
+NewOrderModal.tsx?t=1748281741475:400 Unbekannter Gerätetyp für Fehlerkatalog: sm, verwende "smartphone"
+NewOrderModal.tsx?t=1748281741475:403 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx?t=1748281741475:418 Gerätetyp geändert, lade Fehlerkatalog neu
+2NewOrderModal.tsx?t=1748281741475:407 1 Fehlereinträge für smartphone geladen
+NewOrderModal.tsx?t=1748281741475:425 1 Fehlereinträge für Dropdown geladen
+NewOrderModal.tsx?t=1748281741475:403 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx?t=1748281741475:418 Gerätetyp geändert, lade Fehlerkatalog neu
+NewOrderModal.tsx?t=1748281741475:428 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+NewOrderModal.tsx?t=1748281741475:407 1 Fehlereinträge für smartphone geladen
+NewOrderModal.tsx?t=1748281741475:425 1 Fehlereinträge für Dropdown geladen
+NewOrderModal.tsx?t=1748281741475:621 GlobalDeviceSelector ausgewählte Werte:
+NewOrderModal.tsx?t=1748281741475:651 Error submitting form: ReferenceError: selectedDeviceTypeId is not defined
+    at onSubmit (NewOrderModal.tsx?t=1748281741475:622:60)
+    at chunk-4BFJKWC4.js?v=4a762815:1465:15
+onSubmit @ NewOrderModal.tsx?t=1748281741475:651
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx?t=1748281741475:403 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx?t=1748281741475:407 1 Fehlereinträge für smartphone geladen
+NewOrderModal.tsx?t=1748281741475:403 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx:523 Gerätetyp geändert, lade Fehlerkatalog neu
+NewOrderModal.tsx:503 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx:533 1 Fehlereinträge für Dropdown geladen
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+NewOrderModal.tsx?t=1748281741475:407 1 Fehlereinträge für smartphone geladen
+NewOrderModal.tsx:507 1 Fehlereinträge für smartphone geladen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+Home.tsx:77 Event für Neuer Auftrag empfangen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+NewOrderModal.tsx:609 Found 2 matching customers for Hasan Bugi
+NewOrderModal.tsx:503 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx:523 Gerätetyp geändert, lade Fehlerkatalog neu
+NewOrderModal.tsx:503 Lade Fehlereinträge für Gerätetyp: smartphone
+NewOrderModal.tsx:533 1 Fehlereinträge für Dropdown geladen
+2NewOrderModal.tsx:507 1 Fehlereinträge für smartphone geladen
+NewOrderModal.tsx:811 GlobalDeviceSelector ausgewählte Werte:
+NewOrderModal.tsx:860 Error submitting form: ReferenceError: selectedDeviceTypeId is not defined
+    at onSubmit (NewOrderModal.tsx:812:60)
+    at chunk-4BFJKWC4.js?v=4a762815:1465:15
+onSubmit @ NewOrderModal.tsx:860
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
