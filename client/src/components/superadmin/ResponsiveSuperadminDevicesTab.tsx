@@ -1938,7 +1938,7 @@ export default function ResponsiveSuperadminDevicesTab() {
       <CsvImportExportModal
         isOpen={showCsvModal}
         onClose={() => setShowCsvModal(false)}
-        type={activeTab === "types" ? "deviceTypes" : activeTab === "brands" ? "brands" : "models"}
+        type={activeTab === "types" ? "deviceType" : activeTab === "brands" ? "brand" : "model"}
         data={
           activeTab === "types" ? deviceTypesList :
           activeTab === "brands" ? brandsData :

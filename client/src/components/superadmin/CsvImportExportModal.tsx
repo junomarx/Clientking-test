@@ -108,11 +108,11 @@ export default function CsvImportExportModal({
                 Exportiert alle gefilterten {getTypeName()} als CSV-Datei.
               </p>
               <p className="text-sm font-medium">
-                {filteredData.length} Einträge verfügbar
+                {filteredData?.length || 0} Einträge verfügbar
               </p>
               <Button
                 onClick={handleExport}
-                disabled={filteredData.length === 0}
+                disabled={!filteredData || filteredData.length === 0}
                 variant="outline"
                 className="w-full"
               >
