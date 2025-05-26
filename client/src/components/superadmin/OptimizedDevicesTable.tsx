@@ -51,6 +51,7 @@ interface OptimizedDevicesTableProps {
   onDeviceTypeChange?: (value: string) => void;
   selectedBrand?: number | null;
   onBrandChange?: (value: number) => void;
+  onCsvImportExport?: () => void;
 }
 
 export default function OptimizedDevicesTable({
@@ -68,7 +69,8 @@ export default function OptimizedDevicesTable({
   selectedDeviceType,
   onDeviceTypeChange,
   selectedBrand,
-  onBrandChange
+  onBrandChange,
+  onCsvImportExport
 }: OptimizedDevicesTableProps) {
   // Prüfe, ob wir auf einem mobilen Gerät sind
   const isMobile = useMediaQuery("(max-width: 640px)");
@@ -152,6 +154,18 @@ export default function OptimizedDevicesTable({
               ))}
             </SelectContent>
           </Select>
+        )}
+        
+        {/* CSV Import/Export Button */}
+        {onCsvImportExport && (
+          <Button 
+            onClick={onCsvImportExport}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            CSV Import/Export
+          </Button>
         )}
       </div>
     );

@@ -1099,6 +1099,7 @@ export default function ResponsiveSuperadminDevicesTab() {
             onBulkDelete={handleDeviceTypeBulkDelete}
             searchTerm={deviceTypeSearchTerm}
             onSearchChange={setDeviceTypeSearchTerm}
+            onCsvImportExport={() => setShowCsvModal(true)}
           />
           
           {/* Dialog für neuen Gerätetyp */}
@@ -1909,6 +1910,21 @@ export default function ResponsiveSuperadminDevicesTab() {
           </Dialog>
         </div>
       )}
+
+      {/* CSV Import/Export Modal */}
+      <CsvImportExportModal
+        open={showCsvModal}
+        onOpenChange={setShowCsvModal}
+        type={activeTab === 'types' ? 'deviceType' : activeTab === 'brands' ? 'brand' : 'model'}
+        filteredData={
+          activeTab === 'types' ? filteredDeviceTypes :
+          activeTab === 'brands' ? filteredBrands :
+          filteredModels
+        }
+        onImport={() => {}} // TODO: Implement CSV import
+        onExport={() => {}} // TODO: Implement CSV export
+        isImporting={false}
+      />
     </div>
   );
 }
