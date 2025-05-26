@@ -3453,8 +3453,8 @@ export class DatabaseStorage implements IStorage {
             const statusKey = repair.status || 'Unbekannt';
             byStatus[statusKey] = (byStatus[statusKey] || 0) + cost;
             
-            // Nach Monat gruppieren
-            const month = relevantDate.getMonth();
+            // Nach Monat gruppieren (1-12 statt 0-11)
+            const month = relevantDate.getMonth() + 1;
             byMonth[month] = (byMonth[month] || 0) + cost;
           }
         }
