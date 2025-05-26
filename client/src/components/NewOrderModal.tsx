@@ -824,11 +824,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         estimatedCost: data.estimatedCost === "" ? null : data.estimatedCost,
         depositAmount: data.depositAmount === "" ? null : data.depositAmount,
         status: data.status || 'eingegangen',
-        notes: data.notes || null,
-        // Neue ID-Felder von der GlobalDeviceSelector
-        deviceTypeId: selectedDeviceTypeId,
-        brandId: selectedBrandId,
-        modelId: selectedModelId
+        notes: data.notes || null
       };
       
       console.log("Sende Reparaturdaten mit Kunden-ID:", repairData.customerId);
