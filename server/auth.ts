@@ -131,6 +131,14 @@ export function setupAuth(app: Express) {
       
       // Überprüfe erforderliche Felder
       if (!ownerFirstName || !ownerLastName || !streetAddress || !zipCode || !city || !country) {
+        console.log("❌ Adressdaten-Validierung fehlgeschlagen:", {
+          ownerFirstName: !!ownerFirstName,
+          ownerLastName: !!ownerLastName,
+          streetAddress: !!streetAddress,
+          zipCode: !!zipCode,
+          city: !!city,
+          country: !!country
+        });
         return res.status(400).json({ 
           message: "Bitte füllen Sie alle Adressdaten aus (Name, Straße, PLZ, Ort, Land)" 
         });
