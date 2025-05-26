@@ -897,29 +897,114 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Geräteinformationen</h3>
                 
-                {/* GlobalDeviceSelector Komponente */}
-                <GlobalDeviceSelector 
-                  onDeviceTypeSelect={(deviceType, deviceTypeId) => {
-                    form.setValue('deviceType', deviceType);
-                    setSelectedDeviceTypeId(deviceTypeId);
-                  }}
-                  onBrandSelect={(brand, brandId) => {
-                    form.setValue('brand', brand);
-                    setSelectedBrandId(brandId);
-                  }}
-                  onModelSelect={(model, modelId) => {
-                    form.setValue('model', model);
-                    setSelectedModelId(modelId);
-                  }}
-                  className="mb-4"
-                />
+                {/* Flexible Geräteeingabe - Auswahl aus globaler Liste ODER freie Eingabe */}
+                <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Gerätedaten eingeben</h4>
+                    <span className="text-sm text-muted-foreground">Aus Liste wählen oder frei eingeben</span>
+                  </div>
+                  
+                  {/* GlobalDeviceSelector für Auswahl aus Liste */}
+                  <GlobalDeviceSelector 
+                    onDeviceTypeSelect={(deviceType, deviceTypeId) => {
+                      form.setValue('deviceType', deviceType);
+                      setSelectedDeviceTypeId(deviceTypeId);
+                    }}
+                    onBrandSelect={(brand, brandId) => {
+                      form.setValue('brand', brand);
+                      setSelectedBrandId(brandId);
+                    }}
+                    onModelSelect={(model, modelId) => {
+                      form.setValue('model', model);
+                      setSelectedModelId(modelId);
+                    }}
+                    className="mb-4"
+                  />
+                  
+                  {/* ODER: Manuelle Eingabe */}
+                  <div className="border-t pt-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Sie können auch direkt eigene Werte eingeben, wenn das Gerät nicht in der Liste verfügbar ist:
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                      <FormField
+                        control={form.control}
+                        name="deviceType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gerätetyp</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="z.B. Smartphone, Tablet..." 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Reset IDs wenn manuell eingegeben wird
+                                  if (e.target.value !== form.watch('deviceType')) {
+                                    setSelectedDeviceTypeId(null);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="brand"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Hersteller</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="z.B. Apple, Samsung..." 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Reset IDs wenn manuell eingegeben wird
+                                  if (e.target.value !== form.watch('brand')) {
+                                    setSelectedBrandId(null);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="model"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Modell</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="z.B. iPhone 15, Galaxy S24..." 
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Reset IDs wenn manuell eingegeben wird
+                                  if (e.target.value !== form.watch('model')) {
+                                    setSelectedModelId(null);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {/* Versteckte Felder für die Formvalidierung */}
-                  <input type="hidden" {...form.register("deviceType")} />
-                  <input type="hidden" {...form.register("brand")} />
+                  {/* Versteckte Felder für Modellserie */}
                   <input type="hidden" {...form.register("modelSeries")} />
-                  <input type="hidden" {...form.register("model")} />
                   
                   <FormField
                     control={form.control}
