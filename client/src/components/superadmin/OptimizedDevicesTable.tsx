@@ -145,7 +145,7 @@ export default function OptimizedDevicesTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Hersteller</SelectItem>
-              {brands.map((brand) => (
+              {brands.filter(brand => !selectedDeviceType || selectedDeviceType === "all" || brand.deviceTypeName === selectedDeviceType).map((brand) => (
                 <SelectItem key={brand.id} value={brand.id.toString()}>
                   {brand.name}
                 </SelectItem>
