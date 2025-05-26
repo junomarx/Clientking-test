@@ -502,6 +502,38 @@ export function registerSuperadminRoutes(app: Express) {
 
         console.log(`Benutzer ${updatedUser.username} erfolgreich aktiviert! Neue Shop-ID: ${updatedUser.shopId}`);
 
+        // Business Settings für neuen Benutzer erstellen (falls noch nicht vorhanden)
+        try {
+          const existingSettings = await storage.getBusinessSettings(userId);
+          if (!existingSettings) {
+            console.log(`Erstelle Business Settings für neuen Benutzer ${updatedUser.username}`);
+            
+            // Vollständige Benutzerdaten für Business Settings abrufen
+            const fullUser = await storage.getUser(userId);
+            if (fullUser) {
+              const businessSettingsData = {
+                businessName: fullUser.businessName || "Mein Handyshop",
+                ownerFirstName: fullUser.firstName || "",
+                ownerLastName: fullUser.lastName || "",
+                streetAddress: fullUser.address || "",
+                city: fullUser.city || "",
+                zipCode: fullUser.zipCode || "",
+                country: "Deutschland",
+                phone: fullUser.phone || "",
+                email: fullUser.email || "",
+                userId: userId,
+                shopId: updatedUser.shopId
+              };
+              
+              await storage.createBusinessSettings(businessSettingsData);
+              console.log(`Business Settings für Benutzer ${updatedUser.username} erfolgreich erstellt`);
+            }
+          }
+        } catch (settingsError) {
+          console.error("Fehler beim Erstellen der Business Settings:", settingsError);
+          // Fehler wird nur geloggt, aber die Aktivierung läuft weiter
+        }
+
         // E-Mail-Benachrichtigung senden
         try {
           console.log(`Sende Aktivierungsbenachrichtigung an Benutzer ${updatedUser.username} (${updatedUser.email})`);
