@@ -1139,6 +1139,48 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // Einzelne Marke erstellen
+  app.post("/api/superadmin/brands", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { name, deviceTypeId } = req.body;
+      
+      if (!name || !deviceTypeId) {
+        return res.status(400).json({ message: "Name und Gerätetyp-ID sind erforderlich" });
+      }
+
+      // Prüfen, ob die Marke bereits existiert
+      const existingBrand = await db.select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.name, name),
+            eq(userBrands.deviceTypeId, deviceTypeId)
+          )
+        );
+
+      if (existingBrand.length > 0) {
+        return res.status(400).json({ message: "Marke existiert bereits für diesen Gerätetyp" });
+      }
+
+      // Neue Marke erstellen
+      const [newBrand] = await db.insert(userBrands)
+        .values({
+          name,
+          deviceTypeId,
+          userId: 10, // Superadmin-ID
+          shopId: 1682, // Feste Shop-ID für globale Gerätedaten
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      res.status(201).json(newBrand);
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Marke:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen der Marke" });
+    }
+  });
+
   app.get("/api/superadmin/brands", isSuperadmin, async (req: Request, res: Response) => {
     try {
       // Marken mit Gerätetyp-Namen abrufen
