@@ -311,7 +311,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       isLoadingCustomer,
       error: error?.message,
       repairData: repair ? { id: repair.id, orderCode: repair.orderCode, customerId: repair.customerId } : null,
-      customerData: customer ? { id: customer.id, firstName: customer.firstName, lastName: customer.lastName } : null
+      customerData: customer ? { 
+        id: customer.id, 
+        firstName: customer.firstName, 
+        lastName: customer.lastName,
+        address: customer.address,
+        zipCode: customer.zipCode,
+        city: customer.city,
+        phone: customer.phone,
+        email: customer.email
+      } : null
     });
     
     // Wenn alle Daten geladen sind, auf druckbereit setzen
