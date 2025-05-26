@@ -265,7 +265,9 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         businessPhone: settings?.phone || "",
                         businessEmail: settings?.email || "",
                         businessLogo: settings?.logoImage || "",
+                        orderCode: repair?.orderCode || repair?.id?.toString() || "",
                         repairId: repair?.orderCode || repair?.id?.toString() || "",
+                        creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE'),
                         currentDate: new Date().toLocaleDateString('de-DE'),
                         customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
                         customerPhone: customer?.phone || "",
@@ -276,10 +278,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         deviceIssue: repair?.issue ? repair.issue : '',
                         deviceImei: repair?.serialNumber || "",
                         
-                        // Preis-Platzhalter
+                        // Preis-Platzhalter mit korrekten Namen aus der Template
                         estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
                         finalPrice: "",
                         preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        
+                        // Unterschriften
+                        customerSignature: repair?.dropoffSignature || "",
+                        secondSignature: repair?.pickupSignature || "",
+                        completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
                         
                         // Zusätzliche Platzhalter für Kompatibilität
                         logoUrl: settings?.logoImage || ""
