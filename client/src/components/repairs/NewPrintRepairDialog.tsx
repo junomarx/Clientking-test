@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -61,13 +63,16 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     }
   }, [open, settings?.receiptWidth]);
 
-  // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair | null>({
+  // Lade Reparaturdaten direkt mit der userId aus dem localStorage
+  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
         const userId = localStorage.getItem('userId');
+        
+        // Verwende sowohl Credentials als auch den X-User-ID Header für robustere Authentifizierung
         const response = await fetch(`/api/repairs/${repairId}`, {
           credentials: 'include',
           headers: {
@@ -76,8 +81,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         });
         
         if (!response.ok) {
-          console.error(`Fehler beim Laden der Reparaturdaten: Status ${response.status}`);
-          return null;
+          console.error(`Fehler beim Laden der Reparatur ${repairId}: Status ${response.status}`);
+          throw new Error("Reparaturauftrag konnte nicht geladen werden");
         }
         return response.json();
       } catch (err) {
@@ -86,16 +91,19 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repairId && open,
+    // Deaktiviere Cache um sicherzustellen, dass wir immer frische Daten haben
     staleTime: 0,
   });
 
-  // Lade Kundendaten
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer | null>({
+  // Lade Kundendaten wenn Reparatur geladen ist
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
     queryKey: ['/api/customers', repair?.customerId],
     queryFn: async () => {
       if (!repair?.customerId) return null;
       try {
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
         const userId = localStorage.getItem('userId');
+        
         const response = await fetch(`/api/customers/${repair.customerId}`, {
           credentials: 'include',
           headers: {
@@ -104,8 +112,8 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
         });
         
         if (!response.ok) {
-          console.error(`Fehler beim Laden der Kundendaten: Status ${response.status}`);
-          return null;
+          console.error(`Fehler beim Laden des Kunden ${repair.customerId}: Status ${response.status}`);
+          throw new Error("Kundendaten konnten nicht geladen werden");
         }
         return response.json();
       } catch (err) {
@@ -122,7 +130,9 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     queryKey: ['/api/business-settings'],
     queryFn: async () => {
       try {
+        // Benutzer-ID aus localStorage holen für zusätzliche Authentifizierung
         const userId = localStorage.getItem('userId');
+        
         const response = await fetch('/api/business-settings', {
           credentials: 'include',
           headers: {
@@ -146,7 +156,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
 
-  // Funktion zum direkten Drucken über Browser-Druckfenster
+  // Funktion zum Erstellen eines PDFs für den Kassenbon
   const handlePrint = async () => {
     // Bei Vorschau nicht drucken
     if (isPreview) return;
@@ -159,143 +169,142 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     setIsGeneratingPdf(true);
     
     try {
-      // Erstelle ein neues Fenster für den Druck
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        throw new Error('Pop-up-Blocker verhindert das Öffnen des Druckfensters');
+      // Erstelle ein unsichtbares Element außerhalb des Viewports zum Rendern
+      const fullContent = document.getElementById('receipt-for-pdf');
+      if (!fullContent) {
+        throw new Error('Receipt element not found');
       }
       
-      // Hole den Inhalt des Bons
-      const receiptContent = document.getElementById('receipt-for-pdf');
-      if (!receiptContent) {
-        throw new Error('Bon-Inhalt nicht gefunden');
-      }
+      // Clone den Inhalt in ein neues, unsichtbares Element
+      const clonedContent = fullContent.cloneNode(true) as HTMLElement;
+      clonedContent.style.position = 'absolute';
+      clonedContent.style.left = '-9999px';
+      clonedContent.style.top = '-9999px';
+      clonedContent.style.width = fullContent.style.width; // Beibehalten der Breite
+      clonedContent.style.maxHeight = 'none'; // Keine Höhengrenze
+      clonedContent.style.overflow = 'visible';
+      document.body.appendChild(clonedContent);
       
-      // Bestimme die Bon-Breite
-      const bonWidthMM = settings?.receiptWidth === '58mm' ? 58 : 80;
-      
-      // Erstelle HTML für das Druckfenster mit optimierten Druckstilen
-      const printHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Kassenbon</title>
-          <style>
-            @page {
-              size: ${bonWidthMM}mm auto;
-              margin: 2mm;
-            }
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Courier New', monospace;
-              font-size: 9pt;
-              line-height: 1.2;
-              width: ${bonWidthMM}mm;
-              margin: 0;
-              padding: 0;
-              background: white;
-            }
-            
-            .receipt-content {
-              width: 100%;
-              padding: 2mm;
-            }
-            
-            /* Verstecke alle anderen Elemente beim Drucken */
-            @media print {
-              body * {
-                visibility: hidden;
-              }
-              
-              .receipt-content, .receipt-content * {
-                visibility: visible;
-              }
-              
-              .receipt-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt-content">
-            ${receiptContent.innerHTML}
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.close();
-              }, 500);
-            }
-          </script>
-        </body>
-        </html>
-      `;
-      
-      // Schreibe HTML in das neue Fenster
-      printWindow.document.write(printHTML);
-      printWindow.document.close();
-      
-      toast({
-        title: "Druckfenster geöffnet",
-        description: "Das Druckfenster wird automatisch geöffnet.",
+      // Erfasse den vollständigen Inhalt
+      const canvas = await html2canvas(clonedContent, {
+        scale: 2, // Höhere Qualität
+        logging: true,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 2000, // Timeout für Bildladung erhöhen
       });
       
-      // Dialog schließen
-      onClose();
+      // Entferne das temporäre Element nach dem Rendern
+      document.body.removeChild(clonedContent);
       
-    } catch (error) {
-      console.error('Fehler beim Drucken:', error);
+      // Berechne das Seitenverhältnis für PDF
+      // Für Bon-Format, verwenden wir ein schmales Format
+      const bonWidthMM = settings?.receiptWidth === '58mm' ? 58 : 80;
+      
+      // PDF mit Bon-Maßen erstellen
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [bonWidthMM, (canvas.height * bonWidthMM) / canvas.width],
+      });
+      
+      // Bildgröße berechnen, um im Bon-Format zu passen
+      const imgWidth = bonWidthMM;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Direktes Drucken wird über die print()-Methode des geöffneten Fensters realisiert
+      // PDF im Browser öffnen
+      const pdfOutput = pdf.output('dataurlstring');
+      
+      // Verwenden eines Blob-URLs für das PDF, um Content-Type korrekt zu setzen
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // PDF direkt in einem neuen Tab öffnen
+      const printWindow = window.open(blobUrl, "_blank");
+      
+      if (printWindow) {
+        // Warte kurz und öffne dann den Druckdialog
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000); // Längere Verzögerung für das Laden des PDFs
+        
+        // Dialog schließen nach erfolgreicher PDF-Erstellung
+        onClose();
+      }
+      
+      if (printWindow) {
+        toast({
+          title: "Druckdialog wird geöffnet",
+          description: "Der Druckdialog wird automatisch im Browser geöffnet.",
+        });
+      } else {
+        toast({
+          title: "Drucken fehlgeschlagen",
+          description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Fehler beim Erstellen des PDFs:', err);
       toast({
-        title: "Druckfehler",
-        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Drucken",
-        variant: "destructive",
+        title: "Fehler",
+        description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
+        variant: "destructive"
       });
     } finally {
       setIsGeneratingPdf(false);
     }
   };
 
-  // Template-Variablen vorbereiten
+  if (!open) return null;
+
+  // Erstelle Template-Variablen für die Vorlage
   const templateVariables = {
+    // Standard-Platzhalter
     businessName: businessSettings?.businessName || "Handyshop Verwaltung",
     businessAddress: `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`,
     businessPhone: businessSettings?.phone || "",
     businessEmail: businessSettings?.email || "",
     businessLogo: businessSettings?.logoImage || "",
-    repairId: repair?.orderCode || repair?.id?.toString() || "",
-    currentDate: new Date().toLocaleDateString('de-DE'),
-    customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
-    customerPhone: customer?.phone || "",
-    customerEmail: customer?.email || "",
-    deviceType: repair?.deviceType || "",
-    deviceBrand: repair?.brand || "",
-    deviceModel: repair?.model || "",
-    deviceIssue: repair?.issue || "",
-    estimatedCost: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-    preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
     businessSlogan: businessSettings?.companySlogan || "",
     vatNumber: businessSettings?.vatNumber || "",
     websiteUrl: businessSettings?.website || "",
+    
+    // Reparatur-Platzhalter
+    repairId: repair?.orderCode || `#${repair?.id}`,
+    orderCode: repair?.orderCode || `#${repair?.id}`,
+    currentDate: repair?.createdAt ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    creationDate: repair?.createdAt ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+    completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
+    
+    // Kunden-Platzhalter
+    customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+    customerPhone: customer?.phone || "",
+    customerEmail: customer?.email || "",
+    customerSignature: repair?.dropoffSignature || "",
+    secondSignature: repair?.pickupSignature || "",
+    
+    // Geräte-Platzhalter
+    deviceType: repair?.deviceType || "",
+    deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+    deviceModel: repair?.model || "",
+    deviceIssue: repair?.issue ? repair.issue : '',
+    deviceImei: "", // IMEI ist derzeit kein Teil des Repair-Objekts
+    
+    // Preis-Platzhalter
+    preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+    finalPrice: "", // finalPrice ist derzeit kein Teil des Repair-Objekts
+    
+    // Zusätzliche Platzhalter für Kompatibilität
     logoUrl: businessSettings?.logoImage || "",
-    additionalNotes: repair?.notes || "",
-    deviceSerial: repair?.serialNumber || "",
-    deviceImei: repair?.serialNumber || "",
-    estimatedCompletionDate: repair?.completionDate ? 
-      format(new Date(repair.completionDate), 'dd.MM.yyyy', { locale: de }) : ""
+    dropoffSignature: repair?.dropoffSignature || "",
+    pickupSignature: repair?.pickupSignature || "",
+    pickupDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""
   };
-
-  if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -324,80 +333,90 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     <BonReceipt58mm 
                       firmenlogo={businessSettings?.logoImage || undefined}
                       firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={`${businessSettings?.streetAddress || ""}`}
+                      firmenadresse={businessSettings?.streetAddress || ""}
                       firmenplz={businessSettings?.zipCode || ""}
                       firmenort={businessSettings?.city || ""}
                       firmentelefon={businessSettings?.phone || ""}
-                      auftragsnummer={repair?.orderCode || repair?.id?.toString() || ""}
-                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE')}
-                      kundenname={customer ? `${customer.firstName} ${customer.lastName}` : ""}
-                      kundentelefon={customer?.phone || ""}
-                      kundenemail={customer?.email || ""}
-                      hersteller={repair?.brand || ""}
-                      modell={repair?.model || ""}
-                      problem={repair?.issue || ""}
-                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
-                      imei={repair?.serialNumber || ""}
-                      signatur_dropoff={repair?.dropoffSignature || ""}
-                      signatur_pickup={repair?.pickupSignature || ""}
-                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                      kundentelefon={customer?.phone || undefined}
+                      kundenemail={customer?.email || undefined}
+                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                      modell={repair?.model || undefined}
+                      problem={repair?.issue ? repair.issue : ''}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                      signatur_dropoff={repair?.dropoffSignature || undefined}
+                      signatur_pickup={repair?.pickupSignature || undefined}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
                     />
                   ) : (
                     <BonReceipt80mm 
                       firmenlogo={businessSettings?.logoImage || undefined}
                       firmenname={businessSettings?.businessName || "Handyshop Verwaltung"}
-                      firmenadresse={`${businessSettings?.streetAddress || ""}`}
+                      firmenadresse={businessSettings?.streetAddress || ""}
                       firmenplz={businessSettings?.zipCode || ""}
                       firmenort={businessSettings?.city || ""}
                       firmentelefon={businessSettings?.phone || ""}
-                      auftragsnummer={repair?.orderCode || repair?.id?.toString() || ""}
-                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE')}
-                      kundenname={customer ? `${customer.firstName} ${customer.lastName}` : ""}
-                      kundentelefon={customer?.phone || ""}
-                      kundenemail={customer?.email || ""}
-                      hersteller={repair?.brand || ""}
-                      modell={repair?.model || ""}
-                      problem={repair?.issue || ""}
-                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
-                      imei={repair?.serialNumber || ""}
-                      signatur_dropoff={repair?.dropoffSignature || ""}
-                      signatur_pickup={repair?.pickupSignature || ""}
-                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      auftragsnummer={repair?.orderCode || `#${repair?.id}`}
+                      datum_dropoff={repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : ""}
+                      kundenname={`${customer?.firstName || ""} ${customer?.lastName || ""}`}
+                      kundentelefon={customer?.phone || undefined}
+                      kundenemail={customer?.email || undefined}
+                      hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
+                      modell={repair?.model || undefined}
+                      problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
+                      preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : undefined}
+                      signatur_dropoff={repair?.dropoffSignature || undefined}
+                      signatur_pickup={repair?.pickupSignature || undefined}
+                      datum_pickup={repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : undefined}
                     />
                   )
                 )}
               </div>
             </div>
             
-            <DialogFooter className="gap-2">
-              {!isPreview && (
-                <>
-                  <Button
-                    onClick={loadPrintTemplate}
+            <DialogFooter className="flex justify-between mt-4">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  {isPreview ? "Schließen" : "Abbrechen"}
+                </Button>
+                {!isPreview && (
+                  <Button 
                     variant="outline"
+                    onClick={loadPrintTemplate}
+                    className="gap-1 text-xs"
                     disabled={isLoadingTemplate}
-                    className="flex items-center gap-2"
+                    title="Aktuellste Druckvorlage laden"
                   >
-                    <RefreshCw className={`h-4 w-4 ${isLoadingTemplate ? 'animate-spin' : ''}`} />
-                    Vorlage aktualisieren
-                  </Button>
-                  <Button
-                    onClick={handlePrint}
-                    disabled={isGeneratingPdf}
-                    className="flex items-center gap-2"
-                  >
-                    {isGeneratingPdf ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    {isLoadingTemplate ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      <Printer className="h-4 w-4" />
+                      <RefreshCw className="h-3 w-3" />
                     )}
-                    {isGeneratingPdf ? "Druckvorbereitung..." : "Bon drucken"}
+                    Vorlage neu laden
                   </Button>
-                </>
+                )}
+              </div>
+              {!isPreview && (
+                <Button 
+                  onClick={handlePrint} 
+                  className="gap-2"
+                  disabled={isGeneratingPdf}
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Druckvorschau wird erstellt...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="h-4 w-4" />
+                      Drucken
+                    </>
+                  )}
+                </Button>
               )}
-              <Button onClick={onClose} variant="outline">
-                Schließen
-              </Button>
             </DialogFooter>
           </>
         )}

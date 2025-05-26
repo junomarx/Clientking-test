@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -9,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { Repair, Customer } from '@shared/schema';
+import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -34,14 +36,23 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   const [templateContent, setTemplateContent] = useState<string | null>(null);
 
   // Aktuelle Druckvorlage laden basierend auf der gewählten Breite
-  const loadPrintTemplate = async () => {
+  const fetchPrintTemplate = async () => {
     setIsLoadingTemplate(true);
     try {
       const templateType = settings?.receiptWidth === '58mm' ? 'receipt_58mm' : 'receipt_80mm';
-      const content = await fetchLatestPrintTemplate(templateType);
-      if (content) {
-        setTemplateContent(content);
+      const response = await fetch(`/api/print-templates/${templateType}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fehler beim Laden der Druckvorlage: ${response.status}`);
       }
+      
+      const template = await response.json();
+      console.log(`Druckvorlage vom Typ '${templateType}' geladen:`, template.name);
+      setTemplateContent(template.content);
     } catch (error) {
       console.error('Fehler beim Laden der Druckvorlage:', error);
       toast({
@@ -57,28 +68,22 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   // Beim Öffnen des Dialogs die aktuelle Vorlage laden
   useEffect(() => {
     if (open) {
-      loadPrintTemplate();
+      fetchPrintTemplate();
     }
   }, [open, settings?.receiptWidth]);
 
   // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair | null>({
+  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
-        const userId = localStorage.getItem('userId');
         const response = await fetch(`/api/repairs/${repairId}`, {
-          credentials: 'include',
           headers: {
-            'X-User-ID': userId || '',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           }
         });
-        
-        if (!response.ok) {
-          console.error(`Fehler beim Laden der Reparaturdaten: Status ${response.status}`);
-          return null;
-        }
+        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
@@ -86,27 +91,20 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repairId && open,
-    staleTime: 0,
   });
 
-  // Lade Kundendaten
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer | null>({
+  // Lade Kundendaten wenn Reparatur geladen ist
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
     queryKey: ['/api/customers', repair?.customerId],
     queryFn: async () => {
       if (!repair?.customerId) return null;
       try {
-        const userId = localStorage.getItem('userId');
         const response = await fetch(`/api/customers/${repair.customerId}`, {
-          credentials: 'include',
           headers: {
-            'X-User-ID': userId || '',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           }
         });
-        
-        if (!response.ok) {
-          console.error(`Fehler beim Laden der Kundendaten: Status ${response.status}`);
-          return null;
-        }
+        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Kundendaten:", err);
@@ -114,12 +112,15 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repair?.customerId && open,
-    staleTime: 0,
   });
 
-  const isLoading = isLoadingRepair || isLoadingCustomer;
+  // Wir verwenden nur die Unternehmenseinstellungen aus dem useBusinessSettings Hook
+  // und entfernen die redundante Abfrage, die zu inkonsistenten Daten führt
+  const isLoadingSettings = false; // Wird bereits in useBusinessSettings geladen
 
-  // Funktion zum direkten Drucken über Browser-Druckfenster
+  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
+
+  // Funktion zum Erstellen eines PDFs für den Kassenbon
   const handlePrint = async () => {
     // Bei Vorschau nicht drucken
     if (isPreview) return;
@@ -132,107 +133,90 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     setIsGeneratingPdf(true);
     
     try {
-      // Erstelle ein neues Fenster für den Druck
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        throw new Error('Pop-up-Blocker verhindert das Öffnen des Druckfensters');
+      // Erstelle ein unsichtbares Element außerhalb des Viewports zum Rendern
+      const fullContent = document.getElementById('receipt-for-pdf');
+      if (!fullContent) {
+        throw new Error('Receipt element not found');
       }
       
-      // Hole den Inhalt des Bons
-      const receiptContent = document.getElementById('receipt-for-pdf');
-      if (!receiptContent) {
-        throw new Error('Bon-Inhalt nicht gefunden');
-      }
+      // Clone den Inhalt in ein neues, unsichtbares Element
+      const clonedContent = fullContent.cloneNode(true) as HTMLElement;
+      clonedContent.style.position = 'absolute';
+      clonedContent.style.left = '-9999px';
+      clonedContent.style.top = '-9999px';
+      clonedContent.style.width = fullContent.style.width; // Beibehalten der Breite
+      clonedContent.style.maxHeight = 'none'; // Keine Höhengrenze
+      clonedContent.style.overflow = 'visible';
+      document.body.appendChild(clonedContent);
       
-      // Bestimme die Bon-Breite
-      const bonWidthMM = settings?.receiptWidth === '58mm' ? 58 : 80;
-      
-      // Erstelle HTML für das Druckfenster mit optimierten Druckstilen
-      const printHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Kassenbon</title>
-          <style>
-            @page {
-              size: ${bonWidthMM}mm auto;
-              margin: 2mm;
-            }
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Courier New', monospace;
-              font-size: 9pt;
-              line-height: 1.2;
-              width: ${bonWidthMM}mm;
-              margin: 0;
-              padding: 0;
-              background: white;
-            }
-            
-            .receipt-content {
-              width: 100%;
-              padding: 2mm;
-            }
-            
-            /* Verstecke alle anderen Elemente beim Drucken */
-            @media print {
-              body * {
-                visibility: hidden;
-              }
-              
-              .receipt-content, .receipt-content * {
-                visibility: visible;
-              }
-              
-              .receipt-content {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="receipt-content">
-            ${receiptContent.innerHTML}
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                window.close();
-              }, 500);
-            }
-          </script>
-        </body>
-        </html>
-      `;
-      
-      // Schreibe HTML in das neue Fenster
-      printWindow.document.write(printHTML);
-      printWindow.document.close();
-      
-      toast({
-        title: "Druckfenster geöffnet",
-        description: "Das Druckfenster wird automatisch geöffnet.",
+      // Erfasse den vollständigen Inhalt
+      const canvas = await html2canvas(clonedContent, {
+        scale: 2, // Höhere Qualität
+        logging: true,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 2000, // Timeout für Bildladung erhöhen
       });
       
-      // Dialog schließen
-      onClose();
+      // Entferne das temporäre Element nach dem Rendern
+      document.body.removeChild(clonedContent);
       
-    } catch (error) {
-      console.error('Fehler beim Drucken:', error);
+      // Berechne das Seitenverhältnis für PDF
+      // Für Bon-Format, verwenden wir ein schmales Format
+      const bonWidthMM = settings?.receiptWidth === '58mm' ? 58 : 80;
+      
+      // PDF mit Bon-Maßen erstellen
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [bonWidthMM, (canvas.height * bonWidthMM) / canvas.width],
+      });
+      
+      // Bildgröße berechnen, um im Bon-Format zu passen
+      const imgWidth = bonWidthMM;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+      
+      // Direktes Drucken wird über die print()-Methode des geöffneten Fensters realisiert
+      // PDF im Browser öffnen
+      const pdfOutput = pdf.output('dataurlstring');
+      
+      // Verwenden eines Blob-URLs für das PDF, um Content-Type korrekt zu setzen
+      const blob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // PDF direkt in einem neuen Tab öffnen
+      const printWindow = window.open(blobUrl, "_blank");
+      
+      if (printWindow) {
+        // Warte kurz und öffne dann den Druckdialog
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000); // Längere Verzögerung für das Laden des PDFs
+        
+        // Dialog schließen nach erfolgreicher PDF-Erstellung
+        onClose();
+      }
+      
+      if (printWindow) {
+        toast({
+          title: "Druckdialog wird geöffnet",
+          description: "Der Druckdialog wird automatisch im Browser geöffnet.",
+        });
+      } else {
+        toast({
+          title: "Drucken fehlgeschlagen",
+          description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error('Fehler beim Erstellen des PDFs:', err);
       toast({
-        title: "Druckfehler",
-        description: error instanceof Error ? error.message : "Unbekannter Fehler beim Drucken",
-        variant: "destructive",
+        title: "Fehler",
+        description: "Beim Erstellen des PDFs ist ein Fehler aufgetreten.",
+        variant: "destructive"
       });
     } finally {
       setIsGeneratingPdf(false);
@@ -256,52 +240,48 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
           <>
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
               <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
+                {/* Wenn eine Vorlage geladen wurde, diese verwenden */}
                 {templateContent ? (
                   <div 
                     dangerouslySetInnerHTML={{
-                      __html: (() => {
-                        const variables = {
-                          businessName: settings?.businessName || "Handyshop Verwaltung",
-                          businessAddress: `${settings?.streetAddress || ""}, ${settings?.zipCode || ""} ${settings?.city || ""}`,
-                          businessPhone: settings?.phone || "",
-                          businessEmail: settings?.email || "",
-                          businessLogo: settings?.logoImage || "",
-                          orderCode: repair?.orderCode || repair?.id?.toString() || "",
-                          repairId: repair?.orderCode || repair?.id?.toString() || "",
-                          creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : new Date().toLocaleDateString('de-DE'),
-                          currentDate: new Date().toLocaleDateString('de-DE'),
-                          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
-                          customerPhone: customer?.phone || "",
-                          customerEmail: customer?.email || "",
-                          deviceType: repair?.deviceType || "",
-                          deviceBrand: repair?.brand || "",
-                          deviceModel: repair?.model || "",
-                          deviceIssue: repair?.issue ? repair.issue : '',
-                          deviceImei: repair?.serialNumber || "",
-                          
-                          // Preis-Platzhalter mit korrekten Namen aus der Template
-                          estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-                          finalPrice: "",
-                          preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-                          estimatedCost: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
-                          
-                          // Unterschriften
-                          customerSignature: repair?.dropoffSignature || "",
-                          secondSignature: repair?.pickupSignature || "",
-                          completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
-                          
-                          // Zusätzliche Platzhalter für Kompatibilität
-                          logoUrl: settings?.logoImage || ""
-                        };
+                      __html: applyTemplateVariables(templateContent, {
+                        businessName: settings?.businessName || "Handyshop Verwaltung",
+                        businessAddress: `${settings?.streetAddress || ""}, ${settings?.zipCode || ""} ${settings?.city || ""}`,
+                        businessPhone: settings?.phone || "",
+                        businessEmail: settings?.email || "",
+                        businessLogo: settings?.logoImage || "",
+                        businessSlogan: settings?.companySlogan || "",
+                        vatNumber: settings?.vatNumber || "",
+                        websiteUrl: settings?.website || "",
                         
-                        // Debug-Output für die Template-Variablen
-                        console.log('Template-Variablen für Bondruck:', variables);
-                        console.log('Repair estimatedCost:', repair?.estimatedCost);
-                        console.log('Repair object:', repair);
-                        console.log('Generated estimatedPrice:', variables.estimatedPrice);
+                        // Reparatur-Platzhalter
+                        repairId: repair?.orderCode || `#${repair?.id}`,
+                        orderCode: repair?.orderCode || `#${repair?.id}`,
+                        currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
+                        completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
                         
-                        return applyTemplateVariables(templateContent, variables);
-                      })()
+                        // Kunden-Platzhalter
+                        customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+                        customerPhone: customer?.phone || "",
+                        customerEmail: customer?.email || "",
+                        customerSignature: repair?.dropoffSignature || "",
+                        secondSignature: repair?.pickupSignature || "",
+                        
+                        // Geräte-Platzhalter
+                        deviceType: repair?.deviceType || "",
+                        deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+                        deviceModel: repair?.model || "",
+                        deviceIssue: repair?.issue ? repair.issue : '',
+                        deviceImei: repair?.serialNumber || "",
+                        
+                        // Preis-Platzhalter
+                        estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        finalPrice: "",
+                        
+                        // Zusätzliche Platzhalter für Kompatibilität
+                        logoUrl: settings?.logoImage || ""
+                      })
                     }}
                   />
                 ) : settings?.receiptWidth === '58mm' ? (
@@ -341,7 +321,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     kundenemail={customer?.email || ""}
                     hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
                     modell={repair?.model || ""}
-                    problem={repair?.issue ? repair.issue : ''}
+                    problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
                     imei={repair?.serialNumber || ""}
                     signatur_dropoff={repair?.dropoffSignature || ""}
@@ -352,35 +332,47 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
               </div>
             </div>
             
-            <DialogFooter className="gap-2">
-              {!isPreview && (
-                <>
-                  <Button
-                    onClick={loadPrintTemplate}
+            <DialogFooter className="flex justify-between mt-4">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onClose}>
+                  {isPreview ? "Schließen" : "Abbrechen"}
+                </Button>
+                {!isPreview && (
+                  <Button 
                     variant="outline"
+                    onClick={fetchPrintTemplate}
+                    className="gap-1 text-xs"
                     disabled={isLoadingTemplate}
-                    className="flex items-center gap-2"
+                    title="Aktuellste Druckvorlage laden"
                   >
-                    <RefreshCw className={`h-4 w-4 ${isLoadingTemplate ? 'animate-spin' : ''}`} />
-                    Vorlage aktualisieren
-                  </Button>
-                  <Button
-                    onClick={handlePrint}
-                    disabled={isGeneratingPdf}
-                    className="flex items-center gap-2"
-                  >
-                    {isGeneratingPdf ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    {isLoadingTemplate ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      <Printer className="h-4 w-4" />
+                      <RefreshCw className="h-3 w-3" />
                     )}
-                    {isGeneratingPdf ? "Druckvorbereitung..." : "Bon drucken"}
+                    Vorlage neu laden
                   </Button>
-                </>
+                )}
+              </div>
+              {!isPreview && (
+                <Button 
+                  onClick={handlePrint} 
+                  className="gap-2"
+                  disabled={isGeneratingPdf}
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Druckvorschau wird erstellt...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="h-4 w-4" />
+                      Drucken
+                    </>
+                  )}
+                </Button>
               )}
-              <Button onClick={onClose} variant="outline">
-                Schließen
-              </Button>
             </DialogFooter>
           </>
         )}
