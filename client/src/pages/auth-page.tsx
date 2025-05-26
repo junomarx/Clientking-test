@@ -43,6 +43,7 @@ const registerSchema = z.object({
   website: z.string().optional(),
   companyPhone: z.string().min(2, "Telefonnummer ist erforderlich."),
   email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein."),
+  taxId: z.string().min(2, "UID-Nummer ist erforderlich."),
   
   // Login-Daten
   username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen haben."),
@@ -105,6 +106,7 @@ export default function AuthPage() {
       website: "",
       companyPhone: "",
       email: "",
+      taxId: "",
       username: "",
       password: "",
       confirmPassword: "",
@@ -153,14 +155,21 @@ export default function AuthPage() {
     
     // Formular zurücksetzen
     registerForm.reset({
+      ownerFirstName: "",
+      ownerLastName: "",
+      streetAddress: "",
+      houseNumber: "",
+      zipCode: "",
+      city: "",
+      country: "Österreich",
+      companyName: "",
+      website: "",
+      companyPhone: "",
+      email: "",
+      taxId: "",
       username: "",
       password: "",
       confirmPassword: "",
-      email: "",
-      companyName: "",
-      companyAddress: "",
-      companyVatNumber: "",
-      companyPhone: "",
     });
     
     // Zum Login-Tab wechseln
@@ -560,14 +569,14 @@ export default function AuthPage() {
                           <FormItem>
                             <FormControl>
                               <Input 
-                                placeholder="UID-Nummer (z.B. ATU12345678)" 
+                                placeholder="UID-Nummer (z.B. ATU12345678) *" 
                                 {...field} 
                                 className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
                               />
                             </FormControl>
                             <FormMessage />
                             <p className="text-xs text-gray-500 mt-1 italic">
-                              Optional: Ihre Umsatzsteuer-Identifikationsnummer für Geschäftskunden
+                              Ihre Umsatzsteuer-Identifikationsnummer für Geschäftskunden
                             </p>
                           </FormItem>
                         )}

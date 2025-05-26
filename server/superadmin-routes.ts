@@ -513,15 +513,16 @@ export function registerSuperadminRoutes(app: Express) {
             if (fullUser) {
               const businessSettingsData = {
                 businessName: fullUser.companyName || "Mein Handyshop",
-                ownerFirstName: fullUser.username || "",
-                ownerLastName: "",
-                streetAddress: fullUser.companyAddress || "",
+                ownerFirstName: fullUser.ownerFirstName || "",
+                ownerLastName: fullUser.ownerLastName || "",
+                streetAddress: `${fullUser.streetAddress || ""} ${fullUser.houseNumber || ""}`.trim(),
                 city: fullUser.city || "",
                 zipCode: fullUser.zipCode || "",
                 country: fullUser.country || "Deutschland",
                 phone: fullUser.companyPhone || fullUser.phone || "",
                 email: fullUser.companyEmail || fullUser.email || "",
                 taxId: fullUser.taxId || "",
+                website: fullUser.website || "",
                 userId: userId,
                 shopId: updatedUser.shopId
               };
