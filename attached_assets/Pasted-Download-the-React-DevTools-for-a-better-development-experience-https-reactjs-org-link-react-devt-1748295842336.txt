@@ -1,0 +1,59 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:90 Keine userId im localStorage gefunden, Sitzung wird überprüft...
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+App.tsx:109 Keine aktive Sitzung gefunden, Benutzer ist nicht angemeldet
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+api/register:1 
+        
+        
+       Failed to load resource: the server responded with a status of 400 (Bad Request)
+auth-page.tsx:141 📤 Frontend sendet Registrierungsdaten: {ownerFirstName: 'Hasan', ownerLastName: 'Bugi', streetAddress: 'Rößler 1', zipCode: '1230', city: 'Wien', …}
+auth-page.tsx:142 📊 Feld-Check: {ownerFirstName: true, ownerLastName: true, streetAddress: true, zipCode: true, city: true, …}
+queryClient.ts:40 
+        
+        
+       POST https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/api/register 400 (Bad Request)
+apiRequest @ queryClient.ts:40
+mutationFn @ use-auth.tsx:105
+fn @ @tanstack_react-query.js?v=4a762815:1189
+run @ @tanstack_react-query.js?v=4a762815:494
+start @ @tanstack_react-query.js?v=4a762815:536
+execute @ @tanstack_react-query.js?v=4a762815:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=4a762815:2630
+(anonymous) @ @tanstack_react-query.js?v=4a762815:3295
+onRegisterSubmit @ auth-page.tsx:156
+(anonymous) @ chunk-4BFJKWC4.js?v=4a762815:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=4a762815:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=4a762815:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=4a762815:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=4a762815:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=4a762815:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=4a762815:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=4a762815:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=4a762815:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=4a762815:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=4a762815:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=4a762815:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=4a762815:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=4a762815:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=4a762815:5449
+auth-page.tsx:163 ❌ Registrierung fehlgeschlagen: Error: Bitte füllen Sie alle Adressdaten aus (Name, Straße, Hausnummer, PLZ, Ort, Land)
+    at apiRequest (queryClient.ts:84:13)
+    at async Object.mutationFn (use-auth.tsx:105:19)

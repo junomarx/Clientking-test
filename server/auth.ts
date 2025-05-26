@@ -129,6 +129,10 @@ export function setupAuth(app: Express) {
         passwordPresent: !!password
       });
       
+      console.log("🎯 Alle Felder vollständig:", {
+        allFieldsPresent: !!(ownerFirstName && ownerLastName && streetAddress && zipCode && city && country && companyName && companyPhone && email && taxId && username && password)
+      });
+      
       // Überprüfe erforderliche Felder
       if (!ownerFirstName || !ownerLastName || !streetAddress || !zipCode || !city || !country) {
         console.log("❌ Adressdaten-Validierung fehlgeschlagen:", {
