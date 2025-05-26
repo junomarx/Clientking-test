@@ -519,7 +519,8 @@ export function registerSuperadminRoutes(app: Express) {
           if (template) {
             // Bereite Variablen für die E-Mail-Vorlage vor
             const variables = {
-              benutzername: updatedUser.username,
+              vorname: updatedUser.firstName || "Liebe(r) Kunde(in)",
+              nachname: updatedUser.lastName || "",
               loginLink: process.env.PUBLIC_URL || "https://yourapp.replit.app"
             };
             

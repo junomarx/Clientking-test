@@ -59,7 +59,7 @@ export const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
           <h2 style="color: #4f46e5;">Ihr Konto wurde freigeschaltet!</h2>
         </div>
         
-        <p>Sehr geehrte(r) {{benutzername}},</p>
+        <p>Sehr geehrte(r) {{vorname}} {{nachname}},</p>
         
         <p>wir freuen uns, Ihnen mitteilen zu können, dass Ihr Konto bei der Handyshop Verwaltung nun freigeschaltet wurde.</p>
         
@@ -80,7 +80,7 @@ export const defaultAppEmailTemplates: DefaultEmailTemplate[] = [
         </div>
       </div>
     `,
-    variables: ["benutzername", "loginLink"],
+    variables: ["vorname", "nachname", "loginLink"],
     type: 'app'
   },
   {
