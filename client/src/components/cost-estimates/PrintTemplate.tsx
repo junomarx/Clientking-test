@@ -24,9 +24,12 @@ export function generatePrintHtml({
   businessEmail,
   logoUrl
 }: PrintTemplateProps): string {
-  // Formatiere die Datumsangaben - verwende Erstellungsdatum statt aktuelles Datum
+  // Formatiere die Datumsangaben - exakt wie in CostEstimatesTab
   const createdDate = estimate.created_at ? new Date(estimate.created_at) : new Date();
-  const createdDateFormatted = format(createdDate, 'dd.MM.yyyy', { locale: de });
+  const isValidDate = !isNaN(createdDate.getTime());
+  const createdDateFormatted = isValidDate ? 
+    `${createdDate.getDate().toString().padStart(2, '0')}.${(createdDate.getMonth() + 1).toString().padStart(2, '0')}.${createdDate.getFullYear()}` 
+    : "Unbekanntes Datum";
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
     : format(new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de });
