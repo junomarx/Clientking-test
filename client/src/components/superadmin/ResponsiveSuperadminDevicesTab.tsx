@@ -119,7 +119,7 @@ export default function ResponsiveSuperadminDevicesTab() {
   });
   const [selectedErrorCatalogIds, setSelectedErrorCatalogIds] = useState<number[]>([]);
   
-  // CSV Modal State
+  // State für CSV Modal
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [isBulkImportErrorCatalogOpen, setIsBulkImportErrorCatalogOpen] = useState(false);
   const [bulkErrorCatalogText, setBulkErrorCatalogText] = useState("");
@@ -1198,7 +1198,13 @@ export default function ResponsiveSuperadminDevicesTab() {
               >
                 <FileUp className="mr-2 h-4 w-4" /> Bulk Import
               </Button>
-              <DeviceDataCSVImportExport type={"brands"} />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowCsvModal(true)}
+              >
+                <Upload className="mr-2 h-4 w-4" /> CSV Import/Export
+              </Button>
             </div>
           </div>
           
@@ -1922,6 +1928,21 @@ export default function ResponsiveSuperadminDevicesTab() {
           activeTab === 'types' ? filteredDeviceTypes :
           activeTab === 'brands' ? filteredBrands :
           filteredModels
+        }
+        onImport={() => {}} // TODO: Implement CSV import
+        onExport={() => {}} // TODO: Implement CSV export
+        isImporting={false}
+      />
+      
+      {/* CSV Import/Export Modal */}
+      <CsvImportExportModal
+        isOpen={showCsvModal}
+        onClose={() => setShowCsvModal(false)}
+        type={activeTab === "types" ? "deviceTypes" : activeTab === "brands" ? "brands" : "models"}
+        data={
+          activeTab === "types" ? deviceTypesList :
+          activeTab === "brands" ? brandsData :
+          modelsData
         }
         onImport={() => {}} // TODO: Implement CSV import
         onExport={() => {}} // TODO: Implement CSV export
