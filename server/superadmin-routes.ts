@@ -1183,6 +1183,7 @@ export function registerSuperadminRoutes(app: Express) {
         .returning();
 
       console.log(`Marke erfolgreich erstellt:`, newBrand);
+      res.setHeader('Content-Type', 'application/json');
       res.status(201).json(newBrand);
     } catch (error) {
       console.error("Fehler beim Erstellen der Marke:", error);
