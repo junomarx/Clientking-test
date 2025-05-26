@@ -265,6 +265,9 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
                         customerPhone: customer?.phone || "",
                         customerEmail: customer?.email || "",
+                        customerStreetAddress: customer?.address || "",
+                        customerZipCode: customer?.zipCode || "",
+                        customerCity: customer?.city || "",
                         customerSignature: repair?.dropoffSignature || "",
                         secondSignature: repair?.pickupSignature || "",
                         

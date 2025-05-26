@@ -435,8 +435,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               <div className="mb-8">
                 <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
                 <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
-                <p>{customer.street || ''}</p>
+                <p>{customer.address || ''}</p>
                 <p>{customer.zipCode || ''} {customer.city || ''}</p>
+                <p>Tel: {customer.phone || ''}</p>
+                <p>E-Mail: {customer.email || ''}</p>
               </div>
               
               {/* Dokumententitel und Auftragsnummer */}
