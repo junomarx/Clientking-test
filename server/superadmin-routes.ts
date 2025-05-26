@@ -127,10 +127,10 @@ export function registerSuperadminRoutes(app: Express) {
           city: user.city || "",
           country: user.country || "",
           email: user.email || "",
-          phone: user.companyPhone || "",
+          phone: user.companyPhone || user.phone || "",
           taxId: user.taxId || "",
           website: user.website || "",
-          vatNumber: user.companyVatNumber || ""
+          vatNumber: user.vatNumber || ""
         };
         
         console.log(`Registrierungsdaten für inaktiven Benutzer ${user.username} abgerufen`);
