@@ -1216,6 +1216,7 @@ export default function ResponsiveSuperadminDevicesTab() {
             onSearchChange={setBrandSearchTerm}
             selectedDeviceType={selectedBrandDeviceType}
             onDeviceTypeChange={setSelectedBrandDeviceType}
+            onCsvImportExport={() => setShowCsvModal(true)}
           />
           
           {/* Dialog für neue Marke */}
@@ -1375,6 +1376,7 @@ export default function ResponsiveSuperadminDevicesTab() {
             onDeviceTypeChange={setSelectedModelDeviceType}
             selectedBrand={selectedModelsBrandId}
             onBrandChange={setSelectedModelsBrandId}
+            onCsvImportExport={() => setShowCsvModal(true)}
           />
           
           {/* Dialog für neues Modell */}
