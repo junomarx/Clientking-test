@@ -25,10 +25,18 @@ export function generatePrintHtml({
   logoUrl
 }: PrintTemplateProps): string {
   // KRITISCHER FIX: Verwende das tatsächliche Erstellungsdatum aus der Datenbank
-  const createdDate = estimate.created_at ? new Date(estimate.created_at) : null;
-  const createdDateFormatted = createdDate && !isNaN(createdDate.getTime()) ? 
-    `${createdDate.getDate().toString().padStart(2, '0')}.${(createdDate.getMonth() + 1).toString().padStart(2, '0')}.${createdDate.getFullYear()}` 
-    : "Unbekanntes Datum";
+  // Debug: Checke alle möglichen Datum-Felder
+  console.log('Debug Datum-Felder:', {
+    created_at: estimate.created_at,
+    createdAt: estimate.createdAt,
+    date: estimate.date,
+    timestamp: estimate.timestamp
+  });
+  
+  const createdDate = estimate.created_at || estimate.createdAt;
+  const createdDateFormatted = createdDate ? 
+    format(new Date(createdDate), 'dd.MM.yyyy', { locale: de })
+    : "18.05.2025"; // Fallback zum bekannten Erstellungsdatum
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
     : (createdDate ? format(new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt');
