@@ -3576,6 +3576,147 @@ export function registerSuperadminRoutes(app: Express) {
       });
     }
   });
+
+  // Testbenutzer erstellen
+  app.post("/api/superadmin/create-test-user", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const {
+        username,
+        email,
+        password,
+        companyName,
+        ownerFirstName,
+        ownerLastName,
+        streetAddress,
+        zipCode,
+        city,
+        country,
+        companyPhone,
+        taxId,
+        website,
+        isActive
+      } = req.body;
+
+      console.log(`🧪 Superadmin ${req.user?.username} erstellt Testbenutzer: ${username}`);
+
+      // Prüfen, ob Benutzername bereits existiert
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Benutzername bereits vergeben" });
+      }
+
+      // Prüfen, ob E-Mail bereits existiert
+      const [existingEmailUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      
+      if (existingEmailUser) {
+        return res.status(400).json({ message: "E-Mail-Adresse bereits vergeben" });
+      }
+
+      // Shop-ID generieren (wie bei normaler Registrierung)
+      const maxShopIdResult = await db
+        .select({ maxShopId: sql`MAX(shop_id)`.as('maxShopId') })
+        .from(users)
+        .where(sql`shop_id IS NOT NULL`);
+      
+      const maxShopId = (maxShopIdResult[0]?.maxShopId as number) || 0;
+      const newShopId = maxShopId + 1;
+
+      // Benutzer erstellen
+      const user = await storage.createUser({
+        username,
+        password: await hashPassword(password),
+        email,
+        companyName,
+        ownerFirstName,
+        ownerLastName,
+        streetAddress,
+        zipCode,
+        city,
+        country: country || "Österreich",
+        companyPhone,
+        taxId,
+        website: website || "",
+        companyVatNumber: taxId || "",
+        companyAddress: streetAddress || "",
+        companyEmail: email
+      });
+
+      // Aktivierung und Shop-ID separat setzen
+      if (isActive) {
+        await db
+          .update(users)
+          .set({ 
+            isActive: true,
+            shopId: newShopId,
+            pricingPlan: "basic"
+          })
+          .where(eq(users.id, user.id));
+        
+        // User-Objekt aktualisieren
+        user.isActive = true;
+        user.shopId = newShopId;
+        user.pricingPlan = "basic";
+      }
+
+      // Wenn aktiviert: Business Settings und Demo-Paket erstellen
+      if (isActive && user.shopId) {
+        try {
+          // Business Settings erstellen
+          const businessSettingsData = {
+            businessName: companyName || "Test Handyshop",
+            ownerFirstName: ownerFirstName || "",
+            ownerLastName: ownerLastName || "",
+            streetAddress: streetAddress || "",
+            city: city || "",
+            zipCode: zipCode || "",
+            country: country || "Österreich",
+            phone: companyPhone || "",
+            email: email || "",
+            taxId: taxId || "",
+            website: website || "",
+            userId: user.id,
+            shopId: user.shopId
+          };
+          
+          await storage.updateBusinessSettings(businessSettingsData, user.id);
+          console.log(`✅ Business Settings für Testbenutzer ${username} erstellt`);
+
+          // Demo-Paket zuweisen
+          const demoPackageExpiry = new Date();
+          demoPackageExpiry.setDate(demoPackageExpiry.getDate() + 14); // 14 Tage Demo
+
+          await db
+            .update(users)
+            .set({ 
+              trialExpiresAt: demoPackageExpiry,
+              pricingPlan: "demo"
+            })
+            .where(eq(users.id, user.id));
+
+          console.log(`🎁 Demo-Paket für Testbenutzer ${username} aktiviert (läuft ab: ${demoPackageExpiry.toISOString()})`);
+        } catch (settingsError) {
+          console.error("Fehler beim Erstellen der Business Settings für Testbenutzer:", settingsError);
+        }
+      }
+
+      console.log(`✅ Testbenutzer ${username} erfolgreich erstellt (${isActive ? 'aktiv' : 'inaktiv'})`);
+
+      // Passwort aus Antwort entfernen
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.status(201).json({
+        message: "Testbenutzer erfolgreich erstellt",
+        user: userWithoutPassword
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Testbenutzers:", error);
+      res.status(500).json({ message: "Fehler beim Erstellen des Testbenutzers" });
+    }
+  });
   
   // Geschäftseinstellungen eines bestimmten Shops abrufen
   app.get("/api/superadmin/business-settings/:shopId", isSuperadmin, async (req: Request, res: Response) => {

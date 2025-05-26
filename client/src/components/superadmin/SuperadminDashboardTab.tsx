@@ -39,8 +39,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { BadgeCheck, BadgeX } from 'lucide-react';
+import { BadgeCheck, BadgeX, UserPlus } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { CreateTestUserDialog } from './CreateTestUserDialog';
 
 // Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
@@ -130,9 +131,18 @@ export default function SuperadminDashboardTab() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Superadmin Dashboard</h1>
-        <p className="text-sm md:text-base text-muted-foreground">Hier können Sie die globalen Statistiken aller Shops und Benutzer einsehen.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Superadmin Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Hier können Sie die globalen Statistiken aller Shops und Benutzer einsehen.</p>
+        </div>
+        
+        <CreateTestUserDialog>
+          <Button className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Testbenutzer erstellen
+          </Button>
+        </CreateTestUserDialog>
       </div>
 
       <Tabs defaultValue="basic" className="space-y-4">
