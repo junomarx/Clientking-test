@@ -105,7 +105,6 @@ export function setupAuth(app: Express) {
         
         // Adressdaten
         streetAddress,
-        houseNumber,
         zipCode,
         city,
         country,
@@ -115,31 +114,28 @@ export function setupAuth(app: Express) {
         website,
         companyPhone,
         email,
+        taxId,
         
         // Login-Daten
+        username,
         password
       } = req.body;
       
       // Überprüfe erforderliche Felder
-      if (!ownerFirstName || !ownerLastName || !streetAddress || !houseNumber || !zipCode || !city || !country) {
+      if (!ownerFirstName || !ownerLastName || !streetAddress || !zipCode || !city || !country) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle Adressdaten aus (Name, Straße, Hausnummer, PLZ, Ort, Land)" 
+          message: "Bitte füllen Sie alle Adressdaten aus (Name, Straße, PLZ, Ort, Land)" 
         });
       }
       
-      if (!companyName || !companyPhone || !email || !password) {
+      if (!companyName || !companyPhone || !email || !taxId || !username || !password) {
         return res.status(400).json({ 
-          message: "Bitte füllen Sie alle erforderlichen Felder aus (Firma, Telefon, E-Mail, Passwort)" 
+          message: "Bitte füllen Sie alle erforderlichen Felder aus (Firma, Telefon, E-Mail, UID, Benutzername, Passwort)" 
         });
       }
-      
-      // Automatisch Benutzername aus Firmennamen generieren
-      const username = companyName.toLowerCase()
-        .replace(/[^a-z0-9]/g, '') // Nur Buchstaben und Zahlen
-        .substring(0, 20); // Maximal 20 Zeichen
       
       // Vollständige Adresse zusammenstellen
-      const companyAddress = `${streetAddress} ${houseNumber}, ${zipCode} ${city}, ${country}`;
+      const companyAddress = `${streetAddress}, ${zipCode} ${city}, ${country}`;
       
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
@@ -181,10 +177,10 @@ export function setupAuth(app: Express) {
           businessName: companyName,
           ownerFirstName,
           ownerLastName,
-          taxId: "", // Leer lassen für spätere Eingabe
+          taxId: taxId || "", // UID aus Registrierung übernehmen
           vatNumber: "", // Leer lassen für spätere Eingabe
           companySlogan: "", // Leer lassen für optionale Eingabe
-          streetAddress: `${streetAddress} ${houseNumber}`,
+          streetAddress: streetAddress,
           city,
           zipCode,
           country: country || "Österreich",
