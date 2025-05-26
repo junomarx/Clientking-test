@@ -214,8 +214,9 @@ export function setupAuth(app: Express) {
           shopId: user.shopId
         };
 
-        await storage.updateBusinessSettings(businessSettingsData, user.id);
-        console.log(`✅ Geschäftseinstellungen für Benutzer ${username} erstellt`);
+        console.log("🏪 Erstelle Geschäftseinstellungen mit Daten:", JSON.stringify(businessSettingsData, null, 2));
+        const createdSettings = await storage.updateBusinessSettings(businessSettingsData, user.id);
+        console.log(`✅ Geschäftseinstellungen für Benutzer ${username} erstellt mit ID:`, createdSettings.id);
       } catch (businessSettingsError) {
         console.error(`❌ Fehler beim Erstellen der Geschäftseinstellungen für Benutzer ${username}:`, businessSettingsError);
         // Weiter fortfahren, auch wenn Geschäftseinstellungen fehlschlagen

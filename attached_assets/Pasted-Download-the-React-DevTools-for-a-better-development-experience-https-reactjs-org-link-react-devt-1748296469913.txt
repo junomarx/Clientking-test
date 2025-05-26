@@ -1,0 +1,134 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:90 Keine userId im localStorage gefunden, Sitzung wird überprüft...
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+App.tsx:109 Keine aktive Sitzung gefunden, Benutzer ist nicht angemeldet
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:141 📤 Frontend sendet Registrierungsdaten: Object
+auth-page.tsx:142 📊 Feld-Check: Object
+auth-page.tsx:158 ✅ Registrierung erfolgreich!
+auth-page.tsx:120 Login-Versuch mit Benutzer: macnphone
+use-auth.tsx:64 Token saved to localStorage
+use-auth.tsx:70 UserId saved to localStorage: 10
+use-auth.tsx:76 Username saved to localStorage: macnphone
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+api/customers:1 
+        
+        
+       Failed to load resource: the server responded with a status of 403 (Forbidden)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+auth-page.tsx:127 Nach Login: userId im localStorage: 10 username: macnphone
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+SuperadminUsersTab.tsx:383 Lade Geschäftseinstellungen für Benutzer ID: 35
+SuperadminUsersTab.tsx:327 Business settings geladen: null
+2chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+SuperadminUsersTab.tsx:383 Lade Geschäftseinstellungen für Benutzer ID: 35
+SuperadminUsersTab.tsx:327 Business settings geladen: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+api/customers:1 
+        
+        
+       Failed to load resource: the server responded with a status of 403 (Forbidden)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:120 Login-Versuch mit Benutzer: MacDoc
+api/login:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:127 Nach Login: userId im localStorage: null username: null
+auth-page.tsx:129 WARNUNG: userId nicht im localStorage nach Login gefunden!
+(anonymous) @ auth-page.tsx:129
+auth-page.tsx:120 Login-Versuch mit Benutzer: macdoc
+use-auth.tsx:64 Token saved to localStorage
+use-auth.tsx:70 UserId saved to localStorage: 35
+use-auth.tsx:76 Username saved to localStorage: macdoc
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+auth-page.tsx:127 Nach Login: userId im localStorage: 35 username: macdoc
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:120 Login-Versuch mit Benutzer: macnphone
+use-auth.tsx:64 Token saved to localStorage
+use-auth.tsx:70 UserId saved to localStorage: 10
+use-auth.tsx:76 Username saved to localStorage: macnphone
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+api/customers:1 
+        
+        
+       Failed to load resource: the server responded with a status of 403 (Forbidden)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+auth-page.tsx:127 Nach Login: userId im localStorage: 10 username: macnphone
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+ResponsiveSuperadminDevicesTab.tsx:143 Geladene Benutzer-Gerätetypen: Array(5)
+ResponsiveSuperadminDevicesTab.tsx:164 Geladene Modelle: Array(620)
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24 Ultra, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24+, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:153 Geladene Marken: Array(41)
+ResponsiveSuperadminDevicesTab.tsx:154 Anzahl Marken: 41
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Xing, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Tablet, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24 Ultra, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24+, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:133 Geladene Gerätetypen: Array(5)
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Xing, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Tablet, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24 Ultra, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24+, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Xing, DeviceType: Smartphone, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:189 Brand Filter Debug - Brand: Apple, DeviceType: Tablet, Selected: null, TypeMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24 Ultra, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24+, TypeMatches: true, BrandMatches: true, NameMatches: true
+ResponsiveSuperadminDevicesTab.tsx:203 Filter Debug - Model: Galaxy S24, TypeMatches: true, BrandMatches: true, NameMatches: true
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+SuperadminUsersTab.tsx:383 Lade Geschäftseinstellungen für Benutzer ID: 35
+SuperadminUsersTab.tsx:327 Business settings geladen: Object
+ 🔍 UserDetailsDialog Debug: Object
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
