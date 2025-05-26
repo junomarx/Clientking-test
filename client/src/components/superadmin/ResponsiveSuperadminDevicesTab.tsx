@@ -187,6 +187,12 @@ export default function ResponsiveSuperadminDevicesTab() {
     const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
     const typeMatches = !selectedModelDeviceType || model.deviceTypeName === selectedModelDeviceType;
     const brandMatches = !selectedModelsBrandId || selectedModelsBrandId === 0 || model.brandId === selectedModelsBrandId;
+    
+    // Debug-Ausgabe für die ersten paar Modelle
+    if (modelsData.indexOf(model) < 3) {
+      console.log(`Filter Debug - Model: ${model.name}, TypeMatches: ${typeMatches}, BrandMatches: ${brandMatches}, NameMatches: ${nameMatches}`);
+    }
+    
     return nameMatches && typeMatches && brandMatches;
   });
 
