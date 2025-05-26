@@ -280,9 +280,9 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                           deviceImei: repair?.serialNumber || "",
                           
                           // Preis-Platzhalter mit korrekten Namen aus der Template
-                          estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost} €` : "",
+                          estimatedPrice: (repair as any)?.estimated_cost ? `${(repair as any).estimated_cost} €` : "",
                           finalPrice: "",
-                          preis: repair?.estimatedCost ? `${repair.estimatedCost} €` : "",
+                          preis: (repair as any)?.estimated_cost ? `${(repair as any).estimated_cost} €` : "",
                           
                           // Unterschriften
                           customerSignature: repair?.dropoffSignature || "",

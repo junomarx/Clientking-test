@@ -1,0 +1,87 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:312 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 97
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 97
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 97
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 97
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 97
+PrintOptionsManager.tsx:35 Zeige Druckoptionen für Reparatur: 97
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 97 canPrintLabels: null
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19432
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=4a762815:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18718
+workLoop @ chunk-RPCDYKBN.js?v=4a762815:197
+flushWork @ chunk-RPCDYKBN.js?v=4a762815:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4a762815:384
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 97 canPrintLabels: true
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: 97 canPrintLabels: true
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+print-helper.ts:142 Druckvorlage vom Typ receipt_80mm geladen: Standard Bondruck 80mm
+print-helper.ts:146 Vorlage enthält diese Platzhalter: (24) ['{{businessLogo}}', '{{businessName}}', '{{businessAddress}}', '{{businessPhone}}', '{{businessEmail}}', '{{orderCode}}', '{{creationDate}}', '{{customerName}}', '{{customerPhone}}', '{{customerEmail}}', '{{deviceBrand}}', '{{deviceModel}}', '{{deviceImei}}', '{{deviceIssue}}', '{{estimatedPrice}}', '{{finalPrice}}', '{{customerSignature}}', '{{customerName}}', '{{creationDate}}', '{{secondSignature}}', '{{customerName}}', '{{completionDate}}', '{{businessPhone}}', '{{businessEmail}}']
+print-helper.ts:16 Template-Variablen: {businessName: 'Mac and Phone Doc', businessAddress: 'Amerlingstraße 19, 1060 Wien', businessPhone: '069915267416', businessEmail: 'bugi3000@gmail.com', businessLogo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA5AA…1LTA0VDAyOjQ2OjMyKzAwOjAwT21pKAAAAABJRU5ErkJggg==', …}
+print-helper.ts:75 Verarbeite Platzhalter: businessLogo = "data:image/png;base64,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
+print-helper.ts:75 Verarbeite Platzhalter: businessName = "Mac and Phone Doc"
+print-helper.ts:75 Verarbeite Platzhalter: businessAddress = "Amerlingstraße 19, 1060 Wien"
+print-helper.ts:75 Verarbeite Platzhalter: businessPhone = "069915267416"
+print-helper.ts:75 Verarbeite Platzhalter: businessEmail = "bugi3000@gmail.com"
+print-helper.ts:75 Verarbeite Platzhalter: orderCode = "RA-2505-006"
+print-helper.ts:75 Verarbeite Platzhalter: creationDate = "26.5.2025"
+print-helper.ts:75 Verarbeite Platzhalter: customerName = "Hasan Bugi"
+print-helper.ts:75 Verarbeite Platzhalter: customerPhone = "0699567876"
+print-helper.ts:75 Verarbeite Platzhalter: customerEmail = "bugi3000@gmail.com"
+print-helper.ts:75 Verarbeite Platzhalter: deviceBrand = "Apple"
+print-helper.ts:75 Verarbeite Platzhalter: deviceModel = "MacBook Air A2179"
+print-helper.ts:75 Verarbeite Platzhalter: deviceImei = ""
+print-helper.ts:75 Verarbeite Platzhalter: deviceIssue = "Display defekt<br>Akku defekt"
+print-helper.ts:75 Verarbeite Platzhalter: estimatedPrice = ""
+print-helper.ts:75 Verarbeite Platzhalter: finalPrice = ""
+print-helper.ts:75 Verarbeite Platzhalter: customerSignature = ""
+print-helper.ts:75 Verarbeite Platzhalter: customerName = "Hasan Bugi"
+print-helper.ts:75 Verarbeite Platzhalter: creationDate = "26.5.2025"
+print-helper.ts:75 Verarbeite Platzhalter: secondSignature = ""
+print-helper.ts:75 Verarbeite Platzhalter: customerName = "Hasan Bugi"
+print-helper.ts:75 Verarbeite Platzhalter: completionDate = ""
+print-helper.ts:75 Verarbeite Platzhalter: businessPhone = "069915267416"
+print-helper.ts:75 Verarbeite Platzhalter: businessEmail = "bugi3000@gmail.com"
