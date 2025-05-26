@@ -258,6 +258,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     setSelectedDeviceTypeIndex(-1);
     // Lade neue Hersteller für den ausgewählten Gerätetyp
     loadBrands();
+    // Springe zum nächsten Feld (Hersteller)
+    setTimeout(() => {
+      const brandInput = document.querySelector('input[name="brand"]') as HTMLInputElement;
+      if (brandInput) {
+        brandInput.focus();
+      }
+    }, 100);
   };
 
   const selectBrand = (brand: any) => {
@@ -266,6 +273,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     setSelectedBrandIndex(-1);
     // Lade neue Modelle für den ausgewählten Hersteller
     loadModels();
+    // Springe zum nächsten Feld (Modell)
+    setTimeout(() => {
+      const modelInput = document.querySelector('input[name="model"]') as HTMLInputElement;
+      if (modelInput) {
+        modelInput.focus();
+      }
+    }, 100);
   };
 
   const selectModel = (model: any) => {
@@ -275,6 +289,13 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
     setShowModelDropdown(false);
     setSelectedModelIndex(-1);
+    // Springe zum nächsten Feld (Seriennummer)
+    setTimeout(() => {
+      const serialNumberInput = document.querySelector('input[name="serialNumber"]') as HTMLInputElement;
+      if (serialNumberInput) {
+        serialNumberInput.focus();
+      }
+    }, 100);
   };
 
   // Keyboard Navigation
