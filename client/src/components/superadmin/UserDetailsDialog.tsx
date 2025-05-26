@@ -123,6 +123,15 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
   }
 
   const settings = businessSettings || user.businessSettings || {};
+  
+  // Debug: Log die empfangenen Daten
+  console.log('🔍 UserDetailsDialog Debug:', {
+    businessSettings,
+    userBusinessSettings: user.businessSettings,
+    finalSettings: settings,
+    userId: user.id,
+    username: user.username
+  });
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -179,12 +188,12 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
             </div>
 
             {/* Geschäftsinformationen */}
-            {settings && (
-              <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Building className="h-4 w-4 text-green-600" />
-                  Geschäftsinformationen
-                </h3>
+            <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Building className="h-4 w-4 text-green-600" />
+                Geschäftsinformationen
+              </h3>
+              {settings?.businessName ? (
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
@@ -239,8 +248,10 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500">Keine Geschäftsinformationen verfügbar</p>
+              )}
+            </div>
           </div>
         </div>
 
