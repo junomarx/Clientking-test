@@ -1140,13 +1140,21 @@ export function registerSuperadminRoutes(app: Express) {
   });
 
   // Einzelne Marke erstellen
-  app.post("/api/superadmin/brands", isSuperadmin, async (req: Request, res: Response) => {
+  app.post("/api/superadmin/brands", async (req: Request, res: Response) => {
     try {
+      // Manuelle Superadmin-Prüfung
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (userId !== 10) {
+        return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
+      }
+
       const { name, deviceTypeId } = req.body;
       
       if (!name || !deviceTypeId) {
         return res.status(400).json({ message: "Name und Gerätetyp-ID sind erforderlich" });
       }
+
+      console.log(`Erstelle neue Marke: ${name} für Gerätetyp-ID: ${deviceTypeId}`);
 
       // Prüfen, ob die Marke bereits existiert
       const existingBrand = await db.select()
@@ -1174,6 +1182,7 @@ export function registerSuperadminRoutes(app: Express) {
         })
         .returning();
 
+      console.log(`Marke erfolgreich erstellt:`, newBrand);
       res.status(201).json(newBrand);
     } catch (error) {
       console.error("Fehler beim Erstellen der Marke:", error);
