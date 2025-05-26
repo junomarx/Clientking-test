@@ -1242,7 +1242,7 @@ export function registerSuperadminRoutes(app: Express) {
                   name: modelName,
                   brandId: brandId,
                   userId: superadminUserId,
-                  shopId: 0, // Globale Modelle gehören zu keinem Shop (0 = global)
+                  shopId: 1682, // macnphone's Shop-ID
                   createdAt: new Date(),
                   updatedAt: new Date(),
                   modelSeriesId: null // Explizit null setzen, um das Problem mit der NOT NULL Constraint zu vermeiden
