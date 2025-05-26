@@ -1,6 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -11,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
-import { Repair, Customer, BusinessSettings } from '@shared/schema';
+import { Repair, Customer } from '@shared/schema';
 import { Loader2, Printer, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -36,23 +34,14 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   const [templateContent, setTemplateContent] = useState<string | null>(null);
 
   // Aktuelle Druckvorlage laden basierend auf der gewählten Breite
-  const fetchPrintTemplate = async () => {
+  const loadPrintTemplate = async () => {
     setIsLoadingTemplate(true);
     try {
       const templateType = settings?.receiptWidth === '58mm' ? 'receipt_58mm' : 'receipt_80mm';
-      const response = await fetch(`/api/print-templates/${templateType}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Fehler beim Laden der Druckvorlage: ${response.status}`);
+      const content = await fetchLatestPrintTemplate(templateType);
+      if (content) {
+        setTemplateContent(content);
       }
-      
-      const template = await response.json();
-      console.log(`Druckvorlage vom Typ '${templateType}' geladen:`, template.name);
-      setTemplateContent(template.content);
     } catch (error) {
       console.error('Fehler beim Laden der Druckvorlage:', error);
       toast({
@@ -68,22 +57,28 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
   // Beim Öffnen des Dialogs die aktuelle Vorlage laden
   useEffect(() => {
     if (open) {
-      fetchPrintTemplate();
+      loadPrintTemplate();
     }
   }, [open, settings?.receiptWidth]);
 
   // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
+  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair | null>({
     queryKey: ['/api/repairs', repairId],
     queryFn: async () => {
       if (!repairId) return null;
       try {
+        const userId = localStorage.getItem('userId');
         const response = await fetch(`/api/repairs/${repairId}`, {
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'X-User-ID': userId || '',
           }
         });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden der Reparaturdaten: Status ${response.status}`);
+          return null;
+        }
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Reparaturdaten:", err);
@@ -91,20 +86,27 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repairId && open,
+    staleTime: 0,
   });
 
-  // Lade Kundendaten wenn Reparatur geladen ist
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
+  // Lade Kundendaten
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer | null>({
     queryKey: ['/api/customers', repair?.customerId],
     queryFn: async () => {
       if (!repair?.customerId) return null;
       try {
+        const userId = localStorage.getItem('userId');
         const response = await fetch(`/api/customers/${repair.customerId}`, {
+          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'X-User-ID': userId || '',
           }
         });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
+        
+        if (!response.ok) {
+          console.error(`Fehler beim Laden der Kundendaten: Status ${response.status}`);
+          return null;
+        }
         return response.json();
       } catch (err) {
         console.error("Fehler beim Laden der Kundendaten:", err);
@@ -112,13 +114,10 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
       }
     },
     enabled: !!repair?.customerId && open,
+    staleTime: 0,
   });
 
-  // Wir verwenden nur die Unternehmenseinstellungen aus dem useBusinessSettings Hook
-  // und entfernen die redundante Abfrage, die zu inkonsistenten Daten führt
-  const isLoadingSettings = false; // Wird bereits in useBusinessSettings geladen
-
-  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
+  const isLoading = isLoadingRepair || isLoadingCustomer;
 
   // Funktion zum direkten Drucken über Browser-Druckfenster
   const handlePrint = async () => {
@@ -257,7 +256,6 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
           <>
             <div className="border rounded-md p-6 max-h-[350px] overflow-auto bg-gray-50 shadow-inner flex justify-center">
               <div id="receipt-for-pdf" ref={printRef} className="bg-white rounded-md shadow-sm" style={{ width: settings?.receiptWidth === '58mm' ? '58mm' : '80mm' }}>
-                {/* Wenn eine Vorlage geladen wurde, diese verwenden */}
                 {templateContent ? (
                   <div 
                     dangerouslySetInnerHTML={{
@@ -267,27 +265,13 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         businessPhone: settings?.phone || "",
                         businessEmail: settings?.email || "",
                         businessLogo: settings?.logoImage || "",
-                        businessSlogan: settings?.companySlogan || "",
-                        vatNumber: settings?.vatNumber || "",
-                        websiteUrl: settings?.website || "",
-                        
-                        // Reparatur-Platzhalter
-                        repairId: repair?.orderCode || `#${repair?.id}`,
-                        orderCode: repair?.orderCode || `#${repair?.id}`,
-                        currentDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
-                        creationDate: repair ? format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de }) : "",
-                        completionDate: repair?.pickupSignedAt ? format(new Date(repair.pickupSignedAt), 'dd.MM.yyyy', { locale: de }) : "",
-                        
-                        // Kunden-Platzhalter
-                        customerName: `${customer?.firstName || ""} ${customer?.lastName || ""}`,
+                        repairId: repair?.orderCode || repair?.id?.toString() || "",
+                        currentDate: new Date().toLocaleDateString('de-DE'),
+                        customerName: customer ? `${customer.firstName} ${customer.lastName}` : "",
                         customerPhone: customer?.phone || "",
                         customerEmail: customer?.email || "",
-                        customerSignature: repair?.dropoffSignature || "",
-                        secondSignature: repair?.pickupSignature || "",
-                        
-                        // Geräte-Platzhalter
                         deviceType: repair?.deviceType || "",
-                        deviceBrand: repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : '',
+                        deviceBrand: repair?.brand || "",
                         deviceModel: repair?.model || "",
                         deviceIssue: repair?.issue ? repair.issue : '',
                         deviceImei: repair?.serialNumber || "",
@@ -295,6 +279,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         // Preis-Platzhalter
                         estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
                         finalPrice: "",
+                        preis: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
                         
                         // Zusätzliche Platzhalter für Kompatibilität
                         logoUrl: settings?.logoImage || ""
@@ -338,7 +323,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                     kundenemail={customer?.email || ""}
                     hersteller={repair?.brand ? repair.brand.charAt(0).toUpperCase() + repair.brand.slice(1) : ''}
                     modell={repair?.model || ""}
-                    problem={repair?.issue ? repair.issue.split(',').map(issue => issue.trim()).join('\n') : ''}
+                    problem={repair?.issue ? repair.issue : ''}
                     preis={repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : ""}
                     imei={repair?.serialNumber || ""}
                     signatur_dropoff={repair?.dropoffSignature || ""}
@@ -349,47 +334,35 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
               </div>
             </div>
             
-            <DialogFooter className="flex justify-between mt-4">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={onClose}>
-                  {isPreview ? "Schließen" : "Abbrechen"}
-                </Button>
-                {!isPreview && (
-                  <Button 
-                    variant="outline"
-                    onClick={fetchPrintTemplate}
-                    className="gap-1 text-xs"
-                    disabled={isLoadingTemplate}
-                    title="Aktuellste Druckvorlage laden"
-                  >
-                    {isLoadingTemplate ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-3 w-3" />
-                    )}
-                    Vorlage neu laden
-                  </Button>
-                )}
-              </div>
+            <DialogFooter className="gap-2">
               {!isPreview && (
-                <Button 
-                  onClick={handlePrint} 
-                  className="gap-2"
-                  disabled={isGeneratingPdf}
-                >
-                  {isGeneratingPdf ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Druckvorschau wird erstellt...
-                    </>
-                  ) : (
-                    <>
+                <>
+                  <Button
+                    onClick={loadPrintTemplate}
+                    variant="outline"
+                    disabled={isLoadingTemplate}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isLoadingTemplate ? 'animate-spin' : ''}`} />
+                    Vorlage aktualisieren
+                  </Button>
+                  <Button
+                    onClick={handlePrint}
+                    disabled={isGeneratingPdf}
+                    className="flex items-center gap-2"
+                  >
+                    {isGeneratingPdf ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
                       <Printer className="h-4 w-4" />
-                      Drucken
-                    </>
-                  )}
-                </Button>
+                    )}
+                    {isGeneratingPdf ? "Druckvorbereitung..." : "Bon drucken"}
+                  </Button>
+                </>
               )}
+              <Button onClick={onClose} variant="outline">
+                Schließen
+              </Button>
             </DialogFooter>
           </>
         )}
