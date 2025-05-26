@@ -552,6 +552,27 @@ export default function AuthPage() {
                         )}
                       />
 
+                      {/* UID-Nummer */}
+                      <FormField
+                        control={registerForm.control}
+                        name="taxId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input 
+                                placeholder="UID-Nummer (z.B. ATU12345678)" 
+                                {...field} 
+                                className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-xs text-gray-500 mt-1 italic">
+                              Optional: Ihre Umsatzsteuer-Identifikationsnummer für Geschäftskunden
+                            </p>
+                          </FormItem>
+                        )}
+                      />
+
                       {/* Benutzername */}
                       <FormField
                         control={registerForm.control}

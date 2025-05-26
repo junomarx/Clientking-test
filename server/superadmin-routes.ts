@@ -512,15 +512,16 @@ export function registerSuperadminRoutes(app: Express) {
             const fullUser = await storage.getUser(userId);
             if (fullUser) {
               const businessSettingsData = {
-                businessName: fullUser.businessName || "Mein Handyshop",
-                ownerFirstName: fullUser.firstName || "",
-                ownerLastName: fullUser.lastName || "",
-                streetAddress: fullUser.address || "",
+                businessName: fullUser.companyName || "Mein Handyshop",
+                ownerFirstName: fullUser.username || "",
+                ownerLastName: "",
+                streetAddress: fullUser.companyAddress || "",
                 city: fullUser.city || "",
                 zipCode: fullUser.zipCode || "",
-                country: "Deutschland",
-                phone: fullUser.phone || "",
-                email: fullUser.email || "",
+                country: fullUser.country || "Deutschland",
+                phone: fullUser.companyPhone || fullUser.phone || "",
+                email: fullUser.companyEmail || fullUser.email || "",
+                taxId: fullUser.taxId || "",
                 userId: userId,
                 shopId: updatedUser.shopId
               };
