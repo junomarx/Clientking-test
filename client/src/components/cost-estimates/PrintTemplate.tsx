@@ -39,7 +39,7 @@ export function generatePrintHtml({
     : "18.05.2025"; // Fallback zum bekannten Erstellungsdatum
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
-    : (createdDate ? format(new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt');
+    : (createdDate ? format(new Date(new Date(createdDate).getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de }) : 'unbegrenzt');
   
   // Kundenanzeigename vorbereiten
   const customerName = customer 
