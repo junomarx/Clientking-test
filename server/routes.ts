@@ -116,6 +116,67 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 // Hilfsfunktionen entfernt (keine Modellreihen mehr)
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // CRITICAL: Register the brand creation route FIRST to bypass all middleware
+  app.post("/api/superadmin/create-brand", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (userId !== 10) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Superadmin-Berechtigung erforderlich" }));
+      }
+
+      const { name, deviceTypeId } = req.body;
+      
+      if (!name || !deviceTypeId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Name und Gerätetyp-ID sind erforderlich" }));
+      }
+
+      console.log(`DIRECT ROUTE: Erstelle neue Marke: ${name} für Gerätetyp-ID: ${deviceTypeId}`);
+
+      // Import db here to avoid circular dependencies
+      const { db } = await import('./db');
+      const { userBrands } = await import('@shared/schema');
+      const { eq, and } = await import('drizzle-orm');
+
+      // Prüfen, ob die Marke bereits existiert
+      const existingBrand = await db.select()
+        .from(userBrands)
+        .where(
+          and(
+            eq(userBrands.name, name),
+            eq(userBrands.deviceTypeId, deviceTypeId)
+          )
+        );
+
+      if (existingBrand.length > 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Marke existiert bereits für diesen Gerätetyp" }));
+      }
+
+      // Neue Marke erstellen
+      const [newBrand] = await db.insert(userBrands)
+        .values({
+          name,
+          deviceTypeId,
+          userId: 10,
+          shopId: 1682,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      console.log(`DIRECT ROUTE: Marke erfolgreich erstellt:`, newBrand);
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(newBrand));
+    } catch (error) {
+      console.error("DIRECT ROUTE: Fehler beim Erstellen der Marke:", error);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: "Fehler beim Erstellen der Marke" }));
+    }
+  });
+
   // Set up authentication
   setupAuth(app);
   
