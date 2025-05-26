@@ -200,10 +200,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Alle Gerätetypen laden
       const deviceTypes = await db.select().from(userDeviceTypes);
       
-      // Daten manuell zusammenführen
+      // Daten manuell zusammenführen mit korrekter Zuordnung
       const formattedModels = models.map(model => {
         const brand = brands.find(b => b.id === model.brandId);
-        const deviceType = deviceTypes.find(dt => dt.id === brand?.deviceTypeId);
+        const deviceType = brand ? deviceTypes.find(dt => dt.id === brand.deviceTypeId) : null;
         
         return {
           id: model.id,
