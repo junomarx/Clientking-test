@@ -123,11 +123,11 @@ export default function OptimizedDevicesTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Gerätetypen</SelectItem>
-              {deviceTypes.filter(type => type && type.id !== undefined && type.name).map((type) => (
-                <SelectItem key={type.id} value={type.name}>
+              {deviceTypes.filter(type => type && typeof type === 'string' && type.trim() !== "").map((deviceType) => (
+                <SelectItem key={deviceType} value={deviceType}>
                   <div className="flex items-center">
-                    {getDeviceTypeIcon(type.name)}
-                    <span className="ml-2">{type.name}</span>
+                    {getDeviceTypeIcon(deviceType)}
+                    <span className="ml-2">{deviceType}</span>
                   </div>
                 </SelectItem>
               ))}
