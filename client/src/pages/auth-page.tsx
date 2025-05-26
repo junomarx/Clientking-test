@@ -33,7 +33,6 @@ const registerSchema = z.object({
   
   // Adressdaten
   streetAddress: z.string().min(2, "Straße ist erforderlich."),
-  houseNumber: z.string().min(1, "Hausnummer ist erforderlich."),
   zipCode: z.string().min(2, "PLZ ist erforderlich."),
   city: z.string().min(2, "Ort ist erforderlich."),
   country: z.string().min(2, "Land ist erforderlich.").default("Österreich"),
@@ -98,7 +97,6 @@ export default function AuthPage() {
       ownerFirstName: "",
       ownerLastName: "",
       streetAddress: "",
-      houseNumber: "",
       zipCode: "",
       city: "",
       country: "Österreich",
@@ -158,7 +156,6 @@ export default function AuthPage() {
       ownerFirstName: "",
       ownerLastName: "",
       streetAddress: "",
-      houseNumber: "",
       zipCode: "",
       city: "",
       country: "Österreich",
@@ -392,43 +389,22 @@ export default function AuthPage() {
                       </div>
 
                       {/* Adresse */}
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="col-span-2">
-                          <FormField
-                            control={registerForm.control}
-                            name="streetAddress"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Strasse *" 
-                                    {...field} 
-                                    className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <FormField
-                          control={registerForm.control}
-                          name="houseNumber"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Input 
-                                  placeholder="Hausnr. *" 
-                                  {...field} 
-                                  className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={registerForm.control}
+                        name="streetAddress"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input 
+                                placeholder="Straße und Hausnummer *" 
+                                {...field} 
+                                className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
                       <div className="grid grid-cols-3 gap-4">
                         <FormField
