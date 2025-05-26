@@ -450,7 +450,6 @@ export default function AuthPage() {
                                 <Input 
                                   placeholder="Land *" 
                                   {...field} 
-                                  defaultValue="Österreich"
                                   className="h-14 px-4 text-base border-gray-300 rounded-lg focus:border-blue-500"
                                 />
                               </FormControl>
