@@ -534,7 +534,7 @@ export function registerSuperadminRoutes(app: Express) {
                 shopId: updatedUser.shopId
               };
               
-              await storage.createBusinessSettings(businessSettingsData);
+              await storage.updateBusinessSettings(businessSettingsData, userId);
               console.log(`Business Settings für Benutzer ${updatedUser.username} erfolgreich erstellt`);
             }
           }

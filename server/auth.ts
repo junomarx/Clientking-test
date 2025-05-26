@@ -191,35 +191,27 @@ export function setupAuth(app: Express) {
 
       console.log(`✅ Benutzer ${username} erfolgreich erstellt mit Shop-ID ${user.shopId}`);
 
-      // Erstelle vollständige Geschäftseinstellungen für den neuen Benutzer
+      // Speichere die Registrierungsdaten temporär im Benutzer-Objekt
+      // Die Geschäftseinstellungen werden erst bei der Aktivierung erstellt
       try {
-        const businessSettingsData = {
-          businessName: companyName,
+        console.log(`📋 Registrierungsdaten für Benutzer ${username} gespeichert (Geschäftseinstellungen werden bei Aktivierung erstellt)`);
+        await storage.updateUser(user.id, {
+          companyName,
+          companyPhone,
+          companyEmail: email,
           ownerFirstName,
           ownerLastName,
-          taxId: taxId || "", // UID aus Registrierung übernehmen
-          vatNumber: "", // Leer lassen für spätere Eingabe
-          companySlogan: "", // Leer lassen für optionale Eingabe
-          streetAddress: streetAddress,
-          city,
+          streetAddress,
           zipCode,
+          city,
           country: country || "Österreich",
-          phone: companyPhone,
-          email: email,
-          website: website || "",
-          colorTheme: "blue",
-          receiptWidth: "80mm",
-          openingHours: "", // Leer lassen für spätere Eingabe
-          userId: user.id,
-          shopId: user.shopId
-        };
-
-        console.log("🏪 Erstelle Geschäftseinstellungen mit Daten:", JSON.stringify(businessSettingsData, null, 2));
-        const createdSettings = await storage.updateBusinessSettings(businessSettingsData, user.id);
-        console.log(`✅ Geschäftseinstellungen für Benutzer ${username} erstellt mit ID:`, createdSettings.id);
-      } catch (businessSettingsError) {
-        console.error(`❌ Fehler beim Erstellen der Geschäftseinstellungen für Benutzer ${username}:`, businessSettingsError);
-        // Weiter fortfahren, auch wenn Geschäftseinstellungen fehlschlagen
+          taxId: taxId || "",
+          website: website || ""
+        });
+        console.log(`✅ Registrierungsdaten für Benutzer ${username} erfolgreich gespeichert`);
+      } catch (updateError) {
+        console.error(`❌ Fehler beim Aktualisieren der Benutzerdaten für ${username}:`, updateError);
+        // Weiter fortfahren, auch wenn die Aktualisierung fehlschlägt
       }
 
       // Benachrichtige alle Superadmins über die neue Registrierung, damit sie den Benutzer freischalten können

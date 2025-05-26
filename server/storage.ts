@@ -1568,20 +1568,20 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     try {
-      // Generiere sofort eine Shop-ID für den neuen Benutzer
-      const nextShopId = await this.getNextShopId();
+      // Entferne die Shop-ID aus den eingehenden Daten
+      // Neue Benutzer erhalten KEINE Shop-ID bei der Registrierung
+      const { shopId: _, ...userWithoutShopId } = user as any;
       
-      console.log(`Erstelle neuen Benutzer ${user.username} mit Shop-ID ${nextShopId}`);
+      console.log(`Erstelle neuen Benutzer ${userWithoutShopId.username} ohne Shop-ID (wird bei Aktivierung zugewiesen)`);
 
       const [newUser] = await db
         .insert(users)
         .values({
-          ...user,
-          shopId: nextShopId
+          ...userWithoutShopId,
+          shopId: null  // Explizit NULL setzen
         })
         .returning();
       
-      console.log(`✅ Benutzer ${newUser.username} erstellt mit Shop-ID ${newUser.shopId}`);
       return newUser;
     } catch (error) {
       console.error("Error creating user:", error);
