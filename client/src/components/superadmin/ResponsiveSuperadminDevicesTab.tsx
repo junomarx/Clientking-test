@@ -1431,11 +1431,25 @@ export default function ResponsiveSuperadminDevicesTab() {
                       <SelectValue placeholder="Bitte wählen Sie einen Gerätetyp" />
                     </SelectTrigger>
                     <SelectContent>
-                      {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
+                      {(() => {
+                        console.log("DeviceTypesList im Modell-Bulk-Import:", deviceTypesList);
+                        
+                        if (!deviceTypesList || deviceTypesList.length === 0) {
+                          return (
+                            <SelectItem value="no-types" disabled>
+                              Keine Gerätetypen verfügbar
+                            </SelectItem>
+                          );
+                        }
+                        
+                        return deviceTypesList
+                          .filter(type => type && typeof type === 'string' && type.trim() !== "")
+                          .map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ));
+                      })()}
                     </SelectContent>
                   </Select>
                 </div>

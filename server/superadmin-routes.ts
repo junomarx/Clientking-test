@@ -1160,14 +1160,20 @@ export function registerSuperadminRoutes(app: Express) {
       const brandsWithDeviceTypeName = allBrands.map(brand => {
         let deviceTypeName = 'Unbekannt';
         
-        // Erst in Standard-Gerätetypen suchen
-        if (brand.deviceTypeId <= standardDeviceTypes.length) {
-          deviceTypeName = standardDeviceTypes[brand.deviceTypeId - 1] || 'Unbekannt';
+        console.log(`Verarbeite Marke ${brand.name} mit deviceTypeId: ${brand.deviceTypeId}`);
+        
+        // Erst in Benutzer-Gerätetypen suchen
+        const userDeviceType = userDeviceTypesList.find(dt => dt.id === brand.deviceTypeId);
+        if (userDeviceType) {
+          deviceTypeName = userDeviceType.name;
+          console.log(`Gefunden in userDeviceTypes: ${deviceTypeName}`);
         } else {
-          // In Benutzer-Gerätetypen suchen
-          const userDeviceType = userDeviceTypesList.find(dt => dt.id === brand.deviceTypeId);
-          if (userDeviceType) {
-            deviceTypeName = userDeviceType.name;
+          // Dann in Standard-Gerätetypen suchen (1-basiert)
+          if (brand.deviceTypeId >= 1 && brand.deviceTypeId <= standardDeviceTypes.length) {
+            deviceTypeName = standardDeviceTypes[brand.deviceTypeId - 1];
+            console.log(`Gefunden in standardDeviceTypes: ${deviceTypeName}`);
+          } else {
+            console.log(`Gerätetyp-ID ${brand.deviceTypeId} nicht gefunden`);
           }
         }
         
