@@ -478,13 +478,20 @@ export function registerSuperadminRoutes(app: Express) {
       // Für inaktive Benutzer: Aktivieren und Shop-ID zuweisen
       if (!user.isActive) {
         const nextShopId = await storage.getNextShopId();
+        
+        // Demo-Paket ID abrufen
+        const [demoPackage] = await db.select({
+          id: packages.id
+        }).from(packages).where(eq(packages.name, 'Demo'));
+        
         const updateData = { 
           isActive: true,
           shopId: nextShopId,
           activatedAt: new Date(),
-          pricingPlan: 'demo'  // Automatisch Demo-Paket zuweisen
+          packageId: demoPackage?.id || null  // Automatisch Demo-Paket zuweisen
         };
         console.log(`Benutzer ${user.username} wird aktiviert und erhält Shop-ID ${nextShopId}`);
+        console.log(`Demo-Paket gefunden:`, demoPackage ? `ID ${demoPackage.id}` : 'nicht gefunden');
         console.log(`Update-Daten für ${user.username}:`, updateData);
 
         // Status umkehren (und ggf. Shop-ID zuweisen)
