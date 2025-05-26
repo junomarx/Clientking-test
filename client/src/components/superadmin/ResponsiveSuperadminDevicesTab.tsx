@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import OptimizedDevicesTable from "./OptimizedDevicesTable";
+import CsvImportExportModal from "./CsvImportExportModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import DeviceDataCSVImportExport from "./DeviceDataCSVImportExport";
@@ -117,6 +118,9 @@ export default function ResponsiveSuperadminDevicesTab() {
     forGameconsole: true
   });
   const [selectedErrorCatalogIds, setSelectedErrorCatalogIds] = useState<number[]>([]);
+  
+  // CSV Modal State
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const [isBulkImportErrorCatalogOpen, setIsBulkImportErrorCatalogOpen] = useState(false);
   const [bulkErrorCatalogText, setBulkErrorCatalogText] = useState("");
 
