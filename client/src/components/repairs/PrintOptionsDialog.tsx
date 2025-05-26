@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, Tag, AlertCircle, FileText } from 'lucide-react';
 // Import für PrintOptionsManager entfernt, da nicht mehr benötigt
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { PrintRepairA4Dialog } from "@/components/repairs/PrintRepairA4DialogNew";
+import { PrintRepairA4Dialog } from "@/components/repairs/PrintRepairA4Dialog";
 
 // API for checking permissions
 const checkCanPrintLabels = async (): Promise<boolean> => {
