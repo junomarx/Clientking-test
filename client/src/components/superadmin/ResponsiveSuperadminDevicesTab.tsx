@@ -1215,7 +1215,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                 <div className="grid gap-2">
                   <Label htmlFor="brand-device-type">Gerätetyp</Label>
                   <Select
-                    value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : ""}
+                    value={brandForm.deviceTypeId ? brandForm.deviceTypeId.toString() : undefined}
                     onValueChange={(value) => setBrandForm({ ...brandForm, deviceTypeId: parseInt(value) })}
                   >
                     <SelectTrigger id="brand-device-type">
@@ -1374,7 +1374,7 @@ export default function ResponsiveSuperadminDevicesTab() {
                 <div className="grid gap-2">
                   <Label htmlFor="model-brand">Hersteller</Label>
                   <Select
-                    value={modelForm.brandId ? modelForm.brandId.toString() : ""}
+                    value={modelForm.brandId ? modelForm.brandId.toString() : undefined}
                     onValueChange={(value) => setModelForm({ ...modelForm, brandId: parseInt(value) })}
                   >
                     <SelectTrigger id="model-brand">
