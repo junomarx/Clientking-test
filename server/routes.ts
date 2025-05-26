@@ -191,25 +191,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userModels, userBrands, userDeviceTypes } = await import('@shared/schema');
       const { eq } = await import('drizzle-orm');
 
-      // Alle Modelle mit vollständigen Informationen laden
-      const models = await db.select()
-        .from(userModels)
-        .leftJoin(userBrands, eq(userModels.brandId, userBrands.id))
-        .leftJoin(userDeviceTypes, eq(userBrands.deviceTypeId, userDeviceTypes.id))
-        .orderBy(userModels.createdAt);
-
-      // Daten formatieren für das Frontend (flache Struktur erwartet)
-      const formattedModels = models.map(row => {
-        // Drizzle gibt eine flache Struktur zurück, nicht verschachtelt
-        const model = row as any;
+      // Alle Modelle laden
+      const models = await db.select().from(userModels).orderBy(userModels.createdAt);
+      
+      // Alle Marken laden
+      const brands = await db.select().from(userBrands);
+      
+      // Alle Gerätetypen laden
+      const deviceTypes = await db.select().from(userDeviceTypes);
+      
+      // Daten manuell zusammenführen
+      const formattedModels = models.map(model => {
+        const brand = brands.find(b => b.id === model.brandId);
+        const deviceType = deviceTypes.find(dt => dt.id === brand?.deviceTypeId);
+        
         return {
           id: model.id,
           name: model.name,
           modelSeriesId: model.modelSeriesId,
           brandId: model.brandId,
-          brandName: model.brandName || 'Unbekannte Marke',
-          deviceTypeId: model.deviceTypeId || null,
-          deviceTypeName: model.deviceTypeName || 'Unbekannter Typ',
+          brandName: brand?.name || 'Unbekannte Marke',
+          deviceTypeId: brand?.deviceTypeId || null,
+          deviceTypeName: deviceType?.name || 'Unbekannter Typ',
           shopId: model.shopId,
           userId: model.userId,
           createdAt: model.createdAt,
@@ -222,6 +225,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("DIRECT MODELS ROUTE: Fehler beim Laden der Modelle:", error);
       return res.status(500).json({ message: "Fehler beim Laden der Modelle" });
+    }
+  });
+
+  // CRITICAL FIX: Register bulk import route BEFORE any other middleware
+  app.post("/api/superadmin/device-models/bulk", async (req, res) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (userId !== 10) {
+        return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
+      }
+
+      const { brandId, models } = req.body;
+      
+      if (!brandId || !models || !Array.isArray(models)) {
+        return res.status(400).json({ message: "BrandId und Modelle-Array sind erforderlich" });
+      }
+
+      console.log(`DIRECT BULK ROUTE: Importiere ${models.length} Modelle für Marke ${brandId}`);
+
+      const { db } = await import('./db');
+      const { userModels } = await import('@shared/schema');
+
+      let importedCount = 0;
+      const results = [];
+
+      for (const model of models) {
+        try {
+          const [newModel] = await db.insert(userModels)
+            .values({
+              name: model.name,
+              brandId: brandId,
+              userId: 10,
+              shopId: 1682,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            })
+            .returning();
+
+          results.push(newModel);
+          importedCount++;
+          console.log(`DIRECT BULK ROUTE: Modell '${model.name}' erfolgreich hinzugefügt`);
+        } catch (error) {
+          console.error(`DIRECT BULK ROUTE: Fehler beim Hinzufügen von Modell '${model.name}':`, error);
+        }
+      }
+
+      console.log(`DIRECT BULK ROUTE: ${importedCount} von ${models.length} Modellen erfolgreich importiert`);
+      return res.json({
+        success: true,
+        importedCount,
+        totalModels: models.length,
+        models: results
+      });
+    } catch (error) {
+      console.error("DIRECT BULK ROUTE: Fehler beim Bulk-Import:", error);
+      return res.status(500).json({ message: "Fehler beim Bulk-Import" });
     }
   });
 
