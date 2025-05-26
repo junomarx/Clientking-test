@@ -54,12 +54,12 @@ interface UserWithBusinessSettings {
     streetAddress: string;
     zipCode: string;
     city: string;
-    email: string | null;
-    phone: string | null;
-    websiteUrl: string | null;
-    businessSlogan: string | null;
-    vatNumber: string | null;
-    openingHours: string | null;
+    country: string;
+    email: string;
+    phone: string;
+    taxId: string;
+    website: string;
+    vatNumber: string;
   };
 }
 
@@ -122,10 +122,13 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
     );
   }
 
+  // Für inaktive Benutzer: Zeige Registrierungsdaten aus der users-Tabelle
+  // Für aktive Benutzer: Zeige business_settings
   const settings = businessSettings || user.businessSettings || {};
   
   // Debug: Log die empfangenen Daten
   console.log('🔍 UserDetailsDialog Debug:', {
+    isActive: user.isActive,
     businessSettings,
     userBusinessSettings: user.businessSettings,
     finalSettings: settings,
@@ -193,58 +196,60 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                 <Building className="h-4 w-4 text-green-600" />
                 Geschäftsinformationen
               </h3>
-              {settings?.businessName ? (
+              {settings && Object.keys(settings).length > 0 ? (
                 <div className="space-y-3">
-                  <div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
-                    <p className="text-sm">{settings.businessName}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Inhaber:</span>
-                    <p className="text-sm">{settings.ownerFirstName} {settings.ownerLastName}</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                    <div className="text-sm">
-                      <div>{settings.streetAddress}</div>
-                      <div>{settings.zipCode} {settings.city}</div>
+                  {settings.businessName && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Geschäftsname:</span>
+                      <p className="text-sm">{settings.businessName}</p>
                     </div>
-                  </div>
+                  )}
+                  {settings.ownerFirstName && settings.ownerLastName && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Inhaber:</span>
+                      <p className="text-sm">{settings.ownerFirstName} {settings.ownerLastName}</p>
+                    </div>
+                  )}
+                  {settings.streetAddress && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Adresse:</span>
+                      <p className="text-sm">{settings.streetAddress}</p>
+                    </div>
+                  )}
+                  {(settings.zipCode || settings.city) && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Ort:</span>
+                      <p className="text-sm">{settings.zipCode} {settings.city}</p>
+                    </div>
+                  )}
+                  {settings.country && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Land:</span>
+                      <p className="text-sm">{settings.country}</p>
+                    </div>
+                  )}
                   {settings.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-gray-500" />
                       <span className="text-sm">{settings.phone}</span>
                     </div>
                   )}
-                  {settings.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{settings.email}</span>
-                    </div>
-                  )}
-                  {settings.websiteUrl && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{settings.websiteUrl}</span>
+                  {settings.taxId && (
+                    <div>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">UID:</span>
+                      <p className="text-sm">{settings.taxId}</p>
                     </div>
                   )}
                   {settings.vatNumber && (
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-gray-500" />
+                    <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">USt-IdNr:</span>
-                      <span className="text-sm">{settings.vatNumber}</span>
+                      <p className="text-sm">{settings.vatNumber}</p>
                     </div>
                   )}
-                  {settings.openingHours && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Öffnungszeiten:</span>
-                      <p className="text-sm whitespace-pre-line">{settings.openingHours}</p>
-                    </div>
-                  )}
-                  {settings.businessSlogan && (
-                    <div>
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Slogan:</span>
-                      <p className="text-sm italic">"{settings.businessSlogan}"</p>
+                  {settings.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">{settings.website}</span>
                     </div>
                   )}
                 </div>
@@ -253,34 +258,23 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
               )}
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-between items-center pt-4 border-t">
-          <div className="flex space-x-2">
-            {onToggleActive && (
-              <Button 
-                variant={user.isActive ? "destructive" : "default"}
-                onClick={() => {
-                  onToggleActive(user.id);
-                  // Cache invalidieren, damit die Daten neu geladen werden
-                  setTimeout(() => {
-                    queryClient.invalidateQueries({ queryKey: [`/api/superadmin/users/${user.id}`] });
-                    queryClient.invalidateQueries({ queryKey: [`/api/superadmin/user-business-settings/${user.id}`] });
-                    queryClient.invalidateQueries({ queryKey: ['/api/superadmin/users'] });
-                  }, 500);
-                }}
-              >
-                {user.isActive ? "Deaktivieren" : "Aktivieren"}
-              </Button>
-            )}
-          </div>
-          <div className="flex space-x-2">
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={handleClose}>
               Schließen
             </Button>
             {onEdit && (
               <Button onClick={() => onEdit(user.id)}>
                 Bearbeiten
+              </Button>
+            )}
+            {onToggleActive && (
+              <Button
+                variant={user.isActive ? "destructive" : "default"}
+                onClick={() => onToggleActive(user.id)}
+              >
+                {user.isActive ? "Deaktivieren" : "Aktivieren"}
               </Button>
             )}
           </div>
