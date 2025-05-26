@@ -339,8 +339,9 @@ export default function ResponsiveSuperadminDevicesTab() {
   
   const createBrandMutation = useMutation({
     mutationFn: async (data: { name: string, deviceTypeId: number }) => {
-      const response = await apiRequest('POST', '/api/superadmin/device-brands/bulk', {
-        brands: [{ name: data.name, deviceTypeId: data.deviceTypeId }]
+      const response = await apiRequest('POST', '/api/superadmin/brands', {
+        name: data.name,
+        deviceTypeId: data.deviceTypeId
       });
       if (!response.ok) {
         const errorData = await response.json();
