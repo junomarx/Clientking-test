@@ -440,13 +440,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               `}} />
               
               {/* Header mit Logo und Firmendaten */}
-              <div className="flex justify-between items-start mb-10">
-                <div className="w-[200px] p-3 text-center h-[60px] flex items-center justify-center">
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-[200px] p-2 text-center h-[50px] flex items-center justify-center">
                   {businessSettings?.logoImage ? (
                     <img 
                       src={businessSettings.logoImage} 
                       alt={businessSettings.businessName}
-                      className="max-h-[60px] max-w-[180px] object-contain"
+                      className="max-h-[50px] max-w-[180px] object-contain"
                       onError={(e) => {
                         console.error('Fehler beim Laden des Logos in A4:', e);
                         // Bei Fehler Platzhaltertext anzeigen
@@ -462,9 +462,9 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   )}
                 </div>
                 
-                <div className="text-right text-sm text-gray-600">
-                  <p className="text-base font-bold text-gray-800 mb-1">{businessSettings?.businessName || 'Handyshop Verwaltung'}</p>
-                  <p>{businessSettings?.streetAddress || 'Amerlingstraße 19'}<br />
+                <div className="text-right text-sm text-gray-600 leading-tight">
+                  <p className="text-base font-bold text-gray-800 mb-0.5">{businessSettings?.businessName || 'Handyshop Verwaltung'}</p>
+                  <p className="leading-tight">{businessSettings?.streetAddress || 'Amerlingstraße 19'}<br />
                   {businessSettings?.zipCode || '1060'} {businessSettings?.city || 'Wien'}<br />
                   {businessSettings?.phone || '+4314103511'}<br />
                   {businessSettings?.email || 'office@macandphonedoc.at'}</p>
@@ -472,23 +472,23 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               </div>
 
               {/* Kundeninformationen */}
-              <div className="mb-8">
-                <div className="text-sm mb-2 font-bold">Kundeninformationen</div>
-                <p className="text-base font-bold">{customer.firstName} {customer.lastName}</p>
-                <p>{customer.address || ''}</p>
-                <p>{customer.zipCode || ''} {customer.city || ''}</p>
-                <p>Tel: {customer.phone || ''}</p>
-                <p>E-Mail: {customer.email || ''}</p>
+              <div className="mb-5">
+                <div className="text-sm mb-1 font-bold">Kundeninformationen</div>
+                <p className="text-base font-bold leading-tight">{customer.firstName} {customer.lastName}</p>
+                <p className="leading-tight">{customer.address || ''}</p>
+                <p className="leading-tight">{customer.zipCode || ''} {customer.city || ''}</p>
+                <p className="leading-tight">Tel: {customer.phone || ''}</p>
+                <p className="leading-tight">E-Mail: {customer.email || ''}</p>
               </div>
               
               {/* Dokumententitel und Auftragsnummer */}
-              <div className="text-center mb-10">
-                <h1 className="text-2xl font-bold mb-2">Reparaturauftrag</h1>
+              <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold mb-1">Reparaturauftrag</h1>
                 <div className="text-lg">{repair.orderCode}</div>
               </div>
               
               {/* Gerätedaten & Reparaturdetails Box */}
-              <div className="border border-gray-300 rounded-lg bg-gray-50 p-5 mb-8 flex gap-10">
+              <div className="border border-gray-300 rounded-lg bg-gray-50 p-4 mb-5 flex gap-8">
                 <div className="flex-1">
                   <div className="mb-4">
                     <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Hersteller</div>
@@ -523,18 +523,18 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               </div>
               
               {/* Reparaturbedingungen */}
-              <div className="border border-gray-300 rounded-lg bg-gray-50 p-5 mb-8">
-                <div className="text-sm font-bold mb-3">Reparaturbedingungen</div>
-                <p className="text-sm mb-2"><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
-                <p className="text-sm mb-2"><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
-                <p className="text-sm mb-2"><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
-                <p className="text-sm mb-2"><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
-                <p className="text-sm mb-2"><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
-                <p className="text-sm mb-2"><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
+              <div className="border border-gray-300 rounded-lg bg-gray-50 p-3 mb-5">
+                <div className="text-sm font-bold mb-2">Reparaturbedingungen</div>
+                <p className="text-xs mb-1 leading-tight"><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
+                <p className="text-xs mb-1 leading-tight"><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
+                <p className="text-xs mb-1 leading-tight"><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
+                <p className="text-xs mb-1 leading-tight"><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
+                <p className="text-xs mb-1 leading-tight"><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
+                <p className="text-xs mb-1 leading-tight"><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
               </div>
               
               {/* Unterschriftsbereich mit Datum */}
-              <div className="flex mt-16 gap-10">
+              <div className="flex mt-8 gap-10">
                 <div className="flex-1 text-center">
                   <p className="font-bold mb-2">Reparaturauftrag erteilt</p>
                   {repair.dropoffSignature ? (
