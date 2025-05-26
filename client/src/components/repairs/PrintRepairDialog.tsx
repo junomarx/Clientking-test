@@ -296,6 +296,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         // Debug-Output für die Template-Variablen
                         console.log('Template-Variablen für Bondruck:', variables);
                         console.log('Repair estimatedCost:', repair?.estimatedCost);
+                        console.log('Repair object:', repair);
                         console.log('Generated estimatedPrice:', variables.estimatedPrice);
                         
                         return applyTemplateVariables(templateContent, variables);
