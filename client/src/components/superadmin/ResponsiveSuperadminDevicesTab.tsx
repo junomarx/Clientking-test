@@ -1414,16 +1414,40 @@ export default function ResponsiveSuperadminDevicesTab() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
+                  <Label htmlFor="bulk-model-device-type">Gerätetyp</Label>
+                  <Select
+                    value={selectedModelDeviceType || ""}
+                    onValueChange={(value) => {
+                      setSelectedModelDeviceType(value);
+                      setSelectedBrandForBulk(null); // Reset brand when device type changes
+                    }}
+                  >
+                    <SelectTrigger id="bulk-model-device-type">
+                      <SelectValue placeholder="Bitte wählen Sie einen Gerätetyp" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {deviceTypesList?.filter(type => type && type.trim() !== "").map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="bulk-model-brand">Hersteller</Label>
                   <Select
                     value={selectedBrandForBulk?.toString() || ""}
                     onValueChange={(value) => setSelectedBrandForBulk(parseInt(value))}
+                    disabled={!selectedModelDeviceType}
                   >
                     <SelectTrigger id="bulk-model-brand">
                       <SelectValue placeholder="Bitte wählen Sie einen Hersteller" />
                     </SelectTrigger>
                     <SelectContent>
-                      {brandsData.map((brand: Brand) => (
+                      {brandsData
+                        .filter((brand: Brand) => !selectedModelDeviceType || brand.deviceTypeName === selectedModelDeviceType)
+                        .map((brand: Brand) => (
                         <SelectItem key={brand.id} value={brand.id.toString()}>
                           {brand.name} ({brand.deviceTypeName})
                         </SelectItem>
