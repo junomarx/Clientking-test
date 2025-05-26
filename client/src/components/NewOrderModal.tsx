@@ -289,7 +289,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedDeviceTypeIndex(prev => prev > 0 ? prev - 1 : prev);
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       if (selectedDeviceTypeIndex >= 0) {
         selectDeviceType(availableDeviceTypes[selectedDeviceTypeIndex]);
@@ -311,7 +311,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedBrandIndex(prev => prev > 0 ? prev - 1 : prev);
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       if (selectedBrandIndex >= 0) {
         selectBrand(availableBrands[selectedBrandIndex]);
@@ -333,7 +333,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedModelIndex(prev => prev > 0 ? prev - 1 : prev);
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
       if (selectedModelIndex >= 0) {
         selectModel(availableModels[selectedModelIndex]);
