@@ -119,18 +119,18 @@ export function registerSuperadminRoutes(app: Express) {
       // Für inaktive Benutzer: Zeige die Registrierungsdaten aus der users-Tabelle
       if (!user.isActive) {
         const registrationData = {
-          businessName: (user as any).company_name || "Nicht angegeben",
-          ownerFirstName: (user as any).owner_first_name || "",
-          ownerLastName: (user as any).owner_last_name || "",
-          streetAddress: `${(user as any).street_address || ""} ${(user as any).house_number || ""}`.trim(),
-          zipCode: (user as any).zip_code || "",
+          businessName: user.companyName || "Nicht angegeben",
+          ownerFirstName: user.ownerFirstName || "",
+          ownerLastName: user.ownerLastName || "",
+          streetAddress: user.streetAddress || "",
+          zipCode: user.zipCode || "",
           city: user.city || "",
           country: user.country || "",
           email: user.email || "",
-          phone: (user as any).company_phone || (user as any).phone || "",
-          taxId: (user as any).tax_id || "",
+          phone: user.companyPhone || "",
+          taxId: user.taxId || "",
           website: user.website || "",
-          vatNumber: (user as any).company_vat_number || ""
+          vatNumber: user.companyVatNumber || ""
         };
         
         console.log(`Registrierungsdaten für inaktiven Benutzer ${user.username} abgerufen`);
