@@ -1139,19 +1139,21 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
-  // Einzelne Marke erstellen
-  app.post("/api/superadmin/brands", async (req: Request, res: Response) => {
+  // Einzelne Marke erstellen - neuer Endpoint
+  app.post("/api/superadmin/create-brand", async (req: Request, res: Response) => {
     try {
       // Manuelle Superadmin-Prüfung
       const userId = parseInt(req.header('X-User-ID') || '0');
       if (userId !== 10) {
-        return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Superadmin-Berechtigung erforderlich" }));
       }
 
       const { name, deviceTypeId } = req.body;
       
       if (!name || !deviceTypeId) {
-        return res.status(400).json({ message: "Name und Gerätetyp-ID sind erforderlich" });
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Name und Gerätetyp-ID sind erforderlich" }));
       }
 
       console.log(`Erstelle neue Marke: ${name} für Gerätetyp-ID: ${deviceTypeId}`);
@@ -1167,7 +1169,8 @@ export function registerSuperadminRoutes(app: Express) {
         );
 
       if (existingBrand.length > 0) {
-        return res.status(400).json({ message: "Marke existiert bereits für diesen Gerätetyp" });
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ message: "Marke existiert bereits für diesen Gerätetyp" }));
       }
 
       // Neue Marke erstellen
@@ -1183,11 +1186,12 @@ export function registerSuperadminRoutes(app: Express) {
         .returning();
 
       console.log(`Marke erfolgreich erstellt:`, newBrand);
-      res.setHeader('Content-Type', 'application/json');
-      res.status(201).json(newBrand);
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(newBrand));
     } catch (error) {
       console.error("Fehler beim Erstellen der Marke:", error);
-      res.status(500).json({ message: "Fehler beim Erstellen der Marke" });
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: "Fehler beim Erstellen der Marke" }));
     }
   });
 
