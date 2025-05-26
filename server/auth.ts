@@ -97,6 +97,8 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("📨 Registrierungsanfrage erhalten:", JSON.stringify(req.body, null, 2));
+      
       // Vereinfachte Registrierungsfelder extrahieren
       const { 
         // Persönliche Daten
@@ -120,6 +122,12 @@ export function setupAuth(app: Express) {
         username,
         password
       } = req.body;
+      
+      console.log("🔍 Extrahierte Felder:", {
+        ownerFirstName, ownerLastName, streetAddress, zipCode, city, country,
+        companyName, website, companyPhone, email, taxId, username, 
+        passwordPresent: !!password
+      });
       
       // Überprüfe erforderliche Felder
       if (!ownerFirstName || !ownerLastName || !streetAddress || !zipCode || !city || !country) {
