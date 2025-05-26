@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Trash2, Smartphone, Tablet, Laptop, Watch, GamepadIcon, X, Upload } from "lucide-react";
+import { Search, Filter, Trash2, Smartphone, Tablet, Laptop, Watch, Gamepad2 as GamepadIcon, X, Upload } from "lucide-react";
 import MobileDeviceList from '@/components/MobileDeviceList';
 
 // Interfaces für die Datentypen
