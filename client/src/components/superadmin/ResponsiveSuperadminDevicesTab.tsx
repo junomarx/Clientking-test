@@ -706,6 +706,75 @@ export default function ResponsiveSuperadminDevicesTab() {
     },
   });
 
+  // CSV Import/Export Handler
+  const handleCsvImport = (file: File) => {
+    // TODO: Implementiere CSV Import
+    console.log('CSV Import:', file);
+    toast({
+      title: "Info",
+      description: "CSV Import wird in Kürze implementiert.",
+    });
+  };
+
+  const handleCsvExport = (data: any[]) => {
+    if (!data || data.length === 0) {
+      toast({
+        title: "Keine Daten",
+        description: "Es gibt keine Daten zum Exportieren.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let csvContent = "";
+      let headers = [];
+      
+      // Je nach Datentyp verschiedene CSV-Strukturen
+      if (activeTab === "types") {
+        headers = ["Name"];
+        csvContent = "Name\n";
+        data.forEach(item => {
+          csvContent += `"${item.name || item}"\n`;
+        });
+      } else if (activeTab === "brands") {
+        headers = ["Name", "Gerätetyp"];
+        csvContent = "Name,Gerätetyp\n";
+        data.forEach(item => {
+          csvContent += `"${item.name}","${item.deviceTypeName || item.deviceType || ''}"\n`;
+        });
+      } else if (activeTab === "models") {
+        headers = ["Name", "Hersteller", "Gerätetyp"];
+        csvContent = "Name,Hersteller,Gerätetyp\n";
+        data.forEach(item => {
+          csvContent += `"${item.name}","${item.brandName || ''}","${item.deviceTypeName || ''}"\n`;
+        });
+      }
+
+      // CSV-Datei erstellen und downloaden
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${activeTab}_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export erfolgreich",
+        description: `${data.length} Einträge wurden exportiert.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export-Fehler",
+        description: "Fehler beim Erstellen der CSV-Datei.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Handler-Funktionen für Gerätetypen
   const handleDeviceTypeSelect = (id: number) => {
     setSelectedDeviceTypeIds(prev => {
@@ -1362,7 +1431,13 @@ export default function ResponsiveSuperadminDevicesTab() {
               >
                 <FileUp className="mr-2 h-4 w-4" /> Bulk Import
               </Button>
-              <DeviceDataCSVImportExport type={"models"} />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowCsvModal(true)}
+              >
+                <Upload className="mr-2 h-4 w-4" /> CSV Import/Export
+              </Button>
             </div>
           </div>
           
