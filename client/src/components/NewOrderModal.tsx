@@ -391,12 +391,12 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // Alle Zustandsvariablen zurücksetzen
       setAvailableIssues([]);
       setAvailableBrands([]);
-      setSavedModelSeries([]);
-      setSavedModels([]);
+      setAvailableDeviceTypes([]);
+      setAvailableModels([]);
       setIssueFields(['']); // Nur ein leeres Feld für Fehlerbeschreibung
-      setSelectedDeviceTypeId(null);
-      setSelectedBrandId(null);
-      setSelectedModelSeriesId(null);
+      setShowDeviceTypeDropdown(false);
+      setShowBrandDropdown(false);
+      setShowModelDropdown(false);
       if (!customerId) {
         setSelectedCustomerId(null);
       }
