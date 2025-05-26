@@ -2019,8 +2019,8 @@ export default function ResponsiveSuperadminDevicesTab() {
           activeTab === "brands" ? filteredBrands :
           filteredModels
         }
-        onImport={() => {}} // TODO: Implement CSV import
-        onExport={() => {}} // TODO: Implement CSV export
+        onImport={handleCsvImport}
+        onExport={handleCsvExport}
         isImporting={false}
       />
     </div>
