@@ -1,0 +1,23 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 10
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:94 Geladene Benutzer-Gerätetypen: (5) [{…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:103 Geladene Marken: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:104 Anzahl Marken: 37
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:113 Geladene Modelle: (311) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, …]
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:85 Geladene Gerätetypen: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:1914 DeviceTypesList im Modell-Bulk-Import: (5) ['Smartphone', 'Tablet', 'Laptop', 'Watch', 'Spielekonsole']
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:1975 BrandsData im Bulk-Import: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:1976 Ausgewählter Gerätetyp: null
+ResponsiveSuperadminDevicesTab.tsx?t=1748264506440:1989 Gefilterte Marken: (37) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+queryClient.ts:40 
+            
+            
+           POST https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/api/superadmin/device-brands/bulk 400 (Bad Request)
