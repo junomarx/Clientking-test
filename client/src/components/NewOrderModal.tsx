@@ -107,9 +107,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   
   // States für die Formularfelder und UI
   const [availableIssues, setAvailableIssues] = useState<string[]>([]);
-  const [availableBrands, setAvailableBrands] = useState<string[]>([]);
-  const [savedModelSeries, setSavedModelSeries] = useState<string[]>([]);
-  const [savedModels, setSavedModels] = useState<string[]>([]);
   const [issueFields, setIssueFields] = useState<string[]>(['']); // Array für mehrere Fehlerbeschreibungsfelder
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(customerId || null);
   const [filterText, setFilterText] = useState<string>('');  
@@ -120,25 +117,232 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [showExistingCustomerDialog, setShowExistingCustomerDialog] = useState<boolean>(false);
   const [matchingCustomers, setMatchingCustomers] = useState<Customer[]>([]);
   
-  // GlobalDeviceSelector States (für die neue Geräteauswahl)
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null); 
-  const [selectedModelSeriesId, setSelectedModelSeriesId] = useState<number | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  
-  // Alte Dropdown-Menüs States (werden durch GlobalDeviceSelector ersetzt, aber für Kompatibilität noch behalten)
-  const [deviceTypeDropdown, setDeviceTypeDropdown] = useState<string[]>([]);
-  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState<number>(-1);
-  const [brandDropdown, setBrandDropdown] = useState<string[]>([]);
-  const [selectedBrandIndex, setSelectedBrandIndex] = useState<number>(-1);
-  const [modelDropdown, setModelDropdown] = useState<string[]>([]);
-  const [selectedModelIndex, setSelectedModelIndex] = useState<number>(-1);
+  // Autocomplete States für Geräteeingabe
+  const [showDeviceTypeDropdown, setShowDeviceTypeDropdown] = useState(false);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [availableDeviceTypes, setAvailableDeviceTypes] = useState<any[]>([]);
+  const [availableBrands, setAvailableBrands] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState(-1);
+  const [selectedBrandIndex, setSelectedBrandIndex] = useState(-1);
+  const [selectedModelIndex, setSelectedModelIndex] = useState(-1);
   
   // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
   const isAdmin = user?.id === 3;
   
   // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
+  
+  // Handler-Funktionen für Autocomplete-System (definiert vor JSX-Verwendung)
+  const loadDeviceTypes = async () => {
+    try {
+      const response = await fetch('/api/global/device-types');
+      if (response.ok) {
+        const deviceTypes = await response.json();
+        setAvailableDeviceTypes(deviceTypes);
+        setShowDeviceTypeDropdown(true);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Gerätetypen:', error);
+    }
+  };
+
+  const loadBrands = async () => {
+    try {
+      const currentDeviceType = form.watch('deviceType');
+      let url = '/api/global/brands';
+      
+      // Wenn ein Gerätetyp eingegeben wurde, versuche ihn zu finden
+      if (currentDeviceType && availableDeviceTypes.length > 0) {
+        const matchingDeviceType = availableDeviceTypes.find(dt => 
+          dt.name.toLowerCase() === currentDeviceType.toLowerCase()
+        );
+        if (matchingDeviceType) {
+          url += `?deviceTypeId=${matchingDeviceType.id}`;
+        }
+      }
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const brands = await response.json();
+        setAvailableBrands(brands);
+        setShowBrandDropdown(true);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Hersteller:', error);
+    }
+  };
+
+  const loadModels = async () => {
+    try {
+      const currentBrand = form.watch('brand');
+      const currentDeviceType = form.watch('deviceType');
+      let url = '/api/global/models';
+      
+      // Wenn Hersteller und Gerätetyp eingegeben wurden, filtere entsprechend
+      if (currentBrand && availableBrands.length > 0) {
+        const matchingBrand = availableBrands.find(b => 
+          b.name.toLowerCase() === currentBrand.toLowerCase()
+        );
+        if (matchingBrand) {
+          url += `?brandId=${matchingBrand.id}`;
+          
+          if (currentDeviceType && availableDeviceTypes.length > 0) {
+            const matchingDeviceType = availableDeviceTypes.find(dt => 
+              dt.name.toLowerCase() === currentDeviceType.toLowerCase()
+            );
+            if (matchingDeviceType) {
+              url += `&deviceTypeId=${matchingDeviceType.id}`;
+            }
+          }
+        }
+      }
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const models = await response.json();
+        setAvailableModels(models);
+        setShowModelDropdown(true);
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Modelle:', error);
+    }
+  };
+
+  const handleDeviceTypeInput = (value: string) => {
+    if (!value) {
+      setShowDeviceTypeDropdown(false);
+      return;
+    }
+    
+    const filtered = availableDeviceTypes.filter(deviceType =>
+      deviceType.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setAvailableDeviceTypes(filtered);
+    setShowDeviceTypeDropdown(filtered.length > 0);
+    setSelectedDeviceTypeIndex(-1);
+  };
+
+  const handleBrandInput = (value: string) => {
+    if (!value) {
+      setShowBrandDropdown(false);
+      return;
+    }
+    
+    const filtered = availableBrands.filter(brand =>
+      brand.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setAvailableBrands(filtered);
+    setShowBrandDropdown(filtered.length > 0);
+    setSelectedBrandIndex(-1);
+  };
+
+  const handleModelInput = (value: string) => {
+    if (!value) {
+      setShowModelDropdown(false);
+      return;
+    }
+    
+    const filtered = availableModels.filter(model =>
+      model.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setAvailableModels(filtered);
+    setShowModelDropdown(filtered.length > 0);
+    setSelectedModelIndex(-1);
+  };
+
+  const selectDeviceType = (deviceType: any) => {
+    form.setValue('deviceType', deviceType.name);
+    setShowDeviceTypeDropdown(false);
+    setSelectedDeviceTypeIndex(-1);
+    // Lade neue Hersteller für den ausgewählten Gerätetyp
+    loadBrands();
+  };
+
+  const selectBrand = (brand: any) => {
+    form.setValue('brand', brand.name);
+    setShowBrandDropdown(false);
+    setSelectedBrandIndex(-1);
+    // Lade neue Modelle für den ausgewählten Hersteller
+    loadModels();
+  };
+
+  const selectModel = (model: any) => {
+    form.setValue('model', model.name);
+    if (model.modelSeries) {
+      form.setValue('modelSeries', model.modelSeries);
+    }
+    setShowModelDropdown(false);
+    setSelectedModelIndex(-1);
+  };
+
+  // Keyboard Navigation
+  const handleDeviceTypeKeyDown = (e: React.KeyboardEvent) => {
+    if (!showDeviceTypeDropdown) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedDeviceTypeIndex(prev => 
+        prev < availableDeviceTypes.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedDeviceTypeIndex(prev => prev > 0 ? prev - 1 : prev);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedDeviceTypeIndex >= 0) {
+        selectDeviceType(availableDeviceTypes[selectedDeviceTypeIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowDeviceTypeDropdown(false);
+      setSelectedDeviceTypeIndex(-1);
+    }
+  };
+
+  const handleBrandKeyDown = (e: React.KeyboardEvent) => {
+    if (!showBrandDropdown) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedBrandIndex(prev => 
+        prev < availableBrands.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedBrandIndex(prev => prev > 0 ? prev - 1 : prev);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedBrandIndex >= 0) {
+        selectBrand(availableBrands[selectedBrandIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowBrandDropdown(false);
+      setSelectedBrandIndex(-1);
+    }
+  };
+
+  const handleModelKeyDown = (e: React.KeyboardEvent) => {
+    if (!showModelDropdown) return;
+    
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedModelIndex(prev => 
+        prev < availableModels.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedModelIndex(prev => prev > 0 ? prev - 1 : prev);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedModelIndex >= 0) {
+        selectModel(availableModels[selectedModelIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowModelDropdown(false);
+      setSelectedModelIndex(-1);
+    }
+  };
   
   // In der neuen Version werden die Mutations für Gerätetypen, Hersteller und Modelle 
   // nicht mehr benötigt, da diese jetzt vom Superadmin verwaltet werden
@@ -897,109 +1101,115 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Geräteinformationen</h3>
                 
-                {/* Flexible Geräteeingabe - Auswahl aus globaler Liste ODER freie Eingabe */}
-                <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Gerätedaten eingeben</h4>
-                    <span className="text-sm text-muted-foreground">Aus Liste wählen oder frei eingeben</span>
-                  </div>
-                  
-                  {/* GlobalDeviceSelector für Auswahl aus Liste */}
-                  <GlobalDeviceSelector 
-                    onDeviceTypeSelect={(deviceType, deviceTypeId) => {
-                      form.setValue('deviceType', deviceType);
-                      setSelectedDeviceTypeId(deviceTypeId);
-                    }}
-                    onBrandSelect={(brand, brandId) => {
-                      form.setValue('brand', brand);
-                      setSelectedBrandId(brandId);
-                    }}
-                    onModelSelect={(model, modelId) => {
-                      form.setValue('model', model);
-                      setSelectedModelId(modelId);
-                    }}
-                    className="mb-4"
+                {/* Geräteeingabe mit Autocomplete wie bei Kundeneingabe */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="deviceType"
+                    render={({ field }) => (
+                      <FormItem className="relative">
+                        <FormLabel>Gerätetyp</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="z.B. Smartphone, Tablet..." 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              handleDeviceTypeInput(e.target.value);
+                            }}
+                            onFocus={() => loadDeviceTypes()}
+                            onKeyDown={(e) => handleDeviceTypeKeyDown(e)}
+                          />
+                        </FormControl>
+                        {showDeviceTypeDropdown && availableDeviceTypes.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                            {availableDeviceTypes.map((deviceType, index) => (
+                              <div
+                                key={deviceType.id}
+                                className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedDeviceTypeIndex ? 'bg-gray-100' : ''}`}
+                                onClick={() => selectDeviceType(deviceType)}
+                              >
+                                {deviceType.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                   
-                  {/* ODER: Manuelle Eingabe */}
-                  <div className="border-t pt-4">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Sie können auch direkt eigene Werte eingeben, wenn das Gerät nicht in der Liste verfügbar ist:
-                    </p>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      <FormField
-                        control={form.control}
-                        name="deviceType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Gerätetyp</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="z.B. Smartphone, Tablet..." 
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Reset IDs wenn manuell eingegeben wird
-                                  if (e.target.value !== form.watch('deviceType')) {
-                                    setSelectedDeviceTypeId(null);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem className="relative">
+                        <FormLabel>Hersteller</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="z.B. Apple, Samsung..." 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              handleBrandInput(e.target.value);
+                            }}
+                            onFocus={() => loadBrands()}
+                            onKeyDown={(e) => handleBrandKeyDown(e)}
+                          />
+                        </FormControl>
+                        {showBrandDropdown && availableBrands.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                            {availableBrands.map((brand, index) => (
+                              <div
+                                key={brand.id}
+                                className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedBrandIndex ? 'bg-gray-100' : ''}`}
+                                onClick={() => selectBrand(brand)}
+                              >
+                                {brand.name}
+                              </div>
+                            ))}
+                          </div>
                         )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="brand"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Hersteller</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="z.B. Apple, Samsung..." 
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Reset IDs wenn manuell eingegeben wird
-                                  if (e.target.value !== form.watch('brand')) {
-                                    setSelectedBrandId(null);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem className="relative">
+                        <FormLabel>Modell</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="z.B. iPhone 15, Galaxy S24..." 
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              handleModelInput(e.target.value);
+                            }}
+                            onFocus={() => loadModels()}
+                            onKeyDown={(e) => handleModelKeyDown(e)}
+                          />
+                        </FormControl>
+                        {showModelDropdown && availableModels.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                            {availableModels.map((model, index) => (
+                              <div
+                                key={model.id}
+                                className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedModelIndex ? 'bg-gray-100' : ''}`}
+                                onClick={() => selectModel(model)}
+                              >
+                                {model.name}
+                              </div>
+                            ))}
+                          </div>
                         )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="model"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Modell</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="z.B. iPhone 15, Galaxy S24..." 
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Reset IDs wenn manuell eingegeben wird
-                                  if (e.target.value !== form.watch('model')) {
-                                    setSelectedModelId(null);
-                                  }
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
