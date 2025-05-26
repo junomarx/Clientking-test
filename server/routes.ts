@@ -802,7 +802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/repairs", isAuthenticated, checkTrialExpiry, async (req: Request, res: Response) => {
     try {
-      console.log("Received repair data:", req.body);
+      console.log("Received repair data:", JSON.stringify(req.body, null, 2));
       console.log("Auth status:", req.isAuthenticated(), "User:", req.user?.username);
       
       // Benutzer-ID aus der Authentifizierung abrufen
