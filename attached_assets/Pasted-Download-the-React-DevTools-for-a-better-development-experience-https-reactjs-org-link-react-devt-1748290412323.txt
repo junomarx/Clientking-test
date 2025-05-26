@@ -1,0 +1,300 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+PrintOptionsManager.tsx:35 Zeige Druckoptionen für Reparatur: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 99 canPrintLabels: null
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19432
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=4a762815:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18718
+workLoop @ chunk-RPCDYKBN.js?v=4a762815:197
+flushWork @ chunk-RPCDYKBN.js?v=4a762815:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4a762815:384
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 99 canPrintLabels: true
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 99 canPrintLabels: true
+PrintRepairA4Dialog.tsx?t=1748289040957:319 A4 Dialog Debug: {open: true, repairId: 99, repair: false, customer: false, isLoading: true, …}
+chunk-C6X3ZLD2.js?v=4a762815:325 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:325
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+PrintRepairA4Dialog.tsx?t=1748289040957:319 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: false, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289040957:319 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289040957:340 A4-Vorschau bereit - alle Daten geladen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintRepairA4Dialog.tsx?t=1748289189988:305 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289189988:326 A4-Vorschau bereit - alle Daten geladen
+PrintRepairA4Dialog.tsx?t=1748289201777:291 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289201777:312 A4-Vorschau bereit - alle Daten geladen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintRepairA4Dialog.tsx?t=1748289625342:291 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289625342:312 A4-Vorschau bereit - alle Daten geladen
+PrintRepairA4Dialog.tsx?t=1748289641024:291 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx?t=1748289641024:312 A4-Vorschau bereit - alle Daten geladen
+PrintRepairA4Dialog.tsx:357 A4 Dialog Debug: {open: true, repairId: 99, repair: true, customer: true, isLoading: false, …}
+PrintRepairA4Dialog.tsx:380 A4-Vorschau bereit - alle Daten geladen
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: true repairId: 99 canPrintLabels: true
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: 99 canPrintLabels: true
+CostEstimateDetailsDialog.tsx:311 Kein Erstellungsdatum gefunden
+debug-costestimates.jsx:16 DEBUG: Cost Estimates Daten: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+debug-costestimates.jsx:20 Eintrag #1 (KV-0525-008):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #2 (KV-0525-007):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #3 (KV-2505-006):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #4 (KV-2505-004):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #5 (KV-2505-003):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: mnakoym@gmx.net
+debug-costestimates.jsx:24  - customer_id: 31
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #6 (KV-2505-002):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+debug-costestimates.jsx:20 Eintrag #7 (KV-2505-001):
+debug-costestimates.jsx:21  - firstName: FEHLT
+debug-costestimates.jsx:22  - lastName: FEHLT
+debug-costestimates.jsx:23  - email: bugi3000@gmail.com
+debug-costestimates.jsx:24  - customer_id: 21
+debug-costestimates.jsx:25  - Felder: id, reference_number, customer_id, title, description, device_type, brand, model, serial_number, issue, items, subtotal, tax_rate, tax_amount, total, valid_until, status, notes, accepted_at, converted_to_repair, repair_id, created_at, updated_at, user_id, shop_id, firstname, lastname, email, phone
+chunk-C6X3ZLD2.js?v=4a762815:325 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:325
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+chunk-C6X3ZLD2.js?v=4a762815:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-C6X3ZLD2.js?v=4a762815:339
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+CostEstimateDetailsDialog.tsx:117 API-Antwort für Detailansicht: {id: 22, reference_number: 'KV-0525-008', customerId: 21, deviceType: 'Smartphone', brand: 'Apple', …}brand: "Apple"convertedToRepair: truecreatedAt: "2025-05-18T21:34:29.474Z"customerId: 21description: nulldeviceType: "Smartphone"id: 22issue: "Akku defekt"items: [{…}]model: "iPhone 11 Pro Max"notes: nullreference_number: "KV-0525-008"serial_number: "8277837362526"shopId: 1status: "angenommen"subtotal: "83,33"tax_amount: "16,67"tax_rate: "20"title: "Kostenvoranschlag"total: "100,00"updatedAt: "2025-05-19T09:52:07.997Z"userId: 3validUntil: null[[Prototype]]: Object
+chunk-RPCDYKBN.js?v=4a762815:521 Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>.
+    at div
+    at Badge (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/badge.tsx:38:18)
+    at p
+    at div
+    at div
+    at div
+    at _c9 (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/card.tsx:114:12)
+    at div
+    at _c (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at Presence (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E4UC4BFD.js?v=4a762815:24:11)
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=4a762815:176:13
+    at _c5 (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a762815:38:15)
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=4a762815:54:7
+    at div
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RLLCIQWN.js?v=4a762815:61:7
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=4a762815:79:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=4a762815:56:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PMBXZ7OV.js?v=4a762815:29:5
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6X3ZLD2.js?v=4a762815:235:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6X3ZLD2.js?v=4a762815:158:58
+    at Presence (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E4UC4BFD.js?v=4a762815:24:11)
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6X3ZLD2.js?v=4a762815:149:64
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=4a762815:79:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=4a762815:56:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RLLCIQWN.js?v=4a762815:260:22
+    at Presence (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E4UC4BFD.js?v=4a762815:24:11)
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a762815:38:15)
+    at DialogPortal (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6X3ZLD2.js?v=4a762815:111:11)
+    at _c3 (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/dialog.tsx:52:12)
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a762815:38:15)
+    at Dialog (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-C6X3ZLD2.js?v=4a762815:52:5)
+    at div
+    at CostEstimateDetailsDialog (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/cost-estimates/CostEstimateDetailsDialog.tsx:49:45)
+    at div
+    at CostEstimatesTab (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/cost-estimates/CostEstimatesTab.tsx:49:36)
+    at div
+    at div
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=4a762815:116:13
+    at div
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=4a762815:42:13
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a762815:38:15)
+    at https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=4a762815:54:7
+    at _c (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/ui/scroll-area.tsx:21:11)
+    at main
+    at div
+    at div
+    at Home (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/pages/Home.tsx?t=1748289040957:36:37)
+    at Route (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a762815:265:16)
+    at ProtectedRoute (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/lib/protected-route.tsx:21:34)
+    at Switch (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a762815:321:17)
+    at Router
+    at Provider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=4a762815:38:15)
+    at TooltipProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=4a762815:65:5)
+    at PrintManagerProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/components/repairs/PrintOptionsManager.tsx?t=1748289040957:33:40)
+    at ThemeProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-theme.tsx:26:33)
+    at BusinessSettingsProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-business-settings.tsx:22:44)
+    at AuthProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/src/hooks/use-auth.tsx:27:32)
+    at QueryClientProvider (https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a762815:2805:3)
+    at App
+printWarning @ chunk-RPCDYKBN.js?v=4a762815:521
+error @ chunk-RPCDYKBN.js?v=4a762815:505
+validateDOMNesting @ chunk-RPCDYKBN.js?v=4a762815:8256
+createInstance @ chunk-RPCDYKBN.js?v=4a762815:8328
+completeWork @ chunk-RPCDYKBN.js?v=4a762815:16290
+completeUnitOfWork @ chunk-RPCDYKBN.js?v=4a762815:19224
+performUnitOfWork @ chunk-RPCDYKBN.js?v=4a762815:19206
+workLoopSync @ chunk-RPCDYKBN.js?v=4a762815:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=4a762815:19116
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18874
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+setTimeout
+scheduleFn @ @tanstack_react-query.js?v=4a762815:555
+flush @ @tanstack_react-query.js?v=4a762815:569
+batch @ @tanstack_react-query.js?v=4a762815:587
+dispatch_fn @ @tanstack_react-query.js?v=4a762815:996
+setData @ @tanstack_react-query.js?v=4a762815:696
+onSuccess @ @tanstack_react-query.js?v=4a762815:897
+resolve @ @tanstack_react-query.js?v=4a762815:456
+Promise.then
+run @ @tanstack_react-query.js?v=4a762815:498
+start @ @tanstack_react-query.js?v=4a762815:536
+fetch @ @tanstack_react-query.js?v=4a762815:926
+executeFetch_fn @ @tanstack_react-query.js?v=4a762815:2211
+setOptions @ @tanstack_react-query.js?v=4a762815:1955
+(anonymous) @ @tanstack_react-query.js?v=4a762815:3032
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4a762815:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4a762815:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4a762815:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4a762815:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4a762815:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4a762815:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4a762815:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=4a762815:19416
+commitRoot @ chunk-RPCDYKBN.js?v=4a762815:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4a762815:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4a762815:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=4a762815:18627
+CostEstimateDetailsDialog.tsx:311 Kein Erstellungsdatum gefunden
+CostEstimateDetailsDialog.tsx:311 Kein Erstellungsdatum gefunden
+CostEstimateDetailsDialog.tsx:311 Kein Erstellungsdatum gefunden
+CostEstimateDetailsDialog.tsx:311 Kein Erstellungsdatum gefunden

@@ -24,12 +24,12 @@ export function generatePrintHtml({
   businessEmail,
   logoUrl
 }: PrintTemplateProps): string {
-  // Formatiere die Datumsangaben
-  const today = new Date();
-  const todayFormatted = format(today, 'dd.MM.yyyy', { locale: de });
+  // Formatiere die Datumsangaben - verwende Erstellungsdatum statt aktuelles Datum
+  const createdDate = estimate.created_at ? new Date(estimate.created_at) : new Date();
+  const todayFormatted = format(createdDate, 'dd.MM.yyyy', { locale: de });
   const validUntilFormatted = estimate.validUntil 
     ? format(new Date(estimate.validUntil), 'dd.MM.yyyy', { locale: de })
-    : format(new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de });
+    : format(new Date(createdDate.getTime() + 14 * 24 * 60 * 60 * 1000), 'dd.MM.yyyy', { locale: de });
   
   // Kundenanzeigename vorbereiten
   const customerName = customer 
