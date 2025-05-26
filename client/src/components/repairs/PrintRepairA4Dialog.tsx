@@ -28,28 +28,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [generatedPdf, setGeneratedPdf] = useState<jsPDF | null>(null);
   
-  // Daten für die Reparatur laden
-  const { data: repair, isLoading, error } = useQuery({
-    queryKey: ["/api/repairs", repairId],
-    queryFn: async () => {
-      if (!repairId) return null;
-      const response = await fetch(`/api/repairs/${repairId}`);
-      if (!response.ok) throw new Error('Reparaturdaten konnten nicht geladen werden');
-      return response.json();
-    },
-    enabled: open && repairId !== null,
+  // Daten für die Reparatur laden - gleiche Struktur wie in anderen Komponenten
+  const { data: repair, isLoading, error } = useQuery<any>({
+    queryKey: [`/api/repairs/${repairId}`],
+    enabled: !!repairId && open,
   });
-  
+
   // Daten für den Kunden laden
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery({
-    queryKey: ["/api/customers", repair?.customerId],
-    queryFn: async () => {
-      if (!repair?.customerId) return null;
-      const response = await fetch(`/api/customers/${repair.customerId}`);
-      if (!response.ok) throw new Error('Kundendaten konnten nicht geladen werden');
-      return response.json();
-    },
-    enabled: open && repair?.customerId !== undefined,
+  const { data: customer, isLoading: isLoadingCustomer } = useQuery<any>({
+    queryKey: [`/api/customers/${repair?.customerId}`],
+    enabled: !!repair?.customerId && open,
   });
   
   // Geschäftsdaten laden
@@ -310,37 +298,28 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
   
-  // Setzt das Dokument auf "druckbereit", wenn alle Daten geladen sind
+  // Debug-Informationen und Zustandsverwaltung
   useEffect(() => {
-    // Wenn der Dialog nicht geöffnet ist, nichts tun
     if (!open) return;
     
-    // Timeout, der maximal 2 Sekunden wartet und dann die Vorschau auf jeden Fall anzeigt
-    const backupTimerId = setTimeout(() => {
-      if (repair && customer) {
-        console.warn('Backup-Timer: Zeige A4-Vorschau nach Timeout mit minimalen Daten');
-        setPrintReady(true);
-      }
-    }, 2000);
+    console.log('A4 Dialog Debug:', {
+      open,
+      repairId,
+      repair: !!repair,
+      customer: !!customer,
+      isLoading,
+      isLoadingCustomer,
+      error: error?.message,
+      repairData: repair ? { id: repair.id, orderCode: repair.orderCode, customerId: repair.customerId } : null,
+      customerData: customer ? { id: customer.id, firstName: customer.firstName, lastName: customer.lastName } : null
+    });
     
-    try {
-      // Normale Bedingung: Wenn alle Daten geladen sind, sofort anzeigen
-      if (repair && customer && !isLoading && !isLoadingCustomer) {
-        // businessSettings ist optional - Vorschau wird trotzdem angezeigt
-        console.log('A4-Vorschau wird angezeigt mit Repair/Customer');
-        setPrintReady(true);
-        clearTimeout(backupTimerId); // Timer nicht mehr benötigt
-      }
-    } catch (error) {
-      console.error('Fehler beim Vorbereiten der Druckansicht:', error);
-      // Trotz Fehler auf druckbereit setzen, damit der Benutzer die Vorschau sehen kann
+    // Wenn alle Daten geladen sind, auf druckbereit setzen
+    if (repair && customer && !isLoading && !isLoadingCustomer && !error) {
+      console.log('A4-Vorschau bereit - alle Daten geladen');
       setPrintReady(true);
-      clearTimeout(backupTimerId);
     }
-    
-    // Cleanup-Funktion zum Aufräumen
-    return () => clearTimeout(backupTimerId);
-  }, [open, repair, customer, isLoading, isLoadingCustomer]);
+  }, [open, repair, customer, isLoading, isLoadingCustomer, error, repairId]);
   
   // Zeigt eine Lade-Animation, wenn die Daten noch nicht bereit sind
   if (open && (!printReady || isLoading || isLoadingCustomer)) {
