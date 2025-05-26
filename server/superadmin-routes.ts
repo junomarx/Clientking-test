@@ -1141,8 +1141,43 @@ export function registerSuperadminRoutes(app: Express) {
 
   app.get("/api/superadmin/brands", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      const allBrands = await db.select().from(userBrands);
-      res.json(allBrands);
+      // Marken mit Gerätetyp-Namen abrufen
+      const allBrands = await db.select({
+        id: userBrands.id,
+        name: userBrands.name,
+        deviceTypeId: userBrands.deviceTypeId,
+        userId: userBrands.userId,
+        shopId: userBrands.shopId,
+        createdAt: userBrands.createdAt,
+        updatedAt: userBrands.updatedAt,
+      }).from(userBrands);
+
+      // Alle Gerätetypen abrufen (Standard + Benutzer)
+      const standardDeviceTypes = ["Smartphone", "Tablet", "Laptop", "Watch", "Spielekonsole"];
+      const userDeviceTypesList = await db.select().from(userDeviceTypes);
+      
+      // Marken mit Gerätetyp-Namen anreichern
+      const brandsWithDeviceTypeName = allBrands.map(brand => {
+        let deviceTypeName = 'Unbekannt';
+        
+        // Erst in Standard-Gerätetypen suchen
+        if (brand.deviceTypeId <= standardDeviceTypes.length) {
+          deviceTypeName = standardDeviceTypes[brand.deviceTypeId - 1] || 'Unbekannt';
+        } else {
+          // In Benutzer-Gerätetypen suchen
+          const userDeviceType = userDeviceTypesList.find(dt => dt.id === brand.deviceTypeId);
+          if (userDeviceType) {
+            deviceTypeName = userDeviceType.name;
+          }
+        }
+        
+        return {
+          ...brand,
+          deviceTypeName
+        };
+      });
+
+      res.json(brandsWithDeviceTypeName);
     } catch (error) {
       console.error("Fehler beim Abrufen der Marken:", error);
       res.status(500).json({ message: "Fehler beim Abrufen der Marken" });
