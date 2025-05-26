@@ -43,19 +43,20 @@ export async function exportAsPdf(content: string, filename: string = 'Kostenvor
     tempDiv.style.top = '0';
     tempDiv.style.width = '794px'; // A4 Breite in Pixel (210mm)
     tempDiv.style.backgroundColor = '#ffffff';
-    tempDiv.style.padding = '40px'; // Padding in Pixel
+    tempDiv.style.padding = '30px'; // Reduziertes Padding
     tempDiv.style.fontFamily = 'Arial, sans-serif';
     tempDiv.style.fontSize = '14px';
-    tempDiv.style.lineHeight = '1.4';
+    tempDiv.style.lineHeight = '1.3'; // Kompaktere Zeilen
+    tempDiv.style.minHeight = '1000px'; // Mindesthöhe für vollständigen Inhalt
     
     document.body.appendChild(tempDiv);
     
     // Warte kurz bis das Element im DOM ist
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    // Erstelle Canvas vom HTML-Inhalt
+    // Erstelle Canvas vom HTML-Inhalt - automatische Höhe für vollständigen Inhalt
     const canvas = await html2canvas(tempDiv, {
-      scale: 2.0, // Höhere Skalierung für bessere A4-Größe
+      scale: 1.8, // Etwas reduzierte Skalierung für bessere Performance
       logging: false,
       useCORS: true,
       allowTaint: true,
@@ -63,7 +64,7 @@ export async function exportAsPdf(content: string, filename: string = 'Kostenvor
       imageTimeout: 10000,
       removeContainer: true,
       width: 794, // A4 Breite
-      height: 1123, // A4 Höhe
+      // height entfernt - automatische Höhe basierend auf Inhalt
     });
     
     // Entferne temporäres Element

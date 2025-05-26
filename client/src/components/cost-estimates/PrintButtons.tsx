@@ -127,16 +127,17 @@ export function PrintButtons({
       tempDiv.style.top = '0';
       tempDiv.style.width = '794px';
       tempDiv.style.backgroundColor = '#ffffff';
-      tempDiv.style.padding = '40px';
+      tempDiv.style.padding = '30px';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
       tempDiv.style.fontSize = '14px';
-      tempDiv.style.lineHeight = '1.4';
+      tempDiv.style.lineHeight = '1.3';
+      tempDiv.style.minHeight = '1000px';
       
       document.body.appendChild(tempDiv);
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const canvas = await html2canvas(tempDiv, {
-        scale: 2.0,
+        scale: 1.8,
         logging: false,
         useCORS: true,
         allowTaint: true,
@@ -144,7 +145,7 @@ export function PrintButtons({
         imageTimeout: 10000,
         removeContainer: true,
         width: 794,
-        height: 1123,
+        // height entfernt für automatische Höhe basierend auf Inhalt
       });
       
       document.body.removeChild(tempDiv);
