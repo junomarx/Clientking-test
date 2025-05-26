@@ -138,10 +138,29 @@ export default function AuthPage() {
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
+    console.log("📤 Frontend sendet Registrierungsdaten:", registerData);
+    console.log("📊 Feld-Check:", {
+      ownerFirstName: !!registerData.ownerFirstName,
+      ownerLastName: !!registerData.ownerLastName,
+      streetAddress: !!registerData.streetAddress,
+      zipCode: !!registerData.zipCode,
+      city: !!registerData.city,
+      country: !!registerData.country,
+      companyName: !!registerData.companyName,
+      email: !!registerData.email,
+      taxId: !!registerData.taxId,
+      username: !!registerData.username,
+      password: !!registerData.password
+    });
+    
     registerMutation.mutate(registerData, {
       onSuccess: () => {
+        console.log("✅ Registrierung erfolgreich!");
         // Dialog öffnen
         setIsSuccessDialogOpen(true);
+      },
+      onError: (error) => {
+        console.error("❌ Registrierung fehlgeschlagen:", error);
       }
     });
   }
