@@ -78,6 +78,11 @@ export function CreateTestUserDialog({ children }: CreateTestUserDialogProps) {
         ...data,
         password: "TestPass123!" // Standard-Passwort für Testbenutzer
       });
+      
+      if (!response.ok) {
+        throw new Error(`Fehler: ${response.status}`);
+      }
+      
       return response.json();
     },
     onSuccess: () => {
