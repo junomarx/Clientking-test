@@ -898,16 +898,15 @@ export default function ResponsiveSuperadminDevicesTab() {
       return;
     }
     
-    const models = bulkModelText.split('\n').filter(model => model.trim() !== '');
+    const modelNames = bulkModelText.split('\n')
+      .map(line => line.trim())
+      .filter(line => line !== '');
     
-    console.log("Bereite Import vor:", { models, brandId: selectedBrandForBulk });
+    console.log("Bereite Import vor:", { modelNames, brandId: selectedBrandForBulk });
     
     importBulkModelsMutation.mutate({
-      brandId: parseInt(selectedBrandForBulk.toString()), // Sicherstellen dass es eine Zahl ist
-      models: models.map(modelName => ({
-        name: modelName.trim(),
-        brandId: parseInt(selectedBrandForBulk.toString())
-      }))
+      brandId: parseInt(selectedBrandForBulk.toString()),
+      models: modelNames
     });
   };
 
