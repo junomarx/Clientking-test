@@ -178,7 +178,13 @@ export default function ResponsiveSuperadminDevicesTab() {
   const filteredBrands = brandsData.filter((brand: Brand) => {
     if (!brand || !brand.name) return false;
     const nameMatches = brand.name.toLowerCase().includes(brandSearchTerm.toLowerCase());
-    const typeMatches = !selectedBrandDeviceType || brand.deviceTypeName === selectedBrandDeviceType;
+    const typeMatches = !selectedBrandDeviceType || selectedBrandDeviceType === "all" || brand.deviceTypeName === selectedBrandDeviceType;
+    
+    // Debug-Ausgabe für die ersten paar Marken
+    if (brandsData.indexOf(brand) < 3) {
+      console.log(`Brand Filter Debug - Brand: ${brand.name}, DeviceType: ${brand.deviceTypeName}, Selected: ${selectedBrandDeviceType}, TypeMatches: ${typeMatches}, NameMatches: ${nameMatches}`);
+    }
+    
     return nameMatches && typeMatches;
   });
 
