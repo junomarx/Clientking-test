@@ -511,6 +511,7 @@ export default function ResponsiveSuperadminDevicesTab() {
       }
       
       const response = await apiRequest('POST', '/api/superadmin/device-models/bulk', {
+        brandId: data.brandId,
         models: modelsToImport
       });
       
