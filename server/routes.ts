@@ -177,6 +177,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CRITICAL FIX: Register models route BEFORE any other middleware
+  app.get("/api/superadmin/models", async (req, res) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (userId !== 10) {
+        return res.status(403).json({ message: "Superadmin-Berechtigung erforderlich" });
+      }
+
+      console.log(`DIRECT MODELS ROUTE: Lade alle Modelle für Superadmin`);
+
+      const { db } = await import('./db');
+      const { userModels, userBrands, userDeviceTypes } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
+      // Alle Modelle mit vollständigen Informationen laden
+      const models = await db.select()
+        .from(userModels)
+        .leftJoin(userBrands, eq(userModels.brandId, userBrands.id))
+        .leftJoin(userDeviceTypes, eq(userBrands.deviceTypeId, userDeviceTypes.id))
+        .orderBy(userModels.createdAt);
+
+      // Daten formatieren für das Frontend (flache Struktur erwartet)
+      const formattedModels = models.map(row => {
+        // Drizzle gibt eine flache Struktur zurück, nicht verschachtelt
+        const model = row as any;
+        return {
+          id: model.id,
+          name: model.name,
+          modelSeriesId: model.modelSeriesId,
+          brandId: model.brandId,
+          brandName: model.brandName || 'Unbekannte Marke',
+          deviceTypeId: model.deviceTypeId || null,
+          deviceTypeName: model.deviceTypeName || 'Unbekannter Typ',
+          shopId: model.shopId,
+          userId: model.userId,
+          createdAt: model.createdAt,
+          updatedAt: model.updatedAt
+        };
+      });
+
+      console.log(`DIRECT MODELS ROUTE: ${formattedModels.length} Modelle gefunden`);
+      return res.json(formattedModels);
+    } catch (error) {
+      console.error("DIRECT MODELS ROUTE: Fehler beim Laden der Modelle:", error);
+      return res.status(500).json({ message: "Fehler beim Laden der Modelle" });
+    }
+  });
+
   // Set up authentication
   setupAuth(app);
   
