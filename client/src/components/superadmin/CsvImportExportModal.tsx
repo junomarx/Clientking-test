@@ -117,7 +117,7 @@ export default function CsvImportExportModal({
                 className="w-full"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Exportieren ({filteredData.length} Einträge)
+                Exportieren ({filteredData?.length || 0} Einträge)
               </Button>
             </div>
           </div>

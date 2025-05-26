@@ -1936,13 +1936,13 @@ export default function ResponsiveSuperadminDevicesTab() {
       
       {/* CSV Import/Export Modal */}
       <CsvImportExportModal
-        isOpen={showCsvModal}
-        onClose={() => setShowCsvModal(false)}
+        open={showCsvModal}
+        onOpenChange={(open) => setShowCsvModal(open)}
         type={activeTab === "types" ? "deviceType" : activeTab === "brands" ? "brand" : "model"}
-        data={
-          activeTab === "types" ? deviceTypesList :
-          activeTab === "brands" ? brandsData :
-          modelsData
+        filteredData={
+          activeTab === "types" ? filteredDeviceTypes :
+          activeTab === "brands" ? filteredBrands :
+          filteredModels
         }
         onImport={() => {}} // TODO: Implement CSV import
         onExport={() => {}} // TODO: Implement CSV export
