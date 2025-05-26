@@ -186,7 +186,7 @@ export default function ResponsiveSuperadminDevicesTab() {
     if (!model || !model.name) return false;
     const nameMatches = model.name.toLowerCase().includes(modelSearchTerm.toLowerCase());
     const typeMatches = !selectedModelDeviceType || model.deviceTypeName === selectedModelDeviceType;
-    const brandMatches = !selectedModelsBrandId || model.brandId === selectedModelsBrandId;
+    const brandMatches = !selectedModelsBrandId || selectedModelsBrandId === 0 || model.brandId === selectedModelsBrandId;
     return nameMatches && typeMatches && brandMatches;
   });
 
