@@ -72,6 +72,8 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
     const placeholder = placeholderWithBraces.replace(/[{}]/g, '');
     const value = variables[placeholder] || '';
     
+    console.log(`Verarbeite Platzhalter: ${placeholder} = "${value}"`);
+    
     // Wenn der Wert leer ist
     if (value.trim() === '') {
       try {
