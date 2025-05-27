@@ -660,7 +660,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
-                    // Direkter Druck mit exakt dem gleichen Layout wie das PDF
+                    // Direkter Druck mit dem exakten Layout aus dem A4-Druckinhalt
                     const printWindow = window.open('', '_blank');
                     if (!printWindow) {
                       toast({
@@ -671,15 +671,16 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                       return;
                     }
                     
-                    // Erstelle das gleiche HTML wie im PDF, aber für direkten Druck
-                    const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
-                    const streetAddress = businessSettings?.streetAddress || 'Amerlingstraße 19';
-                    const zipCode = businessSettings?.zipCode || '1060';
-                    const city = businessSettings?.city || 'Wien';
-                    const phone = businessSettings?.phone || '+4314103511';
-                    const email = businessSettings?.email || 'office@macandphonedoc.at';
-                    
-                    const orderDate = format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de });
+                    // Verwende das bestehende A4-Druckinhalt Element
+                    const content = document.getElementById('a4-print-content');
+                    if (!content) {
+                      toast({
+                        title: "Fehler",
+                        description: "Druckinhalt konnte nicht gefunden werden.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
                     
                     printWindow.document.write(`
                       <!DOCTYPE html>
@@ -690,59 +691,69 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                           <style>
                             @media print {
                               body { margin: 0; padding: 0; }
-                              @page { size: A4; margin: 15mm; }
+                              @page { size: A4; margin: 1cm; }
                             }
                             body {
                               font-family: Arial, sans-serif;
                               line-height: 1.4;
                               color: #000;
                               background: white;
-                              padding: 20px;
                             }
-                            .header { margin-bottom: 30px; }
-                            .company-name { font-size: 16pt; font-weight: bold; margin-bottom: 8px; }
-                            .company-info { font-size: 10pt; line-height: 1.3; }
-                            .title { font-size: 18pt; font-weight: bold; margin: 30px 0 20px 0; }
-                            .section-title { font-size: 14pt; font-weight: bold; margin: 20px 0 8px 0; }
-                            .info-line { font-size: 11pt; margin-bottom: 5px; }
-                            .problem-text { font-size: 11pt; line-height: 1.4; }
+                            .print-content {
+                              padding: 0;
+                              max-width: 100%;
+                            }
+                            /* Alle Styles aus dem ursprünglichen A4-Inhalt übernehmen */
+                            .bg-white { background-color: white; }
+                            .text-black { color: black; }
+                            .p-8 { padding: 2rem; }
+                            .sm\\:p-10 { padding: 2.5rem; }
+                            .md\\:p-12 { padding: 3rem; }
+                            .rounded-md { border-radius: 0.375rem; }
+                            .flex { display: flex; }
+                            .justify-between { justify-content: space-between; }
+                            .items-start { align-items: flex-start; }
+                            .items-center { align-items: center; }
+                            .mb-6 { margin-bottom: 1.5rem; }
+                            .mb-8 { margin-bottom: 2rem; }
+                            .mb-4 { margin-bottom: 1rem; }
+                            .mb-2 { margin-bottom: 0.5rem; }
+                            .mb-1 { margin-bottom: 0.25rem; }
+                            .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+                            .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+                            .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+                            .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+                            .text-base { font-size: 1rem; line-height: 1.5rem; }
+                            .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+                            .font-bold { font-weight: 700; }
+                            .font-semibold { font-weight: 600; }
+                            .text-gray-600 { color: rgb(75 85 99); }
+                            .text-gray-800 { color: rgb(31 41 55); }
+                            .border-b { border-bottom-width: 1px; }
+                            .border-gray-200 { border-color: rgb(229 231 235); }
+                            .pb-2 { padding-bottom: 0.5rem; }
+                            .pb-4 { padding-bottom: 1rem; }
+                            .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
+                            .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+                            .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+                            .w-\\[200px\\] { width: 200px; }
+                            .h-\\[50px\\] { height: 50px; }
+                            .p-2 { padding: 0.5rem; }
+                            .text-center { text-align: center; }
+                            .max-w-\\[150px\\] { max-width: 150px; }
+                            .max-h-\\[40px\\] { max-height: 40px; }
+                            .object-contain { object-fit: contain; }
+                            .border { border-width: 1px; }
+                            .border-dashed { border-style: dashed; }
+                            .grid { display: grid; }
+                            .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                            .gap-8 { gap: 2rem; }
                           </style>
                         </head>
                         <body>
-                          <div class="header">
-                            <div class="company-name">${businessName}</div>
-                            <div class="company-info">
-                              ${streetAddress}<br>
-                              ${zipCode} ${city}<br>
-                              Tel: ${phone}<br>
-                              E-Mail: ${email}
-                            </div>
+                          <div class="print-content">
+                            ${content.innerHTML}
                           </div>
-                          
-                          <div class="title">REPARATURAUFTRAG</div>
-                          
-                          <div class="info-line"><strong>Auftragsnummer:</strong> ${repair.orderCode}</div>
-                          <div class="info-line"><strong>Datum:</strong> ${orderDate}</div>
-                          
-                          <div class="section-title">KUNDENDATEN</div>
-                          <div class="info-line"><strong>Name:</strong> ${customer.firstName} ${customer.lastName}</div>
-                          <div class="info-line"><strong>Telefon:</strong> ${customer.phone}</div>
-                          <div class="info-line"><strong>E-Mail:</strong> ${customer.email}</div>
-                          ${customer.address ? `<div class="info-line"><strong>Adresse:</strong> ${customer.address}</div>` : ''}
-                          
-                          <div class="section-title">GERÄTEDATEN</div>
-                          <div class="info-line"><strong>Gerät:</strong> ${repair.deviceType || 'Nicht angegeben'}</div>
-                          <div class="info-line"><strong>Marke:</strong> ${repair.brand || 'Nicht angegeben'}</div>
-                          <div class="info-line"><strong>Modell:</strong> ${repair.model || 'Nicht angegeben'}</div>
-                          ${repair.devicePassword ? `<div class="info-line"><strong>Gerätecode:</strong> ${repair.devicePassword}</div>` : ''}
-                          
-                          <div class="section-title">FEHLERBESCHREIBUNG</div>
-                          <div class="problem-text">${repair.problemDescription || 'Keine Beschreibung angegeben'}</div>
-                          
-                          <div class="section-title">STATUS</div>
-                          <div class="info-line"><strong>Aktueller Status:</strong> ${repair.status}</div>
-                          ${repair.estimatedCost ? `<div class="info-line"><strong>Geschätzte Kosten:</strong> €${repair.estimatedCost}</div>` : ''}
-                          
                           <script>
                             window.onload = function() {
                               setTimeout(function() {
@@ -758,7 +769,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                     printWindow.document.close();
                     toast({
                       title: "Druckdialog geöffnet",
-                      description: "Der Reparaturauftrag wird direkt gedruckt.",
+                      description: "Der Reparaturauftrag wird mit identischem Layout gedruckt.",
                     });
                   }}
                   variant="outline"
