@@ -2653,41 +2653,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }],
         userId: userId
       });
-
-    <div class="document-title">Reparaturauftrag</div>
-    <div class="auftragsnummer">${orderCode || `#${repairId}`}</div>
-
-    <div class="device-repair-box">
-        <div class="info-column">
-            <div class="info-item">
-                <div class="info-label">Hersteller</div>
-                <div class="info-value">${repair.brand}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Modell</div>
-                <div class="info-value">${repair.model}</div>
-            </div>
-        </div>
-        <div class="info-column">
-            <div class="info-item">
-                <div class="info-label">Schaden / Fehler</div>
-                <div class="info-value">${repair.issue}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Kosten</div>
-                <div class="info-value">${repair.estimatedCost ? repair.estimatedCost + '€' : 'Nach Diagnose'}</div>
-            </div>
-        </div>
-    </div>
-
-        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
-        attachments: [{
-          filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        }],
-        userId: userId
-      });
       
       if (!emailSent) {
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
