@@ -631,6 +631,32 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 PDF herunterladen
               </Button>
               
+              <Button
+                onClick={() => {
+                  if (pdfBase64) {
+                    const pdfWindow = window.open('', '_blank');
+                    if (pdfWindow) {
+                      pdfWindow.document.write(`
+                        <html>
+                          <head><title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title></head>
+                          <body style="margin:0;padding:0;">
+                            <embed src="data:application/pdf;base64,${pdfBase64}" type="application/pdf" width="100%" height="100%" />
+                          </body>
+                        </html>
+                      `);
+                      pdfWindow.document.close();
+                      pdfWindow.print();
+                    }
+                  }
+                  setShowActionDialog(false);
+                }}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                PDF drucken
+              </Button>
+              
               {customer?.email && (
                 <Button
                   onClick={handleSendPdfEmail}
