@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { SecretStatsDialog } from '@/components/settings/SecretStatsDialog';
 
 // Schema für die Geschäftseinstellungen
 const businessSettingsSchema = z.object({
@@ -217,6 +218,10 @@ export default function SettingsPage() {
   const [, setLocation] = useLocation();
   const { settings, isLoading } = useBusinessSettings();
   const { toast } = useToast();
+  
+  // Zustand für den geheimen Statistik-Dialog
+  const [isStatsDialogOpen, setIsStatsDialogOpen] = useState(false);
+  const [secretClickCount, setSecretClickCount] = useState(0);
 
   // Form Definition mit React Hook Form und Zod Validierung
   const form = useForm<ExtendedBusinessSettingsFormValues>({
@@ -313,6 +318,17 @@ export default function SettingsPage() {
     console.log('Form submitted with data:', Object.keys(data));
     updateMutation.mutate(data);
   }
+
+  // Handler für geheime Statistik-Klicks
+  const handleSecretClick = () => {
+    setSecretClickCount(prev => prev + 1);
+    
+    // Nach 5 Klicks Dialog öffnen
+    if (secretClickCount >= 4) {
+      setIsStatsDialogOpen(true);
+      setSecretClickCount(0);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -826,6 +842,19 @@ export default function SettingsPage() {
                       <Label>Standardtext für Belege</Label>
                       <Textarea placeholder="Dieser Text erscheint am Ende jeder Quittung" className="h-24" />
                     </div>
+                    
+                    {/* Geheimer Statistik-Button */}
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <Label className="text-sm text-gray-500">Druckqualität</Label>
+                      <button
+                        type="button"
+                        onClick={handleSecretClick}
+                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                        style={{ background: 'none', border: 'none', padding: '2px 4px' }}
+                      >
+                        {secretClickCount > 0 ? `${secretClickCount}/5` : 'Standard'}
+                      </button>
+                    </div>
                   </form>
                 </Form>
               </CardContent>
@@ -843,6 +872,12 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Geheimer Statistik-Dialog */}
+      <SecretStatsDialog 
+        isOpen={isStatsDialogOpen} 
+        onClose={() => setIsStatsDialogOpen(false)} 
+      />
     </div>
   );
 }
