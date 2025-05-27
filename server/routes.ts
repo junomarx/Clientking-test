@@ -2645,6 +2645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <p>Mit freundlichen Grüßen,</p>
             <p><strong>${senderName}</strong></p>
           </div>
+        `,
         textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
           filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
