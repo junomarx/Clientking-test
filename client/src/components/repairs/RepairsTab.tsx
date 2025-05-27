@@ -130,6 +130,15 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     }
   }, [location]);
 
+  // Zusätzlicher useEffect, um sicherzustellen, dass der Filter beim Laden der Komponente auf "all" gesetzt wird
+  useEffect(() => {
+    // Nur setzen, wenn kein URL-Parameter vorhanden ist
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('status')) {
+      setStatusFilter('all');
+    }
+  }, []);
+
   // Hier benutzen wir SchemaRepair für die Anfrage und konvertieren dann zu unserem Repair-Typ
   const { data: schemaRepairs, isLoading: repairsLoading } = useQuery<SchemaRepair[]>({
     queryKey: ['/api/repairs']
