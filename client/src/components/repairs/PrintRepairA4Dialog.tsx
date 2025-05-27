@@ -853,88 +853,91 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               
               <div className="flex space-x-2">
                 <Button
-                  onClick={() => {
-                    // Verwende die exakte Deployment-Methode aus NewPrintRepairDialog
-                    const printWindow = window.open('', '_blank');
+                  onClick={async () => {
+                    // Deployment-Methode: Erst PDF erstellen, dann drucken
+                    setIsGeneratingPdf(true);
                     
-                    if (!printWindow) {
-                      toast({
-                        title: "Drucken fehlgeschlagen",
-                        description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
-                        variant: "destructive"
+                    try {
+                      // Zuerst PDF generieren (wie in der ursprünglichen generatePDF Funktion)
+                      const content = document.getElementById('a4-print-content');
+                      if (!content) {
+                        throw new Error('A4 print content not found');
+                      }
+
+                      const canvas = await html2canvas(content, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        width: content.scrollWidth,
+                        height: content.scrollHeight,
                       });
-                      return;
-                    }
-                    
-                    // Hole den A4-Druckinhalt 
-                    const fullContent = document.getElementById('a4-print-content');
-                    if (!fullContent) {
+
+                      const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4',
+                      });
+
+                      const imgWidth = 210;
+                      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                      
+                      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+                      
+                      // PDF als Blob für direktes Drucken erstellen
+                      const pdfBlob = pdf.output('blob');
+                      const blobUrl = URL.createObjectURL(pdfBlob);
+                      
+                      // PDF in neuem Fenster öffnen und drucken
+                      const printWindow = window.open(blobUrl, '_blank');
+                      
+                      if (printWindow) {
+                        // Warte bis PDF geladen ist, dann drucke
+                        setTimeout(() => {
+                          printWindow.print();
+                          // Optional: Fenster nach dem Drucken schließen
+                          setTimeout(() => {
+                            printWindow.close();
+                            URL.revokeObjectURL(blobUrl);
+                          }, 1000);
+                        }, 1000);
+                        
+                        toast({
+                          title: "PDF erstellt und Druckdialog geöffnet",
+                          description: "Das PDF wurde erstellt und der Druckdialog geöffnet.",
+                        });
+                        
+                        onClose();
+                      } else {
+                        throw new Error('Popup-Fenster konnte nicht geöffnet werden');
+                      }
+                      
+                    } catch (error) {
+                      console.error('Fehler beim PDF-Druck:', error);
                       toast({
                         title: "Fehler",
-                        description: "Druckinhalt konnte nicht gefunden werden.",
+                        description: "PDF konnte nicht erstellt oder gedruckt werden. Bitte versuchen Sie es erneut.",
                         variant: "destructive",
                       });
-                      return;
+                    } finally {
+                      setIsGeneratingPdf(false);
                     }
-                    
-                    // Schreibe den HTML-Inhalt ins neue Fenster - exakt wie im Deployment
-                    printWindow.document.write(`
-                      <!DOCTYPE html>
-                      <html>
-                      <head>
-                        <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
-                        <style>
-                          @media print {
-                            body { 
-                              margin: 0; 
-                              padding: 0; 
-                            }
-                            @page { 
-                              size: A4; 
-                              margin: 1cm; 
-                            }
-                          }
-                          body {
-                            margin: 0;
-                            padding: 20px;
-                            font-family: Arial, sans-serif;
-                            color: #000;
-                            background: white;
-                          }
-                          ${fullContent.querySelector('style')?.innerHTML || ''}
-                        </style>
-                      </head>
-                      <body>
-                        ${fullContent.innerHTML}
-                      </body>
-                      </html>
-                    `);
-                    
-                    printWindow.document.close();
-                    
-                    // Warte kurz, dann öffne den Druckdialog - exakt wie im Deployment
-                    setTimeout(() => {
-                      printWindow.focus();
-                      printWindow.print();
-                      // Schließe das Druckfenster nach dem Drucken
-                      setTimeout(() => {
-                        printWindow.close();
-                      }, 1000);
-                    }, 500);
-                    
-                    // Dialog schließen
-                    onClose();
-                    
-                    toast({
-                      title: "Druckdialog geöffnet",
-                      description: "Der Druckdialog wurde geöffnet.",
-                    });
                   }}
                   variant="outline"
                   className="mr-2"
+                  disabled={isGeneratingPdf}
                 >
-                  <Printer className="mr-2 h-4 w-4" />
-                  Direkt drucken
+                  {isGeneratingPdf ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Erstelle PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="mr-2 h-4 w-4" />
+                      PDF erstellen und drucken
+                    </>
+                  )}
                 </Button>
                 
                 <Button
