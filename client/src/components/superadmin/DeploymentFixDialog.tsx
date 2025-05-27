@@ -54,7 +54,7 @@ export function DeploymentFixDialog({ children }: DeploymentFixDialogProps) {
       setFixResults(data.results);
       toast({
         title: "Deployment-Reparatur abgeschlossen",
-        description: `${data.summary.usersFixed} Benutzer, ${data.summary.businessSettingsCreated} Business Settings, ${data.summary.modelsDistributed} Modelle repariert.`,
+        description: `${data.summary.businessSettingsCreated} Business Settings erstellt, ${data.summary.modelsDistributed} Modelle verteilt.`,
       });
       
       // Cache invalidieren für alle relevanten Daten
@@ -98,9 +98,7 @@ export function DeploymentFixDialog({ children }: DeploymentFixDialogProps) {
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Was wird repariert:</h4>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• Inaktive Benutzer aktivieren</li>
-              <li>• Fehlende Shop-IDs zuweisen</li>
-              <li>• Business Settings erstellen/vervollständigen</li>
+              <li>• Leere Geschäftsdaten im Bearbeiten-Dialog auffüllen</li>
               <li>• Gerätemodelle für alle Benutzer verfügbar machen</li>
             </ul>
           </div>

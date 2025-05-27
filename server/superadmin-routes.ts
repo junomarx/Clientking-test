@@ -3728,70 +3728,7 @@ export function registerSuperadminRoutes(app: Express) {
       let businessSettingsCreated = 0;
       let modelsDistributed = 0;
 
-      // SCHRITT 1: Benutzer aktivieren
-      try {
-        const activateUsersResult = await db.execute(sql`
-          UPDATE users 
-          SET is_active = true
-          WHERE is_active = false 
-          AND id > 1
-          AND (
-            company_name IS NOT NULL 
-            OR email LIKE '%@%'
-          )
-        `);
-        
-        usersFixed = activateUsersResult.rowCount || 0;
-        results.push({
-          step: "Benutzer aktivieren",
-          success: true,
-          message: `${usersFixed} Benutzer wurden aktiviert`,
-          details: "Benutzer mit gültigen Daten wurden automatisch aktiviert"
-        });
-      } catch (error) {
-        results.push({
-          step: "Benutzer aktivieren",
-          success: false,
-          message: "Fehler beim Aktivieren von Benutzern",
-          details: (error as Error).message
-        });
-      }
-
-      // SCHRITT 2: Shop-IDs zuweisen
-      try {
-        await db.execute(sql`
-          WITH next_shop_id AS (
-            SELECT COALESCE(MAX(shop_id), 0) + 1 as start_id 
-            FROM users 
-            WHERE shop_id IS NOT NULL
-          ),
-          user_ranks AS (
-            SELECT id, ROW_NUMBER() OVER (ORDER BY id) - 1 as rank_num
-            FROM users 
-            WHERE shop_id IS NULL AND is_active = true AND id > 1
-          )
-          UPDATE users 
-          SET shop_id = next_shop_id.start_id + user_ranks.rank_num
-          FROM next_shop_id, user_ranks
-          WHERE users.id = user_ranks.id
-        `);
-
-        results.push({
-          step: "Shop-IDs zuweisen",
-          success: true,
-          message: "Shop-IDs wurden korrekt zugewiesen",
-          details: "Alle aktiven Benutzer haben jetzt eindeutige Shop-IDs"
-        });
-      } catch (error) {
-        results.push({
-          step: "Shop-IDs zuweisen",
-          success: false,
-          message: "Fehler beim Zuweisen von Shop-IDs",
-          details: (error as Error).message
-        });
-      }
-
-      // SCHRITT 3: Business Settings erstellen
+      // SCHRITT 1: Business Settings erstellen
       try {
         const businessSettingsResult = await db.execute(sql`
           INSERT INTO business_settings (
@@ -3955,13 +3892,12 @@ export function registerSuperadminRoutes(app: Express) {
         });
       }
 
-      console.log(`✅ Deployment-Reparatur abgeschlossen: ${usersFixed} Benutzer, ${businessSettingsCreated} Settings, ${modelsDistributed} Modelle`);
+      console.log(`✅ Deployment-Reparatur abgeschlossen: ${businessSettingsCreated} Settings, ${modelsDistributed} Modelle`);
 
       res.json({
         success: true,
         results,
         summary: {
-          usersFixed,
           businessSettingsCreated,
           modelsDistributed
         }
