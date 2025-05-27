@@ -468,78 +468,6 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         
         {printReady && repair && customer && (
           <>
-            {/* Direkte Druckfunktion ohne PDF-Erstellung */}
-            <div className="print:hidden mb-4">
-              <Button
-                onClick={() => {
-                  // Direkter Druck wie bei Kostenvoranschlägen
-                  const printWindow = window.open('', '_blank');
-                  if (!printWindow) {
-                    toast({
-                      title: "Fehler",
-                      description: "Popup-Blocker verhindern das Öffnen des Druckfensters. Bitte erlauben Sie Popups für diese Seite.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  
-                  // HTML-Inhalt für direkten Druck generieren
-                  const content = document.getElementById('a4-print-content');
-                  if (!content) return;
-                  
-                  printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                      <head>
-                        <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
-                        <meta charset="UTF-8">
-                        <style>
-                          @media print {
-                            body { margin: 0; padding: 0; }
-                            @page { size: A4; margin: 1cm; }
-                          }
-                          body {
-                            font-family: Arial, sans-serif;
-                            line-height: 1.4;
-                            color: #000;
-                            background: white;
-                          }
-                          .print-content {
-                            padding: 20px;
-                            max-width: 100%;
-                          }
-                        </style>
-                      </head>
-                      <body>
-                        <div class="print-content">
-                          ${content.innerHTML}
-                        </div>
-                        <script>
-                          window.onload = function() {
-                            setTimeout(function() {
-                              window.print();
-                              window.close();
-                            }, 500);
-                          };
-                        </script>
-                      </body>
-                    </html>
-                  `);
-                  
-                  printWindow.document.close();
-                  toast({
-                    title: "Druckdialog geöffnet",
-                    description: "Das Reparaturauftrag wird direkt gedruckt.",
-                  });
-                }}
-                className="mr-2"
-                variant="default"
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Direkt drucken
-              </Button>
-            </div>
-          <>
             {/* Druckinhalt - Neue DIN A4 Vorlage */}
             <div id="a4-print-content" className="bg-white text-black p-8 sm:p-10 md:p-12 rounded-md">
               <style dangerouslySetInnerHTML={{ __html: `
@@ -730,6 +658,116 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               </Button>
               
               <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    // Direkter Druck mit exakt dem gleichen Layout wie das PDF
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                      toast({
+                        title: "Fehler",
+                        description: "Popup-Blocker verhindern das Öffnen des Druckfensters. Bitte erlauben Sie Popups für diese Seite.",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    // Erstelle das gleiche HTML wie im PDF, aber für direkten Druck
+                    const businessName = businessSettings?.businessName || 'Handyshop Verwaltung';
+                    const streetAddress = businessSettings?.streetAddress || 'Amerlingstraße 19';
+                    const zipCode = businessSettings?.zipCode || '1060';
+                    const city = businessSettings?.city || 'Wien';
+                    const phone = businessSettings?.phone || '+4314103511';
+                    const email = businessSettings?.email || 'office@macandphonedoc.at';
+                    
+                    const orderDate = format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de });
+                    
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
+                          <meta charset="UTF-8">
+                          <style>
+                            @media print {
+                              body { margin: 0; padding: 0; }
+                              @page { size: A4; margin: 15mm; }
+                            }
+                            body {
+                              font-family: Arial, sans-serif;
+                              line-height: 1.4;
+                              color: #000;
+                              background: white;
+                              padding: 20px;
+                            }
+                            .header { margin-bottom: 30px; }
+                            .company-name { font-size: 16pt; font-weight: bold; margin-bottom: 8px; }
+                            .company-info { font-size: 10pt; line-height: 1.3; }
+                            .title { font-size: 18pt; font-weight: bold; margin: 30px 0 20px 0; }
+                            .section-title { font-size: 14pt; font-weight: bold; margin: 20px 0 8px 0; }
+                            .info-line { font-size: 11pt; margin-bottom: 5px; }
+                            .problem-text { font-size: 11pt; line-height: 1.4; }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="header">
+                            <div class="company-name">${businessName}</div>
+                            <div class="company-info">
+                              ${streetAddress}<br>
+                              ${zipCode} ${city}<br>
+                              Tel: ${phone}<br>
+                              E-Mail: ${email}
+                            </div>
+                          </div>
+                          
+                          <div class="title">REPARATURAUFTRAG</div>
+                          
+                          <div class="info-line"><strong>Auftragsnummer:</strong> ${repair.orderCode}</div>
+                          <div class="info-line"><strong>Datum:</strong> ${orderDate}</div>
+                          
+                          <div class="section-title">KUNDENDATEN</div>
+                          <div class="info-line"><strong>Name:</strong> ${customer.firstName} ${customer.lastName}</div>
+                          <div class="info-line"><strong>Telefon:</strong> ${customer.phone}</div>
+                          <div class="info-line"><strong>E-Mail:</strong> ${customer.email}</div>
+                          ${customer.address ? `<div class="info-line"><strong>Adresse:</strong> ${customer.address}</div>` : ''}
+                          
+                          <div class="section-title">GERÄTEDATEN</div>
+                          <div class="info-line"><strong>Gerät:</strong> ${repair.deviceType || 'Nicht angegeben'}</div>
+                          <div class="info-line"><strong>Marke:</strong> ${repair.brand || 'Nicht angegeben'}</div>
+                          <div class="info-line"><strong>Modell:</strong> ${repair.model || 'Nicht angegeben'}</div>
+                          ${repair.devicePassword ? `<div class="info-line"><strong>Gerätecode:</strong> ${repair.devicePassword}</div>` : ''}
+                          
+                          <div class="section-title">FEHLERBESCHREIBUNG</div>
+                          <div class="problem-text">${repair.problemDescription || 'Keine Beschreibung angegeben'}</div>
+                          
+                          <div class="section-title">STATUS</div>
+                          <div class="info-line"><strong>Aktueller Status:</strong> ${repair.status}</div>
+                          ${repair.estimatedCost ? `<div class="info-line"><strong>Geschätzte Kosten:</strong> €${repair.estimatedCost}</div>` : ''}
+                          
+                          <script>
+                            window.onload = function() {
+                              setTimeout(function() {
+                                window.print();
+                                window.close();
+                              }, 500);
+                            };
+                          </script>
+                        </body>
+                      </html>
+                    `);
+                    
+                    printWindow.document.close();
+                    toast({
+                      title: "Druckdialog geöffnet",
+                      description: "Der Reparaturauftrag wird direkt gedruckt.",
+                    });
+                  }}
+                  variant="outline"
+                  className="mr-2"
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  Direkt drucken
+                </Button>
+                
                 <Button
                   onClick={generatePDF}
                   disabled={isGeneratingPdf}
