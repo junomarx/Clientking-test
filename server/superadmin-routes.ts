@@ -3717,6 +3717,265 @@ export function registerSuperadminRoutes(app: Express) {
       res.status(500).json({ message: "Fehler beim Erstellen des Testbenutzers" });
     }
   });
+
+  // Deployment-Reparatur ausführen
+  app.post("/api/superadmin/deployment-fix", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log(`🔧 Superadmin ${req.user?.username} startet Deployment-Reparatur`);
+
+      const results: any[] = [];
+      let usersFixed = 0;
+      let businessSettingsCreated = 0;
+      let modelsDistributed = 0;
+
+      // SCHRITT 1: Benutzer aktivieren
+      try {
+        const activateUsersResult = await db.execute(sql`
+          UPDATE users 
+          SET is_active = true
+          WHERE is_active = false 
+          AND id > 1
+          AND (
+            company_name IS NOT NULL 
+            OR email LIKE '%@%'
+          )
+        `);
+        
+        usersFixed = activateUsersResult.rowCount || 0;
+        results.push({
+          step: "Benutzer aktivieren",
+          success: true,
+          message: `${usersFixed} Benutzer wurden aktiviert`,
+          details: "Benutzer mit gültigen Daten wurden automatisch aktiviert"
+        });
+      } catch (error) {
+        results.push({
+          step: "Benutzer aktivieren",
+          success: false,
+          message: "Fehler beim Aktivieren von Benutzern",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 2: Shop-IDs zuweisen
+      try {
+        await db.execute(sql`
+          WITH next_shop_id AS (
+            SELECT COALESCE(MAX(shop_id), 0) + 1 as start_id 
+            FROM users 
+            WHERE shop_id IS NOT NULL
+          ),
+          user_ranks AS (
+            SELECT id, ROW_NUMBER() OVER (ORDER BY id) - 1 as rank_num
+            FROM users 
+            WHERE shop_id IS NULL AND is_active = true AND id > 1
+          )
+          UPDATE users 
+          SET shop_id = next_shop_id.start_id + user_ranks.rank_num
+          FROM next_shop_id, user_ranks
+          WHERE users.id = user_ranks.id
+        `);
+
+        results.push({
+          step: "Shop-IDs zuweisen",
+          success: true,
+          message: "Shop-IDs wurden korrekt zugewiesen",
+          details: "Alle aktiven Benutzer haben jetzt eindeutige Shop-IDs"
+        });
+      } catch (error) {
+        results.push({
+          step: "Shop-IDs zuweisen",
+          success: false,
+          message: "Fehler beim Zuweisen von Shop-IDs",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 3: Business Settings erstellen
+      try {
+        const businessSettingsResult = await db.execute(sql`
+          INSERT INTO business_settings (
+            user_id, shop_id, business_name, owner_first_name, owner_last_name,
+            street_address, city, zip_code, country, phone, email, tax_id, website,
+            created_at, updated_at
+          )
+          SELECT 
+            u.id,
+            u.shop_id,
+            COALESCE(u.company_name, u.username || ' Shop'),
+            COALESCE(u.owner_first_name, 'Inhaber'),
+            COALESCE(u.owner_last_name, u.username),
+            COALESCE(u.street_address, 'Geschäftsstraße 1'),
+            COALESCE(u.city, 'Wien'),
+            COALESCE(u.zip_code, '1010'),
+            COALESCE(u.country, 'Österreich'),
+            COALESCE(u.company_phone, '+43 1 000 0000'),
+            u.email,
+            COALESCE(u.tax_id, 'ATU12345678'),
+            COALESCE(u.website, 'https://www.' || u.username || '.at'),
+            NOW(),
+            NOW()
+          FROM users u
+          WHERE u.is_active = true 
+          AND u.id > 1
+          AND u.shop_id IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM business_settings bs WHERE bs.user_id = u.id
+          )
+        `);
+
+        businessSettingsCreated = businessSettingsResult.rowCount || 0;
+        results.push({
+          step: "Business Settings erstellen",
+          success: true,
+          message: `${businessSettingsCreated} Business Settings wurden erstellt`,
+          details: "Fehlende Unternehmensdaten wurden automatisch ergänzt"
+        });
+      } catch (error) {
+        results.push({
+          step: "Business Settings erstellen",
+          success: false,
+          message: "Fehler beim Erstellen von Business Settings",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 4: Gerätemodelle verteilen
+      try {
+        // Gerätetypen kopieren
+        await db.execute(sql`
+          INSERT INTO user_device_types (name, user_id, created_at, updated_at)
+          SELECT DISTINCT 
+              udt.name,
+              u.id as user_id,
+              NOW() as created_at,
+              NOW() as updated_at
+          FROM user_device_types udt
+          CROSS JOIN (SELECT id FROM users WHERE is_superadmin = false AND is_active = true AND id > 1) u
+          WHERE udt.user_id = (SELECT id FROM users WHERE is_superadmin = true LIMIT 1)
+          AND NOT EXISTS (
+              SELECT 1 FROM user_device_types udt2 
+              WHERE udt2.user_id = u.id AND udt2.name = udt.name
+          )
+        `);
+
+        // Marken kopieren
+        await db.execute(sql`
+          INSERT INTO user_brands (name, device_type_id, user_id, created_at, updated_at)
+          SELECT DISTINCT
+              ub.name,
+              (SELECT udt_target.id 
+               FROM user_device_types udt_target 
+               JOIN user_device_types udt_source ON udt_source.name = udt_target.name
+               WHERE udt_source.id = ub.device_type_id 
+               AND udt_target.user_id = u.id 
+               LIMIT 1) as device_type_id,
+              u.id as user_id,
+              NOW() as created_at,
+              NOW() as updated_at
+          FROM user_brands ub
+          CROSS JOIN (SELECT id FROM users WHERE is_superadmin = false AND is_active = true AND id > 1) u
+          WHERE ub.user_id = (SELECT id FROM users WHERE is_superadmin = true LIMIT 1)
+          AND EXISTS (
+              SELECT 1 FROM user_device_types udt_target 
+              JOIN user_device_types udt_source ON udt_source.name = udt_target.name
+              WHERE udt_source.id = ub.device_type_id AND udt_target.user_id = u.id
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM user_brands ub2 
+              WHERE ub2.user_id = u.id 
+              AND ub2.name = ub.name 
+              AND ub2.device_type_id = (
+                  SELECT udt_target.id 
+                  FROM user_device_types udt_target 
+                  JOIN user_device_types udt_source ON udt_source.name = udt_target.name
+                  WHERE udt_source.id = ub.device_type_id 
+                  AND udt_target.user_id = u.id 
+                  LIMIT 1
+              )
+          )
+        `);
+
+        // Modelle kopieren
+        const modelsResult = await db.execute(sql`
+          INSERT INTO user_models (name, brand_id, user_id, created_at, updated_at)
+          SELECT DISTINCT
+              um.name,
+              (SELECT ub_target.id 
+               FROM user_brands ub_target 
+               JOIN user_brands ub_source ON ub_source.name = ub_target.name
+               JOIN user_device_types udt_target ON udt_target.id = ub_target.device_type_id
+               JOIN user_device_types udt_source ON udt_source.name = udt_target.name AND udt_source.id = ub_source.device_type_id
+               WHERE ub_source.id = um.brand_id 
+               AND ub_target.user_id = u.id 
+               LIMIT 1) as brand_id,
+              u.id as user_id,
+              NOW() as created_at,
+              NOW() as updated_at
+          FROM user_models um
+          CROSS JOIN (SELECT id FROM users WHERE is_superadmin = false AND is_active = true AND id > 1) u
+          WHERE um.user_id = (SELECT id FROM users WHERE is_superadmin = true LIMIT 1)
+          AND EXISTS (
+              SELECT 1 FROM user_brands ub_target 
+              JOIN user_brands ub_source ON ub_source.name = ub_target.name
+              JOIN user_device_types udt_target ON udt_target.id = ub_target.device_type_id
+              JOIN user_device_types udt_source ON udt_source.name = udt_target.name AND udt_source.id = ub_source.device_type_id
+              WHERE ub_source.id = um.brand_id AND ub_target.user_id = u.id
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM user_models um2 
+              WHERE um2.user_id = u.id 
+              AND um2.name = um.name 
+              AND um2.brand_id = (
+                  SELECT ub_target.id 
+                  FROM user_brands ub_target 
+                  JOIN user_brands ub_source ON ub_source.name = ub_target.name
+                  JOIN user_device_types udt_target ON udt_target.id = ub_target.device_type_id
+                  JOIN user_device_types udt_source ON udt_source.name = udt_target.name AND udt_source.id = ub_source.device_type_id
+                  WHERE ub_source.id = um.brand_id 
+                  AND ub_target.user_id = u.id 
+                  LIMIT 1
+              )
+          )
+        `);
+
+        modelsDistributed = modelsResult.rowCount || 0;
+        results.push({
+          step: "Gerätemodelle verteilen",
+          success: true,
+          message: `${modelsDistributed} Gerätemodelle wurden verteilt`,
+          details: "Alle Benutzer haben jetzt Zugriff auf die komplette Geräte-Datenbank"
+        });
+      } catch (error) {
+        results.push({
+          step: "Gerätemodelle verteilen",
+          success: false,
+          message: "Fehler beim Verteilen der Gerätemodelle",
+          details: (error as Error).message
+        });
+      }
+
+      console.log(`✅ Deployment-Reparatur abgeschlossen: ${usersFixed} Benutzer, ${businessSettingsCreated} Settings, ${modelsDistributed} Modelle`);
+
+      res.json({
+        success: true,
+        results,
+        summary: {
+          usersFixed,
+          businessSettingsCreated,
+          modelsDistributed
+        }
+      });
+
+    } catch (error) {
+      console.error("Fehler bei der Deployment-Reparatur:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler bei der Deployment-Reparatur",
+        error: (error as Error).message
+      });
+    }
+  });
   
   // Geschäftseinstellungen eines bestimmten Shops abrufen
   app.get("/api/superadmin/business-settings/:shopId", isSuperadmin, async (req: Request, res: Response) => {

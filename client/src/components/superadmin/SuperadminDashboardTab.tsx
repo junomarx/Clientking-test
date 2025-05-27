@@ -39,9 +39,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { BadgeCheck, BadgeX, UserPlus } from 'lucide-react';
+import { BadgeCheck, BadgeX, UserPlus, Wrench } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { CreateTestUserDialog } from './CreateTestUserDialog';
+import { DeploymentFixDialog } from './DeploymentFixDialog';
 
 // Diese Interface-Definition entspricht der tatsächlichen API-Antwort
 interface SuperadminStats {
@@ -137,12 +138,21 @@ export default function SuperadminDashboardTab() {
           <p className="text-sm md:text-base text-muted-foreground">Hier können Sie die globalen Statistiken aller Shops und Benutzer einsehen.</p>
         </div>
         
-        <CreateTestUserDialog>
-          <Button className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Testbenutzer erstellen
-          </Button>
-        </CreateTestUserDialog>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <CreateTestUserDialog>
+            <Button className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Testbenutzer erstellen
+            </Button>
+          </CreateTestUserDialog>
+          
+          <DeploymentFixDialog>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              Deployment reparieren
+            </Button>
+          </DeploymentFixDialog>
+        </div>
       </div>
 
       <Tabs defaultValue="basic" className="space-y-4">
