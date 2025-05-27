@@ -236,14 +236,14 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
       const canvas = await html2canvas(content, {
-        scale: 2, // Höhere Qualität
-        logging: true,
+        scale: 4, // Viel höhere Qualität für besseren Druck
+        logging: false,
         useCORS: true,
         allowTaint: true,
-        height: content.scrollHeight, // Erfasst die gesamte Höhe
-        windowHeight: content.scrollHeight, // Setzt das Fenster hoch genug
+        height: content.scrollHeight,
+        windowHeight: content.scrollHeight,
+        backgroundColor: '#ffffff',
         onclone: (document, element) => {
-          // Stellt sicher, dass der geklonte Inhalt vollständig sichtbar ist
           element.style.maxHeight = 'none';
           element.style.height = 'auto';
           element.style.overflow = 'visible';
@@ -643,6 +643,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                           <head>
                             <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
                             <style>
+                              @media print {
+                                body { margin: 0; padding: 0; }
+                                iframe { border: none !important; margin: 0; padding: 0; }
+                              }
                               body { margin: 0; padding: 0; }
                               iframe { width: 100%; height: 100vh; border: none; }
                             </style>
