@@ -505,6 +505,19 @@ export function registerSuperadminRoutes(app: Express) {
         updateData.password = hashedPassword;
       }
 
+      // Wenn packageId geändert wird, auch pricing_plan automatisch synchronisieren
+      if (updateData.packageId) {
+        const [selectedPackage] = await db.select({
+          name: packages.name
+        }).from(packages).where(eq(packages.id, updateData.packageId));
+        
+        if (selectedPackage) {
+          // Paketname in lowercase für pricing_plan verwenden
+          updateData.pricing_plan = selectedPackage.name.toLowerCase();
+          console.log(`Automatische Synchronisation: packageId ${updateData.packageId} -> pricing_plan '${updateData.pricing_plan}'`);
+        }
+      }
+
       // Benutzer aktualisieren
       const [updatedUser] = await db
         .update(users)
