@@ -455,13 +455,19 @@ export class EmailService {
       
       console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
       
-      const mailOptions = {
+      const mailOptions: any = {
         from: fromField,
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text,
-        attachments: options.attachments || []
+        attachments: (options.attachments || []).map(att => ({
+          filename: att.filename,
+          content: att.content,
+          contentType: att.contentType,
+          encoding: att.encoding || 'base64',
+          disposition: 'attachment'
+        }))
       };
       
       console.log('Sende E-Mail mit folgenden Optionen:', {

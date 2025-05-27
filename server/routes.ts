@@ -2825,8 +2825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attachments: [{
           filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
           content: pdfBuffer,
-          contentType: 'application/pdf',
-          encoding: 'base64'
+          contentType: 'application/pdf'
         }],
         userId: userId
       });
@@ -4004,8 +4003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           attachments: [{
             filename: filename,
             content: Buffer.from(pdfBase64, 'base64'),
-            contentType: 'application/pdf',
-            encoding: 'base64'
+            contentType: 'application/pdf'
           }],
           userId: userId
         });
