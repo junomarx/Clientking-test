@@ -842,21 +842,21 @@ export default function SettingsPage() {
                       <Label>Standardtext für Belege</Label>
                       <Textarea placeholder="Dieser Text erscheint am Ende jeder Quittung" className="h-24" />
                     </div>
-                    
-                    {/* Geheimer Statistik-Button */}
-                    <div className="flex justify-between items-center pt-4 border-t">
-                      <Label className="text-sm text-gray-500">Druckqualität</Label>
-                      <button
-                        type="button"
-                        onClick={handleSecretClick}
-                        className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                        style={{ background: 'none', border: 'none', padding: '2px 4px' }}
-                      >
-                        {secretClickCount > 0 ? `${secretClickCount}/5` : 'Standard'}
-                      </button>
-                    </div>
                   </form>
                 </Form>
+                
+                {/* Geheimer Statistik-Button */}
+                <div className="flex justify-between items-center pt-4 border-t mt-4">
+                  <Label className="text-sm text-gray-500">Druckqualität</Label>
+                  <button
+                    type="button"
+                    onClick={handleSecretClick}
+                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    style={{ background: 'none', border: 'none', padding: '2px 4px' }}
+                  >
+                    {secretClickCount > 0 ? `${secretClickCount}/5` : 'Standard'}
+                  </button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
