@@ -195,8 +195,10 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         },
         body: JSON.stringify({
           repairId,
-          pdfBase64,
-          filename,
+          customerEmail: customer.email,
+          customerName,
+          pdfData: pdfBase64,
+          orderCode,
         }),
       });
       
