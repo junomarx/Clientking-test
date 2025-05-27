@@ -460,15 +460,33 @@ export class EmailService {
         to: options.to,
         subject: options.subject,
         html: options.html,
-        text: options.text,
-        attachments: (options.attachments || []).map(att => ({
-          filename: att.filename,
-          content: att.content,
-          contentType: att.contentType,
-          encoding: att.encoding || 'base64',
-          disposition: 'attachment'
-        }))
+        text: options.text
       };
+
+      // Add attachments separately to ensure proper handling
+      if (options.attachments && options.attachments.length > 0) {
+        mailOptions.attachments = options.attachments.map(att => {
+          // Ensure we have a proper Buffer for attachments
+          let content = att.content;
+          if (typeof content === 'string' && att.encoding === 'base64') {
+            content = Buffer.from(content, 'base64');
+          } else if (Buffer.isBuffer(content)) {
+            // Already a buffer, use as is
+          } else {
+            // Fallback: convert to buffer
+            content = Buffer.from(content);
+          }
+          
+          console.log(`Preparing attachment: ${att.filename}, contentType: ${att.contentType}, size: ${content.length} bytes`);
+          
+          return {
+            filename: att.filename,
+            content: content,
+            contentType: att.contentType || 'application/octet-stream',
+            disposition: 'attachment'
+          };
+        });
+      }
       
       console.log('Sende E-Mail mit folgenden Optionen:', {
         to: mailOptions.to,
