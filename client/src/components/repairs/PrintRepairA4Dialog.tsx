@@ -854,30 +854,80 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               <div className="flex space-x-2">
                 <Button
                   onClick={() => {
-                    // Verwende die gleiche bewährte Methode wie bei Kostenvoranschlägen
+                    // Verwende die exakte Deployment-Methode aus NewPrintRepairDialog
                     const printWindow = window.open('', '_blank');
+                    
                     if (!printWindow) {
                       toast({
+                        title: "Drucken fehlgeschlagen",
+                        description: "Bitte aktiviere Pop-ups, damit der Druckdialog geöffnet werden kann.",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    
+                    // Hole den A4-Druckinhalt 
+                    const fullContent = document.getElementById('a4-print-content');
+                    if (!fullContent) {
+                      toast({
                         title: "Fehler",
-                        description: "Popup-Blocker verhindern das Öffnen des Druckfensters. Bitte erlauben Sie Popups für diese Seite.",
+                        description: "Druckinhalt konnte nicht gefunden werden.",
                         variant: "destructive",
                       });
                       return;
                     }
                     
-                    // Generiere das HTML wie bei Kostenvoranschlägen - bewährte Methode
-                    const printContent = generateRepairPrintHtml({
-                      repair,
-                      customer,
-                      businessSettings
-                    });
+                    // Schreibe den HTML-Inhalt ins neue Fenster - exakt wie im Deployment
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                        <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
+                        <style>
+                          @media print {
+                            body { 
+                              margin: 0; 
+                              padding: 0; 
+                            }
+                            @page { 
+                              size: A4; 
+                              margin: 1cm; 
+                            }
+                          }
+                          body {
+                            margin: 0;
+                            padding: 20px;
+                            font-family: Arial, sans-serif;
+                            color: #000;
+                            background: white;
+                          }
+                          ${fullContent.querySelector('style')?.innerHTML || ''}
+                        </style>
+                      </head>
+                      <body>
+                        ${fullContent.innerHTML}
+                      </body>
+                      </html>
+                    `);
                     
-                    // Verwende printDocument-Funktion wie bei Kostenvoranschlägen
-                    printDocument(printContent, `Reparaturauftrag ${repair?.orderCode || `#${repairId}`}`);
+                    printWindow.document.close();
+                    
+                    // Warte kurz, dann öffne den Druckdialog - exakt wie im Deployment
+                    setTimeout(() => {
+                      printWindow.focus();
+                      printWindow.print();
+                      // Schließe das Druckfenster nach dem Drucken
+                      setTimeout(() => {
+                        printWindow.close();
+                      }, 1000);
+                    }, 500);
+                    
+                    // Dialog schließen
+                    onClose();
                     
                     toast({
                       title: "Druckdialog geöffnet",
-                      description: "Der Reparaturauftrag wird mit bewährter Druckmethode gedruckt.",
+                      description: "Der Druckdialog wurde geöffnet.",
                     });
                   }}
                   variant="outline"
