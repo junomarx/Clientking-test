@@ -1,0 +1,73 @@
+{
+  "appId": "com.handyshop.verwaltung",
+  "productName": "Handyshop Verwaltung",
+  "directories": {
+    "output": "dist-electron"
+  },
+  "files": [
+    "electron/",
+    "dist/",
+    "!node_modules/"
+  ],
+  "extraFiles": [
+    {
+      "from": "electron/",
+      "to": "Resources/app/electron/"
+    }
+  ],
+  "mac": {
+    "icon": "electron/icon.icns",
+    "category": "public.app-category.business",
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "entitlements": "electron/entitlements.mac.plist",
+    "entitlementsInherit": "electron/entitlements.mac.plist",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false
+  },
+  "dmg": {
+    "title": "Handyshop Verwaltung",
+    "icon": "electron/icon.icns",
+    "background": "electron/dmg-background.png",
+    "window": {
+      "width": 540,
+      "height": 380
+    },
+    "contents": [
+      {
+        "x": 140,
+        "y": 200,
+        "type": "file"
+      },
+      {
+        "x": 400,
+        "y": 200,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ]
+  },
+  "win": {
+    "icon": "electron/icon.ico",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true
+  },
+  "publish": {
+    "provider": "generic",
+    "url": "https://your-update-server.com/updates/"
+  }
+}
