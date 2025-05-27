@@ -940,22 +940,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   )}
                 </Button>
                 
-                <Button
-                  onClick={generatePDF}
-                  disabled={isGeneratingPdf}
-                >
-                  {isGeneratingPdf ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      PDF wird erstellt...
-                    </>
-                  ) : (
-                    <>
-                      <FileDown className="mr-2 h-4 w-4" />
-                      PDF erstellen
-                    </>
-                  )}
-                </Button>
+
               </div>
             </div>
           </>
