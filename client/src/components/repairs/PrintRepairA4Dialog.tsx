@@ -984,49 +984,7 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 PDF herunterladen
               </Button>
               
-              <Button
-                onClick={() => {
-                  if (pdfBase64) {
-                    // PDF in neuem Fenster öffnen und drucken
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
-                            <style>
-                              @media print {
-                                body { margin: 0; padding: 0; }
-                                iframe { border: none !important; margin: 0; padding: 0; }
-                              }
-                              body { margin: 0; padding: 0; }
-                              iframe { width: 100%; height: 100vh; border: none; }
-                            </style>
-                          </head>
-                          <body>
-                            <iframe src="data:application/pdf;base64,${pdfBase64}"></iframe>
-                            <script>
-                              window.onload = function() {
-                                setTimeout(function() {
-                                  window.print();
-                                }, 500);
-                              };
-                            </script>
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                    }
-                  }
-                  setShowActionDialog(false);
-                }}
-                className="w-full justify-start"
-                variant="outline"
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                PDF drucken
-              </Button>
+
               
               {customer?.email && (
                 <Button
