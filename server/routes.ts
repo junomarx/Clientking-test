@@ -2631,144 +2631,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // E-Mail mit der neuen, professionellen HTML-Vorlage senden
+      // E-Mail mit bewährter Kostenvoranschlag-Methode senden (ohne komplexes HTML)
       const emailSent = await storage.sendEmailWithAttachment({
         to: customerEmail,
         from: `"${senderName}" <${senderEmail}>`,
         subject: subject,
         htmlBody: `
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Reparaturauftrag</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            font-size: 12px;
-            color: #333;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-        }
-        .logo-container {
-            width: 200px;
-            border: 1px dashed #ccc;
-            padding: 10px;
-            text-align: center;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-style: italic;
-            color: #999;
-        }
-        .company-info {
-            text-align: right;
-            font-size: 12px;
-            color: #666;
-        }
-        .company-name {
-            font-weight: bold;
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .document-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            margin: 30px 0 10px 0;
-            color: #222;
-        }
-        .auftragsnummer {
-            text-align: center;
-            font-size: 18px;
-            margin: 0 0 40px 0;
-            color: #222;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .section-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #333;
-        }
-        .customer-info {
-            margin-bottom: 30px;
-        }
-        .customer-info p {
-            margin: 3px 0;
-        }
-        .customer-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .device-repair-box {
-            display: flex;
-            justify-content: space-between;
-            gap: 40px;
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-        .info-column {
-            flex: 1;
-        }
-        .info-item {
-            margin-bottom: 15px;
-        }
-        .info-label {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-        }
-        .info-value {
-            font-size: 14px;
-            font-weight: bold;
-            color: #222;
-        }
-        .repair-terms-box {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        .repair-terms-box p {
-            margin: 8px 0;
-            font-size: 12px;
-            color: #333;
-            line-height: 1.4;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="logo-container">
-            ${businessSettings?.logoImage || 'Logo'}
-        </div>
-        <div class="company-info">
-            <p class="company-name">${businessSettings?.businessName || 'Handyshop'}</p>
-            <p>${businessSettings?.streetAddress || ''}<br>
-            ${businessSettings?.zipCode || ''} ${businessSettings?.city || ''}<br>
-            ${businessSettings?.phone || ''}<br>
-            ${businessSettings?.email || ''}</p>
-        </div>
-    </div>
-
-    <div class="customer-info">
-        <div class="section-title">Kundeninformationen</div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || `#${repairId}`}</h2>
+            <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
+            <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
+            <p>Bei Fragen oder für Rücksprachen stehen wir Ihnen gerne zur Verfügung.</p>
+            <p>Mit freundlichen Grüßen,</p>
+            <p><strong>${senderName}</strong></p>
+          </div>
+        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
+        attachments: [{
+          filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }],
+        userId: userId
+      });
         <p class="customer-name">${customer.firstName || ''} ${customer.lastName || ''}</p>
         <p>${customer.address || ''}</p>
         <p>${(customer.zipCode || '') + ' ' + (customer.city || '')}</p>
