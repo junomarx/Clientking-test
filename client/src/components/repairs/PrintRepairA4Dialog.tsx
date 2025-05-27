@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Printer, Mail, FileDown } from 'lucide-react';
+import { Loader2, Printer, Mail, FileDown, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -27,6 +27,8 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
   const [printReady, setPrintReady] = useState(false);
   const [showActionDialog, setShowActionDialog] = useState(false);
   const [generatedPdf, setGeneratedPdf] = useState<jsPDF | null>(null);
+  const [pdfBase64, setPdfBase64] = useState<string>('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   
   // Daten für die Reparatur laden - gleiche Struktur wie in anderen Komponenten
   const { data: repair, isLoading, error } = useQuery<any>({
@@ -56,10 +58,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     if (open) {
       setPrintReady(false);
       setIsGeneratingPdf(false);
+      setShowActionDialog(false);
+      setGeneratedPdf(null);
+      setPdfBase64('');
     }
-  }, [open]); // Nur bei Änderungen an 'open' ausführen
+  }, [open]);
   
-  // Generiert ein PDF zum Herunterladen - optimierte HTML-to-Canvas Methode für <5MB
+  // Generiert das PDF und zeigt Aktionsoptionen
   const generatePDF = async () => {
     if (!document.getElementById('a4-print-content')) return;
     
@@ -69,9 +74,9 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const content = document.getElementById('a4-print-content');
       if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
       
-      // Optimierte Canvas-Einstellungen für Dateigröße unter 5MB
+      // Optimierte Canvas-Einstellungen
       const canvas = await html2canvas(content, {
-        scale: 1.2, // Reduzierte Skalierung für kleinere Dateigröße
+        scale: 1.2,
         logging: false,
         useCORS: true,
         allowTaint: true,
@@ -80,13 +85,13 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
         removeContainer: true,
       });
       
-      // JPEG mit optimierter Komprimierung für kleinere Dateigröße
-      const imgData = canvas.toDataURL('image/jpeg', 0.85); // 85% Qualität - guter Kompromiss
+      // JPEG mit optimierter Komprimierung
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true // PDF-Komprimierung aktivieren
+        compress: true
       });
       
       // A4 Maße
@@ -96,17 +101,15 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       const imgWidth = pageWidth - (2 * margin);
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Immer auf eine A4-Seite skalieren - keine Aufteilung
+      // Immer auf eine A4-Seite skalieren
       const maxHeight = pageHeight - (2 * margin);
       let finalImgWidth = imgWidth;
       let finalImgHeight = imgHeight;
       
-      // Falls das Bild zu hoch ist, proportional skalieren
       if (imgHeight > maxHeight) {
         finalImgHeight = maxHeight;
         finalImgWidth = (canvas.width * maxHeight) / canvas.height;
         
-        // Falls nach der Höhenskalierung die Breite zu groß ist, nochmal anpassen
         if (finalImgWidth > imgWidth) {
           finalImgWidth = imgWidth;
           finalImgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -119,16 +122,14 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       
       pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
       
-      // PDF speichern mit aussagekräftigem Dateinamen
-      const orderCode = repair?.orderCode || repairId;
-      const customerName = customer ? `${customer.lastName}_${customer.firstName}` : 'Kunde';
-      const fileName = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
-      
-      pdf.save(fileName);
+      // PDF und Base64 speichern
+      setGeneratedPdf(pdf);
+      setPdfBase64(pdf.output('datauristring').split(',')[1]);
+      setShowActionDialog(true);
       
       toast({
         title: "PDF erstellt",
-        description: "Das PDF wurde erfolgreich erstellt und heruntergeladen (optimierte Größe).",
+        description: "Das PDF wurde erfolgreich erstellt. Wählen Sie nun eine Aktion.",
       });
     } catch (err) {
       console.error('Fehler beim Generieren des PDFs:', err);
@@ -142,7 +143,25 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
 
-  // PDF per E-Mail senden - optimierte HTML-to-Canvas Methode für <5MB
+  // PDF herunterladen (bereits generiert)
+  const handleDownloadPdf = () => {
+    if (!generatedPdf) return;
+    
+    const orderCode = repair?.orderCode || repairId;
+    const customerName = customer ? `${customer.lastName}_${customer.firstName}` : 'Kunde';
+    const fileName = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
+    
+    generatedPdf.save(fileName);
+    
+    toast({
+      title: "PDF heruntergeladen",
+      description: "Das PDF wurde erfolgreich heruntergeladen.",
+    });
+    
+    setShowActionDialog(false);
+  };
+
+  // PDF per E-Mail senden (bereits generiert)
   const handleSendPdfEmail = async () => {
     if (!customer?.email) {
       toast({
@@ -153,103 +172,54 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
       return;
     }
     
-    if (!document.getElementById('a4-print-content')) return;
+    if (!pdfBase64) {
+      toast({
+        title: "Fehler",
+        description: "PDF wurde noch nicht generiert.",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    setIsGeneratingPdf(true);
+    setIsSendingEmail(true);
     
     try {
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
-      
-      // Optimierte Canvas-Einstellungen für E-Mail (etwas stärker komprimiert)
-      const canvas = await html2canvas(content, {
-        scale: 1.0, // Noch kleinere Skalierung für E-Mail
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        imageTimeout: 10000,
-        removeContainer: true,
-      });
-      
-      // JPEG mit stärkerer Komprimierung für E-Mail
-      const imgData = canvas.toDataURL('image/jpeg', 0.75); // 75% Qualität für E-Mail
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-      
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      const imgWidth = pageWidth - (2 * margin);
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Immer auf eine A4-Seite skalieren - keine Aufteilung (E-Mail-Version)
-      const maxHeight = pageHeight - (2 * margin);
-      let finalImgWidth = imgWidth;
-      let finalImgHeight = imgHeight;
-      
-      // Falls das Bild zu hoch ist, proportional skalieren
-      if (imgHeight > maxHeight) {
-        finalImgHeight = maxHeight;
-        finalImgWidth = (canvas.width * maxHeight) / canvas.height;
-        
-        // Falls nach der Höhenskalierung die Breite zu groß ist, nochmal anpassen
-        if (finalImgWidth > imgWidth) {
-          finalImgWidth = imgWidth;
-          finalImgHeight = (canvas.height * imgWidth) / canvas.width;
-        }
-      }
-      
-      // Bild zentriert auf der Seite platzieren
-      const xOffset = margin + (imgWidth - finalImgWidth) / 2;
-      const yOffset = margin;
-      
-      pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalImgWidth, finalImgHeight);
-      
-      // PDF als Base64 für E-Mail-Versand
-      const pdfBase64 = pdf.output('datauristring').split(',')[1];
-      
       const orderCode = repair?.orderCode || repairId;
-      const customerName = customer ? `${customer.lastName} ${customer.firstName}` : 'Kunde';
+      const customerName = customer ? `${customer.lastName}_${customer.firstName}` : 'Kunde';
+      const filename = `Reparaturauftrag_${orderCode}_${customerName}.pdf`;
       
-      // PDF-Daten an Server senden (wie früher geplant)
       const response = await fetch('/api/send-repair-pdf-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          repairId: repairId,
-          customerEmail: customer.email,
-          customerName: customerName,
-          pdfData: pdfBase64,
-          orderCode: orderCode
+          repairId,
+          pdfBase64,
+          filename,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'E-Mail konnte nicht versendet werden');
-      }
-
-      toast({
-        title: "E-Mail versendet",
-        description: `Das PDF wurde erfolgreich an ${customer.email} gesendet.`,
-      });
       
+      if (response.ok) {
+        toast({
+          title: "E-Mail gesendet",
+          description: `Das PDF wurde erfolgreich an ${customer.email} gesendet.`,
+        });
+        setShowActionDialog(false);
+        onClose(); // Dialog schließen nach erfolgreichem Versand
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'E-Mail konnte nicht gesendet werden');
+      }
     } catch (err) {
-      console.error('Fehler beim Versenden der E-Mail:', err);
+      console.error('Fehler beim Senden der E-Mail:', err);
       toast({
         title: "Fehler",
-        description: err instanceof Error ? err.message : "Die E-Mail konnte nicht versendet werden.",
+        description: "Die E-Mail konnte nicht gesendet werden.",
         variant: "destructive",
       });
     } finally {
-      setIsGeneratingPdf(false);
+      setIsSendingEmail(false);
     }
   };
   
@@ -618,7 +588,6 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                 <Button
                   onClick={generatePDF}
                   disabled={isGeneratingPdf}
-                  variant="outline"
                 >
                   {isGeneratingPdf ? (
                     <>
@@ -628,39 +597,71 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
                   ) : (
                     <>
                       <FileDown className="mr-2 h-4 w-4" />
-                      PDF herunterladen
+                      PDF erstellen
                     </>
                   )}
-                </Button>
-                
-                <Button
-                  onClick={handleSendPdfEmail}
-                  disabled={isGeneratingPdf || !customer?.email}
-                  variant="outline"
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                >
-                  {isGeneratingPdf ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Wird versendet...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      PDF per E-Mail senden
-                    </>
-                  )}
-                </Button>
-                
-                <Button onClick={handlePrint}>
-                  <Printer className="mr-2 h-4 w-4" />
-                  PDF erstellen & drucken
                 </Button>
               </div>
             </div>
           </>
         )}
       </DialogContent>
+
+      {/* Aktions-Dialog nach PDF-Generierung */}
+      <Dialog open={showActionDialog} onOpenChange={setShowActionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>PDF erfolgreich erstellt</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Das PDF wurde erfolgreich erstellt. Was möchten Sie als nächstes tun?
+            </p>
+            
+            <div className="grid grid-cols-1 gap-3">
+              <Button
+                onClick={handleDownloadPdf}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                PDF herunterladen
+              </Button>
+              
+              {customer?.email && (
+                <Button
+                  onClick={handleSendPdfEmail}
+                  disabled={isSendingEmail}
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  {isSendingEmail ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird gesendet...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      PDF per E-Mail an {customer.email} senden
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              <Button
+                onClick={() => setShowActionDialog(false)}
+                className="w-full justify-start"
+                variant="ghost"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Später entscheiden
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
