@@ -4037,6 +4037,135 @@ export function registerSuperadminRoutes(app: Express) {
       });
     }
   });
+
+  // Gerätedaten-Bereinigung: Alle duplizierten Daten löschen und globale Struktur wiederherstellen
+  app.post("/api/superadmin/cleanup-device-data", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log(`🧹 Superadmin ${req.user?.username} startet Gerätedaten-Bereinigung`);
+
+      const results: any[] = [];
+      let deletedTypes = 0;
+      let deletedBrands = 0;
+      let deletedModels = 0;
+
+      // SCHRITT 1: Diagnose der aktuellen Situation
+      const typesBeforeCleanup = await db.execute(sql`
+        SELECT user_id, COUNT(*) as count 
+        FROM user_device_types 
+        WHERE user_id != 10 
+        GROUP BY user_id
+      `);
+
+      const brandsBeforeCleanup = await db.execute(sql`
+        SELECT user_id, COUNT(*) as count 
+        FROM user_brands 
+        WHERE user_id != 10 
+        GROUP BY user_id
+      `);
+
+      const modelsBeforeCleanup = await db.execute(sql`
+        SELECT user_id, COUNT(*) as count 
+        FROM user_models 
+        WHERE user_id != 10 
+        GROUP BY user_id
+      `);
+
+      // SCHRITT 2: Duplizierte Modelle löschen
+      try {
+        const modelsResult = await db.execute(sql`DELETE FROM user_models WHERE user_id != 10`);
+        deletedModels = modelsResult.rowCount || 0;
+        results.push({
+          step: "Duplizierte Modelle löschen",
+          success: true,
+          message: `${deletedModels} duplizierte Modelle gelöscht`,
+          details: "Nur globale Modelle von Shop 1682 behalten"
+        });
+      } catch (error) {
+        results.push({
+          step: "Duplizierte Modelle löschen",
+          success: false,
+          message: "Fehler beim Löschen der Modelle",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 3: Duplizierte Marken löschen
+      try {
+        const brandsResult = await db.execute(sql`DELETE FROM user_brands WHERE user_id != 10`);
+        deletedBrands = brandsResult.rowCount || 0;
+        results.push({
+          step: "Duplizierte Marken löschen",
+          success: true,
+          message: `${deletedBrands} duplizierte Marken gelöscht`,
+          details: "Nur globale Marken von Shop 1682 behalten"
+        });
+      } catch (error) {
+        results.push({
+          step: "Duplizierte Marken löschen",
+          success: false,
+          message: "Fehler beim Löschen der Marken",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 4: Duplizierte Gerätetypen löschen
+      try {
+        const typesResult = await db.execute(sql`DELETE FROM user_device_types WHERE user_id != 10`);
+        deletedTypes = typesResult.rowCount || 0;
+        results.push({
+          step: "Duplizierte Gerätetypen löschen",
+          success: true,
+          message: `${deletedTypes} duplizierte Gerätetypen gelöscht`,
+          details: "Nur globale Gerätetypen von Shop 1682 behalten"
+        });
+      } catch (error) {
+        results.push({
+          step: "Duplizierte Gerätetypen löschen",
+          success: false,
+          message: "Fehler beim Löschen der Gerätetypen",
+          details: (error as Error).message
+        });
+      }
+
+      // SCHRITT 5: Bestätigung der globalen Verfügbarkeit
+      const globalDataCheck = await db.execute(sql`
+        SELECT 
+          (SELECT COUNT(*) FROM user_device_types WHERE user_id = 10) as device_types,
+          (SELECT COUNT(*) FROM user_brands WHERE user_id = 10) as brands,
+          (SELECT COUNT(*) FROM user_models WHERE user_id = 10) as models
+      `);
+
+      const globalData = globalDataCheck.rows[0] as any;
+
+      results.push({
+        step: "Globale Daten bestätigen",
+        success: true,
+        message: `Globale Daten verfügbar: ${globalData.device_types} Gerätetypen, ${globalData.brands} Marken, ${globalData.models} Modelle`,
+        details: "Alle Shops nutzen jetzt die globalen Daten von Shop 1682"
+      });
+
+      console.log(`✅ Gerätedaten-Bereinigung abgeschlossen: ${deletedTypes} Typen, ${deletedBrands} Marken, ${deletedModels} Modelle gelöscht`);
+
+      res.json({
+        success: true,
+        results,
+        summary: {
+          deletedTypes,
+          deletedBrands,
+          deletedModels,
+          globalData
+        }
+      });
+
+    } catch (error) {
+      console.error("Fehler bei der Gerätedaten-Bereinigung:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Fehler bei der Gerätedaten-Bereinigung",
+        error: (error as Error).message
+      });
+    }
+  });
   
   // Geschäftseinstellungen eines bestimmten Shops abrufen
   app.get("/api/superadmin/business-settings/:shopId", isSuperadmin, async (req: Request, res: Response) => {

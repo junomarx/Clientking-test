@@ -39,7 +39,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { BadgeCheck, BadgeX, UserPlus, Wrench } from 'lucide-react';
+import { BadgeCheck, BadgeX, UserPlus, Wrench, Trash2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { CreateTestUserDialog } from './CreateTestUserDialog';
 import { DeploymentFixDialog } from './DeploymentFixDialog';
