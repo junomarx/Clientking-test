@@ -192,6 +192,7 @@ export interface IStorage {
   updateRepairSignature(
     id: number,
     signature: string,
+    signatureType: 'dropoff' | 'pickup',
     userId: number,
   ): Promise<Repair | undefined>;
   deleteRepair(id: number, userId: number): Promise<boolean>;
@@ -1965,6 +1966,74 @@ export class DatabaseStorage implements IStorage {
       return updatedRepair;
     } catch (error) {
       console.error(`Fehler beim Aktualisieren des Status der Reparatur ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  // Implementierung der updateRepairSignature-Funktion
+  async updateRepairSignature(
+    id: number,
+    signature: string,
+    signatureType: 'dropoff' | 'pickup',
+    userId: number
+  ): Promise<Repair | undefined> {
+    try {
+      console.log(`updateRepairSignature: Benutzer mit ID ${userId} speichert ${signatureType}-Unterschrift für Reparatur ${id}`);
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const existingRepair = await this.getRepair(id, userId);
+      if (!existingRepair) {
+        console.warn(`updateRepairSignature: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
+        return undefined;
+      }
+      
+      // Benutzer holen, um Shop-ID zu verifizieren
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`updateRepairSignature: Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+      
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ updateRepairSignature: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      // Je nach Signatur-Typ die entsprechenden Felder aktualisieren
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      if (signatureType === 'dropoff') {
+        updateData.dropoffSignature = signature;
+        updateData.dropoffSignedAt = new Date();
+      } else if (signatureType === 'pickup') {
+        updateData.pickupSignature = signature;
+        updateData.pickupSignedAt = new Date();
+      }
+      
+      // Aktualisiere die Unterschrift der Reparatur
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set(updateData)
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, user.shopId)
+          )
+        )
+        .returning();
+      
+      if (updatedRepair) {
+        console.log(`updateRepairSignature: ${signatureType}-Unterschrift der Reparatur ${id} erfolgreich gespeichert für Benutzer ${userId}`);
+      } else {
+        console.warn(`updateRepairSignature: ${signatureType}-Unterschrift der Reparatur ${id} konnte nicht gespeichert werden (Shop-ID Konflikt?)`);
+      }
+      
+      return updatedRepair;
+    } catch (error) {
+      console.error(`Fehler beim Speichern der ${signatureType}-Unterschrift der Reparatur ${id}:`, error);
       return undefined;
     }
   }

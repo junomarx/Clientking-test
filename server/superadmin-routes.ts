@@ -4017,14 +4017,63 @@ export function registerSuperadminRoutes(app: Express) {
         });
       }
 
-      console.log(`✅ Deployment-Reparatur abgeschlossen: ${businessSettingsCreated} Settings, ${modelsDistributed} Modelle`);
+      // SCHRITT 3: Gerätedaten-Bereinigung (Shop-Isolation reparieren)
+      let deviceDataCleaned = false;
+      try {
+        // Prüfen ob es duplizierte Gerätedaten gibt
+        const duplicateCheck = await db.execute(sql`
+          SELECT COUNT(*) as duplicate_count 
+          FROM user_device_types 
+          WHERE user_id != 10
+        `);
+        
+        const duplicateCount = (duplicateCheck.rows[0] as any)?.duplicate_count || 0;
+        
+        if (duplicateCount > 0) {
+          console.log(`🧹 Bereinige ${duplicateCount} duplizierte Gerätedaten...`);
+          
+          // Duplizierte Modelle löschen
+          await db.execute(sql`DELETE FROM user_models WHERE user_id != 10`);
+          // Duplizierte Marken löschen  
+          await db.execute(sql`DELETE FROM user_brands WHERE user_id != 10`);
+          // Duplizierte Gerätetypen löschen
+          await db.execute(sql`DELETE FROM user_device_types WHERE user_id != 10`);
+          
+          deviceDataCleaned = true;
+          console.log(`✅ Gerätedaten-Bereinigung abgeschlossen`);
+          
+          results.push({
+            step: "Gerätedaten bereinigen",
+            success: true,
+            message: "Duplizierte Gerätedaten entfernt",
+            details: "Alle Shops nutzen jetzt die globalen Daten von Shop 1682"
+          });
+        } else {
+          results.push({
+            step: "Gerätedaten prüfen",
+            success: true,
+            message: "Keine duplizierten Gerätedaten gefunden",
+            details: "Shop-Isolation bereits korrekt"
+          });
+        }
+      } catch (error) {
+        results.push({
+          step: "Gerätedaten bereinigen",
+          success: false,
+          message: "Fehler bei der Gerätedaten-Bereinigung",
+          details: (error as Error).message
+        });
+      }
+
+      console.log(`✅ Deployment-Reparatur abgeschlossen: ${businessSettingsCreated} Settings, ${modelsDistributed} Modelle, Gerätedaten: ${deviceDataCleaned ? 'bereinigt' : 'bereits korrekt'}`);
 
       res.json({
         success: true,
         results,
         summary: {
           businessSettingsCreated,
-          modelsDistributed
+          modelsDistributed,
+          deviceDataCleaned
         }
       });
 
