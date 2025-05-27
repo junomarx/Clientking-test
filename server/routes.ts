@@ -2825,7 +2825,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         attachments: [{
           filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
           content: pdfBuffer,
-          contentType: 'application/pdf'
+          contentType: 'application/pdf',
+          encoding: 'base64'
         }],
         userId: userId
       });
