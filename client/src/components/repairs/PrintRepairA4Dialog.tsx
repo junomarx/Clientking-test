@@ -225,75 +225,146 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
     }
   };
   
-  // Einfachste Variante: Ein zusätzliches PDF-Download-Fenster anzeigen
+  // Hochqualitatives PDF-Generierung ohne Canvas für bessere Druckqualität
   const handlePrint = async () => {
-    if (!document.getElementById('a4-print-content')) return;
+    if (!repair || !customer || !businessSettings) return;
     
     setIsGeneratingPdf(true);
     
     try {
-      const content = document.getElementById('a4-print-content');
-      if (!content) throw new Error('Druckinhalt konnte nicht gefunden werden');
-      
-      const canvas = await html2canvas(content, {
-        scale: 4, // Viel höhere Qualität für besseren Druck
-        logging: false,
-        useCORS: true,
-        allowTaint: true,
-        height: content.scrollHeight,
-        windowHeight: content.scrollHeight,
-        backgroundColor: '#ffffff',
-        onclone: (document, element) => {
-          element.style.maxHeight = 'none';
-          element.style.height = 'auto';
-          element.style.overflow = 'visible';
-        }
-      });
-      
-      // A4 Format: 210 x 297 mm
-      const imgData = canvas.toDataURL('image/png');
+      // Erstelle PDF direkt mit Text und Vektoren für beste Qualität
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Bildgröße berechnen, um im A4-Format zu passen (mit Berücksichtigung der Ränder)
-      const margin = 10; // 1cm Ränder in mm
-      const pageWidth = 210; // A4 Breite in mm
-      const pageHeight = 297; // A4 Höhe in mm
-      const imgWidth = pageWidth - (2 * margin); // Nutzbarer Bereich abzüglich der Ränder
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 15;
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const contentWidth = pageWidth - (2 * margin);
+      let yPosition = margin;
       
-      // Bild mit Rändern platzieren
-      pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      // Header mit Firmendaten
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(businessSettings.businessName || 'Handyshop Verwaltung', margin, yPosition);
+      yPosition += 8;
       
-      // Öffne das PDF in einem neuen Tab und starte den Druckdialog automatisch
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${businessSettings.streetAddress || 'Amerlingstraße 19'}`, margin, yPosition);
+      yPosition += 4;
+      pdf.text(`${businessSettings.zipCode || '1060'} ${businessSettings.city || 'Wien'}`, margin, yPosition);
+      yPosition += 4;
+      pdf.text(`Tel: ${businessSettings.phone || '+4314103511'}`, margin, yPosition);
+      yPosition += 4;
+      pdf.text(`E-Mail: ${businessSettings.email || 'office@macandphonedoc.at'}`, margin, yPosition);
+      yPosition += 15;
+      
+      // Titel
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REPARATURAUFTRAG', margin, yPosition);
+      yPosition += 10;
+      
+      // Auftragsnummer
+      pdf.setFontSize(12);
+      pdf.text(`Auftragsnummer: ${repair.orderCode}`, margin, yPosition);
+      yPosition += 8;
+      pdf.text(`Datum: ${format(new Date(repair.createdAt), 'dd.MM.yyyy', { locale: de })}`, margin, yPosition);
+      yPosition += 12;
+      
+      // Kundendaten
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('KUNDENDATEN', margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Name: ${customer.firstName} ${customer.lastName}`, margin, yPosition);
+      yPosition += 5;
+      pdf.text(`Telefon: ${customer.phone}`, margin, yPosition);
+      yPosition += 5;
+      pdf.text(`E-Mail: ${customer.email}`, margin, yPosition);
+      yPosition += 5;
+      if (customer.address) {
+        pdf.text(`Adresse: ${customer.address}`, margin, yPosition);
+        yPosition += 5;
+      }
+      yPosition += 8;
+      
+      // Gerätedaten
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('GERÄTEDATEN', margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Gerät: ${repair.deviceType || 'Nicht angegeben'}`, margin, yPosition);
+      yPosition += 5;
+      pdf.text(`Marke: ${repair.brand || 'Nicht angegeben'}`, margin, yPosition);
+      yPosition += 5;
+      pdf.text(`Modell: ${repair.model || 'Nicht angegeben'}`, margin, yPosition);
+      yPosition += 5;
+      if (repair.devicePassword) {
+        pdf.text(`Gerätecode: ${repair.devicePassword}`, margin, yPosition);
+        yPosition += 5;
+      }
+      yPosition += 8;
+      
+      // Fehlerbeschreibung
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('FEHLERBESCHREIBUNG', margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      const problemLines = pdf.splitTextToSize(repair.problemDescription || 'Keine Beschreibung angegeben', contentWidth);
+      problemLines.forEach((line: string) => {
+        pdf.text(line, margin, yPosition);
+        yPosition += 5;
+      });
+      yPosition += 8;
+      
+      // Status
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('STATUS', margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Aktueller Status: ${repair.status}`, margin, yPosition);
+      yPosition += 5;
+      if (repair.estimatedCost) {
+        pdf.text(`Geschätzte Kosten: €${repair.estimatedCost}`, margin, yPosition);
+        yPosition += 5;
+      }
+      
+      // PDF in neuem Fenster öffnen und drucken
       const pdfBlob = pdf.output('blob');
       const blobUrl = URL.createObjectURL(pdfBlob);
       const printWindow = window.open(blobUrl, '_blank');
       
       if (printWindow) {
-        // Füge Skript hinzu, um den Druckdialog zu starten
         printWindow.addEventListener('load', function() {
           setTimeout(() => {
             printWindow.print();
-          }, 1000);
+          }, 500);
         });
         
         toast({
-          title: "PDF bereit zum Drucken",
-          description: "Das PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
-        });
-      } else {
-        toast({
-          title: "PDF bereit",
-          description: "Das PDF wurde erstellt. Bitte aktiviere Pop-ups, falls kein neues Fenster geöffnet wurde.",
+          title: "Hochqualitäts-PDF bereit",
+          description: "Das vektorbasierte PDF wird in einem neuen Tab geöffnet und der Druckdialog gestartet.",
         });
       }
       
     } catch (err) {
-      console.error('Fehler beim Vorbereiten des PDFs:', err);
+      console.error('Fehler beim Erstellen des PDFs:', err);
       toast({
         title: "Fehler",
         description: "Das PDF konnte nicht erstellt werden.",
