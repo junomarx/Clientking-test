@@ -466,6 +466,78 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
           <DialogTitle className="text-xl font-semibold">DIN A4 Reparaturauftrag #{repairId}</DialogTitle>
         </DialogHeader>
         
+        {/* Direkte Druckfunktion ohne PDF-Erstellung */}
+        <div className="print:hidden mb-4">
+          <Button
+            onClick={() => {
+              // Direkter Druck wie bei Kostenvoranschlägen
+              const printWindow = window.open('', '_blank');
+              if (!printWindow) {
+                toast({
+                  title: "Fehler",
+                  description: "Popup-Blocker verhindern das Öffnen des Druckfensters. Bitte erlauben Sie Popups für diese Seite.",
+                  variant: "destructive",
+                });
+                return;
+              }
+              
+              // HTML-Inhalt für direkten Druck generieren
+              const content = document.getElementById('a4-print-content');
+              if (!content) return;
+              
+              printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <title>Reparaturauftrag ${repair?.orderCode || `#${repairId}`}</title>
+                    <meta charset="UTF-8">
+                    <style>
+                      @media print {
+                        body { margin: 0; padding: 0; }
+                        @page { size: A4; margin: 1cm; }
+                      }
+                      body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.4;
+                        color: #000;
+                        background: white;
+                      }
+                      .print-content {
+                        padding: 20px;
+                        max-width: 100%;
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="print-content">
+                      ${content.innerHTML}
+                    </div>
+                    <script>
+                      window.onload = function() {
+                        setTimeout(function() {
+                          window.print();
+                          window.close();
+                        }, 500);
+                      };
+                    </script>
+                  </body>
+                </html>
+              `);
+              
+              printWindow.document.close();
+              toast({
+                title: "Druckdialog geöffnet",
+                description: "Das Reparaturauftrag wird direkt gedruckt.",
+              });
+            }}
+            className="mr-2"
+            variant="default"
+          >
+            <Printer className="mr-2 h-4 w-4" />
+            Direkt drucken
+          </Button>
+        </div>
+        
         {printReady && repair && customer && (
           <>
             {/* Druckinhalt - Neue DIN A4 Vorlage */}
