@@ -1,0 +1,124 @@
+name: Release Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.version || github.ref }}
+        release_name: Handyshop Verwaltung ${{ github.event.inputs.version || github.ref }}
+        body: |
+          ## 📱 Handyshop Verwaltung Desktop App
+          
+          ### 🚀 Neue Features:
+          - Lokale SQLite-Datenspeicherung
+          - DSGVO-konforme Datenhaltung
+          - Online-Lizenzvalidierung
+          - Professionelle Benutzeroberfläche
+          
+          ### 📥 Installation:
+          
+          **macOS:**
+          1. Laden Sie `Handyshop-Verwaltung-macOS.dmg` herunter
+          2. Öffnen Sie die DMG-Datei und ziehen Sie die App in den Programme-Ordner
+          3. Starten Sie die App aus dem Launchpad
+          
+          **Windows:**
+          1. Laden Sie `Handyshop-Verwaltung-Windows.exe` herunter
+          2. Führen Sie die EXE-Datei aus und folgen Sie den Anweisungen
+          3. Starten Sie die App über das Desktop-Icon
+          
+          ### 🔧 Systemanforderungen:
+          - macOS 10.14 oder höher
+          - Windows 10 oder höher
+          - Internetverbindung für Lizenzprüfung
+        draft: false
+        prerelease: false
+
+  build-macos:
+    needs: create-release
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install Dependencies
+      run: npm install
+    
+    - name: Build Frontend
+      run: npm run build
+    
+    - name: Build macOS App
+      run: npx electron-builder --mac --publish=never
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload macOS DMG to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: dist-electron/Handyshop Verwaltung-1.0.0.dmg
+        asset_name: Handyshop-Verwaltung-macOS.dmg
+        asset_content_type: application/octet-stream
+
+  build-windows:
+    needs: create-release
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install Dependencies
+      run: npm install
+    
+    - name: Build Frontend
+      run: npm run build
+    
+    - name: Build Windows App
+      run: npx electron-builder --win --publish=never
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload Windows EXE to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: dist-electron/Handyshop Verwaltung Setup 1.0.0.exe
+        asset_name: Handyshop-Verwaltung-Windows.exe
+        asset_content_type: application/octet-stream
