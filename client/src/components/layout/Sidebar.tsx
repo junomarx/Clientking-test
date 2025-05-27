@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,10 +33,30 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const { user, logoutMutation } = useAuth();
+  const [canViewStats, setCanViewStats] = useState(false);
   
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  // Prüfung der Statistik-Berechtigung
+  useEffect(() => {
+    const checkStatsPermission = async () => {
+      try {
+        const response = await fetch('/api/can-view-detailed-stats');
+        if (response.ok) {
+          const data = await response.json();
+          setCanViewStats(data.canViewDetailedStats);
+        }
+      } catch (error) {
+        setCanViewStats(false);
+      }
+    };
+    
+    if (user) {
+      checkStatsPermission();
+    }
+  }, [user]);
 
   // Navigationselemente, die in der Sidebar angezeigt werden
   type NavItemsProps = {
@@ -105,17 +125,19 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <FileText className="h-5 w-5 mr-2" />
           Kostenvoranschläge
         </Button>
-        <Button 
-          variant={activeTab === 'statistics' ? 'default' : 'ghost'}
-          className="w-full justify-start"
-          onClick={() => {
-            onTabChange('statistics');
-            if (isMobile) closeMenu();
-          }}
-        >
-          <BarChart2 className="h-5 w-5 mr-2" />
-          Statistiken
-        </Button>
+        {canViewStats && (
+          <Button 
+            variant={activeTab === 'statistics' ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            onClick={() => {
+              onTabChange('statistics');
+              if (isMobile) closeMenu();
+            }}
+          >
+            <BarChart2 className="h-5 w-5 mr-2" />
+            Statistiken
+          </Button>
+        )}
       </div>
       
       {/* Einstellungen Kategorie */}
