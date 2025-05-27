@@ -109,6 +109,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       }
     } else {
       setFilterByToday(false);
+      // Stelle sicher, dass beim direkten Zugriff auf Reparaturen ohne Parameter "all" gesetzt ist
+      setStatusFilter('all');
     }
     
     // Verarbeite openEmail-Parameter
