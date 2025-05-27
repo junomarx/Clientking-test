@@ -2653,10 +2653,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }],
         userId: userId
       });
-        <p class="customer-name">${customer.firstName || ''} ${customer.lastName || ''}</p>
-        <p>${customer.address || ''}</p>
-        <p>${(customer.zipCode || '') + ' ' + (customer.city || '')}</p>
-    </div>
 
     <div class="document-title">Reparaturauftrag</div>
     <div class="auftragsnummer">${orderCode || `#${repairId}`}</div>
@@ -2684,28 +2680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </div>
     </div>
 
-    <div class="section repair-terms-box">
-        <div class="section-title">Reparaturbedingungen</div>
-        <p><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
-        <p><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
-        <p><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
-        <p><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
-        <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
-        <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
-    </div>
-
-    <p style="margin-top: 30px; font-size: 12px; color: #666;">
-        Bei Fragen zu Ihrem Reparaturauftrag stehen wir Ihnen gerne zur Verfügung.
-    </p>
-    
-    <p style="margin-top: 20px; font-weight: bold; font-size: 14px;">
-        Mit freundlichen Grüßen<br>
-        Ihr ${businessSettings?.businessName || 'Handyshop'} Team
-    </p>
-</body>
-</html>
-        `,
-        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nLiebe/r ${customerName || 'Kunde/Kundin'},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
+        textBody: `Reparaturauftrag ${orderCode || `#${repairId}`}\n\nSehr geehrte/r ${customer.firstName} ${customer.lastName},\n\nanbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument.\n\nBei Fragen stehen wir Ihnen gerne zur Verfügung.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
           filename: `Reparaturauftrag_${orderCode || repairId}.pdf`,
           content: pdfBuffer,
