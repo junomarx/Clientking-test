@@ -25,7 +25,7 @@ export async function hasAccessAsync(user: User | null | undefined, feature: str
   if (!user) return false;
   
   // Admin-Benutzer hat immer Zugriff auf alle Funktionen
-  if (user.isAdmin || user.username === 'bugi') return true;
+  if (user.isAdmin) return true;
 
   // 1. Prüfen, ob ein Paket zugewiesen ist (neues System)
   if (user.packageId) {
@@ -82,7 +82,7 @@ export function hasAccess(user: User | null | undefined, feature: string): boole
   if (!user) return false;
   
   // Admin-Benutzer hat immer Zugriff auf alle Funktionen
-  if (user.isAdmin || user.username === 'bugi') return true;
+  if (user.isAdmin) return true;
 
   // Prüfen, ob für dieses Feature eine individuelle Übersteuerung existiert
   if (user.featureOverrides && typeof user.featureOverrides === 'string') {
@@ -119,7 +119,7 @@ export async function isProfessionalOrHigher(userId: number): Promise<boolean> {
     if (!user) return false;
     
     // Admin-Benutzer hat immer Zugriff
-    if (user.isAdmin || user.username === 'bugi') return true;
+    if (user.isAdmin) return true;
     
     // 1. Prüfen, ob ein Paket zugewiesen ist (neues System)
     if (user.packageId) {
@@ -171,7 +171,7 @@ export async function isEnterprise(userId: number): Promise<boolean> {
     if (!user) return false;
     
     // Admin-Benutzer hat immer Zugriff
-    if (user.isAdmin || user.username === 'bugi') return true;
+    if (user.isAdmin) return true;
     
     // Prüfe auf Feature-Übersteuerungen für Enterprise-Features
     if (user.featureOverrides && typeof user.featureOverrides === 'string') {
