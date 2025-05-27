@@ -12,6 +12,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { SecretStatsDialog } from '@/components/statistics/SecretStatsDialog';
+import { Label } from '@/components/ui/label';
 
 // Typ-Definition für Print-Templates
 interface PrintTemplate {
@@ -35,6 +37,20 @@ export function PrintSettingsTab() {
   const { toast } = useToast();
   const [activeTemplateType, setActiveTemplateType] = React.useState<string>("repair-order");
   const { settings, isLoading: isLoadingSettings } = useBusinessSettings();
+  
+  // Secret statistics access
+  const [secretClickCount, setSecretClickCount] = React.useState(0);
+  const [showSecretDialog, setShowSecretDialog] = React.useState(false);
+
+  const handleSecretClick = () => {
+    const newCount = secretClickCount + 1;
+    setSecretClickCount(newCount);
+    
+    if (newCount >= 5) {
+      setShowSecretDialog(true);
+      setSecretClickCount(0);
+    }
+  };
   
   // Formular für Bon-Einstellungen
   const receiptForm = useForm<ReceiptSettingsFormValues>({
@@ -350,6 +366,25 @@ export function PrintSettingsTab() {
 
         {/* Kostenvoranschlag-Tab entfernt - wird später neu implementiert */}
       </Tabs>
+      
+      {/* Geheimer Statistik-Button */}
+      <div className="flex justify-between items-center pt-4 border-t mt-4">
+        <Label className="text-sm text-gray-500">Druckqualität</Label>
+        <button
+          type="button"
+          onClick={handleSecretClick}
+          className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          style={{ background: 'none', border: 'none', padding: '2px 4px' }}
+        >
+          {secretClickCount > 0 ? `${secretClickCount}/5` : 'Standard'}
+        </button>
+      </div>
+      
+      {/* Secret Statistics Dialog */}
+      <SecretStatsDialog 
+        open={showSecretDialog} 
+        onClose={() => setShowSecretDialog(false)} 
+      />
     </div>
   );
 }
