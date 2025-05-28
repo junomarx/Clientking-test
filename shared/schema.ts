@@ -372,13 +372,13 @@ export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 // E-Mail-Verlauf für Reparaturen
 export const emailHistory = pgTable("email_history", {
   id: serial("id").primaryKey(),
-  repairId: integer("repair_id").notNull().references(() => repairs.id),
-  emailTemplateId: integer("email_template_id").references(() => emailTemplates.id),
+  repairId: integer("repairId").notNull().references(() => repairs.id),
+  emailTemplateId: integer("emailTemplateId").references(() => emailTemplates.id),
   subject: text("subject").notNull(),
   recipient: text("recipient").notNull(),
-  sentAt: timestamp("sent_at").defaultNow().notNull(),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
   status: text("status").notNull(), // "success" oder "failed"
-  userId: integer("user_id").references(() => users.id),
+  userId: integer("userId").references(() => users.id),
   shopId: integer("shop_id").default(1), // Shop, zu dem der E-Mail-Verlauf gehört (für Multi-Tenant-Isolation)
 });
 
