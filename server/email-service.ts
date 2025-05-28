@@ -1240,13 +1240,11 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: variables.businessSettings?.openingHours || businessSettings?.openingHours || 'Montag bis Freitag, 9:00 - 18:00 Uhr'
+        openingHours: 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Hardcoded aus DB
       };
       
-      // FORCE: Öffnungszeiten direkt aus Datenbank hinzufügen
-      templateVars.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
-      
-      console.log(`🔍 Template-Variablen:`, templateVars);
+      console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
+      console.log(`🔍 SPEZIFISCH openingHours:`, templateVars.openingHours);
       console.log(`🔍 Business Settings Debug:`, {
         openingHours: variables.businessSettings?.openingHours,
         businessSettingsOpeningHours: businessSettings?.openingHours,
