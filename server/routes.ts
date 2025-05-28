@@ -974,10 +974,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
             
             try {
-              // Direkte E-Mail-Versendung mit dem EmailService
-              console.log(`📧 Starte E-Mail-Versendung für Status "${status}" an Reparatur ${repair.id}`);
+              console.log(`🔍 DEBUGGING - E-Mail-Versendung startet:`);
+              console.log(`   - Status: ${status}`);
+              console.log(`   - Reparatur ID: ${repair.id}`);
+              console.log(`   - Benutzer ID: ${userId}`);
+              console.log(`   - Kunde: ${customer?.firstName} ${customer?.lastName}`);
+              console.log(`   - Kunden-E-Mail: ${customer?.email}`);
+              console.log(`   - Business-Einstellungen: ${businessSettings?.businessName}`);
               
               const emailService = require('./email-service');
+              console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailService.emailService);
               
               // Template-Typ basierend auf Status bestimmen
               let templateType = status;
@@ -987,7 +993,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 templateType = 'ersatzteil_eingetroffen';
               }
               
-              console.log(`📧 Verwende Template-Typ: ${templateType} für Benutzer ${userId}`);
+              console.log(`🔍 Template-Typ bestimmt: ${templateType}`);
+              
+              // Überprüfe, ob alle notwendigen Daten vorhanden sind
+              if (!customer?.email) {
+                console.error(`❌ FEHLER: Keine Kunden-E-Mail-Adresse vorhanden!`);
+                emailError = 'Keine Kunden-E-Mail-Adresse vorhanden';
+                res.setHeader('X-Email-Sent', 'false');
+                res.setHeader('X-Email-Error', emailError);
+                return;
+              }
+              
+              console.log(`🔍 Rufe sendRepairStatusEmail auf...`);
               
               // E-Mail über den EmailService senden
               const emailResult = await emailService.emailService.sendRepairStatusEmail(
@@ -1003,23 +1020,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               );
               
-              console.log(`📧 E-Mail-Ergebnis:`, emailResult);
+              console.log(`🔍 E-Mail-Ergebnis erhalten:`, {
+                success: emailResult?.success,
+                error: emailResult?.error,
+                type: typeof emailResult
+              });
               
               if (emailResult && emailResult.success === true) {
-                console.log(`✅ E-Mail für Status "${status}" erfolgreich gesendet an ${customer.email}`);
+                console.log(`✅ SUCCESS: E-Mail für Status "${status}" erfolgreich gesendet an ${customer.email}`);
                 emailSent = true;
                 res.setHeader('X-Email-Sent', 'true');
                 res.setHeader('X-Email-Status', `success-${status}`);
               } else {
                 const errorMessage = emailResult?.error || 'E-Mail-Versand fehlgeschlagen ohne spezifischen Fehler';
-                console.error(`❌ E-Mail-Versand fehlgeschlagen für Status "${status}":`, errorMessage);
+                console.error(`❌ FEHLER: E-Mail-Versand fehlgeschlagen für Status "${status}":`, errorMessage);
                 emailError = errorMessage;
                 res.setHeader('X-Email-Sent', 'false');
                 res.setHeader('X-Email-Error', emailError);
               }
             } catch (serviceError) {
               const errorMessage = `E-Mail-Service Fehler: ${serviceError?.message || serviceError}`;
-              console.error(`❌ EmailService Fehler für Status "${status}":`, serviceError);
+              console.error(`❌ EXCEPTION: EmailService Fehler für Status "${status}":`, serviceError);
+              console.error(`❌ Stack Trace:`, serviceError?.stack);
               emailError = errorMessage;
               res.setHeader('X-Email-Sent', 'false');
               res.setHeader('X-Email-Error', emailError);

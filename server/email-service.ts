@@ -1151,22 +1151,44 @@ export class EmailService {
    */
   async sendRepairStatusEmail(userId: number, repairId: number, templateType: string, variables: any): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log(`📧 Sende Reparatur-Status E-Mail: Benutzer ${userId}, Reparatur ${repairId}, Template ${templateType}`);
+      console.log(`🔍 DEBUG - sendRepairStatusEmail startet:`);
+      console.log(`   - userId: ${userId}`);
+      console.log(`   - repairId: ${repairId}`);
+      console.log(`   - templateType: ${templateType}`);
+      console.log(`   - variables:`, {
+        hasCustomer: !!variables?.customer,
+        hasRepair: !!variables?.repair,
+        hasBusinessSettings: !!variables?.businessSettings,
+        customerEmail: variables?.customer?.email
+      });
       
       // Hole die E-Mail-Vorlage
+      console.log(`🔍 Hole E-Mail-Vorlagen für Benutzer ${userId}...`);
       const templates = await this.getEmailTemplates(userId);
-      const template = templates.find(t => t.type === templateType || t.name.toLowerCase().includes(templateType));
+      console.log(`🔍 Gefundene Vorlagen: ${templates.length}`);
+      templates.forEach(t => console.log(`   - ${t.name} (Type: ${t.type})`));
+      
+      const template = templates.find(t => t.type === templateType || t.name.toLowerCase().includes(templateType.toLowerCase()));
       
       if (!template) {
         console.error(`❌ Keine E-Mail-Vorlage für Template-Typ '${templateType}' gefunden`);
+        console.log(`🔍 Verfügbare Template-Typen:`, templates.map(t => t.type || 'undefined'));
+        console.log(`🔍 Verfügbare Template-Namen:`, templates.map(t => t.name));
         return { success: false, error: `Keine E-Mail-Vorlage für '${templateType}' gefunden` };
       }
       
-      console.log(`✅ E-Mail-Vorlage gefunden: ${template.name} (ID: ${template.id})`);
+      console.log(`✅ E-Mail-Vorlage gefunden: ${template.name} (ID: ${template.id}, Type: ${template.type})`);
       
       // Extrahiere Kundendaten und Reparaturdaten
       const customer = variables.customer;
       const repair = variables.repair;
+      
+      console.log(`🔍 Prüfe Kundendaten:`, {
+        hasCustomer: !!customer,
+        firstName: customer?.firstName,
+        lastName: customer?.lastName,
+        email: customer?.email
+      });
       
       if (!customer || !customer.email) {
         console.error(`❌ Keine Kunden-E-Mail-Adresse verfügbar`);
