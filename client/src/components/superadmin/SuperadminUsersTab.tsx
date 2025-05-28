@@ -549,7 +549,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                         <Select
                           value={user.packageId?.toString() || ""}
                           onValueChange={(value) => {
-                            const packageId = value ? parseInt(value, 10) : null;
+                            const packageId = value === "0" ? null : parseInt(value, 10);
                             updatePackageMutation.mutate({ userId: user.id, packageId });
                           }}
                         >
@@ -557,7 +557,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                             <SelectValue placeholder="Kein Paket" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Kein Paket</SelectItem>
+                            <SelectItem value="0">Kein Paket</SelectItem>
                             {packages?.map((pkg) => (
                               <SelectItem key={pkg.id} value={pkg.id.toString()}>
                                 {pkg.name}
