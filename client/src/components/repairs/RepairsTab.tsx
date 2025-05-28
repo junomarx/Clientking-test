@@ -181,6 +181,19 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     queryKey: ['/api/customers']
   });
 
+  // Helper function to get display name for status
+  const getStatusDisplayName = (status: string) => {
+    switch(status) {
+      case 'eingegangen': return 'Eingegangen';
+      case 'in_reparatur': return 'In Reparatur';
+      case 'ersatzteil_eingetroffen': return 'Ersatzteil eingetroffen';
+      case 'fertig': return 'Fertig zur Abholung';
+      case 'abgeholt': return 'Abgeholt';
+      case 'ausser_haus': return 'Außer Haus';
+      default: return status;
+    }
+  };
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
       const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });

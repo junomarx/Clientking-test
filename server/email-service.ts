@@ -1333,7 +1333,15 @@ export class EmailService {
       
       console.log('💾 Historie-Daten zum Speichern:', historyData);
       
-      const result = await db.insert(emailHistory).values(historyData).returning();
+      const result = await db.insert(emailHistory).values({
+        repairId: historyData.repairId,
+        recipient: historyData.recipient,
+        subject: historyData.subject,
+        status: historyData.status,
+        userId: historyData.userId,
+        shopId: historyData.shopId,
+        emailTemplateId: historyData.emailTemplateId
+      }).returning();
       console.log('✅ E-Mail-Historie erfolgreich gespeichert:', result);
     } catch (error) {
       console.error('Fehler beim Speichern der E-Mail-Historie:', error);
