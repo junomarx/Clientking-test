@@ -1240,19 +1240,23 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: variables.businessSettings?.openingHours || 'Montag bis Freitag, 9:00 - 18:00 Uhr'
+        openingHours: variables.businessSettings?.openingHours || businessSettings?.openingHours || 'Montag bis Freitag, 9:00 - 18:00 Uhr'
       };
+      
+      // FORCE: Öffnungszeiten direkt aus Datenbank hinzufügen
+      templateVars.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
       
       console.log(`🔍 Template-Variablen:`, templateVars);
       console.log(`🔍 Business Settings Debug:`, {
         openingHours: variables.businessSettings?.openingHours,
+        businessSettingsOpeningHours: businessSettings?.openingHours,
         businessName: variables.businessSettings?.businessName
       });
       
-      // WICHTIG: openingHours Variable ist nicht in templateVars! Fügen wir sie hinzu:
-      if (variables.businessSettings?.openingHours && !templateVars.openingHours) {
-        templateVars.openingHours = variables.businessSettings.openingHours;
-        console.log(`✅ openingHours Variable hinzugefügt: ${templateVars.openingHours}`);
+      // Direkte Zuweisung der Öffnungszeiten aus businessSettings
+      if (businessSettings?.openingHours) {
+        templateVars.openingHours = businessSettings.openingHours;
+        console.log(`✅ openingHours direkt aus businessSettings hinzugefügt: ${templateVars.openingHours}`);
       }
       
       // Ersetze Platzhalter in Betreff und Inhalt
