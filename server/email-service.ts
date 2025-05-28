@@ -682,6 +682,14 @@ export class EmailService {
       let processedSubject = subject;
       let processedBody = body;
       
+      // WICHTIG: Öffnungszeiten direkt hinzufügen, falls nicht vorhanden
+      if (data && typeof data === 'object') {
+        if (!data.openingHours) {
+          data.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
+          console.log(`✅ openingHours Variable hinzugefügt: ${data.openingHours}`);
+        }
+      }
+      
       // Alle Variablen ersetzen, aber nur wenn data nicht null oder undefined ist
       if (data && typeof data === 'object') {
         Object.entries(data).forEach(([key, value]) => {
@@ -1240,7 +1248,7 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Hardcoded aus DB
+        openingHours: businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Aus DB oder Fallback
       };
       
       console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
