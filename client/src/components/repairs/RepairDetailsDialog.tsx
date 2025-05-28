@@ -435,7 +435,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
               <div className="space-y-3 max-h-48 overflow-y-auto">
                 {emailHistory.map((entry) => (
                   <div key={entry.id} className="flex items-start space-x-2 p-2 rounded-md bg-white/70 shadow-sm border">
-                    {entry.status === 'success' ? (
+                    {entry.status === 'sent' || entry.status === 'success' ? (
                       <Check className="h-4 w-4 mt-1 text-green-500 flex-shrink-0" />
                     ) : (
                       <X className="h-4 w-4 mt-1 text-red-500 flex-shrink-0" />
