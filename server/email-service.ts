@@ -372,7 +372,7 @@ export class EmailService {
         
         // Erstelle benutzer-spezifischen Transporter
         const port = parseInt(businessSetting.smtpPort || '587');
-        const userTransporter = nodemailer.createTransporter({
+        const userTransporter = nodemailer.createTransport({
           host: businessSetting.smtpHost,
           port: port,
           secure: port === 465,

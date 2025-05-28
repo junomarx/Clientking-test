@@ -972,6 +972,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (sendEmail === true) {
             console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
             
+            let emailResult: any = null;
+            let emailSent = false;
+            let emailError = '';
+            
             try {
               console.log(`🔍 DEBUGGING - E-Mail-Versendung startet:`);
               console.log(`   - Status: ${status}`);
