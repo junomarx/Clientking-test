@@ -975,6 +975,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             try {
               // Direkte E-Mail-Versendung mit dem EmailService
+              console.log(`📧 Starte E-Mail-Versendung für Status "${status}" an Reparatur ${repair.id}`);
+              
               const emailService = require('./email-service');
               
               // Template-Typ basierend auf Status bestimmen
@@ -985,10 +987,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 templateType = 'ersatzteil_eingetroffen';
               }
               
-              console.log(`📧 Sende E-Mail direkt über EmailService für Template: ${templateType}`);
+              console.log(`📧 Verwende Template-Typ: ${templateType} für Benutzer ${userId}`);
               
               // E-Mail über den EmailService senden
-              const emailResult = await emailService.sendRepairStatusEmail(
+              const emailResult = await emailService.emailService.sendRepairStatusEmail(
                 userId,
                 repair.id,
                 templateType,
@@ -1001,20 +1003,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               );
               
-              if (emailResult && emailResult.success) {
-                console.log(`✅ E-Mail für Status "${status}" erfolgreich direkt gesendet`);
+              console.log(`📧 E-Mail-Ergebnis:`, emailResult);
+              
+              if (emailResult && emailResult.success === true) {
+                console.log(`✅ E-Mail für Status "${status}" erfolgreich gesendet an ${customer.email}`);
                 emailSent = true;
                 res.setHeader('X-Email-Sent', 'true');
                 res.setHeader('X-Email-Status', `success-${status}`);
               } else {
-                console.error(`❌ E-Mail-Service Fehler für Status "${status}":`, emailResult?.error || 'Unbekannter Fehler');
-                emailError = `E-Mail-Versand fehlgeschlagen: ${emailResult?.error || 'Unbekannter Fehler'}`;
+                const errorMessage = emailResult?.error || 'E-Mail-Versand fehlgeschlagen ohne spezifischen Fehler';
+                console.error(`❌ E-Mail-Versand fehlgeschlagen für Status "${status}":`, errorMessage);
+                emailError = errorMessage;
                 res.setHeader('X-Email-Sent', 'false');
                 res.setHeader('X-Email-Error', emailError);
               }
             } catch (serviceError) {
+              const errorMessage = `E-Mail-Service Fehler: ${serviceError?.message || serviceError}`;
               console.error(`❌ EmailService Fehler für Status "${status}":`, serviceError);
-              emailError = `E-Mail-Service Fehler: ${serviceError}`;
+              emailError = errorMessage;
               res.setHeader('X-Email-Sent', 'false');
               res.setHeader('X-Email-Error', emailError);
             }
@@ -1039,7 +1045,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Kunde nicht gefunden, keine Benachrichtigung möglich");
       }
       
-      res.json(repair);
+      // Gebe das aktualisierte Repair zurück mit E-Mail-Status
+      const response = {
+        ...repair,
+        emailSent: emailSent,
+        emailError: emailError || null
+      };
+      
+      console.log(`📧 Response für Frontend:`, { 
+        emailSent: response.emailSent, 
+        emailError: response.emailError,
+        repairId: repair.id 
+      });
+      
+      res.json(response);
     } catch (error) {
       console.error("Fehler bei der Statusaktualisierung:", error);
       res.status(500).json({ message: "Failed to update repair status" });
