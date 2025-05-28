@@ -1168,7 +1168,27 @@ export class EmailService {
       console.log(`🔍 Gefundene Vorlagen: ${templates.length}`);
       templates.forEach(t => console.log(`   - ${t.name} (Type: ${t.type})`));
       
-      const template = templates.find(t => t.type === templateType || t.name.toLowerCase().includes(templateType.toLowerCase()));
+      // Template-Mapping für verschiedene Status-Arten
+      let template = templates.find(t => t.type === templateType);
+      
+      // Fallback-Suche nach Name, wenn kein Type-Match gefunden wurde
+      if (!template) {
+        if (templateType === 'fertig') {
+          template = templates.find(t => 
+            t.name.toLowerCase().includes('abholbereit') || 
+            t.name.toLowerCase().includes('fertig') ||
+            t.type === 'ready_for_pickup'
+          );
+        } else if (templateType === 'ersatzteil_eingetroffen') {
+          template = templates.find(t => 
+            t.name.toLowerCase().includes('ersatzteil') ||
+            t.type === 'parts_arrived'
+          );
+        } else {
+          // Generische Suche nach Namen
+          template = templates.find(t => t.name.toLowerCase().includes(templateType.toLowerCase()));
+        }
+      }
       
       if (!template) {
         console.error(`❌ Keine E-Mail-Vorlage für Template-Typ '${templateType}' gefunden`);
