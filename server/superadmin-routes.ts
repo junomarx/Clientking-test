@@ -800,13 +800,20 @@ export function registerSuperadminRoutes(app: Express) {
       }
 
       console.log(`Berechtigungsaktualisierung abgeschlossen. ${updatedUsers} Benutzer aktualisiert.`);
-      res.json({ 
+      
+      // Sicherstellen, dass wir JSON zurückgeben
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json({ 
         message: "Berechtigungen erfolgreich aktualisiert",
-        updatedUsers 
+        updatedUsers: updatedUsers
       });
     } catch (error) {
       console.error("Fehler beim Aktualisieren der Berechtigungen:", error);
-      res.status(500).json({ message: "Fehler beim Aktualisieren der Berechtigungen" });
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Berechtigungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
