@@ -200,9 +200,9 @@ export function ChangeStatusDialog({
             
             {/* Der Hinweis zur deaktivierten automatischen E-Mail-Versendung wurde entfernt */}
             
-            {showEmailOption && currentSelectedStatus === 'abgeholt' && (
+            {showEmailOption && (
               <div className="space-y-4">
-                {!isProfessionalOrHigher ? (
+                {currentSelectedStatus === 'abgeholt' && !isProfessionalOrHigher ? (
                   <div className="rounded-md border p-4">
                     {getEmailLabel()}
                   </div>
