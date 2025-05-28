@@ -1249,6 +1249,12 @@ export class EmailService {
         businessName: variables.businessSettings?.businessName
       });
       
+      // WICHTIG: openingHours Variable ist nicht in templateVars! Fügen wir sie hinzu:
+      if (variables.businessSettings?.openingHours && !templateVars.openingHours) {
+        templateVars.openingHours = variables.businessSettings.openingHours;
+        console.log(`✅ openingHours Variable hinzugefügt: ${templateVars.openingHours}`);
+      }
+      
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
       let content = template.body || `Hallo {{customerFirstName}}, der Status Ihrer Reparatur hat sich geändert.`;
