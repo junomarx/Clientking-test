@@ -1142,6 +1142,129 @@ export class EmailService {
       console.error(`Fehler bei der Bereinigung der "Reparatur abgeschlossen" Vorlage für Benutzer ${userId}:`, error);
     }
   }
+  /**
+   * Sendet eine E-Mail-Benachrichtigung für Reparatur-Statusänderungen
+   * @param userId Benutzer-ID
+   * @param repairId Reparatur-ID
+   * @param templateType Template-Typ (z.B. 'fertig', 'ersatzteil_eingetroffen')
+   * @param variables Template-Variablen
+   */
+  async sendRepairStatusEmail(userId: number, repairId: number, templateType: string, variables: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`📧 Sende Reparatur-Status E-Mail: Benutzer ${userId}, Reparatur ${repairId}, Template ${templateType}`);
+      
+      // Hole die E-Mail-Vorlage
+      const templates = await this.getEmailTemplates(userId);
+      const template = templates.find(t => t.type === templateType || t.name.toLowerCase().includes(templateType));
+      
+      if (!template) {
+        console.error(`❌ Keine E-Mail-Vorlage für Template-Typ '${templateType}' gefunden`);
+        return { success: false, error: `Keine E-Mail-Vorlage für '${templateType}' gefunden` };
+      }
+      
+      console.log(`✅ E-Mail-Vorlage gefunden: ${template.name} (ID: ${template.id})`);
+      
+      // Extrahiere Kundendaten und Reparaturdaten
+      const customer = variables.customer;
+      const repair = variables.repair;
+      
+      if (!customer || !customer.email) {
+        console.error(`❌ Keine Kunden-E-Mail-Adresse verfügbar`);
+        return { success: false, error: 'Keine Kunden-E-Mail-Adresse verfügbar' };
+      }
+      
+      // Template-Variablen für die E-Mail-Vorlage
+      const templateVars = {
+        customerFirstName: customer.firstName || '',
+        customerLastName: customer.lastName || '',
+        customerFullName: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+        deviceType: repair.deviceType || '',
+        brand: repair.brand || '',
+        model: repair.model || '',
+        orderCode: repair.orderCode || repair.id?.toString() || '',
+        repairId: repair.id?.toString() || '',
+        status: repair.status || templateType,
+        businessName: variables.businessSettings?.businessName || 'Handyshop',
+        businessPhone: variables.businessSettings?.phone || '',
+        businessEmail: variables.businessSettings?.email || '',
+        businessAddress: variables.businessSettings?.streetAddress || ''
+      };
+      
+      // Ersetze Platzhalter in Betreff und Inhalt
+      let subject = template.subject || `Status-Update für Ihre Reparatur`;
+      let content = template.content || `Hallo {{customerFirstName}}, der Status Ihrer Reparatur hat sich geändert.`;
+      
+      // Ersetze Template-Variablen
+      for (const [key, value] of Object.entries(templateVars)) {
+        const placeholder = `{{${key}}}`;
+        subject = subject.replace(new RegExp(placeholder, 'g'), value || '');
+        content = content.replace(new RegExp(placeholder, 'g'), value || '');
+      }
+      
+      console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
+      
+      // Sende die E-Mail
+      const emailSent = await this.sendRawEmail({
+        from: variables.businessSettings?.businessName || 'Handyshop',
+        to: customer.email,
+        subject: subject,
+        html: content,
+        text: content.replace(/<[^>]*>/g, '') // HTML-Tags entfernen für Text-Version
+      }, userId);
+      
+      if (emailSent) {
+        // Speichere E-Mail im Verlauf
+        try {
+          await this.saveEmailHistory({
+            repairId: repairId,
+            recipient: customer.email,
+            subject: subject,
+            status: 'sent',
+            userId: userId,
+            shopId: repair.shopId
+          });
+        } catch (historyError) {
+          console.warn('Fehler beim Speichern des E-Mail-Verlaufs:', historyError);
+        }
+        
+        console.log(`✅ Status-E-Mail erfolgreich gesendet an ${customer.email}`);
+        return { success: true };
+      } else {
+        console.error(`❌ E-Mail-Versand fehlgeschlagen an ${customer.email}`);
+        return { success: false, error: 'E-Mail-Versand fehlgeschlagen' };
+      }
+      
+    } catch (error) {
+      console.error('❌ Fehler beim Senden der Status-E-Mail:', error);
+      return { success: false, error: `Fehler beim E-Mail-Versand: ${error}` };
+    }
+  }
+
+  /**
+   * Speichert einen E-Mail-Eintrag im Verlauf
+   */
+  private async saveEmailHistory(data: {
+    repairId: number;
+    recipient: string;
+    subject: string;
+    status: string;
+    userId?: number;
+    shopId?: number;
+  }): Promise<void> {
+    try {
+      await db.insert(emailHistory).values({
+        repairId: data.repairId,
+        recipient: data.recipient,
+        subject: data.subject,
+        status: data.status,
+        userId: data.userId || null,
+        shopId: data.shopId || null
+      });
+    } catch (error) {
+      console.error('Fehler beim Speichern der E-Mail-Historie:', error);
+      throw error;
+    }
+  }
 }
 
 export const emailService = new EmailService();

@@ -974,34 +974,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
             
             try {
-              // Verwende die vorhandene E-Mail-API direkt (wie bei PDF-Versand)
-              const emailResponse = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-User-ID': userId.toString()
-                },
-                body: JSON.stringify({
-                  templateType: status,
-                  status: status
-                })
-              });
+              // Direkte E-Mail-Versendung mit dem EmailService
+              const emailService = require('./email-service');
               
-              if (emailResponse.ok) {
-                console.log(`✅ E-Mail für Status "${status}" erfolgreich über API gesendet`);
+              // Template-Typ basierend auf Status bestimmen
+              let templateType = status;
+              if (status === 'fertig') {
+                templateType = 'fertig';
+              } else if (status === 'ersatzteil_eingetroffen') {
+                templateType = 'ersatzteil_eingetroffen';
+              }
+              
+              console.log(`📧 Sende E-Mail direkt über EmailService für Template: ${templateType}`);
+              
+              // E-Mail über den EmailService senden
+              const emailResult = await emailService.sendRepairStatusEmail(
+                userId,
+                repair.id,
+                templateType,
+                {
+                  repairId: repair.id,
+                  status: status,
+                  customer: customer,
+                  repair: repair,
+                  businessSettings: businessSettings
+                }
+              );
+              
+              if (emailResult && emailResult.success) {
+                console.log(`✅ E-Mail für Status "${status}" erfolgreich direkt gesendet`);
                 emailSent = true;
                 res.setHeader('X-Email-Sent', 'true');
                 res.setHeader('X-Email-Status', `success-${status}`);
               } else {
-                const errorText = await emailResponse.text();
-                console.error(`❌ E-Mail-API Fehler für Status "${status}":`, errorText);
-                emailError = `E-Mail-Versand fehlgeschlagen: ${errorText}`;
+                console.error(`❌ E-Mail-Service Fehler für Status "${status}":`, emailResult?.error || 'Unbekannter Fehler');
+                emailError = `E-Mail-Versand fehlgeschlagen: ${emailResult?.error || 'Unbekannter Fehler'}`;
                 res.setHeader('X-Email-Sent', 'false');
                 res.setHeader('X-Email-Error', emailError);
               }
-            } catch (fetchError) {
-              console.error(`❌ E-Mail-Versand Fehler für Status "${status}":`, fetchError);
-              emailError = `E-Mail-Versand fehlgeschlagen: ${fetchError}`;
+            } catch (serviceError) {
+              console.error(`❌ EmailService Fehler für Status "${status}":`, serviceError);
+              emailError = `E-Mail-Service Fehler: ${serviceError}`;
               res.setHeader('X-Email-Sent', 'false');
               res.setHeader('X-Email-Error', emailError);
             }
