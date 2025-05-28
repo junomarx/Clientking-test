@@ -491,7 +491,7 @@ export class EmailService {
       console.log('Sende E-Mail mit folgenden Optionen:', {
         to: mailOptions.to,
         subject: mailOptions.subject,
-        attachments: mailOptions.attachments.map(a => a.filename)
+        attachments: mailOptions.attachments ? mailOptions.attachments.map(a => a.filename) : []
       });
       
       const info = await this.smtpTransporter.sendMail(mailOptions);
