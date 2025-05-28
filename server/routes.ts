@@ -969,24 +969,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let emailError = null;
         
         try {
-          // Automatische E-Mails für kritische Statusänderungen (immer senden)
-          if (status === "ersatzteil_eingetroffen" || status === "fertig") {
-            console.log(`🚀 Automatische E-Mail für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+          // E-Mail-Benachrichtigung nur wenn explizit vom Benutzer gewünscht
+          if (sendEmail === true) {
+            console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
             emailSent = true; // Markiere als gesendet für Frontend-Feedback
             
-            // Setze sofortiges Feedback
+            // Setze Feedback-Header
             res.setHeader('X-Email-Sent', 'true');
-            res.setHeader('X-Email-Status', `automatic-${status}`);
-          }
-          
-          // Manuelle E-Mail-Benachrichtigung wenn sendEmail explizit auf true gesetzt ist
-          else if (sendEmail === true) {
-            console.log(`📧 Manuelle E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
-            emailSent = true; // Markiere als gesendet für Frontend-Feedback
-            
-            // Setze sofortiges Feedback
-            res.setHeader('X-Email-Sent', 'true');
-            res.setHeader('X-Email-Status', `manual-${status}`);
+            res.setHeader('X-Email-Status', `user-selected-${status}`);
+          } else {
+            console.log(`ℹ️ Status "${status}" für Reparatur ${repair.id} geändert - keine E-Mail angefordert`);
           }
           
           // Response-Header setzen für Frontend-Feedback

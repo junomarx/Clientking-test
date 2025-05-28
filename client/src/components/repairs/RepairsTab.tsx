@@ -207,45 +207,32 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       let title = "Status aktualisiert";
       let description = "Der Reparaturstatus wurde erfolgreich aktualisiert.";
       
-      // Automatische E-Mail-Benachrichtigungen (immer aktiv für bestimmte Status)
-      if (result.automaticEmail) {
-        if (result.emailSent) {
-          if (result.status === "ersatzteil_eingetroffen") {
-            title = "Ersatzteil-Benachrichtigung gesendet";
-            description = "Der Status wurde aktualisiert und eine E-Mail über das eingetroffene Ersatzteil wurde automatisch an den Kunden gesendet.";
-          } else if (result.status === "fertig") {
-            title = "Abholbenachrichtigung gesendet";
-            description = "Der Status wurde auf 'Fertig' gesetzt und eine automatische Abholbenachrichtigung wurde an den Kunden gesendet.";
-          }
-          
-          toast({
-            title,
-            description,
-            variant: "default",
-          });
-        } else if (result.emailError) {
-          toast({
-            title: "Status aktualisiert, E-Mail-Fehler",
-            description: `Der Status wurde erfolgreich aktualisiert, aber die automatische E-Mail konnte nicht gesendet werden: ${result.emailError}`,
-            variant: "destructive",
-          });
+      // E-Mail-Benachrichtigungen basierend auf Benutzerauswahl
+      if (result.emailSent) {
+        if (result.status === "ersatzteil_eingetroffen") {
+          title = "Status aktualisiert und E-Mail gesendet";
+          description = "Der Status wurde auf 'Ersatzteil eingetroffen' gesetzt und eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
+        } else if (result.status === "fertig") {
+          title = "Status aktualisiert und E-Mail gesendet";
+          description = "Der Status wurde auf 'Fertig zur Abholung' gesetzt und eine Abholbenachrichtigung wurde an den Kunden gesendet.";
+        } else {
+          title = "Status aktualisiert und E-Mail gesendet";
+          description = "Der Status wurde erfolgreich aktualisiert und eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
         }
-      }
-      // Manuelle E-Mail-Benachrichtigungen
-      else if (result.emailSent) {
+        
         toast({
-          title: "E-Mail gesendet",
-          description: "Der Status wurde aktualisiert und eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.",
+          title,
+          description,
           variant: "default",
         });
       } else if (result.emailError) {
         toast({
-          title: "E-Mail-Fehler",
-          description: `Der Status wurde aktualisiert, aber die E-Mail konnte nicht gesendet werden: ${result.emailError}`,
+          title: "Status aktualisiert, E-Mail-Fehler",
+          description: `Der Status wurde erfolgreich aktualisiert, aber die E-Mail konnte nicht gesendet werden: ${result.emailError}`,
           variant: "destructive",
         });
       } else {
-        // Nur Status-Update ohne E-Mail
+        // Nur Status-Update ohne E-Mail (normal)
         toast({
           title,
           description,
