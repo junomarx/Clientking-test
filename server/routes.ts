@@ -959,6 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fehlende Variablen hinzufügen
           "reparaturarbeit": repair.description || repair.issue || "Reparatur des Geräts",
           "oeffnungszeiten": businessSettings?.opening_hours || "Montag bis Freitag, 9:00 - 18:00 Uhr",
+          "opening_hours": businessSettings?.opening_hours || "Mo - Fr: 10:00 - 18:00 Uhr",
           // Wichtig: userId und repairId für die Datenisolierung und E-Mail-Verlauf hinzufügen
           "userId": userId.toString(),
           "repairId": repair.id.toString()

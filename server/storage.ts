@@ -640,10 +640,10 @@ export class DatabaseStorage implements IStorage {
         
         // Spezielles Handling für Öffnungszeiten - Semikolons in Zeilenumbrüche umwandeln
         let processedValue = value;
-        if (key === 'oeffnungszeiten' && typeof value === 'string') {
+        if ((key === 'oeffnungszeiten' || key === 'opening_hours') && typeof value === 'string') {
           // Ersetze alle Semikolons durch HTML-Zeilenumbrüche
           processedValue = value.replace(/;/g, '<br>');
-          console.log(`Öffnungszeiten mit Zeilenumbrüchen formatiert: ${processedValue}`);
+          console.log(`Öffnungszeiten (${key}) mit Zeilenumbrüchen formatiert: ${processedValue}`);
         }
         
         subject = subject.replace(placeholder, processedValue);
