@@ -1245,14 +1245,19 @@ export class EmailService {
       
       console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
       
-      // Sende die E-Mail
-      const emailSent = await this.sendRawEmail({
-        from: variables.businessSettings?.businessName || 'Handyshop',
+      // Sende die E-Mail mit shop-spezifischen SMTP-Einstellungen
+      const fromAddress = variables.businessSettings?.businessEmail || 
+                         variables.businessSettings?.smtpUser || 
+                         'info@handyshop.com';
+      const fromName = variables.businessSettings?.businessName || 'Handyshop';
+      
+      const emailSent = await this.sendEmail({
+        from: `"${fromName}" <${fromAddress}>`,
         to: customer.email,
         subject: subject,
         html: content,
         text: content.replace(/<[^>]*>/g, '') // HTML-Tags entfernen für Text-Version
-      }, userId);
+      });
       
       if (emailSent) {
         // Speichere E-Mail im Verlauf
