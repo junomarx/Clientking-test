@@ -1238,7 +1238,8 @@ export class EmailService {
         businessName: variables.businessSettings?.businessName || 'Handyshop',
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
-        businessAddress: variables.businessSettings?.streetAddress || ''
+        businessAddress: variables.businessSettings?.streetAddress || '',
+        openingHours: variables.businessSettings?.openingHours || 'Montag bis Freitag, 9:00 - 18:00 Uhr'
       };
       
       console.log(`🔍 Template-Variablen:`, templateVars);
