@@ -965,8 +965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Automatische E-Mail-Benachrichtigungen bei bestimmten Statusänderungen
-        let emailSent = false;
-        let emailError = null;
+        let emailResult = { success: false, error: null };
         
         try {
           // E-Mail-Benachrichtigung nur wenn explizit vom Benutzer gewünscht
@@ -982,8 +981,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`   - Kunden-E-Mail: ${customer?.email}`);
               console.log(`   - Business-Einstellungen: ${businessSettings?.businessName}`);
               
-              const emailService = require('./email-service');
-              console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailService.emailService);
+              const { emailService } = await import('./email-service.js');
+              console.log(`🔍 EmailService erfolgreich geladen:`, typeof emailService);
               
               // Template-Typ basierend auf Status bestimmen
               let templateType = status;
@@ -1007,7 +1006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`🔍 Rufe sendRepairStatusEmail auf...`);
               
               // E-Mail über den EmailService senden
-              const emailResult = await emailService.emailService.sendRepairStatusEmail(
+              emailResult = await emailService.sendRepairStatusEmail(
                 userId,
                 repair.id,
                 templateType,
@@ -1070,8 +1069,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Gebe das aktualisierte Repair zurück mit E-Mail-Status
       const response = {
         ...repair,
-        emailSent: emailSent,
-        emailError: emailError || null
+        emailSent: emailResult?.success || false,
+        emailError: emailResult?.error || null
       };
       
       console.log(`📧 Response für Frontend:`, { 

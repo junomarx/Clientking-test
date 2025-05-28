@@ -1,0 +1,75 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairsTab.tsx:857 Schließe Details-Dialog und öffne Edit-Dialog für ID: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: true repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: true repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+2EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:462 Schließe Details-Dialog und öffne Status-Dialog für ID: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+RepairsTab.tsx:798 Status-Update für ID=102, newStatus=fertig, sendEmail=true
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+queryClient.ts:40 
+            
+            
+           PATCH https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/api/repairs/102/status 500 (Internal Server Error)
+apiRequest @ queryClient.ts:40
+mutationFn @ RepairsTab.tsx:186
+fn @ @tanstack_react-query.js?v=6fe52243:1189
+run @ @tanstack_react-query.js?v=6fe52243:494
+start @ @tanstack_react-query.js?v=6fe52243:536
+execute @ @tanstack_react-query.js?v=6fe52243:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=6fe52243:2630
+(anonymous) @ @tanstack_react-query.js?v=6fe52243:3295
+onUpdateStatus @ RepairsTab.tsx:815
+onSubmit @ ChangeStatusDialog.tsx:160
+(anonymous) @ chunk-4BFJKWC4.js?v=6fe52243:1465
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=6fe52243:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=6fe52243:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=6fe52243:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=6fe52243:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=6fe52243:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=6fe52243:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=6fe52243:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=6fe52243:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=6fe52243:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=6fe52243:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=6fe52243:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=6fe52243:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=6fe52243:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=6fe52243:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=6fe52243:5449
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
