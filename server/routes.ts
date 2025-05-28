@@ -30,7 +30,8 @@ import {
   userDeviceTypes,
   userBrands,
   businessSettings,
-  costEstimates
+  costEstimates,
+  packageFeatures
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -1147,11 +1148,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prüfen ob detaillierte Statistiken über feature_overrides aktiviert sind
       let canViewDetailedStats = false;
       
-      if (user.featureOverrides && typeof user.featureOverrides === 'object') {
-        const overrides = user.featureOverrides as any;
-        if (overrides.canViewDetailedStats === true) {
-          canViewDetailedStats = true;
+      // Admin-Benutzer haben immer Zugriff
+      if (user.isAdmin) {
+        canViewDetailedStats = true;
+      } 
+      // Prüfen über das neue Paketsystem
+      else if (user.packageId) {
+        try {
+          const features = await db.select()
+            .from(packageFeatures)
+            .where(eq(packageFeatures.packageId, user.packageId));
+          
+          canViewDetailedStats = features.some(f => f.feature === 'detailedStats');
+        } catch (error) {
+          console.error('Fehler beim Prüfen der Paket-Features:', error);
         }
+      }
+      // Fallback: Prüfen über featureOverrides (als String gespeichert)
+      else if (user.featureOverrides && typeof user.featureOverrides === 'string') {
+        try {
+          const overrides = JSON.parse(user.featureOverrides);
+          if (overrides.canViewDetailedStats === true) {
+            canViewDetailedStats = true;
+          }
+        } catch (e) {
+          console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
+        }
+      }
+      // Fallback: Prüfen über pricingPlan
+      else if (user.pricingPlan === 'enterprise') {
+        canViewDetailedStats = true;
       }
       
       // Falls nicht über Overrides aktiviert, prüfe das Paket
