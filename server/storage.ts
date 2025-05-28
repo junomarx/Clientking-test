@@ -3095,13 +3095,13 @@ export class DatabaseStorage implements IStorage {
         LEFT JOIN 
           "email_templates" t ON h."emailTemplateId" = t.id 
         WHERE 
-          h."repairId" = ${repairId} AND
-          h."shop_id" = ${shopIdValue}
+          h."repairId" = $1 AND
+          h."shop_id" = $2
         ORDER BY 
           h."sentAt" DESC
       `;
 
-      const result = await db.execute(query);
+      const result = await db.execute(query, [repairId, shopIdValue]);
 
       console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
       return result.rows as (EmailHistory & { templateName?: string })[];
