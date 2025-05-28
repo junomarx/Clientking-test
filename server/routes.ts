@@ -1130,11 +1130,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer ein Enterprise-Paket hat
-      const isEnterpriseUser = await isEnterprise(userId);
+      // Benutzer abrufen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      // Prüfen ob detaillierte Statistiken über feature_overrides aktiviert sind
+      let canViewDetailedStats = false;
+      
+      if (user.featureOverrides && typeof user.featureOverrides === 'object') {
+        const overrides = user.featureOverrides as any;
+        if (overrides.canViewDetailedStats === true) {
+          canViewDetailedStats = true;
+        }
+      }
+      
+      // Falls nicht über Overrides aktiviert, prüfe das Paket
+      if (!canViewDetailedStats) {
+        canViewDetailedStats = await isEnterprise(userId);
+      }
+      
+      console.log(`Detaillierte Statistiken für ${user.username}: ${canViewDetailedStats} (Paket: ${user.pricingPlan}, Overrides: ${JSON.stringify(user.featureOverrides)})`);
       
       // Ergebnis zurückgeben
-      res.json({ canViewDetailedStats: isEnterpriseUser });
+      res.json({ canViewDetailedStats });
     } catch (error) {
       console.error("Error checking detailed stats permission:", error);
       res.status(500).json({ message: "Fehler bei der Überprüfung der Statistik-Berechtigungen" });
