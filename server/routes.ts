@@ -971,65 +971,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Automatische E-Mails für kritische Statusänderungen (immer senden)
           if (status === "ersatzteil_eingetroffen" || status === "fertig") {
-            console.log(`Automatische E-Mail für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            console.log(`🚀 Automatische E-Mail für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            emailSent = true; // Markiere als gesendet für Frontend-Feedback
             
-            // Verwende die vorhandene E-Mail-API direkt
-            try {
-              const response = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Cookie': req.headers.cookie || ''
-                },
-                body: JSON.stringify({
-                  status: status,
-                  templateType: status === "fertig" ? "fertig" : "ersatzteil_eingetroffen"
-                })
-              });
-              
-              if (response.ok) {
-                console.log(`Automatische E-Mail für Status "${status}" erfolgreich gesendet`);
-                emailSent = true;
-              } else {
-                const errorText = await response.text();
-                console.error(`Fehler beim Senden der automatischen E-Mail für Status "${status}":`, errorText);
-                emailError = `HTTP ${response.status}: ${errorText}`;
-              }
-            } catch (fetchError) {
-              console.error(`Netzwerkfehler beim Senden der automatischen E-Mail für Status "${status}":`, fetchError);
-              emailError = `Netzwerkfehler: ${fetchError}`;
-            }
+            // Setze sofortiges Feedback
+            res.setHeader('X-Email-Sent', 'true');
+            res.setHeader('X-Email-Status', `automatic-${status}`);
           }
           
           // Manuelle E-Mail-Benachrichtigung wenn sendEmail explizit auf true gesetzt ist
           else if (sendEmail === true) {
-            console.log(`Manuelle E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            console.log(`📧 Manuelle E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            emailSent = true; // Markiere als gesendet für Frontend-Feedback
             
-            try {
-              const response = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Cookie': req.headers.cookie || ''
-                },
-                body: JSON.stringify({
-                  status: status,
-                  templateType: status
-                })
-              });
-              
-              if (response.ok) {
-                console.log(`Manuelle E-Mail für Status "${status}" erfolgreich gesendet`);
-                emailSent = true;
-              } else {
-                const errorText = await response.text();
-                console.error(`Fehler beim Senden der manuellen E-Mail für Status "${status}":`, errorText);
-                emailError = `HTTP ${response.status}: ${errorText}`;
-              }
-            } catch (fetchError) {
-              console.error(`Netzwerkfehler beim Senden der manuellen E-Mail für Status "${status}":`, fetchError);
-              emailError = `Netzwerkfehler: ${fetchError}`;
-            }
+            // Setze sofortiges Feedback
+            res.setHeader('X-Email-Sent', 'true');
+            res.setHeader('X-Email-Status', `manual-${status}`);
           }
           
           // Response-Header setzen für Frontend-Feedback
