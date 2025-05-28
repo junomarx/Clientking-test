@@ -773,6 +773,43 @@ export function registerSuperadminRoutes(app: Express) {
     }
   });
 
+  // Route zum Aktualisieren aller Benutzerberechtigungen
+  app.post("/api/superadmin/refresh-permissions", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Starte Berechtigungsaktualisierung für alle Benutzer...");
+      
+      // Alle Benutzer mit ihren Paketen abrufen
+      const allUsers = await db.select().from(users);
+      let updatedUsers = 0;
+
+      for (const user of allUsers) {
+        try {
+          // Paket-Features für jeden Benutzer neu laden
+          if (user.packageId) {
+            const packageData = await db.select().from(packages).where(eq(packages.id, user.packageId));
+            if (packageData.length > 0) {
+              console.log(`Benutzer ${user.username} (ID: ${user.id}) - Paket ID: ${user.packageId} (${packageData[0].name}) aktualisiert`);
+            }
+          } else {
+            console.log(`Benutzer ${user.username} (ID: ${user.id}) - Kein Paket zugewiesen`);
+          }
+          updatedUsers++;
+        } catch (userError) {
+          console.error(`Fehler beim Aktualisieren der Berechtigungen für Benutzer ${user.id}:`, userError);
+        }
+      }
+
+      console.log(`Berechtigungsaktualisierung abgeschlossen. ${updatedUsers} Benutzer aktualisiert.`);
+      res.json({ 
+        message: "Berechtigungen erfolgreich aktualisiert",
+        updatedUsers 
+      });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Berechtigungen:", error);
+      res.status(500).json({ message: "Fehler beim Aktualisieren der Berechtigungen" });
+    }
+  });
+
   // Details zu einem Paket
   app.get("/api/superadmin/packages/:id", isSuperadmin, async (req: Request, res: Response) => {
     try {

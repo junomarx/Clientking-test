@@ -52,7 +52,9 @@ import {
   Store,
   Search,
   Info,
-  FileText
+  FileText,
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 
 // Benutzer-Typ ohne Passwort
@@ -309,6 +311,27 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     },
   });
 
+  // Mutation zum Aktualisieren aller Benutzerberechtigungen
+  const refreshPermissionsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/superadmin/refresh-permissions");
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Berechtigungen aktualisiert",
+        description: `${data.updatedUsers} Benutzerberechtigungen wurden erfolgreich aktualisiert.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: `Berechtigungen konnten nicht aktualisiert werden: ${error.message}`,
+      });
+    },
+  });
+
   // Mutation zum Löschen eines Benutzers
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -481,15 +504,36 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                   : `Insgesamt ${users.length} Benutzer im System`}
               </CardDescription>
             </div>
-            <div className="relative w-full sm:w-64">
-              <Input
-                type="text"
-                placeholder="Suche nach Name, Firma..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10"
-              />
-              <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              <Button
+                onClick={() => refreshPermissionsMutation.mutate()}
+                disabled={refreshPermissionsMutation.isPending}
+                variant="outline"
+                size="sm"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                {refreshPermissionsMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Aktualisiere...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Berechtigungen aktualisieren
+                  </>
+                )}
+              </Button>
+              <div className="relative w-full sm:w-64">
+                <Input
+                  type="text"
+                  placeholder="Suche nach Name, Firma..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10"
+                />
+                <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
