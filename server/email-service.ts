@@ -1168,6 +1168,7 @@ export class EmailService {
         hasCustomer: !!variables?.customer,
         hasRepair: !!variables?.repair,
         hasBusinessSettings: !!variables?.businessSettings,
+        openingHours: variables?.businessSettings?.openingHours,
         customerEmail: variables?.customer?.email
       });
       
@@ -1243,6 +1244,10 @@ export class EmailService {
       };
       
       console.log(`🔍 Template-Variablen:`, templateVars);
+      console.log(`🔍 Business Settings Debug:`, {
+        openingHours: variables.businessSettings?.openingHours,
+        businessName: variables.businessSettings?.businessName
+      });
       
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
