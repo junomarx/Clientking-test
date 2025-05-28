@@ -1246,10 +1246,12 @@ export class EmailService {
       console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
       
       // Sende die E-Mail mit shop-spezifischen SMTP-Einstellungen
-      const fromAddress = variables.businessSettings?.businessEmail || 
-                         variables.businessSettings?.smtpUser || 
-                         'info@handyshop.com';
-      const fromName = variables.businessSettings?.businessName || 'Handyshop';
+      const fromAddress = variables.businessSettings?.smtpUser || 'info@handyshop.com';
+      const fromName = variables.businessSettings?.smtpSenderName || 
+                      variables.businessSettings?.businessName || 
+                      'Handyshop';
+      
+      console.log(`📧 Verwende Absender: "${fromName}" <${fromAddress}>`);
       
       const emailSent = await this.sendEmail({
         from: `"${fromName}" <${fromAddress}>`,
