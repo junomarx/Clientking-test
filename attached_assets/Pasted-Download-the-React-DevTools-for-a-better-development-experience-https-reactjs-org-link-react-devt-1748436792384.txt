@@ -1,0 +1,47 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:112 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:131 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 102
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: true repairId: 99
+RepairDetailsDialog.tsx:462 Schließe Details-Dialog und öffne Status-Dialog für ID: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+RepairsTab.tsx:798 Status-Update für ID=99, newStatus=fertig, sendEmail=true
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
+EditRepairDialog.tsx:54 EditRepairDialog geöffnet: false repair: 99
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: 99
