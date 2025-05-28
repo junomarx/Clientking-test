@@ -1319,14 +1319,22 @@ export class EmailService {
     shopId?: number;
   }): Promise<void> {
     try {
-      await db.insert(emailHistory).values({
+      console.log('💾 Speichere E-Mail-Historie:', data);
+      
+      const historyData = {
         repairId: data.repairId,
         recipient: data.recipient,
         subject: data.subject,
-        status: data.status,
+        status: data.status, // 'sent' oder 'failed'
         userId: data.userId || null,
-        shopId: data.shopId || null
-      });
+        shopId: data.shopId || null,
+        emailTemplateId: null
+      };
+      
+      console.log('💾 Historie-Daten zum Speichern:', historyData);
+      
+      const result = await db.insert(emailHistory).values(historyData).returning();
+      console.log('✅ E-Mail-Historie erfolgreich gespeichert:', result);
     } catch (error) {
       console.error('Fehler beim Speichern der E-Mail-Historie:', error);
       throw error;

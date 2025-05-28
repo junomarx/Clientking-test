@@ -199,47 +199,37 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       };
     },
     onSuccess: (result) => {
+      // Sofortiges Cache-Update für alle Repair-Listen
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      setShowStatusDialog(false);
       
-      // Basis-Nachricht für den Status
-      let title = "Status aktualisiert";
-      let description = "Der Reparaturstatus wurde erfolgreich aktualisiert.";
+      // Zusätzlich: Cache für die spezifische Reparatur invalidieren falls verwendet
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs', result.data.id] });
       
-      // E-Mail-Benachrichtigungen basierend auf Benutzerauswahl
-      if (result.emailSent) {
-        if (result.status === "ersatzteil_eingetroffen") {
-          title = "Status aktualisiert und E-Mail gesendet";
-          description = "Der Status wurde auf 'Ersatzteil eingetroffen' gesetzt und eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
-        } else if (result.status === "fertig") {
-          title = "Status aktualisiert und E-Mail gesendet";
-          description = "Der Status wurde auf 'Fertig zur Abholung' gesetzt und eine Abholbenachrichtigung wurde an den Kunden gesendet.";
-        } else {
-          title = "Status aktualisiert und E-Mail gesendet";
-          description = "Der Status wurde erfolgreich aktualisiert und eine E-Mail-Benachrichtigung wurde an den Kunden gesendet.";
-        }
-        
+      // E-Mail-Historie auch invalidieren
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs', result.data.id, 'email-history'] });
+      
+      // Erfolgsmeldung anzeigen
+      toast({
+        title: "Status aktualisiert",
+        description: `Status wurde erfolgreich zu "${getStatusDisplayName(result.status)}" geändert.${result.emailSent ? ' E-Mail wurde versendet.' : ''}`,
+      });
+      
+      // E-Mail-Fehler anzeigen falls vorhanden
+      if (result.emailError) {
         toast({
-          title,
-          description,
-          variant: "default",
-        });
-      } else if (result.emailError) {
-        toast({
-          title: "Status aktualisiert, E-Mail-Fehler",
-          description: `Der Status wurde erfolgreich aktualisiert, aber die E-Mail konnte nicht gesendet werden: ${result.emailError}`,
+          title: "E-Mail-Warnung",
+          description: result.emailError,
           variant: "destructive",
-        });
-      } else {
-        // Nur Status-Update ohne E-Mail (normal)
-        toast({
-          title,
-          description,
-          variant: "default",
         });
       }
     },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Status konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Delete repair mutation
