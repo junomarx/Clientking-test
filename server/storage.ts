@@ -3086,25 +3086,28 @@ export class DatabaseStorage implements IStorage {
 
       // JOIN-Abfrage, um auch den Namen der Vorlagen zu laden
       // Jetzt mit zusätzlichem Filter für die Shop-ID (DSGVO-konform)
-      const query = `
-        SELECT 
-          h.*, 
-          t.name as "templateName" 
-        FROM 
-          "email_history" h 
-        LEFT JOIN 
-          "email_templates" t ON h."emailTemplateId" = t.id 
-        WHERE 
-          h."repairId" = ${repairId} AND
-          h."shop_id" = ${shopIdValue}
-        ORDER BY 
-          h."sentAt" DESC
-      `;
+      const result = await db.select({
+        id: emailHistory.id,
+        repairId: emailHistory.repairId,
+        emailTemplateId: emailHistory.emailTemplateId,
+        subject: emailHistory.subject,
+        recipient: emailHistory.recipient,
+        sentAt: emailHistory.sentAt,
+        status: emailHistory.status,
+        userId: emailHistory.userId,
+        shopId: emailHistory.shopId,
+        templateName: emailTemplates.name
+      })
+      .from(emailHistory)
+      .leftJoin(emailTemplates, eq(emailHistory.emailTemplateId, emailTemplates.id))
+      .where(and(
+        eq(emailHistory.repairId, repairId),
+        eq(emailHistory.shopId, shopIdValue)
+      ))
+      .orderBy(desc(emailHistory.sentAt));
 
-      const result = await db.execute(query);
-
-      console.log(`Gefundener E-Mail-Verlauf:`, result.rows);
-      return result.rows as (EmailHistory & { templateName?: string })[];
+      console.log(`Gefundener E-Mail-Verlauf:`, result);
+      return result as (EmailHistory & { templateName?: string })[];
     } catch (error) {
       console.error("Error getting email history for repair:", error);
       return [];

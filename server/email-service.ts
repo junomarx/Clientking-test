@@ -1339,7 +1339,7 @@ export class EmailService {
         subject: historyData.subject,
         status: historyData.status,
         userId: historyData.userId,
-        shop_id: historyData.shopId,
+        shopId: historyData.shopId,
         emailTemplateId: historyData.emailTemplateId
       }).returning();
       console.log('✅ E-Mail-Historie erfolgreich gespeichert:', result);
