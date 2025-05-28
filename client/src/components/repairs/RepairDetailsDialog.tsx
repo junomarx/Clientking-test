@@ -102,9 +102,15 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const { data: emailHistoryData } = useQuery<EmailHistoryWithTemplate[]>({
     queryKey: ['/api/repairs', repairId, 'email-history'],
     queryFn: async () => {
-      if (!repairId) return [];
+      if (!repairId) {
+        console.log('🔍 DEBUG: Keine repairId für E-Mail-Historie');
+        return [];
+      }
+      console.log('🔍 DEBUG: E-Mail-Historie wird abgerufen für repairId:', repairId);
       const response = await apiRequest('GET', `/api/repairs/${repairId}/email-history`);
-      return response.json();
+      const data = await response.json();
+      console.log('🔍 DEBUG: E-Mail-Historie-Daten erhalten:', data);
+      return data;
     },
     enabled: open && repairId !== null,
   });
@@ -124,8 +130,13 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   
   // E-Mail-Verlauf setzen, wenn Daten verfügbar sind
   useEffect(() => {
+    console.log('🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData:', emailHistoryData);
     if (emailHistoryData) {
+      console.log('🔍 DEBUG: E-Mail-Historie wird gesetzt:', emailHistoryData);
       setEmailHistory(emailHistoryData);
+    } else {
+      console.log('🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert');
+      setEmailHistory([]);
     }
   }, [emailHistoryData]);
   
