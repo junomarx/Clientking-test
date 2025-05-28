@@ -284,6 +284,31 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     },
   });
 
+  // Mutation zum Aktualisieren des Pakets eines Benutzers
+  const updatePackageMutation = useMutation({
+    mutationFn: async ({ userId, packageId }: { userId: number; packageId: number | null }) => {
+      const response = await apiRequest("PATCH", `/api/superadmin/users/${userId}`, {
+        packageId: packageId
+      });
+      return await response.json();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/users"] });
+      const packageName = packages?.find(p => p.id === variables.packageId)?.name || "Kein Paket";
+      toast({
+        title: "Paket aktualisiert",
+        description: `Das Paket wurde erfolgreich auf "${packageName}" geändert.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: `Paket konnte nicht aktualisiert werden: ${error.message}`,
+      });
+    },
+  });
+
   // Mutation zum Löschen eines Benutzers
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -520,17 +545,26 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {user.packageId ? (
-                          <Badge variant="outline" className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                            <Package className="h-3 w-3 mr-1" />
-                            {packages?.find(p => p.id === user.packageId)?.name || `Paket ${user.packageId}`}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-100">
-                            Kein Paket
-                          </Badge>
-                        )}
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value={user.packageId?.toString() || ""}
+                          onValueChange={(value) => {
+                            const packageId = value ? parseInt(value, 10) : null;
+                            updatePackageMutation.mutate({ userId: user.id, packageId });
+                          }}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Kein Paket" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Kein Paket</SelectItem>
+                            {packages?.map((pkg) => (
+                              <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                                {pkg.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">

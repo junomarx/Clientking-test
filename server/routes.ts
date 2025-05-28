@@ -1125,10 +1125,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf (nur Enterprise)
-  app.get("/api/can-view-detailed-stats", isAuthenticated, async (req: Request, res: Response) => {
+  app.get("/api/can-view-detailed-stats", async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
+      // Benutzer-ID aus dem Header abrufen
+      const userIdHeader = req.headers['x-user-id'] as string;
+      if (!userIdHeader) {
+        return res.status(401).json({ message: "Keine Benutzer-ID im Header gefunden" });
+      }
+      
+      const userId = parseInt(userIdHeader, 10);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      }
       
       // Benutzer abrufen
       const user = await storage.getUser(userId);
