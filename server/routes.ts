@@ -972,11 +972,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // E-Mail-Benachrichtigung nur wenn explizit vom Benutzer gewünscht
           if (sendEmail === true) {
             console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
-            emailSent = true; // Markiere als gesendet für Frontend-Feedback
             
-            // Setze Feedback-Header
-            res.setHeader('X-Email-Sent', 'true');
-            res.setHeader('X-Email-Status', `user-selected-${status}`);
+            try {
+              // Verwende die vorhandene E-Mail-API direkt (wie bei PDF-Versand)
+              const emailResponse = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-User-ID': userId.toString()
+                },
+                body: JSON.stringify({
+                  templateType: status,
+                  status: status
+                })
+              });
+              
+              if (emailResponse.ok) {
+                console.log(`✅ E-Mail für Status "${status}" erfolgreich über API gesendet`);
+                emailSent = true;
+                res.setHeader('X-Email-Sent', 'true');
+                res.setHeader('X-Email-Status', `success-${status}`);
+              } else {
+                const errorText = await emailResponse.text();
+                console.error(`❌ E-Mail-API Fehler für Status "${status}":`, errorText);
+                emailError = `E-Mail-Versand fehlgeschlagen: ${errorText}`;
+                res.setHeader('X-Email-Sent', 'false');
+                res.setHeader('X-Email-Error', emailError);
+              }
+            } catch (fetchError) {
+              console.error(`❌ E-Mail-Versand Fehler für Status "${status}":`, fetchError);
+              emailError = `E-Mail-Versand fehlgeschlagen: ${fetchError}`;
+              res.setHeader('X-Email-Sent', 'false');
+              res.setHeader('X-Email-Error', emailError);
+            }
           } else {
             console.log(`ℹ️ Status "${status}" für Reparatur ${repair.id} geändert - keine E-Mail angefordert`);
           }
