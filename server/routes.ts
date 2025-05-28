@@ -964,21 +964,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "repairId": repair.id.toString()
         };
         
-        // Die automatische E-Mail-Versendung bei Statusänderung wurde entfernt.
-        // E-Mails werden jetzt getrennt vom Status-Update-Prozess gesendet.
-        if (sendEmail === true) {
-          console.log("Hinweis: Automatische E-Mail-Benachrichtigungen bei Statusänderungen wurden deaktiviert.");
-          res.setHeader('X-Email-Sent', 'false');
-          res.setHeader('X-Email-Status', 'disabled');
-        }
+        // Automatische E-Mail-Benachrichtigungen bei bestimmten Statusänderungen
+        let emailSent = false;
+        let emailError = null;
         
-        // Die automatische E-Mail-Versendung bei "Ersatzteil eingetroffen" wurde entfernt.
-        // E-Mails werden jetzt getrennt vom Status-Update-Prozess über eine 
-        // spezielle E-Mail-Funktionalität gesendet.
-        if (status === "ersatzteil_eingetroffen" && sendEmail === true) {
-          console.log("Hinweis: Automatische E-Mail-Benachrichtigungen bei Statusänderungen wurden deaktiviert.");
+        try {
+          // Automatische E-Mails für kritische Statusänderungen (immer senden)
+          if (status === "ersatzteil_eingetroffen" || status === "fertig") {
+            console.log(`Automatische E-Mail für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            
+            // Verwende die vorhandene E-Mail-API direkt
+            try {
+              const response = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': req.headers.cookie || ''
+                },
+                body: JSON.stringify({
+                  status: status,
+                  templateType: status === "fertig" ? "fertig" : "ersatzteil_eingetroffen"
+                })
+              });
+              
+              if (response.ok) {
+                console.log(`Automatische E-Mail für Status "${status}" erfolgreich gesendet`);
+                emailSent = true;
+              } else {
+                const errorText = await response.text();
+                console.error(`Fehler beim Senden der automatischen E-Mail für Status "${status}":`, errorText);
+                emailError = `HTTP ${response.status}: ${errorText}`;
+              }
+            } catch (fetchError) {
+              console.error(`Netzwerkfehler beim Senden der automatischen E-Mail für Status "${status}":`, fetchError);
+              emailError = `Netzwerkfehler: ${fetchError}`;
+            }
+          }
+          
+          // Manuelle E-Mail-Benachrichtigung wenn sendEmail explizit auf true gesetzt ist
+          else if (sendEmail === true) {
+            console.log(`Manuelle E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id}`);
+            
+            try {
+              const response = await fetch(`http://localhost:5000/api/repairs/${repair.id}/send-email`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cookie': req.headers.cookie || ''
+                },
+                body: JSON.stringify({
+                  status: status,
+                  templateType: status
+                })
+              });
+              
+              if (response.ok) {
+                console.log(`Manuelle E-Mail für Status "${status}" erfolgreich gesendet`);
+                emailSent = true;
+              } else {
+                const errorText = await response.text();
+                console.error(`Fehler beim Senden der manuellen E-Mail für Status "${status}":`, errorText);
+                emailError = `HTTP ${response.status}: ${errorText}`;
+              }
+            } catch (fetchError) {
+              console.error(`Netzwerkfehler beim Senden der manuellen E-Mail für Status "${status}":`, fetchError);
+              emailError = `Netzwerkfehler: ${fetchError}`;
+            }
+          }
+          
+          // Response-Header setzen für Frontend-Feedback
+          res.setHeader('X-Email-Sent', emailSent.toString());
+          if (emailError) {
+            res.setHeader('X-Email-Error', emailError);
+          }
+          
+        } catch (error) {
+          console.error("Unerwarteter Fehler beim E-Mail-Versand:", error);
           res.setHeader('X-Email-Sent', 'false');
-          res.setHeader('X-Email-Status', 'disabled');
+          res.setHeader('X-Email-Error', 'Unerwarteter Fehler beim E-Mail-Versand');
         }
         
         // SMS-Funktionalität wurde auf Kundenwunsch entfernt
