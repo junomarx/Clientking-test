@@ -1237,13 +1237,17 @@ export class EmailService {
         status: repair.status || templateType,
         businessName: variables.businessSettings?.businessName || 'Handyshop',
         businessPhone: variables.businessSettings?.phone || '',
-        businessEmail: variables.businessSettings?.email || '',
+        businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || ''
       };
       
+      console.log(`🔍 Template-Variablen:`, templateVars);
+      
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
-      let content = template.content || `Hallo {{customerFirstName}}, der Status Ihrer Reparatur hat sich geändert.`;
+      let content = template.body || `Hallo {{customerFirstName}}, der Status Ihrer Reparatur hat sich geändert.`;
+      
+      console.log(`🔍 Original Template:`, { subject, content: content.substring(0, 100) + '...' });
       
       // Ersetze Template-Variablen
       for (const [key, value] of Object.entries(templateVars)) {
@@ -1251,6 +1255,12 @@ export class EmailService {
         subject = subject.replace(new RegExp(placeholder, 'g'), value || '');
         content = content.replace(new RegExp(placeholder, 'g'), value || '');
       }
+      
+      console.log(`🔍 Nach Variable-Ersetzung:`, { 
+        subject, 
+        content: content.substring(0, 200) + '...',
+        contentLength: content.length 
+      });
       
       console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
       
