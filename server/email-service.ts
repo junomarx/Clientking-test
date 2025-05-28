@@ -1248,22 +1248,15 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Aus DB oder Fallback
+        openingHours: variables.businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Aus DB oder Fallback
       };
       
       console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
       console.log(`🔍 SPEZIFISCH openingHours:`, templateVars.openingHours);
       console.log(`🔍 Business Settings Debug:`, {
         openingHours: variables.businessSettings?.openingHours,
-        businessSettingsOpeningHours: businessSettings?.openingHours,
         businessName: variables.businessSettings?.businessName
       });
-      
-      // Direkte Zuweisung der Öffnungszeiten aus businessSettings
-      if (businessSettings?.openingHours) {
-        templateVars.openingHours = businessSettings.openingHours;
-        console.log(`✅ openingHours direkt aus businessSettings hinzugefügt: ${templateVars.openingHours}`);
-      }
       
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
