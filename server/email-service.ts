@@ -1251,6 +1251,12 @@ export class EmailService {
         openingHours: variables.businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen'  // DIREKTER FIX: Aus DB oder Fallback
       };
       
+      // KRITISCHER FIX: openingHours MANUELL hinzufügen falls fehlt
+      if (!templateVars.openingHours) {
+        templateVars.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
+        console.log(`🔧 MANUELLER FIX: openingHours Variable hinzugefügt!`);
+      }
+      
       console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
       console.log(`🔍 SPEZIFISCH openingHours:`, templateVars.openingHours);
       console.log(`🔍 Business Settings Debug:`, {
@@ -1276,6 +1282,15 @@ export class EmailService {
         content: content.substring(0, 200) + '...',
         contentLength: content.length 
       });
+      
+      // SPEZIFISCHER Debug für openingHours
+      if (content.includes('{{openingHours}}')) {
+        console.log(`❌ FEHLER: {{openingHours}} wurde NICHT ersetzt!`);
+        console.log(`🔍 Verfügbare templateVars:`, Object.keys(templateVars));
+        console.log(`🔍 openingHours Wert:`, templateVars.openingHours);
+      } else {
+        console.log(`✅ SUCCESS: {{openingHours}} wurde erfolgreich ersetzt`);
+      }
       
       console.log(`📧 Sende E-Mail an ${customer.email} mit Betreff: ${subject}`);
       
