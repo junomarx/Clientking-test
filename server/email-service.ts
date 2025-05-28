@@ -336,69 +336,78 @@ export class EmailService {
   }
   
   /**
-   * Grundlegende Methode zum Senden einer E-Mail
+   * Grundlegende Methode zum Senden einer E-Mail mit benutzer-spezifischen SMTP-Einstellungen
    * @param options Die E-Mail-Optionen
+   * @param userId Benutzer-ID für die SMTP-Einstellungen
    * @returns Promise<boolean> True wenn die E-Mail erfolgreich gesendet wurde, sonst false
    */
   async sendEmail(options: {
+    from?: string;
     to: string;
     subject: string;
     html: string;
     text?: string;
     attachments?: Array<any>;
-  }): Promise<boolean> {
+  }, userId?: number): Promise<boolean> {
     try {
-      console.log(`Sende grundlegende E-Mail an ${options.to}...`);
+      console.log(`Sende E-Mail an ${options.to}${userId ? ` für Benutzer ${userId}` : ''}...`);
       
-      if (!this.smtpTransporter) {
-        console.log('Kein SMTP-Transporter vorhanden, versuche Initialisierung...');
-        // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
-        await this.initSuperadminSmtpTransporter();
+      // Wenn userId angegeben ist, verwende benutzer-spezifische SMTP-Einstellungen
+      if (userId) {
+        console.log(`Lade SMTP-Einstellungen für Benutzer ${userId}...`);
         
-        if (!this.smtpTransporter) {
-          console.error('Initialisierung des SMTP-Transporters fehlgeschlagen');
-          throw new Error('Kein SMTP-Transporter konfiguriert');
+        const [businessSetting] = await db
+          .select()
+          .from(businessSettings)
+          .where(eq(businessSettings.userId, userId))
+          .orderBy(desc(businessSettings.id))
+          .limit(1);
+          
+        if (!businessSetting || !businessSetting.smtpHost || !businessSetting.smtpUser || !businessSetting.smtpPassword) {
+          console.error(`❌ Keine vollständigen SMTP-Einstellungen für Benutzer ${userId} gefunden`);
+          throw new Error('Keine SMTP-Einstellungen für diesen Benutzer konfiguriert');
         }
-      }
-      
-      // Für die E-Mail-Adresse des Absenders - verwende die global konfigurierte wenn vorhanden
-      let senderName;
-      let senderEmail;
-      
-      if (this.superadminEmailConfig) {
-        senderName = this.superadminEmailConfig.smtpSenderName;
-        senderEmail = this.superadminEmailConfig.smtpSenderEmail;
+        
+        console.log(`✅ SMTP-Einstellungen gefunden: ${businessSetting.smtpHost} für ${businessSetting.smtpUser}`);
+        
+        // Erstelle benutzer-spezifischen Transporter
+        const port = parseInt(businessSetting.smtpPort || '587');
+        const userTransporter = nodemailer.createTransporter({
+          host: businessSetting.smtpHost,
+          port: port,
+          secure: port === 465,
+          auth: {
+            user: businessSetting.smtpUser,
+            pass: businessSetting.smtpPassword
+          },
+          connectionTimeout: 10000,
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+        
+        const fromField = options.from || `"${businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop'}" <${businessSetting.smtpUser}>`;
+        
+        const mailOptions = {
+          from: fromField,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text || options.html.replace(/<[^>]*>/g, ''),
+          attachments: options.attachments || []
+        };
+        
+        const info = await userTransporter.sendMail(mailOptions);
+        console.log('✅ E-Mail erfolgreich gesendet:', info.messageId);
+        
+        return true;
       } else {
-        // Fallback auf Umgebungsvariablen
-        senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-        senderEmail = process.env.SMTP_USER || 'no-reply@example.com';
+        // Fallback auf globale SMTP-Einstellungen nur wenn keine userId angegeben ist
+        console.error('❌ Keine Benutzer-ID angegeben - E-Mail-Versand wird abgebrochen');
+        throw new Error('Benutzer-ID erforderlich für E-Mail-Versand');
       }
-      
-      const fromField = `"${senderName}" <${senderEmail}>`;
-      
-      console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
-      
-      const mailOptions = {
-        from: fromField,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text || options.html.replace(/<[^>]*>/g, ''), // Fallback: Text aus HTML generieren
-        attachments: options.attachments || []
-      };
-      
-      console.log('Sende E-Mail mit folgenden Optionen:', {
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        attachments: mailOptions.attachments.length ? 'Ja' : 'Nein'
-      });
-      
-      const info = await this.smtpTransporter.sendMail(mailOptions);
-      console.log('E-Mail erfolgreich gesendet:', info.messageId);
-      
-      return true;
     } catch (error) {
-      console.error('Fehler beim Senden der E-Mail:', error);
+      console.error('❌ Fehler beim Senden der E-Mail:', error);
       return false;
     }
   }
@@ -1254,12 +1263,11 @@ export class EmailService {
       console.log(`📧 Verwende Absender: "${fromName}" <${fromAddress}>`);
       
       const emailSent = await this.sendEmail({
-        from: `"${fromName}" <${fromAddress}>`,
         to: customer.email,
         subject: subject,
         html: content,
         text: content.replace(/<[^>]*>/g, '') // HTML-Tags entfernen für Text-Version
-      });
+      }, userId);
       
       if (emailSent) {
         // Speichere E-Mail im Verlauf
