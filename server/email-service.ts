@@ -1251,16 +1251,8 @@ export class EmailService {
         opening_hours: variables.businessSettings?.opening_hours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen'
       };
       
-      // KRITISCHER FIX: openingHours MANUELL hinzufügen falls fehlt
-      if (!templateVars.openingHours) {
-        templateVars.openingHours = 'Mo - Fr: 10:00 - 18:00 Uhr; Sa geschlossen';
-        console.log(`🔧 MANUELLER FIX: openingHours Variable hinzugefügt!`);
-      }
-      
-      console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
-      console.log(`🔍 SPEZIFISCH openingHours:`, templateVars.openingHours);
-      console.log(`🔍 Business Settings opening_hours (snake_case):`, variables.businessSettings?.opening_hours);
-      console.log(`🔍 Business Settings openingHours (camelCase):`, variables.businessSettings?.openingHours);
+      console.log(`🔍 Template-Variablen:`, templateVars);
+      console.log(`🔍 Business Settings opening_hours:`, variables.businessSettings?.opening_hours);
       
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
