@@ -1248,7 +1248,7 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: variables.businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen'
+        openingHours: variables.businessSettings?.opening_hours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen'
       };
       
       // KRITISCHER FIX: openingHours MANUELL hinzufügen falls fehlt
