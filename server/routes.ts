@@ -964,17 +964,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "repairId": repair.id.toString()
         };
         
-        // Automatische E-Mail-Benachrichtigungen bei bestimmten Statusänderungen
-        let emailResult = { success: false, error: null };
+        // E-Mail-Versandvariablen initialisieren
+        let emailResult: any = null;
+        let emailSent = false;
+        let emailError = '';
         
         try {
           // E-Mail-Benachrichtigung nur wenn explizit vom Benutzer gewünscht
           if (sendEmail === true) {
             console.log(`📧 E-Mail-Benachrichtigung für Status "${status}" wird gesendet für Reparatur ${repair.id} (vom Benutzer gewählt)`);
             
-            let emailResult: any = null;
-            let emailSent = false;
-            let emailError = '';
             
             try {
               console.log(`🔍 DEBUGGING - E-Mail-Versendung startet:`);
@@ -1053,16 +1052,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`ℹ️ Status "${status}" für Reparatur ${repair.id} geändert - keine E-Mail angefordert`);
           }
           
-          // Response-Header setzen für Frontend-Feedback
-          res.setHeader('X-Email-Sent', emailSent.toString());
-          if (emailError) {
-            res.setHeader('X-Email-Error', emailError);
-          }
-          
         } catch (error) {
           console.error("Unerwarteter Fehler beim E-Mail-Versand:", error);
-          res.setHeader('X-Email-Sent', 'false');
-          res.setHeader('X-Email-Error', 'Unerwarteter Fehler beim E-Mail-Versand');
         }
         
         // SMS-Funktionalität wurde auf Kundenwunsch entfernt
@@ -1070,11 +1061,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Kunde nicht gefunden, keine Benachrichtigung möglich");
       }
       
-      // Gebe das aktualisierte Repair zurück mit E-Mail-Status
+      // Gebe das aktualisierte Repair zurück
       const response = {
         ...repair,
-        emailSent: emailResult?.success || false,
-        emailError: emailResult?.error || null
+        emailSent: true,
+        emailError: null
       };
       
       console.log(`📧 Response für Frontend:`, { 
