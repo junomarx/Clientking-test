@@ -1,0 +1,51 @@
+2s
+1
+Run npx electron-builder --mac --publish=never
+6
+  • electron-builder  version=26.0.12 os=23.6.0
+7
+  • loaded configuration  file=/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/electron-builder.json
+8
+  ⨯ Invalid configuration object. electron-builder 26.0.12 has been initialized using a configuration object that does not match the API schema.
+9
+ - configuration has an unknown property 'main'. These properties are valid:
+10
+   object { afterAllArtifactBuild?, afterExtract?, afterPack?, afterSign?, apk?, appId?, appImage?, appx?, appxManifestCreated?, artifactBuildCompleted?, artifactBuildStarted?, artifactName?, asar?, asarUnpack?, beforeBuild?, beforePack?, buildDependenciesFromSource?, buildNumber?, buildVersion?, compression?, copyright?, cscKeyPassword?, cscLink?, deb?, defaultArch?, detectUpdateChannel?, directories?, disableDefaultIgnoredFiles?, disableSanityCheckAsar?, dmg?, downloadAlternateFFmpeg?, electronBranding?, electronCompile?, electronDist?, electronDownload?, electronFuses?, electronLanguages?, electronUpdaterCompatibility?, electronVersion?, executableName?, extends?, extraFiles?, extraMetadata?, extraResources?, fileAssociations?, files?, flatpak?, forceCodeSigning?, framework?, freebsd?, generateUpdatesFilesForAllChannels?, icon?, includePdb?, launchUiVersion?, linux?, mac?, mas?, masDev?, msi?, msiProjectCreated?, msiWrapped?, nativeRebuilder?, nodeGypRebuild?, nodeVersion?, npmArgs?, npmRebuild?, nsis?, nsisWeb?, onNodeModuleFile?, p5p?, pacman?, pkg?, portable?, productName?, protocols?, publish?, releaseInfo?, removePackageKeywords?, removePackageScripts?, rpm?, snap?, squirrelWindows?, target?, win?, $schema? }
+11
+     How to fix:
+12
+     1. Open https://www.electron.build/configuration
+13
+     2. Search the option name on the page (or type in into Search to find across the docs).
+14
+       * Not found? The option was deprecated or not exists (check spelling).
+15
+       * Found? Check that the option in the appropriate place. e.g. "title" only in the "dmg", not in the root.
+16
+  failedTask=build stackTrace=ValidationError: Invalid configuration object. electron-builder 26.0.12 has been initialized using a configuration object that does not match the API schema.
+17
+ - configuration has an unknown property 'main'. These properties are valid:
+18
+   object { afterAllArtifactBuild?, afterExtract?, afterPack?, afterSign?, apk?, appId?, appImage?, appx?, appxManifestCreated?, artifactBuildCompleted?, artifactBuildStarted?, artifactName?, asar?, asarUnpack?, beforeBuild?, beforePack?, buildDependenciesFromSource?, buildNumber?, buildVersion?, compression?, copyright?, cscKeyPassword?, cscLink?, deb?, defaultArch?, detectUpdateChannel?, directories?, disableDefaultIgnoredFiles?, disableSanityCheckAsar?, dmg?, downloadAlternateFFmpeg?, electronBranding?, electronCompile?, electronDist?, electronDownload?, electronFuses?, electronLanguages?, electronUpdaterCompatibility?, electronVersion?, executableName?, extends?, extraFiles?, extraMetadata?, extraResources?, fileAssociations?, files?, flatpak?, forceCodeSigning?, framework?, freebsd?, generateUpdatesFilesForAllChannels?, icon?, includePdb?, launchUiVersion?, linux?, mac?, mas?, masDev?, msi?, msiProjectCreated?, msiWrapped?, nativeRebuilder?, nodeGypRebuild?, nodeVersion?, npmArgs?, npmRebuild?, nsis?, nsisWeb?, onNodeModuleFile?, p5p?, pacman?, pkg?, portable?, productName?, protocols?, publish?, releaseInfo?, removePackageKeywords?, removePackageScripts?, rpm?, snap?, squirrelWindows?, target?, win?, $schema? }
+19
+     How to fix:
+20
+     1. Open https://www.electron.build/configuration
+21
+     2. Search the option name on the page (or type in into Search to find across the docs).
+22
+       * Not found? The option was deprecated or not exists (check spelling).
+23
+       * Found? Check that the option in the appropriate place. e.g. "title" only in the "dmg", not in the root.
+24
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              at validate (/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/node_modules/@develar/schema-utils/dist/validate.js:86:11)
+25
+    at validateConfiguration (/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/node_modules/app-builder-lib/src/util/config/config.ts:239:3)
+26
+    at Packager.validateConfig (/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/node_modules/app-builder-lib/src/packager.ts:384:5)
+27
+    at Packager.build (/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/node_modules/app-builder-lib/src/packager.ts:392:5)
+28
+    at executeFinally (/Users/runner/work/handyshop-desktop-app/handyshop-desktop-app/node_modules/builder-util/src/promise.ts:12:14)
+29
+Error: Process completed with exit code 1.

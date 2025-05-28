@@ -113,6 +113,12 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       setStatusFilter('all');
     }
     
+    // Zusätzlich: Entferne URL-Parameter nach dem Setzen, damit der Filter zurückgesetzt werden kann
+    if (statusParam || openEmailParam) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+    
     // Verarbeite openEmail-Parameter
     if (openEmailParam) {
       const repairId = parseInt(openEmailParam);
