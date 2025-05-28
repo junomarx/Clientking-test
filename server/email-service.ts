@@ -1248,7 +1248,7 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        openingHours: variables.businessSettings?.opening_hours?.replace(/;/g, '<br>') || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen'
+        openingHours: (variables.businessSettings?.opening_hours || variables.businessSettings?.openingHours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen').replace(/;/g, '<br>')
       };
       
       // KRITISCHER FIX: openingHours MANUELL hinzufügen falls fehlt
@@ -1259,10 +1259,8 @@ export class EmailService {
       
       console.log(`🔍 Template-Variablen MIT openingHours:`, templateVars);
       console.log(`🔍 SPEZIFISCH openingHours:`, templateVars.openingHours);
-      console.log(`🔍 Business Settings Debug:`, {
-        openingHours: variables.businessSettings?.openingHours,
-        businessName: variables.businessSettings?.businessName
-      });
+      console.log(`🔍 Business Settings opening_hours (snake_case):`, variables.businessSettings?.opening_hours);
+      console.log(`🔍 Business Settings openingHours (camelCase):`, variables.businessSettings?.openingHours);
       
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
