@@ -1164,7 +1164,7 @@ export class EmailService {
       
       // Hole die E-Mail-Vorlage
       console.log(`🔍 Hole E-Mail-Vorlagen für Benutzer ${userId}...`);
-      const templates = await this.getEmailTemplates(userId);
+      const templates = await this.getAllEmailTemplates(userId);
       console.log(`🔍 Gefundene Vorlagen: ${templates.length}`);
       templates.forEach(t => console.log(`   - ${t.name} (Type: ${t.type})`));
       
