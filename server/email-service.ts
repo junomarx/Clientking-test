@@ -1251,8 +1251,11 @@ export class EmailService {
         opening_hours: variables.businessSettings?.opening_hours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen'
       };
       
+      // FORCE opening_hours in die Logs
       console.log(`🔍 Template-Variablen:`, templateVars);
       console.log(`🔍 Business Settings opening_hours:`, variables.businessSettings?.opening_hours);
+      console.log(`🔍 SPEZIFISCH opening_hours Variable:`, templateVars.opening_hours);
+      console.log(`🔍 ALLE Template-Variablen Keys:`, Object.keys(templateVars));
       
       // Ersetze Platzhalter in Betreff und Inhalt
       let subject = template.subject || `Status-Update für Ihre Reparatur`;
