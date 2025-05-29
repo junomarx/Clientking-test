@@ -988,67 +988,91 @@ export function registerSuperadminRoutes(app: Express) {
 
 
 
-  // Endpunkt für Gerätestatistiken basierend auf Reparaturdaten
+  // Endpunkt für Gerätestatistiken basierend auf Geräteverwaltung
   app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
     try {
-      console.log("Superadmin-Bereich: Abrufen von Gerätestatistiken");
+      console.log("Superadmin-Bereich: Abrufen von Geräteverwaltungsstatistiken");
 
-      // Geräte pro Gerätetyp (basierend auf Reparaturdaten)
-      const deviceTypeStats = await db.select({
-        deviceType: repairs.deviceType,
-        count: count(repairs.id)
+      // Alle Gerätetypen aus der Geräteverwaltung
+      const deviceTypes = await db.select({
+        id: userDeviceTypes.id,
+        name: userDeviceTypes.name
       })
-      .from(repairs)
-      .groupBy(repairs.deviceType)
-      .orderBy(desc(count(repairs.id)));
+      .from(userDeviceTypes);
 
-      // Geräte pro Hersteller (alle Gerätetypen zusammen)
-      const brandStats = await db.select({
-        brand: repairs.brand,
-        count: count(repairs.id)
+      // Alle Hersteller aus der Geräteverwaltung
+      const brands = await db.select({
+        id: userBrands.id,
+        name: userBrands.name,
+        deviceTypeId: userBrands.deviceTypeId
       })
-      .from(repairs)
-      .groupBy(repairs.brand)
-      .orderBy(desc(count(repairs.id)));
+      .from(userBrands);
 
-      // Detaillierte Aufschlüsselung: Geräte pro Gerätetyp + Hersteller
-      const combinedStats = await db.select({
-        deviceType: repairs.deviceType,
-        brand: repairs.brand,
-        count: count(repairs.id)
+      // Alle Modelle aus der Geräteverwaltung
+      const models = await db.select({
+        id: userModels.id,
+        name: userModels.name,
+        brandId: userModels.brandId
       })
-      .from(repairs)
-      .groupBy(repairs.deviceType, repairs.brand)
-      .orderBy(desc(count(repairs.id)));
+      .from(userModels);
 
-      // Gesamtanzahl der Geräte
-      const totalDevicesResult = await db.select({
-        total: count(repairs.id)
-      })
-      .from(repairs);
+      // Statistiken pro Gerätetyp berechnen
+      const deviceTypeStats = deviceTypes.map(deviceType => {
+        const deviceTypeBrands = brands.filter(brand => brand.deviceTypeId === deviceType.id);
+        const deviceTypeBrandIds = deviceTypeBrands.map(brand => brand.id);
+        const deviceTypeModels = models.filter(model => deviceTypeBrandIds.includes(model.brandId));
 
-      const totalDevices = totalDevicesResult[0]?.total || 0;
+        return {
+          deviceType: deviceType.name,
+          count: deviceTypeModels.length,
+          brandCount: deviceTypeBrands.length
+        };
+      }).filter(stat => stat.count > 0);
+
+      // Hersteller-Statistiken (alle Gerätetypen zusammen)
+      const brandStats = brands.map(brand => {
+        const brandModels = models.filter(model => model.brandId === brand.id);
+        return {
+          brand: brand.name,
+          count: brandModels.length
+        };
+      }).filter(stat => stat.count > 0);
+
+      // Detaillierte Aufschlüsselung: Gerätetyp + Hersteller + Modellanzahl
+      const combinedStats = deviceTypes.flatMap(deviceType => {
+        const deviceTypeBrands = brands.filter(brand => brand.deviceTypeId === deviceType.id);
+        return deviceTypeBrands.map(brand => {
+          const brandModels = models.filter(model => model.brandId === brand.id);
+          return {
+            deviceType: deviceType.name,
+            brand: brand.name,
+            count: brandModels.length
+          };
+        }).filter(stat => stat.count > 0);
+      });
 
       const statistics = {
-        totalDeviceTypes: deviceTypeStats.length,
-        totalBrands: brandStats.length,
-        totalDevices: totalDevices,
+        totalDeviceTypes: deviceTypes.length,
+        totalBrands: brands.length,
+        totalDevices: models.length,
         deviceTypeStats: deviceTypeStats,
         brandStats: brandStats,
         combinedStats: combinedStats
       };
 
-      console.log("Gerätestatistiken erfolgreich abgerufen:", {
-        totalDevices,
-        deviceTypes: deviceTypeStats.length,
-        brands: brandStats.length,
-        combinations: combinedStats.length
+      console.log("Geräteverwaltungsstatistiken erfolgreich abgerufen:", {
+        totalDeviceTypes: deviceTypes.length,
+        totalBrands: brands.length,
+        totalModels: models.length,
+        deviceTypeStatsCount: deviceTypeStats.length,
+        brandStatsCount: brandStats.length,
+        combinationsCount: combinedStats.length
       });
 
       res.json(statistics);
     } catch (error) {
-      console.error("Fehler beim Abrufen der Gerätestatistiken:", error);
-      res.status(500).json({ message: "Fehler beim Abrufen der Gerätestatistiken" });
+      console.error("Fehler beim Abrufen der Geräteverwaltungsstatistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Geräteverwaltungsstatistiken" });
     }
   });
 

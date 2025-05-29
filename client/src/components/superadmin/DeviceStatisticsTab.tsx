@@ -8,6 +8,7 @@ import { getQueryFn } from "@/lib/queryClient";
 interface DeviceTypeStats {
   deviceType: string;
   count: number;
+  brandCount: number;
 }
 
 interface BrandStats {
@@ -107,14 +108,30 @@ export default function DeviceStatisticsTab() {
             Gesamt-Gerätestatistiken
           </CardTitle>
           <CardDescription>
-            Übersicht aller erfassten Geräte basierend auf Reparaturdaten
+            Übersicht aller verfügbaren Gerätemodelle in der Geräteverwaltung
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-primary">
-            {deviceStats.totalDevices?.toLocaleString() || '0'}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-2xl font-bold text-primary">
+                {deviceStats.totalDeviceTypes?.toLocaleString() || '0'}
+              </div>
+              <p className="text-sm text-muted-foreground">Gerätetypen</p>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-primary">
+                {deviceStats.totalBrands?.toLocaleString() || '0'}
+              </div>
+              <p className="text-sm text-muted-foreground">Hersteller</p>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-primary">
+                {deviceStats.totalDevices?.toLocaleString() || '0'}
+              </div>
+              <p className="text-sm text-muted-foreground">Modelle insgesamt</p>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">Geräte insgesamt</p>
         </CardContent>
       </Card>
 
@@ -122,9 +139,9 @@ export default function DeviceStatisticsTab() {
         {/* Gerätetypen */}
         <Card>
           <CardHeader>
-            <CardTitle>Nach Gerätetyp</CardTitle>
+            <CardTitle>Modelle nach Gerätetyp</CardTitle>
             <CardDescription>
-              Verteilung der Geräte nach Kategorien
+              Anzahl verfügbarer Modelle pro Gerätetyp
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -133,16 +150,21 @@ export default function DeviceStatisticsTab() {
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getDeviceIcon(item.deviceType)}
-                    <span className="font-medium">{item.deviceType || 'Unbekannt'}</span>
+                    <div>
+                      <span className="font-medium">{item.deviceType || 'Unbekannt'}</span>
+                      <div className="text-xs text-muted-foreground">
+                        {item.brandCount || 0} Hersteller
+                      </div>
+                    </div>
                   </div>
                   <Badge variant="secondary">
-                    {item.count?.toLocaleString() || '0'}
+                    {item.count?.toLocaleString() || '0'} Modelle
                   </Badge>
                 </div>
               )) || []}
               {(!deviceStats.deviceTypeStats || deviceStats.deviceTypeStats.length === 0) && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Keine Geräte gefunden
+                  Keine Gerätetypen gefunden
                 </p>
               )}
             </div>
@@ -152,9 +174,9 @@ export default function DeviceStatisticsTab() {
         {/* Hersteller */}
         <Card>
           <CardHeader>
-            <CardTitle>Nach Hersteller</CardTitle>
+            <CardTitle>Modelle nach Hersteller</CardTitle>
             <CardDescription>
-              Top Hersteller aller Gerätetypen
+              Top Hersteller mit verfügbaren Modellen
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -170,7 +192,7 @@ export default function DeviceStatisticsTab() {
                     <span className="font-medium">{item.brand || 'Unbekannt'}</span>
                   </div>
                   <Badge variant="secondary">
-                    {item.count?.toLocaleString() || '0'}
+                    {item.count?.toLocaleString() || '0'} Modelle
                   </Badge>
                 </div>
               )) || []}
@@ -189,7 +211,7 @@ export default function DeviceStatisticsTab() {
         <CardHeader>
           <CardTitle>Detaillierte Aufschlüsselung</CardTitle>
           <CardDescription>
-            Gerätetyp und Hersteller kombiniert
+            Modellanzahl pro Gerätetyp und Hersteller
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,13 +226,13 @@ export default function DeviceStatisticsTab() {
                   </div>
                 </div>
                 <Badge variant="secondary">
-                  {item.count?.toLocaleString() || '0'}
+                  {item.count?.toLocaleString() || '0'} Modelle
                 </Badge>
               </div>
             )) || []}
             {(!deviceStats.combinedStats || deviceStats.combinedStats.length === 0) && (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Keine Kombinationen gefunden
+                Keine Geräte-Hersteller-Kombinationen gefunden
               </p>
             )}
           </div>
