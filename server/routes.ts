@@ -2543,7 +2543,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const emailSent = await storage.sendEmailWithTemplate(
           reviewTemplate.id, 
           customer.email, 
-          variables
+          variables,
+          [], // attachments
+          false, // isSystemEmail
+          user.id // userId - das war das fehlende Element!
         );
         
         if (!emailSent) {
