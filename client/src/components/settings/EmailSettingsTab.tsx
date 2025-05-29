@@ -22,7 +22,6 @@ const emailSettingsSchema = z.object({
   smtpUser: z.string().optional(),
   smtpPassword: z.string().optional(),
   smtpPort: z.string().optional(),
-  testEmailRecipient: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein").optional(),
 });
 
 export function EmailSettingsTab() {
@@ -39,7 +38,6 @@ export function EmailSettingsTab() {
       smtpUser: "",
       smtpPassword: "",
       smtpPort: "",
-      testEmailRecipient: "",
     },
   });
 
@@ -53,7 +51,6 @@ export function EmailSettingsTab() {
         smtpUser: settings.smtpUser || "",
         smtpPassword: settings.smtpPassword || "",
         smtpPort: settings.smtpPort || "",
-        testEmailRecipient: "",
       };
       
       form.reset(formattedSettings);
@@ -213,40 +210,25 @@ export function EmailSettingsTab() {
               
               <Separator className="my-4" />
               
-              {/* Test-E-Mail senden */}
+              {/* SMTP-Test Button */}
               <div className="mt-4 md:mt-6">
-                <h3 className="text-sm md:text-md font-medium mb-2">Test-E-Mail senden</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 items-end">
-                  <div className="md:col-span-2">
-                    <FormField
-                      control={form.control}
-                      name="testEmailRecipient"
-                      render={({ field }) => (
-                        <FormItem className="w-full">
-                          <FormLabel className="text-sm">Empfänger-E-Mail</FormLabel>
-                          <FormControl>
-                            <Input placeholder="test@beispiel.at" {...field} className="h-9 text-sm" />
-                          </FormControl>
-                          <FormMessage className="text-xs" />
-                        </FormItem>
-                      )}
-                    />
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-sm md:text-md font-medium">SMTP-Test</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Testen Sie Ihre SMTP-Einstellungen mit vollständiger Kontrolle über alle Parameter.
+                    </p>
                   </div>
-                  <div className="flex">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="h-9 text-xs w-full"
-                      onClick={() => setSmtpTestDialogOpen(true)}
-                    >
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      SMTP-Test
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="h-9 text-xs"
+                    onClick={() => setSmtpTestDialogOpen(true)}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    SMTP-Test
+                  </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Testen Sie Ihre SMTP-Einstellungen mit vollständiger Kontrolle über alle Parameter.
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -274,7 +256,7 @@ export function EmailSettingsTab() {
           user: form.getValues("smtpUser") || '',
           password: form.getValues("smtpPassword") || '',
           sender: form.getValues("smtpSenderName") || 'Handyshop Verwaltung',
-          recipient: form.getValues("testEmailRecipient") || '',
+          recipient: '',
         }}
       />
     </div>
