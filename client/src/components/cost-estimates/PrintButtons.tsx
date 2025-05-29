@@ -199,12 +199,14 @@ export function PrintButtons({
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
       
       // Cleanup der temporären Elemente
-      document.body.removeChild(tempDiv);
+      if (tempDiv.parentNode) {
+        document.body.removeChild(tempDiv);
+      }
       if (styles) {
         // Entferne das temporäre Style-Element
         const addedStyles = document.head.querySelectorAll('style');
         addedStyles.forEach(style => {
-          if (style.textContent === styles) {
+          if (style.textContent === styles && style.parentNode) {
             document.head.removeChild(style);
           }
         });
