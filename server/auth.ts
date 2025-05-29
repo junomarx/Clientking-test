@@ -299,9 +299,21 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+  app.post("/api/logout", async (req, res, next) => {
+    const userId = req.user?.id;
+    
+    req.logout(async (err) => {
       if (err) return next(err);
+      
+      // Update last logout timestamp if user was logged in
+      if (userId) {
+        try {
+          await storage.updateUserLastLogout(userId);
+        } catch (error) {
+          console.error("Failed to update last logout timestamp:", error);
+        }
+      }
+      
       res.sendStatus(200);
     });
   });

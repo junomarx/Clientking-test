@@ -226,6 +226,7 @@ export const users = pgTable("users", {
   resetTokenExpires: timestamp("reset_token_expires"),     // Ablaufzeit des Reset-Tokens
   trialExpiresAt: timestamp("trial_expires_at"),           // Ablaufdatum des Demo-Zugangs (nur für Demo-Paket)
   lastLoginAt: timestamp("last_login_at"),                 // Zeitpunkt der letzten Anmeldung
+  lastLogoutAt: timestamp("last_logout_at"),               // Zeitpunkt der letzten Abmeldung
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

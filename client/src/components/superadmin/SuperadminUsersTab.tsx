@@ -72,6 +72,7 @@ interface User {
   companyEmail: string | null;
   packageId: number | null;
   lastLoginAt: string | null;
+  lastLogoutAt: string | null;
   createdAt: string;
 }
 
@@ -95,9 +96,20 @@ interface SuperadminUsersTabProps {
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
 
-  // Utility function to determine if a user is online (last login within 15 minutes)
-  const isUserOnline = (lastLoginAt: string | null) => {
+  // Verbesserte Online-Status-Erkennung mit Login/Logout-Zeitstempeln
+  const isUserOnline = (lastLoginAt: string | null, lastLogoutAt: string | null) => {
     if (!lastLoginAt) return false;
+    
+    // Wenn es einen Logout gibt und dieser nach dem Login war, ist der Benutzer offline
+    if (lastLogoutAt) {
+      const loginTime = new Date(lastLoginAt);
+      const logoutTime = new Date(lastLogoutAt);
+      if (logoutTime > loginTime) {
+        return false; // Benutzer hat sich bewusst abgemeldet
+      }
+    }
+    
+    // Andernfalls prüfen wir, ob der Login innerhalb der letzten 15 Minuten war
     const lastLogin = new Date(lastLoginAt);
     const now = new Date();
     const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
@@ -568,13 +580,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                         <div className="flex items-center">
                           <Circle 
                             className={`h-2 w-2 mr-2 ${
-                              isUserOnline(user.lastLoginAt) 
+                              isUserOnline(user.lastLoginAt, user.lastLogoutAt) 
                                 ? 'fill-green-500 text-green-500' 
                                 : 'fill-red-500 text-red-500'
                             }`} 
                           />
                           <span className="text-sm">
-                            {isUserOnline(user.lastLoginAt) ? 'Online' : 'Offline'}
+                            {isUserOnline(user.lastLoginAt, user.lastLogoutAt) ? 'Online' : 'Offline'}
                           </span>
                         </div>
                       </TableCell>

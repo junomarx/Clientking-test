@@ -1357,6 +1357,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateUserLastLogout(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ lastLogoutAt: new Date() })
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user last logout:", error);
+      return false;
+    }
+  }
+
   async deleteUser(id: number): Promise<boolean> {
     try {
       await db
