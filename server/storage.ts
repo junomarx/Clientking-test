@@ -1167,17 +1167,8 @@ export class DatabaseStorage implements IStorage {
         throw new Error(`Benutzer mit ID ${userId} nicht gefunden`);
       }
       
-      // Wenn der Benutzer auf Professional oder Enterprise ist, hat er unbegrenzte Reparaturen
-      if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
-        return {
-          count: 0,
-          limit: 999999, // Praktisch unbegrenzt
-          canCreate: true
-        };
-      }
-      
-      // Basic-Plan: 50 Reparaturen pro Monat
-      const limit = 50;
+      // Alle Benutzer haben jetzt unbegrenzten Zugriff
+      const limit = 999999; // Praktisch unbegrenzt
       
       // Wenn keine Shop-ID vorhanden ist, kann der Benutzer keine Reparaturen erstellen
       if (!user.shopId) {
@@ -1209,15 +1200,15 @@ export class DatabaseStorage implements IStorage {
       return {
         count,
         limit,
-        canCreate: count < limit
+        canCreate: true // Immer erlaubt da unbegrenzt
       };
     } catch (error) {
       console.error("Error in canCreateNewRepair:", error);
-      // Standardwert im Fehlerfall
+      // Standardwert im Fehlerfall - trotzdem unbegrenzt
       return {
         count: 0,
-        limit: 50,
-        canCreate: false
+        limit: 999999,
+        canCreate: true
       };
     }
   }
