@@ -96,16 +96,9 @@ export function SubscriptionSettingsTab() {
           <CardContent>
             <div className="space-y-4">
               {/* Status-Anzeige */}
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-md">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <span className="font-medium">Aktiv</span>
-                </div>
-                <Button variant="link" size="sm" className="text-green-600 p-0 h-auto" asChild>
-                  <a href="mailto:support@handyshop-verwaltung.at">
-                    Support kontaktieren <ArrowUpRight className="h-3 w-3 ml-1" />
-                  </a>
-                </Button>
+              <div className="flex items-center p-3 bg-green-50 rounded-md">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <span className="font-medium">Aktiv</span>
               </div>
 
               {/* Unbegrenzte Reparaturaufträge */}
