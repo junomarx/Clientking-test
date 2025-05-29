@@ -77,6 +77,8 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Konto ist nicht aktiviert. Bitte warten Sie auf die Freischaltung durch einen Superadministrator.' });
         } 
         else {
+          // Aktualisiere den letzten Login-Zeitpunkt
+          await storage.updateUserLastLogin(user.id);
           return done(null, user);
         }
       } catch (error) {
