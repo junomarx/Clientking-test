@@ -710,9 +710,10 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           </DialogHeader>
           
           <Tabs defaultValue="settings" className="w-full mt-4">
-            <TabsList className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-0">
+            <TabsList className="w-full grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-0">
               <TabsTrigger value="settings">Einstellungen</TabsTrigger>
               <TabsTrigger value="permissions">Berechtigungen</TabsTrigger>
+              <TabsTrigger value="activity">Aktivität</TabsTrigger>
               <TabsTrigger value="company">Unternehmensdaten</TabsTrigger>
             </TabsList>
             
@@ -768,6 +769,62 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                   </div>
                 </div>
 
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="activity" className="space-y-4 py-4">
+              <div className="grid gap-4 py-4">
+                {/* Benutzeraktivität */}
+                <div className="border-b pb-4 mb-4">
+                  <h3 className="font-medium mb-3">Benutzeraktivität</h3>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Status</Label>
+                    <div className="col-span-3 flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-2 ${isUserOnline(selectedUser?.lastLoginAt || null) ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className={isUserOnline(selectedUser?.lastLoginAt || null) ? 'text-green-600' : 'text-red-600'}>
+                        {isUserOnline(selectedUser?.lastLoginAt || null) ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4 mt-4">
+                    <Label className="text-right">Letzte Anmeldung</Label>
+                    <div className="col-span-3">
+                      {selectedUser?.lastLoginAt ? (
+                        <div className="space-y-1">
+                          <div className="text-sm">
+                            {new Date(selectedUser.lastLoginAt).toLocaleDateString('de-DE', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {new Date(selectedUser.lastLoginAt).toLocaleTimeString('de-DE', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit'
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Noch nie angemeldet</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4 mt-4">
+                    <Label className="text-right">Registriert seit</Label>
+                    <div className="col-span-3">
+                      <div className="text-sm">
+                        {new Date(selectedUser?.createdAt || '').toLocaleDateString('de-DE', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </TabsContent>
             
