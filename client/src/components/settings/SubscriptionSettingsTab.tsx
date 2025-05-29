@@ -34,7 +34,7 @@ const basicFeatures = [
 export function SubscriptionSettingsTab() {
   const { toast } = useToast();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [canInstallPWA, setCanInstallPWA] = useState(false);
+  const [canInstallPWA, setCanInstallPWA] = useState(true);
   
   // PWA Installation Event Listener
   useEffect(() => {
@@ -50,9 +50,9 @@ export function SubscriptionSettingsTab() {
     const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
     const isInWebAppiOS = (window.navigator as any).standalone === true;
     
-    if (!isStandalone && !isInWebAppiOS) {
-      // Zeige den Button immer an, auch wenn das beforeinstallprompt Event nicht verfügbar ist
-      setCanInstallPWA(true);
+    if (isStandalone || isInWebAppiOS) {
+      // App ist bereits installiert
+      setCanInstallPWA(false);
     }
 
     return () => {
