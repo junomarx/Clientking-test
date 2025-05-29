@@ -153,7 +153,12 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         description: "Der Kunde wurde erfolgreich gelöscht.",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      // Cache umfassend invalidieren
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      // Dialog schließen und State zurücksetzen
+      setShowDeleteCustomerDialog(false);
       onClose();
     },
     onError: (error) => {
@@ -163,6 +168,8 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         variant: "destructive",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      // Dialog-State zurücksetzen auch bei Fehler
+      setShowDeleteCustomerDialog(false);
     },
   });
   
@@ -178,8 +185,11 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         description: "Die Reparatur wurde erfolgreich gelöscht.",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      // Cache umfassend invalidieren
       queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
+      // State zurücksetzen
       setShowDeleteRepairDialog(false);
       setRepairToDelete(null);
     },
@@ -190,6 +200,9 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
         variant: "destructive",
         duration: 2000, // Nach 2 Sekunden ausblenden
       });
+      // State auch bei Fehler zurücksetzen
+      setShowDeleteRepairDialog(false);
+      setRepairToDelete(null);
     },
   });
   

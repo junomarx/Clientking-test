@@ -246,14 +246,18 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
       return response.ok;
     },
     onSuccess: () => {
+      // Cache umfassend invalidieren
       queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
       toast({
         title: "Kostenvoranschlag gelöscht",
         description: "Der Kostenvoranschlag wurde erfolgreich gelöscht.",
       });
       
-      // Dialog schließen
+      // Dialog schließen und State zurücksetzen
+      setShowDeleteConfirm(false);
       onClose();
     },
     onError: (error: Error) => {
@@ -262,6 +266,7 @@ export function CostEstimateDetailsDialog({ open, onClose, estimateId }: CostEst
         description: `Der Kostenvoranschlag konnte nicht gelöscht werden: ${error.message}`,
         variant: "destructive",
       });
+      // Dialog-State auch bei Fehler zurücksetzen
       setShowDeleteConfirm(false);
     }
   });
