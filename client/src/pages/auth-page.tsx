@@ -216,42 +216,13 @@ export default function AuthPage() {
       </Dialog>
       <div className="flex items-center justify-center p-4 pt-20">
         <div className="grid md:grid-cols-2 w-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden">
-          {/* Hero section - Left side with blue background */}
-          <div className="hidden md:flex flex-col justify-center items-center p-12 bg-blue-500 text-white relative overflow-hidden">
-            {/* Abstract wave pattern and dots background */}
-            <div className="absolute inset-0 z-0 grid grid-cols-12 grid-rows-12 opacity-20">
-              {Array.from({ length: 40 }).map((_, i) => (
-                <div key={i} className="rounded-full bg-blue-200 w-2 h-2 m-4" style={{ 
-                  left: `${Math.random() * 100}%`, 
-                  top: `${Math.random() * 100}%`,
-                  position: 'absolute'
-                }}></div>
-              ))}
-              <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-[20%] left-0 w-full h-40 bg-blue-300 rounded-[100%] opacity-20 transform -rotate-6 scale-150"></div>
-                <div className="absolute bottom-[20%] left-0 w-full h-40 bg-blue-300 rounded-[100%] opacity-20 transform -rotate-6 scale-150"></div>
-              </div>
-            </div>
-            
-            <div className="z-10 text-center">
-              {/* ClientKing Logo */}
-              <div className="mb-8">
-                <img 
-                  src={logoNewPath} 
-                  alt="ClientKing Handyshop Verwaltung" 
-                  className="w-64 h-auto mx-auto"
-                />
-              </div>
-              
-              <p className="text-lg font-light mb-2">Schön, Sie wiederzusehen</p>
-              <h1 className="text-5xl font-bold tracking-wide mb-8">WILLKOMMEN<br />ZURÜCK</h1>
-              
-              <div className="w-20 h-1 bg-white mx-auto my-6 rounded-full"></div>
-              
-              <p className="text-sm max-w-xs opacity-80 leading-relaxed">
-                Verwalten Sie Ihre Reparaturaufträge, Kunden und Geräte einfach und effizient mit unserem Verwaltungssystem für Handyshops.
-              </p>
-            </div>
+          {/* Logo section - Left side */}
+          <div className="hidden md:flex flex-col justify-center items-center p-12 bg-gray-50">
+            <img 
+              src={logoNewPath} 
+              alt="ClientKing Handyshop Verwaltung" 
+              className="w-80 h-auto"
+            />
           </div>
           
           {/* Forms section - Right side with white background */}
