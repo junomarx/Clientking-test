@@ -28,13 +28,15 @@ import { AlertCircle, Mail, Star, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from '@/components/ui/input';
 
 // Form schema
 const statusSchema = z.object({
   status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
-  sendEmail: z.boolean().optional()
+  sendEmail: z.boolean().optional(),
+  technicianNote: z.string().optional()
 });
 
 type StatusFormValues = z.infer<typeof statusSchema>;
@@ -44,7 +46,7 @@ interface ChangeStatusDialogProps {
   onClose: () => void;
   repairId: number | null;
   currentStatus: string;
-  onUpdateStatus: (id: number, status: string, sendEmail?: boolean) => void;
+  onUpdateStatus: (id: number, status: string, sendEmail?: boolean, technicianNote?: string) => void;
 }
 
 export function ChangeStatusDialog({ 
@@ -86,7 +88,8 @@ export function ChangeStatusDialog({
     resolver: zodResolver(statusSchema),
     defaultValues: {
       status: (currentStatus || 'eingegangen') as any,
-      sendEmail: false
+      sendEmail: false,
+      technicianNote: ''
     },
   });
   
@@ -95,6 +98,9 @@ export function ChangeStatusDialog({
   const showEmailOption = currentSelectedStatus === 'fertig' || 
                           currentSelectedStatus === 'ersatzteil_eingetroffen' ||
                           currentSelectedStatus === 'abgeholt';
+  
+  // Zeige Techniker-Eingabefeld nur bei "Ausser Haus"
+  const showTechnicianField = currentSelectedStatus === 'ausser_haus';
   
   // Label für E-Mail-Checkbox je nach Status
   const getEmailLabel = () => {
@@ -157,7 +163,7 @@ export function ChangeStatusDialog({
       return;
     }
     
-    onUpdateStatus(repairId, data.status, data.sendEmail);
+    onUpdateStatus(repairId, data.status, data.sendEmail, data.technicianNote);
   }
   
   return (
@@ -197,6 +203,29 @@ export function ChangeStatusDialog({
                 </FormItem>
               )}
             />
+            
+            {/* Techniker-Eingabefeld für "Ausser Haus" Status */}
+            {showTechnicianField && (
+              <FormField
+                control={form.control}
+                name="technicianNote"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Techniker</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Name des Technikers eingeben..."
+                      />
+                    </FormControl>
+                    <p className="text-sm text-muted-foreground">
+                      Diese Information wird mit Zeitstempel in den Reparaturdetails gespeichert
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             {/* Der Hinweis zur deaktivierten automatischen E-Mail-Versendung wurde entfernt */}
             
