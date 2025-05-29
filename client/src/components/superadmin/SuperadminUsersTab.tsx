@@ -47,7 +47,7 @@ import {
   Phone,
   BadgeCheck,
   BadgeX,
-  Package,
+  Circle,
   Pencil,
   Store,
   Search,
@@ -71,6 +71,7 @@ interface User {
   companyPhone: string | null;
   companyEmail: string | null;
   packageId: number | null;
+  lastLoginAt: string | null;
   createdAt: string;
 }
 
@@ -100,6 +101,15 @@ interface SuperadminUsersTabProps {
 
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
+
+  // Utility function to determine if a user is online (last login within 5 minutes)
+  const isUserOnline = (lastLoginAt: string | null) => {
+    if (!lastLoginAt) return false;
+    const lastLogin = new Date(lastLoginAt);
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    return lastLogin > fiveMinutesAgo;
+  };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
@@ -548,7 +558,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                     <TableHead className="w-10">Shop</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Rolle</TableHead>
-                    <TableHead>Paket</TableHead>
+                    <TableHead>Status Online</TableHead>
                     <TableHead>Erstellt</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
@@ -589,26 +599,19 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Select
-                          value={user.packageId?.toString() || ""}
-                          onValueChange={(value) => {
-                            const packageId = value === "0" ? null : parseInt(value, 10);
-                            updatePackageMutation.mutate({ userId: user.id, packageId });
-                          }}
-                        >
-                          <SelectTrigger className="w-32">
-                            <SelectValue placeholder="Kein Paket" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="0">Kein Paket</SelectItem>
-                            {packages?.map((pkg) => (
-                              <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                                {pkg.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Circle 
+                            className={`h-2 w-2 mr-2 ${
+                              isUserOnline(user.lastLoginAt) 
+                                ? 'fill-green-500 text-green-500' 
+                                : 'fill-red-500 text-red-500'
+                            }`} 
+                          />
+                          <span className="text-sm">
+                            {isUserOnline(user.lastLoginAt) ? 'Online' : 'Offline'}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
