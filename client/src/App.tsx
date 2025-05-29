@@ -31,19 +31,6 @@ import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheH
 function Router() {
   return (
     <Switch>
-      <ProtectedRoute path="/">
-        <Home />
-      </ProtectedRoute>
-      {/* Die /settings Route wird nicht mehr verwendet, stattdessen wird
-          der Settings-Tab in der Home-Komponente angezeigt */}
-      <AdminProtectedRoute path="/admin">
-        <AdminPage />
-      </AdminProtectedRoute>
-      <SuperadminProtectedRoute path="/superadmin">
-        <SuperadminPage />
-      </SuperadminProtectedRoute>
-
-      {/* Design Preview Routen wurden entfernt */}
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/reset-password/:token" component={ResetPasswordPage} />
@@ -52,6 +39,17 @@ function Router() {
       <Route path="/optimized-table-demo" component={OptimizedTableDemo} />
       <Route path="/responsive-devices-demo" component={ResponsiveDevicesDemo} />
       <Route path="/api-test" component={ApiTest} />
+      
+      <ProtectedRoute path="/admin">
+        <AdminPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/superadmin">
+        <SuperadminPage />
+      </ProtectedRoute>
+      <ProtectedRoute path="/">
+        <Home />
+      </ProtectedRoute>
+      
       <Route path="*" component={NotFound} />
     </Switch>
   );
