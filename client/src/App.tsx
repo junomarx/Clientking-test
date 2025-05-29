@@ -14,7 +14,6 @@ import SuperadminPage from "@/pages/superadmin-page";
 import SettingsPage from "@/pages/settings-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
-import LandingPage from "@/pages/landing/LandingPage";
 import DeviceSelectorDemo from "@/pages/device-selector-demo";
 import DeviceFinderDemo from "@/pages/device-finder-demo";
 import OptimizedTableDemo from "@/pages/optimized-table-demo";
@@ -32,8 +31,7 @@ import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheH
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={LandingPage} />
-      <ProtectedRoute path="/app">
+      <ProtectedRoute path="/">
         <Home />
       </ProtectedRoute>
       {/* Die /settings Route wird nicht mehr verwendet, stattdessen wird
