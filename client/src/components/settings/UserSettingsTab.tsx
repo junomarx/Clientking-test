@@ -27,9 +27,6 @@ const passwordChangeSchema = z.object({
 
 const profileUpdateSchema = z.object({
   username: z.string().min(3, "Benutzername muss mindestens 3 Zeichen lang sein"),
-  email: z.string().email("Bitte geben Sie eine gültige E-Mail-Adresse ein"),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
 });
 
 // Benutzer-Einstellungen Komponente
@@ -43,9 +40,6 @@ export function UserSettingsTab() {
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       username: user?.username || "",
-      email: user?.email || "",
-      firstName: "", // Wird noch nicht vom API unterstützt
-      lastName: "",  // Wird noch nicht vom API unterstützt
     },
   });
   
@@ -64,9 +58,6 @@ export function UserSettingsTab() {
     if (user) {
       profileForm.reset({
         username: user.username || "",
-        email: user.email || "",
-        firstName: "", // Diese Felder existieren noch nicht im Schema
-        lastName: "",  // Diese Felder existieren noch nicht im Schema
       });
     }
   }, [user, profileForm]);
@@ -200,7 +191,7 @@ export function UserSettingsTab() {
             <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
               <Form {...profileForm}>
                 <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={profileForm.control}
                       name="username"
@@ -209,48 +200,6 @@ export function UserSettingsTab() {
                           <FormLabel>Benutzername</FormLabel>
                           <FormControl>
                             <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>E-Mail-Adresse</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Vorname</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nachname</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
