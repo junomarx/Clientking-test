@@ -96,7 +96,7 @@ interface SuperadminUsersTabProps {
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
 
-  // Verbesserte Online-Status-Erkennung: Betrachtet den letzten Zeitstempel (Login oder Logout)
+  // Online-Status-Erkennung: Betrachtet Login/Logout-Zeitstempel intelligent
   const isUserOnline = (lastLoginAt: string | null, lastLogoutAt: string | null) => {
     if (!lastLoginAt) return false;
     
@@ -104,22 +104,17 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     const now = new Date();
     const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
     
-    // Wenn es einen Logout gibt, vergleiche die Zeitstempel
+    // Wenn es einen Logout-Zeitstempel gibt
     if (lastLogoutAt) {
       const logoutTime = new Date(lastLogoutAt);
       
-      // Wenn Logout nach Login erfolgte, ist der Benutzer offline
+      // Wenn der Logout nach dem Login war, ist der Benutzer definitiv offline
       if (logoutTime > loginTime) {
         return false;
       }
-      
-      // Wenn Login nach Logout erfolgte, prüfe ob Login innerhalb der letzten 15 Minuten war
-      if (loginTime > logoutTime) {
-        return loginTime > fifteenMinutesAgo;
-      }
     }
     
-    // Kein Logout vorhanden, prüfe nur Login-Zeit
+    // Wenn kein Logout nach dem Login erfolgte, prüfe ob Login recent genug ist
     return loginTime > fifteenMinutesAgo;
   };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
