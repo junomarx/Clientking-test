@@ -354,7 +354,6 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           // Formular mit Benutzerdaten und Geschäftseinstellungen füllen
           setEditForm({
             isAdmin: user.isAdmin,
-            packageId: user.packageId,
             shopId: user.shopId,
             email: user.email,
             companyName: user.companyName || businessSettings?.businessName,
@@ -375,7 +374,6 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           // Kein Fehler, nur Formular mit Benutzerdaten füllen
           setEditForm({
             isAdmin: user.isAdmin,
-            packageId: user.packageId,
             shopId: user.shopId,
             email: user.email,
             companyName: user.companyName,
@@ -391,7 +389,6 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
         // Im Fehlerfall nur Benutzerdaten anzeigen
         setEditForm({
           isAdmin: user.isAdmin,
-          packageId: user.packageId,
           shopId: user.shopId,
           email: user.email,
           companyName: user.companyName,
@@ -770,29 +767,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                     </span>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Paket</Label>
-                  <div className="col-span-3">
-                    <Select
-                      value={editForm.packageId?.toString() || 'null'}
-                      onValueChange={(value) => 
-                        setEditForm({ ...editForm, packageId: (value && value !== "null") ? parseInt(value) : null })
-                      }
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Wählen Sie ein Paket" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="null">Kein Paket</SelectItem>
-                        {packages?.map((pkg) => (
-                          <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                            {pkg.name} ({pkg.priceMonthly.toFixed(2)} €/Monat)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+
               </div>
             </TabsContent>
             
