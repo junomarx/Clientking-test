@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info, Trash2 } from 'lucide-react';
+import { Printer, Info } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
-import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
 
 interface RepairWithCustomer {
   id: number;
@@ -19,6 +18,7 @@ interface AnimatedRecentOrdersProps {
   onPrintClick: (repairId: number) => void;
   onStatusChange?: (id: number, currentStatus: string) => void;
   onEdit?: (id: number) => void;
+  onRepairClick?: (repairId: number) => void;
 }
 
 export function AnimatedRecentOrders({ 
@@ -26,22 +26,14 @@ export function AnimatedRecentOrders({
   isLoading, 
   onPrintClick,
   onStatusChange,
-  onEdit
+  onEdit,
+  onRepairClick
 }: AnimatedRecentOrdersProps) {
-  // State für den Detaildialog
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
-  
-  // Funktion zum Öffnen des Detaildialogs
-  const openDetailsDialog = (repairId: number) => {
-    setSelectedRepairId(repairId);
-    setShowDetailsDialog(true);
-  };
-  
-  // Funktion zum Schließen des Detaildialogs
-  const closeDetailsDialog = () => {
-    setShowDetailsDialog(false);
-    setTimeout(() => setSelectedRepairId(null), 300); // Verzögerung für die Animation
+  // Funktion zum Öffnen der Reparaturseite mit Details
+  const handleRepairClick = (repairId: number) => {
+    if (onRepairClick) {
+      onRepairClick(repairId);
+    }
   };
   return (
     <motion.div
@@ -102,7 +94,7 @@ export function AnimatedRecentOrders({
                       delay: index * 0.05,
                       ease: "easeOut"
                     }}
-                    onClick={() => openDetailsDialog(repair.id)}
+                    onClick={() => handleRepairClick(repair.id)}
                   >
                     <td className="py-3 px-4 font-medium">
                       <motion.div whileHover={{ scale: 1.05 }}>
@@ -136,7 +128,7 @@ export function AnimatedRecentOrders({
                           title="Details anzeigen"
                           onClick={(e) => {
                             e.stopPropagation();
-                            openDetailsDialog(repair.id);
+                            handleRepairClick(repair.id);
                           }}
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
@@ -164,7 +156,7 @@ export function AnimatedRecentOrders({
             <motion.div 
               key={repair.id} 
               className="border rounded-lg overflow-hidden cursor-pointer" 
-              onClick={() => openDetailsDialog(repair.id)}
+              onClick={() => handleRepairClick(repair.id)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ 
@@ -210,7 +202,7 @@ export function AnimatedRecentOrders({
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
                     e.stopPropagation(); 
-                    openDetailsDialog(repair.id);
+                    handleRepairClick(repair.id);
                   }}
                 >
                   <Info className="h-5 w-5" />
@@ -220,16 +212,7 @@ export function AnimatedRecentOrders({
           ))
         )}
       </div>
-      
-      {/* Verwende den normalen RepairDetailsDialog im Dashboard-Modus */}
-      <RepairDetailsDialog
-        open={showDetailsDialog}
-        onClose={closeDetailsDialog}
-        repairId={selectedRepairId}
-        mode="dashboard"
-        onStatusChange={undefined} /* Im Dashboard-Modus keine Statusänderung */
-        onEdit={undefined} /* Im Dashboard-Modus keine Bearbeitung */
-      />
+
     </motion.div>
   );
 }
