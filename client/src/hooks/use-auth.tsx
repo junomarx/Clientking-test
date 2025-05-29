@@ -83,8 +83,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Dies verhindert, dass Daten anderer Benutzer angezeigt werden
       queryClient.invalidateQueries();
       
-      // Nach erfolgreichem Login zur App-Seite weiterleiten
-      setLocation('/app');
+      // Nach erfolgreichem Login zur Hauptseite weiterleiten
+      setLocation('/');
       
       toast({
         title: "Anmeldung erfolgreich",
