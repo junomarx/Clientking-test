@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, CheckCircle, AlertTriangle, ArrowUpRight, Loader2, Infinity } from 'lucide-react';
+import { Package, CheckCircle, AlertTriangle, ArrowUpRight, Loader2, Infinity, Download, Smartphone } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 // Typ-Definition für die API-Antwort des Reparaturkontingents
 interface RepairQuota {
@@ -31,6 +32,68 @@ const basicFeatures = [
 ];
 
 export function SubscriptionSettingsTab() {
+  const { toast } = useToast();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [canInstallPWA, setCanInstallPWA] = useState(false);
+  
+  // PWA Installation Event Listener
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstallPWA(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if app is already installed
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setCanInstallPWA(false);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) {
+      toast({
+        title: "Installation nicht verfügbar",
+        description: "Die App-Installation wird von Ihrem Browser oder Gerät nicht unterstützt.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      
+      if (choiceResult.outcome === 'accepted') {
+        toast({
+          title: "App erfolgreich installiert",
+          description: "Sie können die App jetzt von Ihrem Homescreen aus starten.",
+        });
+        setCanInstallPWA(false);
+      } else {
+        toast({
+          title: "Installation abgebrochen",
+          description: "Die App-Installation wurde vom Benutzer abgebrochen.",
+        });
+      }
+      
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error('PWA Installation Error:', error);
+      toast({
+        title: "Installationsfehler",
+        description: "Bei der App-Installation ist ein Fehler aufgetreten.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Abrufen des Reparaturkontingents über die API
   const { data: quotaData, isLoading, error } = useQuery<RepairQuota>({
     queryKey: ["/api/repair-quota"],
@@ -113,6 +176,28 @@ export function SubscriptionSettingsTab() {
               </div>
 
               <Separator />
+
+              {/* PWA Installation */}
+              {canInstallPWA && (
+                <div className="flex items-center p-3 bg-blue-50 rounded-md">
+                  <div className="flex items-center flex-1">
+                    <Smartphone className="h-5 w-5 text-blue-500 mr-2" />
+                    <div>
+                      <span className="font-medium block">App installieren</span>
+                      <span className="text-sm text-blue-600">Direkt auf Ihr Gerät</span>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleInstallPWA}
+                    size="sm"
+                    variant="outline"
+                    className="ml-2"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Installieren
+                  </Button>
+                </div>
+              )}
 
               {/* Abonnement verwalten */}
               <div className="flex justify-end pt-2">
