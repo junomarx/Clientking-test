@@ -1090,14 +1090,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
+      const user = req.user as any;
+      
+      console.log(`DELETE /api/repairs/${id}: Benutzer ${user.username} (ID: ${userId}, Shop: ${user.shopId}) versucht Reparatur zu löschen`);
       
       // Reparatur mit Benutzerkontext löschen
       const deleted = await storage.deleteRepair(id, userId);
       
       if (!deleted) {
+        console.warn(`DELETE /api/repairs/${id}: Reparatur nicht gefunden oder Zugriff verweigert für Benutzer ${userId}`);
         return res.status(404).json({ message: "Repair not found" });
       }
       
+      console.log(`DELETE /api/repairs/${id}: Erfolgreich gelöscht durch Benutzer ${userId}`);
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting repair:", error);

@@ -2046,6 +2046,12 @@ export class DatabaseStorage implements IStorage {
           )
         );
       
+      // Prüfe, ob eine Zeile gelöscht wurde
+      if (result.rowCount === 0) {
+        console.warn(`deleteRepair: Keine Reparatur mit ID ${id} in Shop ${user.shopId} gefunden`);
+        return false;
+      }
+      
       console.log(`deleteRepair: Reparatur ${id} erfolgreich gelöscht für Benutzer ${userId}`);
       return true;
     } catch (error) {
