@@ -255,7 +255,18 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       setShowDeleteDialog(false);
       setSelectedRepairId(null);
+      toast({
+        title: "Erfolg",
+        description: "Reparatur wurde erfolgreich gelöscht.",
+      });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Fehler",
+        description: error.message || "Reparatur konnte nicht gelöscht werden.",
+        variant: "destructive",
+      });
+    }
   });
 
   const filteredRepairs = useMemo(() => {
