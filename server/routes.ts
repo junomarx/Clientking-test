@@ -940,8 +940,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Reparaturstatus mit Benutzerkontext aktualisieren
-      const repair = await storage.updateRepairStatus(id, status, userId);
+      // Reparaturstatus mit Benutzerkontext und optionaler Techniker-Information aktualisieren
+      const repair = await storage.updateRepairStatus(id, status, userId, technicianNote);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });

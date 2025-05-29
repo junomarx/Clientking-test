@@ -133,6 +133,9 @@ export const repairs = pgTable("repairs", {
   pickupSignature: text("pickup_signature"),        // Digitale Unterschrift als Base64-kodiertes Bild (Abholung)
   pickupSignedAt: timestamp("pickup_signed_at"),    // Datum/Uhrzeit der Unterschrift bei Abholung
   
+  // Techniker-Information für "Ausser Haus" Status
+  technicianNote: text("technician_note"),         // Notiz mit Techniker-Information und Zeitstempel
+  
   // Alte Felder, für Abwärtskompatibilität beibehalten - nur in Drizzle definiert
   // customerSignature: text("customer_signature"),
   // signedAt: timestamp("signed_at"),

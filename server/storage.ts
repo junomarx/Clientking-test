@@ -1953,7 +1953,8 @@ export class DatabaseStorage implements IStorage {
   async updateRepairStatus(
     id: number,
     status: string,
-    userId: number
+    userId: number,
+    technicianNote?: string
   ): Promise<Repair | undefined> {
     try {
       console.log(`updateRepairStatus: Benutzer mit ID ${userId} ändert Status der Reparatur ${id} zu "${status}"`);
@@ -1978,13 +1979,20 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      // Aktualisiere nur den Status der Reparatur
+      // Aktualisiere den Status und optional die Techniker-Information
+      const updateData: any = {
+        status: status,
+        updatedAt: new Date()
+      };
+      
+      // Techniker-Information hinzufügen, wenn vorhanden
+      if (technicianNote) {
+        updateData.technicianNote = technicianNote;
+      }
+      
       const [updatedRepair] = await db
         .update(repairs)
-        .set({
-          status: status,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(
           and(
             eq(repairs.id, id),
