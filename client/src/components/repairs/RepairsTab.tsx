@@ -461,6 +461,19 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
     };
   }, []);
 
+  // Check for selectedRepairId from localStorage when component mounts
+  useEffect(() => {
+    const storedRepairId = localStorage.getItem('selectedRepairId');
+    if (storedRepairId) {
+      const repairId = parseInt(storedRepairId, 10);
+      if (!isNaN(repairId)) {
+        openDetailsDialog(repairId);
+        // Clear the stored ID after using it
+        localStorage.removeItem('selectedRepairId');
+      }
+    }
+  }, [repairs]); // Depend on repairs being loaded
+
   return (
     <div>
       <div className="flex justify-between items-center p-6">

@@ -202,7 +202,7 @@ export function AnimatedRecentOrders({
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
                     e.stopPropagation(); 
-                    handleRepairClick(repair.id);
+                    onRepairClick?.(repair.id);
                   }}
                 >
                   <Info className="h-5 w-5" />

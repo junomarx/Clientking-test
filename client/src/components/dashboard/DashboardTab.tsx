@@ -141,6 +141,15 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       });
   }, [repairs, customers]);
 
+  // Funktion zum Navigieren zu einer spezifischen Reparatur
+  const handleRepairClick = (repairId: number) => {
+    if (onTabChange) {
+      onTabChange('repairs');
+      // Setze die Reparatur-ID in localStorage, damit sie in RepairsTab gelesen werden kann
+      localStorage.setItem('selectedRepairId', repairId.toString());
+    }
+  };
+
   // Container-Animations-Varianten
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -300,6 +309,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
             onPrintClick={showPrintOptions}
             onStatusChange={openStatusDialog}
             onEdit={handleEdit}
+            onRepairClick={handleRepairClick}
           />
         </div>
       </motion.div>
