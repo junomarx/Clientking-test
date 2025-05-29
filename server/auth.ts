@@ -341,9 +341,16 @@ export function setupAuth(app: Express) {
     }
   };
   
-  app.get("/api/user", checkTokenAuth, (req, res) => {
+  app.get("/api/user", checkTokenAuth, async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Nicht angemeldet" });
+    }
+    
+    // Update last activity timestamp for active users
+    try {
+      await storage.updateUserLastLogin(req.user.id);
+    } catch (error) {
+      console.error("Failed to update user activity:", error);
     }
     
     // Return the user without the password

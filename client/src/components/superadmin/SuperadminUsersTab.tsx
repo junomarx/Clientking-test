@@ -95,13 +95,13 @@ interface SuperadminUsersTabProps {
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
 
-  // Utility function to determine if a user is online (last login within 5 minutes)
+  // Utility function to determine if a user is online (last login within 15 minutes)
   const isUserOnline = (lastLoginAt: string | null) => {
     if (!lastLoginAt) return false;
     const lastLogin = new Date(lastLoginAt);
     const now = new Date();
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-    return lastLogin > fiveMinutesAgo;
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    return lastLogin > fifteenMinutesAgo;
   };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
