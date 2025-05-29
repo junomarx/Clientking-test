@@ -50,7 +50,7 @@ export function AdminProtectedRoute({ path, children }: { path: string; children
   if (!user.isAdmin) {
     return (
       <Route path={path}>
-        <Redirect to="/app" />
+        <Redirect to="/" />
       </Route>
     );
   }
@@ -82,7 +82,7 @@ export function SuperadminProtectedRoute({ path, children }: { path: string; chi
   if (!user.isSuperadmin) {
     return (
       <Route path={path}>
-        <Redirect to="/app" />
+        <Redirect to="/" />
       </Route>
     );
   }
