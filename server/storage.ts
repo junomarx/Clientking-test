@@ -90,6 +90,7 @@ export interface IStorage {
   ): Promise<User | undefined>;
   updateUserPassword(id: number, newPassword: string): Promise<boolean>;
   updateUserLastLogin(id: number): Promise<boolean>;
+  updateUserLastLogout(id: number): Promise<boolean>;
   
   // E-Mail-Methoden
   getAllEmailTemplates(userId: number): Promise<EmailTemplate[]>;
