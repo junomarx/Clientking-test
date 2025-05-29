@@ -677,7 +677,7 @@ export class DatabaseStorage implements IStorage {
         console.log(`Verwende spezielle E-Mail-Einstellungen für Benutzer 'murat' (ID 4)`);
       }
       
-      const result = await userEmailService.sendEmail(userId, {
+      const result = await emailService.sendEmail({
         to: recipientEmail,
         subject: subject,
         html: body,
