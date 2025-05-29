@@ -18,6 +18,8 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [isCustomerDetailOpen, setIsCustomerDetailOpen] = useState(false);
   const [isNewCustomerDialogOpen, setIsNewCustomerDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: customers, isLoading: customersLoading } = useQuery<Customer[]>({
     queryKey: ['/api/customers']
@@ -71,6 +73,18 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
       });
   }, [customers, repairs, searchTerm]);
 
+  // Paginierung der Kundenliste
+  const totalPages = Math.ceil(customerWithRepairs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCustomers = customerWithRepairs.slice(startIndex, endIndex);
+
+  // Reset page when search term changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
   // Event handlers
   const handleCustomerClick = (customerId: number) => {
     setSelectedCustomerId(customerId);
@@ -123,7 +137,7 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
             type="text"
             placeholder="Kunden suchen..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pr-10"
           />
           <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -149,12 +163,12 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
                 <tr>
                   <td colSpan={6} className="py-4 text-center text-gray-500">Lädt Daten...</td>
                 </tr>
-              ) : customerWithRepairs.length === 0 ? (
+              ) : paginatedCustomers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-4 text-center text-gray-500">Keine Kunden gefunden</td>
                 </tr>
               ) : (
-                customerWithRepairs.map(customer => (
+                paginatedCustomers.map(customer => (
                   <tr 
                     key={customer.id} 
                     className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer"
@@ -181,10 +195,10 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
         <div className="md:hidden space-y-2">
           {customersLoading || repairsLoading ? (
             <div className="p-4 text-center text-gray-500">Lädt Daten...</div>
-          ) : customerWithRepairs.length === 0 ? (
+          ) : paginatedCustomers.length === 0 ? (
             <div className="p-4 text-center text-gray-500">Keine Kunden gefunden</div>
           ) : (
-            customerWithRepairs.map(customer => (
+            paginatedCustomers.map(customer => (
               <div 
                 key={customer.id} 
                 className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden cursor-pointer"
@@ -218,6 +232,36 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
             ))
           )}
         </div>
+        
+        {/* Paginierung */}
+        {customerWithRepairs.length > itemsPerPage && (
+          <div className="px-6 pb-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Zeige {startIndex + 1} von {customerWithRepairs.length} Einträgen
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                >
+                  ‹
+                </button>
+                <span className="text-sm text-gray-700">
+                  Seite {currentPage} von {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Customer Detail Dialog */}
