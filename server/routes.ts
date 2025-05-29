@@ -3639,12 +3639,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = (req.user as any).id;
-      const { email, subject, content } = req.body;
+      const { email, subject, pdfAttachment, pdfFilename } = req.body;
       
       // Überprüfen, ob alle erforderlichen Daten vorhanden sind
-      if (!email || !subject || !content) {
+      if (!email || !subject || !pdfAttachment || !pdfFilename) {
         return res.status(400).json({ 
-          message: "E-Mail-Adresse, Betreff und Inhalt sind erforderlich" 
+          message: "E-Mail-Adresse, Betreff, PDF-Anhang und Dateiname sind erforderlich" 
         });
       }
       
@@ -3657,12 +3657,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Sende Kostenvoranschlag ${estimate.reference_number} per E-Mail an ${email}`);
       
-      // PDF generieren aus HTML-Inhalt
-      const pdfBuffer = await storage.generatePdfFromHtml(content, `Kostenvoranschlag_${estimate.reference_number}`);
-      
-      if (!pdfBuffer) {
-        return res.status(500).json({ message: "Fehler beim Generieren des PDF-Dokuments" });
-      }
+      // PDF aus Base64 konvertieren (client-seitig generiert)
+      const pdfBuffer = Buffer.from(pdfAttachment, 'base64');
       
       // Geschäftseinstellungen für den Absender abrufen
       const businessSettings = await storage.getBusinessSettings(userId);
@@ -3688,7 +3684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `,
         textBody: `Kostenvoranschlag ${estimate.reference_number}\n\nSehr geehrte(r) Kunde/Kundin,\n\nanbei erhalten Sie den angeforderten Kostenvoranschlag für Ihre Reparatur.\n\nBei Fragen oder zur Beauftragung kontaktieren Sie uns bitte.\n\nMit freundlichen Grüßen,\n${senderName}`,
         attachments: [{
-          filename: `Kostenvoranschlag_${estimate.reference_number}.pdf`,
+          filename: pdfFilename,
           content: pdfBuffer,
           contentType: 'application/pdf'
         }],
@@ -3699,15 +3695,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
       }
       
-      // Erfolgreichen Versand protokollieren
-      await storage.logEmailHistory({
-        type: 'cost_estimate',
-        recipientEmail: email,
-        subject: subject,
-        referenceId: estimate.id,
-        userId: userId,
-        shopId: (req.user as any).shopId
-      });
+      // Erfolgreichen Versand protokollieren - ohne repairId da es ein Kostenvoranschlag ist
+      try {
+        await storage.logEmailHistory({
+          subject: subject,
+          status: 'sent',
+          recipient: email,
+          userId: userId,
+          shopId: estimate.shopId || undefined
+        });
+      } catch (logError) {
+        console.error("Fehler beim Protokollieren des E-Mail-Verlaufs:", logError);
+        // E-Mail wurde erfolgreich gesendet, nur die Protokollierung ist fehlgeschlagen
+      }
       
       res.status(200).json({ success: true, message: "Kostenvoranschlag wurde per E-Mail gesendet" });
     } catch (error) {
