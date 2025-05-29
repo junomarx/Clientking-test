@@ -288,23 +288,24 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
 
 
 
-  // Mutation zum Aktualisieren aller Benutzerberechtigungen
-  const refreshPermissionsMutation = useMutation({
+  // Mutation zum Aktualisieren des Online-Status aller Benutzer
+  const refreshStatusMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/superadmin/refresh-permissions");
-      return await response.json();
+      // Einfach die Benutzerdaten neu laden, um aktuelle lastLoginAt-Werte zu erhalten
+      await queryClient.invalidateQueries({ queryKey: ['/api/superadmin/users'] });
+      return { success: true };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
-        title: "Berechtigungen aktualisiert",
-        description: `${data.updatedUsers} Benutzerberechtigungen wurden erfolgreich aktualisiert.`,
+        title: "Status aktualisiert",
+        description: "Der Online-Status aller Benutzer wurde erfolgreich aktualisiert.",
       });
     },
     onError: (error: Error) => {
       toast({
         variant: "destructive",
-        title: "Fehler",
-        description: `Berechtigungen konnten nicht aktualisiert werden: ${error.message}`,
+        title: "Fehler", 
+        description: `Status konnte nicht aktualisiert werden: ${error.message}`,
       });
     },
   });
@@ -480,13 +481,13 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             </div>
             <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
               <Button
-                onClick={() => refreshPermissionsMutation.mutate()}
-                disabled={refreshPermissionsMutation.isPending}
+                onClick={() => refreshStatusMutation.mutate()}
+                disabled={refreshStatusMutation.isPending}
                 variant="outline"
                 size="sm"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                className="border-green-600 text-green-600 hover:bg-green-50"
               >
-                {refreshPermissionsMutation.isPending ? (
+                {refreshStatusMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Aktualisiere...
@@ -494,7 +495,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                 ) : (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Berechtigungen aktualisieren
+                    Status aktualisieren
                   </>
                 )}
               </Button>
