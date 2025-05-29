@@ -26,10 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, UserCog, Shield, Loader2 } from "lucide-react";
 
-// Validierungsschemas
-const profileUpdateSchema = z.object({
-  username: z.string().min(1, "Benutzername ist erforderlich"),
-});
+// Validierungsschemas (Profile-Updates entfernt, da Benutzername nicht mehr änderbar ist)
 
 const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1, "Aktuelles Passwort ist erforderlich"),
@@ -45,14 +42,6 @@ export function UserSettingsTab() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Formular für Profiländerungen
-  const profileForm = useForm<z.infer<typeof profileUpdateSchema>>({
-    resolver: zodResolver(profileUpdateSchema),
-    defaultValues: {
-      username: "",
-    },
-  });
-  
   // Formular für Passwort-Änderungen
   const passwordForm = useForm<z.infer<typeof passwordChangeSchema>>({
     resolver: zodResolver(passwordChangeSchema),
@@ -60,43 +49,6 @@ export function UserSettingsTab() {
       currentPassword: "",
       newPassword: "",
       confirmNewPassword: "",
-    },
-  });
-  
-  // Aktualisierung der Profilwerte, wenn sich der Benutzer ändert
-  React.useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        username: user.username || "",
-      });
-    }
-  }, [user, profileForm]);
-  
-  // Mutation für Profilupdates
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof profileUpdateSchema>) => {
-      const response = await apiRequest("POST", "/api/update-profile", data);
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Profil aktualisiert",
-        description: "Ihre Profilinformationen wurden erfolgreich gespeichert.",
-        variant: "default",
-        duration: 3000,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fehler beim Aktualisieren",
-        description: error.message || "Ein unbekannter Fehler ist aufgetreten.",
-        variant: "destructive",
-        duration: 3000,
-      });
     },
   });
   
@@ -127,11 +79,6 @@ export function UserSettingsTab() {
       });
     },
   });
-  
-  // Profilformular absenden
-  function onProfileSubmit(data: z.infer<typeof profileUpdateSchema>) {
-    updateProfileMutation.mutate(data);
-  }
   
   // Passwortformular absenden
   function onPasswordSubmit(data: z.infer<typeof passwordChangeSchema>) {
@@ -173,45 +120,45 @@ export function UserSettingsTab() {
               <UserCog className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
               Profilinformationen
             </CardTitle>
-            <CardDescription className="text-xs md:text-sm">Aktualisieren Sie Ihre persönlichen Daten</CardDescription>
+            <CardDescription className="text-xs md:text-sm">Ihre unveränderlichen Kontoinformationen</CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-6 pt-2 md:pt-3">
-            <Form {...profileForm}>
-              <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <FormField
-                    control={profileForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Benutzername</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Benutzername</label>
+                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-900">
+                    {user.username}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Der Benutzername kann aus Sicherheitsgründen nicht geändert werden.
+                  </p>
                 </div>
-                
-                <div className="flex justify-end mt-6">
-                  <Button 
-                    type="submit" 
-                    disabled={updateProfileMutation.isPending}
-                    className="min-w-[120px]"
-                  >
-                    {updateProfileMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Speichern...
-                      </>
-                    ) : (
-                      "Speichern"
-                    )}
-                  </Button>
+              </div>
+              
+              <div className="pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className="font-medium text-green-600">Aktiv</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Rolle:</span>
+                    <span className="font-medium">
+                      {user.isSuperadmin ? "Superadmin" : user.isAdmin ? "Administrator" : "Benutzer"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shop-ID:</span>
+                    <span className="font-medium">{user.shopId || "-"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Benutzer-ID:</span>
+                    <span className="font-medium">{user.id}</span>
+                  </div>
                 </div>
-              </form>
-            </Form>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
