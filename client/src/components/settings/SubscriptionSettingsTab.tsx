@@ -47,8 +47,12 @@ export function SubscriptionSettingsTab() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Check if app is already installed
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-      setCanInstallPWA(false);
+    const isStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const isInWebAppiOS = (window.navigator as any).standalone === true;
+    
+    if (!isStandalone && !isInWebAppiOS) {
+      // Zeige den Button immer an, auch wenn das beforeinstallprompt Event nicht verfügbar ist
+      setCanInstallPWA(true);
     }
 
     return () => {
@@ -57,39 +61,54 @@ export function SubscriptionSettingsTab() {
   }, []);
 
   const handleInstallPWA = async () => {
-    if (!deferredPrompt) {
-      toast({
-        title: "Installation nicht verfügbar",
-        description: "Die App-Installation wird von Ihrem Browser oder Gerät nicht unterstützt.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        
+        if (choiceResult.outcome === 'accepted') {
+          toast({
+            title: "App erfolgreich installiert",
+            description: "Sie können die App jetzt von Ihrem Homescreen aus starten.",
+          });
+          setCanInstallPWA(false);
+        } else {
+          toast({
+            title: "Installation abgebrochen",
+            description: "Die App-Installation wurde vom Benutzer abgebrochen.",
+          });
+        }
+        
+        setDeferredPrompt(null);
+      } catch (error) {
+        console.error('PWA Installation Error:', error);
         toast({
-          title: "App erfolgreich installiert",
-          description: "Sie können die App jetzt von Ihrem Homescreen aus starten.",
-        });
-        setCanInstallPWA(false);
-      } else {
-        toast({
-          title: "Installation abgebrochen",
-          description: "Die App-Installation wurde vom Benutzer abgebrochen.",
+          title: "Installationsfehler",
+          description: "Bei der App-Installation ist ein Fehler aufgetreten.",
+          variant: "destructive",
         });
       }
+    } else {
+      // Fallback: Zeige Anweisungen für manuelle Installation
+      const userAgent = navigator.userAgent.toLowerCase();
+      let instructions = "";
       
-      setDeferredPrompt(null);
-    } catch (error) {
-      console.error('PWA Installation Error:', error);
+      if (userAgent.includes('chrome') && !userAgent.includes('edg')) {
+        instructions = "Chrome: Klicken Sie auf das Symbol in der Adressleiste oder gehen Sie zu Menü → App installieren";
+      } else if (userAgent.includes('firefox')) {
+        instructions = "Firefox: Diese Funktion wird noch nicht vollständig unterstützt";
+      } else if (userAgent.includes('safari')) {
+        instructions = "Safari: Tippen Sie auf das Teilen-Symbol und wählen Sie 'Zum Home-Bildschirm'";
+      } else if (userAgent.includes('edg')) {
+        instructions = "Edge: Klicken Sie auf das Symbol in der Adressleiste oder gehen Sie zu Menü → Apps → Diese Seite als App installieren";
+      } else {
+        instructions = "Schauen Sie in den Browser-Einstellungen nach der Option 'App installieren' oder 'Zum Homescreen hinzufügen'";
+      }
+      
       toast({
-        title: "Installationsfehler",
-        description: "Bei der App-Installation ist ein Fehler aufgetreten.",
-        variant: "destructive",
+        title: "Manuelle Installation",
+        description: instructions,
+        duration: 8000,
       });
     }
   };
