@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as emailService from "./email-service";
 // Import der Berechtigungsprüfung aus permissions.ts
-import { isProfessionalOrHigher, isEnterprise, hasAccess, hasAccessAsync } from './permissions';
+import { hasAccess, hasAccessAsync } from './permissions';
 // Import der Middleware für die Prüfung der Trial-Version
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
@@ -1125,7 +1125,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf (nur Enterprise)
+  // API-Endpunkt, um zu prüfen, ob der User detaillierte Statistiken sehen darf
+  // Im neuen System haben alle authentifizierten Benutzer Vollzugriff
   app.get("/api/can-view-detailed-stats", async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus dem Header abrufen
@@ -1145,47 +1146,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      // Prüfen ob detaillierte Statistiken über feature_overrides aktiviert sind
-      let canViewDetailedStats = false;
+      // Alle authentifizierten Benutzer haben Vollzugriff auf detaillierte Statistiken
+      const canViewDetailedStats = true;
       
-      // Admin-Benutzer haben immer Zugriff
-      if (user.isAdmin) {
-        canViewDetailedStats = true;
-      } 
-      // Prüfen über das neue Paketsystem
-      else if (user.packageId) {
-        try {
-          const features = await db.select()
-            .from(packageFeatures)
-            .where(eq(packageFeatures.packageId, user.packageId));
-          
-          canViewDetailedStats = features.some(f => f.feature === 'detailedStats');
-        } catch (error) {
-          console.error('Fehler beim Prüfen der Paket-Features:', error);
-        }
-      }
-      // Fallback: Prüfen über featureOverrides (als String gespeichert)
-      else if (user.featureOverrides && typeof user.featureOverrides === 'string') {
-        try {
-          const overrides = JSON.parse(user.featureOverrides);
-          if (overrides.canViewDetailedStats === true) {
-            canViewDetailedStats = true;
-          }
-        } catch (e) {
-          console.warn(`Fehler beim Parsen der Feature-Übersteuerungen für Benutzer ${user.id}:`, e);
-        }
-      }
-      // Fallback: Prüfen über pricingPlan
-      else if (user.pricingPlan === 'enterprise') {
-        canViewDetailedStats = true;
-      }
-      
-      // Falls nicht über Overrides aktiviert, prüfe das Paket
-      if (!canViewDetailedStats) {
-        canViewDetailedStats = await isEnterprise(userId);
-      }
-      
-      console.log(`Detaillierte Statistiken für ${user.username}: ${canViewDetailedStats} (Paket: ${user.pricingPlan}, Overrides: ${JSON.stringify(user.featureOverrides)})`);
+      console.log(`Vollzugriff auf detaillierte Statistiken für ${user.username}: ${canViewDetailedStats}`);
       
       // Ergebnis zurückgeben
       res.json({ canViewDetailedStats });
@@ -1412,15 +1376,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Prüfen, ob der Benutzer berechtigt ist, detaillierte Statistiken zu sehen
-      // Diese Funktion ist nur für Enterprise-Nutzer verfügbar
-      const isEnterpriseUser = await isEnterprise(userId);
-      if (!isEnterpriseUser) {
-        return res.status(403).json({ 
-          message: "Detaillierte Statistiken sind nur im Enterprise-Paket verfügbar",
-          errorCode: "FEATURE_NOT_AVAILABLE"
-        });
-      }
+      // Im vereinfachten System haben alle authentifizierten Benutzer Vollzugriff
+      // Keine weitere Berechtigungsprüfung erforderlich
       
       // Zeitraum-Filter aus Query-Parametern holen
       let startDate: Date | undefined;
