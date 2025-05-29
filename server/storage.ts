@@ -2062,7 +2062,14 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
-      // Lösche die Reparatur mit der korrekten Shop-ID
+      // Erst die E-Mail-Historie löschen (Foreign Key Constraint)
+      await db
+        .delete(emailHistory)
+        .where(eq(emailHistory.repairId, id));
+      
+      console.log(`deleteRepair: E-Mail-Historie für Reparatur ${id} gelöscht`);
+
+      // Dann die Reparatur mit der korrekten Shop-ID löschen
       const result = await db
         .delete(repairs)
         .where(
@@ -2082,6 +2089,97 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error(`Error deleting repair ${id}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Löscht einen Kunden
+   * @param id Die ID des Kunden
+   * @param userId Die ID des Benutzers, der die Löschung vornimmt
+   * @returns true bei Erfolg, false bei Fehler
+   */
+  async deleteCustomer(id: number, userId: number): Promise<boolean> {
+    try {
+      console.log(`deleteCustomer: Benutzer mit ID ${userId} löscht Kunden ${id}`);
+      
+      // Benutzer holen, um Berechtigung zu prüfen
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`deleteCustomer: Benutzer mit ID ${userId} nicht gefunden.`);
+        return false;
+      }
+      
+      // Superadmin-Prüfung: Superadmin kann alle Kunden löschen
+      if (user.isSuperadmin) {
+        console.log(`deleteCustomer: Superadmin ${user.username} (ID: ${userId}) löscht Kunden ${id}`);
+        
+        const result = await db
+          .delete(customers)
+          .where(eq(customers.id, id));
+        
+        if (result.rowCount === 0) {
+          console.warn(`deleteCustomer: Kunde mit ID ${id} nicht gefunden`);
+          return false;
+        }
+        
+        console.log(`deleteCustomer: Kunde ${id} erfolgreich durch Superadmin gelöscht`);
+        return true;
+      }
+      
+      // Normale Benutzer: Strikte Shop-Isolation
+      if (!user.shopId) {
+        console.warn(`❌ deleteCustomer: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+      
+      // Direkt prüfen, ob der Kunde in der Datenbank existiert und zum Shop gehört
+      const existingCustomers = await db
+        .select()
+        .from(customers)
+        .where(
+          and(
+            eq(customers.id, id),
+            eq(customers.shopId, user.shopId)
+          )
+        );
+      
+      if (existingCustomers.length === 0) {
+        console.warn(`deleteCustomer: Kunde ${id} nicht gefunden oder nicht im Shop ${user.shopId} des Benutzers ${userId}`);
+        return false;
+      }
+      
+      // Prüfen, ob der Kunde noch Reparaturen hat
+      const customerRepairs = await db
+        .select()
+        .from(repairs)
+        .where(eq(repairs.customerId, id));
+      
+      if (customerRepairs.length > 0) {
+        console.warn(`deleteCustomer: Kunde ${id} kann nicht gelöscht werden - hat noch ${customerRepairs.length} Reparaturen`);
+        return false;
+      }
+      
+      // Kunde löschen
+      const result = await db
+        .delete(customers)
+        .where(
+          and(
+            eq(customers.id, id),
+            eq(customers.shopId, user.shopId)
+          )
+        );
+      
+      // Prüfe, ob eine Zeile gelöscht wurde
+      if (result.rowCount === 0) {
+        console.warn(`deleteCustomer: Keine Kunde mit ID ${id} in Shop ${user.shopId} gefunden`);
+        return false;
+      }
+      
+      console.log(`deleteCustomer: Kunde ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting customer ${id}:`, error);
       return false;
     }
   }
