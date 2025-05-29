@@ -2006,6 +2006,54 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  /**
+   * Löscht eine Reparatur
+   * @param id Die ID der Reparatur
+   * @param userId Die ID des Benutzers, der die Löschung vornimmt
+   * @returns true bei Erfolg, false bei Fehler
+   */
+  async deleteRepair(id: number, userId: number): Promise<boolean> {
+    try {
+      console.log(`deleteRepair: Benutzer mit ID ${userId} löscht Reparatur ${id}`);
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const existingRepair = await this.getRepair(id, userId);
+      if (!existingRepair) {
+        console.warn(`deleteRepair: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
+        return false;
+      }
+      
+      // Benutzer holen, um Shop-ID zu verifizieren
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`deleteRepair: Benutzer mit ID ${userId} nicht gefunden.`);
+        return false;
+      }
+      
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, false zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ deleteRepair: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+      
+      // Lösche die Reparatur mit der korrekten Shop-ID
+      const result = await db
+        .delete(repairs)
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, user.shopId)
+          )
+        );
+      
+      console.log(`deleteRepair: Reparatur ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting repair ${id}:`, error);
+      return false;
+    }
+  }
+
   // Implementierung der updateRepairSignature-Funktion
   async updateRepairSignature(
     id: number,
