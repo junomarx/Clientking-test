@@ -2540,7 +2540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { emailService } = await import('./email-service.js');
         
-        // E-Mail über den EmailService senden (gleiche Methode wie bei Statusänderungen)
+        // E-Mail über den EmailService senden mit korrekten Variablen für die Bewertungsvorlage
         const emailResult = await emailService.sendRepairStatusEmail(
           user.id,
           repair.id,
@@ -2550,7 +2550,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'bewertung_angefordert',
             customer: customer,
             repair: repair,
-            businessSettings: businessSettings
+            businessSettings: businessSettings,
+            // Zusätzliche Variablen für die Bewertungsvorlage
+            customVariables: {
+              "kundenname": `${customer.firstName} ${customer.lastName}`,
+              "geraet": repair.model,
+              "hersteller": repair.brand,
+              "geschaeftsname": businessSettings?.businessName || "Handyshop",
+              "telefon": businessSettings?.phone || "",
+              "email": businessSettings?.email || "",
+              "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`.trim(),
+              "website": businessSettings?.website || "",
+              "bewertungslink": reviewLink
+            }
           }
         );
         
