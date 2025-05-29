@@ -1987,7 +1987,15 @@ export class DatabaseStorage implements IStorage {
       
       // Techniker-Information hinzufügen, wenn vorhanden
       if (technicianNote) {
-        updateData.technicianNote = technicianNote;
+        const now = new Date();
+        const timestamp = now.toLocaleString('de-DE', {
+          day: '2-digit',
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        updateData.technicianNote = `${technicianNote} (${timestamp})`;
       }
       
       const [updatedRepair] = await db
