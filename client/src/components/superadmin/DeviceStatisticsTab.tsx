@@ -25,6 +25,7 @@ interface DeviceStats {
 
 // Icon-Mapping für Gerätetypen
 const getDeviceIcon = (deviceType: string) => {
+  if (!deviceType) return <Smartphone className="h-4 w-4" />;
   const type = deviceType.toLowerCase();
   if (type.includes('iphone') || type.includes('handy') || type.includes('smartphone')) {
     return <Smartphone className="h-4 w-4" />;
