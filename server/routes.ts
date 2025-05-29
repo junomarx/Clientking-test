@@ -1129,21 +1129,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Im neuen System haben alle authentifizierten Benutzer Vollzugriff
   app.get("/api/can-view-detailed-stats", async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus dem Header abrufen
-      const userIdHeader = req.headers['x-user-id'] as string;
-      if (!userIdHeader) {
-        return res.status(401).json({ message: "Keine Benutzer-ID im Header gefunden" });
+      // Prüfe Token-Authentifizierung
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: "Nicht authentifiziert" });
       }
       
-      const userId = parseInt(userIdHeader, 10);
-      if (isNaN(userId)) {
-        return res.status(400).json({ message: "Ungültige Benutzer-ID" });
+      const token = authHeader.split(' ')[1];
+      const tokenData = Buffer.from(token, 'base64').toString().split(':');
+      
+      if (tokenData.length < 2) {
+        return res.status(401).json({ message: "Ungültiges Token" });
       }
       
-      // Benutzer abrufen
+      const userId = parseInt(tokenData[0]);
       const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      
+      if (!user || (!user.isActive && !user.isSuperadmin)) {
+        return res.status(401).json({ message: "Benutzer nicht gefunden oder inaktiv" });
       }
       
       // Alle authentifizierten Benutzer haben Vollzugriff auf detaillierte Statistiken

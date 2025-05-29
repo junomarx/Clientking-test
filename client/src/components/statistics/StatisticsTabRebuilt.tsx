@@ -17,8 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 // Hilfsfunktion zum Prüfen, ob der Benutzer detaillierte Statistiken sehen darf
 const checkCanViewDetailedStats = async (): Promise<boolean> => {
   try {
-    const response = await fetch('/api/can-view-detailed-stats');
-    if (!response.ok) return false;
+    const response = await apiRequest('GET', '/api/can-view-detailed-stats');
     const data = await response.json();
     return data.canViewDetailedStats;
   } catch (error) {
