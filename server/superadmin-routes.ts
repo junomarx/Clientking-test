@@ -424,6 +424,7 @@ export function registerSuperadminRoutes(app: Express) {
         packageId: users.packageId,
         createdAt: users.createdAt,
         lastLoginAt: users.lastLoginAt,
+        lastLogoutAt: users.lastLogoutAt,
       }).from(users);
 
       res.json(allUsers);
