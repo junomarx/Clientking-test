@@ -1246,7 +1246,7 @@ export class EmailService {
         telefon: variables.businessSettings?.phone || '',
         email: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         adresse: variables.businessSettings?.streetAddress || '',
-        oeffnungszeiten: variables.businessSettings?.openingHours || '',
+        oeffnungszeiten: variables.businessSettings?.openingHours?.replace(/,\s*/g, ',<br>') || '',
         auftragsnummer: repair.orderCode || repair.id?.toString() || '',
         fehler: repair.issue || '',
         
@@ -1264,7 +1264,7 @@ export class EmailService {
         businessPhone: variables.businessSettings?.phone || '',
         businessEmail: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         businessAddress: variables.businessSettings?.streetAddress || '',
-        opening_hours: variables.businessSettings?.openingHours || '',
+        opening_hours: variables.businessSettings?.openingHours?.replace(/,\s*/g, ',<br>') || '',
         // Zusätzliche Variablen für Bewertungsvorlagen
         ...(variables.customVariables || {})
       };
