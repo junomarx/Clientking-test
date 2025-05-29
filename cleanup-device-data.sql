@@ -1,59 +1,50 @@
--- BEREINIGUNG: Alle Gerätedaten außer Shop-ID 1682 löschen
--- und sicherstellen, dass alle Benutzer auf die globalen Daten zugreifen
+-- Bereinigungsskript für Gerätedaten
+-- Behält nur Gerätetypen, Marken und Modelle, die vom Superadmin (Shop-ID 1682) erstellt wurden
 
--- SCHRITT 1: Diagnose - Zeige aktuelle Verteilung
-SELECT 'VORHER - Gerätetypen pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_typen 
-FROM user_device_types 
-GROUP BY user_id 
-ORDER BY user_id;
-
-SELECT 'VORHER - Marken pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_marken 
-FROM user_brands 
-GROUP BY user_id 
-ORDER BY user_id;
-
-SELECT 'VORHER - Modelle pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_modelle 
-FROM user_models 
-GROUP BY user_id 
-ORDER BY user_id;
-
--- SCHRITT 2: Alle Modelle löschen, die NICHT von User-ID 10 (Shop 1682) sind
+-- 1. Lösche alle Modelle, die nicht zu Marken gehören, die vom Superadmin (Shop-ID 1682) stammen
 DELETE FROM user_models 
-WHERE user_id != 10;
+WHERE brand_id NOT IN (
+    SELECT id FROM user_brands 
+    WHERE shop_id = 1682 OR user_id = 10
+);
 
--- SCHRITT 3: Alle Marken löschen, die NICHT von User-ID 10 (Shop 1682) sind
+-- 2. Lösche alle Marken, die nicht vom Superadmin (Shop-ID 1682) stammen
 DELETE FROM user_brands 
-WHERE user_id != 10;
+WHERE NOT (shop_id = 1682 OR user_id = 10);
 
--- SCHRITT 4: Alle Gerätetypen löschen, die NICHT von User-ID 10 (Shop 1682) sind
+-- 3. Lösche alle Gerätetypen, die nicht vom Superadmin (Shop-ID 1682) stammen
 DELETE FROM user_device_types 
-WHERE user_id != 10;
+WHERE NOT (shop_id = 1682 OR user_id = 10);
 
--- SCHRITT 5: Bestätigung - Zeige Ergebnis nach der Bereinigung
-SELECT 'NACHHER - Gerätetypen pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_typen 
-FROM user_device_types 
-GROUP BY user_id 
-ORDER BY user_id;
+-- 4. Lösche alle Modellserien, die nicht mehr zu existierenden Modellen gehören
+DELETE FROM user_model_series 
+WHERE model_id NOT IN (
+    SELECT id FROM user_models
+);
 
-SELECT 'NACHHER - Marken pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_marken 
-FROM user_brands 
-GROUP BY user_id 
-ORDER BY user_id;
+-- 5. Lösche alle versteckten Standard-Gerätetypen, die nicht mehr zu existierenden Gerätetypen gehören
+DELETE FROM hidden_standard_device_types 
+WHERE device_type_id NOT IN (
+    SELECT id FROM user_device_types
+);
 
-SELECT 'NACHHER - Modelle pro Shop:' as info;
-SELECT user_id, COUNT(*) as anzahl_modelle 
-FROM user_models 
-GROUP BY user_id 
-ORDER BY user_id;
+-- 6. Lösche alle Gerätefehler, die nicht mehr zu existierenden Gerätetypen gehören
+DELETE FROM device_issues 
+WHERE device_type_id NOT IN (
+    SELECT id FROM user_device_types
+);
 
--- SCHRITT 6: Bestätigung der globalen Verfügbarkeit
-SELECT 'GLOBALE DATEN - Superadmin (User 10):' as info;
+-- 7. Lösche alle Fehlerkatalogeintragungen, die nicht mehr zu existierenden Gerätefehlern gehören
+DELETE FROM error_catalog_entries 
+WHERE device_issue_id NOT IN (
+    SELECT id FROM device_issues
+);
+
+-- Statusausgabe
 SELECT 
-  (SELECT COUNT(*) FROM user_device_types WHERE user_id = 10) as geraetetypen,
-  (SELECT COUNT(*) FROM user_brands WHERE user_id = 10) as marken,
-  (SELECT COUNT(*) FROM user_models WHERE user_id = 10) as modelle;
+    (SELECT COUNT(*) FROM user_device_types) as remaining_device_types,
+    (SELECT COUNT(*) FROM user_brands) as remaining_brands,
+    (SELECT COUNT(*) FROM user_models) as remaining_models,
+    (SELECT COUNT(*) FROM user_model_series) as remaining_model_series,
+    (SELECT COUNT(*) FROM device_issues) as remaining_device_issues,
+    (SELECT COUNT(*) FROM error_catalog_entries) as remaining_error_catalog_entries;
