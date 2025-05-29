@@ -930,7 +930,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/repairs/:id/status", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const { status, sendEmail } = req.body;
+      const { status, sendEmail, technicianNote } = req.body;
       
       // Validate status
       if (!status || !repairStatuses.safeParse(status).success) {

@@ -195,8 +195,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
   };
 
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status, sendEmail }: { id: number, status: string, sendEmail?: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail });
+    mutationFn: async ({ id, status, sendEmail, technicianNote }: { id: number, status: string, sendEmail?: boolean, technicianNote?: string }) => {
+      const response = await apiRequest('PATCH', `/api/repairs/${id}/status`, { status, sendEmail, technicianNote });
       const data = await response.json();
       
       // Check for email status in response headers
@@ -821,13 +821,14 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
           onClose={() => setShowStatusDialog(false)}
           repairId={selectedRepairId}
           currentStatus={newStatus || 'eingegangen'}
-          onUpdateStatus={(id, status, sendEmail) => {
-            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}`);
+          onUpdateStatus={(id, status, sendEmail, technicianNote) => {
+            console.log(`Status-Update für ID=${id}, newStatus=${status}, sendEmail=${sendEmail}, technicianNote=${technicianNote}`);
             
             if (status === 'abgeholt') {
               updateStatusMutation.mutate({
                 id: id,
-                status: status
+                status: status,
+                technicianNote: technicianNote
               }, {
                 onSuccess: () => {
                   // Wenn das Senden der Bewertungsanfrage ausgewählt wurde, diese nach der Statusänderung senden
@@ -842,7 +843,8 @@ export function RepairsTab({ onNewOrder }: RepairsTabProps) {
               updateStatusMutation.mutate({
                 id: id,
                 status: status,
-                sendEmail: sendEmail
+                sendEmail: sendEmail,
+                technicianNote: technicianNote
               });
             }
             
