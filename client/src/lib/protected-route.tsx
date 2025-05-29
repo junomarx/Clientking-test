@@ -7,23 +7,17 @@ export function ProtectedRoute({ path, children }: { path: string; children: Rea
 
   if (isLoading) {
     return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-border" />
-        </div>
-      </Route>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-border" />
+      </div>
     );
   }
 
   if (!user) {
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
+    return <Redirect to="/auth" />;
   }
 
-  return <Route path={path}>{children}</Route>;
+  return <>{children}</>;
 }
 
 export function AdminProtectedRoute({ path, children }: { path: string; children: React.ReactNode }) {

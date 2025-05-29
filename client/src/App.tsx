@@ -40,15 +40,21 @@ function Router() {
       <Route path="/responsive-devices-demo" component={ResponsiveDevicesDemo} />
       <Route path="/api-test" component={ApiTest} />
       
-      <ProtectedRoute path="/admin">
-        <AdminPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/superadmin">
-        <SuperadminPage />
-      </ProtectedRoute>
-      <ProtectedRoute path="/">
-        <Home />
-      </ProtectedRoute>
+      <Route path="/admin">
+        <ProtectedRoute path="/admin">
+          <AdminPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/superadmin">
+        <ProtectedRoute path="/superadmin">
+          <SuperadminPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/">
+        <ProtectedRoute path="/">
+          <Home />
+        </ProtectedRoute>
+      </Route>
       
       <Route path="*" component={NotFound} />
     </Switch>
