@@ -2562,7 +2562,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`.trim(),
               "website": businessSettings?.website || "",
               "bewertungslink": reviewLink,
-              "logo": businessSettings?.logoImage || ""
+              "logo": businessSettings?.logoImage || "",
+              "logoImage": businessSettings?.logoImage || ""
             }
           }
         );
