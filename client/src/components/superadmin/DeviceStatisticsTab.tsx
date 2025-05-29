@@ -55,7 +55,7 @@ const getDeviceIcon = (deviceType: string) => {
 export default function DeviceStatisticsTab() {
   const { data: deviceStats, isLoading, error } = useQuery<DeviceStatistics>({
     queryKey: ["/api/superadmin/device-statistics"],
-    queryFn: getQueryFn(),
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   if (isLoading) {
