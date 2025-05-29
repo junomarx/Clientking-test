@@ -739,11 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       
       // Kunde mit Benutzerkontext löschen
-      const deleted = await storage.deleteCustomer(id, userId);
-      
-      if (!deleted) {
-        return res.status(404).json({ message: "Customer not found" });
-      }
+      await storage.deleteCustomer(id, userId);
       
       res.status(204).send();
     } catch (error) {
@@ -754,6 +750,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (error.message.includes("aktive Reparaturen")) {
           return res.status(400).json({ message: error.message });
         }
+        // Andere spezifische Fehlermeldungen
+        return res.status(400).json({ message: error.message });
       }
       
       res.status(500).json({ message: "Failed to delete customer" });
