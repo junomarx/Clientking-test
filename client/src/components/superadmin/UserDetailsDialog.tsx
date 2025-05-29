@@ -189,25 +189,29 @@ export function UserDetailsDialog({ open, onClose, userId, onEdit, onToggleActiv
                   
                   {/* Online Status und Last Login */}
                   <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className={`h-3 w-3 rounded-full ${
-                        user.lastLoginAt && new Date(user.lastLoginAt) > new Date(Date.now() - 15 * 60 * 1000)
-                          ? 'bg-green-500' 
-                          : 'bg-red-500'
-                      }`} />
-                      <span className="text-sm font-medium">
-                        {user.lastLoginAt && new Date(user.lastLoginAt) > new Date(Date.now() - 15 * 60 * 1000)
-                          ? 'Online' 
-                          : 'Offline'}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      <strong>Letzter Login:</strong><br />
-                      {user.lastLoginAt 
-                        ? format(new Date(user.lastLoginAt), 'dd.MM.yyyy - HH:mm', { locale: de })
-                        : 'Noch nie eingeloggt'
-                      }
-                    </div>
+                    {(() => {
+                      const now = new Date();
+                      const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+                      const isOnline = user.lastLoginAt && new Date(user.lastLoginAt) > fifteenMinutesAgo;
+                      
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`h-3 w-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <span className="text-sm font-medium">
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>Letzter Login:</strong><br />
+                            {user.lastLoginAt 
+                              ? format(new Date(user.lastLoginAt), 'dd.MM.yyyy - HH:mm', { locale: de })
+                              : 'Noch nie eingeloggt'
+                            }
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
