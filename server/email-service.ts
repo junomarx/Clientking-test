@@ -1198,7 +1198,10 @@ export class EmailService {
             t.type === 'ready_for_pickup'
           );
         } else if (templateType === 'ersatzteil_eingetroffen') {
+          // Für "Ersatzteil eingetroffen" verwende die Vorlage "Gerät zur Reparatur bringen"
           template = templates.find(t => 
+            t.name.toLowerCase().includes('gerät zur reparatur') ||
+            t.name.toLowerCase().includes('reparatur bringen') ||
             t.name.toLowerCase().includes('ersatzteil') ||
             t.type === 'parts_arrived'
           );
