@@ -14,4 +14,17 @@ if (clearCacheOnStartup) {
   console.log('Cache für Gerätearten und Hersteller wurde beim Start gelöscht');
 }
 
+// PWA Service Worker registrieren
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('PWA Service Worker erfolgreich registriert:', registration);
+      })
+      .catch((error) => {
+        console.log('PWA Service Worker Registrierung fehlgeschlagen:', error);
+      });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(<App />);
