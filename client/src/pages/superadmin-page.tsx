@@ -8,7 +8,7 @@ import { User, BusinessSettings } from "@shared/schema";
 
 import SuperadminDashboardTab, { SuperadminContext } from "@/components/superadmin/SuperadminDashboardTab";
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
-import SuperadminPackagesTab from "@/components/superadmin/SuperadminPackagesTab";
+// SuperadminPackagesTab entfernt - Pakete-System wurde deaktiviert
 import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
@@ -132,7 +132,7 @@ export default function SuperadminPage() {
             <SuperadminContext.Provider value={setActiveTab}>
               {activeTab === "dashboard" && <SuperadminDashboardTab />}
               {activeTab === "users" && <SuperadminUsersTab initialSelectedUserId={selectedUserId} />}
-              {activeTab === "packages" && <SuperadminPackagesTab />}
+              {/* Pakete-Tab entfernt */}
               {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
               {activeTab === "email" && <SuperadminEmailTab />}
               {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}

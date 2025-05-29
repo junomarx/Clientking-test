@@ -7,7 +7,7 @@ import {
   Menu,
   GaugeCircle,
   Users,
-  Package,
+  // Package icon entfernt
   Laptop,
   LogOut,
   ChevronLeft,
@@ -76,17 +76,7 @@ export function SuperadminSidebar({
           <Users className="h-5 w-5 mr-2" />
           Benutzer
         </Button>
-        <Button 
-          variant={activeTab === "packages" ? "default" : "ghost"}
-          className="w-full justify-start"
-          onClick={() => {
-            setActiveTab("packages");
-            if (isMobile) closeMenu();
-          }}
-        >
-          <Package className="h-5 w-5 mr-2" />
-          Pakete
-        </Button>
+        {/* Pakete-Navigation entfernt - alle Benutzer haben jetzt Vollzugriff */}
         <Button 
           variant={activeTab === "devices" ? "default" : "ghost"}
           className="w-full justify-start"
