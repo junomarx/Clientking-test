@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
+import logoNewPath from "@assets/logo_new_2.png";
 
 import { 
   Dialog, 
@@ -232,15 +233,16 @@ export default function AuthPage() {
               </div>
             </div>
             
-            {/* Company name at top */}
-            <div className="absolute top-8 left-8 flex items-center z-10">
-              <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center mr-2">
-                <div className="w-3 h-3 rounded-full bg-white"></div>
-              </div>
-              <span className="text-sm font-semibold tracking-wider">HANDYSHOP VERWALTUNG</span>
-            </div>
-            
             <div className="z-10 text-center">
+              {/* ClientKing Logo */}
+              <div className="mb-8">
+                <img 
+                  src={logoNewPath} 
+                  alt="ClientKing Handyshop Verwaltung" 
+                  className="w-64 h-auto mx-auto"
+                />
+              </div>
+              
               <p className="text-lg font-light mb-2">Schön, Sie wiederzusehen</p>
               <h1 className="text-5xl font-bold tracking-wide mb-8">WILLKOMMEN<br />ZURÜCK</h1>
               
