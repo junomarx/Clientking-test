@@ -273,6 +273,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <div>{getStatusBadge(repair.status)}</div>
                 </div>
               </div>
+
+              {repair.technicianNote && (
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Techniker-Information</div>
+                    <div className="whitespace-pre-wrap bg-blue-50 p-2 rounded text-sm">{repair.technicianNote}</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
