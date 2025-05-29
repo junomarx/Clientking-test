@@ -106,7 +106,7 @@ export function PrintButtons({
       });
       
       // Generiere das HTML für die PDF-Erstellung (gleiche Methode wie beim Download)
-      const printContent = generatePrintHtml({
+      const fullHtmlContent = generatePrintHtml({
         estimate,
         customer,
         items,
@@ -118,20 +118,31 @@ export function PrintButtons({
         logoUrl
       });
       
-      // Erstelle PDF-Daten für E-Mail-Anhang
+      // Extrahiere CSS-Styles und Body-Inhalt separat
+      const styleMatch = fullHtmlContent.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+      const styles = styleMatch ? styleMatch[1] : '';
+      const bodyMatch = fullHtmlContent.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      const bodyContent = bodyMatch ? bodyMatch[1] : fullHtmlContent;
+      
+      // Erstelle PDF-Daten für E-Mail-Anhang mit korrekten Styles
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = printContent;
+      tempDiv.innerHTML = bodyContent;
       tempDiv.id = 'temp-email-content';
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
       tempDiv.style.width = '794px';
       tempDiv.style.backgroundColor = '#ffffff';
-      tempDiv.style.padding = '30px';
       tempDiv.style.fontFamily = 'Arial, sans-serif';
       tempDiv.style.fontSize = '14px';
-      tempDiv.style.lineHeight = '1.3';
-      tempDiv.style.minHeight = '1000px';
+      tempDiv.style.color = '#333';
+      
+      // Füge die extrahierten CSS-Styles hinzu
+      if (styles) {
+        const styleElement = document.createElement('style');
+        styleElement.textContent = styles;
+        document.head.appendChild(styleElement);
+      }
       
       document.body.appendChild(tempDiv);
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -187,10 +198,21 @@ export function PrintButtons({
       // PDF als Base64 für E-Mail-Anhang
       const pdfBase64 = pdf.output('datauristring').split(',')[1];
       
+      // Cleanup der temporären Elemente
+      document.body.removeChild(tempDiv);
+      if (styles) {
+        // Entferne das temporäre Style-Element
+        const addedStyles = document.head.querySelectorAll('style');
+        addedStyles.forEach(style => {
+          if (style.textContent === styles) {
+            document.head.removeChild(style);
+          }
+        });
+      }
+      
       // Sende den Kostenvoranschlag per E-Mail mit PDF-Anhang
       const response = await apiRequest('POST', `/api/cost-estimates/${estimate.id}/send-email`, {
         email: emailAddress,
-        content: printContent,
         subject: `Kostenvoranschlag ${estimate.reference_number}`,
         pdfAttachment: pdfBase64,
         pdfFilename: `Kostenvoranschlag_${estimate.reference_number}.pdf`
@@ -206,6 +228,12 @@ export function PrintButtons({
         throw new Error(errorData.message || 'Fehler beim Senden der E-Mail');
       }
     } catch (error) {
+      // Cleanup im Fehlerfall
+      const tempElement = document.getElementById('temp-email-content');
+      if (tempElement) {
+        document.body.removeChild(tempElement);
+      }
+      
       toast({
         title: "Fehler beim Senden",
         description: error instanceof Error ? error.message : 'Unerwarteter Fehler beim Senden der E-Mail',
