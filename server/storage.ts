@@ -2016,23 +2016,40 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`deleteRepair: Benutzer mit ID ${userId} löscht Reparatur ${id}`);
       
-      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
-      const existingRepair = await this.getRepair(id, userId);
-      if (!existingRepair) {
-        console.warn(`deleteRepair: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
-        return false;
-      }
-      
-      // Benutzer holen, um Shop-ID zu verifizieren
+      // Benutzer holen, um Berechtigung zu prüfen
       const user = await this.getUser(userId);
       if (!user) {
         console.warn(`deleteRepair: Benutzer mit ID ${userId} nicht gefunden.`);
         return false;
       }
       
-      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, false zurückgeben
+      // Superadmin-Prüfung: Superadmin kann alle Reparaturen löschen
+      if (user.isSuperadmin) {
+        console.log(`deleteRepair: Superadmin ${user.username} (ID: ${userId}) löscht Reparatur ${id}`);
+        
+        const result = await db
+          .delete(repairs)
+          .where(eq(repairs.id, id));
+        
+        if (result.rowCount === 0) {
+          console.warn(`deleteRepair: Reparatur mit ID ${id} nicht gefunden`);
+          return false;
+        }
+        
+        console.log(`deleteRepair: Reparatur ${id} erfolgreich durch Superadmin gelöscht`);
+        return true;
+      }
+      
+      // Normale Benutzer: Strikte Shop-Isolation
       if (!user.shopId) {
         console.warn(`❌ deleteRepair: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return false;
+      }
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const existingRepair = await this.getRepair(id, userId);
+      if (!existingRepair) {
+        console.warn(`deleteRepair: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
         return false;
       }
       
