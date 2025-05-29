@@ -2536,21 +2536,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Keine Bewertungs-E-Mail-Vorlage gefunden" });
       }
       
-      // E-Mail senden
-      // Verwende storage.sendEmailWithTemplate statt emailService.sendEmailWithTemplate
-      // um E-Mail-Verlaufseinträge zu erstellen
+      // E-Mail senden - verwende die gleiche Methode wie bei Statusänderungen
       try {
-        const emailSent = await storage.sendEmailWithTemplateById(
-          reviewTemplate.id, 
-          customer.email, 
-          variables,
-          [], // attachments
-          false, // isSystemEmail
-          user.id // userId - das war das fehlende Element!
+        const { emailService } = await import('./email-service.js');
+        
+        // E-Mail über den EmailService senden (gleiche Methode wie bei Statusänderungen)
+        const emailResult = await emailService.sendRepairStatusEmail(
+          user.id,
+          repair.id,
+          'bewertung', // templateType
+          {
+            repairId: repair.id,
+            status: 'bewertung_angefordert',
+            customer: customer,
+            repair: repair,
+            businessSettings: businessSettings
+          }
         );
         
-        if (!emailSent) {
-          return res.status(500).json({ message: "E-Mail konnte nicht gesendet werden" });
+        if (!emailResult || !emailResult.success) {
+          const errorMessage = emailResult?.error || 'E-Mail-Versand fehlgeschlagen';
+          return res.status(500).json({ message: `E-Mail konnte nicht gesendet werden: ${errorMessage}` });
         }
       } catch (error) {
         console.error("Fehler beim Senden der Bewertungs-E-Mail:", error);
