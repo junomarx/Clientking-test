@@ -1108,17 +1108,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API-Endpunkt, um zu prüfen, ob der User ein Professional oder Enterprise Paket hat
   // Kostenvoranschlag-Berechtigungsprüfung entfernt
   
-  // API-Endpunkt, um zu prüfen, ob der User Etiketten drucken darf (nur Professional/Enterprise)
+  // API-Endpunkt für Etikettendruck-Berechtigung
+  // Alle authentifizierten Benutzer können Etiketten drucken
   app.get("/api/can-print-labels", isAuthenticated, async (req: Request, res: Response) => {
     try {
-      // Benutzer-ID aus der Authentifizierung abrufen
-      const userId = (req.user as any).id;
-      
-      // Prüfen, ob der Benutzer mindestens ein Professional-Paket hat
-      const isProfessional = await isProfessionalOrHigher(userId);
-      
-      // Ergebnis zurückgeben
-      res.json({ canPrintLabels: isProfessional });
+      // Alle authentifizierten Benutzer haben Druckberechtigung
+      res.json({ canPrintLabels: true });
     } catch (error) {
       console.error("Error checking label printing permission:", error);
       res.status(500).json({ message: "Fehler bei der Überprüfung der Druckberechtigungen" });
@@ -1162,7 +1157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Abrufen des monatlichen Reparaturkontingents (für Basic-Paket)
+  // Abrufen des Reparaturkontingents - alle Benutzer haben unbegrenzten Zugriff
   app.get("/api/repair-quota", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -1173,12 +1168,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      console.log(`QUOTA-API: Benutzer ${user.username} (ID: ${userId}, Paket: ${user.package_id}, Plan: ${user.pricing_plan})`);
+      console.log(`QUOTA-API: Benutzer ${user.username} (ID: ${userId}) - Vollzugriff gewährt`);
       
-      // Standardwerte für den Fall, dass kein Limit existiert (für Professional und Enterprise)
+      // Alle Benutzer haben unbegrenzten Zugriff
       let quotaInfo = {
         count: 0,
-        limit: 10, // Geändert von 50 auf 10 als Standardwert
+        limit: 999999, // Praktisch unbegrenzt
         canCreate: true
       };
       
@@ -1220,53 +1215,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
         
-        // Prüfe auf Paket-Features für maxRepairs
-        if (user.packageId) {
-          console.log(`Prüfe auf max. Reparaturen für Benutzer ${userId} mit Paket ${user.packageId}`);
+        // Alle Benutzer haben unbegrenzten Zugriff
+        console.log(`Benutzer ${userId} hat unbegrenzten Zugriff auf Reparaturen`);
           
-          try {
-            // Direkte Abfrage des maxRepairs-Features für das Paket des Benutzers
-            const features = await db.select({
-              feature: packageFeatures.feature,
-              value: packageFeatures.value
-            })
-            .from(packageFeatures)
-            .where(eq(packageFeatures.packageId, user.packageId));
-            
-            console.log("Paket-Features für Benutzer:", features);
-            
-            // Direkte Suche nach dem maxRepairs-Feature
-            const maxRepairsFeature = features.find(feature => feature.feature === 'maxRepairs');
-            
-            if (maxRepairsFeature && maxRepairsFeature.value) {
-              console.log(`Max. Reparaturen Feature direkt gefunden: ${maxRepairsFeature.value}`);
-              quotaInfo.limit = parseInt(maxRepairsFeature.value) || 10; // Fallback auf 10, wenn keine gültige Zahl
-            } else {
-              // Wenn kein spezifisches maxRepairs gefunden wurde, bestimme anhand des Pakettyps
-              const userPackage = await storage.getPackageById(user.packageId);
-              
-              if (userPackage) {
-                console.log(`Bestimme Limit basierend auf Pakettyp: ${userPackage.name}`);
-                
-                if (userPackage.name === 'Professional' || userPackage.name === 'Enterprise') {
-                  quotaInfo.limit = 999999; // Unbegrenzt für höhere Pakete
-                } else if (userPackage.name === 'Demo') {
-                  console.log("DEMO-PAKET ERKANNT: Setze Limit auf 10 Reparaturen");
-                  quotaInfo.limit = 10; // Demo hat 10 Reparaturen
-                } else if (userPackage.name === 'Basic') {
-                  quotaInfo.limit = 50; // Basic hat 50 Reparaturen
-                }
-              }
-            }
-          } catch (error) {
-            console.error("Fehler beim Abrufen der Paket-Features:", error);
-          }
-        } else if (user.pricingPlan) {
-          // Fallback auf die alte pricingPlan-Eigenschaft
-          if (user.pricingPlan === 'professional' || user.pricingPlan === 'enterprise') {
-            quotaInfo.limit = 999999; // Praktisch unbegrenzt
-          }
-        }
+        // Alle Benutzer haben unbegrenzten Zugriff
+        quotaInfo.limit = 999999;
         
         // Prüfen, ob neue Reparaturen erstellt werden können
         quotaInfo.canCreate = quotaInfo.count < quotaInfo.limit;
@@ -1277,48 +1230,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentMonth = today.toLocaleString('de-DE', { month: 'long' });
       const currentYear = today.getFullYear();
       
-      // Antwort mit Berücksichtigung des neuen Paketsystems
-      // Wenn der Benutzer eine packageId hat, verwenden wir diese für die Bestimmung des Plans
-      let pricingPlan = user.pricingPlan || 'basic'; // Fallback auf die alte Eigenschaft
+      // Alle Benutzer haben "Basic" Zugriff mit unbegrenzten Funktionen
+      let pricingPlan = 'basic';
       let displayName = 'Basic';
-      
-      if (user.packageId) {
-        try {
-          // Paket aus der Datenbank abrufen
-          const userPackage = await storage.getPackageById(user.packageId);
-          if (userPackage) {
-            // Paketname für die Anzeige und Entscheidungslogik verwenden
-            displayName = userPackage.name;
-            
-            // pricingPlan für Legacy-Kompatibilität setzen
-            if (userPackage.name === 'Basic') pricingPlan = 'basic';
-            else if (userPackage.name === 'Professional') pricingPlan = 'professional';
-            else if (userPackage.name === 'Enterprise') pricingPlan = 'enterprise';
-            else if (userPackage.name === 'Demo') pricingPlan = 'basic'; // Demo als Basic behandeln
-          }
-        } catch (error) {
-          console.error("Fehler beim Abrufen des Pakets:", error);
-        }
-      } else {
-        // Wenn keine packageId, dann verwenden wir die alte pricingPlan-Eigenschaft
-        displayName = pricingPlan === 'basic' ? 'Basic' : 
-                      pricingPlan === 'professional' ? 'Professional' : 'Enterprise';
-      }
-      
-      // Ablaufdatum für das Demo-Paket hinzufügen
       let trialExpiryInfo = null;
-      if (displayName === 'Demo' && user.trialExpiresAt) {
-        const expiryDate = new Date(user.trialExpiresAt);
-        const today = new Date();
-        
-        // Berechnung der verbleibenden Tage
-        const remainingDays = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        trialExpiryInfo = {
-          expiresAt: user.trialExpiresAt,
-          remainingDays: remainingDays > 0 ? remainingDays : 0
-        };
-      }
       
       res.json({
         ...quotaInfo,
