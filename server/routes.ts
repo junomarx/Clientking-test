@@ -959,8 +959,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "abholzeit": "ab sofort", // kann später angepasst werden
           // Fehlende Variablen hinzufügen
           "reparaturarbeit": repair.description || repair.issue || "Reparatur des Geräts",
-          "oeffnungszeiten": businessSettings?.opening_hours || "Montag bis Freitag, 9:00 - 18:00 Uhr",
-          "opening_hours": businessSettings?.opening_hours || "Mo - Fr: 10:00 - 18:00 Uhr",
+          "oeffnungszeiten": businessSettings?.opening_hours || "",
+          "opening_hours": businessSettings?.opening_hours || "",
           // Wichtig: userId und repairId für die Datenisolierung und E-Mail-Verlauf hinzufügen
           "userId": userId.toString(),
           "repairId": repair.id.toString()
