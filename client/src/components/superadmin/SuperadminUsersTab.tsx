@@ -86,14 +86,7 @@ interface UserFormData extends Partial<User> {
   country?: string;
 }
 
-// Paket-Typ
-interface Package {
-  id: number;
-  name: string;
-  description: string | null;
-  priceMonthly: number;
-  createdAt: string;
-}
+
 
 interface SuperadminUsersTabProps {
   initialSelectedUserId?: number | null;
@@ -174,10 +167,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     return [...filtered].sort((a, b) => a.username.localeCompare(b.username));
   }, [users, searchQuery]);
 
-  // Pakete abrufen
-  const { data: packages, isLoading: isLoadingPackages } = useQuery<Package[]>({ 
-    queryKey: ["/api/superadmin/packages"],
-  });
+
 
   // Mutation zum Aktivieren/Deaktivieren eines Benutzers
   const toggleActivationMutation = useMutation({
@@ -296,30 +286,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     },
   });
 
-  // Mutation zum Aktualisieren des Pakets eines Benutzers
-  const updatePackageMutation = useMutation({
-    mutationFn: async ({ userId, packageId }: { userId: number; packageId: number | null }) => {
-      const response = await apiRequest("PATCH", `/api/superadmin/users/${userId}`, {
-        packageId: packageId
-      });
-      return await response.json();
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/superadmin/users"] });
-      const packageName = packages?.find(p => p.id === variables.packageId)?.name || "Kein Paket";
-      toast({
-        title: "Paket aktualisiert",
-        description: `Das Paket wurde erfolgreich auf "${packageName}" geändert.`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: `Paket konnte nicht aktualisiert werden: ${error.message}`,
-      });
-    },
-  });
+
 
   // Mutation zum Aktualisieren aller Benutzerberechtigungen
   const refreshPermissionsMutation = useMutation({
@@ -697,16 +664,23 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                       </Badge>
                     )}
                     
-                    {user.packageId ? (
-                      <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                        <Package className="h-3 w-3 mr-1" />
-                        {packages?.find(p => p.id === user.packageId)?.name || `Paket ${user.packageId}`}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-gray-100 text-gray-700">
-                        Kein Paket
-                      </Badge>
-                    )}
+                    <Badge 
+                      variant="outline" 
+                      className={`${
+                        isUserOnline(user.lastLoginAt) 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      <Circle 
+                        className={`h-3 w-3 mr-1 ${
+                          isUserOnline(user.lastLoginAt) 
+                            ? 'fill-green-500 text-green-500' 
+                            : 'fill-red-500 text-red-500'
+                        }`} 
+                      />
+                      {isUserOnline(user.lastLoginAt) ? 'Online' : 'Offline'}
+                    </Badge>
                   </div>
                   
                   <div className="pt-2">
