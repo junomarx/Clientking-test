@@ -86,7 +86,7 @@ export default function DeviceStatisticsTab() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">
-            {deviceStats.totalDevices.toLocaleString()}
+            {deviceStats?.totalDevices?.toLocaleString() || '0'}
           </div>
           <p className="text-sm text-muted-foreground">Geräte insgesamt</p>
         </CardContent>
