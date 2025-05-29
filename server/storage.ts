@@ -68,7 +68,7 @@ import { pool } from "./db";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { emailService } from "./email-service";
-import { userEmailService } from "./user-specific-email-service.js";
+// import { userEmailService } from "./user-specific-email-service.js";
 
 const PostgresSessionStore = connectPg(session);
 
