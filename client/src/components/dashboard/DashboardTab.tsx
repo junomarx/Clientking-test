@@ -283,57 +283,26 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         </motion.div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            className="rounded-lg overflow-hidden shadow-sm border"
-          >
-            <div className="border-b px-4 py-3 bg-white">
-              <h2 className="font-semibold">Aktuelle Reparaturen</h2>
-              <p className="text-sm text-muted-foreground">Die neuesten Reparaturaufträge</p>
-            </div>
-            <div className="bg-white">
-              <AnimatedRecentOrders 
-                repairs={recentRepairs}
-                isLoading={repairsLoading || customersLoading}
-                onPrintClick={showPrintOptions}
-                onStatusChange={openStatusDialog}
-                onEdit={handleEdit}
-              />
-            </div>
-          </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
+        className="rounded-lg overflow-hidden shadow-sm border"
+      >
+        <div className="border-b px-4 py-3 bg-white">
+          <h2 className="font-semibold">Aktuelle Reparaturen</h2>
+          <p className="text-sm text-muted-foreground">Die neuesten Reparaturaufträge</p>
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-          className="rounded-lg overflow-hidden shadow-sm border bg-white"
-        >
-          <div>
-            <div className="border-b px-4 py-3">
-              <h2 className="font-semibold">Reparaturstatistik</h2>
-              <p className="text-sm text-muted-foreground">Übersicht nach Status</p>
-            </div>
-            <div className="p-4">
-              {statsLoading ? (
-                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                  Lade Statistiken...
-                </div>
-              ) : (
-                <RepairStatusChart stats={{
-                  inRepair: stats?.inRepair || 0,
-                  readyForPickup: stats?.readyForPickup || 0,
-                  outsourced: stats?.outsourced || 0,
-                  completed: stats?.completed || 0
-                }} />
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
+        <div className="bg-white">
+          <AnimatedRecentOrders 
+            repairs={recentRepairs}
+            isLoading={repairsLoading || customersLoading}
+            onPrintClick={showPrintOptions}
+            onStatusChange={openStatusDialog}
+            onEdit={handleEdit}
+          />
+        </div>
+      </motion.div>
 
       {/* Status-Änderungsdialog */}
       <ChangeStatusDialog
