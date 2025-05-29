@@ -311,9 +311,11 @@ export function registerSuperadminRoutes(app: Express) {
         totalUsers: count().as("total_users"), 
       }).from(users);
       
-      const [activeUserCount] = await db.select({
+      // Online-Benutzer: Benutzer, die in den letzten 15 Minuten aktiv waren
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const [onlineUserCount] = await db.select({
         activeUsers: count().as("active_users"),
-      }).from(users).where(eq(users.isActive, true));
+      }).from(users).where(sql`${users.lastLoginAt} > ${fifteenMinutesAgo.toISOString()} AND (${users.lastLogoutAt} IS NULL OR ${users.lastLogoutAt} < ${users.lastLoginAt})`);
       
       const [inactiveUserCount] = await db.select({
         inactiveUsers: count().as("inactive_users"),
@@ -321,7 +323,7 @@ export function registerSuperadminRoutes(app: Express) {
       
       const userStats = {
         totalUsers: totalUserCount.totalUsers,
-        activeUsers: activeUserCount.activeUsers,
+        activeUsers: onlineUserCount.activeUsers,
         inactiveUsers: inactiveUserCount.inactiveUsers
       };
 
