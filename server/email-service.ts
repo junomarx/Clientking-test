@@ -1238,6 +1238,17 @@ export class EmailService {
       
       // Template-Variablen für die E-Mail-Vorlage
       const templateVars = {
+        // Deutsche Variablennamen (neu)
+        kundenname: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+        hersteller: repair.brand || '',
+        geraet: repair.model || '',
+        geschaeftsname: variables.businessSettings?.businessName || 'Handyshop',
+        telefon: variables.businessSettings?.phone || '',
+        email: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
+        adresse: variables.businessSettings?.streetAddress || '',
+        oeffnungszeiten: variables.businessSettings?.opening_hours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen',
+        
+        // Englische Variablennamen (für Kompatibilität)
         customerFirstName: customer.firstName || '',
         customerLastName: customer.lastName || '',
         customerFullName: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
