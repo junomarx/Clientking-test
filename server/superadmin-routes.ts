@@ -6,7 +6,7 @@ import { Express, Request, Response } from "express";
 import { isSuperadmin } from "./superadmin-middleware";
 import { db } from "./db";
 import { storage } from "./storage";
-import { count, eq, and, or, sql } from "drizzle-orm";
+import { count, eq, and, or, sql, desc } from "drizzle-orm";
 import { 
   users, packages, packageFeatures, shops, 
   customers, repairs, userDeviceTypes, userBrands, userModels, userModelSeries,
@@ -988,90 +988,62 @@ export function registerSuperadminRoutes(app: Express) {
 
 
 
-  // Endpunkt für Gerätestatistiken
+  // Endpunkt für Gerätestatistiken basierend auf Reparaturdaten
   app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
     try {
       console.log("Superadmin-Bereich: Abrufen von Gerätestatistiken");
 
-      // 1. Alle Gerätetypen abrufen
-      const deviceTypesResult = await db.select({
-        id: userDeviceTypes.id,
-        name: userDeviceTypes.name
+      // Geräte pro Gerätetyp (basierend auf Reparaturdaten)
+      const deviceTypeStats = await db.select({
+        deviceType: repairs.deviceType,
+        count: count(repairs.id)
       })
-      .from(userDeviceTypes)
-      .where(
-        or(
-          eq(userDeviceTypes.userId, req.user?.id || 0),
-          eq(userDeviceTypes.userId, 0),
-          sql`${userDeviceTypes.shopId} IS NULL`
-        )
-      );
-      
-      // Entferne Duplikate (basierend auf dem Namen)
-      const deviceTypesMap = new Map();
-      deviceTypesResult.forEach(type => {
-        deviceTypesMap.set(type.name.toLowerCase(), type);
-      });
-      const deviceTypes = Array.from(deviceTypesMap.values());
+      .from(repairs)
+      .groupBy(repairs.deviceType)
+      .orderBy(desc(count(repairs.id)));
 
-      // 2. Alle Marken abrufen
-      const brands = await db.select({
-        id: userBrands.id,
-        name: userBrands.name,
-        deviceTypeId: userBrands.deviceTypeId
+      // Geräte pro Hersteller (alle Gerätetypen zusammen)
+      const brandStats = await db.select({
+        brand: repairs.brand,
+        count: count(repairs.id)
       })
-      .from(userBrands);
+      .from(repairs)
+      .groupBy(repairs.brand)
+      .orderBy(desc(count(repairs.id)));
 
-      // 3. Alle Modelle abrufen
-      const models = await db.select({
-        id: userModels.id,
-        name: userModels.name,
-        brandId: userModels.brandId
+      // Detaillierte Aufschlüsselung: Geräte pro Gerätetyp + Hersteller
+      const combinedStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        count: count(repairs.id)
       })
-      .from(userModels);
+      .from(repairs)
+      .groupBy(repairs.deviceType, repairs.brand)
+      .orderBy(desc(count(repairs.id)));
 
-      // Statistiken zusammenstellen
+      // Gesamtanzahl der Geräte
+      const totalDevicesResult = await db.select({
+        total: count(repairs.id)
+      })
+      .from(repairs);
+
+      const totalDevices = totalDevicesResult[0]?.total || 0;
+
       const statistics = {
-        totalDeviceTypes: deviceTypes.length,
-        totalBrands: brands.length,
-        totalModels: models.length,
-        deviceTypeStats: [] as Array<{
-          name: string;
-          brandCount: number;
-          modelCount: number;
-          brands: Array<{
-            name: string;
-            modelCount: number;
-          }>;
-        }>
+        totalDeviceTypes: deviceTypeStats.length,
+        totalBrands: brandStats.length,
+        totalDevices: totalDevices,
+        deviceTypeStats: deviceTypeStats,
+        brandStats: brandStats,
+        combinedStats: combinedStats
       };
 
-      // Statistiken für jeden Gerätetyp erstellen
-      for (const deviceType of deviceTypes) {
-        const deviceTypeBrands = brands.filter(brand => 
-          brand.deviceTypeId === deviceType.id
-        );
-        
-        const deviceTypeBrandIds = deviceTypeBrands.map(brand => brand.id);
-        const deviceTypeModels = models.filter(model => 
-          deviceTypeBrandIds.includes(model.brandId)
-        );
-
-        const brandStats = deviceTypeBrands.map(brand => {
-          const brandModels = models.filter(model => model.brandId === brand.id);
-          return {
-            name: brand.name,
-            modelCount: brandModels.length
-          };
-        });
-
-        statistics.deviceTypeStats.push({
-          name: deviceType.name,
-          brandCount: deviceTypeBrands.length,
-          modelCount: deviceTypeModels.length,
-          brands: brandStats
-        });
-      }
+      console.log("Gerätestatistiken erfolgreich abgerufen:", {
+        totalDevices,
+        deviceTypes: deviceTypeStats.length,
+        brands: brandStats.length,
+        combinations: combinedStats.length
+      });
 
       res.json(statistics);
     } catch (error) {
