@@ -9,6 +9,7 @@ import {
   Users,
   // Package icon entfernt
   Laptop,
+  BarChart3,
   LogOut,
   ChevronLeft,
   Mail,
@@ -87,6 +88,17 @@ export function SuperadminSidebar({
         >
           <Laptop className="h-5 w-5 mr-2" />
           Geräte
+        </Button>
+        <Button 
+          variant={activeTab === "device-statistics" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("device-statistics");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <BarChart3 className="h-5 w-5 mr-2" />
+          Gerätestatistiken
         </Button>
       </div>
       

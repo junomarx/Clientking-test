@@ -2510,6 +2510,71 @@ export function registerSuperadminRoutes(app: Express) {
       });
     }
   });
+
+  // Reparatur-basierte Gerätestatistiken für den Superadmin-Bereich
+  app.get("/api/superadmin/device-statistics", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      console.log("Superadmin ruft reparatur-basierte Gerätestatistiken ab");
+
+      // Geräte pro Gerätetyp (basierend auf Reparaturdaten)
+      const deviceTypeStats = await db.select({
+        deviceType: repairs.deviceType,
+        count: count(repairs.id)
+      })
+      .from(repairs)
+      .groupBy(repairs.deviceType)
+      .orderBy(count(repairs.id));
+
+      // Geräte pro Hersteller (alle Gerätetypen zusammen)
+      const brandStats = await db.select({
+        brand: repairs.brand,
+        count: count(repairs.id)
+      })
+      .from(repairs)
+      .groupBy(repairs.brand)
+      .orderBy(count(repairs.id));
+
+      // Detaillierte Aufschlüsselung: Geräte pro Gerätetyp + Hersteller
+      const detailedStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        count: count(repairs.id)
+      })
+      .from(repairs)
+      .groupBy(repairs.deviceType, repairs.brand)
+      .orderBy(repairs.deviceType, count(repairs.id));
+
+      // Gesamtanzahl aller Geräte (aus Reparaturdaten)
+      const totalDevicesResult = await db.select({
+        total: count(repairs.id)
+      }).from(repairs);
+
+      const totalDevices = totalDevicesResult[0]?.total || 0;
+
+      const response = {
+        deviceTypeStats: deviceTypeStats.map(item => ({
+          deviceType: item.deviceType,
+          count: Number(item.count)
+        })),
+        brandStats: brandStats.map(item => ({
+          brand: item.brand,
+          count: Number(item.count)
+        })),
+        detailedStats: detailedStats.map(item => ({
+          deviceType: item.deviceType,
+          brand: item.brand,
+          count: Number(item.count)
+        })),
+        totalDevices: Number(totalDevices)
+      };
+
+      console.log(`Reparatur-basierte Gerätestatistiken abgerufen: ${totalDevices} Geräte insgesamt`);
+      res.json(response);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der reparatur-basierten Gerätestatistiken:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen der Gerätestatistiken" });
+    }
+  });
   
   // Kompletten Export aller Gerätedaten (Gerätearten, Hersteller, Modelle, Fehlerkatalog)
   app.get("/api/superadmin/device-management/export", isSuperadmin, async (req: Request, res: Response) => {

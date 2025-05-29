@@ -10,6 +10,7 @@ import SuperadminDashboardTab, { SuperadminContext } from "@/components/superadm
 import SuperadminUsersTab from "@/components/superadmin/SuperadminUsersTab";
 // SuperadminPackagesTab entfernt - Pakete-System wurde deaktiviert
 import ResponsiveSuperadminDevicesTab from "@/components/superadmin/ResponsiveSuperadminDevicesTab";
+import DeviceStatisticsTab from "@/components/superadmin/DeviceStatisticsTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportModeTab";
@@ -30,7 +31,7 @@ export default function SuperadminPage() {
     const userIdParam = params.get('userId');
     
     // Tab setzen, wenn in URL vorhanden
-    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'email', 'print-templates', 'support-mode'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -98,6 +99,7 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzer"}
               {activeTab === "packages" && "Pakete"}
               {activeTab === "devices" && "Geräte"}
+              {activeTab === "device-statistics" && "Statistiken"}
               {activeTab === "email" && "E-Mail"}
               {activeTab === "print-templates" && "Vorlagen"}
 
@@ -111,6 +113,7 @@ export default function SuperadminPage() {
               {activeTab === "users" && "Benutzerverwaltung"}
               {activeTab === "packages" && "Paketverwaltung"}
               {activeTab === "devices" && "Geräteverwaltung"}
+              {activeTab === "device-statistics" && "Gerätestatistiken"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
 
@@ -134,6 +137,7 @@ export default function SuperadminPage() {
               {activeTab === "users" && <SuperadminUsersTab initialSelectedUserId={selectedUserId} />}
               {/* Pakete-Tab entfernt */}
               {activeTab === "devices" && <ResponsiveSuperadminDevicesTab />}
+              {activeTab === "device-statistics" && <DeviceStatisticsTab />}
               {activeTab === "email" && <SuperadminEmailTab />}
               {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
               {activeTab === "support-mode" && <SuperadminSupportModeTab />}
