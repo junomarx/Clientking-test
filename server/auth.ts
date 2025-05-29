@@ -274,8 +274,16 @@ export function setupAuth(app: Express) {
         });
       }
       
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) return next(err);
+        
+        // Update last login timestamp
+        try {
+          await storage.updateUserLastLogin(user.id);
+        } catch (error) {
+          console.error("Failed to update last login timestamp:", error);
+        }
+        
         // Generate a simple token (in production we would use JWT)
         const token = Buffer.from(`${user.id}:${user.username}:${Date.now()}`).toString('base64');
         
@@ -344,13 +352,6 @@ export function setupAuth(app: Express) {
   app.get("/api/user", checkTokenAuth, async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Nicht angemeldet" });
-    }
-    
-    // Update last activity timestamp for active users
-    try {
-      await storage.updateUserLastLogin(req.user.id);
-    } catch (error) {
-      console.error("Failed to update user activity:", error);
     }
     
     // Return the user without the password
