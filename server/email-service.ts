@@ -1247,6 +1247,8 @@ export class EmailService {
         email: variables.businessSettings?.smtpUser || variables.businessSettings?.email || '',
         adresse: variables.businessSettings?.streetAddress || '',
         oeffnungszeiten: variables.businessSettings?.opening_hours || 'Mo - Fr: 10:00 - 18:00 Uhr<br>Sa geschlossen',
+        auftragsnummer: repair.orderCode || repair.id?.toString() || '',
+        fehler: repair.issue || '',
         
         // Englische Variablennamen (für Kompatibilität)
         customerFirstName: customer.firstName || '',
