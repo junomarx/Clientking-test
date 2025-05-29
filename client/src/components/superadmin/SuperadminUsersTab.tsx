@@ -96,24 +96,31 @@ interface SuperadminUsersTabProps {
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
 
-  // Verbesserte Online-Status-Erkennung mit Login/Logout-Zeitstempeln
+  // Verbesserte Online-Status-Erkennung: Betrachtet den letzten Zeitstempel (Login oder Logout)
   const isUserOnline = (lastLoginAt: string | null, lastLogoutAt: string | null) => {
     if (!lastLoginAt) return false;
     
-    // Wenn es einen Logout gibt und dieser nach dem Login war, ist der Benutzer offline
+    const loginTime = new Date(lastLoginAt);
+    const now = new Date();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    
+    // Wenn es einen Logout gibt, vergleiche die Zeitstempel
     if (lastLogoutAt) {
-      const loginTime = new Date(lastLoginAt);
       const logoutTime = new Date(lastLogoutAt);
+      
+      // Wenn Logout nach Login erfolgte, ist der Benutzer offline
       if (logoutTime > loginTime) {
-        return false; // Benutzer hat sich bewusst abgemeldet
+        return false;
+      }
+      
+      // Wenn Login nach Logout erfolgte, prüfe ob Login innerhalb der letzten 15 Minuten war
+      if (loginTime > logoutTime) {
+        return loginTime > fifteenMinutesAgo;
       }
     }
     
-    // Andernfalls prüfen wir, ob der Login innerhalb der letzten 15 Minuten war
-    const lastLogin = new Date(lastLoginAt);
-    const now = new Date();
-    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
-    return lastLogin > fifteenMinutesAgo;
+    // Kein Logout vorhanden, prüfe nur Login-Zeit
+    return loginTime > fifteenMinutesAgo;
   };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
