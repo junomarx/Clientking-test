@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bewerten Sie unsere Reparaturleistung</title>
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; line-height: 1.5; margin: 0; padding: 0; background-color: #f7f7f7; color: #333333;">
+    <div style="width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div style="padding: 25px 20px; text-align: center; background-color: #f0f7ff;">
+            <img src="{{logo}}" alt="{{businessName}}" style="max-width: 150px; height: auto;">
+        </div>
+        
+        <div style="padding: 30px;">
+            <h1 style="color: #2c5aa0; font-size: 28px; margin-bottom: 20px; text-align: center; font-family: Arial, Helvetica, sans-serif;">Feedback zu Ihrer Reparatur</h1>
+            
+            <p style="margin-bottom: 15px; font-size: 15px; text-align: left; font-family: Arial, Helvetica, sans-serif;">Sehr geehrte(r) {{customerFullName}},</p>
+            
+            <p style="margin-bottom: 15px; font-size: 15px; text-align: left; font-family: Arial, Helvetica, sans-serif;">wir hoffen, dass Ihr {{brand}} {{model}} nach der Reparatur wieder einwandfrei funktioniert und Sie mit unserem Service zufrieden sind.</p>
+            
+            <p style="margin-bottom: 15px; font-size: 15px; text-align: left; font-family: Arial, Helvetica, sans-serif;">Um unsere Leistungen kontinuierlich zu verbessern, würden wir uns sehr über Ihre Bewertung freuen. Ihre Meinung hilft uns und anderen Kunden.</p>
+            
+            <div style="margin: 25px 0; text-align: center;">
+                <a href="{{bewertungslink}}" style="display: inline-block; padding: 15px 30px; background-color: #2c5aa0; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 16px; border-radius: 4px; font-family: Arial, Helvetica, sans-serif;">Bewertung abgeben</a>
+            </div>
+            
+            <p style="margin-bottom: 15px; font-size: 15px; text-align: left; font-family: Arial, Helvetica, sans-serif;">Sollten Sie Fragen oder Anregungen haben, können Sie uns jederzeit kontaktieren.</p>
+            
+            <div style="height: 1px; background-color: #e0e0e0; margin: 25px 0;"></div>
+            
+            <div style="margin-top: 30px; padding: 15px; background-color: #f9f9f9; border-radius: 4px; font-size: 14px; font-family: Arial, Helvetica, sans-serif;">
+                <p style="font-size: 28px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px; font-family: Arial, Helvetica, sans-serif;">{{businessName}}</p>
+                <p style="margin-bottom: 5px; font-family: Arial, Helvetica, sans-serif;">{{businessAddress}}<br>
+                Telefon: <a href="tel:{{businessPhone}}" style="color: #2c5aa0;">{{businessPhone}}</a><br>
+                E-Mail: <a href="mailto:{{businessEmail}}" style="color: #2c5aa0;">{{businessEmail}}</a></p>
+            </div>
+            
+            <p style="margin-top: 30px; font-style: italic; color: #555; text-align: center; font-family: Arial, Helvetica, sans-serif;">Vielen Dank für Ihr Vertrauen!</p>
+        </div>
+        
+        <div style="padding: 20px; text-align: center; font-size: 12px; color: #999999; background-color: #f5f5f5; font-family: Arial, Helvetica, sans-serif;">
+            <p style="font-family: Arial, Helvetica, sans-serif;">Sie erhalten diese E-Mail, weil Sie unseren Service in Anspruch genommen haben.<br>
+            © {{businessName}} 2025 | <a href="{{datenschutzlink}}" style="color: #2c5aa0;">Datenschutz</a></p>
+        </div>
+    </div>
+</body>
+</html>
