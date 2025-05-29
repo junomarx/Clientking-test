@@ -2180,7 +2180,8 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error(`Error deleting customer ${id}:`, error);
-      return false;
+      // Fehler weiterwerfen anstatt false zurückzugeben
+      throw error;
     }
   }
 
