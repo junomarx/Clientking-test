@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Redirect, Link, useLocation } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
-import { Header } from "@/components/layout/Header";
+
 import { 
   Dialog, 
   DialogContent, 
@@ -194,8 +194,6 @@ export default function AuthPage() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header variant="auth" />
-      
       {/* Erfolgsdialog */}
       <Dialog open={isSuccessDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-md">
