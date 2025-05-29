@@ -423,6 +423,7 @@ export function registerSuperadminRoutes(app: Express) {
         shopId: users.shopId,
         packageId: users.packageId,
         createdAt: users.createdAt,
+        lastLoginAt: users.lastLoginAt,
       }).from(users);
 
       res.json(allUsers);
