@@ -100,11 +100,12 @@ export function generatePrintHtml({
         }
         
         .company-info, .customer-info {
-          margin-bottom: 30px;
+          margin-bottom: 20px;
         }
         
         .company-info p, .customer-info p {
-          margin: 3px 0;
+          margin: 2px 0;
+          font-size: 13px;
         }
         
         .company-name, .customer-name {
@@ -113,24 +114,24 @@ export function generatePrintHtml({
         }
         
         .document-info {
-          margin-bottom: 30px;
+          margin-bottom: 15px;
           border-top: 1px solid #eee;
           border-bottom: 1px solid #eee;
-          padding: 10px 0;
+          padding: 8px 0;
         }
         
         .document-title {
           text-align: center;
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
-          margin: 20px 0 10px 0;
+          margin: 10px 0 8px 0;
           color: #2a53a9;
         }
         
         .reference-number {
           text-align: center;
-          font-size: 14px;
-          margin-bottom: 20px;
+          font-size: 13px;
+          margin-bottom: 15px;
         }
         
         .section-title {
@@ -144,18 +145,21 @@ export function generatePrintHtml({
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 30px;
+          margin-bottom: 20px;
         }
         
         table th, table td {
-          padding: 10px;
+          padding: 6px 8px;
           text-align: left;
           border-bottom: 1px solid #eee;
+          font-size: 12px;
+          line-height: 1.2;
         }
         
         table th {
           background-color: #f8f8f8;
           font-weight: bold;
+          font-size: 11px;
         }
         
         .text-right {
@@ -190,23 +194,24 @@ export function generatePrintHtml({
         }
         
         .device-info {
-          margin-bottom: 30px;
+          margin-bottom: 15px;
         }
         
         .device-info p {
-          margin: 5px 0;
+          margin: 3px 0;
+          font-size: 13px;
         }
         
         .device-details, .financial-details {
           display: flex;
           flex-wrap: wrap;
-          margin-bottom: 20px;
+          margin-bottom: 15px;
         }
         
         .device-details div, .financial-details div {
           flex: 1;
           min-width: 200px;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
         
         .label {
