@@ -2046,10 +2046,19 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
-      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
-      const existingRepair = await this.getRepair(id, userId);
-      if (!existingRepair) {
-        console.warn(`deleteRepair: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
+      // Direkt prüfen, ob die Reparatur in der Datenbank existiert und zum Shop gehört
+      const existingRepairs = await db
+        .select()
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, user.shopId)
+          )
+        );
+      
+      if (existingRepairs.length === 0) {
+        console.warn(`deleteRepair: Reparatur ${id} nicht gefunden oder nicht im Shop ${user.shopId} des Benutzers ${userId}`);
         return false;
       }
       
