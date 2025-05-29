@@ -21,7 +21,7 @@ import {
   UserCog
 } from "lucide-react";
 import { useRef, useState } from "react";
-import ClientKingLogo from "../../assets/ClientKing_Logo.png";
+import ClientKingLogo from "@assets/logo_new.png";
 import { useAuth } from "@/hooks/use-auth";
 import {
   DropdownMenu,
