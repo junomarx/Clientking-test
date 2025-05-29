@@ -2540,7 +2540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verwende storage.sendEmailWithTemplate statt emailService.sendEmailWithTemplate
       // um E-Mail-Verlaufseinträge zu erstellen
       try {
-        const emailSent = await storage.sendEmailWithTemplate(
+        const emailSent = await storage.sendEmailWithTemplateById(
           reviewTemplate.id, 
           customer.email, 
           variables,
