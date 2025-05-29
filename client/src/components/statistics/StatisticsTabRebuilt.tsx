@@ -14,16 +14,11 @@ import { Repair } from '@shared/schema';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Hilfsfunktion zum Prüfen, ob der Benutzer detaillierte Statistiken sehen darf
+import { apiRequest } from '@/lib/queryClient';
+
+// Alle authentifizierten Benutzer haben Vollzugriff auf detaillierte Statistiken
 const checkCanViewDetailedStats = async (): Promise<boolean> => {
-  try {
-    const response = await apiRequest('GET', '/api/can-view-detailed-stats');
-    const data = await response.json();
-    return data.canViewDetailedStats;
-  } catch (error) {
-    console.error('Fehler bei der Prüfung der Statistik-Berechtigungen:', error);
-    return false;
-  }
+  return true; // Immer erlaubt
 };
 
 // Basis-Statistiken
