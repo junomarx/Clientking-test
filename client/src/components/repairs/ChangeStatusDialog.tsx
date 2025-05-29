@@ -78,8 +78,8 @@ export function ChangeStatusDialog({
     }
   }, [businessSettings]);
   
-  // Ist der Benutzer auf Professional oder höher?
-  const isProfessionalOrHigher = user?.pricingPlan === 'professional' || user?.pricingPlan === 'enterprise';
+  // Alle Benutzer haben jetzt vollen Zugriff auf alle Funktionen
+  const isProfessionalOrHigher = true;
   
   // Form definition
   const form = useForm<StatusFormValues>({
