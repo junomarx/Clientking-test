@@ -2157,7 +2157,7 @@ export class DatabaseStorage implements IStorage {
       
       if (customerRepairs.length > 0) {
         console.warn(`deleteCustomer: Kunde ${id} kann nicht gelöscht werden - hat noch ${customerRepairs.length} Reparaturen`);
-        return false;
+        throw new Error(`Kunde kann nicht gelöscht werden - hat noch ${customerRepairs.length} aktive Reparaturen`);
       }
       
       // Kunde löschen

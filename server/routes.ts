@@ -748,6 +748,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting customer:", error);
+      
+      if (error instanceof Error) {
+        // Spezifische Fehlermeldung für Kunden mit aktiven Reparaturen
+        if (error.message.includes("aktive Reparaturen")) {
+          return res.status(400).json({ message: error.message });
+        }
+      }
+      
       res.status(500).json({ message: "Failed to delete customer" });
     }
   });
