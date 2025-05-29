@@ -292,8 +292,8 @@ export function generatePrintHtml({
               <th>Position</th>
               <th>Beschreibung</th>
               <th class="text-right">Menge</th>
-              <th class="text-right">Einzelpreis</th>
-              <th class="text-right">Gesamtpreis</th>
+              <th class="text-right">Einzelpreis (brutto)</th>
+              <th class="text-right">Gesamtpreis (brutto)</th>
             </tr>
           </thead>
           <tbody>
@@ -312,11 +312,7 @@ export function generatePrintHtml({
         <div class="totals">
           <table>
             <tr>
-              <td>Zwischensumme:</td>
-              <td class="text-right">€ ${Number(subtotal.replace(',', '.')).toFixed(2).replace('.', ',')}</td>
-            </tr>
-            <tr>
-              <td>MwSt. (${taxRate}%):</td>
+              <td>enthaltene MwSt. (${taxRate}%):</td>
               <td class="text-right">€ ${Number(taxAmount.replace(',', '.')).toFixed(2).replace('.', ',')}</td>
             </tr>
             <tr class="total">
