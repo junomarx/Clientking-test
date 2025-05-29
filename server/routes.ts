@@ -2561,7 +2561,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "email": businessSettings?.email || "",
               "adresse": `${businessSettings?.streetAddress || ""}, ${businessSettings?.zipCode || ""} ${businessSettings?.city || ""}`.trim(),
               "website": businessSettings?.website || "",
-              "bewertungslink": reviewLink
+              "bewertungslink": reviewLink,
+              "logo": businessSettings?.logoImage || ""
             }
           }
         );
