@@ -335,11 +335,6 @@ export function registerSuperadminRoutes(app: Express) {
         totalShops: sql<string>`COUNT(DISTINCT ${users.shopId})`.as("total_shops"),
       }).from(users);
 
-      // Reparaturstatistiken
-      const [repairStats] = await db.select({
-        totalRepairs: count().as("total_repairs"),
-      }).from(repairs);
-
       // Bestellungen (hier als Platzhalter, später kann das mit echten Bestellungsdaten gefüllt werden)
       const orderStats = {
         totalOrders: "0",
@@ -350,7 +345,7 @@ export function registerSuperadminRoutes(app: Express) {
         totalRevenue: "0 €",
       };
 
-      // Die gesammelten Statistiken zurückgeben
+      // Die gesammelten Statistiken zurückgeben (ohne Reparatur-Daten für DSGVO-Konformität)
       res.json({
         users: {
           totalUsers: userStats.totalUsers.toString(),
@@ -362,9 +357,6 @@ export function registerSuperadminRoutes(app: Express) {
         },
         shops: {
           totalShops: shopStats.totalShops || "0",
-        },
-        repairs: {
-          totalRepairs: repairStats.totalRepairs.toString(),
         },
         orders: orderStats,
         revenue: revenueStats,

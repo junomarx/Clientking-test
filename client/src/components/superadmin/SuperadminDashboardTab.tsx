@@ -54,9 +54,6 @@ interface SuperadminStats {
   shops: {
     totalShops: string;
   };
-  repairs: {
-    totalRepairs: string;
-  };
   packages: {
     totalPackages: string;
   };
@@ -191,9 +188,9 @@ export default function SuperadminDashboardTab() {
                   description="Anzahl der Shops"
                 />
                 <StatsCard
-                  title="Reparaturen"
-                  value={stats.repairs.totalRepairs}
-                  description="Gesamtanzahl der Reparaturen"
+                  title="Online Benutzer"
+                  value={stats.users.activeUsers}
+                  description="Derzeit online"
                 />
                 <StatsCard
                   title="Pakete"
