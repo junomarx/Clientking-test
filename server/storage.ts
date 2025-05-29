@@ -91,6 +91,7 @@ export interface IStorage {
   updateUserPassword(id: number, newPassword: string): Promise<boolean>;
   updateUserLastLogin(id: number): Promise<boolean>;
   updateUserLastLogout(id: number): Promise<boolean>;
+  updateUserLastActivity(id: number): Promise<boolean>;
   
   // E-Mail-Methoden
   getAllEmailTemplates(userId: number): Promise<EmailTemplate[]>;
@@ -1368,6 +1369,20 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error updating user last logout:", error);
+      return false;
+    }
+  }
+
+  async updateUserLastActivity(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user last activity:", error);
       return false;
     }
   }

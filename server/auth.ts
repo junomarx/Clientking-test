@@ -366,6 +366,13 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
     
+    // Aktualisiere die letzte Aktivität des Benutzers
+    try {
+      await storage.updateUserLastActivity(req.user.id);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der letzten Aktivität:", error);
+    }
+    
     // Return the user without the password
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);
