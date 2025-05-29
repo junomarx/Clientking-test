@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Smartphone, Tablet, Laptop, Watch, Gamepad2, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Smartphone, Tablet, Laptop, Watch, Gamepad2, BarChart3, ChevronRight } from "lucide-react";
 import { getQueryFn } from "@/lib/queryClient";
+import { useState } from "react";
 
 // Typen für die API-Response
 interface DeviceTypeStats {
@@ -53,11 +56,80 @@ const getDeviceIcon = (deviceType: string) => {
   return <Smartphone className="h-4 w-4" />;
 };
 
+// Komponente für Hersteller-Details-Dialog
+function BrandDetailsDialog({ brand, combinedStats }: { brand: string; combinedStats: CombinedStats[] }) {
+  const brandDetails = combinedStats.filter(item => item.brand === brand);
+  
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-3 h-auto">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary/20 rounded-sm flex items-center justify-center">
+              <span className="text-sm font-medium text-primary">
+                {brand.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <span className="font-medium text-left">{brand}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">
+              {brandDetails.reduce((sum, item) => sum + item.count, 0)} Modelle
+            </Badge>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary/20 rounded-sm flex items-center justify-center">
+              <span className="text-sm font-medium text-primary">
+                {brand.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            {brand}
+          </DialogTitle>
+          <DialogDescription>
+            Modellverteilung nach Gerätetyp
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          {brandDetails.map((item, index) => (
+            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                {getDeviceIcon(item.deviceType)}
+                <span className="font-medium">{item.deviceType}</span>
+              </div>
+              <Badge variant="secondary">
+                {item.count} Modelle
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function DeviceStatisticsTab() {
   const { data: deviceStats, isLoading, error } = useQuery<DeviceStatistics>({
     queryKey: ["/api/superadmin/device-statistics"],
     queryFn: getQueryFn({ on401: "throw" }),
   });
+
+  // Dedupliziere Hersteller und berechne Gesamtmodelle
+  const uniqueBrands = deviceStats?.brandStats ? 
+    Object.values(
+      deviceStats.brandStats.reduce((acc, item) => {
+        if (acc[item.brand]) {
+          acc[item.brand].count += item.count;
+        } else {
+          acc[item.brand] = { ...item };
+        }
+        return acc;
+      }, {} as Record<string, BrandStats>)
+    ).sort((a, b) => b.count - a.count) : [];
 
   if (isLoading) {
     return (
@@ -176,27 +248,19 @@ export default function DeviceStatisticsTab() {
           <CardHeader>
             <CardTitle>Modelle nach Hersteller</CardTitle>
             <CardDescription>
-              Top Hersteller mit verfügbaren Modellen
+              Klicken Sie auf einen Hersteller für Details nach Gerätetyp
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {deviceStats.brandStats?.slice(0, 10).map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-primary/20 rounded-sm flex items-center justify-center">
-                      <span className="text-xs font-medium text-primary">
-                        {(item.brand || 'U').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="font-medium">{item.brand || 'Unbekannt'}</span>
-                  </div>
-                  <Badge variant="secondary">
-                    {item.count?.toLocaleString() || '0'} Modelle
-                  </Badge>
-                </div>
-              )) || []}
-              {(!deviceStats.brandStats || deviceStats.brandStats.length === 0) && (
+            <div className="space-y-2">
+              {uniqueBrands.slice(0, 10).map((item, index) => (
+                <BrandDetailsDialog 
+                  key={index} 
+                  brand={item.brand || 'Unbekannt'} 
+                  combinedStats={deviceStats?.combinedStats || []}
+                />
+              ))}
+              {uniqueBrands.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   Keine Hersteller gefunden
                 </p>
