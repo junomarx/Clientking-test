@@ -17,6 +17,7 @@ interface BonReceipt80mmProps {
   modell?: string;
   problem?: string;
   preis?: string;
+  anzahlung?: string;
   imei?: string;
   signatur_dropoff?: string;
   signatur_pickup?: string;
@@ -39,6 +40,7 @@ export function BonReceipt80mm({
   modell,
   problem,
   preis,
+  anzahlung,
   imei,
   signatur_dropoff,
   signatur_pickup,
@@ -112,6 +114,13 @@ export function BonReceipt80mm({
           <div>
             <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>Reparaturkosten</div>
             <div>{preis}</div>
+          </div>
+        )}
+
+        {anzahlung && (
+          <div>
+            <div style={{ fontWeight: "bold", marginTop: "10px", marginBottom: "3px" }}>Anzahlung</div>
+            <div>{anzahlung}</div>
           </div>
         )}
       </div>

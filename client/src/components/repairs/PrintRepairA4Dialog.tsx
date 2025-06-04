@@ -197,6 +197,7 @@ function generateRepairPrintHtml({ repair, customer, businessSettings }: {
             <span class="label">Status:</span> ${repair.status}
           </div>
           ${repair.estimatedCost ? `<div class="info-line"><span class="label">Geschätzte Kosten:</span> €${repair.estimatedCost}</div>` : ''}
+          ${repair.depositAmount ? `<div class="info-line"><span class="label">Anzahlung:</span> €${repair.depositAmount}</div>` : ''}
         </div>
         
         <div style="margin-top: 50px; font-size: 12px; color: #777;">
