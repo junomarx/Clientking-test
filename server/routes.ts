@@ -4088,6 +4088,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unterschrift noch nicht vorhanden" });
       }
 
+      // Unterschrift zur Reparatur hinzufügen basierend auf dem Typ
+      if (tempSignature.type === 'dropoff') {
+        await storage.updateRepairSignature(tempSignature.repairId, tempSignature.customerSignature, 'dropoff', userId);
+      } else if (tempSignature.type === 'pickup') {
+        await storage.updateRepairSignature(tempSignature.repairId, tempSignature.customerSignature, 'pickup', userId);
+      }
+
       // Unterschrift als abgeschlossen markieren
       await storage.completeTempSignature(tempId);
 
