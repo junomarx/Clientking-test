@@ -213,41 +213,35 @@ export default function SignaturePage() {
                 {signatureData.repairData.customerData && (
                   <div className="border rounded-lg p-4 bg-blue-50">
                     <h3 className="font-semibold text-blue-900 mb-3">Ihre Kontaktdaten</h3>
-                    <p className="text-sm text-blue-700 mb-3">
-                      Bitte überprüfen Sie Ihre Kontaktdaten. Falls diese nicht korrekt sind, teilen Sie uns dies bitte vor der Unterschrift mit.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="font-medium text-blue-700">Vorname:</span>
-                        <p className="text-blue-900">{signatureData.repairData.customerData.firstName}</p>
+                    <div className="space-y-2 text-sm">
+                      {/* Name */}
+                      <div className="text-blue-900 font-medium">
+                        {signatureData.repairData.customerData.firstName} {signatureData.repairData.customerData.lastName}
                       </div>
-                      <div>
-                        <span className="font-medium text-blue-700">Nachname:</span>
-                        <p className="text-blue-900">{signatureData.repairData.customerData.lastName}</p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-blue-700">Telefon:</span>
-                        <p className="text-blue-900 font-medium">{signatureData.repairData.customerData.phone}</p>
-                      </div>
-                      {signatureData.repairData.customerData.email && (
-                        <div>
-                          <span className="font-medium text-blue-700">E-Mail:</span>
-                          <p className="text-blue-900">{signatureData.repairData.customerData.email}</p>
+                      
+                      {/* Adresse */}
+                      {signatureData.repairData.customerData.address && (
+                        <div className="text-blue-900">
+                          {signatureData.repairData.customerData.address}
                         </div>
                       )}
-                      {(signatureData.repairData.customerData.address || signatureData.repairData.customerData.zipCode || signatureData.repairData.customerData.city) && (
-                        <div className="sm:col-span-2">
-                          <span className="font-medium text-blue-700">Adresse:</span>
-                          <div className="text-blue-900">
-                            {signatureData.repairData.customerData.address && (
-                              <p>{signatureData.repairData.customerData.address}</p>
-                            )}
-                            {(signatureData.repairData.customerData.zipCode || signatureData.repairData.customerData.city) && (
-                              <p>
-                                {signatureData.repairData.customerData.zipCode} {signatureData.repairData.customerData.city}
-                              </p>
-                            )}
-                          </div>
+                      
+                      {/* PLZ und Ort */}
+                      {(signatureData.repairData.customerData.zipCode || signatureData.repairData.customerData.city) && (
+                        <div className="text-blue-900">
+                          {signatureData.repairData.customerData.zipCode} {signatureData.repairData.customerData.city}
+                        </div>
+                      )}
+                      
+                      {/* Telefonnummer */}
+                      <div className="text-blue-900 font-medium">
+                        {signatureData.repairData.customerData.phone}
+                      </div>
+                      
+                      {/* E-Mail */}
+                      {signatureData.repairData.customerData.email && (
+                        <div className="text-blue-900">
+                          {signatureData.repairData.customerData.email}
                         </div>
                       )}
                     </div>
