@@ -28,6 +28,7 @@ export default function Home() {
   const [location] = useLocation();
   const params = useParams();
   const [qrCodeFilter, setQrCodeFilter] = useState<string>('');
+  const [isQrCodeNavigation, setIsQrCodeNavigation] = useState<boolean>(false);
   
   // URL Parameter auswerten für Tab und QR-Code-Filter
   useEffect(() => {
@@ -38,6 +39,7 @@ export default function Home() {
     if (params.orderCode) {
       setActiveTab('repairs');
       setQrCodeFilter(params.orderCode);
+      setIsQrCodeNavigation(true);
     }
     
     // Tab aus URL setzen, wenn vorhanden
@@ -51,6 +53,21 @@ export default function Home() {
       }
     }
   }, [location, params]);
+
+  // Tab-Wechsel Handler - QR-Code-Filter zurücksetzen bei manueller Navigation
+  const handleTabChange = (newTab: Tab) => {
+    setActiveTab(newTab);
+    
+    // QR-Code-Filter nur zurücksetzen, wenn es eine manuelle Navigation ist
+    // (nicht durch QR-Code ausgelöst)
+    if (isQrCodeNavigation && newTab !== 'repairs') {
+      setQrCodeFilter('');
+      setIsQrCodeNavigation(false);
+    } else if (newTab === 'repairs' && !isQrCodeNavigation) {
+      // Wenn manuell zu Repairs gewechselt wird, QR-Code-Filter löschen
+      setQrCodeFilter('');
+    }
+  };
   
   const handleNewOrder = () => {
     console.log("Home: handleNewOrder aufgerufen ohne Parameter");
@@ -107,14 +124,14 @@ export default function Home() {
       <div className="hidden md:block">
         <Sidebar 
           activeTab={activeTab} 
-          onTabChange={(tab) => setActiveTab(tab as Tab)}
+          onTabChange={handleTabChange}
         />
       </div>
       
       {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header mit Benutzerdaten */}
-        <Header variant="app" activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} />
+        <Header variant="app" activeTab={activeTab} onTabChange={handleTabChange} />
         
         {/* Main content */}
         <main className="flex-1 overflow-auto p-3 md:p-6">
@@ -123,7 +140,7 @@ export default function Home() {
               {activeTab === 'dashboard' && (
                 <DashboardTab 
                   onNewOrder={handleNewOrder} 
-                  onTabChange={setActiveTab} 
+                  onTabChange={handleTabChange} 
                 />
               )}
               
@@ -136,7 +153,7 @@ export default function Home() {
               )}
               
               {activeTab === 'statistics' && (
-                <StatisticsTab onTabChange={setActiveTab} />
+                <StatisticsTab onTabChange={handleTabChange} />
               )}
               
               {activeTab === 'cost-estimates' && (
