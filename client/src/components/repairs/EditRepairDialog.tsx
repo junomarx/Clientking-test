@@ -33,6 +33,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 // Form schema
 const repairEditSchema = z.object({
+  orderCode: z.string().optional(),
+  deviceType: z.string().min(1, { message: 'Bitte Gerätetyp eingeben' }),
+  brand: z.string().min(1, { message: 'Bitte Marke eingeben' }),
+  model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
+  serialNumber: z.string().nullable().optional(),
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
   estimatedCost: z.string().nullable().optional(),
   depositAmount: z.string().nullable().optional(),
@@ -40,6 +45,7 @@ const repairEditSchema = z.object({
     required_error: 'Bitte Status auswählen',
   }),
   notes: z.string().nullable().optional(),
+  technicianNote: z.string().nullable().optional(),
 });
 
 type RepairEditValues = z.infer<typeof repairEditSchema>;
@@ -60,11 +66,17 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   const form = useForm<RepairEditValues>({
     resolver: zodResolver(repairEditSchema),
     defaultValues: {
+      orderCode: repair?.orderCode || '',
+      deviceType: repair?.deviceType || '',
+      brand: repair?.brand || '',
+      model: repair?.model || '',
+      serialNumber: repair?.serialNumber || '',
       issue: repair?.issue || '',
       estimatedCost: repair?.estimatedCost?.toString(),
       depositAmount: repair?.depositAmount?.toString(),
       status: repair?.status || 'eingegangen',
       notes: repair?.notes || '',
+      technicianNote: repair?.technicianNote || '',
     },
   });
   
@@ -72,11 +84,17 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   useEffect(() => {
     if (repair) {
       form.reset({
+        orderCode: repair.orderCode || '',
+        deviceType: repair.deviceType || '',
+        brand: repair.brand || '',
+        model: repair.model || '',
+        serialNumber: repair.serialNumber || '',
         issue: repair.issue,
         estimatedCost: repair.estimatedCost?.toString(),
         depositAmount: repair.depositAmount?.toString(),
         status: repair.status,
         notes: repair.notes || '',
+        technicianNote: repair.technicianNote || '',
       });
     }
   }, [repair, form]);
@@ -89,11 +107,19 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       // Für Debugging-Zwecke die Daten anzeigen
       console.log("Updating repair data:", data);
       
-      // Stelle sicher, dass depositAmount korrekt übermittelt wird
+      // Stelle sicher, dass leere Felder korrekt übermittelt werden
       const cleanData = {
         ...data,
         // Wenn depositAmount leer ist, setze es auf null
-        depositAmount: data.depositAmount === "" ? null : data.depositAmount
+        depositAmount: data.depositAmount === "" ? null : data.depositAmount,
+        // Wenn estimatedCost leer ist, setze es auf null
+        estimatedCost: data.estimatedCost === "" ? null : data.estimatedCost,
+        // Wenn serialNumber leer ist, setze es auf null
+        serialNumber: data.serialNumber === "" ? null : data.serialNumber,
+        // Wenn notes leer ist, setze es auf null
+        notes: data.notes === "" ? null : data.notes,
+        // Wenn technicianNote leer ist, setze es auf null
+        technicianNote: data.technicianNote === "" ? null : data.technicianNote,
       };
       
       console.log("Clean data being sent:", cleanData);
@@ -200,6 +226,104 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4 px-1 overflow-y-auto">
+            
+            {/* Auftragsnummer */}
+            <FormField
+              control={form.control}
+              name="orderCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Auftragsnummer</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="z.B. GS250068"
+                      className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      readOnly
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Geräte-Informationen */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="deviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gerätetyp</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="z.B. Smartphone"
+                        className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Marke</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="z.B. Apple"
+                        className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Modell</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="z.B. iPhone 14"
+                        className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Seriennummer */}
+            <FormField
+              control={form.control}
+              name="serialNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seriennummer (optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      placeholder="Seriennummer des Geräts"
+                      value={field.value === null || field.value === undefined ? '' : field.value}
+                      className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="issue"
@@ -298,6 +422,28 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                   <FormControl>
                     <Textarea 
                       placeholder="Interne Notizen"
+                      className="resize-none h-[70px] md:h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                      value={field.value === null ? '' : (field.value || '')}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="technicianNote"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Techniker-Notiz</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Notiz für 'Außer Haus' Status"
                       className="resize-none h-[70px] md:h-[100px] rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                       value={field.value === null ? '' : (field.value || '')}
                       onChange={field.onChange}
