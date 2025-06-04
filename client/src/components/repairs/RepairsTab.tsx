@@ -61,6 +61,13 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   // For tracking if we're filtering by today's orders
   const [filterByToday, setFilterByToday] = useState(false);
   
+  // Update search term when initialFilter changes (for QR code filtering)
+  useEffect(() => {
+    if (initialFilter) {
+      setSearchTerm(initialFilter);
+    }
+  }, [initialFilter]);
+  
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
