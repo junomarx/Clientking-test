@@ -416,7 +416,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
       issue: repair.issue,
       status: repair.status,
       estimatedCost: repair.estimatedCost,
-      depositAmount: repair.depositAmount
+      depositAmount: repair.depositAmount,
+      customerId: repair.customerId
     });
     setShowQRSignatureDialog(true);
   };
