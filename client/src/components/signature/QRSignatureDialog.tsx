@@ -15,9 +15,10 @@ interface QRSignatureDialogProps {
     customerName: string;
     device: string;
     issue: string;
+    status?: string;
   };
   businessName: string;
-  signatureType: 'dropoff' | 'pickup';
+  signatureType?: 'dropoff' | 'pickup'; // Made optional as we'll determine it automatically
 }
 
 interface SignatureResponse {
@@ -34,7 +35,20 @@ interface SignatureStatus {
   expiresAt: string;
 }
 
+// Function to determine signature type based on repair status
+function determineSignatureType(status?: string): 'dropoff' | 'pickup' {
+  if (status === 'eingegangen') {
+    return 'dropoff'; // Abgabe-Unterschrift für Status "Eingegangen"
+  } else if (status === 'fertig') {
+    return 'pickup'; // Abhol-Unterschrift für Status "Fertig zur Abholung"
+  }
+  // Default fallback
+  return 'dropoff';
+}
+
 export function QRSignatureDialog({ open, onOpenChange, repair, businessName, signatureType }: QRSignatureDialogProps) {
+  // Determine the actual signature type to use
+  const actualSignatureType = signatureType || determineSignatureType(repair.status);
   const [loading, setLoading] = useState(false);
   const [signatureData, setSignatureData] = useState<SignatureResponse | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<SignatureStatus | null>(null);
@@ -78,7 +92,7 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
       
       const repairData = {
         repairId: repair.id,
-        signatureType: signatureType,
+        signatureType: actualSignatureType,
         customerName: repair.customerName,
         device: repair.device,
         issue: repair.issue,
@@ -228,10 +242,13 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <QrCode className="h-5 w-5" />
-            QR-Code Unterschrift
+            QR-Code Unterschrift - {actualSignatureType === 'dropoff' ? 'Abgabe' : 'Abholung'}
           </DialogTitle>
           <DialogDescription>
-            Lassen Sie den Kunden den QR-Code scannen und digital unterschreiben
+            {actualSignatureType === 'dropoff' 
+              ? 'Abgabe-Unterschrift: Lassen Sie den Kunden bei der Geräte-Abgabe den QR-Code scannen und digital unterschreiben'
+              : 'Abhol-Unterschrift: Lassen Sie den Kunden bei der Geräte-Abholung den QR-Code scannen und digital unterschreiben'
+            }
           </DialogDescription>
         </DialogHeader>
 

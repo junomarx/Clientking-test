@@ -626,7 +626,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                               id: repair.id,
                               customerName: repair.customerName,
                               device: `${repair.brand} ${repair.model}`,
-                              issue: repair.issue
+                              issue: repair.issue,
+                              status: repair.status
                             });
                             setShowQRSignatureDialog(true);
                           }}
@@ -952,7 +953,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           onOpenChange={setShowQRSignatureDialog}
           repair={selectedRepairForSignature}
           businessName={businessSettings.businessName}
-          signatureType="pickup"
         />
       )}
     </div>
