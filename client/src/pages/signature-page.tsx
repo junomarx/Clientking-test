@@ -238,11 +238,14 @@ export default function SignaturePage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Unterschrift - {signatureData?.repairData.shopName}</h2>
               <Button
-                onClick={() => window.history.back()}
+                onClick={() => {
+                  // Querformat-Modus beenden, zurück zum normalen Modus
+                  setIsLandscape(false);
+                }}
                 variant="outline"
                 size="sm"
               >
-                Zurück
+                Zurück zum Hochformat
               </Button>
             </div>
             
