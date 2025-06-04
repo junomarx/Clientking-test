@@ -13,6 +13,8 @@ interface SignatureData {
     device: string;
     issue: string;
     shopName: string;
+    estimatedCost?: string;
+    depositAmount?: string;
   };
   status: string;
   expiresAt: string;
@@ -27,6 +29,7 @@ export default function SignaturePage() {
   const [success, setSuccess] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
+  const [hasReadTerms, setHasReadTerms] = useState(false);
 
   useEffect(() => {
     if (tempId) {
@@ -82,6 +85,11 @@ export default function SignaturePage() {
   };
 
   const submitSignature = async () => {
+    if (!hasReadTerms) {
+      setError("Bitte lesen Sie zuerst die Reparaturbedingungen und stimmen Sie diesen zu.");
+      return;
+    }
+    
     if (!signatureRef.current || signatureEmpty) {
       setError("Bitte leisten Sie zuerst Ihre Unterschrift.");
       return;
@@ -205,6 +213,18 @@ export default function SignaturePage() {
                     <span className="font-medium text-gray-700">Problem:</span>
                     <p className="text-gray-900">{signatureData.repairData.issue}</p>
                   </div>
+                  {signatureData.repairData.estimatedCost && (
+                    <div>
+                      <span className="font-medium text-gray-700">Kosten:</span>
+                      <p className="text-gray-900">{signatureData.repairData.estimatedCost}</p>
+                    </div>
+                  )}
+                  {signatureData.repairData.depositAmount && (
+                    <div>
+                      <span className="font-medium text-gray-700">Anzahlung:</span>
+                      <p className="text-gray-900">{signatureData.repairData.depositAmount}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Reparaturbedingungen */}
@@ -218,6 +238,25 @@ export default function SignaturePage() {
                     <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
                     <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
                   </div>
+                  
+                  {!hasReadTerms && (
+                    <div className="mt-4 text-center">
+                      <Button 
+                        onClick={() => setHasReadTerms(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                      >
+                        Gelesen - Ich stimme den Bedingungen zu
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {hasReadTerms && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-green-800 text-sm font-medium text-center">
+                        ✓ Sie haben den Bedingungen zugestimmt. Sie können nun unterschreiben.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -229,66 +268,76 @@ export default function SignaturePage() {
               </Alert>
             )}
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bitte unterschreiben Sie hier:
-                </label>
-                <div className="border-2 border-gray-300 border-dashed rounded-lg bg-white">
-                  <SignatureCanvas
-                    ref={signatureRef}
-                    canvasProps={{
-                      className: "w-full h-48 cursor-crosshair",
-                      style: { touchAction: 'none' }
-                    }}
-                    onBegin={handleSignatureBegin}
-                    onEnd={handleSignatureEnd}
-                  />
+            {hasReadTerms && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bitte unterschreiben Sie hier:
+                  </label>
+                  <div className="border-2 border-gray-300 border-dashed rounded-lg bg-white">
+                    <SignatureCanvas
+                      ref={signatureRef}
+                      canvasProps={{
+                        className: "w-full h-48 cursor-crosshair",
+                        style: { touchAction: 'none' }
+                      }}
+                      onBegin={handleSignatureBegin}
+                      onEnd={handleSignatureEnd}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs text-gray-500">
+                      Verwenden Sie Ihren Finger oder einen Stift zum Unterschreiben
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSignature}
+                      className="flex items-center gap-1"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Löschen
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs text-gray-500">
-                    Verwenden Sie Ihren Finger oder einen Stift zum Unterschreiben
-                  </p>
+
+                <div className="pt-4">
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSignature}
-                    className="flex items-center gap-1"
+                    onClick={submitSignature}
+                    disabled={signatureEmpty || submitting}
+                    className="w-full"
+                    size="lg"
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    Löschen
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Wird gespeichert...
+                      </>
+                    ) : (
+                      <>
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Unterschrift bestätigen
+                      </>
+                    )}
                   </Button>
                 </div>
-              </div>
 
-              <div className="pt-4">
-                <Button
-                  onClick={submitSignature}
-                  disabled={signatureEmpty || submitting}
-                  className="w-full"
-                  size="lg"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Wird gespeichert...
-                    </>
-                  ) : (
-                    <>
-                      <PenTool className="h-4 w-4 mr-2" />
-                      Unterschrift bestätigen
-                    </>
-                  )}
-                </Button>
+                {signatureData && (
+                  <p className="text-xs text-gray-500 text-center">
+                    Gültig bis: {new Date(signatureData.expiresAt).toLocaleString('de-DE')}
+                  </p>
+                )}
               </div>
-
-              {signatureData && (
-                <p className="text-xs text-gray-500 text-center">
-                  Gültig bis: {new Date(signatureData.expiresAt).toLocaleString('de-DE')}
+            )}
+            
+            {!hasReadTerms && (
+              <div className="pt-4 text-center">
+                <p className="text-gray-600 text-sm mb-4">
+                  Bitte lesen Sie zuerst die Reparaturbedingungen und stimmen Sie diesen zu, bevor Sie unterschreiben können.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
