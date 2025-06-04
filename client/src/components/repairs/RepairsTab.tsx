@@ -952,6 +952,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           onOpenChange={setShowQRSignatureDialog}
           repair={selectedRepairForSignature}
           businessName={businessSettings.businessName}
+          signatureType="pickup"
         />
       )}
     </div>

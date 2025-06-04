@@ -17,6 +17,7 @@ interface QRSignatureDialogProps {
     issue: string;
   };
   businessName: string;
+  signatureType: 'dropoff' | 'pickup';
 }
 
 interface SignatureResponse {
@@ -33,7 +34,7 @@ interface SignatureStatus {
   expiresAt: string;
 }
 
-export function QRSignatureDialog({ open, onOpenChange, repair, businessName }: QRSignatureDialogProps) {
+export function QRSignatureDialog({ open, onOpenChange, repair, businessName, signatureType }: QRSignatureDialogProps) {
   const [loading, setLoading] = useState(false);
   const [signatureData, setSignatureData] = useState<SignatureResponse | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<SignatureStatus | null>(null);

@@ -1,0 +1,209 @@
+Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:122 UserId bereits im localStorage: 53
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:141 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+main.tsx:25 PWA Service Worker Registrierung fehlgeschlagen: SecurityError: Failed to register a ServiceWorker for scope ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/') with script ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/sw.js'): The script has an unsupported MIME type ('text/html').
+/manifest.json:1 Manifest: Line: 1, column: 1, Syntax error.
+887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:133 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: undefined
+RepairDetailsDialog.tsx:138 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at QRSignatureDialog.tsx:46:7
+    at commitHookEffectListMount (chunk-RPCDYKBN.js?v=6fe52243:16915:34)
+    at commitPassiveMountOnFiber (chunk-RPCDYKBN.js?v=6fe52243:18156:19)
+    at commitPassiveMountEffects_complete (chunk-RPCDYKBN.js?v=6fe52243:18129:17)
+    at commitPassiveMountEffects_begin (chunk-RPCDYKBN.js?v=6fe52243:18119:15)
+    at commitPassiveMountEffects (chunk-RPCDYKBN.js?v=6fe52243:18109:11)
+    at flushPassiveEffectsImpl (chunk-RPCDYKBN.js?v=6fe52243:19490:11)
+    at flushPassiveEffects (chunk-RPCDYKBN.js?v=6fe52243:19447:22)
+    at commitRootImpl (chunk-RPCDYKBN.js?v=6fe52243:19416:13) Error Component Stack
+    at QRSignatureDialog (QRSignatureDialog.tsx:36:37)
+    at div (<anonymous>)
+    at RepairsTab (RepairsTab.tsx:46:30)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at @radix-ui_react-scroll-area.js?v=6fe52243:116:13
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at @radix-ui_react-scroll-area.js?v=6fe52243:54:7
+    at _c (scroll-area.tsx:9:6)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Home (Home.tsx:25:37)
+    at ProtectedRoute (protected-route.tsx:5:34)
+    at Route (wouter.js?v=6fe52243:265:16)
+    at Switch (wouter.js?v=6fe52243:321:17)
+    at Router (<anonymous>)
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=6fe52243:65:5)
+    at PrintManagerProvider (PrintOptionsManager.tsx:25:40)
+    at ThemeProvider (use-theme.tsx:22:33)
+    at BusinessSettingsProvider (use-business-settings.tsx:21:44)
+    at AuthProvider (use-auth.tsx:42:32)
+    at QueryClientProvider (@tanstack_react-query.js?v=6fe52243:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+3hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=6fe52243:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=6fe52243:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=6fe52243:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-RPCDYKBN.js?v=6fe52243:3736:33)
+    at executeDispatch (chunk-RPCDYKBN.js?v=6fe52243:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-RPCDYKBN.js?v=6fe52243:7034:15)
+    at processDispatchQueue (chunk-RPCDYKBN.js?v=6fe52243:7043:13)
+    at dispatchEventsForPlugins (chunk-RPCDYKBN.js?v=6fe52243:7051:11)
+    at chunk-RPCDYKBN.js?v=6fe52243:7174:20
+overrideMethod @ hook.js:608
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at QRSignatureDialog.tsx:46:7
+    at commitHookEffectListMount (chunk-RPCDYKBN.js?v=6fe52243:16915:34)
+    at commitPassiveMountOnFiber (chunk-RPCDYKBN.js?v=6fe52243:18156:19)
+    at commitPassiveMountEffects_complete (chunk-RPCDYKBN.js?v=6fe52243:18129:17)
+    at commitPassiveMountEffects_begin (chunk-RPCDYKBN.js?v=6fe52243:18119:15)
+    at commitPassiveMountEffects (chunk-RPCDYKBN.js?v=6fe52243:18109:11)
+    at flushPassiveEffectsImpl (chunk-RPCDYKBN.js?v=6fe52243:19490:11)
+    at flushPassiveEffects (chunk-RPCDYKBN.js?v=6fe52243:19447:22)
+    at commitRootImpl (chunk-RPCDYKBN.js?v=6fe52243:19416:13) Error Component Stack
+    at QRSignatureDialog (QRSignatureDialog.tsx:36:37)
+    at div (<anonymous>)
+    at RepairsTab (RepairsTab.tsx:46:30)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at @radix-ui_react-scroll-area.js?v=6fe52243:116:13
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at @radix-ui_react-scroll-area.js?v=6fe52243:54:7
+    at _c (scroll-area.tsx:9:6)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Home (Home.tsx:25:37)
+    at ProtectedRoute (protected-route.tsx:5:34)
+    at Route (wouter.js?v=6fe52243:265:16)
+    at Switch (wouter.js?v=6fe52243:321:17)
+    at Router (<anonymous>)
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=6fe52243:65:5)
+    at PrintManagerProvider (PrintOptionsManager.tsx:25:40)
+    at ThemeProvider (use-theme.tsx:22:33)
+    at BusinessSettingsProvider (use-business-settings.tsx:21:44)
+    at AuthProvider (use-auth.tsx:42:32)
+    at QueryClientProvider (@tanstack_react-query.js?v=6fe52243:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=6fe52243:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=6fe52243:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=6fe52243:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-RPCDYKBN.js?v=6fe52243:3736:33)
+    at executeDispatch (chunk-RPCDYKBN.js?v=6fe52243:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-RPCDYKBN.js?v=6fe52243:7034:15)
+    at processDispatchQueue (chunk-RPCDYKBN.js?v=6fe52243:7043:13)
+    at dispatchEventsForPlugins (chunk-RPCDYKBN.js?v=6fe52243:7051:11)
+    at chunk-RPCDYKBN.js?v=6fe52243:7174:20
+overrideMethod @ hook.js:608
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+/api/user:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:121 Login-Versuch mit Benutzer: demotest
+use-auth.tsx:64 Token saved to localStorage
+use-auth.tsx:70 UserId saved to localStorage: 53
+use-auth.tsx:76 Username saved to localStorage: demotest
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+auth-page.tsx:128 Nach Login: userId im localStorage: 53 username: demotest
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:133 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: undefined
+RepairDetailsDialog.tsx:138 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at QRSignatureDialog.tsx:46:7
+    at commitHookEffectListMount (chunk-RPCDYKBN.js?v=6fe52243:16915:34)
+    at commitPassiveMountOnFiber (chunk-RPCDYKBN.js?v=6fe52243:18156:19)
+    at commitPassiveMountEffects_complete (chunk-RPCDYKBN.js?v=6fe52243:18129:17)
+    at commitPassiveMountEffects_begin (chunk-RPCDYKBN.js?v=6fe52243:18119:15)
+    at commitPassiveMountEffects (chunk-RPCDYKBN.js?v=6fe52243:18109:11)
+    at flushPassiveEffectsImpl (chunk-RPCDYKBN.js?v=6fe52243:19490:11)
+    at flushPassiveEffects (chunk-RPCDYKBN.js?v=6fe52243:19447:22)
+    at commitRootImpl (chunk-RPCDYKBN.js?v=6fe52243:19416:13) Error Component Stack
+    at QRSignatureDialog (QRSignatureDialog.tsx:36:37)
+    at div (<anonymous>)
+    at RepairsTab (RepairsTab.tsx:46:30)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at @radix-ui_react-scroll-area.js?v=6fe52243:116:13
+    at div (<anonymous>)
+    at chunk-Q6YJROYD.js?v=6fe52243:42:13
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at @radix-ui_react-scroll-area.js?v=6fe52243:54:7
+    at _c (scroll-area.tsx:9:6)
+    at main (<anonymous>)
+    at div (<anonymous>)
+    at div (<anonymous>)
+    at Home (Home.tsx:25:37)
+    at ProtectedRoute (protected-route.tsx:5:34)
+    at Route (wouter.js?v=6fe52243:265:16)
+    at Switch (wouter.js?v=6fe52243:321:17)
+    at Router (<anonymous>)
+    at Provider (chunk-OXZDJRWN.js?v=6fe52243:38:15)
+    at TooltipProvider (@radix-ui_react-tooltip.js?v=6fe52243:65:5)
+    at PrintManagerProvider (PrintOptionsManager.tsx:25:40)
+    at ThemeProvider (use-theme.tsx:22:33)
+    at BusinessSettingsProvider (use-business-settings.tsx:21:44)
+    at AuthProvider (use-auth.tsx:42:32)
+    at QueryClientProvider (@tanstack_react-query.js?v=6fe52243:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+3hook.js:608 Fehler beim Generieren des QR-Codes: ReferenceError: signatureType is not defined
+    at generateQRCode (QRSignatureDialog.tsx:80:9)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=6fe52243:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=6fe52243:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=6fe52243:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-RPCDYKBN.js?v=6fe52243:3736:33)
+    at executeDispatch (chunk-RPCDYKBN.js?v=6fe52243:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-RPCDYKBN.js?v=6fe52243:7034:15)
+    at processDispatchQueue (chunk-RPCDYKBN.js?v=6fe52243:7043:13)
+    at dispatchEventsForPlugins (chunk-RPCDYKBN.js?v=6fe52243:7051:11)
+    at chunk-RPCDYKBN.js?v=6fe52243:7174:20
+overrideMethod @ hook.js:608
