@@ -280,6 +280,7 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
                         
                         // Preis-Platzhalter
                         estimatedPrice: repair?.estimatedCost ? `${repair.estimatedCost.replace('.', ',')} €` : "",
+                        downPayment: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
                         finalPrice: "",
                         
                         // Zusätzliche Platzhalter für Kompatibilität
