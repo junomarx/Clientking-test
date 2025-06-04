@@ -262,15 +262,17 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
 
         <div className="space-y-4">
           {/* Reparaturdetails */}
-          <Card>
-            <CardContent className="pt-4">
-              <div className="space-y-2 text-sm">
-                <div><span className="font-medium">Kunde:</span> {repair.customerName}</div>
-                <div><span className="font-medium">Gerät:</span> {repair.device}</div>
-                <div><span className="font-medium">Problem:</span> {repair.issue}</div>
-              </div>
-            </CardContent>
-          </Card>
+          {repair && (
+            <Card>
+              <CardContent className="pt-4">
+                <div className="space-y-2 text-sm">
+                  <div><span className="font-medium">Kunde:</span> {repair.customerName}</div>
+                  <div><span className="font-medium">Gerät:</span> {repair.device}</div>
+                  <div><span className="font-medium">Problem:</span> {repair.issue}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Loading State */}
           {loading && !signatureData && (
