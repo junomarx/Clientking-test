@@ -22,6 +22,8 @@ import { apiRequest } from '@/lib/queryClient';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
 import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
+import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
+import { useBusinessSettings } from '@/hooks/use-business-settings';
 
 
 interface DashboardTabProps {
@@ -40,6 +42,10 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>('');
   
+  // State für QR-Unterschrift
+  const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
+  const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
+  
 
   
   // QueryClient für Cache-Invalidierung
@@ -47,6 +53,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
+  
+  // Business Settings für QR-Code Unterschriften
+  const { settings: businessSettingsData } = useBusinessSettings();
 
   // Status-Änderung Mutation
   const updateStatusMutation = useMutation<any, Error, { id: number; status: string; sendEmail?: boolean; technicianNote?: string }>({
@@ -83,9 +92,22 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   
   // Handler für QR-Unterschrift öffnen
   const handleOpenQRSignature = (repairId: number) => {
-    // Navigate to repairs page where QR signature functionality already exists
-    if (onTabChange) {
-      onTabChange('repairs');
+    // Finde die Reparatur und den Kunden
+    const repair = repairs?.find(r => r.id === repairId);
+    const customer = customers?.find(c => c.id === repair?.customerId);
+    
+    if (repair && customer) {
+      setSelectedRepairForSignature({
+        id: repair.id,
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        device: `${repair.brand} ${repair.model}`,
+        issue: repair.issue,
+        status: repair.status,
+        estimatedCost: repair.estimatedCost,
+        depositAmount: repair.depositAmount,
+        customerId: repair.customerId
+      });
+      setShowQRSignatureDialog(true);
     }
   };
   
@@ -101,7 +123,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   });
 
   // Business settings für den Geschäftsnamen
-  const { data: businessSettings } = useQuery<{ businessName: string }>({
+  const { data: businessSettingsQuery } = useQuery<{ businessName: string }>({
     queryKey: ['/api/business-settings']
   });
   
@@ -349,6 +371,15 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         />
       )}
 
+      {/* QR-Code Unterschrift Dialog */}
+      {selectedRepairForSignature && (
+        <QRSignatureDialog
+          open={showQRSignatureDialog}
+          onOpenChange={setShowQRSignatureDialog}
+          repair={selectedRepairForSignature}
+          businessName={businessSettingsData?.businessName || businessSettingsQuery?.businessName || 'Handyshop'}
+        />
+      )}
 
     </motion.div>
   );
