@@ -209,34 +209,7 @@ export default function SignaturePage() {
           <CardContent>
             {signatureData && (
               <div className="space-y-6 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-700">Kunde:</span>
-                    <p className="text-gray-900">{signatureData.repairData.customerName}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Gerät:</span>
-                    <p className="text-gray-900">{signatureData.repairData.device}</p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <span className="font-medium text-gray-700">Problem:</span>
-                    <p className="text-gray-900">{signatureData.repairData.issue}</p>
-                  </div>
-                  {signatureData.repairData.estimatedCost && (
-                    <div>
-                      <span className="font-medium text-gray-700">Kosten:</span>
-                      <p className="text-gray-900">{signatureData.repairData.estimatedCost}</p>
-                    </div>
-                  )}
-                  {signatureData.repairData.depositAmount && (
-                    <div>
-                      <span className="font-medium text-gray-700">Anzahlung:</span>
-                      <p className="text-gray-900">{signatureData.repairData.depositAmount}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Kundendaten Verifikation */}
+                {/* Kundendaten Verifikation - ganz oben */}
                 {signatureData.repairData.customerData && (
                   <div className="border rounded-lg p-4 bg-blue-50">
                     <h3 className="font-semibold text-blue-900 mb-3">Ihre Kontaktdaten</h3>
@@ -280,6 +253,30 @@ export default function SignaturePage() {
                     </div>
                   </div>
                 )}
+
+                {/* Reparaturdaten - ohne redundanten Kundennamen */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Gerät:</span>
+                    <p className="text-gray-900">{signatureData.repairData.device}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="font-medium text-gray-700">Problem:</span>
+                    <p className="text-gray-900">{signatureData.repairData.issue}</p>
+                  </div>
+                  {signatureData.repairData.estimatedCost && (
+                    <div>
+                      <span className="font-medium text-gray-700">Kosten:</span>
+                      <p className="text-gray-900">{signatureData.repairData.estimatedCost}</p>
+                    </div>
+                  )}
+                  {signatureData.repairData.depositAmount && (
+                    <div>
+                      <span className="font-medium text-gray-700">Anzahlung:</span>
+                      <p className="text-gray-900">{signatureData.repairData.depositAmount}</p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Reparaturbedingungen */}
                 <div className="border rounded-lg p-4 bg-gray-50">

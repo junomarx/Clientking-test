@@ -3997,31 +3997,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Reparaturdaten sind erforderlich" });
       }
 
-      console.log("🔍 QR-Code Generation Debug:");
-      console.log("   - repairData:", JSON.stringify(repairData, null, 2));
-      console.log("   - repairId:", repairData.repairId);
-      console.log("   - userId:", userId);
-
       // Kundendaten direkt aus der Reparatur laden
       let customerData = null;
       if (repairData.repairId) {
         try {
-          console.log(`🔍 Lade Reparatur für repairId: ${repairData.repairId}`);
           const repair = await storage.getRepair(repairData.repairId, userId);
-          console.log("🔍 Geladene Reparatur:", repair ? JSON.stringify(repair, null, 2) : "NULL");
           
           if (repair && repair.customerId) {
-            console.log(`🔍 Lade Kundendaten für customerId: ${repair.customerId}`);
             customerData = await storage.getCustomer(repair.customerId, userId);
-            console.log("🔍 Geladene Kundendaten:", customerData ? JSON.stringify(customerData, null, 2) : "NULL");
-          } else {
-            console.log("🔍 Keine customerId in Reparatur gefunden");
           }
         } catch (error) {
           console.error("Fehler beim Laden der Reparatur/Kundendaten:", error);
         }
-      } else {
-        console.log("🔍 Keine repairId in repairData vorhanden");
       }
 
       // Erweiterte Reparaturdaten mit Kundendaten zusammenführen
