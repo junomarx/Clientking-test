@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, QrCode, CheckCircle2, XCircle, RefreshCw, Copy, ExternalLink } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface QRSignatureDialogProps {
@@ -143,10 +143,19 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
 
       setSignatureStatus(prev => prev ? { ...prev, status: 'completed' } : null);
       
+      // Invalidate repairs cache to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs', repair.id] });
+      
       toast({
         title: "Unterschrift abgeschlossen",
         description: "Die Kundenunterschrift wurde erfolgreich zur Reparatur hinzugefügt.",
       });
+
+      // Close dialog after successful completion
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 1500);
 
     } catch (err) {
       console.error("Fehler beim Abschließen der Unterschrift:", err);
