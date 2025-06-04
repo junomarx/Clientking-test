@@ -4011,10 +4011,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Temporäre Unterschrift in der Datenbank erstellen
       const tempSignature = await storage.createTempSignature(tempId, repairData, userId, shopId);
 
-      // QR-Code URL für Kunde erstellen
-      const baseUrl = process.env.NODE_ENV === 'production' 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN || 'your-domain.replit.app'}`
-        : `http://localhost:5000`;
+      // QR-Code URL für Kunde erstellen - dynamisch basierend auf Request
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5000';
+      const baseUrl = `${protocol}://${host}`;
       
       const signatureUrl = `${baseUrl}/signature/${tempId}`;
 
