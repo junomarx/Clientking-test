@@ -269,16 +269,36 @@ export default function SignaturePage() {
           <div className="fixed inset-0 bg-white z-40 flex flex-col p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Unterschrift - {signatureData?.repairData.shopName}</h2>
-              <Button
-                onClick={() => {
-                  // Querformat-Modus beenden, zurück zum normalen Modus
-                  setIsLandscape(false);
-                }}
-                variant="outline"
-                size="sm"
-              >
-                Zurück zum Hochformat
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearSignature}
+                  className="flex items-center gap-1"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Löschen
+                </Button>
+                <Button
+                  onClick={submitSignature}
+                  disabled={signatureEmpty || submitting}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Speichern...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Speichern
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             
             <div className="flex-1 min-h-0">
@@ -296,39 +316,10 @@ export default function SignaturePage() {
                   onEnd={handleSignatureEnd}
                 />
               </div>
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-center mt-2">
                 <p className="text-xs text-gray-500">
                   Verwenden Sie Ihren Finger oder einen Stift zum Unterschreiben
                 </p>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSignature}
-                    className="flex items-center gap-1"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                    Löschen
-                  </Button>
-                  <Button
-                    onClick={submitSignature}
-                    disabled={signatureEmpty || submitting}
-                    size="sm"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Speichern...
-                      </>
-                    ) : (
-                      <>
-                        <PenTool className="h-4 w-4 mr-2" />
-                        Bestätigen
-                      </>
-                    )}
-                  </Button>
-                </div>
               </div>
             </div>
           </div>
