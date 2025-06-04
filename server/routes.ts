@@ -3988,6 +3988,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // QR-Code Unterschriften API-Endpoints
+  
+  // QR-Code für Unterschrift generieren
+  app.post("/api/signature/generate-qr", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { repairData } = req.body;
+      const userId = req.user?.id;
+      const shopId = req.user?.shopId;
+
+      if (!userId || !shopId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+
+      if (!repairData) {
+        return res.status(400).json({ message: "Reparaturdaten sind erforderlich" });
+      }
+
+      // Eindeutige temporäre ID generieren
+      const tempId = crypto.randomUUID();
+
+      // Temporäre Unterschrift in der Datenbank erstellen
+      const tempSignature = await storage.createTempSignature(tempId, repairData, userId, shopId);
+
+      // QR-Code URL für Kunde erstellen
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN || 'your-domain.replit.app'}`
+        : `http://localhost:5000`;
+      
+      const signatureUrl = `${baseUrl}/signature/${tempId}`;
+
+      res.json({
+        success: true,
+        tempId,
+        signatureUrl,
+        expiresAt: tempSignature.expiresAt
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Generieren des QR-Codes:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Generieren des QR-Codes",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Status der temporären Unterschrift abrufen
+  app.get("/api/signature/status/:tempId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { tempId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+
+      const tempSignature = await storage.getTempSignature(tempId);
+
+      if (!tempSignature) {
+        return res.status(404).json({ message: "Unterschrift nicht gefunden" });
+      }
+
+      // Prüfen ob die Unterschrift zum angemeldeten Benutzer gehört
+      if (tempSignature.userId !== userId) {
+        return res.status(403).json({ message: "Zugriff verweigert" });
+      }
+
+      res.json({
+        status: tempSignature.status,
+        signedAt: tempSignature.signedAt,
+        customerSignature: tempSignature.customerSignature,
+        expiresAt: tempSignature.expiresAt
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Unterschriftsstatus:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen des Unterschriftsstatus",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Unterschrift abschließen und zur Reparatur hinzufügen
+  app.post("/api/signature/complete/:tempId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { tempId } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+
+      const tempSignature = await storage.getTempSignature(tempId);
+
+      if (!tempSignature) {
+        return res.status(404).json({ message: "Unterschrift nicht gefunden" });
+      }
+
+      // Prüfen ob die Unterschrift zum angemeldeten Benutzer gehört
+      if (tempSignature.userId !== userId) {
+        return res.status(403).json({ message: "Zugriff verweigert" });
+      }
+
+      if (tempSignature.status !== 'signed') {
+        return res.status(400).json({ message: "Unterschrift noch nicht vorhanden" });
+      }
+
+      // Unterschrift als abgeschlossen markieren
+      await storage.completeTempSignature(tempId);
+
+      res.json({
+        success: true,
+        message: "Unterschrift erfolgreich abgeschlossen",
+        signature: tempSignature.customerSignature
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Abschließen der Unterschrift:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abschließen der Unterschrift",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Öffentlicher Endpunkt für Kunden-Unterschrift (ohne Authentifizierung)
+  app.get("/api/signature/customer/:tempId", async (req: Request, res: Response) => {
+    try {
+      const { tempId } = req.params;
+
+      const tempSignature = await storage.getTempSignature(tempId);
+
+      if (!tempSignature) {
+        return res.status(404).json({ message: "Unterschrifts-Link ungültig oder abgelaufen" });
+      }
+
+      // Prüfen ob abgelaufen
+      if (new Date() > tempSignature.expiresAt) {
+        return res.status(410).json({ message: "Unterschrifts-Link ist abgelaufen" });
+      }
+
+      // Nur notwendige Daten für den Kunden zurückgeben
+      res.json({
+        tempId,
+        repairData: tempSignature.repairData,
+        status: tempSignature.status,
+        expiresAt: tempSignature.expiresAt
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kundendaten:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Unterschriftsdaten",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Kunden-Unterschrift speichern (ohne Authentifizierung)
+  app.post("/api/signature/customer/:tempId", async (req: Request, res: Response) => {
+    try {
+      const { tempId } = req.params;
+      const { signature } = req.body;
+
+      if (!signature) {
+        return res.status(400).json({ message: "Unterschrift ist erforderlich" });
+      }
+
+      const tempSignature = await storage.getTempSignature(tempId);
+
+      if (!tempSignature) {
+        return res.status(404).json({ message: "Unterschrifts-Link ungültig oder abgelaufen" });
+      }
+
+      // Prüfen ob abgelaufen
+      if (new Date() > tempSignature.expiresAt) {
+        return res.status(410).json({ message: "Unterschrifts-Link ist abgelaufen" });
+      }
+
+      if (tempSignature.status !== 'pending') {
+        return res.status(400).json({ message: "Unterschrift wurde bereits geleistet" });
+      }
+
+      // Unterschrift speichern
+      await storage.updateTempSignatureWithSignature(tempId, signature);
+
+      res.json({
+        success: true,
+        message: "Unterschrift erfolgreich gespeichert"
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Speichern der Kundenunterschrift:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Speichern der Unterschrift",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

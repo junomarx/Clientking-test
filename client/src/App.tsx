@@ -19,6 +19,7 @@ import DeviceFinderDemo from "@/pages/device-finder-demo";
 import OptimizedTableDemo from "@/pages/optimized-table-demo";
 import ResponsiveDevicesDemo from "@/pages/responsive-devices-demo";
 import ApiTest from "@/pages/api-test";
+import SignaturePage from "@/pages/signature-page";
 import { ProtectedRoute, AdminProtectedRoute, SuperadminProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/optimized-table-demo" component={OptimizedTableDemo} />
       <Route path="/responsive-devices-demo" component={ResponsiveDevicesDemo} />
       <Route path="/api-test" component={ApiTest} />
+      <Route path="/signature/:tempId" component={SignaturePage} />
       
       <Route path="/admin">
         <ProtectedRoute path="/admin">

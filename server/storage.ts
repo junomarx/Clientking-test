@@ -44,6 +44,9 @@ import {
   type CostEstimate,
   type InsertCostEstimate,
   type CostEstimateItem,
+  tempSignatures,
+  type TempSignature,
+  type InsertTempSignature,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
