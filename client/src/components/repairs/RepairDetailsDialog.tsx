@@ -368,24 +368,15 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 )}
                 
                 <div className="mt-4 flex justify-center">
-                  {isProfessionalOrHigher ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDropoffSignatureDialog(true)}
-                      className="flex items-center gap-1"
-                    >
-                      <Pen className="h-4 w-4" />
-                      {repair.dropoffSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
-                    </Button>
-                  ) : (
-                    <div className="text-xs text-amber-500">
-                      <span className="flex items-center gap-1">
-                        <Pen className="h-4 w-4" />
-                        Abgabe-Unterschriften nur in Professional verfügbar
-                      </span>
-                    </div>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDropoffSignatureDialog(true)}
+                    className="flex items-center gap-1"
+                  >
+                    <Pen className="h-4 w-4" />
+                    {repair.dropoffSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
+                  </Button>
                 </div>
               </div>
               

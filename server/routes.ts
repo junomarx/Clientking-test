@@ -2835,12 +2835,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Benutzer nicht gefunden" });
       }
       
-      // Für Basic-Benutzer: Abgabe-Unterschrift nicht erlauben
-      if (user.pricingPlan === 'basic') {
-        return res.status(403).json({ 
-          message: "Im Basic-Paket können nur Abholungs-Unterschriften erstellt werden. Upgrade auf Professional, um beide Unterschriftstypen zu nutzen."
-        });
-      }
+      // Alle Benutzer haben Vollzugriff auf beide Unterschriftstypen
+      // Paketbeschränkungen wurden entfernt
       
       // Zuerst prüfen, ob die Reparatur dem angemeldeten Benutzer gehört
       const repair = await storage.getRepair(repairId, userId);
