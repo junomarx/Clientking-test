@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info } from 'lucide-react';
+import { Printer, Info, QrCode } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
 
 interface RepairWithCustomer {
@@ -19,6 +19,7 @@ interface AnimatedRecentOrdersProps {
   onStatusChange?: (id: number, currentStatus: string) => void;
   onEdit?: (id: number) => void;
   onRepairClick?: (repairId: number) => void;
+  onQRSignatureClick?: (repairId: number) => void;
 }
 
 export function AnimatedRecentOrders({ 
@@ -27,7 +28,8 @@ export function AnimatedRecentOrders({
   onPrintClick,
   onStatusChange,
   onEdit,
-  onRepairClick
+  onRepairClick,
+  onQRSignatureClick
 }: AnimatedRecentOrdersProps) {
   // Funktion zum Öffnen der Reparaturseite mit Details
   const handleRepairClick = (repairId: number) => {
@@ -123,6 +125,20 @@ export function AnimatedRecentOrders({
                         >
                           <Printer className="h-4 w-4" />
                         </motion.button>
+                        {onQRSignatureClick && (
+                          <motion.button 
+                            className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
+                            title="QR-Code für Unterschrift generieren"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onQRSignatureClick(repair.id);
+                            }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <QrCode className="h-4 w-4" />
+                          </motion.button>
+                        )}
                         <motion.button 
                           className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
                           title="Details anzeigen"
