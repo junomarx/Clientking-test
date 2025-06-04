@@ -117,10 +117,15 @@ export function BonReceipt58mm({
         padding: "6px",
         fontSize: "9px",
         lineHeight: 1.3,
-        marginBottom: "14px",
-        textAlign: "center"
+        marginBottom: "14px"
       }}>
-        Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.
+        <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "10px", marginBottom: "4px" }}>Reparaturbedingungen</div>
+        1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+        2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+        3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+        4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+        5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+        6. Mit Unterschrift werden Bedingungen akzeptiert.
       </div>
 
       {/* Unterschrift Abgabe - nur anzeigen wenn vorhanden und nicht leer */}
@@ -142,7 +147,24 @@ export function BonReceipt58mm({
         </div>
       )}
 
-
+      {/* Unterschrift Abholung - nur anzeigen wenn vorhanden und nicht leer */}
+      {signatur_pickup && signatur_pickup.trim() !== "" && (
+        <div style={{ marginTop: "16px", textAlign: "center" }}>
+          <div style={{ fontWeight: "bold", marginBottom: "4px" }}>Gerät abgeholt</div>
+          <img 
+            src={signatur_pickup} 
+            alt="Unterschrift bei Abholung" 
+            style={{ maxWidth: "80%", maxHeight: "25mm", margin: "0 auto 5px auto", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abholungs-Unterschrift in der 58mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div style={{ borderTop: "1px solid #000", width: "100%", margin: "2px 0 6px" }}></div>
+          {kundenname}<br />
+          {datum_pickup}
+        </div>
+      )}
     </div>
   );
 }

@@ -125,17 +125,24 @@ export function BonReceipt80mm({
         )}
       </div>
 
-      {/* Bestätigungstext */}
+      {/* Reparaturbedingungen */}
       <div style={{
         border: "1px solid #ccc",
         padding: "10px",
         fontSize: "11px",
         lineHeight: 1.4,
         marginBottom: "15px",
-        backgroundColor: "#f9f9f9",
-        textAlign: "center"
+        backgroundColor: "#f9f9f9"
       }}>
-        Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.
+        <div style={{ fontWeight: "bold", fontSize: "12px", marginBottom: "5px" }}>Reparaturbedingungen</div>
+        <div>
+          1. Für Datenverlust wird keine Haftung übernommen. Der Kunde ist für Datensicherung selbst verantwortlich.<br /><br />
+          2. Die Reparatur erfolgt nach bestem Wissen mit geeigneten Ersatzteilen. Originalteile können nicht garantiert werden.<br /><br />
+          3. Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die Reparaturleistung.<br /><br />
+          4. Testzugriffe auf das Gerät können notwendig sein.<br /><br />
+          5. Geräte müssen innerhalb von 60 Tagen abgeholt werden. Danach kann das Gerät kostenpflichtig eingelagert oder entsorgt werden.<br /><br />
+          6. Mit Ihrer Unterschrift stimmen Sie diesen Bedingungen ausdrücklich zu.
+        </div>
       </div>
 
       {/* Unterschrift Abgabe - nur anzeigen wenn vorhanden und nicht leer */}
@@ -157,7 +164,24 @@ export function BonReceipt80mm({
         </div>
       )}
 
-
+      {/* Unterschrift Abholung - nur anzeigen wenn vorhanden und nicht leer */}
+      {signatur_pickup && signatur_pickup.trim() !== "" && (
+        <div style={{ marginTop: "20px" }}>
+          <div style={{ fontWeight: "bold", marginBottom: "5px" }}>Gerät abgeholt</div>
+          <img 
+            src={signatur_pickup} 
+            alt="Unterschrift bei Abholung" 
+            style={{ maxWidth: "80%", maxHeight: "30mm", display: "block" }}
+            onError={(e) => {
+              console.error('Fehler beim Laden der Abholungs-Unterschrift in der 80mm Quittung:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div style={{ borderTop: "1px solid #000", width: "100%", margin: "3px 0 8px" }}></div>
+          {kundenname}<br />
+          {datum_pickup}
+        </div>
+      )}
     </div>
   );
 }

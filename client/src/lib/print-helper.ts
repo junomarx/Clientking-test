@@ -62,15 +62,6 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
     result = result.replace(/{{secondSignature}}/g, secondSignatureImg);
   }
 
-  // Spezielle Behandlung für Preis- und Anzahlungsfelder - entferne ganze Zeilen wenn leer
-  if (!variables.estimatedPrice || variables.estimatedPrice.trim() === '') {
-    result = result.replace(/<div[^>]*class="[^"]*price-row[^"]*"[^>]*>.*?<\/div>/g, '');
-  }
-  
-  if (!variables.downPayment || variables.downPayment.trim() === '') {
-    result = result.replace(/<div[^>]*class="[^"]*downpayment-row[^"]*"[^>]*>.*?<\/div>/g, '');
-  }
-
   // Entferne Zeilen mit leeren Werten
   // 1. Sammle alle noch vorhandenen Platzhalter
   const placeholderMatches = result.match(/{{([^}]+)}}/g) || [];
@@ -201,8 +192,17 @@ function getDefaultTemplate(templateType: string): string {
     <div>{{preis}}</div>
   </div>
   
+  <div style="border: 1px solid #000; padding: 6px; font-size: 9px; line-height: 1.3; margin-bottom: 14px;">
+    <div style="text-align: center; font-weight: bold; font-size: 10px; margin-bottom: 4px;">Reparaturbedingungen</div>
+    1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+    2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+    3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+    4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+    5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+    6. Mit Unterschrift werden Bedingungen akzeptiert.
+  </div>
+  
   <div style="margin-top: 16px; text-align: center;">
-    <div style="font-size: 9px; margin-bottom: 8px;">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</div>
     <div style="font-weight: bold; margin-bottom: 4px;">Reparaturauftrag erteilt</div>
     {{customerSignature}}
     <div style="border-top: 1px solid #000; width: 100%; margin: 2px 0 6px;"></div>
@@ -248,8 +248,17 @@ function getDefaultTemplate(templateType: string): string {
     <div>{{preis}}</div>
   </div>
   
+  <div style="border: 1px solid #000; padding: 8px; font-size: 10px; line-height: 1.4; margin-bottom: 15px;">
+    <div style="text-align: center; font-weight: bold; font-size: 11px; margin-bottom: 5px;">Reparaturbedingungen</div>
+    1. Keine Haftung für Datenverlust – Kunde ist verantwortlich.<br /><br />
+    2. Reparatur mit geprüften, ggf. nicht originalen Teilen.<br /><br />
+    3. 6 Monate Gewährleistung auf Reparaturleistung.<br /><br />
+    4. Zugriff auf Gerät zur Fehlerprüfung möglich.<br /><br />
+    5. Abholung innerhalb von 60 Tagen erforderlich.<br /><br />
+    6. Mit Unterschrift werden Bedingungen akzeptiert.
+  </div>
+  
   <div style="margin-top: 20px; text-align: center;">
-    <div style="font-size: 10px; margin-bottom: 10px;">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</div>
     <div style="font-weight: bold; margin-bottom: 5px;">Reparaturauftrag erteilt</div>
     {{customerSignature}}
     <div style="border-top: 1px solid #000; width: 100%; margin: 3px 0 8px;"></div>

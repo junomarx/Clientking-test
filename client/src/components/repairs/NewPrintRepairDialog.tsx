@@ -297,7 +297,6 @@ export function PrintRepairDialog({ open, onClose, repairId, isPreview = false }
     finalPrice: "", // finalPrice ist derzeit kein Teil des Repair-Objekts
     depositAmount: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
     anzahlung: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
-    downPayment: repair?.depositAmount ? `${repair.depositAmount.replace('.', ',')} €` : "",
     
     // Zusätzliche Platzhalter für Kompatibilität
     logoUrl: businessSettings?.logoImage || "",

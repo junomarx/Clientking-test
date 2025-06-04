@@ -435,31 +435,58 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
 
               {/* Unterschriftenbereich */}
               <div className="border-t-2 border-gray-300 pt-8 mt-16">
-                <div className="text-center">
-                  <p className="text-sm mb-2">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</p>
-                  <p className="font-bold mb-4">Reparaturauftrag erteilt</p>
-                  {repair.dropoffSignature ? (
-                    <>
-                      <div className="h-[60px] flex items-center justify-center mb-2">
-                        <img 
-                          src={repair.dropoffSignature} 
-                          alt="Unterschrift bei Abgabe" 
-                          className="max-h-[60px] object-contain"
-                        />
-                      </div>
-                      <div className="border-t border-gray-900 mt-2"></div>
-                      <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="h-[60px] border-b border-gray-900 mb-2"></div>
-                      <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
-                      <div className="text-xs text-gray-600 mt-1">{formatDate(repair.createdAt)}</div>
-                    </>
-                  )}
+                <div className="flex justify-between gap-16">
+                  <div className="flex-1 text-center">
+                    <p className="font-bold mb-4">Gerät abgegeben</p>
+                    {repair.dropoffSignature ? (
+                      <>
+                        <div className="h-[60px] flex items-center justify-center mb-2">
+                          <img 
+                            src={repair.dropoffSignature} 
+                            alt="Unterschrift bei Abgabe" 
+                            className="max-h-[60px] object-contain"
+                          />
+                        </div>
+                        <div className="border-t border-gray-900 mt-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-[60px] border-b border-gray-900 mb-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                        <div className="text-xs text-gray-600 mt-1">{formatDate(repair.createdAt)}</div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 text-center">
+                    <p className="font-bold mb-4">Gerät abgeholt</p>
+                    {repair.pickupSignature ? (
+                      <>
+                        <div className="h-[60px] flex items-center justify-center mb-2">
+                          <img 
+                            src={repair.pickupSignature} 
+                            alt="Unterschrift bei Abholung" 
+                            className="max-h-[60px] object-contain"
+                          />
+                        </div>
+                        <div className="border-t border-gray-900 mt-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {repair.pickupSignedAt && formatDate(repair.pickupSignedAt)}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-[60px] border-b border-gray-900 mb-2"></div>
+                        <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                        <div className="text-xs text-gray-600 mt-1"></div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

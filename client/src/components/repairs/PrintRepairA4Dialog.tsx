@@ -772,36 +772,71 @@ export function PrintRepairA4Dialog({ open, onClose, repairId }: PrintRepairA4Di
               </div>
               
               {/* Unterschriftsbereich mit Datum */}
-              <div className="mt-8">
-                <div className="text-center">
-                  <p className="text-sm mb-2">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</p>
-                  <p className="font-bold mb-4">Reparaturauftrag erteilt</p>
+              <div className="flex mt-8 gap-10">
+                <div className="flex-1 text-center">
+                  <p className="font-bold mb-2">Reparaturauftrag erteilt</p>
                   {repair.dropoffSignature ? (
                     <>
-                      <div className="h-[60px] flex items-center justify-center mb-2">
+                      <div className="h-[40px] flex items-center justify-center">
                         <img 
                           src={repair.dropoffSignature} 
                           alt="Unterschrift bei Abgabe" 
-                          className="max-h-[60px] object-contain"
+                          className="max-h-[40px] object-contain"
                           onError={(e) => {
                             console.error('Fehler beim Laden der Abgabe-Unterschrift:', e);
                             e.currentTarget.style.display = 'none';
                           }}
                         />
                       </div>
-                      <div className="border-t border-gray-900 mt-2"></div>
-                      <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
                       <div className="text-xs text-gray-600 mt-1">
                         {repair.dropoffSignedAt && formatDate(repair.dropoffSignedAt)}
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="h-[60px] border-b border-gray-900 mb-2"></div>
-                      <div className="text-sm mt-2">{customer.firstName} {customer.lastName}</div>
+                      <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
+                        <span>Keine Unterschrift vorhanden</span>
+                      </div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
                       <div className="text-xs text-gray-600 mt-1">
                         {formatDate(repair.createdAt)}
                       </div>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex-1 text-center">
+                  <p className="font-bold mb-2">Gerät abgeholt</p>
+                  {repair.pickupSignature ? (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center">
+                        <img 
+                          src={repair.pickupSignature} 
+                          alt="Unterschrift bei Abholung" 
+                          className="max-h-[40px] object-contain"
+                          onError={(e) => {
+                            console.error('Fehler beim Laden der Abholungs-Unterschrift:', e);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {repair.pickupSignedAt && formatDate(repair.pickupSignedAt)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-[40px] flex items-center justify-center text-gray-400 text-sm">
+                        <span>Keine Unterschrift vorhanden</span>
+                      </div>
+                      <div className="border-t border-gray-900 mt-1"></div>
+                      <div className="text-sm mt-1">{customer.firstName} {customer.lastName}</div>
+                      <div className="text-xs text-gray-600 mt-1"></div>
                     </>
                   )}
                 </div>
