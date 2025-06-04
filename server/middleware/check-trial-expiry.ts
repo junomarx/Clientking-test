@@ -15,7 +15,8 @@ import { storage } from '../storage';
  * @param next Express NextFunction
  */
 export async function checkTrialExpiry(req: Request, res: Response, next: NextFunction) {
-  // Sicherstellen, dass der Benutzer authentifiziert ist
+  // Alle Benutzer haben Vollzugriff - keine Trial-Beschränkungen
+  // Nur Authentifizierung prüfen
   if (!req.isAuthenticated() || !req.user) {
     return res.status(401).json({ 
       error: "Nicht authentifiziert",
@@ -23,21 +24,6 @@ export async function checkTrialExpiry(req: Request, res: Response, next: NextFu
     });
   }
 
-  // Benutzer-ID aus der Session holen
-  const userId = (req.user as any).id;
-  
-  // Prüfen, ob die Testversion abgelaufen ist
-  const isExpired = await storage.isTrialExpired(userId);
-  
-  if (isExpired) {
-    console.warn(`❌ Benutzer ${(req.user as any).username} (ID: ${userId}) hat eine abgelaufene Testversion – Zugriff verweigert`);
-    
-    return res.status(403).json({
-      error: "Ihre Testversion ist abgelaufen. Bitte aktualisieren Sie Ihr Paket, um weiterhin Zugriff zu haben.",
-      code: "TRIAL_EXPIRED"
-    });
-  }
-
-  // Wenn die Testversion nicht abgelaufen ist, Anfrage normal weiterleiten
+  // Anfrage normal weiterleiten - keine Trial-Prüfung mehr
   next();
 }
