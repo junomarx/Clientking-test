@@ -100,7 +100,8 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
         issue: repair.issue,
         shopName: businessName,
         estimatedCost: repair.estimatedCost ? `${repair.estimatedCost} €` : undefined,
-        depositAmount: repair.depositAmount ? `${repair.depositAmount} €` : undefined
+        depositAmount: repair.depositAmount ? `${repair.depositAmount} €` : undefined,
+        customerId: repair.customerId
       };
 
       const response = await apiRequest("POST", "/api/signature/generate-qr", {

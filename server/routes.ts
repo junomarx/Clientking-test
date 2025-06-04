@@ -3997,11 +3997,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Reparaturdaten sind erforderlich" });
       }
 
+      // Kundendaten laden wenn customerId vorhanden ist
+      let customerData = null;
+      if (repairData.customerId) {
+        try {
+          customerData = await storage.getCustomer(repairData.customerId, userId);
+        } catch (error) {
+          console.error("Fehler beim Laden der Kundendaten:", error);
+        }
+      }
+
+      // Erweiterte Reparaturdaten mit Kundendaten zusammenführen
+      const enrichedRepairData = {
+        ...repairData,
+        customerData: customerData ? {
+          firstName: customerData.firstName,
+          lastName: customerData.lastName,
+          phone: customerData.phone,
+          email: customerData.email,
+          address: customerData.address,
+          zipCode: customerData.zipCode,
+          city: customerData.city
+        } : null
+      };
+
       // Eindeutige temporäre ID generieren
       const tempId = crypto.randomUUID();
 
       // Temporäre Unterschrift in der Datenbank erstellen
-      const tempSignature = await storage.createTempSignature(tempId, repairData, userId, shopId);
+      const tempSignature = await storage.createTempSignature(tempId, enrichedRepairData, userId, shopId);
 
       // QR-Code URL für Kunde erstellen - dynamisch basierend auf Request
       const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
