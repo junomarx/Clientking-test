@@ -191,7 +191,7 @@ export default function SignaturePage() {
           </CardHeader>
           <CardContent>
             {signatureData && (
-              <div className="space-y-4 mb-6">
+              <div className="space-y-6 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-700">Kunde:</span>
@@ -204,6 +204,19 @@ export default function SignaturePage() {
                   <div className="sm:col-span-2">
                     <span className="font-medium text-gray-700">Problem:</span>
                     <p className="text-gray-900">{signatureData.repairData.issue}</p>
+                  </div>
+                </div>
+
+                {/* Reparaturbedingungen */}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <h3 className="font-semibold text-gray-900 mb-3">Reparaturbedingungen</h3>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p><strong>1.</strong> Die Reparatur erfolgt nach bestem Wissen und mit geprüften Ersatzteilen. Originalteile können nicht in jedem Fall garantiert werden.</p>
+                    <p><strong>2.</strong> Für etwaige Datenverluste wird keine Haftung übernommen. Der Kunde ist verpflichtet, vor Abgabe des Geräts eine vollständige Datensicherung vorzunehmen.</p>
+                    <p><strong>3.</strong> Die Gewährleistung beträgt 6 Monate und bezieht sich ausschließlich auf die ausgeführten Arbeiten und eingesetzten Komponenten.</p>
+                    <p><strong>4.</strong> Wird ein Kostenvoranschlag abgelehnt oder ist eine Reparatur nicht möglich, kann eine Überprüfungspauschale berechnet werden.</p>
+                    <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
+                    <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
                   </div>
                 </div>
               </div>
