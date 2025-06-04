@@ -76,6 +76,8 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName }: 
       setError(null);
       
       const repairData = {
+        repairId: repair.id,
+        signatureType: signatureType,
         customerName: repair.customerName,
         device: repair.device,
         issue: repair.issue,

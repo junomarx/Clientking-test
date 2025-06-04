@@ -1,0 +1,44 @@
+Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+PrintOptionsDialog.tsx:79 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: null
+App.tsx:122 UserId bereits im localStorage: 53
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:141 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+manifest.json:1 Manifest: Line: 1, column: 1, Syntax error.
+887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+main.tsx:25 PWA Service Worker Registrierung fehlgeschlagen: SecurityError: Failed to register a ServiceWorker for scope ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/') with script ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/sw.js'): The script has an unsupported MIME type ('text/html').
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:133 🔍 DEBUG: useEffect für E-Mail-Historie ausgeführt. emailHistoryData: undefined
+RepairDetailsDialog.tsx:138 🔍 DEBUG: Keine emailHistoryData vorhanden, Historie wird geleert
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+/api/signature/complete/b937aa99-8775-4e7d-b945-abb3c917950f:1 
+        
+        
+       Failed to load resource: the server responded with a status of 400 (Bad Request)
+hook.js:608 Fehler beim Abschließen der Unterschrift: Error: Fehlende Daten für Unterschrift
+    at apiRequest (queryClient.ts:84:13)
+    at async completeSignature (QRSignatureDialog.tsx:134:24)
+overrideMethod @ hook.js:608
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+RepairDetailsDialog.tsx:62 RepairDetailsDialog geöffnet: false repairId: null
+/api/signature/complete/243ba28c-9253-49f4-9e8d-4f1cad742af5:1 
+        
+        
+       Failed to load resource: the server responded with a status of 400 (Bad Request)
+hook.js:608 Fehler beim Abschließen der Unterschrift: Error: Fehlende Daten für Unterschrift
+    at apiRequest (queryClient.ts:84:13)
+    at async completeSignature (QRSignatureDialog.tsx:134:24)
+overrideMethod @ hook.js:608
