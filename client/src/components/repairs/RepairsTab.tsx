@@ -413,7 +413,10 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
       id: repair.id,
       customerName: repair.customerName,
       device: `${repair.brand} ${repair.model}`,
-      issue: repair.issue
+      issue: repair.issue,
+      status: repair.status,
+      estimatedCost: repair.estimatedCost,
+      depositAmount: repair.depositAmount
     });
     setShowQRSignatureDialog(true);
   };
@@ -627,7 +630,9 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                               customerName: repair.customerName,
                               device: `${repair.brand} ${repair.model}`,
                               issue: repair.issue,
-                              status: repair.status
+                              status: repair.status,
+                              estimatedCost: repair.estimatedCost,
+                              depositAmount: repair.depositAmount
                             });
                             setShowQRSignatureDialog(true);
                           }}
