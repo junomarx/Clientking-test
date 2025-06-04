@@ -409,22 +409,19 @@ const defaultPrintTemplates = [
     </div>
 
     <div class="signature-section">
+        <div class="signature-confirmation">
+            <p class="confirmation-text">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</p>
+        </div>
         <div class="signature-box">
             <p><strong>Reparaturauftrag erteilt</strong></p>
             <div class="signature-line">{{signatur_dropoff}}</div>
             <div class="signature-placeholder">{{kundenname}}</div>
             <div class="signature-date">{{datum_dropoff}}</div>
         </div>
-        <div class="signature-box">
-            <p><strong>Gerät abgeholt</strong></p>
-            <div class="signature-line">{{signatur_pickup}}</div>
-            <div class="signature-placeholder">{{kundenname}}</div>
-            <div class="signature-date">{{datum_pickup}}</div>
-        </div>
     </div>
 </body>
 </html>`,
-    variables: ['firmenlogo','kundenname','kundenadresse1','kundenadresse2','auftragsnummer','hersteller','modell','problem','preis','signatur_dropoff','datum_dropoff','signatur_pickup','datum_pickup','businessName','businessAddress','businessPhone','businessEmail']
+    variables: ['firmenlogo','kundenname','kundenadresse1','kundenadresse2','auftragsnummer','hersteller','modell','problem','preis','signatur_dropoff','datum_dropoff','businessName','businessAddress','businessPhone','businessEmail']
   },
   {
     name: 'Standard Kostenvoranschlag A4',
