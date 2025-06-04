@@ -62,6 +62,15 @@ export function applyTemplateVariables(templateHtml: string, variables: Record<s
     result = result.replace(/{{secondSignature}}/g, secondSignatureImg);
   }
 
+  // Spezielle Behandlung für Preis- und Anzahlungsfelder - entferne ganze Zeilen wenn leer
+  if (!variables.estimatedPrice || variables.estimatedPrice.trim() === '') {
+    result = result.replace(/<div[^>]*class="[^"]*price-row[^"]*"[^>]*>.*?<\/div>/g, '');
+  }
+  
+  if (!variables.downPayment || variables.downPayment.trim() === '') {
+    result = result.replace(/<div[^>]*class="[^"]*downpayment-row[^"]*"[^>]*>.*?<\/div>/g, '');
+  }
+
   // Entferne Zeilen mit leeren Werten
   // 1. Sammle alle noch vorhandenen Platzhalter
   const placeholderMatches = result.match(/{{([^}]+)}}/g) || [];
