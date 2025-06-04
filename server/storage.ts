@@ -478,6 +478,13 @@ export interface IStorage {
   
   // E-Mail-Verlauf protokollieren
   logEmailHistory(data: Partial<InsertEmailHistory>): Promise<EmailHistory | undefined>;
+  
+  // QR-Code Unterschriften methods
+  createTempSignature(tempId: string, repairData: any, userId: number, shopId: number): Promise<TempSignature>;
+  getTempSignature(tempId: string): Promise<TempSignature | undefined>;
+  updateTempSignatureWithSignature(tempId: string, signature: string): Promise<TempSignature | undefined>;
+  completeTempSignature(tempId: string): Promise<TempSignature | undefined>;
+  cleanupExpiredTempSignatures(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3790,6 +3797,98 @@ export class DatabaseStorage implements IStorage {
           byMonth: {},
         },
       };
+    }
+  }
+
+  // QR-Code Unterschriften Implementierung
+  async createTempSignature(tempId: string, repairData: any, userId: number, shopId: number): Promise<TempSignature> {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // 24 Stunden gültig
+
+      const [tempSignature] = await db
+        .insert(tempSignatures)
+        .values({
+          tempId,
+          repairData,
+          userId,
+          shopId,
+          expiresAt,
+          status: 'pending'
+        })
+        .returning();
+
+      console.log(`✅ Temporäre Unterschrift erstellt: ${tempId} für Benutzer ${userId}`);
+      return tempSignature;
+    } catch (error) {
+      console.error('❌ Fehler beim Erstellen der temporären Unterschrift:', error);
+      throw error;
+    }
+  }
+
+  async getTempSignature(tempId: string): Promise<TempSignature | undefined> {
+    try {
+      const [tempSignature] = await db
+        .select()
+        .from(tempSignatures)
+        .where(eq(tempSignatures.tempId, tempId));
+
+      return tempSignature;
+    } catch (error) {
+      console.error('❌ Fehler beim Abrufen der temporären Unterschrift:', error);
+      return undefined;
+    }
+  }
+
+  async updateTempSignatureWithSignature(tempId: string, signature: string): Promise<TempSignature | undefined> {
+    try {
+      const [updatedSignature] = await db
+        .update(tempSignatures)
+        .set({
+          customerSignature: signature,
+          signedAt: new Date(),
+          status: 'signed'
+        })
+        .where(eq(tempSignatures.tempId, tempId))
+        .returning();
+
+      console.log(`✅ Unterschrift hinzugefügt für tempId: ${tempId}`);
+      return updatedSignature;
+    } catch (error) {
+      console.error('❌ Fehler beim Aktualisieren der Unterschrift:', error);
+      return undefined;
+    }
+  }
+
+  async completeTempSignature(tempId: string): Promise<TempSignature | undefined> {
+    try {
+      const [completedSignature] = await db
+        .update(tempSignatures)
+        .set({
+          status: 'completed'
+        })
+        .where(eq(tempSignatures.tempId, tempId))
+        .returning();
+
+      console.log(`✅ Unterschrift abgeschlossen für tempId: ${tempId}`);
+      return completedSignature;
+    } catch (error) {
+      console.error('❌ Fehler beim Abschließen der Unterschrift:', error);
+      return undefined;
+    }
+  }
+
+  async cleanupExpiredTempSignatures(): Promise<number> {
+    try {
+      const result = await db
+        .delete(tempSignatures)
+        .where(lt(tempSignatures.expiresAt, new Date()));
+
+      console.log(`🧹 ${result.rowCount || 0} abgelaufene temporäre Unterschriften gelöscht`);
+      return result.rowCount || 0;
+    } catch (error) {
+      console.error('❌ Fehler beim Bereinigen abgelaufener Unterschriften:', error);
+      return 0;
     }
   }
 }

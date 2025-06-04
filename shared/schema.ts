@@ -695,3 +695,25 @@ export const insertSupportAccessLogSchema = createInsertSchema(supportAccessLogs
 
 export type SupportAccessLog = typeof supportAccessLogs.$inferSelect;
 export type InsertSupportAccessLog = z.infer<typeof insertSupportAccessLogSchema>;
+
+// Temporäre Unterschriftentabelle für QR-Code-Workflow
+export const tempSignatures = pgTable("temp_signatures", {
+  id: serial("id").primaryKey(),
+  tempId: text("temp_id").notNull().unique(), // UUID für QR-Code
+  repairData: jsonb("repair_data").notNull(), // Gespeicherte Reparaturdaten
+  customerSignature: text("customer_signature"), // Base64 Unterschrift
+  signedAt: timestamp("signed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(), // Ablauf nach 24h
+  userId: integer("user_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending, signed, completed, expired
+});
+
+export const insertTempSignatureSchema = createInsertSchema(tempSignatures).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type TempSignature = typeof tempSignatures.$inferSelect;
+export type InsertTempSignature = z.infer<typeof insertTempSignatureSchema>;
