@@ -22,6 +22,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
 import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
+import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -38,6 +39,10 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>('');
+  
+  // State für QR-Unterschrift
+  const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
+  const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
   
   // QueryClient für Cache-Invalidierung
   const queryClient = useQueryClient();
@@ -76,6 +81,27 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const handleEdit = (id: number) => {
     setSelectedRepairId(id);
     setShowEditDialog(true);
+  };
+  
+  // Handler für QR-Unterschrift öffnen
+  const handleOpenQRSignature = (repairId: number) => {
+    // Finde die Reparatur und den Kunden
+    const repair = repairs?.find(r => r.id === repairId);
+    const customer = customers?.find(c => c.id === repair?.customerId);
+    
+    if (repair && customer) {
+      setSelectedRepairForSignature({
+        id: repair.id,
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        device: `${repair.brand} ${repair.model}`,
+        issue: repair.issue,
+        status: repair.status,
+        estimatedCost: repair.estimatedCost,
+        depositAmount: repair.depositAmount,
+        customerId: repair.customerId
+      });
+      setShowQRSignatureDialog(true);
+    }
   };
   
   const { data: stats, isLoading: statsLoading } = useQuery<{
@@ -310,6 +336,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
             onStatusChange={openStatusDialog}
             onEdit={handleEdit}
             onRepairClick={handleRepairClick}
+            onQRSignatureClick={handleOpenQRSignature}
           />
         </div>
       </motion.div>
@@ -331,6 +358,13 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           repair={repairs.find(r => r.id === selectedRepairId) as any || null}
         />
       )}
+
+      {/* QR-Unterschrift Dialog */}
+      <QRSignatureDialog
+        open={showQRSignatureDialog}
+        onClose={() => setShowQRSignatureDialog(false)}
+        repair={selectedRepairForSignature}
+      />
     </motion.div>
   );
 }
