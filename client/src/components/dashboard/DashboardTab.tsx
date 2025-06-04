@@ -22,7 +22,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
 import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
-import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
+
 
 interface DashboardTabProps {
   onNewOrder: () => void;
@@ -40,9 +40,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>('');
   
-  // State für QR-Unterschrift
-  const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
-  const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
+
   
   // QueryClient für Cache-Invalidierung
   const queryClient = useQueryClient();
@@ -85,22 +83,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   
   // Handler für QR-Unterschrift öffnen
   const handleOpenQRSignature = (repairId: number) => {
-    // Finde die Reparatur und den Kunden
-    const repair = repairs?.find(r => r.id === repairId);
-    const customer = customers?.find(c => c.id === repair?.customerId);
-    
-    if (repair && customer) {
-      setSelectedRepairForSignature({
-        id: repair.id,
-        customerName: `${customer.firstName} ${customer.lastName}`,
-        device: `${repair.brand} ${repair.model}`,
-        issue: repair.issue,
-        status: repair.status,
-        estimatedCost: repair.estimatedCost,
-        depositAmount: repair.depositAmount,
-        customerId: repair.customerId
-      });
-      setShowQRSignatureDialog(true);
+    // Navigate to repairs page where QR signature functionality already exists
+    if (onTabChange) {
+      onTabChange('repairs');
     }
   };
   
@@ -364,13 +349,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         />
       )}
 
-      {/* QR-Unterschrift Dialog */}
-      <QRSignatureDialog
-        open={showQRSignatureDialog}
-        onOpenChange={setShowQRSignatureDialog}
-        repair={selectedRepairForSignature}
-        businessName={businessSettings?.businessName || 'Handyshop'}
-      />
+
     </motion.div>
   );
 }
