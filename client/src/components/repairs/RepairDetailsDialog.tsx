@@ -380,48 +380,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 </div>
               </div>
               
-              {/* Abholungs-Unterschrift */}
-              <div>
-                <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-                  <Pen className="h-5 w-5" />
-                  Unterschrift bei Abholung
-                </h3>
-                
-                {repair.pickupSignature ? (
-                  <div className="space-y-3">
-                    <div className="border rounded bg-white p-2">
-                      <img 
-                        src={repair.pickupSignature} 
-                        alt="Unterschrift bei Abholung" 
-                        className="max-h-32 mx-auto"
-                      />
-                    </div>
-                    {repair.pickupSignedAt && (
-                      <div className="text-sm text-muted-foreground text-center">
-                        Unterschrieben am {formatDateTime(repair.pickupSignedAt)}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground italic text-center py-3">
-                    Keine Abholungs-Unterschrift vorhanden
-                  </div>
-                )}
-                
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPickupSignatureDialog(true)}
-                    className="flex items-center gap-1"
-                    disabled={repair.status !== 'fertig' && repair.status !== 'abgeholt'}
-                    title={repair.status !== 'fertig' && repair.status !== 'abgeholt' ? 'Abholungs-Unterschrift ist nur möglich, wenn der Status "Fertig" oder "Abgeholt" ist' : undefined}
-                  >
-                    <Pen className="h-4 w-4" />
-                    {repair.pickupSignature ? 'Unterschrift ändern' : 'Unterschrift hinzufügen'}
-                  </Button>
-                </div>
-              </div>
+
             </div>
           </div>
           

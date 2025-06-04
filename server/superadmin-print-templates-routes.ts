@@ -97,9 +97,8 @@ const defaultPrintTemplates = [
   <div class="divider"></div>
   
   <div>
-    <p>Mit Ihrer Unterschrift bestätigen Sie die
-Abholung des oben genannten Geräts.</p>
-    <div style="height: 60px;"></div>
+    <p class="text-xs">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</p>
+    <div style="height: 40px;"></div>
     <div class="center">____________________________</div>
     <div class="center text-xs">Unterschrift Kunde</div>
   </div>
@@ -183,8 +182,8 @@ Abholung des oben genannten Geräts.</p>
   <div class="divider"></div>
   
   <div>
-    <p>Mit Ihrer Unterschrift bestätigen Sie die Abholung des oben genannten Geräts.</p>
-    <div style="height: 60px;"></div>
+    <p class="text-sm">Mit der Unterschrift bestätigt der Kunde, dass er die Reparaturbedingungen gelesen und akzeptiert hat.</p>
+    <div style="height: 50px;"></div>
     <div class="center">____________________________</div>
     <div class="center text-xs">Unterschrift Kunde</div>
   </div>
