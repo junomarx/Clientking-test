@@ -362,7 +362,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
       {/* QR-Unterschrift Dialog */}
       <QRSignatureDialog
         open={showQRSignatureDialog}
-        onClose={() => setShowQRSignatureDialog(false)}
+        onOpenChange={setShowQRSignatureDialog}
         repair={selectedRepairForSignature}
       />
     </motion.div>

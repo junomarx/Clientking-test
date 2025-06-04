@@ -51,7 +51,7 @@ function determineSignatureType(status?: string): 'dropoff' | 'pickup' {
 
 export function QRSignatureDialog({ open, onOpenChange, repair, businessName, signatureType }: QRSignatureDialogProps) {
   // Determine the actual signature type to use
-  const actualSignatureType = signatureType || determineSignatureType(repair.status);
+  const actualSignatureType = signatureType || (repair ? determineSignatureType(repair.status) : 'dropoff');
   const [loading, setLoading] = useState(false);
   const [signatureData, setSignatureData] = useState<SignatureResponse | null>(null);
   const [signatureStatus, setSignatureStatus] = useState<SignatureStatus | null>(null);
