@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useRoute } from "wouter";
+import { useParams } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, CheckCircle2, XCircle, FileSignature } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle2, XCircle, PenTool, RotateCcw } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-import { apiRequest } from "@/lib/queryClient";
 
 interface SignatureData {
   tempId: string;
@@ -19,40 +19,42 @@ interface SignatureData {
 }
 
 export default function SignaturePage() {
-  const [match, params] = useRoute("/signature/:tempId");
-  const { tempId } = params || {};
-  
+  const { tempId } = useParams<{ tempId: string }>();
   const [signatureData, setSignatureData] = useState<SignatureData | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [success, setSuccess] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
+  const [signatureEmpty, setSignatureEmpty] = useState(true);
 
   useEffect(() => {
-    if (!tempId) return;
-    
-    loadSignatureData();
+    if (tempId) {
+      fetchSignatureData();
+    }
   }, [tempId]);
 
-  const loadSignatureData = async () => {
+  const fetchSignatureData = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await apiRequest("GET", `/api/signature/customer/${tempId}`);
+
+      const response = await fetch(`/api/signature/customer/${tempId}`);
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Fehler beim Laden der Unterschriftsdaten");
       }
-      
+
       setSignatureData(data);
-      
-      if (data.status === 'signed') {
-        setSubmitted(true);
+
+      // Prüfen ob bereits unterschrieben oder abgelaufen
+      if (data.status === 'signed' || data.status === 'completed') {
+        setError("Diese Unterschrift wurde bereits geleistet.");
+      } else if (new Date() > new Date(data.expiresAt)) {
+        setError("Dieser Unterschriftlink ist abgelaufen.");
       }
+
     } catch (err) {
       console.error("Fehler beim Laden der Unterschriftsdaten:", err);
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -61,9 +63,27 @@ export default function SignaturePage() {
     }
   };
 
-  const handleSubmitSignature = async () => {
-    if (!signatureRef.current || signatureRef.current.isEmpty()) {
-      setError("Bitte leisten Sie Ihre Unterschrift");
+  const handleSignatureBegin = () => {
+    setSignatureEmpty(false);
+  };
+
+  const handleSignatureEnd = () => {
+    if (signatureRef.current) {
+      const isEmpty = signatureRef.current.isEmpty();
+      setSignatureEmpty(isEmpty);
+    }
+  };
+
+  const clearSignature = () => {
+    if (signatureRef.current) {
+      signatureRef.current.clear();
+      setSignatureEmpty(true);
+    }
+  };
+
+  const submitSignature = async () => {
+    if (!signatureRef.current || signatureEmpty) {
+      setError("Bitte leisten Sie zuerst Ihre Unterschrift.");
       return;
     }
 
@@ -72,18 +92,25 @@ export default function SignaturePage() {
       setError(null);
 
       const signatureDataURL = signatureRef.current.toDataURL();
-      
-      const response = await apiRequest("POST", `/api/signature/customer/${tempId}`, {
-        signature: signatureDataURL
+
+      const response = await fetch(`/api/signature/customer/${tempId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          signature: signatureDataURL
+        })
       });
-      
-      const result = await response.json();
-      
+
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(result.message || "Fehler beim Speichern der Unterschrift");
+        throw new Error(data.message || "Fehler beim Speichern der Unterschrift");
       }
-      
-      setSubmitted(true);
+
+      setSuccess(true);
+
     } catch (err) {
       console.error("Fehler beim Speichern der Unterschrift:", err);
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
@@ -92,93 +119,58 @@ export default function SignaturePage() {
     }
   };
 
-  const clearSignature = () => {
-    if (signatureRef.current) {
-      signatureRef.current.clear();
-    }
-    setError(null);
-  };
-
-  if (!match || !tempId) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Ungültiger Link
-              </h2>
-              <p className="text-gray-600">
-                Der Unterschrifts-Link ist ungültig oder wurde nicht korrekt aufgerufen.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Loader2 className="h-16 w-16 text-blue-500 mx-auto mb-4 animate-spin" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Laden...
-              </h2>
-              <p className="text-gray-600">
-                Unterschriftsdaten werden geladen
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-gray-600">Unterschriftsdaten werden geladen...</p>
+        </div>
       </div>
     );
   }
 
   if (error && !signatureData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Fehler
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {error}
-              </p>
-              <Button onClick={loadSignatureData} variant="outline">
-                Erneut versuchen
-              </Button>
-            </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="h-5 w-5" />
+              Fehler
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 mb-4">{error}</p>
+            <Button onClick={() => window.close()} className="w-full">
+              Schließen
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (submitted) {
+  if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Unterschrift erfolgreich gespeichert!
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Vielen Dank! Ihre Unterschrift wurde erfolgreich gespeichert.
-              </p>
-              <p className="text-sm text-gray-500">
-                Sie können dieses Fenster nun schließen.
-              </p>
-            </div>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle2 className="h-5 w-5" />
+              Unterschrift erfolgreich
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-gray-700 mb-4">
+              Vielen Dank! Ihre Unterschrift wurde erfolgreich gespeichert.
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Sie können dieses Fenster nun schließen.
+            </p>
+            <Button onClick={() => window.close()} className="w-full">
+              Schließen
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -186,99 +178,103 @@ export default function SignaturePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
         <Card className="mb-6">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-              <FileSignature className="h-6 w-6 text-blue-600" />
-              Digitale Unterschrift
-            </CardTitle>
-            <CardDescription>
-              Bitte leisten Sie Ihre Unterschrift für die Reparaturaufnahme
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
+          <CardHeader>
+            <CardTitle className="text-center">Digitale Unterschrift</CardTitle>
             {signatureData && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Reparaturdetails:</h3>
-                <div className="space-y-2 text-sm">
+              <p className="text-center text-gray-600">
+                {signatureData.repairData.shopName}
+              </p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {signatureData && (
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium">Kunde:</span> {signatureData.repairData.customerName}
+                    <span className="font-medium text-gray-700">Kunde:</span>
+                    <p className="text-gray-900">{signatureData.repairData.customerName}</p>
                   </div>
                   <div>
-                    <span className="font-medium">Gerät:</span> {signatureData.repairData.device}
+                    <span className="font-medium text-gray-700">Gerät:</span>
+                    <p className="text-gray-900">{signatureData.repairData.device}</p>
                   </div>
-                  <div>
-                    <span className="font-medium">Problem:</span> {signatureData.repairData.issue}
-                  </div>
-                  <div>
-                    <span className="font-medium">Geschäft:</span> {signatureData.repairData.shopName}
+                  <div className="sm:col-span-2">
+                    <span className="font-medium text-gray-700">Problem:</span>
+                    <p className="text-gray-900">{signatureData.repairData.issue}</p>
                   </div>
                 </div>
               </div>
             )}
 
+            {error && (
+              <Alert className="mb-4">
+                <XCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Unterschrift leisten:
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Bitte unterschreiben Sie mit dem Finger oder einem Stylus in dem Feld unten.
-                </p>
-              </div>
-
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
-                <SignatureCanvas
-                  ref={signatureRef}
-                  canvasProps={{
-                    width: 400,
-                    height: 200,
-                    className: 'signature-canvas w-full h-48 touch-action-none'
-                  }}
-                  backgroundColor="rgb(255,255,255)"
-                  penColor="rgb(0,0,0)"
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-red-800 text-sm">{error}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bitte unterschreiben Sie hier:
+                </label>
+                <div className="border-2 border-gray-300 border-dashed rounded-lg bg-white">
+                  <SignatureCanvas
+                    ref={signatureRef}
+                    canvasProps={{
+                      className: "w-full h-48 cursor-crosshair",
+                      style: { touchAction: 'none' }
+                    }}
+                    onBegin={handleSignatureBegin}
+                    onEnd={handleSignatureEnd}
+                  />
                 </div>
-              )}
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-gray-500">
+                    Verwenden Sie Ihren Finger oder einen Stift zum Unterschreiben
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSignature}
+                    className="flex items-center gap-1"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Löschen
+                  </Button>
+                </div>
+              </div>
 
-              <div className="flex gap-3">
+              <div className="pt-4">
                 <Button
-                  onClick={clearSignature}
-                  variant="outline"
-                  className="flex-1"
-                  disabled={submitting}
-                >
-                  Löschen
-                </Button>
-                <Button
-                  onClick={handleSubmitSignature}
-                  className="flex-1"
-                  disabled={submitting}
+                  onClick={submitSignature}
+                  disabled={signatureEmpty || submitting}
+                  className="w-full"
+                  size="lg"
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Speichern...
+                      Wird gespeichert...
                     </>
                   ) : (
-                    "Unterschrift speichern"
+                    <>
+                      <PenTool className="h-4 w-4 mr-2" />
+                      Unterschrift bestätigen
+                    </>
                   )}
                 </Button>
               </div>
-            </div>
 
-            <div className="text-center">
-              <p className="text-xs text-gray-500">
-                Durch das Leisten Ihrer Unterschrift bestätigen Sie die Reparaturaufnahme
-              </p>
+              {signatureData && (
+                <p className="text-xs text-gray-500 text-center">
+                  Gültig bis: {new Date(signatureData.expiresAt).toLocaleString('de-DE')}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -607,6 +607,22 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                           </button>
                         )}
                         <button 
+                          className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
+                          title="QR-Code Unterschrift"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedRepairForSignature({
+                              id: repair.id,
+                              customerName: repair.customerName,
+                              device: `${repair.brand} ${repair.model}`,
+                              issue: repair.issue
+                            });
+                            setShowQRSignatureDialog(true);
+                          }}
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </button>
+                        <button 
                           className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
                           title="Auftrag löschen"
                           onClick={(e) => {
@@ -908,6 +924,16 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           }, 300);
         }}
       />
+
+      {/* QR Signature Dialog */}
+      {selectedRepairForSignature && businessSettings && (
+        <QRSignatureDialog
+          open={showQRSignatureDialog}
+          onOpenChange={setShowQRSignatureDialog}
+          repair={selectedRepairForSignature}
+          businessName={businessSettings.businessName}
+        />
+      )}
     </div>
   );
 }
