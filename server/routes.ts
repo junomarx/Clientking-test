@@ -4089,10 +4089,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Unterschrift zur Reparatur hinzufügen basierend auf dem Typ
-      if (tempSignature.type === 'dropoff') {
-        await storage.updateRepairSignature(tempSignature.repairId, tempSignature.customerSignature, 'dropoff', userId);
-      } else if (tempSignature.type === 'pickup') {
-        await storage.updateRepairSignature(tempSignature.repairId, tempSignature.customerSignature, 'pickup', userId);
+      const repairData = tempSignature.repairData as any;
+      const signatureType = repairData?.signatureType || 'pickup';
+      const repairId = repairData?.repairId;
+      
+      console.log(`🔄 Completing signature: tempId=${tempId}, type=${signatureType}, repairId=${repairId}, userId=${userId}`);
+      
+      if (!repairId || !tempSignature.customerSignature) {
+        console.error(`❌ Missing data: repairId=${repairId}, signature=${tempSignature.customerSignature}`);
+        return res.status(400).json({ message: "Fehlende Daten für Unterschrift" });
+      }
+      
+      if (signatureType === 'dropoff') {
+        console.log(`📝 Saving dropoff signature for repair ${repairId}`);
+        const result = await storage.updateRepairSignature(repairId, tempSignature.customerSignature, 'dropoff', userId);
+        console.log(`✅ Dropoff signature save result:`, result ? 'SUCCESS' : 'FAILED');
+      } else if (signatureType === 'pickup') {
+        console.log(`📝 Saving pickup signature for repair ${repairId}`);
+        const result = await storage.updateRepairSignature(repairId, tempSignature.customerSignature, 'pickup', userId);
+        console.log(`✅ Pickup signature save result:`, result ? 'SUCCESS' : 'FAILED');
       }
 
       // Unterschrift als abgeschlossen markieren
