@@ -48,13 +48,17 @@ export default function SignaturePage() {
     }
   }, [tempId]);
 
-  // Orientierungserkennung
+  // Orientierungserkennung - aber nicht automatisch wechseln
   useEffect(() => {
     const checkOrientation = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
+      const actualLandscape = window.innerWidth > window.innerHeight;
+      // Nur Prompt schließen wenn wirklich ins Querformat gedreht
+      if (actualLandscape && showLandscapePrompt) {
+        setShowLandscapePrompt(false);
+        setIsLandscape(true); // Jetzt erst aktivieren
+      }
     };
 
-    checkOrientation();
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
 
@@ -62,14 +66,7 @@ export default function SignaturePage() {
       window.removeEventListener('resize', checkOrientation);
       window.removeEventListener('orientationchange', checkOrientation);
     };
-  }, []);
-
-  // Querformat-Prompt schließen wenn Querformat erkannt
-  useEffect(() => {
-    if (isLandscape && showLandscapePrompt) {
-      setShowLandscapePrompt(false);
-    }
-  }, [isLandscape, showLandscapePrompt]);
+  }, [showLandscapePrompt]);
 
   const fetchSignatureData = async () => {
     try {
@@ -127,7 +124,7 @@ export default function SignaturePage() {
 
       const signatureDataURL = signatureRef.current.toDataURL();
       
-      const response = await fetch(`/api/signature/submit/${tempId}`, {
+      const response = await fetch(`/api/signature/customer/${tempId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
