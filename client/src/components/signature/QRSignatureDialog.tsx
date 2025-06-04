@@ -105,6 +105,11 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
         customerId: repair.customerId
       };
 
+      console.log("🔍 Frontend QR Generation Debug:");
+      console.log("   - repair object:", repair);
+      console.log("   - repairData being sent:", repairData);
+      console.log("   - customerId:", repair.customerId);
+
       const response = await apiRequest("POST", "/api/signature/generate-qr", {
         repairData
       });
