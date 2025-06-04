@@ -212,6 +212,19 @@ export function AnimatedRecentOrders({
                 >
                   <Printer className="h-5 w-5" />
                 </motion.button>
+                {onQRSignatureClick && (
+                  <motion.button 
+                    className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onQRSignatureClick(repair.id);
+                    }}
+                  >
+                    <QrCode className="h-5 w-5" />
+                  </motion.button>
+                )}
                 <motion.button 
                   className="text-primary hover:text-primary/80 p-2 rounded-full hover:bg-muted"
                   whileHover={{ scale: 1.1 }}
