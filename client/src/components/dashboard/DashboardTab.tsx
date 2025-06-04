@@ -114,6 +114,11 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   }>({
     queryKey: ['/api/stats']
   });
+
+  // Business settings für den Geschäftsnamen
+  const { data: businessSettings } = useQuery<{ businessName: string }>({
+    queryKey: ['/api/business-settings']
+  });
   
   // Handler functions for status filtering
   const navigateToFilteredRepairs = (status: string) => {
@@ -364,6 +369,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         open={showQRSignatureDialog}
         onOpenChange={setShowQRSignatureDialog}
         repair={selectedRepairForSignature}
+        businessName={businessSettings?.businessName || 'Handyshop'}
       />
     </motion.div>
   );
