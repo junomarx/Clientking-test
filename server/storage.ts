@@ -1619,13 +1619,18 @@ export class DatabaseStorage implements IStorage {
       // Neue Benutzer erhalten KEINE Shop-ID bei der Registrierung
       const { shopId: _, ...userWithoutShopId } = user as any;
       
-      console.log(`Erstelle neuen Benutzer ${userWithoutShopId.username} ohne Shop-ID (wird bei Aktivierung zugewiesen)`);
+      // Hole das Basic-Paket für neue Benutzer
+      const basicPackage = await this.getPackageByName("Basic");
+      
+      console.log(`Erstelle neuen Benutzer ${userWithoutShopId.username} mit Basic-Paket (keine Einschränkungen)`);
 
       const [newUser] = await db
         .insert(users)
         .values({
           ...userWithoutShopId,
-          shopId: null  // Explizit NULL setzen
+          shopId: null,  // Explizit NULL setzen
+          pricingPlan: "basic",  // Basic-Plan zuweisen
+          packageId: basicPackage?.id || null  // Basic-Paket-ID zuweisen
         })
         .returning();
       

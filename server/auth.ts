@@ -170,14 +170,7 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Diese E-Mail-Adresse wird bereits verwendet" });
       }
       
-      // Demo-Paket aus der Datenbank abrufen
-      const demoPackage = await storage.getPackageByName("Demo");
-      
-      // Ablaufdatum für Demo-Paket berechnen (14 Tage ab jetzt)
-      const trialExpiresAt = new Date();
-      trialExpiresAt.setDate(trialExpiresAt.getDate() + 14); // 14 Tage in die Zukunft
-      
-      console.log(`Neuer Benutzer ${username} erhält Demo-Paket mit Ablaufdatum ${trialExpiresAt.toISOString()}`);
+      console.log(`Neuer Benutzer ${username} erhält Basic-Paket ohne Einschränkungen`);
 
       // Erstelle einen neuen Benutzer mit ALLEN Registrierungsdaten auf einmal
       const user = await storage.createUser({
