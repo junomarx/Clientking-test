@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Search, User, UserPlus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { GlobalDeviceSelector } from "@/components/GlobalDeviceSelector";
+
 
 // Customer Interface kopiert aus der NewOrderModal.tsx
 interface Customer {
@@ -92,10 +92,16 @@ export function NewCostEstimateDialog({
   const [selectedCustomerIndex, setSelectedCustomerIndex] = useState<number>(-1);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState<boolean>(false);
   
-  // Gerätedaten-Stati
-  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
-  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  // Gerätedaten-Stati für freie Eingabe mit Autocomplete
+  const [availableDeviceTypes, setAvailableDeviceTypes] = useState<{id: number, name: string}[]>([]);
+  const [availableBrands, setAvailableBrands] = useState<{id: number, name: string}[]>([]);
+  const [availableModels, setAvailableModels] = useState<{id: number, name: string}[]>([]);
+  const [showDeviceTypeDropdown, setShowDeviceTypeDropdown] = useState(false);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+  const [selectedDeviceTypeIndex, setSelectedDeviceTypeIndex] = useState(-1);
+  const [selectedBrandIndex, setSelectedBrandIndex] = useState(-1);
+  const [selectedModelIndex, setSelectedModelIndex] = useState(-1);
   
   // Positionen-Stati
   const [items, setItems] = useState<CostEstimateItem[]>([]);
@@ -246,6 +252,172 @@ export function NewCostEstimateDialog({
     setTimeout(() => {
       setShowCustomerDropdown(false);
     }, 200);
+  };
+
+  // Gerätedaten-Funktionen für freie Eingabe mit Autocomplete
+  const loadDeviceTypes = async () => {
+    try {
+      const response = await apiRequest('GET', '/api/global/device-types');
+      const deviceTypes = await response.json();
+      setAvailableDeviceTypes(deviceTypes);
+    } catch (error) {
+      console.error('Fehler beim Laden der Gerätetypen:', error);
+    }
+  };
+
+  const loadBrands = async () => {
+    const deviceType = form.getValues('deviceType');
+    if (deviceType) {
+      try {
+        const selectedDeviceType = availableDeviceTypes.find(dt => dt.name === deviceType);
+        if (selectedDeviceType) {
+          const response = await apiRequest('GET', `/api/global/brands?deviceTypeId=${selectedDeviceType.id}`);
+          const brands = await response.json();
+          setAvailableBrands(brands);
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Marken:', error);
+      }
+    }
+  };
+
+  const loadModels = async () => {
+    const brand = form.getValues('brand');
+    const deviceType = form.getValues('deviceType');
+    if (brand && deviceType) {
+      try {
+        const selectedDeviceType = availableDeviceTypes.find(dt => dt.name === deviceType);
+        const selectedBrand = availableBrands.find(b => b.name === brand);
+        if (selectedDeviceType && selectedBrand) {
+          const response = await apiRequest('GET', `/api/global/models?brandId=${selectedBrand.id}&deviceTypeId=${selectedDeviceType.id}`);
+          const models = await response.json();
+          setAvailableModels(models);
+        }
+      } catch (error) {
+        console.error('Fehler beim Laden der Modelle:', error);
+      }
+    }
+  };
+
+  // Handler für Gerätetyp-Eingabe
+  const handleDeviceTypeInput = (value: string) => {
+    if (value) {
+      const filtered = availableDeviceTypes.filter(deviceType => 
+        deviceType.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setAvailableDeviceTypes(filtered);
+      setShowDeviceTypeDropdown(true);
+    } else {
+      setShowDeviceTypeDropdown(false);
+    }
+  };
+
+  // Handler für Marken-Eingabe
+  const handleBrandInput = (value: string) => {
+    if (value) {
+      const filtered = availableBrands.filter(brand => 
+        brand.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setAvailableBrands(filtered);
+      setShowBrandDropdown(true);
+    } else {
+      setShowBrandDropdown(false);
+    }
+  };
+
+  // Handler für Modell-Eingabe
+  const handleModelInput = (value: string) => {
+    if (value) {
+      const filtered = availableModels.filter(model => 
+        model.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setAvailableModels(filtered);
+      setShowModelDropdown(true);
+    } else {
+      setShowModelDropdown(false);
+    }
+  };
+
+  // Auswahl-Handler
+  const selectDeviceType = (deviceType: {id: number, name: string}) => {
+    form.setValue('deviceType', deviceType.name);
+    setShowDeviceTypeDropdown(false);
+    setSelectedDeviceTypeIndex(-1);
+    // Marken und Modelle zurücksetzen
+    form.setValue('brand', '');
+    form.setValue('model', '');
+    setAvailableBrands([]);
+    setAvailableModels([]);
+  };
+
+  const selectBrand = (brand: {id: number, name: string}) => {
+    form.setValue('brand', brand.name);
+    setShowBrandDropdown(false);
+    setSelectedBrandIndex(-1);
+    // Modelle zurücksetzen
+    form.setValue('model', '');
+    setAvailableModels([]);
+  };
+
+  const selectModel = (model: {id: number, name: string}) => {
+    form.setValue('model', model.name);
+    setShowModelDropdown(false);
+    setSelectedModelIndex(-1);
+  };
+
+  // Tastatur-Navigation für Geräteeingabe
+  const handleDeviceTypeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showDeviceTypeDropdown && availableDeviceTypes.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedDeviceTypeIndex(prev => Math.min(prev + 1, availableDeviceTypes.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedDeviceTypeIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && selectedDeviceTypeIndex >= 0) {
+        e.preventDefault();
+        selectDeviceType(availableDeviceTypes[selectedDeviceTypeIndex]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowDeviceTypeDropdown(false);
+      }
+    }
+  };
+
+  const handleBrandKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showBrandDropdown && availableBrands.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedBrandIndex(prev => Math.min(prev + 1, availableBrands.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedBrandIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && selectedBrandIndex >= 0) {
+        e.preventDefault();
+        selectBrand(availableBrands[selectedBrandIndex]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowBrandDropdown(false);
+      }
+    }
+  };
+
+  const handleModelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showModelDropdown && availableModels.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedModelIndex(prev => Math.min(prev + 1, availableModels.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedModelIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && selectedModelIndex >= 0) {
+        e.preventDefault();
+        selectModel(availableModels[selectedModelIndex]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowModelDropdown(false);
+      }
+    }
   };
   
   // Handler für die Tastaturnavigation in der Kundenauswahl
@@ -531,45 +703,39 @@ export function NewCostEstimateDialog({
             <div className="p-4 bg-muted/50 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Gerätedaten</h3>
 
-              {/* Globale Geräteauswahl (gleiche Komponente wie beim Reparaturauftrag) */}
-              <div className="border border-border rounded-md p-3 mb-4">
-                <div className="text-sm text-muted-foreground mb-2">
-                  Gerätedetails aus dem globalen Katalog
-                </div>
-                <GlobalDeviceSelector
-                  onDeviceTypeSelect={(deviceType, deviceTypeId) => {
-                    form.setValue('deviceType', deviceType);
-                    setSelectedDeviceTypeId(deviceTypeId);
-                    // Zurücksetzen der abhängigen Felder bei Änderung
-                    form.setValue('brand', '');
-                    form.setValue('model', '');
-                    setSelectedBrandId(null);
-                    setSelectedModelId(null);
-                  }}
-                  onBrandSelect={(brand, brandId) => {
-                    form.setValue('brand', brand);
-                    setSelectedBrandId(brandId);
-                    // Zurücksetzen des Modells bei Änderung
-                    form.setValue('model', '');
-                    setSelectedModelId(null);
-                  }}
-                  onModelSelect={(model, modelId) => {
-                    form.setValue('model', model);
-                    setSelectedModelId(modelId);
-                  }}
-                />
-              </div>
-
-              {/* Versteckte Formularfelder, die durch GlobalDeviceSelector befüllt werden */}
-              <div className="hidden">
+              {/* Freie Geräteeingabe mit Autocomplete wie bei Neuer Auftrag */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <FormField
                   control={form.control}
                   name="deviceType"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative">
+                      <FormLabel>Gerätetyp</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input 
+                          placeholder="z.B. Smartphone, Tablet..." 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleDeviceTypeInput(e.target.value);
+                          }}
+                          onFocus={() => loadDeviceTypes()}
+                          onKeyDown={(e) => handleDeviceTypeKeyDown(e)}
+                        />
                       </FormControl>
+                      {showDeviceTypeDropdown && availableDeviceTypes.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                          {availableDeviceTypes.map((deviceType, index) => (
+                            <div
+                              key={deviceType.id}
+                              className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedDeviceTypeIndex ? 'bg-gray-100' : ''}`}
+                              onClick={() => selectDeviceType(deviceType)}
+                            >
+                              {deviceType.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -579,10 +745,33 @@ export function NewCostEstimateDialog({
                   control={form.control}
                   name="brand"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative">
+                      <FormLabel>Hersteller</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input 
+                          placeholder="z.B. Apple, Samsung..." 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleBrandInput(e.target.value);
+                          }}
+                          onFocus={() => loadBrands()}
+                          onKeyDown={(e) => handleBrandKeyDown(e)}
+                        />
                       </FormControl>
+                      {showBrandDropdown && availableBrands.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                          {availableBrands.map((brand, index) => (
+                            <div
+                              key={brand.id}
+                              className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedBrandIndex ? 'bg-gray-100' : ''}`}
+                              onClick={() => selectBrand(brand)}
+                            >
+                              {brand.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -592,18 +781,41 @@ export function NewCostEstimateDialog({
                   control={form.control}
                   name="model"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="relative">
+                      <FormLabel>Modell</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input 
+                          placeholder="z.B. iPhone 15, Galaxy S24..." 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            handleModelInput(e.target.value);
+                          }}
+                          onFocus={() => loadModels()}
+                          onKeyDown={(e) => handleModelKeyDown(e)}
+                        />
                       </FormControl>
+                      {showModelDropdown && availableModels.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                          {availableModels.map((model, index) => (
+                            <div
+                              key={model.id}
+                              className={`px-3 py-2 cursor-pointer hover:bg-gray-100 ${index === selectedModelIndex ? 'bg-gray-100' : ''}`}
+                              onClick={() => selectModel(model)}
+                            >
+                              {model.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
-              {/* Nur Seriennummer sichtbar lassen */}
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              {/* Seriennummer */}
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                 <FormField
                   control={form.control}
                   name="serialNumber"
