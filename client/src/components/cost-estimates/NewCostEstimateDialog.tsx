@@ -377,6 +377,16 @@ export function NewCostEstimateDialog({
       } else if (e.key === 'Enter' && selectedDeviceTypeIndex >= 0) {
         e.preventDefault();
         selectDeviceType(availableDeviceTypes[selectedDeviceTypeIndex]);
+      } else if (e.key === 'Tab' && selectedDeviceTypeIndex >= 0) {
+        e.preventDefault();
+        selectDeviceType(availableDeviceTypes[selectedDeviceTypeIndex]);
+        // Fokus auf das nächste Feld setzen
+        setTimeout(() => {
+          const nextField = document.querySelector('input[name="brand"]') as HTMLInputElement;
+          if (nextField) {
+            nextField.focus();
+          }
+        }, 100);
       } else if (e.key === 'Escape') {
         e.preventDefault();
         setShowDeviceTypeDropdown(false);
@@ -395,6 +405,16 @@ export function NewCostEstimateDialog({
       } else if (e.key === 'Enter' && selectedBrandIndex >= 0) {
         e.preventDefault();
         selectBrand(availableBrands[selectedBrandIndex]);
+      } else if (e.key === 'Tab' && selectedBrandIndex >= 0) {
+        e.preventDefault();
+        selectBrand(availableBrands[selectedBrandIndex]);
+        // Fokus auf das nächste Feld setzen
+        setTimeout(() => {
+          const nextField = document.querySelector('input[name="model"]') as HTMLInputElement;
+          if (nextField) {
+            nextField.focus();
+          }
+        }, 100);
       } else if (e.key === 'Escape') {
         e.preventDefault();
         setShowBrandDropdown(false);
@@ -413,6 +433,16 @@ export function NewCostEstimateDialog({
       } else if (e.key === 'Enter' && selectedModelIndex >= 0) {
         e.preventDefault();
         selectModel(availableModels[selectedModelIndex]);
+      } else if (e.key === 'Tab' && selectedModelIndex >= 0) {
+        e.preventDefault();
+        selectModel(availableModels[selectedModelIndex]);
+        // Fokus auf das nächste Feld setzen
+        setTimeout(() => {
+          const nextField = document.querySelector('input[name="serialNumber"]') as HTMLInputElement;
+          if (nextField) {
+            nextField.focus();
+          }
+        }, 100);
       } else if (e.key === 'Escape') {
         e.preventDefault();
         setShowModelDropdown(false);
