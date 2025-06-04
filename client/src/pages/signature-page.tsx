@@ -41,6 +41,7 @@ export default function SignaturePage() {
   const [hasReadTerms, setHasReadTerms] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
+  const [signatureDataURL, setSignatureDataURL] = useState<string | null>(null);
 
   useEffect(() => {
     if (tempId) {
@@ -67,6 +68,16 @@ export default function SignaturePage() {
       window.removeEventListener('orientationchange', checkOrientation);
     };
   }, [showLandscapePrompt]);
+
+  // Unterschrift laden wenn Canvas bereit ist
+  useEffect(() => {
+    if (signatureRef.current && signatureDataURL) {
+      // Kurze Verzögerung damit Canvas vollständig geladen ist
+      setTimeout(() => {
+        loadSignatureToCanvas();
+      }, 100);
+    }
+  }, [isLandscape, signatureDataURL]);
 
   const fetchSignatureData = async () => {
     try {
@@ -105,6 +116,12 @@ export default function SignaturePage() {
     if (signatureRef.current) {
       const isEmpty = signatureRef.current.isEmpty();
       setSignatureEmpty(isEmpty);
+      
+      // Unterschrift speichern für Moduswechsel
+      if (!isEmpty) {
+        const dataURL = signatureRef.current.toDataURL();
+        setSignatureDataURL(dataURL);
+      }
     }
   };
 
@@ -112,17 +129,35 @@ export default function SignaturePage() {
     if (signatureRef.current) {
       signatureRef.current.clear();
       setSignatureEmpty(true);
+      setSignatureDataURL(null);
+    }
+  };
+
+  // Unterschrift laden wenn Canvas gewechselt wird
+  const loadSignatureToCanvas = () => {
+    if (signatureRef.current && signatureDataURL) {
+      signatureRef.current.fromDataURL(signatureDataURL);
+      setSignatureEmpty(false);
     }
   };
 
   const submitSignature = async () => {
-    if (!signatureRef.current || signatureEmpty) return;
+    if (signatureEmpty) return;
 
     try {
       setSubmitting(true);
       setError(null);
 
-      const signatureDataURL = signatureRef.current.toDataURL();
+      // Aktuelle Unterschrift von Canvas holen oder gespeicherte verwenden
+      let currentSignatureDataURL = signatureDataURL;
+      if (signatureRef.current && !signatureRef.current.isEmpty()) {
+        currentSignatureDataURL = signatureRef.current.toDataURL();
+      }
+
+      if (!currentSignatureDataURL) {
+        setError("Keine Unterschrift vorhanden");
+        return;
+      }
       
       const response = await fetch(`/api/signature/customer/${tempId}`, {
         method: 'POST',
@@ -130,7 +165,7 @@ export default function SignaturePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          signature: signatureDataURL
+          signature: currentSignatureDataURL
         })
       });
 
