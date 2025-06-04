@@ -31,9 +31,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Form schema
+// Form schema - orderCode excluded from form data since it's read-only
 const repairEditSchema = z.object({
-  orderCode: z.string().optional(),
   deviceType: z.string().min(1, { message: 'Bitte Gerätetyp eingeben' }),
   brand: z.string().min(1, { message: 'Bitte Marke eingeben' }),
   model: z.string().min(1, { message: 'Bitte Modell eingeben' }),
@@ -62,11 +61,10 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // Form definition
+  // Form definition - orderCode excluded as it's read-only
   const form = useForm<RepairEditValues>({
     resolver: zodResolver(repairEditSchema),
     defaultValues: {
-      orderCode: repair?.orderCode || '',
       deviceType: repair?.deviceType || '',
       brand: repair?.brand || '',
       model: repair?.model || '',
@@ -76,7 +74,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
       depositAmount: repair?.depositAmount?.toString(),
       status: repair?.status || 'eingegangen',
       notes: repair?.notes || '',
-      technicianNote: repair?.technicianNote || '',
+      technicianNote: (repair as any)?.technicianNote || '',
     },
   });
   
@@ -84,7 +82,6 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
   useEffect(() => {
     if (repair) {
       form.reset({
-        orderCode: repair.orderCode || '',
         deviceType: repair.deviceType || '',
         brand: repair.brand || '',
         model: repair.model || '',
@@ -94,7 +91,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         depositAmount: repair.depositAmount?.toString(),
         status: repair.status,
         notes: repair.notes || '',
-        technicianNote: repair.technicianNote || '',
+        technicianNote: (repair as any).technicianNote || '',
       });
     }
   }, [repair, form]);
@@ -227,25 +224,19 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-4 px-1 overflow-y-auto">
             
-            {/* Auftragsnummer */}
-            <FormField
-              control={form.control}
-              name="orderCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Auftragsnummer</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="z.B. GS250068"
-                      className="rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
-                      readOnly
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Auftragsnummer - Nur zur Anzeige */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Auftragsnummer
+              </label>
+              <Input 
+                value={repair?.orderCode || `#${repair?.id}`}
+                placeholder="z.B. GS250068"
+                className="rounded-lg border-gray-300 bg-gray-50"
+                readOnly
+                disabled
+              />
+            </div>
 
             {/* Geräte-Informationen */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
