@@ -37,11 +37,12 @@ import { usePrintManager } from './PrintOptionsManager';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
+  initialFilter?: string;
 }
 
-export function RepairsTab({ onNewOrder }: RepairsTabProps) {
+export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   const [location] = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialFilter || '');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);

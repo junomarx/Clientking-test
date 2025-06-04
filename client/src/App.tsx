@@ -9,7 +9,6 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import AdminPage from "@/pages/admin-page";
 import SuperadminPage from "@/pages/superadmin-page";
-import RepairDetailsPage from "@/pages/repair-details-page";
 
 // Design Preview Imports wurden entfernt
 import SettingsPage from "@/pages/settings-page";
@@ -51,9 +50,9 @@ function Router() {
           <SuperadminPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/repairs/:repairId">
-        <ProtectedRoute path="/repairs/:repairId">
-          <RepairDetailsPage />
+      <Route path="/repairs/:orderCode">
+        <ProtectedRoute path="/repairs/:orderCode">
+          <Home />
         </ProtectedRoute>
       </Route>
       

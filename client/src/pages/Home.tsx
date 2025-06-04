@@ -7,7 +7,7 @@ import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
 import { CostEstimatesTab } from '@/components/cost-estimates/CostEstimatesTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -26,11 +26,19 @@ export default function Home() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [location] = useLocation();
+  const params = useParams();
+  const [qrCodeFilter, setQrCodeFilter] = useState<string>('');
   
-  // URL Parameter auswerten für Tab
+  // URL Parameter auswerten für Tab und QR-Code-Filter
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get('tab');
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // QR-Code-Filter aus URL-Pfad extrahieren (für /repairs/:orderCode)
+    if (params.orderCode) {
+      setActiveTab('repairs');
+      setQrCodeFilter(params.orderCode);
+    }
     
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
@@ -42,7 +50,7 @@ export default function Home() {
         setActiveTab(tabParam as Tab);
       }
     }
-  }, [location]);
+  }, [location, params]);
   
   const handleNewOrder = () => {
     console.log("Home: handleNewOrder aufgerufen ohne Parameter");
@@ -120,7 +128,7 @@ export default function Home() {
               )}
               
               {activeTab === 'repairs' && (
-                <RepairsTab onNewOrder={handleNewOrder} />
+                <RepairsTab onNewOrder={handleNewOrder} initialFilter={qrCodeFilter} />
               )}
               
               {activeTab === 'customers' && (
