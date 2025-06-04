@@ -31,9 +31,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Info
+  Info,
+  QrCode
 } from 'lucide-react';
 import { usePrintManager } from './PrintOptionsManager';
+import { QRSignatureDialog } from '../signature/QRSignatureDialog';
+import { useBusinessSettings } from '@/hooks/use-business-settings';
 
 interface RepairsTabProps {
   onNewOrder: () => void;
@@ -48,6 +51,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
+  const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [sendEmail, setSendEmail] = useState(false);
@@ -57,6 +62,9 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   
   // PrintManager für Druckoptionen
   const { showPrintOptions } = usePrintManager();
+  
+  // Business Settings für QR-Code Unterschriften
+  const { settings: businessSettings } = useBusinessSettings();
   
   // For tracking if we're filtering by today's orders
   const [filterByToday, setFilterByToday] = useState(false);
