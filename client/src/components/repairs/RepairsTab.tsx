@@ -406,6 +406,17 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
   const handleSendReviewRequest = (repairId: number) => {
     sendReviewRequestMutation.mutate(repairId);
   };
+
+  // QR-Code Unterschrift öffnen
+  const handleOpenQRSignature = (repair: any) => {
+    setSelectedRepairForSignature({
+      id: repair.id,
+      customerName: repair.customerName,
+      device: `${repair.brand} ${repair.model}`,
+      issue: repair.issue
+    });
+    setShowQRSignatureDialog(true);
+  };
   
   // Pagination logic
   const totalPages = Math.ceil(filteredRepairs.length / itemsPerPage);
@@ -751,7 +762,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     <div>{new Date(repair.createdAt).toLocaleDateString('de-DE')}</div>
                   </div>
                 </div>
-                <div className="flex justify-center gap-8 p-3 bg-gray-50 border-t border-gray-100">
+                <div className="flex justify-center gap-6 p-3 bg-gray-50 border-t border-gray-100">
                   <button 
                     className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors" 
                     onClick={(e) => {
@@ -760,6 +771,15 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     }}
                   >
                     <Printer className="h-5 w-5" />
+                  </button>
+                  <button 
+                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenQRSignature(repair);
+                    }}
+                  >
+                    <QrCode className="h-5 w-5" />
                   </button>
                   {repair.status === 'abgeholt' ? (
                     <button 
