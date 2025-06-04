@@ -18,6 +18,7 @@ interface QRSignatureDialogProps {
     status?: string;
     estimatedCost?: string;
     depositAmount?: string;
+    customerId?: number;
   };
   businessName: string;
   signatureType?: 'dropoff' | 'pickup'; // Made optional as we'll determine it automatically

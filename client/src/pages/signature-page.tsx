@@ -15,6 +15,15 @@ interface SignatureData {
     shopName: string;
     estimatedCost?: string;
     depositAmount?: string;
+    customerData?: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email?: string;
+      address?: string;
+      zipCode?: string;
+      city?: string;
+    };
   };
   status: string;
   expiresAt: string;
@@ -226,6 +235,51 @@ export default function SignaturePage() {
                     </div>
                   )}
                 </div>
+
+                {/* Kundendaten Verifikation */}
+                {signatureData.repairData.customerData && (
+                  <div className="border rounded-lg p-4 bg-blue-50">
+                    <h3 className="font-semibold text-blue-900 mb-3">Ihre Kontaktdaten</h3>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Bitte überprüfen Sie Ihre Kontaktdaten. Falls diese nicht korrekt sind, teilen Sie uns dies bitte vor der Unterschrift mit.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="font-medium text-blue-700">Vorname:</span>
+                        <p className="text-blue-900">{signatureData.repairData.customerData.firstName}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-blue-700">Nachname:</span>
+                        <p className="text-blue-900">{signatureData.repairData.customerData.lastName}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-blue-700">Telefon:</span>
+                        <p className="text-blue-900 font-medium">{signatureData.repairData.customerData.phone}</p>
+                      </div>
+                      {signatureData.repairData.customerData.email && (
+                        <div>
+                          <span className="font-medium text-blue-700">E-Mail:</span>
+                          <p className="text-blue-900">{signatureData.repairData.customerData.email}</p>
+                        </div>
+                      )}
+                      {(signatureData.repairData.customerData.address || signatureData.repairData.customerData.zipCode || signatureData.repairData.customerData.city) && (
+                        <div className="sm:col-span-2">
+                          <span className="font-medium text-blue-700">Adresse:</span>
+                          <div className="text-blue-900">
+                            {signatureData.repairData.customerData.address && (
+                              <p>{signatureData.repairData.customerData.address}</p>
+                            )}
+                            {(signatureData.repairData.customerData.zipCode || signatureData.repairData.customerData.city) && (
+                              <p>
+                                {signatureData.repairData.customerData.zipCode} {signatureData.repairData.customerData.city}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Reparaturbedingungen */}
                 <div className="border rounded-lg p-4 bg-gray-50">
