@@ -659,7 +659,7 @@ export class DatabaseStorage implements IStorage {
       // verwenden wir den globalen E-Mail-Service
       if (isSystemEmail || !userId) {
         console.log(`Verwende globalen E-Mail-Service für ${isSystemEmail ? 'System-E-Mail' : 'E-Mail ohne Benutzer-ID'}`);
-        const success = await emailService.sendEmail({
+        const success = await emailService.sendSystemEmail({
           to: recipientEmail,
           subject: subject,
           html: body,

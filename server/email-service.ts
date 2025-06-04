@@ -336,6 +336,45 @@ export class EmailService {
   }
   
   /**
+   * Sendet eine System-E-Mail über die globale SMTP-Konfiguration
+   * @param options Die E-Mail-Optionen
+   * @returns Promise<boolean> True wenn die E-Mail erfolgreich gesendet wurde, sonst false
+   */
+  async sendSystemEmail(options: {
+    from?: string;
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+    attachments?: Array<any>;
+  }): Promise<boolean> {
+    try {
+      if (!this.smtpTransporter) {
+        console.error('❌ Kein SMTP-Transporter verfügbar für System-E-Mail');
+        return false;
+      }
+
+      const mailOptions = {
+        from: options.from || process.env.SMTP_USER,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+        text: options.text,
+        attachments: options.attachments
+      };
+
+      console.log('Sende System-E-Mail an:', options.to);
+      const info = await this.smtpTransporter.sendMail(mailOptions);
+      console.log('✅ System-E-Mail erfolgreich gesendet:', info.messageId);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Fehler beim Senden der System-E-Mail:', error);
+      return false;
+    }
+  }
+
+  /**
    * Grundlegende Methode zum Senden einer E-Mail mit benutzer-spezifischen SMTP-Einstellungen
    * @param options Die E-Mail-Optionen
    * @param userId Benutzer-ID für die SMTP-Einstellungen

@@ -226,7 +226,7 @@ export function setupAuth(app: Express) {
             for (const admin of superadmins) {
               if (admin.email) {
                 try {
-                  await storage.sendEmailWithTemplateById(emailTemplateId, admin.email, variables);
+                  await storage.sendEmailWithTemplateById(emailTemplateId, admin.email, variables, [], true);
                   console.log(`✅ Benachrichtigungs-E-Mail an Superadmin ${admin.username} (${admin.email}) gesendet`);
                 } catch (emailError) {
                   console.error(`❌ Fehler beim Senden der Benachrichtigungs-E-Mail an Superadmin ${admin.username}:`, emailError);

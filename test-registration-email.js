@@ -14,7 +14,7 @@ async function testRegistrationNotification() {
       },
       body: JSON.stringify({
         username: 'testuser_email_' + Date.now(),
-        email: 'testuser@example.com',
+        email: 'testuser' + Date.now() + '@example.com',
         password: 'TestPassword123!',
         companyName: 'Test E-Mail Handyshop',
         streetAddress: 'Teststraße 456',
