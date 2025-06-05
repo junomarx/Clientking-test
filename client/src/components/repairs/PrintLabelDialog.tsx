@@ -85,7 +85,47 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     enabled: open,
   });
 
-  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings;
+  // Lade Gerätecode
+  const { data: deviceCodeData, isLoading: isLoadingDeviceCode } = useQuery({
+    queryKey: ['/api/repairs', repairId, 'device-code'],
+    queryFn: async () => {
+      if (!repairId) return null;
+      try {
+        const response = await fetch(`/api/repairs/${repairId}/device-code`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          }
+        });
+        if (!response.ok) return null;
+        return response.json();
+      } catch (err) {
+        console.error("Fehler beim Laden des Gerätecodes:", err);
+        return null;
+      }
+    },
+    enabled: !!repairId && open,
+  });
+
+  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings || isLoadingDeviceCode;
+
+  // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
+  const formatDeviceCodeForLabel = (deviceCodeData: any): string => {
+    if (!deviceCodeData) return '';
+    
+    if (deviceCodeData.deviceCodeType === 'pattern' && deviceCodeData.deviceCode) {
+      // Pattern codes sind bereits als "6-3-0-1-2-4-5-7-8" gespeichert
+      // Wir zeigen sie als Zahlen mit Kommas: "7,4,1,2,3,5,6,8,9"
+      const patternNumbers = deviceCodeData.deviceCode.split('-').map((num: string) => {
+        const digit = parseInt(num);
+        return (digit + 1).toString(); // +1 für die Anzeige (0-8 wird zu 1-9)
+      });
+      return `Code: ${patternNumbers.join(',')}`;
+    } else if (deviceCodeData.deviceCodeType === 'text' && deviceCodeData.deviceCode) {
+      return `Code: ${deviceCodeData.deviceCode}`;
+    }
+    
+    return '';
+  };
 
   // Funktion zum Drucken mit neuem Fenster
   const handlePrint = () => {
@@ -111,6 +151,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const customerPhone = customer?.phone || '';
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
+    const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
@@ -182,7 +223,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             }
             .phone {
               font-size: 10px;
+              margin-bottom: 1mm;
+            }
+            .device-code {
+              font-size: 9px;
               margin-bottom: 2mm;
+              font-weight: bold;
+              color: #555;
             }
             .repair-info {
               text-align: center;
@@ -211,6 +258,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                 <div class="first-name">${firstName}</div>
                 <div class="last-name">${lastName}</div>
                 <div class="phone">${customerPhone}</div>
+                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
               </div>
               
               <div class="repair-info">
