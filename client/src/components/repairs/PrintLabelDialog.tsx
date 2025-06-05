@@ -199,13 +199,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               text-align: center;
               font-size: 14px;
               font-weight: bold;
-              margin-bottom: 1.5mm;
+              margin-bottom: 0.5mm;
             }
             .customer-name {
               text-align: center;
               font-size: 10px;
               font-weight: bold;
-              margin-bottom: 1.5mm;
+              margin-bottom: 0.5mm;
             }
             .qr-code {
               margin-bottom: 1.5mm;
@@ -293,7 +293,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div className="bg-white p-4 rounded-md shadow-sm">
                 <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
                   {/* Vorschau im gleichen Format wie das Drucklayout (Hochformat) */}
-                  <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2mm' }}>
+                  <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1mm' }}>
                     {/* Auftragsnummer */}
                     <div className="text-center">
                       <p className="text-lg font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
