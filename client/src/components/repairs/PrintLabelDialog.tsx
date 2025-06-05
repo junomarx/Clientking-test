@@ -199,7 +199,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               text-align: center;
               font-size: 14px;
               font-weight: bold;
-              margin-bottom: 0.5mm;
+              margin-bottom: 0.2mm;
             }
             .customer-name {
               text-align: center;
