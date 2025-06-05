@@ -156,6 +156,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     // Debug-Logging für Gerätecode
     console.log('PrintLabelDialog - Device Code Data:', deviceCodeData);
     console.log('PrintLabelDialog - Formatted Device Code:', deviceCode);
+    console.log('PrintLabelDialog - Device Code exists:', !!deviceCode);
+    console.log('PrintLabelDialog - Device Code length:', deviceCode?.length);
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
