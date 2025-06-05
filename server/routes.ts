@@ -4120,7 +4120,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: tempSignature.status,
         signedAt: tempSignature.signedAt,
         customerSignature: tempSignature.customerSignature,
-        expiresAt: tempSignature.expiresAt
+        expiresAt: tempSignature.expiresAt,
+        hasDeviceCode: !!tempSignature.deviceCode,
+        hasSignature: !!tempSignature.customerSignature
       });
 
     } catch (error) {

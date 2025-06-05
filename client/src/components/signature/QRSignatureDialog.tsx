@@ -36,6 +36,8 @@ interface SignatureStatus {
   signedAt?: string;
   customerSignature?: string;
   expiresAt: string;
+  hasDeviceCode?: boolean;
+  hasSignature?: boolean;
 }
 
 // Function to determine signature type based on repair status
@@ -237,8 +239,8 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
 
   const getStatusText = () => {
     switch (signatureStatus?.status) {
-      case 'pending': return 'Warten auf Unterschrift...';
-      case 'signed': return 'Unterschrift erhalten';
+      case 'pending': return 'Warte auf Code und Unterschrift...';
+      case 'signed': return 'Code und Unterschrift erhalten';
       case 'completed': return 'Abgeschlossen';
       default: return 'Unbekannt';
     }
@@ -364,9 +366,31 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
                   <div className="text-center py-4">
                     <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-2" />
                     <p className="text-green-700 font-medium">Unterschrift erfolgreich abgeschlossen!</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Die Kundenunterschrift wurde zur Reparatur hinzugefügt.
-                    </p>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
+                      <p className="text-sm text-green-800 font-medium mb-2">
+                        Vom Kunden eingegeben:
+                      </p>
+                      <div className="space-y-1 text-sm">
+                        {signatureStatus?.hasDeviceCode && (
+                          <div className="flex items-center gap-2 text-green-700">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Gerätecode eingegeben
+                          </div>
+                        )}
+                        {signatureStatus?.hasSignature && (
+                          <div className="flex items-center gap-2 text-green-700">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Digital unterschrieben
+                          </div>
+                        )}
+                        {!signatureStatus?.hasDeviceCode && signatureStatus?.hasSignature && (
+                          <div className="flex items-center gap-2 text-amber-700">
+                            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                            Nur Unterschrift (ohne Code)
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
