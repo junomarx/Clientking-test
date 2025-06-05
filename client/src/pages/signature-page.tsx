@@ -44,8 +44,8 @@ export default function SignaturePage() {
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
   const [signatureDataURL, setSignatureDataURL] = useState<string | null>(null);
 
-  // 2-Schritt Prozess: Device Code + Signature
-  const [currentStep, setCurrentStep] = useState<"deviceCode" | "signature">("deviceCode");
+  // 3-Schritt Prozess: Terms -> Device Code -> Signature
+  const [currentStep, setCurrentStep] = useState<"terms" | "deviceCode" | "signature">("terms");
   const [deviceCode, setDeviceCode] = useState<string | null>(null);
   const [deviceCodeType, setDeviceCodeType] = useState<string | null>(null);
 
@@ -145,6 +145,11 @@ export default function SignaturePage() {
       signatureRef.current.fromDataURL(signatureDataURL);
       setSignatureEmpty(false);
     }
+  };
+
+  // Handler für Terms Schritt
+  const handleTermsComplete = () => {
+    setCurrentStep("deviceCode");
   };
 
   // Handler für Device Code Schritt
@@ -252,7 +257,124 @@ export default function SignaturePage() {
     );
   }
 
-  // Device Code Schritt anzeigen
+  // Schritt 1: Terms und Kundendaten
+  if (currentStep === "terms" && signatureData) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-xl">
+                Reparaturauftrag und Geschäftsbedingungen
+              </CardTitle>
+              <p className="text-center text-gray-600 text-sm">
+                {signatureData.repairData.shopName}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Kundendaten */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Kundendaten</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <span className="font-medium">Name:</span>
+                    <p>{signatureData.repairData.customerName}</p>
+                  </div>
+                  {signatureData.repairData.customerData?.phone && (
+                    <div>
+                      <span className="font-medium">Telefon:</span>
+                      <p>{signatureData.repairData.customerData.phone}</p>
+                    </div>
+                  )}
+                  {signatureData.repairData.customerData?.email && (
+                    <div>
+                      <span className="font-medium">E-Mail:</span>
+                      <p>{signatureData.repairData.customerData.email}</p>
+                    </div>
+                  )}
+                  {signatureData.repairData.customerData?.address && (
+                    <div className="col-span-full">
+                      <span className="font-medium">Adresse:</span>
+                      <p>{signatureData.repairData.customerData.address}</p>
+                      {signatureData.repairData.customerData?.zipCode && signatureData.repairData.customerData?.city && (
+                        <p>{signatureData.repairData.customerData.zipCode} {signatureData.repairData.customerData.city}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Gerätedaten */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Gerätedaten</h3>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium">Gerät:</span>
+                      <p>{signatureData.repairData.device}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Problem:</span>
+                      <p>{signatureData.repairData.issue}</p>
+                    </div>
+                    {signatureData.repairData.estimatedCost && (
+                      <div>
+                        <span className="font-medium">Geschätzte Kosten:</span>
+                        <p>{signatureData.repairData.estimatedCost}</p>
+                      </div>
+                    )}
+                    {signatureData.repairData.depositAmount && (
+                      <div>
+                        <span className="font-medium">Anzahlung:</span>
+                        <p>{signatureData.repairData.depositAmount}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Reparaturbedingungen */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Reparaturbedingungen</h3>
+                <div className="p-4 border rounded-lg text-sm space-y-3">
+                  <p>• Die Reparatur wird nach bestem Wissen und Gewissen durchgeführt.</p>
+                  <p>• Bei irreparablen Geräten fällt eine Diagnosepauschale an.</p>
+                  <p>• Datenverlust kann nicht ausgeschlossen werden. Bitte erstellen Sie vorher ein Backup.</p>
+                  <p>• Die Haftung ist auf den Gerätewert begrenzt.</p>
+                  <p>• Abholung innerhalb von 30 Tagen nach Benachrichtigung, sonst fallen Lagerkosten an.</p>
+                </div>
+              </div>
+
+              {/* Checkbox */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={hasReadTerms}
+                  onChange={(e) => setHasReadTerms(e.target.checked)}
+                  className="mt-1"
+                />
+                <label htmlFor="terms" className="text-sm">
+                  Ich habe die Reparaturbedingungen gelesen und akzeptiere diese. 
+                  Ich beauftrage hiermit die Reparatur meines Gerätes.
+                </label>
+              </div>
+
+              <Button
+                onClick={handleTermsComplete}
+                disabled={!hasReadTerms}
+                className="w-full"
+              >
+                Weiter zur Gerätecode-Eingabe
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Schritt 2: Device Code
   if (currentStep === "deviceCode" && signatureData) {
     return (
       <DeviceCodeStep
