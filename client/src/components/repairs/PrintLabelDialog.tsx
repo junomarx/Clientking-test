@@ -110,17 +110,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
   const formatDeviceCodeForLabel = (deviceCodeData: any): string => {
-    if (!deviceCodeData) return '';
+    if (!deviceCodeData || !deviceCodeData.deviceCode) return '';
     
-    if (deviceCodeData.deviceCodeType === 'pattern' && deviceCodeData.deviceCode) {
-      // Pattern codes sind bereits als "6-3-0-1-2-4-5-7-8" gespeichert
-      // Wir zeigen sie als Zahlen mit Kommas: "7,4,1,2,3,5,6,8,9"
+    if (deviceCodeData.deviceCodeType === 'pattern') {
+      // Pattern codes sind als "6-3-0-1-2-4-5-7-8" gespeichert
+      // Wir zeigen sie als Zahlen mit Kommas: "7,4,1,2,3,5,6,8,9" (+1 für Anzeige)
       const patternNumbers = deviceCodeData.deviceCode.split('-').map((num: string) => {
         const digit = parseInt(num);
         return (digit + 1).toString(); // +1 für die Anzeige (0-8 wird zu 1-9)
       });
       return `Code: ${patternNumbers.join(',')}`;
-    } else if (deviceCodeData.deviceCodeType === 'text' && deviceCodeData.deviceCode) {
+    } else if (deviceCodeData.deviceCodeType === 'text') {
       return `Code: ${deviceCodeData.deviceCode}`;
     }
     
@@ -152,6 +152,10 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
+    
+    // Debug-Logging für Gerätecode
+    console.log('PrintLabelDialog - Device Code Data:', deviceCodeData);
+    console.log('PrintLabelDialog - Formatted Device Code:', deviceCode);
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
