@@ -201,6 +201,12 @@ export interface IStorage {
     signatureType: 'dropoff' | 'pickup',
     userId: number,
   ): Promise<Repair | undefined>;
+  updateRepairDeviceCode(
+    id: number,
+    deviceCode: string | null,
+    deviceCodeType: string | null,
+    userId: number,
+  ): Promise<Repair | undefined>;
   deleteRepair(id: number, userId: number): Promise<boolean>;
 
   // Business settings methods
@@ -2278,6 +2284,65 @@ export class DatabaseStorage implements IStorage {
       return updatedRepair;
     } catch (error) {
       console.error(`Fehler beim Speichern der ${signatureType}-Unterschrift der Reparatur ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  // Implementierung der updateRepairDeviceCode-Funktion
+  async updateRepairDeviceCode(
+    id: number,
+    deviceCode: string | null,
+    deviceCodeType: string | null,
+    userId: number
+  ): Promise<Repair | undefined> {
+    try {
+      console.log(`updateRepairDeviceCode: Benutzer mit ID ${userId} speichert Gerätecode für Reparatur ${id}`);
+      
+      // Zuerst prüfen, ob die Reparatur zum Shop des Benutzers gehört
+      const existingRepair = await this.getRepair(id, userId);
+      if (!existingRepair) {
+        console.warn(`updateRepairDeviceCode: Reparatur ${id} nicht gefunden oder nicht im Shop des Benutzers ${userId}`);
+        return undefined;
+      }
+      
+      // Benutzer holen, um Shop-ID zu verifizieren
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`updateRepairDeviceCode: Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+      
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ updateRepairDeviceCode: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      // Gerätecode-Felder aktualisieren
+      const [updatedRepair] = await db
+        .update(repairs)
+        .set({
+          deviceCode: deviceCode,
+          deviceCodeType: deviceCodeType,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(repairs.id, id),
+            eq(repairs.shopId, user.shopId) // DSGVO-Schutz: Nur Reparaturen des eigenen Shops
+          )
+        )
+        .returning();
+      
+      if (updatedRepair) {
+        console.log(`updateRepairDeviceCode: Gerätecode der Reparatur ${id} erfolgreich gespeichert für Benutzer ${userId}`);
+      } else {
+        console.warn(`updateRepairDeviceCode: Gerätecode der Reparatur ${id} konnte nicht gespeichert werden (Shop-ID Konflikt?)`);
+      }
+      
+      return updatedRepair;
+    } catch (error) {
+      console.error(`Fehler beim Speichern des Gerätecodes der Reparatur ${id}:`, error);
       return undefined;
     }
   }

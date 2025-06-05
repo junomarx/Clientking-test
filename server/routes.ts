@@ -4193,7 +4193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/signature/customer/:tempId", async (req: Request, res: Response) => {
     try {
       const { tempId } = req.params;
-      const { signature } = req.body;
+      const { signature, deviceCode, deviceCodeType } = req.body;
 
       if (!signature) {
         return res.status(400).json({ message: "Unterschrift ist erforderlich" });
@@ -4216,6 +4216,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Unterschrift speichern
       await storage.updateTempSignatureWithSignature(tempId, signature);
+
+      // Gerätecode in der Reparatur speichern (wenn vorhanden)
+      if (tempSignature.repairData?.repairId && (deviceCode || deviceCodeType)) {
+        const repairId = tempSignature.repairData.repairId;
+        const userId = tempSignature.userId;
+        
+        console.log(`💾 Speichere Gerätecode für Reparatur ${repairId}: Type=${deviceCodeType}, Code vorhanden=${!!deviceCode}`);
+        
+        // Gerätecode in der Reparatur speichern mit Shop-Isolation
+        await storage.updateRepairDeviceCode(repairId, deviceCode, deviceCodeType, userId);
+      }
 
       res.json({
         success: true,
