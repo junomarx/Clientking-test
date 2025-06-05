@@ -113,13 +113,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     if (!deviceCodeData || !deviceCodeData.deviceCode) return '';
     
     if (deviceCodeData.deviceCodeType === 'pattern') {
-      // Pattern codes sind als "6-3-0-1-2-4-5-7-8" gespeichert
-      // Wir zeigen sie als Zahlen mit Kommas: "7,4,1,2,3,5,6,8,9" (+1 für Anzeige)
+      // Pattern codes sind als "6-3-0-1-2-4-5-7-8" gespeichert (0-8 intern)
+      // Für das Etikett zeigen wir sie als 1-9 (benutzerfreundlich)
       const patternNumbers = deviceCodeData.deviceCode.split('-').map((num: string) => {
         const digit = parseInt(num);
         return (digit + 1).toString(); // +1 für die Anzeige (0-8 wird zu 1-9)
       });
-      return `Code: ${patternNumbers.join(',')}`;
+      return `${patternNumbers.join(',')}`;
     } else if (deviceCodeData.deviceCodeType === 'text') {
       return `Code: ${deviceCodeData.deviceCode}`;
     }
