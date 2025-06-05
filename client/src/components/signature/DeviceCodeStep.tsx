@@ -158,6 +158,20 @@ export default function DeviceCodeStep({ onComplete, shopName }: DeviceCodeStepP
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Informationstext */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+              <div className="font-medium text-blue-900 text-sm">
+                Warum benötigen wir Ihren Gerätecode?
+              </div>
+              <div className="text-sm text-blue-800">
+                Mit Ihrem Sperrcode können wir Ihr Gerät vollständig testen und eine umfassende Funktionsprüfung durchführen. 
+                Ohne den Code ist nur eine eingeschränkte Überprüfung möglich, weshalb wir keine vollständige Funktionsgarantie übernehmen können.
+              </div>
+              <div className="text-xs text-blue-700 italic">
+                Der Code wird verschlüsselt gespeichert und dient ausschließlich der Reparatur.
+              </div>
+            </div>
+
             <div className="text-center text-sm text-gray-700">
               Bitte wählen Sie eine Option oder überspringen Sie diesen Schritt:
             </div>
