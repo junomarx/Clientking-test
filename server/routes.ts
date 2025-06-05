@@ -791,6 +791,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch repair" });
     }
   });
+
+  // Route zum Entschlüsseln des Gerätecodes für autorisierte Mitarbeiter
+  app.get("/api/repairs/:id/device-code", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      if (!repairId || isNaN(repairId)) {
+        return res.status(400).json({ message: "Ungültige Reparatur-ID" });
+      }
+
+      // Reparatur abrufen mit Shop-Isolation
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      if (!repair.deviceCode) {
+        return res.status(404).json({ message: "Kein Gerätecode verfügbar" });
+      }
+
+      // Gerätecode entschlüsseln
+      let decryptedCode = '';
+      try {
+        decryptedCode = Buffer.from(repair.deviceCode, 'base64').toString('utf-8');
+      } catch (error) {
+        console.error("Fehler beim Entschlüsseln des Gerätecodes:", error);
+        return res.status(500).json({ message: "Fehler beim Entschlüsseln des Gerätecodes" });
+      }
+
+      console.log(`Gerätecode für Reparatur ${repairId} entschlüsselt für Benutzer ${userId}`);
+      
+      res.json({
+        deviceCode: decryptedCode,
+        deviceCodeType: repair.deviceCodeType
+      });
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Gerätecodes:", error);
+      res.status(500).json({ message: "Fehler beim Abrufen des Gerätecodes" });
+    }
+  });
   
   app.get("/api/customers/:id/repairs", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
