@@ -71,14 +71,14 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
                       : 'bg-gray-100 border-gray-300 text-gray-400'
                   }`}
                 >
-                  {i}
+                  {i + 1}
                 </div>
               ))}
             </div>
             <div className="text-center">
               <div className="text-sm font-medium text-gray-700">Android-Muster</div>
               <div className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded mt-1">
-                Reihenfolge: {pattern.join(' → ')}
+                Reihenfolge: {pattern.map(p => p + 1).join(' → ')}
               </div>
             </div>
           </div>
