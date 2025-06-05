@@ -258,6 +258,23 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 </div>
               )}
               
+              {repair.deviceCode && (
+                <div className="flex items-start gap-2">
+                  <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Gerätecode</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                        {repair.deviceCodeType === 'text' ? '••••••••' : 'Muster'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ({repair.deviceCodeType === 'text' ? 'PIN/Code' : 'Android-Muster'})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div>
