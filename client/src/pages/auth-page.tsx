@@ -62,11 +62,36 @@ export default function AuthPage() {
   const [location] = useLocation();
   const [isSuperadminLogin, setIsSuperadminLogin] = useState(false);
   
+  // State für Dialog und Tab-Steuerung
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
+  const tabsRef = useRef<HTMLDivElement>(null);
+  
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      ownerFirstName: "",
+      ownerLastName: "",
+      streetAddress: "",
+      zipCode: "",
+      city: "",
+      country: "Österreich",
+      companyName: "",
+      website: "",
+      companyPhone: "",
+      email: "",
+      taxId: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
     },
   });
   
@@ -91,28 +116,8 @@ export default function AuthPage() {
       }, 100);
     }
   }, [location, loginForm]);
-
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      ownerFirstName: "",
-      ownerLastName: "",
-      streetAddress: "",
-      zipCode: "",
-      city: "",
-      country: "Österreich",
-      companyName: "",
-      website: "",
-      companyPhone: "",
-      email: "",
-      taxId: "",
-      username: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
   
-  // Redirect wenn bereits eingeloggt
+  // Redirect wenn bereits eingeloggt - nach allen Hook-Aufrufen
   if (user) {
     return <Redirect to="/" />;
   }
@@ -131,11 +136,6 @@ export default function AuthPage() {
       }
     }, 1000);
   }
-  
-  // State für Dialog und Tab-Steuerung
-  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
-  const tabsRef = useRef<HTMLDivElement>(null);
   
   function onRegisterSubmit(data: RegisterFormValues) {
     const { confirmPassword, ...registerData } = data;
