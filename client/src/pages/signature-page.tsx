@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, PenTool, RotateCcw, XCircle, CheckCircle2 } from "lucide-react";
+import DeviceCodeStep from "@/components/signature/DeviceCodeStep";
 
 interface SignatureData {
   tempId: string;
@@ -42,6 +43,11 @@ export default function SignaturePage() {
   const [isLandscape, setIsLandscape] = useState(false);
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
   const [signatureDataURL, setSignatureDataURL] = useState<string | null>(null);
+
+  // 2-Schritt Prozess: Device Code + Signature
+  const [currentStep, setCurrentStep] = useState<"deviceCode" | "signature">("deviceCode");
+  const [deviceCode, setDeviceCode] = useState<string | null>(null);
+  const [deviceCodeType, setDeviceCodeType] = useState<string | null>(null);
 
   useEffect(() => {
     if (tempId) {
@@ -141,6 +147,13 @@ export default function SignaturePage() {
     }
   };
 
+  // Handler für Device Code Schritt
+  const handleDeviceCodeComplete = (code: string | null, type: string | null) => {
+    setDeviceCode(code);
+    setDeviceCodeType(type);
+    setCurrentStep("signature");
+  };
+
   const submitSignature = async () => {
     if (signatureEmpty) return;
 
@@ -165,7 +178,9 @@ export default function SignaturePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          signature: currentSignatureDataURL
+          signature: currentSignatureDataURL,
+          deviceCode: deviceCode,
+          deviceCodeType: deviceCodeType
         })
       });
 
@@ -234,6 +249,16 @@ export default function SignaturePage() {
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  // Device Code Schritt anzeigen
+  if (currentStep === "deviceCode" && signatureData) {
+    return (
+      <DeviceCodeStep
+        onComplete={handleDeviceCodeComplete}
+        shopName={signatureData.repairData.shopName}
+      />
     );
   }
 

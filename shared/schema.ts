@@ -136,6 +136,10 @@ export const repairs = pgTable("repairs", {
   // Techniker-Information für "Ausser Haus" Status
   technicianNote: text("technician_note"),         // Notiz mit Techniker-Information und Zeitstempel
   
+  // Gerätecode-Funktionalität für 2-Schritt Unterschriftsprozess
+  deviceCode: text("device_code"),                 // Verschlüsselter Gerätecode (PIN oder Pattern-Hash)
+  deviceCodeType: text("device_code_type"),        // "text", "pattern", oder null wenn übersprungen
+  
   // Alte Felder, für Abwärtskompatibilität beibehalten - nur in Drizzle definiert
   // customerSignature: text("customer_signature"),
   // signedAt: timestamp("signed_at"),
