@@ -207,7 +207,7 @@ export default function DeviceCodeStep({ onComplete, shopName }: DeviceCodeStepP
                   <Label htmlFor="device-code">Gerätecode eingeben</Label>
                   <Input
                     id="device-code"
-                    type="password"
+                    type="text"
                     placeholder="PIN oder Passcode"
                     value={textCode}
                     onChange={(e) => setTextCode(e.target.value)}

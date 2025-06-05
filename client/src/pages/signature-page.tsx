@@ -157,6 +157,11 @@ export default function SignaturePage() {
     setDeviceCode(code);
     setDeviceCodeType(type);
     setCurrentStep("signature");
+    
+    // Querformat-Prompt nach kurzer Verzögerung anzeigen
+    setTimeout(() => {
+      setShowLandscapePrompt(true);
+    }, 500);
   };
 
   const submitSignature = async () => {
@@ -412,7 +417,7 @@ export default function SignaturePage() {
         )}
 
         {/* Vollbild-Querformat-Modus */}
-        {isLandscape && hasReadTerms && !showLandscapePrompt ? (
+        {isLandscape && currentStep === "signature" && !showLandscapePrompt ? (
           <div className="fixed inset-0 bg-white z-40 flex flex-col p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Unterschrift - {signatureData?.repairData.shopName}</h2>
@@ -593,7 +598,7 @@ export default function SignaturePage() {
                 </Alert>
               )}
 
-              {hasReadTerms && !showLandscapePrompt && !isLandscape && (
+              {currentStep === "signature" && !showLandscapePrompt && !isLandscape && (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -650,10 +655,10 @@ export default function SignaturePage() {
                 </div>
               )}
               
-              {!hasReadTerms && (
+              {currentStep !== "signature" && (
                 <div className="pt-4 text-center">
                   <p className="text-gray-600 text-sm mb-4">
-                    Bitte lesen Sie zuerst die Reparaturbedingungen und stimmen Sie diesen zu, bevor Sie unterschreiben können.
+                    Bitte durchlaufen Sie zuerst alle Schritte des Unterschriftsprozesses.
                   </p>
                 </div>
               )}
