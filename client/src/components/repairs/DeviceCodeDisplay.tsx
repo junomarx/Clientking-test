@@ -57,65 +57,92 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
     if (deviceCodeType === 'pattern') {
       // Display pattern as grid visualization
       try {
-        const pattern = decryptedCode.split('-').map(Number);
+        // Filter out empty strings and convert to numbers
+        const pattern = decryptedCode.split('-').filter(p => p !== '').map(Number);
         return (
-          <div className="inline-block">
-            <div className="grid grid-cols-3 gap-1 bg-white border rounded p-2" style={{ width: '60px', height: '60px' }}>
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-2 bg-white border rounded-lg p-4 mx-auto" style={{ width: '120px', height: '120px' }}>
               {Array.from({ length: 9 }, (_, i) => (
                 <div
                   key={i}
-                  className={`w-3 h-3 rounded-full border ${
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center font-bold text-xs ${
                     pattern.includes(i) 
-                      ? 'bg-blue-500 border-blue-500' 
-                      : 'bg-gray-200 border-gray-300'
+                      ? 'bg-blue-500 border-blue-600 text-white' 
+                      : 'bg-gray-100 border-gray-300 text-gray-400'
                   }`}
-                />
+                >
+                  {i}
+                </div>
               ))}
             </div>
-            <div className="text-xs text-gray-500 mt-1 text-center">
-              Muster: {decryptedCode}
+            <div className="text-center">
+              <div className="text-sm font-medium text-gray-700">Android-Muster</div>
+              <div className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-1 rounded mt-1">
+                Reihenfolge: {pattern.join(' → ')}
+              </div>
             </div>
           </div>
         );
       } catch (error) {
-        return `Muster: ${decryptedCode}`;
+        return (
+          <div className="text-sm">
+            <div className="font-medium">Android-Muster</div>
+            <div className="font-mono text-xs bg-gray-50 px-2 py-1 rounded mt-1">
+              {decryptedCode}
+            </div>
+          </div>
+        );
       }
     }
 
     return (
-      <span className="font-mono text-sm bg-blue-50 px-2 py-1 rounded border">
-        {decryptedCode}
-      </span>
+      <div className="text-sm">
+        <div className="font-medium">PIN/Code</div>
+        <div className="font-mono text-lg bg-blue-50 px-3 py-2 rounded border mt-1 tracking-wider">
+          {decryptedCode}
+        </div>
+      </div>
     );
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-          {renderDeviceCode()}
-        </span>
-        <span className="text-xs text-muted-foreground">
-          ({deviceCodeType === 'text' ? 'PIN/Code' : 'Android-Muster'})
-        </span>
+        {!revealed && (
+          <>
+            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+              {renderDeviceCode()}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ({deviceCodeType === 'text' ? 'PIN/Code' : 'Android-Muster'})
+            </span>
+          </>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={revealCode}
+          disabled={loading}
+          className="h-8 px-2 text-xs"
+          title={revealed ? "Code verbergen" : "Code anzeigen"}
+        >
+          {loading ? (
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+          ) : revealed ? (
+            <EyeOff className="h-3 w-3 mr-1" />
+          ) : (
+            <Eye className="h-3 w-3 mr-1" />
+          )}
+          {revealed ? "Verbergen" : "Anzeigen"}
+        </Button>
       </div>
       
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={revealCode}
-        disabled={loading}
-        className="h-6 w-6 p-0"
-        title={revealed ? "Code verbergen" : "Code anzeigen"}
-      >
-        {loading ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : revealed ? (
-          <EyeOff className="h-3 w-3" />
-        ) : (
-          <Eye className="h-3 w-3" />
-        )}
-      </Button>
+      {revealed && (
+        <div className="mt-2">
+          {renderDeviceCode()}
+        </div>
+      )}
     </div>
   );
 }

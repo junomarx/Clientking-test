@@ -131,17 +131,13 @@ export default function DeviceCodeStep({ onComplete, shopName }: DeviceCodeStepP
     setPattern([]);
   };
 
-  const generatePatternHash = (pattern: number[]): string => {
-    // Simple hash generation - in production use proper encryption
-    return btoa(pattern.join('-') + '-' + Date.now().toString()).slice(0, 16);
-  };
-
   const handleContinue = () => {
     if (selectedMethod === "text" && textCode.trim()) {
       onComplete(textCode.trim(), "text");
     } else if (selectedMethod === "pattern" && pattern.length >= 4) {
-      const patternHash = generatePatternHash(pattern);
-      onComplete(patternHash, "pattern");
+      // Store the actual pattern sequence for display purposes
+      const patternString = pattern.join('-');
+      onComplete(patternString, "pattern");
     }
   };
 
