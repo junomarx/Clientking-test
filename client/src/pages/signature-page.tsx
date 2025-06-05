@@ -39,7 +39,6 @@ export default function SignaturePage() {
   const [success, setSuccess] = useState(false);
   const signatureRef = useRef<SignatureCanvas>(null);
   const [signatureEmpty, setSignatureEmpty] = useState(true);
-  const [hasReadTerms, setHasReadTerms] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [showLandscapePrompt, setShowLandscapePrompt] = useState(false);
   const [signatureDataURL, setSignatureDataURL] = useState<string | null>(null);
@@ -48,6 +47,7 @@ export default function SignaturePage() {
   const [currentStep, setCurrentStep] = useState<"terms" | "deviceCode" | "signature">("terms");
   const [deviceCode, setDeviceCode] = useState<string | null>(null);
   const [deviceCodeType, setDeviceCodeType] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (tempId) {
@@ -355,8 +355,8 @@ export default function SignaturePage() {
                 <input
                   type="checkbox"
                   id="terms"
-                  checked={hasReadTerms}
-                  onChange={(e) => setHasReadTerms(e.target.checked)}
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
                   className="mt-1"
                 />
                 <label htmlFor="terms" className="text-sm">
@@ -367,7 +367,7 @@ export default function SignaturePage() {
 
               <Button
                 onClick={handleTermsComplete}
-                disabled={!hasReadTerms}
+                disabled={!termsAccepted}
                 className="w-full"
               >
                 Weiter zur Gerätecode-Eingabe
@@ -563,30 +563,7 @@ export default function SignaturePage() {
                       <p><strong>5.</strong> Nicht abgeholte Geräte können nach 60 Tagen kostenpflichtig eingelagert oder entsorgt werden.</p>
                       <p><strong>6.</strong> Mit der Unterschrift bestätigt der Kunde die Beauftragung der Reparatur sowie die Anerkennung dieser Bedingungen.</p>
                     </div>
-                    
-                    {!hasReadTerms && (
-                      <div className="mt-4 text-center">
-                        <Button 
-                          onClick={() => {
-                            setHasReadTerms(true);
-                            if (!isLandscape) {
-                              setShowLandscapePrompt(true);
-                            }
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                        >
-                          Gelesen - Ich stimme den Bedingungen zu
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {hasReadTerms && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-green-800 text-sm font-medium text-center">
-                          ✓ Sie haben den Bedingungen zugestimmt. Sie können nun unterschreiben.
-                        </p>
-                      </div>
-                    )}
+
                   </div>
                 </div>
               )}
