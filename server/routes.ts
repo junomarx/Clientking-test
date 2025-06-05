@@ -4265,8 +4265,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log(`💾 Speichere Gerätecode für Reparatur ${repairId}: Type=${deviceCodeType}, Code vorhanden=${!!deviceCode}`);
         
+        // Gerätecode verschlüsseln vor dem Speichern
+        let encryptedCode = null;
+        if (deviceCode) {
+          encryptedCode = Buffer.from(deviceCode, 'utf-8').toString('base64');
+        }
+        
         // Gerätecode in der Reparatur speichern mit Shop-Isolation
-        await storage.updateRepairDeviceCode(repairId, deviceCode, deviceCodeType, userId);
+        await storage.updateRepairDeviceCode(repairId, encryptedCode, deviceCodeType, userId);
       }
 
       res.json({
