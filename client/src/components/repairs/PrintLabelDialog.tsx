@@ -197,41 +197,28 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             }
             .repair-number {
               text-align: center;
-              font-size: 16px;
+              font-size: 14px;
               font-weight: bold;
-              margin-bottom: 2mm;
+              margin-bottom: 1.5mm;
+            }
+            .customer-name {
+              text-align: center;
+              font-size: 10px;
+              font-weight: bold;
+              margin-bottom: 1.5mm;
             }
             .qr-code {
-              margin-bottom: 2mm;
-              width: 20mm;
-              height: 20mm;
+              margin-bottom: 1.5mm;
+              width: 17mm;
+              height: 17mm;
             }
             .qr-code svg {
               width: 100%;
               height: 100%;
             }
-            .customer-info {
-              text-align: center;
-              width: 100%;
-              margin-bottom: 2mm;
-            }
-            .first-name {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-            }
-            .last-name {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 1mm;
-            }
-            .phone {
-              font-size: 10px;
-              margin-bottom: 1mm;
-            }
             .device-code {
-              font-size: 9px;
-              margin-bottom: 2mm;
+              font-size: 8px;
+              margin-bottom: 1.5mm;
               font-weight: bold;
               color: #333;
               border: 1px solid #666;
@@ -239,20 +226,18 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               background-color: #f0f0f0;
               border-radius: 1mm;
               display: inline-block;
-            }
-            .repair-info {
               text-align: center;
-              width: 100%;
-              font-size: 9px;
             }
             .model {
-              margin-bottom: 1mm;
+              text-align: center;
+              font-size: 9px;
               font-weight: bold;
+              margin-bottom: 1mm;
             }
             .issue {
-              font-size: 9px;
+              text-align: center;
+              font-size: 8px;
               white-space: pre-wrap;
-              text-align: left;
             }
           </style>
         </head>
@@ -261,19 +246,15 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
             <div class="print-area">
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
+              <div class="customer-name">${firstName} ${lastName}</div>
+              
               <div class="qr-code">${qrCode}</div>
               
-              <div class="customer-info">
-                <div class="first-name">${firstName}</div>
-                <div class="last-name">${lastName}</div>
-                <div class="phone">${customerPhone}</div>
-                ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
-              </div>
+              ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
               
-              <div class="repair-info">
-                <div class="model">${model}</div>
-                <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
-              </div>
+              <div class="model">${model}</div>
+              
+              <div class="issue">${repairIssue ? repairIssue.split(',').join('\n') : ''}</div>
             </div>
           </div>
           <script>
@@ -312,38 +293,44 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div className="bg-white p-4 rounded-md shadow-sm">
                 <div ref={printRef} className="label-container border border-dashed border-gray-300 p-3">
                   {/* Vorschau im gleichen Format wie das Drucklayout (Hochformat) */}
-                  <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3mm' }}>
+                  <div style={{ width: '26mm', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2mm' }}>
                     {/* Auftragsnummer */}
                     <div className="text-center">
-                      <p className="text-xl font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
+                      <p className="text-lg font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
+                    </div>
+                    
+                    {/* Kundenname */}
+                    <div className="text-center w-full">
+                      <p className="text-xs font-bold">{customer?.firstName} {customer?.lastName}</p>
                     </div>
                     
                     {/* QR-Code mittig */}
                     <div className="flex justify-center">
                       <QRCodeSVG 
                         value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
-                        size={76} 
+                        size={64} 
                         level="M"
                       />
                     </div>
                     
-                    {/* Kundendaten */}
-                    <div className="text-center w-full">
-                      <p className="text-xs font-bold">{customer?.firstName}</p>
-                      <p className="text-xs font-bold">{customer?.lastName}</p>
-                      <p className="text-xs">{customer?.phone}</p>
-                      {deviceCodeData && (
-                        <div className="mt-1 px-2 py-1 border border-gray-400 rounded bg-gray-100">
+                    {/* Gerätecode */}
+                    {deviceCodeData && (
+                      <div className="w-full text-center">
+                        <div className="inline-block px-2 py-1 border border-gray-400 rounded bg-gray-100">
                           <p className="text-xs font-bold text-gray-800">
                             {formatDeviceCodeForLabel(deviceCodeData)}
                           </p>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
-                    {/* Reparaturinformationen */}
+                    {/* Modell */}
                     <div className="text-center w-full">
                       <p className="text-xs font-bold">{repair?.model}</p>
+                    </div>
+                    
+                    {/* Fehler */}
+                    <div className="text-center w-full">
                       <p className="text-xs whitespace-pre-wrap">{repair?.issue ? repair.issue.split(',').join('\n') : ''}</p>
                     </div>
                   </div>
