@@ -15,6 +15,7 @@ import { getStatusBadge } from '@/lib/utils';
 import { SignatureDialog } from './SignatureDialog';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useAuth } from '@/hooks/use-auth';
+import { DeviceCodeDisplay } from './DeviceCodeDisplay';
 
 import {
   Dialog,
@@ -263,14 +264,10 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <Pen className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>
                     <div className="text-sm text-muted-foreground">Gerätecode</div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {repair.deviceCodeType === 'text' ? '••••••••' : 'Muster'}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ({repair.deviceCodeType === 'text' ? 'PIN/Code' : 'Android-Muster'})
-                      </span>
-                    </div>
+                    <DeviceCodeDisplay 
+                      repairId={repair.id} 
+                      deviceCodeType={repair.deviceCodeType} 
+                    />
                   </div>
                 </div>
               )}
