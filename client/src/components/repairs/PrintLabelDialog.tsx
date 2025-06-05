@@ -233,7 +233,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               font-size: 9px;
               margin-bottom: 2mm;
               font-weight: bold;
-              color: #555;
+              color: #333;
+              border: 1px solid #666;
+              padding: 1mm;
+              background-color: #f0f0f0;
+              border-radius: 1mm;
+              display: inline-block;
             }
             .repair-info {
               text-align: center;
@@ -328,9 +333,11 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                       <p className="text-xs font-bold">{customer?.lastName}</p>
                       <p className="text-xs">{customer?.phone}</p>
                       {deviceCodeData && (
-                        <p className="text-xs font-bold text-gray-600 mt-1">
-                          {formatDeviceCodeForLabel(deviceCodeData)}
-                        </p>
+                        <div className="mt-1 px-2 py-1 border border-gray-400 rounded bg-gray-100">
+                          <p className="text-xs font-bold text-gray-800">
+                            {formatDeviceCodeForLabel(deviceCodeData)}
+                          </p>
+                        </div>
                       )}
                     </div>
                     
