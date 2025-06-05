@@ -108,6 +108,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings || isLoadingDeviceCode;
 
+  // Debug-Logging für Gerätecode (wird immer ausgeführt wenn Dialog offen ist)
+  React.useEffect(() => {
+    if (open && deviceCodeData) {
+      console.log('PrintLabelDialog - Device Code Data:', deviceCodeData);
+      const formattedCode = formatDeviceCodeForLabel(deviceCodeData);
+      console.log('PrintLabelDialog - Formatted Device Code:', formattedCode);
+      console.log('PrintLabelDialog - Device Code exists:', !!formattedCode);
+      console.log('PrintLabelDialog - Device Code length:', formattedCode?.length);
+    }
+  }, [open, deviceCodeData]);
+
   // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
   const formatDeviceCodeForLabel = (deviceCodeData: any): string => {
     if (!deviceCodeData || !deviceCodeData.deviceCode) return '';
@@ -153,11 +164,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const repairIssue = repair?.issue || '';
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
     
-    // Debug-Logging für Gerätecode
-    console.log('PrintLabelDialog - Device Code Data:', deviceCodeData);
-    console.log('PrintLabelDialog - Formatted Device Code:', deviceCode);
-    console.log('PrintLabelDialog - Device Code exists:', !!deviceCode);
-    console.log('PrintLabelDialog - Device Code length:', deviceCode?.length);
+
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
