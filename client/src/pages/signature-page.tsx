@@ -351,15 +351,15 @@ export default function SignaturePage() {
               </div>
 
               {/* Checkbox */}
-              <div className="flex items-start gap-3 pr-2">
+              <div className="flex items-start space-x-3">
                 <input
                   type="checkbox"
                   id="terms"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="flex-shrink-0 mt-1 w-4 h-4 accent-blue-600"
+                  className="mt-1"
                 />
-                <label htmlFor="terms" className="text-sm leading-relaxed flex-1 cursor-pointer">
+                <label htmlFor="terms" className="text-sm">
                   Ich habe die Reparaturbedingungen gelesen und akzeptiere diese. 
                   Ich beauftrage hiermit die Reparatur meines Gerätes.
                 </label>

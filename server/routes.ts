@@ -4105,14 +4105,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Temporäre Unterschrift in der Datenbank erstellen
       const tempSignature = await storage.createTempSignature(tempId, enrichedRepairData, userId, shopId);
 
-      // QR-Code URL für Kunde erstellen - HTTPS erzwingen für Sicherheit
-      const forwardedProto = req.get('x-forwarded-proto');
-      const protocol = forwardedProto === 'https' || req.secure || req.protocol === 'https' ? 'https' : 'http';
+      // QR-Code URL für Kunde erstellen - dynamisch basierend auf Request
+      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
       const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5000';
-      
-      // Für Produktion immer HTTPS verwenden
-      const finalProtocol = process.env.NODE_ENV === 'production' || host.includes('.replit.app') ? 'https' : protocol;
-      const baseUrl = `${finalProtocol}://${host}`;
+      const baseUrl = `${protocol}://${host}`;
       
       const signatureUrl = `${baseUrl}/signature/${tempId}`;
 
