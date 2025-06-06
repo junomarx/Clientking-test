@@ -3260,31 +3260,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
       const shopId = shopIdResult.rows[0]?.shop_id || 1;
       
-      // Nächste Referenznummer generieren
+      // Nächste Referenznummer generieren mit verbesserter Logik
       const today = new Date();
       const year = today.getFullYear().toString().slice(-2);
       const month = (today.getMonth() + 1).toString().padStart(2, '0');
       
-      const lastEstimateQuery = await db.execute(`
-        SELECT reference_number 
-        FROM cost_estimates 
-        WHERE shop_id = ${shopId} 
-          AND reference_number LIKE 'KV-${month}${year}-%'
-        ORDER BY reference_number DESC 
-        LIMIT 1
-      `);
+      // Verwende eine Transaktion um Race Conditions zu vermeiden
+      let estimateNumber;
+      let attempts = 0;
+      const maxAttempts = 10;
       
-      let nextNumber = 1;
-      if (lastEstimateQuery.rows.length > 0) {
-        const lastEstimateNumber = lastEstimateQuery.rows[0].reference_number;
-        const match = lastEstimateNumber.match(/KV-\d{4}-(\d{3})/);
-        if (match && match[1]) {
-          nextNumber = parseInt(match[1]) + 1;
+      while (attempts < maxAttempts) {
+        attempts++;
+        
+        // Hole die höchste Nummer für diesen Monat
+        const lastEstimateQuery = await db.execute(`
+          SELECT MAX(CAST(SUBSTRING(reference_number FROM 'KV-${month}${year}-(\\d+)') AS INTEGER)) as max_number
+          FROM cost_estimates 
+          WHERE shop_id = ${shopId} 
+            AND reference_number ~ '^KV-${month}${year}-\\d{3}$'
+        `);
+        
+        let nextNumber = 1;
+        if (lastEstimateQuery.rows.length > 0 && lastEstimateQuery.rows[0].max_number) {
+          nextNumber = parseInt(lastEstimateQuery.rows[0].max_number) + 1;
         }
+        
+        estimateNumber = `KV-${month}${year}-${String(nextNumber).padStart(3, '0')}`;
+        
+        // Prüfe ob die Nummer bereits existiert
+        const existsQuery = await db.execute(`
+          SELECT 1 FROM cost_estimates 
+          WHERE reference_number = '${estimateNumber}' 
+          LIMIT 1
+        `);
+        
+        if (existsQuery.rows.length === 0) {
+          break; // Nummer ist frei
+        }
+        
+        console.log(`Referenznummer ${estimateNumber} bereits vergeben, versuche nächste...`);
       }
       
-      // Generiere die Kostenvoranschlagsnummer
-      const estimateNumber = `KV-${month}${year}-${String(nextNumber).padStart(3, '0')}`;
+      if (attempts >= maxAttempts) {
+        throw new Error("Konnte keine eindeutige Referenznummer generieren");
+      }
+      
       console.log(`Neue Kostenvoranschlagsnummer erstellt: ${estimateNumber}`);
       
       // Direktes SQL ohne Storage-Funktion
