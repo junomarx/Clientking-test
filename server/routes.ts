@@ -671,6 +671,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paramCounter++;
         }
         
+        if (customerData.zipCode !== undefined) {
+          updateFields.push(`zip_code = $${paramCounter}`);
+          updateValues.push(customerData.zipCode);
+          paramCounter++;
+        }
+        
+        if (customerData.city !== undefined) {
+          updateFields.push(`city = $${paramCounter}`);
+          updateValues.push(customerData.city);
+          paramCounter++;
+        }
+        
         if (customerData.notes !== undefined) {
           updateFields.push(`notes = $${paramCounter}`);
           updateValues.push(customerData.notes);
@@ -709,6 +721,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: customer.email,
           phone: customer.phone,
           address: customer.address,
+          zipCode: customer.zip_code,
+          city: customer.city,
           notes: customer.notes,
           createdAt: customer.created_at,
           updatedAt: customer.updated_at,
