@@ -95,6 +95,9 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       lastName: '',
       phone: '',
       email: '',
+      address: '',
+      zipCode: '',
+      city: '',
     },
   });
   
