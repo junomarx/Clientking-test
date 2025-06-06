@@ -3269,7 +3269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT reference_number 
         FROM cost_estimates 
         WHERE shop_id = ${shopId} 
-        ORDER BY id DESC 
+          AND reference_number LIKE 'KV-${month}${year}-%'
+        ORDER BY reference_number DESC 
         LIMIT 1
       `);
       
