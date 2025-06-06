@@ -1268,13 +1268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Alle Benutzer haben unbegrenzten Zugriff
-        console.log(`Benutzer ${userId} hat unbegrenzten Zugriff auf Reparaturen`);
-          
-        // Alle Benutzer haben unbegrenzten Zugriff
         quotaInfo.limit = 999999;
-        
-        // Prüfen, ob neue Reparaturen erstellt werden können
-        quotaInfo.canCreate = quotaInfo.count < quotaInfo.limit;
+        quotaInfo.canCreate = true;
+        quotaInfo.pricingPlan = "professional";
+        quotaInfo.displayName = "Professional";
       }
       
       // Datumsinformationen
