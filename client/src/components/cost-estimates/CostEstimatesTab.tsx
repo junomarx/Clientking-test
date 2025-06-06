@@ -154,8 +154,10 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
   });
 
   const handleNewCostEstimate = () => {
+    console.log("handleNewCostEstimate aufgerufen - Dialog wird geöffnet");
     // Dialog öffnen statt Event-Handling
     setIsDialogOpen(true);
+    console.log("isDialogOpen auf true gesetzt");
     
     if (onNewCostEstimate) {
       onNewCostEstimate();
