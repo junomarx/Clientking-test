@@ -3267,6 +3267,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // CustomerId zum Request hinzufügen
       req.body.customerId = customerId;
       
+      // Bei bestehenden Kunden: Adressdaten aus der Datenbank laden
+      if (!isNewCustomer && customerId) {
+        const customerFromDb = await db.execute(`
+          SELECT first_name, last_name, phone, email, address, zip_code, city 
+          FROM customers WHERE id = ${customerId}
+        `);
+        
+        if (customerFromDb.rows.length > 0) {
+          const dbCustomer = customerFromDb.rows[0];
+          // Überschreibe Formulardaten mit Datenbankdaten
+          req.body.firstName = dbCustomer.first_name;
+          req.body.lastName = dbCustomer.last_name;
+          req.body.phone = dbCustomer.phone;
+          req.body.email = dbCustomer.email;
+          req.body.address = dbCustomer.address;
+          req.body.postalCode = dbCustomer.zip_code;
+          req.body.city = dbCustomer.city;
+          
+          console.log("Adressdaten aus Datenbank geladen für Kunde", customerId, ":", {
+            address: dbCustomer.address,
+            zipCode: dbCustomer.zip_code,
+            city: dbCustomer.city
+          });
+        }
+      }
+      
       // Validierung der Daten mit Zod
       const data = insertCostEstimateSchema.parse(req.body);
       
