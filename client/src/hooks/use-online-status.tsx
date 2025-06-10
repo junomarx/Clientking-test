@@ -152,8 +152,12 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         
         // Query Cache invalidieren um UI zu aktualisieren
         import('@/lib/queryClient').then(({ queryClient }) => {
+          console.log('Invalidiere Reparatur-Cache nach Unterschrift-Empfang');
           queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
           queryClient.invalidateQueries({ queryKey: ['/api/repairs', message.repairId] });
+          
+          // Zusätzlich: Refetch erzwingen
+          queryClient.refetchQueries({ queryKey: ['/api/repairs'] });
         });
         break;
         
