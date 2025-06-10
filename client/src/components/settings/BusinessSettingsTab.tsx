@@ -38,6 +38,8 @@ const businessSettingsSchema = z.object({
   smtpPort: z.string().optional(),
   // Bewertungslink
   reviewLink: z.string().optional(),
+  // Kiosk-Modus PIN
+  kioskPin: z.string().min(4, "PIN muss mindestens 4 Zeichen haben").max(10, "PIN darf maximal 10 Zeichen haben").optional(),
 });
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
@@ -84,6 +86,8 @@ export function BusinessSettingsTab() {
       smtpPort: "",
       // Bewertungslink
       reviewLink: "",
+      // Kiosk-Modus PIN
+      kioskPin: "1234",
     },
   });
 
@@ -166,7 +170,8 @@ export function BusinessSettingsTab() {
         smtpPassword: settings.smtpPassword === null ? undefined : settings.smtpPassword,
         smtpSenderName: settings.smtpSenderName === null ? undefined : settings.smtpSenderName,
         openingHours: settings.openingHours === null ? undefined : settings.openingHours,
-        reviewLink: settings.reviewLink === null ? undefined : settings.reviewLink
+        reviewLink: settings.reviewLink === null ? undefined : settings.reviewLink,
+        kioskPin: settings.kioskPin === null ? "1234" : settings.kioskPin
       };
       
       form.reset(formattedSettings);
@@ -434,6 +439,29 @@ export function BusinessSettingsTab() {
                         <Input placeholder="https://g.page/review/..." {...field} className="h-9 text-sm" />
                       </FormControl>
                       <FormMessage className="text-xs" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="kioskPin"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Kiosk-Modus PIN</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="1234" 
+                          {...field} 
+                          className="h-9 text-sm" 
+                          type="password"
+                          maxLength={10}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                      <p className="text-xs text-gray-500">
+                        PIN für die Aktivierung des Kiosk-Modus auf Tablets (4-10 Zeichen)
+                      </p>
                     </FormItem>
                   )}
                 />
