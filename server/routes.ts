@@ -132,6 +132,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
       }
 
+      // Dynamische Imports für Datenbankzugriff
+      const { db } = await import('./db');
+      const { repairs } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+
       // Direkte Datenbankabfrage ohne Shop-Isolation für Kiosk
       const [repair] = await db.select().from(repairs).where(eq(repairs.id, repairId));
       if (!repair) {
@@ -141,24 +146,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Reparatur ${repairId} gefunden, speichere Unterschrift...`);
 
-      // Unterschrift und optionalen Gerätecode speichern
-      const updateData: any = {
-        signature: signature,
-        signedAt: new Date()
-      };
-
+      // Verwende rohe SQL-Abfrage für bessere Kompatibilität
+      const { sql } = await import('drizzle-orm');
+      
       if (deviceCode) {
-        // Gerätecode verschlüsseln (Base64)
-        updateData.deviceCode = Buffer.from(deviceCode).toString('base64');
-        updateData.deviceCodeType = 'pattern';
+        // Mit Gerätecode
+        await db.execute(sql`
+          UPDATE repairs 
+          SET signature = ${signature}, 
+              signed_at = NOW(), 
+              device_code = ${Buffer.from(deviceCode).toString('base64')}, 
+              device_code_type = 'pattern'
+          WHERE id = ${repairId}
+        `);
+      } else {
+        // Nur Unterschrift
+        await db.execute(sql`
+          UPDATE repairs 
+          SET signature = ${signature}, 
+              signed_at = NOW()
+          WHERE id = ${repairId}
+        `);
       }
 
-      // Direkte Datenbankaktualisierung ohne Storage-Layer
-      await db.update(repairs)
-        .set(updateData)
-        .where(eq(repairs.id, repairId));
-
       // WebSocket-Nachricht an Hauptgerät senden
+      const { getOnlineStatusManager } = await import('./websocket-server');
       const onlineStatusManager = getOnlineStatusManager();
       if (onlineStatusManager) {
         onlineStatusManager.broadcast({
