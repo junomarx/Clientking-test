@@ -12,7 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Repair } from '@/lib/types';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { RotateCcw, Smartphone, Loader2 } from 'lucide-react';
+import { RotateCcw, Smartphone, Loader2, Tablet } from 'lucide-react';
 import { isMobileDevice, isPortraitMode } from '@/lib/deviceHelpers';
 
 interface SignatureDialogProps {
@@ -35,6 +35,30 @@ export function SignatureDialog({
   const [error, setError] = useState<string | null>(null);
   const [isPortrait, setIsPortrait] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  
+  // Kiosk-Senden Mutation
+  const sendToKioskMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/send-to-kiosk', {
+        repairId: repairId
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'An Kiosk-Gerät gesendet',
+        description: 'Die Unterschrifts-Anfrage wurde an das Kiosk-Gerät gesendet.',
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Fehler',
+        description: `Anfrage konnte nicht gesendet werden: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
   
   // Überprüfung der Geräteausrichtung beim Öffnen des Dialogs
   useEffect(() => {
@@ -145,6 +169,36 @@ export function SignatureDialog({
           </div>
         )}
         
+        {/* Kiosk-Gerät Option */}
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Tablet className="h-6 w-6 text-blue-600" />
+              <div>
+                <h3 className="font-medium text-blue-900">An Kiosk-Gerät senden</h3>
+                <p className="text-sm text-blue-700">Kunde kann direkt am Kiosk-Gerät unterschreiben</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => sendToKioskMutation.mutate()}
+              disabled={sendToKioskMutation.isPending}
+              variant="outline"
+              className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600"
+            >
+              {sendToKioskMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Tablet className="h-4 w-4 mr-2" />
+              )}
+              Senden
+            </Button>
+          </div>
+        </div>
+
+        <div className="text-center text-sm text-gray-500 mb-4">
+          oder
+        </div>
+
         <div className="pt-4">
           {signatureMutation.isPending ? (
             <div className="flex items-center justify-center p-8">

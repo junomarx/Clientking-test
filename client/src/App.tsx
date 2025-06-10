@@ -26,6 +26,8 @@ import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
 import { OnlineStatusProvider } from "./hooks/use-online-status";
+import { KioskModeProvider } from "./hooks/use-kiosk-mode";
+import { KioskOverlay } from "@/components/kiosk/KioskOverlay";
 import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
@@ -150,18 +152,21 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OnlineStatusProvider>
-          <BusinessSettingsProvider>
-            <ThemeProvider>
-              <PrintManagerProvider>
-                <TooltipProvider>
-                  <TitleUpdater />
-                  <CacheClearer />
-                  <Toaster />
-                  <Router />
-                </TooltipProvider>
-              </PrintManagerProvider>
-            </ThemeProvider>
-          </BusinessSettingsProvider>
+          <KioskModeProvider>
+            <BusinessSettingsProvider>
+              <ThemeProvider>
+                <PrintManagerProvider>
+                  <TooltipProvider>
+                    <TitleUpdater />
+                    <CacheClearer />
+                    <Toaster />
+                    <Router />
+                    <KioskOverlay />
+                  </TooltipProvider>
+                </PrintManagerProvider>
+              </ThemeProvider>
+            </BusinessSettingsProvider>
+          </KioskModeProvider>
         </OnlineStatusProvider>
       </AuthProvider>
     </QueryClientProvider>

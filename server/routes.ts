@@ -4532,6 +4532,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== KIOSK-MODUS API-ENDPUNKTE =====
+  
+  // PIN-Validierung für Kiosk-Modus
+  app.post("/api/validate-kiosk-pin", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { pin } = req.body;
+      const userId = (req.user as any).id;
+      
+      // PIN gegen Business Settings validieren
+      const settings = await storage.getBusinessSettings(userId);
+      
+      // Für den Anfang verwenden wir einen Standard-PIN "1234"
+      // TODO: PIN in Business Settings speichern
+      const validPin = settings?.kioskPin || "1234";
+      
+      if (pin === validPin) {
+        res.json({ valid: true });
+      } else {
+        res.status(401).json({ valid: false, message: "Ungültiger PIN" });
+      }
+    } catch (error) {
+      console.error("Fehler bei PIN-Validierung:", error);
+      res.status(500).json({ message: "Fehler bei der PIN-Validierung" });
+    }
+  });
+
+  // Kiosk-Unterschrift speichern
+  app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
+    try {
+      const { repairId, signature, deviceCode, timestamp } = req.body;
+      
+      if (!repairId || !signature) {
+        return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
+      }
+
+      // Reparatur laden (ohne User-Kontext für Kiosk)
+      const repair = await storage.getRepairById(repairId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Unterschrift und optionalen Gerätecode speichern
+      const updateData: any = {
+        signature: signature,
+        signedAt: new Date().toISOString()
+      };
+
+      if (deviceCode) {
+        // Gerätecode verschlüsseln (Base64)
+        updateData.deviceCode = Buffer.from(deviceCode).toString('base64');
+        updateData.deviceCodeType = 'pattern';
+      }
+
+      await storage.updateRepairSignature(repairId, updateData);
+
+      // WebSocket-Nachricht an Hauptgerät senden
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        onlineStatusManager.broadcast({
+          type: 'signature-completed',
+          repairId: repairId,
+          timestamp: timestamp
+        });
+      }
+
+      console.log(`Kiosk-Unterschrift für Reparatur ${repairId} gespeichert`);
+      res.json({ success: true, message: "Unterschrift erfolgreich gespeichert" });
+    } catch (error) {
+      console.error("Fehler beim Speichern der Kiosk-Unterschrift:", error);
+      res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
+    }
+  });
+
+  // "An Kiosk senden" - Unterschrifts-Anfrage an Kiosk-Gerät
+  app.post("/api/send-to-kiosk", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { repairId } = req.body;
+      const userId = (req.user as any).id;
+
+      if (!repairId) {
+        return res.status(400).json({ message: "Reparatur-ID ist erforderlich" });
+      }
+
+      // Reparatur mit Shop-Isolation laden
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Kunde laden
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+
+      // WebSocket-Nachricht an alle Kiosk-Geräte senden
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        onlineStatusManager.broadcast({
+          type: 'signature-request',
+          payload: {
+            repairId: repairId,
+            customerName: `${customer.firstName} ${customer.lastName}`,
+            repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
+            timestamp: Date.now()
+          }
+        });
+      }
+
+      console.log(`Unterschrifts-Anfrage für Reparatur ${repairId} an Kiosk-Geräte gesendet`);
+      res.json({ success: true, message: "Anfrage an Kiosk-Gerät gesendet" });
+    } catch (error) {
+      console.error("Fehler beim Senden an Kiosk:", error);
+      res.status(500).json({ message: "Fehler beim Senden der Anfrage" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren
