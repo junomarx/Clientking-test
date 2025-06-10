@@ -30,9 +30,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       if (!repairId) return null;
       try {
         const response = await fetch(`/api/repairs/${repairId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include'
         });
         if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
         return response.json();
@@ -51,9 +49,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       if (!repair?.customerId) return null;
       try {
         const response = await fetch(`/api/customers/${repair.customerId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include'
         });
         if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
         return response.json();
@@ -71,9 +67,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     queryFn: async () => {
       try {
         const response = await fetch('/api/business-settings', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include'
         });
         if (!response.ok) return null;
         return response.json();
@@ -92,9 +86,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
       if (!repairId) return null;
       try {
         const response = await fetch(`/api/repairs/${repairId}/device-code`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          }
+          credentials: 'include'
         });
         if (!response.ok) return null;
         return response.json();
