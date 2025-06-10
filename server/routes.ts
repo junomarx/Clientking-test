@@ -3231,6 +3231,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.body.items = processedItems;
       console.log("Verarbeitete Items:", processedItems);
       
+      // Zuerst: Kunde erstellen oder finden
+      let customerId = req.body.customerId;
+      
+      if (!customerId) {
+        // Automatisch einen Kunden erstellen
+        const customerData = {
+          firstName: req.body.firstName,
+          lastName: req.body.lastName,
+          phone: req.body.phone,
+          email: req.body.email,
+          address: req.body.address,
+          postalCode: req.body.postalCode,
+          city: req.body.city
+        };
+        
+        console.log("Erstelle automatisch Kunde für Kostenvoranschlag:", customerData);
+        const newCustomer = await storage.createCustomer(customerData, (req.user as any).id);
+        customerId = newCustomer.id;
+        console.log("Neuer Kunde erstellt mit ID:", customerId);
+      }
+      
+      // CustomerId zum Request hinzufügen
+      req.body.customerId = customerId;
+      
       // Validierung der Daten mit Zod
       const data = insertCostEstimateSchema.parse(req.body);
       
