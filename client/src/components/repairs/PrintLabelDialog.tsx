@@ -243,18 +243,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     {/* Kundenname */}
                     <div className="text-center w-full">
                       <p className="text-xs font-bold">
-                        {customer ? `${customer.firstName} ${customer.lastName || ''}`.trim() : 'Kunde'}
+                        {getCustomerName()}
                       </p>
                     </div>
-                    
-                    {/* Telefonnummer zwischen Name und QR-Code */}
-                    {customer?.phone && (
-                      <div className="text-center w-full mb-2">
-                        <span className="text-xs text-gray-600">
-                          {customer.phone}
-                        </span>
-                      </div>
-                    )}
                     
                     {/* QR-Code mittig */}
                     <div className="flex justify-center">
