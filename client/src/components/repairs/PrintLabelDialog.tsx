@@ -205,7 +205,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               text-align: center;
               font-size: 10px;
               font-weight: bold;
+              margin-bottom: 0.3mm;
+            }
+            .customer-phone {
+              text-align: center;
+              font-size: 8px;
               margin-bottom: 0.5mm;
+              color: #333;
             }
             .qr-code {
               margin-bottom: 1.5mm;
@@ -247,6 +253,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               <div class="repair-number">${orderCode || `#${repairId}`}</div>
               
               <div class="customer-name">${firstName} ${lastName}</div>
+              
+              ${customerPhone ? `<div class="customer-phone">${customerPhone}</div>` : ''}
               
               <div class="qr-code">${qrCode}</div>
               
