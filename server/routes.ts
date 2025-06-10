@@ -195,8 +195,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Temporäre Unterschrift auf "signed" setzen
         await pool.query(
-          'UPDATE temp_signatures SET status = \'signed\', customer_signature = $1, signed_at = NOW(), device_code = $2 WHERE temp_id = $3',
-          [signature, deviceCode || null, tempId]
+          'UPDATE temp_signatures SET status = \'signed\', customer_signature = $1, signed_at = NOW() WHERE temp_id = $2',
+          [signature, tempId]
         );
       }
 
