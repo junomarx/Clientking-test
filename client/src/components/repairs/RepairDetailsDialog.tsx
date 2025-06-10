@@ -4,6 +4,7 @@ import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
 import { Customer, EmailHistory } from '@shared/schema';
 import { Repair } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 // Erweiterte EmailHistory mit optionalem templateName
 export interface EmailHistoryWithTemplate extends EmailHistory {
@@ -48,7 +49,9 @@ import {
   X,
   Printer,
   Pen,
-  Send
+  Send,
+  QrCode,
+  Tablet
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -77,6 +80,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   // Für Rückwärtskompatibilität
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { showPrintOptions } = usePrintManager();
+  const { toast } = useToast();
   
   // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
@@ -86,6 +90,32 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       setRepair(null);
       setCustomer(null);
     }, 300);
+  };
+
+  // Unterschrift an Kiosk senden
+  const sendSignatureToKiosk = async () => {
+    if (!repair) return;
+
+    try {
+      const response = await apiRequest("POST", "/api/send-to-kiosk", {
+        repairId: repair.id
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Unterschrift gesendet",
+          description: "Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet.",
+        });
+      } else {
+        throw new Error("Fehler beim Senden der Unterschrift");
+      }
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Die Unterschrift konnte nicht an das Kiosk gesendet werden.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Daten der Reparatur abrufen
@@ -536,6 +566,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
           >
             <Printer className="h-4 w-4" />
             Drucken
+          </Button>
+
+          {/* Unterschrift an Kiosk senden */}
+          <Button 
+            variant="outline" 
+            onClick={sendSignatureToKiosk}
+            className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border-blue-200"
+          >
+            <Tablet className="h-4 w-4" />
+            An Kiosk senden
           </Button>
           
           <Button 
