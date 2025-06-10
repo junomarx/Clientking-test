@@ -137,6 +137,26 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         console.log('Frontend: Custom Event dispatched');
         break;
         
+      case 'signature-completed':
+        // Unterschrift wurde erfolgreich übertragen - UI aktualisieren
+        console.log('Frontend: Unterschrift abgeschlossen empfangen:', message);
+        
+        // Custom Event für Hauptsystem-UI-Update
+        const signatureCompletedEvent = new CustomEvent('signatureCompleted', {
+          detail: {
+            repairId: message.repairId,
+            timestamp: message.timestamp
+          }
+        });
+        window.dispatchEvent(signatureCompletedEvent);
+        
+        // Query Cache invalidieren um UI zu aktualisieren
+        import('@/lib/queryClient').then(({ queryClient }) => {
+          queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/repairs', message.repairId] });
+        });
+        break;
+        
       default:
         console.log('Unbekannte WebSocket-Nachricht:', message);
     }

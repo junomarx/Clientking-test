@@ -114,6 +114,43 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
     }
   }, [signatureData, signatureStatus?.status]);
 
+  // Event-Listener für signature-completed Events
+  useEffect(() => {
+    const handleSignatureCompleted = (event: CustomEvent) => {
+      const { repairId } = event.detail;
+      
+      if (repairId === repair.id) {
+        console.log('Unterschrift für diese Reparatur abgeschlossen, aktualisiere UI');
+        
+        // Status auf completed setzen
+        setSignatureStatus(prev => prev ? { ...prev, status: 'completed' } : null);
+        
+        // Cache invalidieren für sofortige UI-Aktualisierung
+        queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/repairs', repair.id] });
+        
+        // Toast-Benachrichtigung
+        toast({
+          title: "Unterschrift erhalten!",
+          description: "Die Kundenunterschrift wurde erfolgreich übertragen.",
+        });
+        
+        // Polling stoppen
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          setPollInterval(null);
+        }
+      }
+    };
+
+    // Event-Listener registrieren
+    window.addEventListener('signatureCompleted', handleSignatureCompleted as EventListener);
+    
+    return () => {
+      window.removeEventListener('signatureCompleted', handleSignatureCompleted as EventListener);
+    };
+  }, [repair.id, pollInterval, toast]);
+
   const generateQRCode = async () => {
     try {
       setLoading(true);
