@@ -135,27 +135,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Nur Pool für direkte SQL-Abfragen verwenden
       const { pool } = await import('./db');
       
-      // Erst prüfen, ob Reparatur existiert
-      const checkResult = await pool.query('SELECT id FROM repairs WHERE id = $1', [repairId]);
+      // Reparatur mit Status abrufen, um richtige Unterschrift-Spalte zu bestimmen
+      const checkResult = await pool.query('SELECT id, status FROM repairs WHERE id = $1', [repairId]);
       if (checkResult.rows.length === 0) {
         console.log(`Reparatur mit ID ${repairId} nicht gefunden`);
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      console.log(`Reparatur ${repairId} gefunden, speichere Unterschrift...`);
+      const repair = checkResult.rows[0];
+      const status = repair.status;
+      
+      // Bestimme Unterschrift-Typ basierend auf Status
+      let signatureType = 'pickup'; // Standard
+      if (status === 'eingegangen') {
+        signatureType = 'dropoff';
+      } else if (status === 'fertig') {
+        signatureType = 'pickup';
+      }
+      
+      console.log(`Reparatur ${repairId} gefunden (Status: ${status}), speichere ${signatureType}-Unterschrift...`);
 
       if (deviceCode) {
-        // Mit Gerätecode für Abholung (pickup)
-        await pool.query(
-          'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
-          [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
-        );
+        // Mit Gerätecode
+        if (signatureType === 'dropoff') {
+          await pool.query(
+            'UPDATE repairs SET dropoff_signature = $1, dropoff_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
+            [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
+          );
+        } else {
+          await pool.query(
+            'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
+            [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
+          );
+        }
       } else {
-        // Nur Unterschrift für Abholung (pickup)
-        await pool.query(
-          'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW() WHERE id = $2',
-          [signature, repairId]
-        );
+        // Nur Unterschrift
+        if (signatureType === 'dropoff') {
+          await pool.query(
+            'UPDATE repairs SET dropoff_signature = $1, dropoff_signed_at = NOW() WHERE id = $2',
+            [signature, repairId]
+          );
+        } else {
+          await pool.query(
+            'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW() WHERE id = $2',
+            [signature, repairId]
+          );
+        }
       }
 
       // WebSocket-Nachricht an Hauptgerät senden
