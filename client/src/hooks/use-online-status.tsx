@@ -126,6 +126,15 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         // Heartbeat-Bestätigung erhalten
         break;
         
+      case 'signature-request':
+        // Weiterleitung an Kiosk-System über Custom Event
+        console.log('Weiterleitung der Unterschrifts-Anfrage an Kiosk-System:', message);
+        const kioskEvent = new CustomEvent('kioskWebSocketMessage', {
+          detail: message
+        });
+        window.dispatchEvent(kioskEvent);
+        break;
+        
       default:
         console.log('Unbekannte WebSocket-Nachricht:', message);
     }

@@ -27,19 +27,21 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { wsStatus, sendMessage } = useOnlineStatus();
 
-  // WebSocket-Listener für eingehende Unterschrifts-Anfragen
+  // WebSocket-Listener für eingehende Unterschrifts-Anfragen über das Online-Status-System
   useEffect(() => {
-    if (!isKioskMode || wsStatus !== 'connected') return;
+    if (!isKioskMode) return;
 
-    const handleSignatureRequest = (event: MessageEvent) => {
+    const handleWebSocketMessage = (event: CustomEvent) => {
       try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'signature-request') {
-          console.log('Kiosk: Unterschrifts-Anfrage erhalten', data.payload);
+        const message = event.detail;
+        console.log('Kiosk: WebSocket-Nachricht empfangen', message);
+        
+        if (message.type === 'signature-request') {
+          console.log('Kiosk: Unterschrifts-Anfrage erhalten', message.payload);
           setSignatureRequest({
-            tempId: data.payload.tempId,
-            customerName: data.payload.customerName,
-            repairDetails: data.payload.repairDetails,
+            tempId: message.payload.tempId,
+            customerName: message.payload.customerName,
+            repairDetails: message.payload.repairDetails,
             timestamp: Date.now()
           });
         }
@@ -48,14 +50,13 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Event-Listener hinzufügen (falls WebSocket direkt verfügbar)
-    if (typeof window !== 'undefined' && (window as any).kioskWebSocket) {
-      (window as any).kioskWebSocket.addEventListener('message', handleSignatureRequest);
-      return () => {
-        (window as any).kioskWebSocket.removeEventListener('message', handleSignatureRequest);
-      };
-    }
-  }, [isKioskMode, wsStatus]);
+    // Custom Event Listener für WebSocket-Nachrichten
+    window.addEventListener('kioskWebSocketMessage', handleWebSocketMessage as EventListener);
+    
+    return () => {
+      window.removeEventListener('kioskWebSocketMessage', handleWebSocketMessage as EventListener);
+    };
+  }, [isKioskMode]);
 
   const activateKioskMode = () => {
     setIsKioskMode(true);

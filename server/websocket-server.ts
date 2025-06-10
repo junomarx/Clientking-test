@@ -8,6 +8,7 @@ interface ConnectedUser {
   socket: WebSocket;
   lastHeartbeat: Date;
   isActive: boolean;
+  isKiosk?: boolean;
 }
 
 class OnlineStatusManager {
@@ -60,6 +61,10 @@ class OnlineStatusManager {
       case 'activity':
         await this.handleActivity(message.userId);
         break;
+        
+      case 'register-kiosk':
+        await this.registerKiosk(ws, message.userId);
+        break;
       
       default:
         console.log('Unknown message type:', message.type);
@@ -86,7 +91,8 @@ class OnlineStatusManager {
       username,
       socket: ws,
       lastHeartbeat: new Date(),
-      isActive: true
+      isActive: true,
+      isKiosk: false
     });
 
     // LastLoginAt in Datenbank aktualisieren
@@ -224,6 +230,21 @@ class OnlineStatusManager {
     return user ? user.lastHeartbeat : null;
   }
 
+  // Kiosk-Registrierung
+  private async registerKiosk(ws: WebSocket, userId: number) {
+    const user = this.connectedUsers.get(userId);
+    if (user && user.socket === ws) {
+      user.isKiosk = true;
+      console.log(`User ${user.username} (${userId}) registered as Kiosk device`);
+      
+      // Bestätigung senden
+      ws.send(JSON.stringify({
+        type: 'kiosk_registered',
+        message: 'Kiosk registration successful'
+      }));
+    }
+  }
+
   // Broadcast-Methode für externe Nachrichten
   broadcast(message: any): void {
     const messageString = JSON.stringify(message);
@@ -234,6 +255,22 @@ class OnlineStatusManager {
           user.socket.send(messageString);
         } catch (error) {
           console.error('Error broadcasting message:', error);
+        }
+      }
+    }
+  }
+
+  // Gezielte Broadcast-Nachricht nur an Kiosk-Geräte
+  broadcastToKiosks(message: any): void {
+    const messageString = JSON.stringify(message);
+    
+    for (const user of this.connectedUsers.values()) {
+      if (user.isKiosk && user.socket.readyState === WebSocket.OPEN) {
+        try {
+          user.socket.send(messageString);
+          console.log(`Kiosk message sent to ${user.username} (${user.userId})`);
+        } catch (error) {
+          console.error('Error sending kiosk message:', error);
         }
       }
     }
