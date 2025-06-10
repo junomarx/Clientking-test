@@ -49,6 +49,8 @@ class OnlineStatusManager {
   }
 
   private async handleMessage(ws: WebSocket, message: any) {
+    console.log('WebSocket message received:', message.type, message);
+    
     switch (message.type) {
       case 'auth':
         await this.handleAuth(ws, message.userId, message.username);
@@ -63,11 +65,12 @@ class OnlineStatusManager {
         break;
         
       case 'register-kiosk':
+        console.log('Processing kiosk registration for user:', message.userId);
         await this.registerKiosk(ws, message.userId);
         break;
       
       default:
-        console.log('Unknown message type:', message.type);
+        console.log('Unknown message type:', message.type, message);
     }
   }
 

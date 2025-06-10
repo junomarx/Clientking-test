@@ -58,16 +58,30 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
     };
   }, [isKioskMode]);
 
+  // Automatische Kiosk-Registrierung wenn WebSocket verbunden ist
+  useEffect(() => {
+    if (isKioskMode && wsStatus === 'connected' && sendMessage && user?.id) {
+      console.log('WebSocket verbunden - registriere Kiosk-Gerät für Benutzer:', user.id);
+      sendMessage({
+        type: 'register-kiosk',
+        userId: user.id
+      });
+    }
+  }, [isKioskMode, wsStatus, sendMessage, user?.id]);
+
   const activateKioskMode = () => {
     setIsKioskMode(true);
     localStorage.setItem('kioskMode', 'true');
     
     // Kiosk-Gerät beim WebSocket-Server registrieren
-    if (sendMessage) {
+    if (sendMessage && user?.id) {
+      console.log('Registriere Kiosk-Gerät für Benutzer:', user.id);
       sendMessage({
         type: 'register-kiosk',
-        userId: user?.id
+        userId: user.id
       });
+    } else {
+      console.warn('Kiosk-Registrierung fehlgeschlagen: sendMessage oder user.id fehlt');
     }
     
     console.log('Kiosk-Modus aktiviert');
