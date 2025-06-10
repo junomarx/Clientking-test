@@ -146,6 +146,7 @@ export default function SuperadminPage() {
               {activeTab === "email" && <SuperadminEmailTab />}
               {activeTab === "print-templates" && <SuperadminPrintTemplatesTab />}
               {activeTab === "support-mode" && <SuperadminSupportModeTab />}
+              {activeTab === "account" && <SuperadminAccountTab />}
             </SuperadminContext.Provider>
           </ScrollArea>
         </main>

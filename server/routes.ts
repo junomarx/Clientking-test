@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as emailService from "./email-service";
 import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
+import { isSuperadmin } from "./superadmin-middleware";
 // Import der Berechtigungsprüfung aus permissions.ts
 import { hasAccess, hasAccessAsync } from './permissions';
 // Import der Middleware für die Prüfung der Trial-Version
@@ -4447,6 +4448,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Fehler beim Abrufen des Benutzer-Online-Status",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // Superadmin-Passwort ändern
+  app.post("/api/superadmin/change-password", isSuperadmin, async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Aktuelles und neues Passwort sind erforderlich" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Neues Passwort muss mindestens 6 Zeichen haben" });
+      }
+
+      // Aktuellen Benutzer abrufen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      // Aktuelles Passwort prüfen
+      const { comparePasswords } = await import('./auth');
+      const isCurrentPasswordValid = await comparePasswords(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Aktuelles Passwort ist nicht korrekt" });
+      }
+
+      // Neues Passwort hashen
+      const { hashPassword } = await import('./auth');
+      const hashedNewPassword = await hashPassword(newPassword);
+
+      // Passwort in der Datenbank aktualisieren
+      await storage.updateUserPassword(userId, hashedNewPassword);
+
+      console.log(`Superadmin ${user.username} (ID: ${userId}) hat das Passwort erfolgreich geändert`);
+
+      res.json({ 
+        success: true,
+        message: "Passwort erfolgreich geändert" 
+      });
+
+    } catch (error) {
+      console.error('Fehler beim Ändern des Superadmin-Passworts:', error);
+      res.status(500).json({ message: 'Fehler beim Ändern des Passworts' });
     }
   });
 

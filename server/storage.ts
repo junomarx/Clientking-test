@@ -430,6 +430,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  updateUserPassword(id: number, hashedPassword: string): Promise<boolean>;
   deleteUser(id: number): Promise<boolean>;
   
   // Kunden-Verwaltung
