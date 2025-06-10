@@ -37,10 +37,8 @@ interface CostEstimateItem {
 
 // Validierungsschema für das Formular
 const costEstimateSchema = z.object({
-  // Kundenreferenz-ID
-  customerId: z.number({
-    required_error: "Bitte wählen Sie einen Kunden aus"
-  }),
+  // Kundenreferenz-ID - optional, wird automatisch generiert wenn nicht vorhanden
+  customerId: z.number().optional(),
   
   // Titel und Beschreibung
   title: z.string().default("Kostenvoranschlag"),
@@ -116,7 +114,7 @@ export function NewCostEstimateDialog({
   const form = useForm<CostEstimateFormData>({
     resolver: zodResolver(costEstimateSchema),
     defaultValues: {
-      customerId: undefined as unknown as number, // Wird später durch einen echten Wert ersetzt
+      customerId: undefined,
       title: "Kostenvoranschlag",
       firstName: "",
       lastName: "",
@@ -553,6 +551,22 @@ export function NewCostEstimateDialog({
   };
 
   const onSubmit = (data: CostEstimateFormData) => {
+    console.log("=== KOSTENVORANSCHLAG FORMULAR SUBMIT ===");
+    console.log("Eingabe-Daten:", data);
+    console.log("Items:", items);
+    console.log("Form State:", form.formState);
+    console.log("Form Errors:", form.formState.errors);
+    
+    // Validierung: Mindestens ein Item muss vorhanden sein
+    if (items.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Bitte fügen Sie mindestens eine Position hinzu",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Positionen zum Datensatz hinzufügen
     const formData = {
       ...data,
@@ -563,23 +577,39 @@ export function NewCostEstimateDialog({
       tax_amount: data.taxAmount
     };
     
-    console.log("Formular-Daten:", formData);
+    console.log("Finale Formular-Daten für API:", formData);
     
     // Kostenvoranschlag erstellen
     if (onCreateCostEstimate) {
-      onCreateCostEstimate(formData);
+      try {
+        onCreateCostEstimate(formData);
+        
+        // Erfolgsmeldung anzeigen
+        toast({
+          title: "Kostenvoranschlag erstellt",
+          description: `Für ${data.firstName} ${data.lastName} - ${data.brand} ${data.model}`,
+        });
+        
+        // Dialog schließen und Formular zurücksetzen
+        form.reset();
+        setItems([]);
+        onClose();
+      } catch (error) {
+        console.error("Fehler beim Erstellen des Kostenvoranschlags:", error);
+        toast({
+          title: "Fehler beim Erstellen",
+          description: "Der Kostenvoranschlag konnte nicht erstellt werden",
+          variant: "destructive",
+        });
+      }
+    } else {
+      console.error("onCreateCostEstimate Callback nicht verfügbar");
+      toast({
+        title: "Konfigurationsfehler",
+        description: "Formular nicht korrekt konfiguriert",
+        variant: "destructive",
+      });
     }
-    
-    // Erfolgsmeldung anzeigen
-    toast({
-      title: "Kostenvoranschlag erstellt",
-      description: `Für ${data.firstName} ${data.lastName} - ${data.brand} ${data.model}`,
-    });
-    
-    // Dialog schließen und Formular zurücksetzen
-    form.reset();
-    setItems([]);
-    onClose();
   };
 
   return (
