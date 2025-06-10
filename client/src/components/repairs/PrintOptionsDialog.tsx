@@ -56,27 +56,10 @@ export function PrintOptionsDialog({
   repairId,
   repair
 }: PrintOptionsDialogProps) {
-  // printManager entfernt, da nicht mehr benötigt
-  // State für die Berechtigung zum Drucken von Etiketten
-  const [canPrintLabels, setCanPrintLabels] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Alle Benutzer können Etiketten drucken - keine Beschränkungen mehr
+  const [canPrintLabels] = useState<boolean>(true);
+  const [isLoading] = useState<boolean>(false);
   const [showA4Preview, setShowA4Preview] = useState(false);
-  
-  // Abfrage der Berechtigung beim Öffnen des Dialogs
-  useEffect(() => {
-    if (open) {
-      setIsLoading(true);
-      checkCanPrintLabels()
-        .then(canPrint => {
-          setCanPrintLabels(canPrint);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setCanPrintLabels(false);
-          setIsLoading(false);
-        });
-    }
-  }, [open]);
   
   console.log("PrintOptionsDialog gerendert mit open:", open, "repairId:", repairId, "canPrintLabels:", canPrintLabels);
   
