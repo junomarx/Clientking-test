@@ -87,7 +87,7 @@ export function BonReceipt80mm({
       {/* Kunde */}
       <div style={{ marginBottom: "15px" }}>
         <div style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "5px" }}>{kundenname}</div>
-        {kundentelefon && <div style={{ marginBottom: "3px" }}>{kundentelefon}</div>}
+        {kundentelefon && <div style={{ fontSize: "12px", marginBottom: "3px" }}>{kundentelefon}</div>}
         {kundenemail && <div style={{ marginBottom: "3px" }}>{kundenemail}</div>}
       </div>
 
