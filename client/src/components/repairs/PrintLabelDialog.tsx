@@ -240,9 +240,27 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                       <p className="text-lg font-bold">{repair?.orderCode || `#${repair?.id}`}</p>
                     </div>
                     
+                    {/* Kundenname */}
+                    <div className="text-center w-full">
+                      <p className="text-xs font-bold">
+                        {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
+                      </p>
+                    </div>
+                    
+                    {/* Telefonnummer zwischen Name und QR-Code */}
+                    <div className="text-center w-full mb-2">
+                      <p className="text-xs text-gray-600">
+                        {customer?.phone || ''}
+                      </p>
+                    </div>
+                    
                     {/* QR-Code mittig */}
                     <div className="flex justify-center">
-                      <div>QR Code</div>
+                      <QRCodeSVG 
+                        value={`${window.location.origin}/repairs/${repairId}`} 
+                        size={64} 
+                        level="M"
+                      />
                     </div>
                     
                     {/* Modell */}
