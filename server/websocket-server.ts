@@ -224,6 +224,21 @@ class OnlineStatusManager {
     return user ? user.lastHeartbeat : null;
   }
 
+  // Broadcast-Methode für externe Nachrichten
+  broadcast(message: any): void {
+    const messageString = JSON.stringify(message);
+    
+    for (const user of this.connectedUsers.values()) {
+      if (user.socket.readyState === WebSocket.OPEN) {
+        try {
+          user.socket.send(messageString);
+        } catch (error) {
+          console.error('Error broadcasting message:', error);
+        }
+      }
+    }
+  }
+
   // Cleanup-Methode
   shutdown() {
     if (this.heartbeatInterval) {
