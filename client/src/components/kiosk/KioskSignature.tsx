@@ -21,9 +21,11 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
 
   const submitSignatureMutation = useMutation({
     mutationFn: async (signatureData: string) => {
-      const response = await apiRequest('POST', '/api/kiosk/submit-signature', {
-        tempId: signatureRequest?.tempId,
-        signature: signatureData
+      console.log('Kiosk: Sende Unterschrift für repairId:', signatureRequest?.repairId);
+      const response = await apiRequest('POST', '/api/kiosk-signature', {
+        repairId: signatureRequest?.repairId,
+        signature: signatureData,
+        timestamp: Date.now()
       });
       return response.json();
     },
