@@ -7,7 +7,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
 import { Loader2, Printer } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
@@ -22,83 +22,17 @@ interface PrintLabelDialogProps {
 export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const { settings } = useBusinessSettings();
+  const queryClient = useQueryClient();
 
-  // Lade Reparaturdaten
-  const { data: repair, isLoading: isLoadingRepair } = useQuery<Repair>({
-    queryKey: ['/api/repairs', repairId],
-    queryFn: async () => {
-      if (!repairId) return null;
-      try {
-        const response = await fetch(`/api/repairs/${repairId}`, {
-          credentials: 'include'
-        });
-        if (!response.ok) throw new Error("Reparaturauftrag konnte nicht geladen werden");
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Reparaturdaten:", err);
-        return null;
-      }
-    },
-    enabled: !!repairId && open,
-  });
+  // Nutze bereits gecachte Daten aus dem Query Client
+  const repairs = queryClient.getQueryData<Repair[]>(['/api/repairs']);
+  const customers = queryClient.getQueryData<Customer[]>(['/api/customers']);
+  
+  const repair = repairs?.find(r => r.id === repairId);
+  const customer = repair && customers ? customers.find(c => c.id === repair.customerId) : null;
+  const deviceCodeData = queryClient.getQueryData(['/api/repairs', repairId, 'device-code']);
 
-  // Lade Kundendaten wenn Reparatur geladen ist
-  const { data: customer, isLoading: isLoadingCustomer } = useQuery<Customer>({
-    queryKey: ['/api/customers', repair?.customerId],
-    queryFn: async () => {
-      if (!repair?.customerId) return null;
-      try {
-        const response = await fetch(`/api/customers/${repair.customerId}`, {
-          credentials: 'include'
-        });
-        if (!response.ok) throw new Error("Kundendaten konnten nicht geladen werden");
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Kundendaten:", err);
-        return null;
-      }
-    },
-    enabled: !!repair?.customerId && open,
-  });
-
-  // Lade Unternehmenseinstellungen
-  const { data: businessSettings, isLoading: isLoadingSettings } = useQuery<BusinessSettings>({
-    queryKey: ['/api/business-settings'],
-    queryFn: async () => {
-      try {
-        const response = await fetch('/api/business-settings', {
-          credentials: 'include'
-        });
-        if (!response.ok) return null;
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden der Unternehmenseinstellungen:", err);
-        return null;
-      }
-    },
-    enabled: open,
-  });
-
-  // Lade Gerätecode
-  const { data: deviceCodeData, isLoading: isLoadingDeviceCode } = useQuery({
-    queryKey: ['/api/repairs', repairId, 'device-code'],
-    queryFn: async () => {
-      if (!repairId) return null;
-      try {
-        const response = await fetch(`/api/repairs/${repairId}/device-code`, {
-          credentials: 'include'
-        });
-        if (!response.ok) return null;
-        return response.json();
-      } catch (err) {
-        console.error("Fehler beim Laden des Gerätecodes:", err);
-        return null;
-      }
-    },
-    enabled: !!repairId && open,
-  });
-
-  const isLoading = isLoadingRepair || isLoadingCustomer || isLoadingSettings || isLoadingDeviceCode;
+  const isLoading = false;
 
 
 
@@ -138,9 +72,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     
     // Extrahiere den Inhalt aus dem Referenzobjekt
     const qrCode = `<svg width="60" height="60"><foreignObject width="60" height="60"><div xmlns="http://www.w3.org/1999/xhtml"><div style="width:60px;height:60px;">${printRef.current.querySelector('svg')?.outerHTML || ''}</div></div></foreignObject></svg>`;
-    const repairId = repair?.id || '';
-    const orderCode = repair?.orderCode || '';
-    const firstName = customer?.firstName || '';
+    const repairIdValue = repair?.id || repairId || '';
+    const orderCode = repair?.orderCode || `#${repairIdValue}`;
+    const firstName = customer?.firstName || 'Kunde';
     const lastName = customer?.lastName || '';
     const customerPhone = customer?.phone || '';
     const model = repair?.model || '';
@@ -242,7 +176,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
-              <div class="repair-number">${orderCode || `#${repairId}`}</div>
+              <div class="repair-number">${orderCode || `#${repairIdValue}`}</div>
               
               <div class="customer-name">${firstName} ${lastName}</div>
               
@@ -301,7 +235,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     
                     {/* Kundenname */}
                     <div className="text-center w-full">
-                      <p className="text-xs font-bold">{customer?.firstName} {customer?.lastName}</p>
+                      <p className="text-xs font-bold">{(customer?.firstName || 'Kunde') + ' ' + (customer?.lastName || '')}</p>
                     </div>
                     
                     {/* QR-Code mittig */}
