@@ -34,6 +34,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   const isLoading = false;
 
+  // Helper function to safely render customer name
+  const getCustomerName = (): string => {
+    if (!customer) return 'Kunde';
+    const firstName = customer.firstName || 'Kunde';
+    const lastName = customer.lastName || '';
+    return `${firstName} ${lastName}`.trim();
+  };
 
 
   // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
@@ -235,12 +242,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     
                     {/* Kundenname */}
                     <div className="text-center w-full">
-                      <p className="text-xs font-bold">
-                        {customer 
-                          ? `${customer.firstName} ${customer.lastName || ''}`.trim() 
-                          : 'Kunde'
-                        }
-                      </p>
+                      <span className="text-xs font-bold">
+                        {customer?.firstName || 'Kunde'} {customer?.lastName || ''}
+                      </span>
                     </div>
                     
                     {/* QR-Code mittig */}
