@@ -4558,17 +4558,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Kiosk-Unterschrift speichern
+  // Kiosk-Unterschrift speichern (ohne User-Authentifizierung)
   app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
     try {
       const { repairId, signature, deviceCode, timestamp } = req.body;
+      
+      console.log('Kiosk-Unterschrift empfangen:', { repairId, timestamp });
       
       if (!repairId || !signature) {
         return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
       }
 
-      // Reparatur laden (ohne User-Kontext für Kiosk)
-      const repair = await storage.getRepairById(repairId);
+      // Direkte Datenbankabfrage ohne Shop-Isolation für Kiosk
+      const [repair] = await db.select().from(repairs).where(eq(repairs.id, repairId));
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
@@ -4576,7 +4578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Unterschrift und optionalen Gerätecode speichern
       const updateData: any = {
         signature: signature,
-        signedAt: new Date().toISOString()
+        signedAt: new Date()
       };
 
       if (deviceCode) {
@@ -4585,7 +4587,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.deviceCodeType = 'pattern';
       }
 
-      await storage.updateRepairSignature(repairId, updateData);
+      // Direkte Datenbankaktualisierung ohne Storage-Layer
+      await db.update(repairs)
+        .set(updateData)
+        .where(eq(repairs.id, repairId));
 
       // WebSocket-Nachricht an Hauptgerät senden
       const onlineStatusManager = getOnlineStatusManager();
