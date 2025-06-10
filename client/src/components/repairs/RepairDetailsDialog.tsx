@@ -48,10 +48,10 @@ import {
   Check,
   X,
   Printer,
+  Tablet,
   Pen,
   Send,
-  QrCode,
-  Tablet
+  QrCode
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
