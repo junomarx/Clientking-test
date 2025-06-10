@@ -16,7 +16,8 @@ import {
   FileCode,
   Layout,
   X,
-  ShieldAlert
+  ShieldAlert,
+  UserCog
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { User, BusinessSettings } from "@shared/schema";
@@ -142,6 +143,17 @@ export function SuperadminSidebar({
         >
           <ShieldAlert className="h-5 w-5 mr-2" />
           Support-Modus
+        </Button>
+        <Button 
+          variant={activeTab === "account" ? "default" : "ghost"}
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("account");
+            if (isMobile) closeMenu();
+          }}
+        >
+          <UserCog className="h-5 w-5 mr-2" />
+          Konto
         </Button>
       </div>
     </>

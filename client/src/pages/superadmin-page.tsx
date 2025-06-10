@@ -14,6 +14,7 @@ import DeviceStatisticsTab from "@/components/superadmin/DeviceStatisticsTab";
 import SuperadminEmailTab from "@/components/superadmin/SuperadminEmailTab";
 import SuperadminPrintTemplatesTab from "@/components/superadmin/SuperadminPrintTemplatesTab";
 import SuperadminSupportModeTab from "@/components/superadmin/SuperadminSupportModeTab";
+import SuperadminAccountTab from "@/components/superadmin/SuperadminAccountTab";
 
 import { SuperadminSidebar } from "@/components/superadmin/SuperadminSidebar";
 
@@ -31,7 +32,7 @@ export default function SuperadminPage() {
     const userIdParam = params.get('userId');
     
     // Tab setzen, wenn in URL vorhanden
-    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode'].includes(tabParam)) {
+    if (tabParam && ['dashboard', 'users', 'packages', 'devices', 'device-statistics', 'email', 'print-templates', 'support-mode', 'account'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
     
@@ -102,6 +103,8 @@ export default function SuperadminPage() {
               {activeTab === "device-statistics" && "Statistiken"}
               {activeTab === "email" && "E-Mail"}
               {activeTab === "print-templates" && "Vorlagen"}
+              {activeTab === "support-mode" && "Support"}
+              {activeTab === "account" && "Konto"}
 
             </h1>
           </div>
@@ -116,6 +119,8 @@ export default function SuperadminPage() {
               {activeTab === "device-statistics" && "Gerätestatistiken"}
               {activeTab === "email" && "E-Mail-Konfiguration"}
               {activeTab === "print-templates" && "Vorlagenverwaltung"}
+              {activeTab === "support-mode" && "Support-Modus"}
+              {activeTab === "account" && "Konto-Einstellungen"}
 
             </h1>
             {/* Die Benutzerinfo wurde entfernt, da sie bereits in der Sidebar angezeigt wird */}
