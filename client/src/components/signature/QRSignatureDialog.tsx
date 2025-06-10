@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, QrCode, CheckCircle2, XCircle, RefreshCw, Copy, ExternalLink } from "lucide-react";
+import { Loader2, QrCode, CheckCircle2, XCircle, RefreshCw, Copy, ExternalLink, Tablet } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,30 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
   const [error, setError] = useState<string | null>(null);
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  // Kiosk-Senden Funktion
+  const sendToKiosk = async () => {
+    try {
+      const response = await apiRequest('POST', '/api/send-to-kiosk', {
+        repairId: repair.id
+      });
+      
+      if (response.ok) {
+        toast({
+          title: 'An Kiosk gesendet',
+          description: 'Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet.',
+        });
+      } else {
+        throw new Error('Fehler beim Senden');
+      }
+    } catch (error) {
+      toast({
+        title: 'Fehler',
+        description: 'Die Anfrage konnte nicht an das Kiosk gesendet werden.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   useEffect(() => {
     if (open && !signatureData) {
@@ -334,16 +358,23 @@ export function QRSignatureDialog({ open, onOpenChange, repair, businessName, si
               {/* Action Buttons */}
               <div className="space-y-2">
                 {signatureStatus?.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <Button onClick={copyToClipboard} variant="outline" size="sm" className="flex-1">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Link kopieren
+                  <>
+                    <div className="flex gap-2">
+                      <Button onClick={copyToClipboard} variant="outline" size="sm" className="flex-1">
+                        <Copy className="h-4 w-4 mr-2" />
+                        Link kopieren
+                      </Button>
+                      <Button onClick={openInNewTab} variant="outline" size="sm" className="flex-1">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Öffnen
+                      </Button>
+                    </div>
+                    
+                    <Button onClick={sendToKiosk} variant="outline" size="sm" className="w-full">
+                      <Tablet className="h-4 w-4 mr-2" />
+                      An Kiosk senden
                     </Button>
-                    <Button onClick={openInNewTab} variant="outline" size="sm" className="flex-1">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Öffnen
-                    </Button>
-                  </div>
+                  </>
                 )}
 
                 {signatureStatus?.status === 'signed' && (
