@@ -123,6 +123,8 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
   const [isUserDetailsDialogOpen, setIsUserDetailsDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(initialSelectedUserId || null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10); // Anzahl Benutzer pro Seite
 
   // Benutzer abrufen
   const { data: users, isLoading: isLoadingUsers, error: usersError } = useQuery<User[]>({ 
@@ -180,6 +182,18 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     // Sortiere alphabetisch nach Benutzernamen
     return [...filtered].sort((a, b) => a.username.localeCompare(b.username));
   }, [users, searchQuery]);
+
+  // Pagination-Logik
+  const totalUsers = filteredUsers.length;
+  const totalPages = Math.ceil(totalUsers / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Seite zurücksetzen wenn Suche geändert wird
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
 
 
@@ -491,6 +505,11 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                 {searchQuery 
                   ? `${filteredUsers.length} von ${users.length} Benutzern gefunden` 
                   : `Insgesamt ${users.length} Benutzer im System`}
+                {totalPages > 1 && (
+                  <span className="text-muted-foreground ml-2">
+                    • Seite {currentPage} von {totalPages}
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
@@ -543,7 +562,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => (
+                  {currentUsers.map((user) => (
                     <TableRow 
                       key={user.id} 
                       className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900"
@@ -615,7 +634,7 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
             
             {/* Mobile-Karten (nur auf kleinen Bildschirmen) */}
             <div className="md:hidden space-y-4">
-              {filteredUsers.map((user) => (
+              {currentUsers.map((user) => (
                 <div 
                   key={user.id} 
                   className="border rounded-lg p-4 space-y-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900"
@@ -709,6 +728,81 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
               ))}
             </div>
           </CardContent>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6">
+              <div className="text-sm text-muted-foreground">
+                Zeige {startIndex + 1}-{Math.min(endIndex, totalUsers)} von {totalUsers} Benutzern
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Zurück
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {/* Erste Seite */}
+                  {currentPage > 3 && (
+                    <>
+                      <Button
+                        variant={currentPage === 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                      >
+                        1
+                      </Button>
+                      {currentPage > 4 && <span className="px-2">...</span>}
+                    </>
+                  )}
+                  
+                  {/* Seiten um die aktuelle Seite */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (pageNum > totalPages) return null;
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  
+                  {/* Letzte Seite */}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && <span className="px-2">...</span>}
+                      <Button
+                        variant={currentPage === totalPages ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Weiter
+                </Button>
+              </div>
+            </CardFooter>
+          )}
         </Card>
       ) : (
         <p>Keine Benutzerdaten verfügbar</p>
