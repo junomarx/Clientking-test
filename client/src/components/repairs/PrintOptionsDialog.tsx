@@ -15,7 +15,11 @@ import { PrintRepairA4Dialog } from "@/components/repairs/PrintRepairA4Dialog";
 // API for checking permissions
 const checkCanPrintLabels = async (): Promise<boolean> => {
   try {
-    const response = await fetch('/api/can-print-labels');
+    const response = await fetch('/api/can-print-labels', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      }
+    });
     if (!response.ok) return false;
     const data = await response.json();
     return data.canPrintLabels;

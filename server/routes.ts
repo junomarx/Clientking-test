@@ -1296,9 +1296,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentMonth = today.toLocaleString('de-DE', { month: 'long' });
       const currentYear = today.getFullYear();
       
-      // Alle Benutzer haben "Basic" Zugriff mit unbegrenzten Funktionen
-      let pricingPlan = 'basic';
-      let displayName = 'Basic';
+      // Alle Benutzer haben "Professional" Zugriff mit unbegrenzten Funktionen
+      let pricingPlan = 'professional';
+      let displayName = 'Professional';
       let trialExpiryInfo = null;
       
       res.json({
