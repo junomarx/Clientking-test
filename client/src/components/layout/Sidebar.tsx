@@ -22,9 +22,11 @@ import {
   Package,
   UserCog,
   CreditCard,
-  User
+  User,
+  Tablet
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { KioskActivationButton } from '@/components/kiosk/KioskActivationButton';
 
 interface SidebarProps {
   activeTab: string;
