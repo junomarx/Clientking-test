@@ -4,8 +4,8 @@ import { useOnlineStatus } from "@/hooks/use-online-status";
 
 interface KioskModeContextType {
   isKioskMode: boolean;
-  activateKioskMode: (pin: string) => Promise<boolean>;
-  deactivateKioskMode: (pin: string) => Promise<boolean>;
+  activateKioskMode: () => void;
+  deactivateKioskMode: () => void;
   signatureRequest: SignatureRequest | null;
   clearSignatureRequest: () => void;
 }
