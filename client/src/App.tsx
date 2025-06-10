@@ -25,6 +25,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { ThemeProvider } from "./hooks/use-theme";
 import { BusinessSettingsProvider } from "./hooks/use-business-settings";
 import { PrintManagerProvider } from "@/components/repairs/PrintOptionsManager";
+import { OnlineStatusProvider } from "./hooks/use-online-status";
 import { useEffect } from "react";
 import { useTheme } from "./hooks/use-theme";
 import { clearAllBrands, clearAllModels } from '@/components/repairs/ClearCacheHelpers';
@@ -148,18 +149,20 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BusinessSettingsProvider>
-          <ThemeProvider>
-            <PrintManagerProvider>
-              <TooltipProvider>
-                <TitleUpdater />
-                <CacheClearer />
-                <Toaster />
-                <Router />
-              </TooltipProvider>
-            </PrintManagerProvider>
-          </ThemeProvider>
-        </BusinessSettingsProvider>
+        <OnlineStatusProvider>
+          <BusinessSettingsProvider>
+            <ThemeProvider>
+              <PrintManagerProvider>
+                <TooltipProvider>
+                  <TitleUpdater />
+                  <CacheClearer />
+                  <Toaster />
+                  <Router />
+                </TooltipProvider>
+              </PrintManagerProvider>
+            </ThemeProvider>
+          </BusinessSettingsProvider>
+        </OnlineStatusProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -37,6 +37,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useOnlineStatus } from '@/hooks/use-online-status';
+import { formatDistanceToNow } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   CircleUserRound,
   UserCog,
@@ -95,9 +98,10 @@ interface SuperadminUsersTabProps {
 
 export default function SuperadminUsersTab({ initialSelectedUserId }: SuperadminUsersTabProps = {}) {
   const { toast } = useToast();
+  const { isUserOnline: isOnlineViaWebSocket, onlineUsers, isConnected } = useOnlineStatus();
 
-  // Online-Status-Erkennung: Betrachtet Login/Logout-Zeitstempel intelligent
-  const isUserOnline = (lastLoginAt: string | null, lastLogoutAt: string | null) => {
+  // Fallback Online-Status-Erkennung für wenn WebSocket nicht verfügbar ist
+  const isUserOnlineFallback = (lastLoginAt: string | null, lastLogoutAt: string | null) => {
     if (!lastLoginAt) return false;
     
     const loginTime = new Date(lastLoginAt);
@@ -116,6 +120,17 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     
     // Wenn kein Logout nach dem Login erfolgte, prüfe ob Login recent genug ist
     return loginTime > fifteenMinutesAgo;
+  };
+
+  // Hybride Online-Status-Funktion - nutzt WebSocket wenn verfügbar, sonst Fallback
+  const isUserOnline = (userId: number, lastLoginAt: string | null, lastLogoutAt: string | null) => {
+    // Primär: WebSocket-basierter Status wenn verbunden
+    if (isConnected) {
+      return isOnlineViaWebSocket(userId);
+    }
+    
+    // Fallback: Zeitstempel-basierte Logik
+    return isUserOnlineFallback(lastLoginAt, lastLogoutAt);
   };
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
