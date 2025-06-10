@@ -4407,11 +4407,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Zusätzlich: Benutzer mit kürzlichen Logins (letzte 15 Minuten) ohne Logout
+      // WICHTIG: Nur aktive Benutzer berücksichtigen
       const allUsers = await storage.getAllUsers();
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       
       const recentlyActiveUsers = allUsers
         .filter(user => {
+          // Nur aktive Benutzer berücksichtigen
+          if (!user.isActive) return false;
+          
           if (!user.lastLoginAt) return false;
           
           const loginTime = new Date(user.lastLoginAt);
