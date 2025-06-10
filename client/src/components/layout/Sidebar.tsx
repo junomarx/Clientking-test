@@ -205,6 +205,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           <UserCog className="h-5 w-5 mr-2" />
           Benutzerdaten
         </Button>
+        
+        {/* Kiosk-Modus Aktivierung */}
+        <div className="pt-2 border-t">
+          <KioskActivationButton />
+        </div>
       </div>
     </>
   );
