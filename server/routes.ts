@@ -3247,8 +3247,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         console.log("Erstelle automatisch Kunde für Kostenvoranschlag:", customerData);
-        const newCustomer = await storage.createCustomer(customerData, (req.user as any).id);
-        customerId = newCustomer.id;
+        
+        // Direkte Datenbankoperation für Kundenerstellung
+        const user = await db.execute(`SELECT shop_id FROM users WHERE id = ${(req.user as any).id}`);
+        const shopId = user.rows[0]?.shop_id || 1;
+        
+        const customerResult = await db.execute(`
+          INSERT INTO customers (first_name, last_name, phone, email, address, zip_code, city, user_id, shop_id)
+          VALUES ('${customerData.firstName}', '${customerData.lastName}', '${customerData.phone}', 
+                  '${customerData.email}', '${customerData.address}', '${customerData.postalCode}', 
+                  '${customerData.city}', ${(req.user as any).id}, ${shopId})
+          RETURNING id
+        `);
+        
+        customerId = customerResult.rows[0]?.id;
         console.log("Neuer Kunde erstellt mit ID:", customerId);
       }
       

@@ -120,10 +120,20 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       // Aus dem Formular die Daten für die API extrahieren
       const costEstimateData = {
         customerId: data.customerId,
+        // Kundendaten für automatische Kundenerstellung
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        postalCode: data.postalCode,
+        city: data.city,
+        // Gerätedaten
         deviceType: data.deviceType,
         brand: data.brand,
         model: data.model,
         issue: data.issueDescription,
+        // Preisdaten
         total: data.totalPrice || "0",
         subtotal: data.subtotal || "0",
         tax_rate: data.taxRate || "20",
