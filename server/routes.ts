@@ -4395,24 +4395,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Online-Status API-Endpunkte
+  // Online-Status API-Endpunkte - Hybrid-Ansatz
   app.get("/api/online-status", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const onlineStatusManager = getOnlineStatusManager();
+      let webSocketOnlineUsers: number[] = [];
       
-      if (!onlineStatusManager) {
-        return res.json({
-          onlineUsers: [],
-          onlineCount: 0
-        });
+      // WebSocket-basierte Online-Benutzer abrufen
+      if (onlineStatusManager) {
+        webSocketOnlineUsers = onlineStatusManager.getOnlineUsers();
       }
 
-      const onlineUsers = onlineStatusManager.getOnlineUsers();
-      const onlineCount = onlineStatusManager.getOnlineUserCount();
+      // Zusätzlich: Benutzer mit kürzlichen Logins (letzte 15 Minuten) ohne Logout
+      const allUsers = await storage.getAllUsers();
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      
+      const recentlyActiveUsers = allUsers
+        .filter(user => {
+          if (!user.lastLoginAt) return false;
+          
+          const loginTime = new Date(user.lastLoginAt);
+          
+          // Prüfe ob Login innerhalb der letzten 15 Minuten war
+          if (loginTime <= fifteenMinutesAgo) return false;
+          
+          // Wenn es einen Logout gibt, prüfe ob er nach dem Login war
+          if (user.lastLogoutAt) {
+            const logoutTime = new Date(user.lastLogoutAt);
+            if (logoutTime > loginTime) return false;
+          }
+          
+          return true;
+        })
+        .map(user => user.id);
+
+      // Kombiniere WebSocket-Online-Benutzer mit kürzlich aktiven Benutzern
+      const allOnlineUsers = [...new Set([...webSocketOnlineUsers, ...recentlyActiveUsers])];
+      
+      console.log(`Online-Status: WebSocket: [${webSocketOnlineUsers.join(', ')}], Kürzlich aktiv: [${recentlyActiveUsers.join(', ')}], Kombiniert: [${allOnlineUsers.join(', ')}]`);
 
       res.json({
-        onlineUsers,
-        onlineCount
+        onlineUsers: allOnlineUsers,
+        onlineCount: allOnlineUsers.length,
+        webSocketUsers: webSocketOnlineUsers,
+        recentlyActiveUsers: recentlyActiveUsers
       });
     } catch (error) {
       console.error("Error getting online status:", error);
