@@ -20,7 +20,7 @@ interface CustomerFormData {
 
 interface KioskCustomerFormProps {
   onCancel: () => void;
-  onSuccess: (customerId: number) => void;
+  onSuccess: () => void;
 }
 
 export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProps) {
@@ -40,12 +40,12 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
       const response = await apiRequest('POST', '/api/customers', data);
       return response.json();
     },
-    onSuccess: (customer) => {
+    onSuccess: () => {
       toast({
         title: 'Kundendaten gespeichert',
         description: 'Ihre Daten wurden erfolgreich erfasst.',
       });
-      onSuccess(customer.id);
+      onSuccess();
     },
     onError: (error: any) => {
       toast({

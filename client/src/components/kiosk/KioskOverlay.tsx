@@ -52,7 +52,7 @@ export function KioskOverlay() {
       case 'customer-form':
         return (
           <KioskCustomerForm 
-            onComplete={() => setCurrentView('home')}
+            onSuccess={() => setCurrentView('home')}
             onCancel={() => setCurrentView('home')}
           />
         );
@@ -80,37 +80,42 @@ export function KioskOverlay() {
                   <Tablet className="h-16 w-16 text-blue-600" />
                 </div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Kundengerät
+                  Kundendatenerfassung
                 </h1>
                 <p className="text-xl text-gray-600">
-                  Willkommen! Wählen Sie eine Option um fortzufahren.
+                  Willkommen! Geben Sie Ihre persönlichen Daten ein.
                 </p>
               </div>
 
               {/* Action Cards */}
-              <div className="grid gap-6">
+              <div className="space-y-6">
+                {/* Kundendaten erfassen - Hauptfunktion */}
                 <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-300"
                       onClick={() => setCurrentView('customer-form')}>
-                  <CardHeader className="text-center pb-4">
-                    <div className="flex justify-center mb-2">
-                      <User className="h-12 w-12 text-green-600" />
+                  <CardHeader className="text-center pb-6">
+                    <div className="flex justify-center mb-4">
+                      <User className="h-16 w-16 text-blue-600" />
                     </div>
-                    <CardTitle className="text-2xl">Neuer Kunde</CardTitle>
-                    <CardDescription className="text-lg">
-                      Registrieren Sie sich als neuer Kunde
+                    <CardTitle className="text-3xl mb-2">Kundendaten erfassen</CardTitle>
+                    <CardDescription className="text-lg text-gray-600">
+                      Geben Sie Ihre persönlichen Daten für die Reparaturannahme ein
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full h-16 text-xl" size="lg">
+                    <Button className="w-full h-16 text-xl bg-blue-600 hover:bg-blue-700" size="lg">
                       Daten eingeben
                     </Button>
                   </CardContent>
                 </Card>
 
+                {/* Unterschrift - nur wenn angefordert */}
                 {signatureRequest && (
                   <Card className="border-orange-300 bg-orange-50 cursor-pointer hover:shadow-lg transition-shadow"
                         onClick={() => setCurrentView('signature')}>
                     <CardHeader className="text-center pb-4">
+                      <div className="flex justify-center mb-4">
+                        <Shield className="h-12 w-12 text-orange-600" />
+                      </div>
                       <CardTitle className="text-2xl text-orange-700">
                         Unterschrift erforderlich
                       </CardTitle>
