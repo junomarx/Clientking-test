@@ -132,41 +132,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
       }
 
-      // Dynamische Imports für Datenbankzugriff
-      const { db } = await import('./db');
-      const { repairs } = await import('@shared/schema');
-      const { eq } = await import('drizzle-orm');
-
-      // Direkte Datenbankabfrage ohne Shop-Isolation für Kiosk
-      const [repair] = await db.select().from(repairs).where(eq(repairs.id, repairId));
-      if (!repair) {
+      // Nur Pool für direkte SQL-Abfragen verwenden
+      const { pool } = await import('./db');
+      
+      // Erst prüfen, ob Reparatur existiert
+      const checkResult = await pool.query('SELECT id FROM repairs WHERE id = $1', [repairId]);
+      if (checkResult.rows.length === 0) {
         console.log(`Reparatur mit ID ${repairId} nicht gefunden`);
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
       console.log(`Reparatur ${repairId} gefunden, speichere Unterschrift...`);
 
-      // Verwende rohe SQL-Abfrage für bessere Kompatibilität
-      const { sql } = await import('drizzle-orm');
-      
       if (deviceCode) {
-        // Mit Gerätecode
-        await db.execute(sql`
-          UPDATE repairs 
-          SET signature = ${signature}, 
-              signed_at = NOW(), 
-              device_code = ${Buffer.from(deviceCode).toString('base64')}, 
-              device_code_type = 'pattern'
-          WHERE id = ${repairId}
-        `);
+        // Mit Gerätecode für Abholung (pickup)
+        await pool.query(
+          'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
+          [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
+        );
       } else {
-        // Nur Unterschrift
-        await db.execute(sql`
-          UPDATE repairs 
-          SET signature = ${signature}, 
-              signed_at = NOW()
-          WHERE id = ${repairId}
-        `);
+        // Nur Unterschrift für Abholung (pickup)
+        await pool.query(
+          'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW() WHERE id = $2',
+          [signature, repairId]
+        );
       }
 
       // WebSocket-Nachricht an Hauptgerät senden
