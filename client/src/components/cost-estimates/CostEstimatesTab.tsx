@@ -150,8 +150,9 @@ export function CostEstimatesTab({ onNewCostEstimate }: CostEstimatesTabProps) {
       return await response.json();
     },
     onSuccess: () => {
-      // Cache invalidieren, damit die Liste aktualisiert wird
+      // Cache invalidieren, damit die Listen aktualisiert werden
       queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       setIsDialogOpen(false);
     },
     onError: (error: Error) => {
