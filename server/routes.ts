@@ -121,6 +121,61 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // KIOSK-ROUTE: Registriere Kiosk-Unterschrift-Route ZUERST, um Middleware zu umgehen
+  app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
+    try {
+      const { repairId, signature, deviceCode, timestamp } = req.body;
+      
+      console.log('Kiosk-Unterschrift empfangen:', { repairId, timestamp });
+      
+      if (!repairId || !signature) {
+        return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
+      }
+
+      // Direkte Datenbankabfrage ohne Shop-Isolation für Kiosk
+      const [repair] = await db.select().from(repairs).where(eq(repairs.id, repairId));
+      if (!repair) {
+        console.log(`Reparatur mit ID ${repairId} nicht gefunden`);
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      console.log(`Reparatur ${repairId} gefunden, speichere Unterschrift...`);
+
+      // Unterschrift und optionalen Gerätecode speichern
+      const updateData: any = {
+        signature: signature,
+        signedAt: new Date()
+      };
+
+      if (deviceCode) {
+        // Gerätecode verschlüsseln (Base64)
+        updateData.deviceCode = Buffer.from(deviceCode).toString('base64');
+        updateData.deviceCodeType = 'pattern';
+      }
+
+      // Direkte Datenbankaktualisierung ohne Storage-Layer
+      await db.update(repairs)
+        .set(updateData)
+        .where(eq(repairs.id, repairId));
+
+      // WebSocket-Nachricht an Hauptgerät senden
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        onlineStatusManager.broadcast({
+          type: 'signature-completed',
+          repairId: repairId,
+          timestamp: timestamp
+        });
+      }
+
+      console.log(`Kiosk-Unterschrift für Reparatur ${repairId} gespeichert`);
+      res.json({ success: true, message: "Unterschrift erfolgreich gespeichert" });
+    } catch (error) {
+      console.error("Fehler beim Speichern der Kiosk-Unterschrift:", error);
+      res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
+    }
+  });
+  
   // CRITICAL: Register the brand creation route FIRST to bypass all middleware
   app.post("/api/superadmin/create-brand", async (req: Request, res: Response) => {
     try {
@@ -4558,57 +4613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Kiosk-Unterschrift speichern (ohne User-Authentifizierung)
-  app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
-    try {
-      const { repairId, signature, deviceCode, timestamp } = req.body;
-      
-      console.log('Kiosk-Unterschrift empfangen:', { repairId, timestamp });
-      
-      if (!repairId || !signature) {
-        return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
-      }
 
-      // Direkte Datenbankabfrage ohne Shop-Isolation für Kiosk
-      const [repair] = await db.select().from(repairs).where(eq(repairs.id, repairId));
-      if (!repair) {
-        return res.status(404).json({ message: "Reparatur nicht gefunden" });
-      }
-
-      // Unterschrift und optionalen Gerätecode speichern
-      const updateData: any = {
-        signature: signature,
-        signedAt: new Date()
-      };
-
-      if (deviceCode) {
-        // Gerätecode verschlüsseln (Base64)
-        updateData.deviceCode = Buffer.from(deviceCode).toString('base64');
-        updateData.deviceCodeType = 'pattern';
-      }
-
-      // Direkte Datenbankaktualisierung ohne Storage-Layer
-      await db.update(repairs)
-        .set(updateData)
-        .where(eq(repairs.id, repairId));
-
-      // WebSocket-Nachricht an Hauptgerät senden
-      const onlineStatusManager = getOnlineStatusManager();
-      if (onlineStatusManager) {
-        onlineStatusManager.broadcast({
-          type: 'signature-completed',
-          repairId: repairId,
-          timestamp: timestamp
-        });
-      }
-
-      console.log(`Kiosk-Unterschrift für Reparatur ${repairId} gespeichert`);
-      res.json({ success: true, message: "Unterschrift erfolgreich gespeichert" });
-    } catch (error) {
-      console.error("Fehler beim Speichern der Kiosk-Unterschrift:", error);
-      res.status(500).json({ message: "Fehler beim Speichern der Unterschrift" });
-    }
-  });
 
   // "An Kiosk senden" - Unterschrifts-Anfrage an Kiosk-Gerät
   app.post("/api/send-to-kiosk", isAuthenticated, async (req: Request, res: Response) => {
