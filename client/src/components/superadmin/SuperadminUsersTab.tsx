@@ -122,9 +122,20 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
     return loginTime > fifteenMinutesAgo;
   };
 
-  // Hybride Online-Status-Funktion - nutzt WebSocket wenn verfügbar, sonst Fallback
+  // Backend-Online-Status abrufen
+  const { data: backendOnlineStatus } = useQuery({
+    queryKey: ['/api/online-status'],
+    refetchInterval: 30000, // Alle 30 Sekunden aktualisieren
+  });
+
+  // Hybride Online-Status-Funktion - kombiniert Backend-API und WebSocket
   const isUserOnline = (userId: number, lastLoginAt: string | null, lastLogoutAt: string | null) => {
-    // Primär: WebSocket-basierter Status wenn verbunden
+    // Primär: Backend-API-Status (kombiniert WebSocket + kürzliche Aktivität)
+    if (backendOnlineStatus?.onlineUsers) {
+      return backendOnlineStatus.onlineUsers.includes(userId);
+    }
+    
+    // Sekundär: WebSocket-basierter Status wenn verbunden
     if (isConnected) {
       return isOnlineViaWebSocket(userId);
     }
