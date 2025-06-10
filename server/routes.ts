@@ -4627,10 +4627,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // WebSocket-Nachricht gezielt an Kiosk-Geräte senden
+      // WebSocket-Nachricht an alle verbundenen Clients senden (wird vom Kiosk-System gefiltert)
       const onlineStatusManager = getOnlineStatusManager();
       if (onlineStatusManager) {
-        onlineStatusManager.broadcastToKiosks({
+        const message = {
           type: 'signature-request',
           payload: {
             repairId: repairId,
@@ -4638,7 +4638,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
             timestamp: Date.now()
           }
-        });
+        };
+        
+        console.log('Sende Unterschrifts-Anfrage an alle Clients:', message);
+        onlineStatusManager.broadcast(message);
+        
+        // Zusätzlich gezielter Versuch an Kiosk-Geräte
+        onlineStatusManager.broadcastToKiosks(message);
       }
 
       console.log(`Unterschrifts-Anfrage für Reparatur ${repairId} an Kiosk-Geräte gesendet`);

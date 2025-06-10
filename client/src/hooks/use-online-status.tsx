@@ -128,11 +128,13 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         
       case 'signature-request':
         // Weiterleitung an Kiosk-System über Custom Event
-        console.log('Weiterleitung der Unterschrifts-Anfrage an Kiosk-System:', message);
+        console.log('Frontend: Unterschrifts-Anfrage empfangen vom WebSocket:', message);
+        console.log('Frontend: Dispatching Custom Event für Kiosk');
         const kioskEvent = new CustomEvent('kioskWebSocketMessage', {
           detail: message
         });
         window.dispatchEvent(kioskEvent);
+        console.log('Frontend: Custom Event dispatched');
         break;
         
       default:
