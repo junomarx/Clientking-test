@@ -15,6 +15,8 @@ interface OnlineStatusContextType {
   getUserLastSeen: (userId: number) => Date | null;
   isConnected: boolean;
   connectionError: string | null;
+  wsStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
+  sendMessage: (message: any) => void;
 }
 
 const OnlineStatusContext = createContext<OnlineStatusContextType | null>(null);
@@ -25,6 +27,7 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
   const [onlineCount, setOnlineCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   
   const wsRef = useRef<WebSocket | null>(null);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
@@ -203,6 +206,12 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
     return user ? new Date(user.lastSeen) : null;
   };
 
+  const sendMessage = (message: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
+  };
+
   // Effekte
   useEffect(() => {
     if (user) {
@@ -243,7 +252,9 @@ export function OnlineStatusProvider({ children }: { children: ReactNode }) {
         isUserOnline,
         getUserLastSeen,
         isConnected,
-        connectionError
+        connectionError,
+        wsStatus,
+        sendMessage
       }}
     >
       {children}
