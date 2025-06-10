@@ -28,8 +28,8 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
   const repairs = queryClient.getQueryData<Repair[]>(['/api/repairs']);
   const customers = queryClient.getQueryData<Customer[]>(['/api/customers']);
   
-  const repair = repairs?.find(r => r.id === repairId);
-  const customer = repair && customers ? customers.find(c => c.id === repair.customerId) : null;
+  const repair = repairs?.find(r => r.id === repairId) || null;
+  const customer: Customer | null = repair && customers ? customers.find(c => c.id === repair.customerId) || null : null;
   const deviceCodeData = queryClient.getQueryData(['/api/repairs', repairId, 'device-code']);
 
   const isLoading = false;
@@ -235,7 +235,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     
                     {/* Kundenname */}
                     <div className="text-center w-full">
-                      <p className="text-xs font-bold">{(customer?.firstName || 'Kunde') + ' ' + (customer?.lastName || '')}</p>
+                      <p className="text-xs font-bold">
+                        {customer 
+                          ? `${customer.firstName} ${customer.lastName || ''}`.trim() 
+                          : 'Kunde'
+                        }
+                      </p>
                     </div>
                     
                     {/* QR-Code mittig */}
