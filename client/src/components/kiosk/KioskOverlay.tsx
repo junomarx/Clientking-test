@@ -20,12 +20,24 @@ export function KioskOverlay() {
   const handleExitAttempt = async () => {
     if (pin.trim() === "") return;
     
-    const success = await deactivateKioskMode(pin);
-    if (success) {
-      setShowExitDialog(false);
-      setPin("");
-    } else {
-      alert("Falscher PIN. Zugang verweigert.");
+    try {
+      // PIN validation via API
+      const response = await fetch('/api/validate-kiosk-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+
+      if (response.ok) {
+        deactivateKioskMode();
+        setShowExitDialog(false);
+        setPin("");
+      } else {
+        alert("Falscher PIN. Zugang verweigert.");
+        setPin("");
+      }
+    } catch (error) {
+      alert("Fehler bei der PIN-Validierung.");
       setPin("");
     }
   };

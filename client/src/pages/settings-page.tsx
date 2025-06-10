@@ -45,6 +45,8 @@ const businessSettingsSchema = z.object({
   smtpPort: z.string().optional(),
   // Bewertungslink
   reviewLink: z.string().optional(),
+  // Kiosk-Modus PIN
+  kioskPin: z.string().min(4, "PIN muss mindestens 4 Zeichen haben").max(10, "PIN darf maximal 10 Zeichen haben").optional(),
 });
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern

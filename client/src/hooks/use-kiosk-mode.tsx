@@ -57,67 +57,35 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
     }
   }, [isKioskMode, wsStatus]);
 
-  const activateKioskMode = async (pin: string): Promise<boolean> => {
-    try {
-      // PIN gegen Business Settings validieren
-      const response = await fetch('/api/validate-kiosk-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
+  const activateKioskMode = () => {
+    setIsKioskMode(true);
+    localStorage.setItem('kioskMode', 'true');
+    
+    // Kiosk-Gerät beim WebSocket-Server registrieren
+    if (sendMessage) {
+      sendMessage({
+        type: 'register-kiosk',
+        userId: user?.id
       });
-
-      if (response.ok) {
-        setIsKioskMode(true);
-        localStorage.setItem('kioskMode', 'true');
-        
-        // Kiosk-Gerät beim WebSocket-Server registrieren
-        if (sendMessage) {
-          sendMessage({
-            type: 'register-kiosk',
-            userId: user?.id
-          });
-        }
-        
-        console.log('Kiosk-Modus aktiviert');
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Fehler beim Aktivieren des Kiosk-Modus:', error);
-      return false;
     }
+    
+    console.log('Kiosk-Modus aktiviert');
   };
 
-  const deactivateKioskMode = async (pin: string): Promise<boolean> => {
-    try {
-      // PIN gegen Business Settings validieren
-      const response = await fetch('/api/validate-kiosk-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin })
+  const deactivateKioskMode = () => {
+    setIsKioskMode(false);
+    localStorage.removeItem('kioskMode');
+    setSignatureRequest(null);
+    
+    // Kiosk-Registrierung beim WebSocket-Server entfernen
+    if (sendMessage) {
+      sendMessage({
+        type: 'unregister-kiosk',
+        userId: user?.id
       });
-
-      if (response.ok) {
-        setIsKioskMode(false);
-        localStorage.removeItem('kioskMode');
-        setSignatureRequest(null);
-        
-        // Kiosk-Registrierung beim WebSocket-Server entfernen
-        if (sendMessage) {
-          sendMessage({
-            type: 'unregister-kiosk',
-            userId: user?.id
-          });
-        }
-        
-        console.log('Kiosk-Modus deaktiviert');
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Fehler beim Deaktivieren des Kiosk-Modus:', error);
-      return false;
     }
+    
+    console.log('Kiosk-Modus deaktiviert');
   };
 
   const clearSignatureRequest = () => {
