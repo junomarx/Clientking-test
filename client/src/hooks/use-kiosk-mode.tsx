@@ -11,9 +11,15 @@ interface KioskModeContextType {
 }
 
 interface SignatureRequest {
-  repairId: number;
-  customerName: string;
-  repairDetails: string;
+  tempId: string;
+  repairData: {
+    orderCode: string;
+    customerName: string;
+    deviceType: string;
+    brand: string;
+    model: string;
+    issue: string;
+  };
   timestamp: number;
 }
 

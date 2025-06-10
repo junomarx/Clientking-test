@@ -1,163 +1,166 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CustomSignaturePad } from '@/components/ui/signature-pad';
-import { PenTool, CheckCircle, X, RotateCcw, User } from 'lucide-react';
+import { PenTool, RotateCcw, Check, X } from 'lucide-react';
+import SignatureCanvas from 'react-signature-canvas';
+import { useKioskMode } from '@/hooks/use-kiosk-mode';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-interface SignatureRequest {
-  repairId: number;
-  customerName: string;
-  repairDetails: string;
-  timestamp: number;
-}
-
 interface KioskSignatureProps {
-  signatureRequest: SignatureRequest | null;
-  onComplete: () => void;
   onCancel: () => void;
+  onSuccess: () => void;
 }
 
-export function KioskSignature({ signatureRequest, onComplete, onCancel }: KioskSignatureProps) {
+export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   const { toast } = useToast();
+  const { signatureRequest, clearSignatureRequest } = useKioskMode();
+  const sigCanvas = useRef<SignatureCanvas>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!signatureRequest) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <PenTool className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              Keine Unterschrifts-Anfrage
-            </h2>
-            <p className="text-gray-500">
-              Warten auf Unterschrifts-Anfrage vom Hauptgerät...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const handleSignatureSubmit = async (signature: string) => {
-    setIsSubmitting(true);
-    
-    try {
-      const response = await fetch('/api/kiosk-signature', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          repairId: signatureRequest.repairId,
-          signature: signature,
-          timestamp: Date.now()
-        }),
+  const submitSignatureMutation = useMutation({
+    mutationFn: async (signatureData: string) => {
+      const response = await apiRequest('POST', '/api/kiosk/submit-signature', {
+        tempId: signatureRequest?.tempId,
+        signature: signatureData
       });
-
-      if (response.ok) {
-        toast({
-          title: 'Unterschrift gespeichert',
-          description: 'Ihre Unterschrift wurde erfolgreich übermittelt.',
-        });
-        onComplete();
-      } else {
-        throw new Error('Fehler beim Speichern der Unterschrift');
-      }
-    } catch (error) {
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Unterschrift übertragen',
+        description: 'Ihre Unterschrift wurde erfolgreich gespeichert.',
+      });
+      clearSignatureRequest();
+      onSuccess();
+    },
+    onError: (error: any) => {
       toast({
         title: 'Fehler',
-        description: 'Die Unterschrift konnte nicht gespeichert werden.',
+        description: 'Beim Übertragen der Unterschrift ist ein Fehler aufgetreten.',
         variant: 'destructive',
       });
-    } finally {
       setIsSubmitting(false);
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!sigCanvas.current || !signatureRequest) return;
+    
+    const signatureData = sigCanvas.current.toDataURL();
+    if (sigCanvas.current.isEmpty()) {
+      toast({
+        title: 'Unterschrift fehlt',
+        description: 'Bitte setzen Sie Ihre Unterschrift auf die Fläche.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    submitSignatureMutation.mutate(signatureData);
+  };
+
+  const handleClear = () => {
+    if (sigCanvas.current) {
+      sigCanvas.current.clear();
     }
   };
 
   const handleCancel = () => {
+    clearSignatureRequest();
     onCancel();
-    toast({
-      title: 'Unterschrift abgebrochen',
-      description: 'Der Unterschriftsvorgang wurde abgebrochen.',
-    });
   };
 
+  if (!signatureRequest) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <Card className="shadow-lg">
-          <CardHeader className="bg-green-600 text-white">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-bold flex items-center">
-                <PenTool className="mr-3 h-8 w-8" />
-                Digitale Unterschrift
-              </CardTitle>
-              <Button
-                onClick={handleCancel}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-green-700"
-                disabled={isSubmitting}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
+    <div className="fixed inset-0 bg-white z-50 flex flex-col">
+      {/* Header */}
+      <div className="bg-blue-600 text-white p-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <PenTool className="h-8 w-8" />
+          <h1 className="text-2xl font-semibold">Unterschrift erforderlich</h1>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCancel}
+          className="text-white hover:bg-blue-500"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
+        <Card className="w-full max-w-4xl">
+          <CardHeader>
+            <CardTitle className="text-xl text-center">
+              Bitte setzen Sie hier Ihre Unterschrift
+            </CardTitle>
+            <p className="text-center text-gray-600">
+              Reparaturauftrag: {signatureRequest.repairData?.orderCode || 'Unbekannt'}
+            </p>
           </CardHeader>
-          
-          <CardContent className="p-6">
-            {/* Kundeninformationen */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-                <User className="mr-2 h-5 w-5" />
-                Reparaturdetails
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-blue-800">Kunde:</span>
-                  <p className="text-blue-700">{signatureRequest.customerName}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-800">Reparatur-ID:</span>
-                  <p className="text-blue-700">#{signatureRequest.repairId}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <span className="font-medium text-blue-800">Details:</span>
-                  <p className="text-blue-700">{signatureRequest.repairDetails}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Unterschrifts-Anweisungen */}
-            <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <h3 className="font-semibold text-amber-900 mb-2">
-                Bitte unterschreiben Sie hier:
-              </h3>
-              <p className="text-amber-800 text-sm">
-                Durch Ihre Unterschrift bestätigen Sie die Übergabe/Abholung Ihres Geräts 
-                und die Richtigkeit der oben genannten Informationen.
-              </p>
-            </div>
-
-            {/* Unterschriften-Pad */}
-            <div className="mb-6">
-              <CustomSignaturePad
-                onSave={handleSignatureSubmit}
-                onCancel={handleCancel}
-                width={600}
-                height={300}
+          <CardContent className="space-y-6">
+            {/* Signature Canvas */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-white">
+              <SignatureCanvas
+                ref={sigCanvas}
+                canvasProps={{
+                  width: 800,
+                  height: 300,
+                  className: 'signature-canvas w-full h-full'
+                }}
+                backgroundColor="white"
+                penColor="black"
               />
             </div>
 
-            {/* Zusätzliche Informationen */}
-            <div className="text-xs text-gray-500 text-center border-t pt-4">
-              <p>
-                Diese digitale Unterschrift hat dieselbe rechtliche Gültigkeit wie eine handschriftliche Unterschrift.
-              </p>
-              <p className="mt-1">
-                Erstellt am: {new Date(signatureRequest.timestamp).toLocaleString('de-DE')}
-              </p>
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleClear}
+                className="px-6 py-3"
+              >
+                <RotateCcw className="h-5 w-5 mr-2" />
+                Zurücksetzen
+              </Button>
+
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleCancel}
+                  className="px-6 py-3"
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  size="lg"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="px-6 py-3 bg-green-600 hover:bg-green-700"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Übertragen...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Check className="h-5 w-5" />
+                      Unterschrift bestätigen
+                    </div>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

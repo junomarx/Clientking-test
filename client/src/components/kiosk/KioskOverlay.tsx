@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useKioskMode } from "@/hooks/use-kiosk-mode";
-import { KioskCustomerForm } from "./KioskCustomerForm";
-import { KioskSignature } from "./KioskSignature";
+import { KioskCustomerForm } from "@/components/kiosk/KioskCustomerForm";
+import { KioskSignature } from "@/components/kiosk/KioskSignature";
 import { Tablet, Shield, User } from "lucide-react";
 
 export function KioskOverlay() {
