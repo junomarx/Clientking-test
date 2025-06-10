@@ -546,6 +546,20 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
               </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+              {/* WebSocket-Verbindungsstatus */}
+              <div className="flex items-center gap-2 text-sm">
+                <Circle 
+                  className={`h-2 w-2 ${
+                    isConnected 
+                      ? 'fill-green-500 text-green-500' 
+                      : 'fill-yellow-500 text-yellow-500'
+                  }`} 
+                />
+                <span className="text-muted-foreground">
+                  {isConnected ? 'Live-Status aktiv' : 'Fallback-Modus'}
+                </span>
+              </div>
+              
               <Button
                 onClick={() => refreshStatusMutation.mutate()}
                 disabled={refreshStatusMutation.isPending}
@@ -634,14 +648,17 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                         <div className="flex items-center">
                           <Circle 
                             className={`h-2 w-2 mr-2 ${
-                              isUserOnline(user.lastLoginAt, user.lastLogoutAt) 
+                              isUserOnline(user.id, user.lastLoginAt, user.lastLogoutAt) 
                                 ? 'fill-green-500 text-green-500' 
                                 : 'fill-red-500 text-red-500'
                             }`} 
                           />
                           <span className="text-sm">
-                            {isUserOnline(user.lastLoginAt, user.lastLogoutAt) ? 'Online' : 'Offline'}
+                            {isUserOnline(user.id, user.lastLoginAt, user.lastLogoutAt) ? 'Online' : 'Offline'}
                           </span>
+                          {isConnected && (
+                            <span className="text-xs text-muted-foreground ml-1">(Live)</span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
@@ -731,19 +748,22 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
                     <Badge 
                       variant="outline" 
                       className={`${
-                        isUserOnline(user.lastLoginAt) 
+                        isUserOnline(user.id, user.lastLoginAt, user.lastLogoutAt) 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
                       <Circle 
                         className={`h-3 w-3 mr-1 ${
-                          isUserOnline(user.lastLoginAt) 
+                          isUserOnline(user.id, user.lastLoginAt, user.lastLogoutAt) 
                             ? 'fill-green-500 text-green-500' 
                             : 'fill-red-500 text-red-500'
                         }`} 
                       />
-                      {isUserOnline(user.lastLoginAt) ? 'Online' : 'Offline'}
+                      {isUserOnline(user.id, user.lastLoginAt, user.lastLogoutAt) ? 'Online' : 'Offline'}
+                      {isConnected && (
+                        <span className="text-xs ml-1">(Live)</span>
+                      )}
                     </Badge>
                   </div>
                   

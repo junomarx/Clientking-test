@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as emailService from "./email-service";
+import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
 // Import der Berechtigungsprüfung aus permissions.ts
 import { hasAccess, hasAccessAsync } from './permissions';
 // Import der Middleware für die Prüfung der Trial-Version
