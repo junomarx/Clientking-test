@@ -3325,18 +3325,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Hole die höchste Nummer für diesen Monat
         const lastEstimateQuery = await db.execute(`
-          SELECT MAX(CAST(SUBSTRING(reference_number FROM 'KV-${month}${year}-(\\d+)') AS INTEGER)) as max_number
+          SELECT reference_number
           FROM cost_estimates 
           WHERE shop_id = ${shopId} 
-            AND reference_number ~ '^KV-${month}${year}-\\d{3}$'
+            AND reference_number LIKE 'KV-${year}${month}-%'
+          ORDER BY reference_number DESC
+          LIMIT 1
         `);
         
         let nextNumber = 1;
-        if (lastEstimateQuery.rows.length > 0 && lastEstimateQuery.rows[0].max_number) {
-          nextNumber = parseInt(lastEstimateQuery.rows[0].max_number) + 1;
+        if (lastEstimateQuery.rows.length > 0 && lastEstimateQuery.rows[0].reference_number) {
+          const lastNumber = lastEstimateQuery.rows[0].reference_number;
+          const match = lastNumber.match(/KV-\d{4}-(\d{3})/);
+          if (match && match[1]) {
+            nextNumber = parseInt(match[1]) + 1;
+          }
         }
         
-        estimateNumber = `KV-${month}${year}-${String(nextNumber).padStart(3, '0')}`;
+        estimateNumber = `KV-${year}${month}-${String(nextNumber).padStart(3, '0')}`;
         
         // Prüfe ob die Nummer bereits existiert
         const existsQuery = await db.execute(`
