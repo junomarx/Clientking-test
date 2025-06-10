@@ -49,13 +49,13 @@ export function generatePrintHtml({
       : 'Kunde';
   
   // Kundenadresse vorbereiten
-  const customerAddress = customer?.address || 'Neubaugasse 7';
+  const customerAddress = customer?.address || 'Keine Adresse angegeben';
   // Hier stellen wir sicher, dass die Postleitzahl immer angezeigt wird
-  const customerZipCity = (customer?.zip_code && customer?.city) 
-    ? `${customer?.zip_code} ${customer?.city}`
-    : ((!customer?.zip_code && customer?.city)
-       ? `1070 ${customer?.city}`
-       : '1070 Wien');
+  const customerZipCity = (customer?.zipCode && customer?.city) 
+    ? `${customer?.zipCode} ${customer?.city}`
+    : ((customer?.zip_code && customer?.city)
+       ? `${customer?.zip_code} ${customer?.city}`
+       : (customer?.city ? customer?.city : 'Keine Stadt angegeben'));
 
   // Subtotal, Steuer und Gesamtbetrag formatieren
   const subtotal = estimate.subtotal || '0.00';
