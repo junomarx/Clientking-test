@@ -179,8 +179,26 @@ export default function SuperadminUsersTab({ initialSelectedUserId }: Superadmin
           user.id.toString().includes(searchQuery))
       : users;
     
-    // Sortiere alphabetisch nach Benutzernamen
-    return [...filtered].sort((a, b) => a.username.localeCompare(b.username));
+    // Sortiere nach letztem Login (neueste zuerst, dann nach Benutzername)
+    return [...filtered].sort((a, b) => {
+      // Benutzer ohne Login kommen nach hinten
+      if (!a.lastLoginAt && !b.lastLoginAt) {
+        return a.username.localeCompare(b.username);
+      }
+      if (!a.lastLoginAt) return 1;
+      if (!b.lastLoginAt) return -1;
+      
+      // Sortiere nach letztem Login (neueste zuerst)
+      const loginA = new Date(a.lastLoginAt).getTime();
+      const loginB = new Date(b.lastLoginAt).getTime();
+      
+      if (loginA !== loginB) {
+        return loginB - loginA; // Neueste zuerst
+      }
+      
+      // Bei gleichem Login-Datum nach Benutzername sortieren
+      return a.username.localeCompare(b.username);
+    });
   }, [users, searchQuery]);
 
   // Pagination-Logik
