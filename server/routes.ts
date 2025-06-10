@@ -4627,10 +4627,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // WebSocket-Nachricht an alle Kiosk-Geräte senden
+      // WebSocket-Nachricht gezielt an Kiosk-Geräte senden
       const onlineStatusManager = getOnlineStatusManager();
       if (onlineStatusManager) {
-        onlineStatusManager.broadcast({
+        onlineStatusManager.broadcastToKiosks({
           type: 'signature-request',
           payload: {
             repairId: repairId,
