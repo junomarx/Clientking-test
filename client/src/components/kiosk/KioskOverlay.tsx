@@ -59,8 +59,7 @@ export function KioskOverlay() {
       case 'signature':
         return (
           <KioskSignature 
-            signatureRequest={signatureRequest}
-            onComplete={() => {
+            onSuccess={() => {
               clearSignatureRequest();
               setCurrentView('home');
             }}

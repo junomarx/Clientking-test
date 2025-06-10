@@ -47,7 +47,8 @@ import {
   Check,
   X,
   Printer,
-  Pen
+  Pen,
+  Send
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {

@@ -12,14 +12,8 @@ interface KioskModeContextType {
 
 interface SignatureRequest {
   tempId: string;
-  repairData: {
-    orderCode: string;
-    customerName: string;
-    deviceType: string;
-    brand: string;
-    model: string;
-    issue: string;
-  };
+  customerName: string;
+  repairDetails: string;
   timestamp: number;
 }
 
@@ -43,7 +37,7 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
         if (data.type === 'signature-request') {
           console.log('Kiosk: Unterschrifts-Anfrage erhalten', data.payload);
           setSignatureRequest({
-            repairId: data.payload.repairId,
+            tempId: data.payload.tempId,
             customerName: data.payload.customerName,
             repairDetails: data.payload.repairDetails,
             timestamp: Date.now()

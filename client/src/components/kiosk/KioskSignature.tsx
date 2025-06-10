@@ -103,7 +103,10 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
               Bitte setzen Sie hier Ihre Unterschrift
             </CardTitle>
             <p className="text-center text-gray-600">
-              Reparaturauftrag: {signatureRequest.repairData?.orderCode || 'Unbekannt'}
+              Kunde: {signatureRequest.customerName}
+            </p>
+            <p className="text-center text-sm text-gray-500">
+              {signatureRequest.repairDetails}
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
