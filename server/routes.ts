@@ -183,6 +183,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Prüfen ob es eine aktive temporäre Unterschrift für diese Reparatur gibt
+      const tempSignatureResult = await pool.query(
+        'SELECT temp_id FROM temp_signatures WHERE (repair_data->>\'repairId\')::integer = $1 AND status = \'pending\' ORDER BY created_at DESC LIMIT 1',
+        [repairId]
+      );
+      
+      if (tempSignatureResult.rows.length > 0) {
+        const tempId = tempSignatureResult.rows[0].temp_id;
+        console.log(`Aktualisiere temporäre Unterschrift ${tempId} mit Kiosk-Unterschrift`);
+        
+        // Temporäre Unterschrift auf "signed" setzen
+        await pool.query(
+          'UPDATE temp_signatures SET status = \'signed\', customer_signature = $1, signed_at = NOW(), device_code = $2 WHERE temp_id = $3',
+          [signature, deviceCode || null, tempId]
+        );
+      }
+
       // WebSocket-Nachricht an Hauptgerät senden
       const { getOnlineStatusManager } = await import('./websocket-server');
       const onlineStatusManager = getOnlineStatusManager();
