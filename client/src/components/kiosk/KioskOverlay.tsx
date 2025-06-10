@@ -1,0 +1,186 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useKioskMode } from "@/hooks/use-kiosk-mode";
+import { KioskCustomerForm } from "./KioskCustomerForm";
+import { KioskSignature } from "./KioskSignature";
+import { Tablet, Shield, User } from "lucide-react";
+
+export function KioskOverlay() {
+  const { isKioskMode, deactivateKioskMode, signatureRequest, clearSignatureRequest } = useKioskMode();
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [pin, setPin] = useState("");
+  const [currentView, setCurrentView] = useState<'home' | 'customer-form' | 'signature'>('home');
+
+  if (!isKioskMode) return null;
+
+  const handleExitAttempt = async () => {
+    if (pin.trim() === "") return;
+    
+    const success = await deactivateKioskMode(pin);
+    if (success) {
+      setShowExitDialog(false);
+      setPin("");
+    } else {
+      alert("Falscher PIN. Zugang verweigert.");
+      setPin("");
+    }
+  };
+
+  // Automatisches Öffnen der Unterschrift bei eingehender Anfrage
+  if (signatureRequest && currentView !== 'signature') {
+    setCurrentView('signature');
+  }
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'customer-form':
+        return (
+          <KioskCustomerForm 
+            onComplete={() => setCurrentView('home')}
+            onCancel={() => setCurrentView('home')}
+          />
+        );
+      case 'signature':
+        return (
+          <KioskSignature 
+            signatureRequest={signatureRequest}
+            onComplete={() => {
+              clearSignatureRequest();
+              setCurrentView('home');
+            }}
+            onCancel={() => {
+              clearSignatureRequest();
+              setCurrentView('home');
+            }}
+          />
+        );
+      default:
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
+            <div className="max-w-2xl w-full space-y-8">
+              {/* Header */}
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <Tablet className="h-16 w-16 text-blue-600" />
+                </div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  Kundengerät
+                </h1>
+                <p className="text-xl text-gray-600">
+                  Willkommen! Wählen Sie eine Option um fortzufahren.
+                </p>
+              </div>
+
+              {/* Action Cards */}
+              <div className="grid gap-6">
+                <Card className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-300"
+                      onClick={() => setCurrentView('customer-form')}>
+                  <CardHeader className="text-center pb-4">
+                    <div className="flex justify-center mb-2">
+                      <User className="h-12 w-12 text-green-600" />
+                    </div>
+                    <CardTitle className="text-2xl">Neuer Kunde</CardTitle>
+                    <CardDescription className="text-lg">
+                      Registrieren Sie sich als neuer Kunde
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button className="w-full h-16 text-xl" size="lg">
+                      Daten eingeben
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {signatureRequest && (
+                  <Card className="border-orange-300 bg-orange-50 cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => setCurrentView('signature')}>
+                    <CardHeader className="text-center pb-4">
+                      <CardTitle className="text-2xl text-orange-700">
+                        Unterschrift erforderlich
+                      </CardTitle>
+                      <CardDescription className="text-lg text-orange-600">
+                        Bitte unterschreiben Sie für Ihre Reparatur
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button className="w-full h-16 text-xl bg-orange-600 hover:bg-orange-700" size="lg">
+                        Jetzt unterschreiben
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Exit Button - Small and discrete */}
+              <div className="text-center pt-8">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowExitDialog(true)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Shield className="h-4 w-4 mr-1" />
+                  Admin-Zugang
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <>
+      {/* Fullscreen Overlay */}
+      <div className="fixed inset-0 z-50 bg-white overflow-hidden">
+        {renderCurrentView()}
+      </div>
+
+      {/* Exit PIN Dialog */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Kiosk-Modus verlassen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="exit-pin">Admin-PIN eingeben</Label>
+              <Input
+                id="exit-pin"
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleExitAttempt()}
+                placeholder="PIN eingeben"
+                className="text-center text-lg"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={handleExitAttempt} 
+                disabled={!pin.trim()}
+                className="flex-1"
+              >
+                Bestätigen
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowExitDialog(false);
+                  setPin("");
+                }}
+                className="flex-1"
+              >
+                Abbrechen
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
