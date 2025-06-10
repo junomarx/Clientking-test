@@ -46,6 +46,7 @@ import { emailService } from "./email-service";
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
+import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -4392,7 +4393,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Online-Status API-Endpunkte
+  app.get("/api/online-status", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      if (!onlineStatusManager) {
+        return res.json({
+          onlineUsers: [],
+          onlineCount: 0
+        });
+      }
+
+      const onlineUsers = onlineStatusManager.getOnlineUsers();
+      const onlineCount = onlineStatusManager.getOnlineUserCount();
+
+      res.json({
+        onlineUsers,
+        onlineCount
+      });
+    } catch (error) {
+      console.error("Error getting online status:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen des Online-Status",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  app.get("/api/online-status/:userId", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const onlineStatusManager = getOnlineStatusManager();
+      
+      if (!onlineStatusManager) {
+        return res.json({
+          isOnline: false,
+          lastSeen: null
+        });
+      }
+
+      const isOnline = onlineStatusManager.isUserOnline(userId);
+      const lastSeen = onlineStatusManager.getUserLastSeen(userId);
+
+      res.json({
+        isOnline,
+        lastSeen: lastSeen ? lastSeen.toISOString() : null
+      });
+    } catch (error) {
+      console.error("Error getting user online status:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen des Benutzer-Online-Status",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
+  
+  // WebSocket-Server initialisieren
+  const onlineStatusManager = initializeWebSocketServer(httpServer);
+  console.log("WebSocket-Server für Online-Status initialisiert");
 
   return httpServer;
 }

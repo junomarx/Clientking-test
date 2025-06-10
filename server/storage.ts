@@ -95,6 +95,8 @@ export interface IStorage {
   updateUserLastLogin(id: number): Promise<boolean>;
   updateUserLastLogout(id: number): Promise<boolean>;
   updateUserLastActivity(id: number): Promise<boolean>;
+  updateUserLoginTimestamp(id: number): Promise<boolean>;
+  updateUserLogoutTimestamp(id: number): Promise<boolean>;
   
   // E-Mail-Methoden
   getAllEmailTemplates(userId: number): Promise<EmailTemplate[]>;
@@ -1390,6 +1392,34 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error updating user last activity:", error);
+      return false;
+    }
+  }
+
+  async updateUserLoginTimestamp(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ lastLoginAt: new Date() })
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user login timestamp:", error);
+      return false;
+    }
+  }
+
+  async updateUserLogoutTimestamp(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({ lastLogoutAt: new Date() })
+        .where(eq(users.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error updating user logout timestamp:", error);
       return false;
     }
   }
