@@ -10,7 +10,7 @@ import { hasAccess, hasAccessAsync } from './permissions';
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
 import { db, pool } from './db';
-import { eq } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`,
             sql`LOWER(${customers.lastName}) LIKE LOWER(${'%' + lastName + '%'})`
           ))
-          .orderBy(customers.lastName, customers.firstName);
+          .orderBy(desc(customers.createdAt));
         
         console.log(`Found ${matchingCustomers.length} matching customers (strict shop isolation: ${shopId})`);
         return res.json(matchingCustomers);
@@ -619,7 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             eq(customers.shopId, shopId),
             sql`LOWER(${customers.firstName}) LIKE LOWER(${'%' + firstName + '%'})`
           ))
-          .orderBy(customers.lastName, customers.firstName);
+          .orderBy(desc(customers.createdAt));
         
         console.log(`Found ${matchingCustomers.length} customers matching first name "${firstName}" (strict shop isolation: ${shopId})`);
         return res.json(matchingCustomers);
@@ -630,7 +630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select()
         .from(customers)
         .where(eq(customers.shopId, shopId))
-        .orderBy(customers.lastName, customers.firstName);
+        .orderBy(desc(customers.createdAt));
       
       console.log(`Returning all ${allCustomers.length} customers (strict shop isolation: ${shopId})`);
       res.json(allCustomers);
