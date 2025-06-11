@@ -20,11 +20,13 @@ import {
   insertUserBrandSchema,
   insertUserModelSchema,
   insertCostEstimateSchema,
+  insertSparePartSchema,
   repairStatuses,
   deviceTypes,
   type InsertEmailTemplate,
   type InsertCostEstimate,
   type InsertCostEstimateItem,
+  type InsertSparePart,
   customers,
   users,
   repairs,
@@ -33,7 +35,8 @@ import {
   userBrands,
   businessSettings,
   costEstimates,
-  packageFeatures
+  packageFeatures,
+  spareParts
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -4767,6 +4770,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("❌ Fehler beim Senden an Kiosk:", error);
       res.status(500).json({ message: "Fehler beim Senden der Anfrage" });
+    }
+  });
+
+  // ERSATZTEIL-VERWALTUNG API mit DSGVO-konformer Shop-Isolation
+
+  // Alle Ersatzteile für eine Reparatur abrufen
+  app.get("/api/repairs/:repairId/spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.repairId);
+      if (isNaN(repairId)) {
+        return res.status(400).json({ message: "Ungültige Reparatur-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Ersatzteile für Reparatur ${repairId} (Benutzer ${userId})`);
+      
+      const spareParts = await storage.getSparePartsByRepairId(repairId, userId);
+      res.json(spareParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Alle Ersatzteile für Bestellungen-Tab abrufen (nur Reparaturen mit Status "warten_auf_ersatzteile")
+  app.get("/api/spare-parts/orders", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Ersatzteile für Bestellungen-Tab (Benutzer ${userId})`);
+      
+      const spareParts = await storage.getSparePartsForOrders(userId);
+      res.json(spareParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Ersatzteile für Bestellungen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Ersatzteile für Bestellungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Alle Ersatzteile für einen Benutzer abrufen
+  app.get("/api/spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Ersatzteile für Benutzer ${userId}`);
+      
+      const spareParts = await storage.getAllSpareParts(userId);
+      res.json(spareParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen aller Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen aller Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Einzelnes Ersatzteil abrufen
+  app.get("/api/spare-parts/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      const sparePart = await storage.getSparePart(id, userId);
+      
+      if (!sparePart) {
+        return res.status(404).json({ message: "Ersatzteil nicht gefunden" });
+      }
+      
+      res.json(sparePart);
+    } catch (error) {
+      console.error(`Fehler beim Abrufen des Ersatzteils ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen des Ersatzteils",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Neues Ersatzteil erstellen
+  app.post("/api/spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Erstellen eines neuen Ersatzteils für Benutzer ${userId}`);
+      
+      // Validierung mit Zod Schema
+      const validatedData = insertSparePartSchema.parse(req.body);
+      
+      // Prüfe, ob die Reparatur dem Benutzer gehört
+      const repair = await storage.getRepair(validatedData.repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden oder keine Berechtigung" });
+      }
+      
+      const sparePart = await storage.createSparePart(validatedData, userId);
+      
+      console.log(`Ersatzteil ${sparePart.id} für Reparatur ${validatedData.repairId} erstellt von Benutzer ${userId}`);
+      res.status(201).json(sparePart);
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Ersatzteils:", error);
+      
+      if (error instanceof ZodError) {
+        return res.status(400).json({ 
+          message: "Validierungsfehler", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Fehler beim Erstellen des Ersatzteils",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Ersatzteil aktualisieren
+  app.patch("/api/spare-parts/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      console.log(`Aktualisieren des Ersatzteils ${id} für Benutzer ${userId}`);
+      
+      // Prüfe, ob das Ersatzteil existiert und dem Benutzer gehört
+      const existingSparePart = await storage.getSparePart(id, userId);
+      if (!existingSparePart) {
+        return res.status(404).json({ message: "Ersatzteil nicht gefunden oder keine Berechtigung" });
+      }
+      
+      const sparePart = await storage.updateSparePart(id, req.body, userId);
+      
+      if (!sparePart) {
+        return res.status(404).json({ message: "Ersatzteil nicht gefunden" });
+      }
+      
+      console.log(`Ersatzteil ${id} aktualisiert von Benutzer ${userId}`);
+      res.json(sparePart);
+    } catch (error) {
+      console.error(`Fehler beim Aktualisieren des Ersatzteils ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Ersatzteils",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Ersatzteil löschen
+  app.delete("/api/spare-parts/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-ID" });
+      }
+      
+      const userId = (req.user as any).id;
+      console.log(`Löschen des Ersatzteils ${id} für Benutzer ${userId}`);
+      
+      // Prüfe, ob das Ersatzteil existiert und dem Benutzer gehört
+      const existingSparePart = await storage.getSparePart(id, userId);
+      if (!existingSparePart) {
+        return res.status(404).json({ message: "Ersatzteil nicht gefunden oder keine Berechtigung" });
+      }
+      
+      const success = await storage.deleteSparePart(id, userId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Ersatzteil nicht gefunden" });
+      }
+      
+      console.log(`Ersatzteil ${id} gelöscht von Benutzer ${userId}`);
+      res.json({ message: "Ersatzteil erfolgreich gelöscht" });
+    } catch (error) {
+      console.error(`Fehler beim Löschen des Ersatzteils ${req.params.id}:`, error);
+      res.status(500).json({ 
+        message: "Fehler beim Löschen des Ersatzteils",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

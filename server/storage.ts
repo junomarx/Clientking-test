@@ -4008,6 +4008,260 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
   }
+
+  // Ersatzteil-Verwaltung Implementierung
+  
+  /**
+   * Holt alle Ersatzteile für eine spezifische Reparatur
+   */
+  async getSparePartsByRepairId(repairId: number, userId: number): Promise<SparePart[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      const shopId = user.shopId || 1;
+      
+      const parts = await db
+        .select()
+        .from(spareParts)
+        .where(and(
+          eq(spareParts.repairId, repairId),
+          eq(spareParts.shopId, shopId)
+        ))
+        .orderBy(desc(spareParts.createdAt));
+      
+      return parts;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Ersatzteile für Reparatur:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Holt alle Ersatzteile für einen Benutzer
+   */
+  async getAllSpareParts(userId: number): Promise<SparePart[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      const shopId = user.shopId || 1;
+      
+      const parts = await db
+        .select()
+        .from(spareParts)
+        .where(eq(spareParts.shopId, shopId))
+        .orderBy(desc(spareParts.createdAt));
+      
+      return parts;
+    } catch (error) {
+      console.error('Fehler beim Abrufen aller Ersatzteile:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Holt Ersatzteile für den Bestellungen-Tab (nur Reparaturen mit Status "warten_auf_ersatzteile")
+   */
+  async getSparePartsForOrders(userId: number): Promise<SparePart[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      const shopId = user.shopId || 1;
+      
+      // Erstelle eine Subquery für Reparaturen mit Status "warten_auf_ersatzteile"
+      const parts = await db
+        .select({
+          id: spareParts.id,
+          repairId: spareParts.repairId,
+          partName: spareParts.partName,
+          supplier: spareParts.supplier,
+          cost: spareParts.cost,
+          status: spareParts.status,
+          orderDate: spareParts.orderDate,
+          deliveryDate: spareParts.deliveryDate,
+          notes: spareParts.notes,
+          userId: spareParts.userId,
+          shopId: spareParts.shopId,
+          createdAt: spareParts.createdAt,
+          updatedAt: spareParts.updatedAt,
+        })
+        .from(spareParts)
+        .innerJoin(repairs, eq(spareParts.repairId, repairs.id))
+        .where(and(
+          eq(spareParts.shopId, shopId),
+          eq(repairs.status, 'warten_auf_ersatzteile')
+        ))
+        .orderBy(desc(spareParts.createdAt));
+      
+      return parts;
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Ersatzteile für Bestellungen:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Holt ein spezifisches Ersatzteil
+   */
+  async getSparePart(id: number, userId: number): Promise<SparePart | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      const shopId = user.shopId || 1;
+      
+      const [part] = await db
+        .select()
+        .from(spareParts)
+        .where(and(
+          eq(spareParts.id, id),
+          eq(spareParts.shopId, shopId)
+        ));
+      
+      return part;
+    } catch (error) {
+      console.error('Fehler beim Abrufen des Ersatzteils:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Erstellt ein neues Ersatzteil
+   */
+  async createSparePart(sparePart: InsertSparePart, userId: number): Promise<SparePart> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) throw new Error('Benutzer nicht gefunden');
+      
+      const shopId = user.shopId || 1;
+      
+      const [newPart] = await db
+        .insert(spareParts)
+        .values({
+          ...sparePart,
+          userId,
+          shopId,
+        })
+        .returning();
+      
+      // Nach dem Erstellen prüfen, ob der Reparatur-Status aktualisiert werden muss
+      await this.checkAndUpdateRepairStatus(sparePart.repairId, userId);
+      
+      return newPart;
+    } catch (error) {
+      console.error('Fehler beim Erstellen des Ersatzteils:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Aktualisiert ein Ersatzteil
+   */
+  async updateSparePart(id: number, sparePart: Partial<SparePart>, userId: number): Promise<SparePart | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      const shopId = user.shopId || 1;
+      
+      const [updatedPart] = await db
+        .update(spareParts)
+        .set({
+          ...sparePart,
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(spareParts.id, id),
+          eq(spareParts.shopId, shopId)
+        ))
+        .returning();
+      
+      if (updatedPart) {
+        // Nach dem Update prüfen, ob der Reparatur-Status aktualisiert werden muss
+        await this.checkAndUpdateRepairStatus(updatedPart.repairId, userId);
+      }
+      
+      return updatedPart;
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren des Ersatzteils:', error);
+      return undefined;
+    }
+  }
+
+  /**
+   * Löscht ein Ersatzteil
+   */
+  async deleteSparePart(id: number, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+      
+      const shopId = user.shopId || 1;
+      
+      // Erst das Ersatzteil abrufen, um die repairId zu bekommen
+      const part = await this.getSparePart(id, userId);
+      if (!part) return false;
+      
+      const result = await db
+        .delete(spareParts)
+        .where(and(
+          eq(spareParts.id, id),
+          eq(spareParts.shopId, shopId)
+        ));
+      
+      if (result.rowCount && result.rowCount > 0) {
+        // Nach dem Löschen prüfen, ob der Reparatur-Status aktualisiert werden muss
+        await this.checkAndUpdateRepairStatus(part.repairId, userId);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Fehler beim Löschen des Ersatzteils:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Prüft und aktualisiert automatisch den Reparatur-Status basierend auf Ersatzteil-Status
+   */
+  async checkAndUpdateRepairStatus(repairId: number, userId: number): Promise<void> {
+    try {
+      // Hole die Reparatur
+      const repair = await this.getRepair(repairId, userId);
+      if (!repair) return;
+      
+      // Hole alle Ersatzteile für diese Reparatur
+      const parts = await this.getSparePartsByRepairId(repairId, userId);
+      
+      if (parts.length === 0) {
+        // Keine Ersatzteile vorhanden - Status sollte nicht "warten_auf_ersatzteile" sein
+        if (repair.status === 'warten_auf_ersatzteile') {
+          await this.updateRepairStatus(repairId, 'in_reparatur', userId);
+          console.log(`Reparatur ${repairId}: Status auf 'in_reparatur' geändert (keine Ersatzteile mehr)`);
+        }
+        return;
+      }
+      
+      // Prüfe Status aller Ersatzteile
+      const hasOpenParts = parts.some(part => part.status === 'bestellen' || part.status === 'bestellt');
+      const allPartsDelivered = parts.every(part => part.status === 'eingetroffen');
+      
+      if (hasOpenParts && repair.status !== 'warten_auf_ersatzteile') {
+        // Es gibt offene Ersatzteile, aber Status ist nicht "warten_auf_ersatzteile"
+        await this.updateRepairStatus(repairId, 'warten_auf_ersatzteile', userId);
+        console.log(`Reparatur ${repairId}: Status auf 'warten_auf_ersatzteile' geändert`);
+      } else if (allPartsDelivered && repair.status === 'warten_auf_ersatzteile') {
+        // Alle Ersatzteile sind eingetroffen
+        await this.updateRepairStatus(repairId, 'in_reparatur', userId);
+        console.log(`Reparatur ${repairId}: Status auf 'in_reparatur' geändert (alle Ersatzteile eingetroffen)`);
+      }
+    } catch (error) {
+      console.error('Fehler beim Prüfen/Aktualisieren des Reparatur-Status:', error);
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
