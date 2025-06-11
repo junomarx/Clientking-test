@@ -16,9 +16,9 @@ export function KioskOverlay() {
   const [pin, setPin] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'customer-form' | 'signature'>('home');
   
-  // Geschäftseinstellungen für Logo abrufen
+  // Geschäftseinstellungen für Logo abrufen (Kiosk-spezifischer Endpunkt)
   const { data: businessSettings } = useQuery({
-    queryKey: ['/api/business-settings'],
+    queryKey: ['/api/kiosk/business-settings'],
     enabled: isKioskMode, // Nur laden wenn Kiosk-Modus aktiv ist
   });
 

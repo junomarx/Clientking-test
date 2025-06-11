@@ -4708,6 +4708,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Kiosk-spezifischer Endpunkt für Business-Settings (ohne Authentifizierung)
+  app.get("/api/kiosk/business-settings", async (req: Request, res: Response) => {
+    try {
+      // Da Kiosk-Modus keine Benutzerauthentifizierung hat, nehmen wir die erste aktive Business-Einstellung
+      // oder die des ersten aktiven Benutzers
+      const allUsers = await storage.getAllUsers();
+      const firstActiveUser = allUsers.find(user => user.isActive);
+      
+      if (!firstActiveUser) {
+        return res.status(404).json({ message: "Keine aktiven Benutzer gefunden" });
+      }
+      
+      const businessSettings = await storage.getBusinessSettings(firstActiveUser.id);
+      
+      if (!businessSettings) {
+        return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
+      }
+      
+      // Nur die für das Frontend notwendigen Felder zurückgeben
+      res.json({
+        businessName: businessSettings.businessName,
+        logoUrl: businessSettings.logoUrl
+      });
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Kiosk Business-Settings:", error);
+      res.status(500).json({ message: "Interner Serverfehler" });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren
