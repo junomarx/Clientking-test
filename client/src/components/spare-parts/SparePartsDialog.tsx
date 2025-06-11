@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -20,7 +19,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -62,27 +60,18 @@ export default function SparePartsDialog({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      repairId,
+      repairId: repairId,
       partName: "",
-      supplier: "",
-      cost: "",
       status: "bestellen",
-      notes: "",
     },
   });
 
-  // Form mit vorhandenen Daten füllen beim Bearbeiten
   useEffect(() => {
     if (mode === "edit" && sparePart && open) {
       form.reset({
         repairId: sparePart.repairId,
         partName: sparePart.partName,
-        supplier: sparePart.supplier || "",
-        cost: sparePart.cost?.toString() || "", // Convert number to string for form
-        status: sparePart.status,
-        orderDate: sparePart.orderDate ? new Date(sparePart.orderDate).toISOString().split('T')[0] : undefined,
-        deliveryDate: sparePart.deliveryDate ? new Date(sparePart.deliveryDate).toISOString().split('T')[0] : undefined,
-        notes: sparePart.notes || "",
+        status: sparePart.status as "bestellen" | "bestellt" | "eingetroffen",
       });
     } else if (mode === "create" && open) {
       form.reset({
@@ -128,16 +117,7 @@ export default function SparePartsDialog({
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      if (!sparePart) throw new Error("Kein Ersatzteil zum Bearbeiten");
-      
-      const submitData = {
-        ...data,
-        cost: parseFloat(data.cost.replace(',', '.')), // Convert string to number
-        orderDate: data.orderDate ? new Date(data.orderDate) : undefined,
-        deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
-      };
-      
-      const response = await apiRequest("PATCH", `/api/spare-parts/${sparePart.id}`, submitData);
+      const response = await apiRequest("PUT", `/api/spare-parts/${sparePart?.id}`, data);
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error);
@@ -151,13 +131,13 @@ export default function SparePartsDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
       toast({
         title: "Ersatzteil aktualisiert",
-        description: "Das Ersatzteil wurde erfolgreich bearbeitet.",
+        description: "Das Ersatzteil wurde erfolgreich aktualisiert.",
       });
       onOpenChange(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Fehler beim Bearbeiten",
+        title: "Fehler beim Aktualisieren",
         description: error.message,
         variant: "destructive",
       });
@@ -172,26 +152,17 @@ export default function SparePartsDialog({
     }
   };
 
-  const currentStatus = form.watch("status");
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Ersatzteil hinzufügen" : "Ersatzteil bearbeiten"}
+            {mode === "create" ? "Neues Ersatzteil" : "Ersatzteil bearbeiten"}
           </DialogTitle>
-          <DialogDescription>
-            {mode === "create" 
-              ? "Fügen Sie ein neues Ersatzteil für diese Reparatur hinzu."
-              : "Bearbeiten Sie die Details des Ersatzteils."
-            }
-          </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="partName"
@@ -205,8 +176,6 @@ export default function SparePartsDialog({
                   </FormItem>
                 )}
               />
-
-
 
               <FormField
                 control={form.control}
@@ -230,57 +199,7 @@ export default function SparePartsDialog({
                   </FormItem>
                 )}
               />
-
-              {(currentStatus === "bestellt" || currentStatus === "eingetroffen") && (
-                <FormField
-                  control={form.control}
-                  name="orderDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bestelldatum</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {currentStatus === "eingetroffen" && (
-                <FormField
-                  control={form.control}
-                  name="deliveryDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lieferdatum</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notizen</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Zusätzliche Informationen zum Ersatzteil..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <DialogFooter>
               <Button

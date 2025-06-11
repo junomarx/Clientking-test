@@ -161,11 +161,7 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Ersatzteil</TableHead>
-                  <TableHead>Lieferant</TableHead>
-                  <TableHead>Kosten</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Bestelldatum</TableHead>
-                  <TableHead>Lieferdatum</TableHead>
                   <TableHead className="w-[100px]">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
@@ -175,8 +171,6 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
                     <TableCell className="font-medium">
                       {sparePart.partName}
                     </TableCell>
-                    <TableCell>{sparePart.supplier || "-"}</TableCell>
-                    <TableCell>{sparePart.cost} €</TableCell>
                     <TableCell>
                       <Badge 
                         variant="secondary" 
@@ -184,18 +178,6 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
                       >
                         {statusLabels[sparePart.status]}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {sparePart.orderDate 
-                        ? format(new Date(sparePart.orderDate), "dd.MM.yyyy", { locale: de })
-                        : "-"
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {sparePart.deliveryDate 
-                        ? format(new Date(sparePart.deliveryDate), "dd.MM.yyyy", { locale: de })
-                        : "-"
-                      }
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
