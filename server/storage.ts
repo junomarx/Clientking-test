@@ -47,6 +47,9 @@ import {
   tempSignatures,
   type TempSignature,
   type InsertTempSignature,
+  spareParts,
+  type SparePart,
+  type InsertSparePart,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -497,6 +500,16 @@ export interface IStorage {
   updateTempSignatureWithSignature(tempId: string, signature: string): Promise<TempSignature | undefined>;
   completeTempSignature(tempId: string): Promise<TempSignature | undefined>;
   cleanupExpiredTempSignatures(): Promise<number>;
+  
+  // Ersatzteil-Verwaltung
+  getSparePartsByRepairId(repairId: number, userId: number): Promise<SparePart[]>;
+  getAllSpareParts(userId: number): Promise<SparePart[]>;
+  getSparePartsForOrders(userId: number): Promise<SparePart[]>; // Nur für Bestellungen-Tab
+  getSparePart(id: number, userId: number): Promise<SparePart | undefined>;
+  createSparePart(sparePart: InsertSparePart, userId: number): Promise<SparePart>;
+  updateSparePart(id: number, sparePart: Partial<SparePart>, userId: number): Promise<SparePart | undefined>;
+  deleteSparePart(id: number, userId: number): Promise<boolean>;
+  checkAndUpdateRepairStatus(repairId: number, userId: number): Promise<void>; // Automatische Status-Updates
 }
 
 export class DatabaseStorage implements IStorage {
