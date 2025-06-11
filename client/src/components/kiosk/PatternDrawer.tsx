@@ -43,13 +43,13 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
     canvas.style.height = `${CANVAS_SIZE}px`;
     ctx.scale(dpr, dpr);
 
-    // Create grid points
+    // Create grid points (1-9 layout like Android pattern)
     const newPoints: Point[] = [];
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         const x = (col + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
         const y = (row + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
-        const index = row * GRID_SIZE + col + 1;
+        const index = row * GRID_SIZE + col + 1; // This gives us 1-9
         newPoints.push({ x, y, index });
       }
     }
