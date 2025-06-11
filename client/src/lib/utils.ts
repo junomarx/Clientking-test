@@ -47,6 +47,10 @@ export function getStatusBadge(status: string): React.ReactNode {
       return React.createElement("span", { className: `${badgeStyle} bg-yellow-100 text-amber-700` }, "Eingegangen");
     case "in_reparatur":
       return React.createElement("span", { className: `${badgeStyle} bg-blue-100 text-blue-700` }, "In Reparatur");
+    case "ersatzteile_bestellen":
+      return React.createElement("span", { className: `${badgeStyle} bg-orange-100 text-orange-700` }, "Ersatzteile bestellen");
+    case "warten_auf_ersatzteile":
+      return React.createElement("span", { className: `${badgeStyle} bg-amber-100 text-amber-700` }, "Warten auf Ersatzteile");
     case "ersatzteil_eingetroffen":
       return React.createElement("span", { className: `${badgeStyle} bg-indigo-100 text-indigo-700` }, "Ersatzteil eingetroffen");
     case "ausser_haus":

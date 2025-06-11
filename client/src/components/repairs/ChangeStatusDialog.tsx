@@ -32,7 +32,7 @@ import { Input } from '@/components/ui/input';
 
 // Form schema
 const statusSchema = z.object({
-  status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
+  status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteile_bestellen', 'warten_auf_ersatzteile', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
   sendEmail: z.boolean().optional(),
@@ -146,6 +146,8 @@ export function ChangeStatusDialog({
   const statusLabels: Record<string, string> = {
     eingegangen: 'Eingegangen',
     in_reparatur: 'In Reparatur',
+    ersatzteile_bestellen: 'Ersatzteile bestellen',
+    warten_auf_ersatzteile: 'Warten auf Ersatzteile',
     ersatzteil_eingetroffen: 'Ersatzteil eingetroffen',
     ausser_haus: 'Außer Haus',
     fertig: 'Fertig zur Abholung',

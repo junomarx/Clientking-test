@@ -8,6 +8,14 @@ export const getStatusText = (status: string): string => {
       return 'Eingegangen';
     case 'in_reparatur':
       return 'In Reparatur';
+    case 'ersatzteile_bestellen':
+      return 'Ersatzteile bestellen';
+    case 'warten_auf_ersatzteile':
+      return 'Warten auf Ersatzteile';
+    case 'ersatzteil_eingetroffen':
+      return 'Ersatzteil eingetroffen';
+    case 'ausser_haus':
+      return 'Außer Haus';
     case 'fertig':
       return 'Fertig';
     case 'abgeholt':
