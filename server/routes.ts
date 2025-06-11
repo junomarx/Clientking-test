@@ -4728,14 +4728,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Kiosk Business Settings Response:', {
         businessName: businessSettings.businessName,
-        logoUrl: businessSettings.logoUrl,
-        fullSettings: businessSettings
+        logoImageType: typeof businessSettings.logoImage,
+        logoImageLength: businessSettings.logoImage ? businessSettings.logoImage.length : 0,
+        logoImageExists: !!businessSettings.logoImage,
+        logoImageFirst100: businessSettings.logoImage ? businessSettings.logoImage.substring(0, 100) : 'null'
       });
       
       // Nur die für das Frontend notwendigen Felder zurückgeben
+      // logoImage wird als logoUrl zurückgegeben für Frontend-Kompatibilität
       res.json({
         businessName: businessSettings.businessName,
-        logoUrl: businessSettings.logoUrl
+        logoUrl: businessSettings.logoImage || null
       });
     } catch (error) {
       console.error("Fehler beim Abrufen der Kiosk Business-Settings:", error);

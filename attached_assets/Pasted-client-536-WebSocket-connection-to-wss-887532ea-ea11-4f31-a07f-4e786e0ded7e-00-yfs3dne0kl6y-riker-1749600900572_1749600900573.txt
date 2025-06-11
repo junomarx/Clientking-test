@@ -1,0 +1,64 @@
+client:536 WebSocket connection to 'wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/?token=8g10Hedb4C3V' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=8g10Hedb4C3V' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+ClearCacheHelpers.ts:32 Alle gespeicherten Gerätetypen wurden gelöscht.
+main.tsx:14 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+PrintOptionsDialog.tsx:64 PrintOptionsDialog gerendert mit open: false repairId: null canPrintLabels: true
+App.tsx:125 UserId bereits im localStorage: 3
+ClearCacheHelpers.ts:12 Alle gespeicherten Herstellern wurden gelöscht.
+ClearCacheHelpers.ts:22 Alle gespeicherten Modelle wurden gelöscht.
+App.tsx:144 Cache für Gerätearten und Hersteller wurde beim Start gelöscht
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+NewOrderModal.tsx:537 Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+main.tsx:25 PWA Service Worker Registrierung fehlgeschlagen: SecurityError: Failed to register a ServiceWorker for scope ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/') with script ('https://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/sw.js'): The script has an unsupported MIME type ('text/html').
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+/api/can-view-detailed-stats:1 
+        
+        
+       Failed to load resource: the server responded with a status of 401 (Unauthorized)
+manifest.json:1 Manifest: Line: 1, column: 1, Syntax error.
+887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: Object
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: Object
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
+KioskOverlay.tsx:26 Kiosk Business Settings Debug: {isKioskMode: true, businessSettings: {…}, isLoading: false, error: null, logoUrl: undefined}
+KioskOverlay.tsx:106 Zeige Tablet-Icon, da kein Logo: {businessSettings: {…}, logoUrl: undefined}
