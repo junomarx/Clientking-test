@@ -107,7 +107,7 @@ export function KioskOverlay() {
                     <img 
                       src={clientKingLogo} 
                       alt="ClientKing Handyshop Verwaltung"
-                      className="h-16 w-auto max-w-xs object-contain"
+                      className="h-32 w-auto max-w-md object-contain"
                     />
                   )}
                 </div>
