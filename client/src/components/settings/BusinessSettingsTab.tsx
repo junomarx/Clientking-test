@@ -40,6 +40,8 @@ const businessSettingsSchema = z.object({
   reviewLink: z.string().optional(),
   // Kiosk-Modus PIN
   kioskPin: z.string().min(4, "PIN muss mindestens 4 Zeichen haben").max(10, "PIN darf maximal 10 Zeichen haben").optional(),
+  // Reparaturbedingungen
+  repairTerms: z.string().optional(),
 });
 
 // Erweiterte Formulardaten mit zusätzlichen Feldern
@@ -88,6 +90,8 @@ export function BusinessSettingsTab() {
       reviewLink: "",
       // Kiosk-Modus PIN
       kioskPin: "1234",
+      // Reparaturbedingungen
+      repairTerms: "",
     },
   });
 
@@ -461,6 +465,31 @@ export function BusinessSettingsTab() {
                       <FormMessage className="text-xs" />
                       <p className="text-xs text-gray-500">
                         PIN für die Aktivierung des Kiosk-Modus auf Tablets (4-10 Zeichen)
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              {/* Reparaturbedingungen */}
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="repairTerms"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel className="text-sm">Reparaturbedingungen</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Geben Sie hier Ihre Reparaturbedingungen ein. Diese werden bei der Kiosk-Unterschrift angezeigt..."
+                          {...field} 
+                          className="min-h-[120px] text-sm"
+                          rows={6}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
+                      <p className="text-xs text-gray-500">
+                        Diese Bedingungen werden Kunden bei der digitalen Unterschrift im Kiosk-Modus angezeigt
                       </p>
                     </FormItem>
                   )}

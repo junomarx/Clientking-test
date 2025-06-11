@@ -298,6 +298,9 @@ export const businessSettings = pgTable("business_settings", {
   // Kiosk-Modus PIN für Tablet-Aktivierung
   kioskPin: text("kiosk_pin").default("1234"),
   
+  // Reparaturbedingungen für Kiosk-Unterschrift
+  repairTerms: text("repair_terms"),
+  
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   // Jede Geschäftseinstellung gehört zu einem bestimmten Benutzer
   userId: integer("user_id").references(() => users.id),
