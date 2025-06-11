@@ -120,7 +120,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
               Reparaturauftrag und Geschäftsbedingungen
             </CardTitle>
             <p className="text-center text-gray-600 text-sm">
-              {businessSettings?.businessName}
+              {signatureRequest?.shopName || 'Handyshop'}
             </p>
           </CardHeader>
           
@@ -189,7 +189,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
               <h3 className="font-semibold text-lg">Reparaturbedingungen</h3>
               <div className="p-4 border rounded-lg bg-gray-50 max-h-40 overflow-y-auto">
                 <div className="text-sm whitespace-pre-wrap">
-                  {businessSettings?.repairTerms || 'Es wurden keine spezifischen Reparaturbedingungen hinterlegt.'}
+                  {signatureRequest?.repairTerms || 'Es wurden keine spezifischen Reparaturbedingungen hinterlegt.'}
                 </div>
               </div>
               
