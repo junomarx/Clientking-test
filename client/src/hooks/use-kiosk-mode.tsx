@@ -22,6 +22,8 @@ interface SignatureRequest {
   orderCode?: string;
   estimatedCost?: number;
   status?: string;
+  repairTerms?: string;
+  shopName?: string;
   timestamp: number;
 }
 

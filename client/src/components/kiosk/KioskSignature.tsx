@@ -30,11 +30,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   const [deviceCodeType, setDeviceCodeType] = useState<"pin" | "pattern" | null>(null);
   const [showPatternDrawer, setShowPatternDrawer] = useState(false);
 
-  // Geschäftseinstellungen für Reparaturbedingungen laden
-  const { data: businessSettings } = useQuery({
-    queryKey: ['/api/business-settings'],
-    enabled: !!signatureRequest
-  });
+  // Reparaturbedingungen sind jetzt direkt in der signatureRequest enthalten
 
   // Schritt-Handler
   const handleTermsComplete = () => {

@@ -4562,6 +4562,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
       
+      // Geschäftseinstellungen für Reparaturbedingungen abrufen
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
       // Nachricht für Kiosk-Geräte vorbereiten
       const message = {
         type: 'signature-request',
@@ -4577,6 +4580,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           orderCode: repair.orderCode,
           estimatedCost: repair.estimatedCost,
           status: repair.status,
+          repairTerms: businessSettings?.repairTerms || null,
+          shopName: businessSettings?.businessName || 'Reparaturservice',
           timestamp: Date.now(),
           attempt: 1
         }
