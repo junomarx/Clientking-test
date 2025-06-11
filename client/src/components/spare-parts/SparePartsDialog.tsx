@@ -100,6 +100,7 @@ export default function SparePartsDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/repairs/waiting-for-parts"] });
       toast({
         title: "Ersatzteil erstellt",
         description: "Das Ersatzteil wurde erfolgreich hinzugefügt.",
@@ -129,6 +130,7 @@ export default function SparePartsDialog({
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/repairs/waiting-for-parts"] });
       toast({
         title: "Ersatzteil aktualisiert",
         description: "Das Ersatzteil wurde erfolgreich aktualisiert.",

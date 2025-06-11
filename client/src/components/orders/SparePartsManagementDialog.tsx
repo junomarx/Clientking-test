@@ -110,10 +110,11 @@ export function SparePartsManagementDialog({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs", repairId, "spare-parts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/spare-parts`] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/repairs/waiting-for-parts"] });
       toast({
         title: "Ersatzteil gelöscht",
         description: "Das Ersatzteil wurde erfolgreich entfernt.",
