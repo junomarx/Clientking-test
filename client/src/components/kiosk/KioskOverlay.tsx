@@ -8,12 +8,19 @@ import { useKioskMode } from "@/hooks/use-kiosk-mode";
 import { KioskCustomerForm } from "@/components/kiosk/KioskCustomerForm";
 import { KioskSignature } from "@/components/kiosk/KioskSignature";
 import { Tablet, Shield, User } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export function KioskOverlay() {
   const { isKioskMode, deactivateKioskMode, signatureRequest, clearSignatureRequest } = useKioskMode();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pin, setPin] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'customer-form' | 'signature'>('home');
+  
+  // Geschäftseinstellungen für Logo abrufen
+  const { data: businessSettings } = useQuery({
+    queryKey: ['/api/business-settings'],
+    enabled: isKioskMode, // Nur laden wenn Kiosk-Modus aktiv ist
+  });
 
   if (!isKioskMode) return null;
 
@@ -71,12 +78,20 @@ export function KioskOverlay() {
         );
       default:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
+          <div className="min-h-screen bg-white flex items-center justify-center p-8">
             <div className="max-w-2xl w-full space-y-8">
               {/* Header */}
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  <Tablet className="h-16 w-16 text-blue-600" />
+                  {businessSettings?.logoUrl ? (
+                    <img 
+                      src={businessSettings.logoUrl} 
+                      alt={businessSettings.businessName || "Firmenlogo"}
+                      className="h-16 w-auto max-w-xs object-contain"
+                    />
+                  ) : (
+                    <Tablet className="h-16 w-16 text-blue-600" />
+                  )}
                 </div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
                   Kundendatenerfassung

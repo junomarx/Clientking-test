@@ -83,23 +83,23 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4 flex items-center justify-between shrink-0">
+      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <User className="h-6 w-6" />
-          <h1 className="text-xl font-semibold">Kundendaten erfassen</h1>
+          <User className="h-6 w-6 text-blue-600" />
+          <h1 className="text-xl font-semibold text-gray-900">Kundendaten erfassen</h1>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="text-white hover:bg-blue-500"
+          className="text-gray-600 hover:bg-gray-100"
         >
           <X className="h-5 w-5" />
         </Button>
       </div>
 
       {/* Scrollable Form Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4 pb-20 bg-white">
         <div className="max-w-xl mx-auto">
           <Card className="w-full">
             <CardHeader className="pb-4">

@@ -82,23 +82,23 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   return (
     <div className="fixed inset-0 bg-white z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-blue-600 text-white p-6 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <PenTool className="h-8 w-8" />
-          <h1 className="text-2xl font-semibold">Unterschrift erforderlich</h1>
+          <PenTool className="h-8 w-8 text-blue-600" />
+          <h1 className="text-2xl font-semibold text-gray-900">Unterschrift erforderlich</h1>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleCancel}
-          className="text-white hover:bg-blue-500"
+          className="text-gray-600 hover:bg-gray-100"
         >
           <X className="h-6 w-6" />
         </Button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
+      <div className="flex-1 flex items-center justify-center p-6 bg-white">
         <Card className="w-full max-w-4xl">
           <CardHeader>
             <CardTitle className="text-xl text-center">
