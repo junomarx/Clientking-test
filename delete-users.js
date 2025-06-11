@@ -158,6 +158,13 @@ async function deleteUser(userId) {
       );
       console.log(`✅ Gerätetypen gelöscht: ${userDeviceTypesResult.length}`);
       
+      // 5.4 Temporäre Unterschriften löschen
+      const tempSignaturesResult = await executeQuery(
+        `DELETE FROM temp_signatures WHERE user_id = $1 RETURNING id`,
+        [userId]
+      );
+      console.log(`✅ Temporäre Unterschriften gelöscht: ${tempSignaturesResult.length}`);
+      
       // 6. Benutzer selbst löschen
       const userDeleteResult = await executeQuery(
         `DELETE FROM users WHERE id = $1 RETURNING id, username`,
