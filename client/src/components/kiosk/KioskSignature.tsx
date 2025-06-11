@@ -120,8 +120,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
       <div className="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-4xl h-full max-h-[90vh] flex flex-col">
           <CardHeader className="text-center pb-6">
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-              <Shield className="h-6 w-6 text-blue-600" />
+            <CardTitle className="text-center text-2xl">
               Reparaturauftrag und Geschäftsbedingungen
             </CardTitle>
             <p className="text-center text-gray-600 text-sm">
@@ -132,8 +131,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
           <CardContent className="flex-1 flex flex-col space-y-6 overflow-y-auto">
             {/* Kundendaten */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <User className="h-5 w-5" />
+              <h3 className="font-semibold text-lg">
                 Kundendaten
               </h3>
               <div className="p-4 bg-gray-50 rounded-lg space-y-2">
@@ -142,17 +140,17 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 </div>
                 {signatureRequest.customerPhone && (
                   <div className="text-sm text-gray-600">
-                    📞 {signatureRequest.customerPhone}
+                    {signatureRequest.customerPhone}
                   </div>
                 )}
                 {signatureRequest.customerEmail && (
                   <div className="text-sm text-gray-600">
-                    ✉️ {signatureRequest.customerEmail}
+                    {signatureRequest.customerEmail}
                   </div>
                 )}
                 {signatureRequest.customerAddress && (
                   <div className="text-sm text-gray-600">
-                    📍 {signatureRequest.customerAddress}
+                    {signatureRequest.customerAddress}
                   </div>
                 )}
               </div>
@@ -160,8 +158,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
 
             {/* Reparaturdaten */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
+              <h3 className="font-semibold text-lg">
                 Reparaturdetails
               </h3>
               <div className="p-4 bg-blue-50 rounded-lg space-y-3">
@@ -170,22 +167,22 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 </div>
                 {signatureRequest.deviceInfo && (
                   <div className="text-sm text-blue-700">
-                    📱 {signatureRequest.deviceInfo}
+                    {signatureRequest.deviceInfo}
                   </div>
                 )}
                 {signatureRequest.orderCode && (
                   <div className="text-sm text-blue-700">
-                    🏷️ Auftragsnummer: {signatureRequest.orderCode}
+                    Auftragsnummer: {signatureRequest.orderCode}
                   </div>
                 )}
                 {signatureRequest.estimatedCost && (
                   <div className="text-sm text-blue-700">
-                    💰 Geschätzte Kosten: {signatureRequest.estimatedCost}€
+                    Geschätzte Kosten: {signatureRequest.estimatedCost}€
                   </div>
                 )}
                 {signatureRequest.status && (
                   <div className="text-sm text-blue-700">
-                    📊 Status: {signatureRequest.status}
+                    Status: {signatureRequest.status}
                   </div>
                 )}
               </div>
@@ -218,7 +215,6 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 onClick={handleCancel}
                 className="flex-1"
               >
-                <X className="h-4 w-4 mr-2" />
                 Abbrechen
               </Button>
               
@@ -227,7 +223,6 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 disabled={!termsAccepted}
                 className="flex-1"
               >
-                <ArrowRight className="h-4 w-4 mr-2" />
                 Weiter zur Gerätecode-Eingabe
               </Button>
             </div>
