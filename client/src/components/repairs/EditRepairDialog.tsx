@@ -40,7 +40,7 @@ const repairEditSchema = z.object({
   issue: z.string().min(5, { message: 'Bitte Fehlerbeschreibung eingeben' }),
   estimatedCost: z.string().nullable().optional(),
   depositAmount: z.string().nullable().optional(),
-  status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
+  status: z.enum(['eingegangen', 'in_reparatur', 'ersatzteile_bestellen', 'warten_auf_ersatzteile', 'ersatzteil_eingetroffen', 'ausser_haus', 'fertig', 'abgeholt'], {
     required_error: 'Bitte Status auswählen',
   }),
   notes: z.string().nullable().optional(),

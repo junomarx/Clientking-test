@@ -46,7 +46,7 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
 export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 
 // Repair statuses enum
-export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "warten_auf_ersatzteile", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
+export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteile_bestellen", "warten_auf_ersatzteile", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
 
 // Error catalog table (Fehlerkatalog) - Neue Implementierung
 export const errorCatalogEntries = pgTable("error_catalog_entries", {
