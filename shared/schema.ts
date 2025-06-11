@@ -46,7 +46,7 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({
 export const deviceTypes = z.enum(["smartphone", "tablet", "laptop"]);
 
 // Repair statuses enum
-export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
+export const repairStatuses = z.enum(["eingegangen", "in_reparatur", "warten_auf_ersatzteile", "ersatzteil_eingetroffen", "fertig", "abgeholt", "ausser_haus"]);
 
 // Error catalog table (Fehlerkatalog) - Neue Implementierung
 export const errorCatalogEntries = pgTable("error_catalog_entries", {
@@ -478,9 +478,10 @@ export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
   }),
 }));
 
-// Beziehungen für repairs zu emailHistory
+// Beziehungen für repairs zu emailHistory und spareParts
 export const repairsRelations = relations(repairs, ({ many }) => ({
   emailHistory: many(emailHistory),
+  spareParts: many(spareParts),
 }));
 
 // Beziehungen zwischen Benutzer und Paket definieren
@@ -724,3 +725,45 @@ export const insertTempSignatureSchema = createInsertSchema(tempSignatures).omit
 
 export type TempSignature = typeof tempSignatures.$inferSelect;
 export type InsertTempSignature = z.infer<typeof insertTempSignatureSchema>;
+
+// Ersatzteile für Reparaturen
+export const sparePartStatuses = z.enum(["bestellen", "bestellt", "eingetroffen"]);
+
+export const spareParts = pgTable("spare_parts", {
+  id: serial("id").primaryKey(),
+  repairId: integer("repair_id").notNull().references(() => repairs.id, { onDelete: 'cascade' }),
+  partName: text("part_name").notNull(),
+  supplier: text("supplier"),
+  cost: doublePrecision("cost"),
+  status: text("status").notNull().default("bestellen"), // bestellen, bestellt, eingetroffen
+  orderDate: timestamp("order_date"),
+  deliveryDate: timestamp("delivery_date"),
+  notes: text("notes"),
+  userId: integer("user_id").notNull().references(() => users.id),
+  shopId: integer("shop_id").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSparePartSchema = createInsertSchema(spareParts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  status: sparePartStatuses.optional(),
+});
+
+export type SparePart = typeof spareParts.$inferSelect;
+export type InsertSparePart = z.infer<typeof insertSparePartSchema>;
+
+// Beziehungen für Ersatzteile
+export const sparePartsRelations = relations(spareParts, ({ one }) => ({
+  repair: one(repairs, {
+    fields: [spareParts.repairId],
+    references: [repairs.id],
+  }),
+  user: one(users, {
+    fields: [spareParts.userId],
+    references: [users.id],
+  }),
+}));
