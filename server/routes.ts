@@ -4881,8 +4881,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       console.log(`Erstellen eines neuen Ersatzteils für Benutzer ${userId}`);
       
-      // Validierung mit Zod Schema
-      const validatedData = insertSparePartSchema.parse(req.body);
+      // Validierung mit Zod Schema (ohne userId und shopId, die server-seitig hinzugefügt werden)
+      const validatedData = insertSparePartSchema.omit({ 
+        userId: true, 
+        shopId: true 
+      }).parse(req.body);
       
       // Prüfe, ob die Reparatur dem Benutzer gehört
       const repair = await storage.getRepair(validatedData.repairId, userId);
