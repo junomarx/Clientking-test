@@ -357,6 +357,17 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Pattern Drawer Modal - nur in Schritt 2 */}
+        {showPatternDrawer && (
+          <PatternDrawer
+            onPatternComplete={(pattern) => {
+              setDeviceCode(pattern);
+              setShowPatternDrawer(false);
+            }}
+            onClose={() => setShowPatternDrawer(false)}
+          />
+        )}
       </div>
     );
   }
@@ -432,16 +443,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
         </CardContent>
       </Card>
 
-      {/* Pattern Drawer Modal */}
-      {showPatternDrawer && (
-        <PatternDrawer
-          onPatternComplete={(pattern) => {
-            setDeviceCode(pattern);
-            setShowPatternDrawer(false);
-          }}
-          onClose={() => setShowPatternDrawer(false)}
-        />
-      )}
+
     </div>
   );
 }
