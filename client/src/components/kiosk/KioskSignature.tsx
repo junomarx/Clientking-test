@@ -10,6 +10,7 @@ import { useKioskMode } from '@/hooks/use-kiosk-mode';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { PatternDrawer } from './PatternDrawer';
 
 interface KioskSignatureProps {
   onCancel: () => void;
@@ -27,6 +28,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [deviceCode, setDeviceCode] = useState<string>("");
   const [deviceCodeType, setDeviceCodeType] = useState<"pin" | "pattern" | null>(null);
+  const [showPatternDrawer, setShowPatternDrawer] = useState(false);
 
   // Geschäftseinstellungen für Reparaturbedingungen laden
   const { data: businessSettings } = useQuery({
@@ -258,18 +260,16 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                   <Button
                     variant={deviceCodeType === "pin" ? "default" : "outline"}
                     onClick={() => setDeviceCodeType("pin")}
-                    className="h-16 flex flex-col gap-1"
+                    className="h-12 text-base"
                   >
-                    <div className="text-2xl">🔢</div>
-                    <div className="text-sm">PIN-Code</div>
+                    PIN-Code
                   </Button>
                   <Button
                     variant={deviceCodeType === "pattern" ? "default" : "outline"}
                     onClick={() => setDeviceCodeType("pattern")}
-                    className="h-16 flex flex-col gap-1"
+                    className="h-12 text-base"
                   >
-                    <div className="text-2xl">📱</div>
-                    <div className="text-sm">Entsperrmuster</div>
+                    Entsperrmuster
                   </Button>
                 </div>
               </div>
@@ -294,27 +294,39 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
 
               {deviceCodeType === "pattern" && (
                 <div>
-                  <Label htmlFor="deviceCode" className="text-base font-medium">Entsperrmuster beschreiben</Label>
-                  <div className="mt-3 space-y-3">
-                    <div className="grid grid-cols-3 gap-2 w-32 mx-auto">
-                      {Array.from({length: 9}, (_, i) => (
-                        <div key={i} className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
-                          {i + 1}
+                  <Label htmlFor="deviceCode" className="text-base font-medium">Entsperrmuster</Label>
+                  <div className="mt-3 space-y-4">
+                    {deviceCode ? (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="text-green-800 font-medium">Muster erfasst: {deviceCode}</span>
                         </div>
-                      ))}
-                    </div>
-                    <Input
-                      id="deviceCode"
-                      type="text"
-                      value={deviceCode}
-                      onChange={(e) => setDeviceCode(e.target.value)}
-                      placeholder="z.B. L-Form: 1-2-3-6-9 oder Z-Form: 1-3-5-7-9"
-                      className="mt-2 h-12"
-                    />
-                    <div className="text-sm text-gray-500 space-y-1">
-                      <p>• Beschreiben Sie das Muster mit Zahlen (1-9)</p>
-                      <p>• Beispiele: "1-2-3-6-9" für L-Form, "1-5-9" für Diagonale</p>
-                      <p>• Oder beschreiben Sie die Form: "L-Form von oben links"</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDeviceCode("");
+                            setShowPatternDrawer(true);
+                          }}
+                          className="mt-2"
+                        >
+                          Muster ändern
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPatternDrawer(true)}
+                        className="w-full h-16 flex flex-col gap-2"
+                      >
+                        <Smartphone className="h-6 w-6" />
+                        <span>Muster zeichnen</span>
+                      </Button>
+                    )}
+                    
+                    <div className="text-sm text-gray-500">
+                      <p>Zeichnen Sie das Android-Entsperrmuster durch Verbinden der Punkte</p>
                     </div>
                   </div>
                 </div>
@@ -424,6 +436,17 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pattern Drawer Modal */}
+      {showPatternDrawer && (
+        <PatternDrawer
+          onPatternComplete={(pattern) => {
+            setDeviceCode(pattern);
+            setShowPatternDrawer(false);
+          }}
+          onClose={() => setShowPatternDrawer(false)}
+        />
+      )}
     </div>
   );
 }
