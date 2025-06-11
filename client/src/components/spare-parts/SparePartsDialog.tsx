@@ -36,6 +36,9 @@ import { z } from "zod";
 
 const formSchema = insertSparePartSchema.extend({
   cost: z.string().min(1, "Kosten sind erforderlich"),
+}).omit({ 
+  userId: true, 
+  shopId: true 
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -77,7 +80,7 @@ export default function SparePartsDialog({
         repairId: sparePart.repairId,
         partName: sparePart.partName,
         supplier: sparePart.supplier || "",
-        cost: sparePart.cost,
+        cost: sparePart.cost?.toString() || "", // Convert number to string for form
         status: sparePart.status,
         orderDate: sparePart.orderDate ? new Date(sparePart.orderDate).toISOString().split('T')[0] : undefined,
         deliveryDate: sparePart.deliveryDate ? new Date(sparePart.deliveryDate).toISOString().split('T')[0] : undefined,
@@ -99,6 +102,7 @@ export default function SparePartsDialog({
     mutationFn: async (data: FormData) => {
       const submitData: InsertSparePart = {
         ...data,
+        cost: parseFloat(data.cost.replace(',', '.')), // Convert string to number
         orderDate: data.orderDate ? new Date(data.orderDate) : undefined,
         deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
       };
@@ -136,6 +140,7 @@ export default function SparePartsDialog({
       
       const submitData = {
         ...data,
+        cost: parseFloat(data.cost.replace(',', '.')), // Convert string to number
         orderDate: data.orderDate ? new Date(data.orderDate) : undefined,
         deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
       };
