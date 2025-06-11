@@ -4328,14 +4328,19 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Prüfe Status aller Ersatzteile
-      const hasOpenParts = parts.some(part => part.status === 'bestellen' || part.status === 'bestellt');
+      const hasPartsToOrder = parts.some(part => part.status === 'bestellen');
+      const hasOrderedParts = parts.some(part => part.status === 'bestellt');
       const allPartsDelivered = parts.every(part => part.status === 'eingetroffen');
       
-      if (hasOpenParts && repair.status !== 'warten_auf_ersatzteile') {
-        // Es gibt offene Ersatzteile, aber Status ist nicht "warten_auf_ersatzteile"
+      if (hasPartsToOrder && repair.status !== 'ersatzteile_bestellen') {
+        // Es gibt Ersatzteile, die bestellt werden müssen
+        await this.updateRepairStatus(repairId, 'ersatzteile_bestellen', userId);
+        console.log(`Reparatur ${repairId}: Status auf 'ersatzteile_bestellen' geändert`);
+      } else if (!hasPartsToOrder && hasOrderedParts && repair.status !== 'warten_auf_ersatzteile') {
+        // Alle Teile sind bestellt oder eingetroffen, aber mindestens eines ist noch bestellt
         await this.updateRepairStatus(repairId, 'warten_auf_ersatzteile', userId);
         console.log(`Reparatur ${repairId}: Status auf 'warten_auf_ersatzteile' geändert`);
-      } else if (allPartsDelivered && repair.status === 'warten_auf_ersatzteile') {
+      } else if (allPartsDelivered && (repair.status === 'warten_auf_ersatzteile' || repair.status === 'ersatzteile_bestellen')) {
         // Alle Ersatzteile sind eingetroffen
         await this.updateRepairStatus(repairId, 'ersatzteil_eingetroffen', userId);
         console.log(`Reparatur ${repairId}: Status auf 'ersatzteil_eingetroffen' geändert (alle Ersatzteile eingetroffen)`);
