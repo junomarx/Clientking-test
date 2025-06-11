@@ -99,20 +99,20 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
       </div>
 
       {/* Scrollable Form Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20 bg-white">
-        <div className="max-w-xl mx-auto">
+      <div className="flex-1 overflow-y-auto p-8 pb-20 bg-white">
+        <div className="max-w-4xl mx-auto">
           <Card className="w-full">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <User className="h-5 w-5 text-blue-600" />
-                Persönliche Daten
+            <CardHeader className="pb-6">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <User className="h-6 w-6 text-blue-600" />
+                Kundendaten erfassen
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Persönliche Daten */}
-              <div className="space-y-3">
+            <CardContent className="space-y-6">
+              {/* Erste Zeile: Vorname und Nachname */}
+              <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="firstName" className="text-base font-medium">
+                  <Label htmlFor="firstName" className="text-lg font-medium">
                     Vorname <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -120,12 +120,12 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     placeholder="Ihr Vorname"
-                    className="text-base h-10 mt-1"
+                    className="text-lg h-12 mt-2"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName" className="text-base font-medium">
+                  <Label htmlFor="lastName" className="text-lg font-medium">
                     Nachname <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -133,94 +133,82 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                     placeholder="Ihr Nachname"
-                    className="text-base h-10 mt-1"
+                    className="text-lg h-12 mt-2"
                     required
                   />
                 </div>
               </div>
 
-              {/* Kontaktdaten */}
-              <div className="mt-6">
-                <h3 className="flex items-center gap-2 text-base font-medium mb-3">
-                  <Phone className="h-4 w-4 text-blue-600" />
-                  Kontaktdaten
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="phone" className="text-base font-medium">
-                      Telefon <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Ihre Telefonnummer"
-                      className="text-base h-10 mt-1"
-                      type="tel"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email" className="text-base font-medium">
-                      E-Mail
-                    </Label>
-                    <Input
-                      id="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="Ihre E-Mail-Adresse"
-                      className="text-base h-10 mt-1"
-                      type="email"
-                    />
-                  </div>
+              {/* Zweite Zeile: Telefon und E-Mail */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="phone" className="text-lg font-medium">
+                    Telefon <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="Ihre Telefonnummer"
+                    className="text-lg h-12 mt-2"
+                    type="tel"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email" className="text-lg font-medium">
+                    E-Mail
+                  </Label>
+                  <Input
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="Ihre E-Mail-Adresse"
+                    className="text-lg h-12 mt-2"
+                    type="email"
+                  />
                 </div>
               </div>
 
-              {/* Adresse */}
-              <div className="mt-6">
-                <h3 className="flex items-center gap-2 text-base font-medium mb-3">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  Adresse
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="address" className="text-base font-medium">
-                      Straße und Hausnummer
-                    </Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="Ihre Adresse"
-                      className="text-base h-10 mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="zipCode" className="text-base font-medium">
-                        PLZ
-                      </Label>
-                      <Input
-                        id="zipCode"
-                        value={formData.zipCode}
-                        onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                        placeholder="Postleitzahl"
-                        className="text-base h-10 mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="city" className="text-base font-medium">
-                        Ort
-                      </Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        placeholder="Ihr Wohnort"
-                        className="text-base h-10 mt-1"
-                      />
-                    </div>
-                  </div>
+              {/* Dritte Zeile: Straße und Hausnummer (volle Breite) */}
+              <div>
+                <Label htmlFor="address" className="text-lg font-medium">
+                  Straße und Hausnummer
+                </Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Ihre Adresse"
+                  className="text-lg h-12 mt-2"
+                />
+              </div>
+
+              {/* Vierte Zeile: PLZ und Ort */}
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="zipCode" className="text-lg font-medium">
+                    PLZ
+                  </Label>
+                  <Input
+                    id="zipCode"
+                    value={formData.zipCode}
+                    onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                    placeholder="Postleitzahl"
+                    className="text-lg h-12 mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="city" className="text-lg font-medium">
+                    Ort
+                  </Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    placeholder="Ihr Wohnort"
+                    className="text-lg h-12 mt-2"
+                  />
                 </div>
               </div>
             </CardContent>
@@ -229,8 +217,8 @@ export function KioskCustomerForm({ onCancel, onSuccess }: KioskCustomerFormProp
       </div>
 
       {/* Fixed Action Bar */}
-      <div className="bg-white border-t p-4 shrink-0">
-        <div className="max-w-xl mx-auto flex justify-end gap-3">
+      <div className="bg-white border-t p-6 shrink-0">
+        <div className="max-w-4xl mx-auto flex justify-end gap-4">
           <Button
             type="button"
             variant="outline"
