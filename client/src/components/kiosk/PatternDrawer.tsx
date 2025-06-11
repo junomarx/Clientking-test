@@ -49,12 +49,10 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
       for (let col = 0; col < GRID_SIZE; col++) {
         const x = (col + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
         const y = (row + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
-        const index = row * GRID_SIZE + col + 1; // This gives us 1-9
-        console.log(`Creating point: row=${row}, col=${col}, index=${index}`);
+        const index = row * GRID_SIZE + col; // This gives us 0-8 (internal storage)
         newPoints.push({ x, y, index });
       }
     }
-    console.log('All points created:', newPoints.map(p => p.index));
     setPoints(newPoints);
     drawCanvas(ctx, newPoints, []);
   };
@@ -74,12 +72,12 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Draw point number
+      // Draw point number (display as 1-9 but store as 0-8)
       ctx.fillStyle = isSelected ? 'white' : '#374151';
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(point.index.toString(), point.x, point.y);
+      ctx.fillText((point.index + 1).toString(), point.x, point.y);
     });
 
     // Draw connections
@@ -158,9 +156,7 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
 
   const handleEnd = () => {
     if (currentPattern.length >= 2) {
-      console.log('Pattern indices:', currentPattern);
       const patternString = currentPattern.join('-');
-      console.log('Pattern string:', patternString);
       onPatternComplete(patternString);
     }
     setIsDrawing(false);
