@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Package, User, Phone, Mail, Calendar, Euro, FileText } from "lucide-react";
+import { Clock, Package, User, Phone, Mail, Calendar, Euro, FileText, Settings, ShoppingCart } from "lucide-react";
 import { RepairDetailsDialog } from "@/components/repairs/RepairDetailsDialog";
+import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { useState } from "react";
 import { formatDate } from "@/lib/utils";
 
@@ -42,68 +43,73 @@ interface RepairWithCustomer {
 
 export function OrdersTab() {
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
-  const [isRepairDialogOpen, setIsRepairDialogOpen] = useState(false);
+  const [isSparePartsDialogOpen, setIsSparePartsDialogOpen] = useState(false);
 
   const { data: repairsWaitingForParts = [], isLoading, error } = useQuery<RepairWithCustomer[]>({
     queryKey: ['/api/repairs/waiting-for-parts'],
     refetchInterval: 30000,
   });
 
-  console.log('OrdersTab render:', { 
-    isLoading, 
-    error, 
-    repairsCount: repairsWaitingForParts.length, 
-    repairs: repairsWaitingForParts 
-  });
-
-  const handleRepairClick = (repairId: number) => {
+  const handleManageParts = (repairId: number) => {
     setSelectedRepairId(repairId);
-    setIsRepairDialogOpen(true);
+    setIsSparePartsDialogOpen(true);
   };
 
-  const handleRepairDialogClose = () => {
-    setIsRepairDialogOpen(false);
+  const handleSparePartsDialogClose = () => {
+    setIsSparePartsDialogOpen(false);
     setSelectedRepairId(null);
   };
 
-  // Debug component - simplified version to test rendering
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Package className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
+        </div>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Package className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
+        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <p className="text-red-600">Fehler beim Laden der Bestellungen</p>
+            <p className="text-sm text-gray-600 mt-2">{error?.message}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center gap-2 mb-6">
         <Package className="h-6 w-6 text-blue-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Bestellungen (Debug)</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
         <Badge variant="secondary" className="ml-2">
           {repairsWaitingForParts.length}
         </Badge>
       </div>
 
-      <div className="mb-4 p-4 bg-gray-100 rounded">
-        <h3 className="font-bold mb-2">Debug Info:</h3>
-        <p>Loading: {isLoading.toString()}</p>
-        <p>Error: {error ? error.message : 'none'}</p>
-        <p>Repairs Count: {repairsWaitingForParts.length}</p>
-        <pre className="text-xs mt-2 overflow-auto max-h-40">
-          {JSON.stringify(repairsWaitingForParts, null, 2)}
-        </pre>
-      </div>
-
-      {isLoading && (
-        <Card>
-          <CardContent className="p-6">
-            <p>Laden...</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <p className="text-red-600">Fehler: {error.message}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {!isLoading && !error && repairsWaitingForParts.length === 0 && (
+      {repairsWaitingForParts.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -115,12 +121,10 @@ export function OrdersTab() {
             </p>
           </CardContent>
         </Card>
-      )}
-
-      {!isLoading && !error && repairsWaitingForParts.length > 0 && (
+      ) : (
         <div className="space-y-4">
           {repairsWaitingForParts.map((repair) => (
-            <Card key={repair.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card key={repair.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg font-semibold">
@@ -134,6 +138,7 @@ export function OrdersTab() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Geräte-Informationen */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <FileText className="h-4 w-4 text-gray-500" />
@@ -144,7 +149,17 @@ export function OrdersTab() {
                     <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
                       {repair.issue}
                     </p>
+                    {repair.estimatedCost && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Euro className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-600">
+                          {repair.estimatedCost.toFixed(2)} €
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Kunden-Informationen */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <User className="h-4 w-4 text-gray-500" />
@@ -152,21 +167,42 @@ export function OrdersTab() {
                         {repair.customer.firstName} {repair.customer.lastName}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Phone className="h-4 w-4" />
-                      <span>{repair.customer.phone}</span>
+                    {repair.customer.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="h-4 w-4" />
+                        <span>{repair.customer.phone}</span>
+                      </div>
+                    )}
+                    {repair.customer.email && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="h-4 w-4" />
+                        <span>{repair.customer.email}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar className="h-4 w-4" />
+                      <span>Erstellt: {new Date(repair.createdAt).toLocaleDateString('de-DE')}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end mt-4">
+
+                {repair.notes && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-gray-600 italic">
+                      "{repair.notes}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 mt-4">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => handleRepairClick(repair.id)}
+                    onClick={() => handleManageParts(repair.id)}
                     className="flex items-center gap-2"
                   >
-                    <FileText className="h-4 w-4" />
-                    Details anzeigen
+                    <ShoppingCart className="h-4 w-4" />
+                    Ersatzteile verwalten
                   </Button>
                 </div>
               </CardContent>
@@ -175,12 +211,14 @@ export function OrdersTab() {
         </div>
       )}
 
-      <RepairDetailsDialog
-        open={isRepairDialogOpen}
-        onClose={handleRepairDialogClose}
-        repairId={selectedRepairId}
-        mode="dashboard"
-      />
+      {/* Spare Parts Management Dialog */}
+      {selectedRepairId && (
+        <SparePartsManagementDialog
+          open={isSparePartsDialogOpen}
+          onClose={handleSparePartsDialogClose}
+          repairId={selectedRepairId}
+        />
+      )}
     </div>
   );
 }
