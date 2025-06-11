@@ -1948,7 +1948,10 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             eq(repairs.shopId, shopId),
-            eq(repairs.status, 'warten_auf_ersatzteile')
+            or(
+              eq(repairs.status, 'ersatzteile_bestellen'),
+              eq(repairs.status, 'warten_auf_ersatzteile')
+            )
           )
         )
         .orderBy(desc(repairs.createdAt));
