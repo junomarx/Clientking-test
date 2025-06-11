@@ -124,9 +124,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // KIOSK-ROUTE: Registriere Kiosk-Unterschrift-Route ZUERST, um Middleware zu umgehen
   app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
     try {
-      const { repairId, signature, deviceCode, timestamp } = req.body;
+      const { repairId, signature, deviceCode, deviceCodeType, timestamp } = req.body;
       
-      console.log('Kiosk-Unterschrift empfangen:', { repairId, timestamp });
+      console.log('Kiosk-Unterschrift empfangen:', { repairId, deviceCodeType: deviceCodeType, hasDeviceCode: !!deviceCode, timestamp });
       
       if (!repairId || !signature) {
         return res.status(400).json({ message: "Reparatur-ID und Unterschrift sind erforderlich" });
@@ -155,19 +155,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Reparatur ${repairId} gefunden (Status: ${status}), speichere ${signatureType}-Unterschrift...`);
 
-      if (deviceCode) {
-        // Mit Gerätecode
+      if (deviceCode && deviceCodeType) {
+        // Mit Gerätecode - Verschlüsselung für Sicherheit
+        const encryptedCode = Buffer.from(deviceCode).toString('base64');
+        
         if (signatureType === 'dropoff') {
           await pool.query(
             'UPDATE repairs SET dropoff_signature = $1, dropoff_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
-            [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
+            [signature, encryptedCode, deviceCodeType, repairId]
           );
         } else {
           await pool.query(
             'UPDATE repairs SET pickup_signature = $1, pickup_signed_at = NOW(), device_code = $2, device_code_type = $3 WHERE id = $4',
-            [signature, Buffer.from(deviceCode).toString('base64'), 'pattern', repairId]
+            [signature, encryptedCode, deviceCodeType, repairId]
           );
         }
+        console.log(`Gerätecode gespeichert (Typ: ${deviceCodeType}) für Reparatur ${repairId}`);
       } else {
         // Nur Unterschrift
         if (signatureType === 'dropoff') {
