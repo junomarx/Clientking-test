@@ -118,7 +118,7 @@ export default function SparePartsDialog({
 
   const updateMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("PUT", `/api/spare-parts/${sparePart?.id}`, data);
+      const response = await apiRequest("PATCH", `/api/spare-parts/${sparePart?.id}`, data);
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error);
