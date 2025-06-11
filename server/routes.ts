@@ -4726,12 +4726,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
       }
       
-      console.log('Kiosk Business Settings Response:', {
+      console.log('Kiosk Business Settings geladen:', {
         businessName: businessSettings.businessName,
-        logoImageType: typeof businessSettings.logoImage,
-        logoImageLength: businessSettings.logoImage ? businessSettings.logoImage.length : 0,
-        logoImageExists: !!businessSettings.logoImage,
-        logoImageFirst100: businessSettings.logoImage ? businessSettings.logoImage.substring(0, 100) : 'null'
+        hasLogo: !!businessSettings.logoImage
       });
       
       // Nur die für das Frontend notwendigen Felder zurückgeben
