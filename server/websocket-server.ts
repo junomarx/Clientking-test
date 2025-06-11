@@ -69,6 +69,11 @@ class OnlineStatusManager {
         await this.registerKiosk(ws, message.userId);
         break;
       
+      case 'unregister-kiosk':
+        console.log('Processing kiosk unregistration for user:', message.userId);
+        await this.unregisterKiosk(message.userId);
+        break;
+      
       default:
         console.log('Unknown message type:', message.type, message);
     }
@@ -246,6 +251,15 @@ class OnlineStatusManager {
         message: 'Kiosk registration successful',
         timestamp: Date.now()
       }));
+    }
+  }
+
+  // Kiosk-Deregistrierung
+  private async unregisterKiosk(userId: number) {
+    const user = this.connectedUsers.get(userId);
+    if (user) {
+      user.isKiosk = false;
+      console.log(`📱 Kiosk deregistriert: ${user.username} (${userId})`);
     }
   }
 

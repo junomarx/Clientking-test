@@ -4541,6 +4541,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unterschrifts-Anfrage an Kiosk-Geräte senden
+  app.post("/api/repairs/:id/request-signature", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentifizierung fehlgeschlagen" });
+      }
+      
+      // Reparatur und Kundendaten abrufen
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+      
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+      
+      // Nachricht für Kiosk-Geräte vorbereiten
+      const message = {
+        type: 'signature-request',
+        payload: {
+          repairId: repair.id,
+          tempId: `temp-${Date.now()}-${repair.id}`,
+          customerName: `${customer.firstName} ${customer.lastName}`,
+          customerPhone: customer.phone,
+          customerEmail: customer.email,
+          customerAddress: customer.address,
+          repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
+          deviceInfo: `${repair.brand} ${repair.model} (${repair.deviceType})`,
+          orderCode: repair.orderCode,
+          estimatedCost: repair.estimatedCost,
+          status: repair.status,
+          timestamp: Date.now(),
+          attempt: 1
+        }
+      };
+      
+      // An alle Clients senden
+      const onlineStatusManager = getOnlineStatusManager();
+      if (onlineStatusManager) {
+        console.log('Sende Unterschrifts-Anfrage an alle Clients:', {
+          repairId: repair.id,
+          customerName: message.payload.customerName,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Primärer Broadcast an alle Clients
+        onlineStatusManager.broadcast(message);
+        
+        // Gezielter Broadcast an Kiosk-Geräte mit Retry
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          onlineStatusManager.broadcastToKiosks({
+            ...message,
+            payload: { ...message.payload, attempt }
+          });
+          
+          if (attempt < 3) {
+            // Kurze Pause zwischen Versuchen
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        console.log('Unterschrifts-Anfrage erfolgreich an Kiosk-Geräte gesendet');
+        
+        res.json({
+          success: true,
+          message: "Unterschrifts-Anfrage wurde an Kiosk-Geräte gesendet",
+          repairId: repair.id,
+          customerName: message.payload.customerName
+        });
+      } else {
+        res.status(500).json({ 
+          message: "WebSocket-Server nicht verfügbar" 
+        });
+      }
+      
+    } catch (error) {
+      console.error("Fehler beim Senden der Unterschrifts-Anfrage:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Senden der Unterschrifts-Anfrage",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Online-Status API-Endpunkte - Hybrid-Ansatz
   app.get("/api/online-status", isAuthenticated, async (req: Request, res: Response) => {
     try {
