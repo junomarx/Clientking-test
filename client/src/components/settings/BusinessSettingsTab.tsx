@@ -175,7 +175,8 @@ export function BusinessSettingsTab() {
         smtpSenderName: settings.smtpSenderName === null ? undefined : settings.smtpSenderName,
         openingHours: settings.openingHours === null ? undefined : settings.openingHours,
         reviewLink: settings.reviewLink === null ? undefined : settings.reviewLink,
-        kioskPin: settings.kioskPin === null ? "1234" : settings.kioskPin
+        kioskPin: settings.kioskPin === null ? "1234" : settings.kioskPin,
+        repairTerms: settings.repairTerms === null ? undefined : settings.repairTerms
       };
       
       form.reset(formattedSettings);

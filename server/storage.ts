@@ -2850,6 +2850,13 @@ export class DatabaseStorage implements IStorage {
             // Review Link
             reviewLink: settings.reviewLink || "",
             
+            // Kiosk-Einstellungen
+            kioskPin: settings.kioskPin || "1234",
+            repairTerms: settings.repairTerms || "",
+            
+            // Öffnungszeiten
+            openingHours: settings.openingHours || "",
+            
             // Mandanten-Isolation
             userId: userId,
             shopId: shopId,
