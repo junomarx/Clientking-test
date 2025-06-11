@@ -9,17 +9,24 @@ import { KioskCustomerForm } from "@/components/kiosk/KioskCustomerForm";
 import { KioskSignature } from "@/components/kiosk/KioskSignature";
 import { Tablet, Shield, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 
 export function KioskOverlay() {
   const { isKioskMode, deactivateKioskMode, signatureRequest, clearSignatureRequest } = useKioskMode();
+  const { user } = useAuth();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [pin, setPin] = useState("");
   const [currentView, setCurrentView] = useState<'home' | 'customer-form' | 'signature'>('home');
   
   // Geschäftseinstellungen für Logo abrufen (Kiosk-spezifischer Endpunkt)
   const { data: businessSettings, isLoading, error } = useQuery({
-    queryKey: ['/api/kiosk/business-settings'],
-    enabled: isKioskMode, // Nur laden wenn Kiosk-Modus aktiv ist
+    queryKey: ['/api/kiosk/business-settings', user?.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/kiosk/business-settings?userId=${user?.id}`);
+      if (!response.ok) throw new Error('Failed to fetch business settings');
+      return response.json();
+    },
+    enabled: isKioskMode && !!user?.id, // Nur laden wenn Kiosk-Modus aktiv ist und User-ID verfügbar
   });
 
 

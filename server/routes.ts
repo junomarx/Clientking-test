@@ -4996,30 +4996,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Kiosk-spezifischer Endpunkt für Business-Settings (ohne Authentifizierung)
   app.get("/api/kiosk/business-settings", async (req: Request, res: Response) => {
     try {
-      // Da Kiosk-Modus keine Benutzerauthentifizierung hat, nehmen wir die erste aktive Business-Einstellung
-      // oder die des ersten aktiven Benutzers
-      const allUsers = await storage.getAllUsers();
-      const firstActiveUser = allUsers.find(user => user.isActive);
+      // Prüfe, ob aktuell eingeloggte User "bugi" ist über Query-Parameter oder Session
+      const currentUserId = req.query.userId;
+      let currentUser = null;
       
-      if (!firstActiveUser) {
+      if (currentUserId) {
+        currentUser = await storage.getUser(parseInt(currentUserId as string));
+      }
+      
+      // Fallback: ersten aktiven User für Business-Settings nehmen
+      if (!currentUser) {
+        const allUsers = await storage.getAllUsers();
+        currentUser = allUsers.find(user => user.isActive);
+      }
+      
+      if (!currentUser) {
         return res.status(404).json({ message: "Keine aktiven Benutzer gefunden" });
       }
       
-      const businessSettings = await storage.getBusinessSettings(firstActiveUser.id);
+      const businessSettings = await storage.getBusinessSettings(currentUser.id);
       
       if (!businessSettings) {
         return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
       }
       
       // ClientKing Logo für alle außer "bugi"
-      const useClientKingLogo = firstActiveUser.username !== "bugi";
+      const useClientKingLogo = currentUser.username !== "bugi";
       const logoUrl = useClientKingLogo 
         ? "/assets/clientking-logo.png" 
         : (businessSettings.logoImage || null);
       
       console.log('Kiosk Business Settings geladen:', {
         businessName: businessSettings.businessName,
-        username: firstActiveUser.username,
+        username: currentUser.username,
         useClientKingLogo,
         hasOriginalLogo: !!businessSettings.logoImage
       });
