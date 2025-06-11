@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Package, User, Phone, Mail, Calendar, Euro, FileText, ShoppingCart } from "lucide-react";
-import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
+// import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { useState } from "react";
 
 interface Customer {
@@ -187,13 +187,13 @@ export function OrdersTab() {
         </div>
       )}
 
-      {selectedRepairId && (
+      {/* {selectedRepairId && (
         <SparePartsManagementDialog
           open={isSparePartsDialogOpen}
           onClose={handleSparePartsDialogClose}
           repairId={selectedRepairId}
         />
-      )}
+      )} */}
     </div>
   );
 }
