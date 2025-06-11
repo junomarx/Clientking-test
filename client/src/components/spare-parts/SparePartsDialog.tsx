@@ -34,9 +34,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { SparePart, InsertSparePart } from "@shared/schema";
 import { z } from "zod";
 
-const formSchema = insertSparePartSchema.extend({
-  cost: z.string().min(1, "Kosten sind erforderlich"),
-}).omit({ 
+const formSchema = insertSparePartSchema.omit({ 
   userId: true, 
   shopId: true 
 });
@@ -90,10 +88,7 @@ export default function SparePartsDialog({
       form.reset({
         repairId,
         partName: "",
-        supplier: "",
-        cost: "",
         status: "bestellen",
-        notes: "",
       });
     }
   }, [mode, sparePart, open, repairId, form]);
@@ -102,9 +97,6 @@ export default function SparePartsDialog({
     mutationFn: async (data: FormData) => {
       const submitData: InsertSparePart = {
         ...data,
-        cost: parseFloat(data.cost.replace(',', '.')), // Convert string to number
-        orderDate: data.orderDate ? new Date(data.orderDate) : undefined,
-        deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : undefined,
       };
       
       const response = await apiRequest("POST", "/api/spare-parts", submitData);
@@ -214,33 +206,7 @@ export default function SparePartsDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="supplier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lieferant</FormLabel>
-                    <FormControl>
-                      <Input placeholder="z.B. Lieferant XYZ" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <FormField
-                control={form.control}
-                name="cost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kosten *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="z.B. 49,90" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}

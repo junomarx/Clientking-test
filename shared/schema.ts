@@ -733,12 +733,7 @@ export const spareParts = pgTable("spare_parts", {
   id: serial("id").primaryKey(),
   repairId: integer("repair_id").notNull().references(() => repairs.id, { onDelete: 'cascade' }),
   partName: text("part_name").notNull(),
-  supplier: text("supplier"),
-  cost: doublePrecision("cost"),
   status: text("status").notNull().default("bestellen"), // bestellen, bestellt, eingetroffen
-  orderDate: timestamp("order_date"),
-  deliveryDate: timestamp("delivery_date"),
-  notes: text("notes"),
   userId: integer("user_id").notNull().references(() => users.id),
   shopId: integer("shop_id").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow().notNull(),
