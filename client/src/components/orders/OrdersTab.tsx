@@ -12,13 +12,11 @@ interface Customer {
   firstName: string;
   lastName: string;
   email: string | null;
-  phone: string | null;
+  phone: string;
   address: string | null;
   zipCode: string | null;
   city: string | null;
-  notes: string | null;
   createdAt: Date;
-  updatedAt: Date;
   shopId: number | null;
   userId: number | null;
 }

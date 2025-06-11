@@ -1936,9 +1936,7 @@ export class DatabaseStorage implements IStorage {
             address: customers.address,
             zipCode: customers.zipCode,
             city: customers.city,
-            notes: customers.notes,
             createdAt: customers.createdAt,
-            updatedAt: customers.updatedAt,
             shopId: customers.shopId,
             userId: customers.userId
           }
