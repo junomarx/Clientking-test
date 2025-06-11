@@ -4277,12 +4277,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Temporäre Unterschrift in der Datenbank erstellen
       const tempSignature = await storage.createTempSignature(tempId, enrichedRepairData, userId, shopId);
 
-      // QR-Code URL für Kunde erstellen - dynamisch basierend auf Request
-      const protocol = req.get('x-forwarded-proto') || req.protocol || 'https';
-      const host = req.get('host') || req.get('x-forwarded-host') || 'localhost:5000';
-      const baseUrl = `${protocol}://${host}`;
+      // QR-Code URL für Kunde erstellen - robuste Deployment-Erkennung
+      let protocol = 'https'; // Default für Deployment
+      let host = req.get('host') || req.get('x-forwarded-host');
       
+      // Für lokale Entwicklung
+      if (host?.includes('localhost') || host?.includes('127.0.0.1')) {
+        protocol = req.protocol || 'http';
+      }
+      
+      // Für Replit Deployment
+      if (host?.includes('.replit.dev') || host?.includes('.repl.it')) {
+        protocol = 'https';
+      }
+      
+      // Header-basierte Protokoll-Erkennung
+      if (req.get('x-forwarded-proto')) {
+        protocol = req.get('x-forwarded-proto');
+      }
+      
+      // Fallback Host
+      if (!host) {
+        host = 'localhost:5000';
+        protocol = 'http';
+      }
+      
+      const baseUrl = `${protocol}://${host}`;
       const signatureUrl = `${baseUrl}/signature/${tempId}`;
+      
+      console.log(`QR-Code URL generiert: ${signatureUrl} (Protocol: ${protocol}, Host: ${host})`);
 
       res.json({
         success: true,
