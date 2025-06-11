@@ -4337,8 +4337,8 @@ export class DatabaseStorage implements IStorage {
         console.log(`Reparatur ${repairId}: Status auf 'warten_auf_ersatzteile' geändert`);
       } else if (allPartsDelivered && repair.status === 'warten_auf_ersatzteile') {
         // Alle Ersatzteile sind eingetroffen
-        await this.updateRepairStatus(repairId, 'ersatzteile_eingetroffen', userId);
-        console.log(`Reparatur ${repairId}: Status auf 'ersatzteile_eingetroffen' geändert (alle Ersatzteile eingetroffen)`);
+        await this.updateRepairStatus(repairId, 'ersatzteil_eingetroffen', userId);
+        console.log(`Reparatur ${repairId}: Status auf 'ersatzteil_eingetroffen' geändert (alle Ersatzteile eingetroffen)`);
       }
     } catch (error) {
       console.error('Fehler beim Prüfen/Aktualisieren des Reparatur-Status:', error);
