@@ -32,13 +32,13 @@ interface SparePartsListProps {
   repairId: number;
 }
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   bestellen: "bg-red-100 text-red-800",
   bestellt: "bg-yellow-100 text-yellow-800", 
   eingetroffen: "bg-green-100 text-green-800",
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   bestellen: "Bestellen",
   bestellt: "Bestellt",
   eingetroffen: "Eingetroffen",

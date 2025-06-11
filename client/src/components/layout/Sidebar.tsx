@@ -106,6 +106,17 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           Reparaturen
         </Button>
         <Button 
+          variant={activeTab === 'orders' ? 'default' : 'ghost'}
+          className="w-full justify-start"
+          onClick={() => {
+            onTabChange('orders');
+            if (isMobile) closeMenu();
+          }}
+        >
+          <Package className="h-5 w-5 mr-2" />
+          Bestellungen
+        </Button>
+        <Button 
           variant={activeTab === 'customers' ? 'default' : 'ghost'}
           className="w-full justify-start"
           onClick={() => {

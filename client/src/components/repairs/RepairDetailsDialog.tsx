@@ -17,6 +17,7 @@ import { SignatureDialog } from './SignatureDialog';
 import { CustomSignaturePad } from '@/components/ui/signature-pad';
 import { useAuth } from '@/hooks/use-auth';
 import { DeviceCodeDisplay } from './DeviceCodeDisplay';
+import SparePartsList from '@/components/spare-parts/SparePartsList';
 
 import {
   Dialog,
@@ -379,6 +380,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 </div>
               )}
             </div>
+          </div>
+          
+          {/* Ersatzteile */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
+            <SparePartsList repairId={repair.id} />
           </div>
           
           {/* Unterschriften */}
