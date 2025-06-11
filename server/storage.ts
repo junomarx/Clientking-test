@@ -1954,8 +1954,19 @@ export class DatabaseStorage implements IStorage {
         )
         .orderBy(desc(repairs.createdAt));
 
-      console.log(`Gefunden: ${results.length} Reparaturen mit ausstehenden Ersatzteilen für Shop ${shopId}`);
-      return results;
+      // Ersatzteile für jede Reparatur laden
+      const resultsWithParts = await Promise.all(
+        results.map(async (repair) => {
+          const spareParts = await this.getSparePartsByRepairId(repair.id, userId);
+          return {
+            ...repair,
+            spareParts
+          };
+        })
+      );
+
+      console.log(`Gefunden: ${resultsWithParts.length} Reparaturen mit ausstehenden Ersatzteilen für Shop ${shopId}`);
+      return resultsWithParts;
     } catch (error) {
       console.error("Error getting repairs waiting for parts:", error);
       return [];
