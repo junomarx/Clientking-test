@@ -5011,16 +5011,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
       }
       
+      // ClientKing Logo für alle außer "bugi"
+      const useClientKingLogo = firstActiveUser.username !== "bugi";
+      const logoUrl = useClientKingLogo 
+        ? "/assets/clientking-logo.png" 
+        : (businessSettings.logoImage || null);
+      
       console.log('Kiosk Business Settings geladen:', {
         businessName: businessSettings.businessName,
-        hasLogo: !!businessSettings.logoImage
+        username: firstActiveUser.username,
+        useClientKingLogo,
+        hasOriginalLogo: !!businessSettings.logoImage
       });
       
       // Nur die für das Frontend notwendigen Felder zurückgeben
       // logoImage wird als logoUrl zurückgegeben für Frontend-Kompatibilität
       res.json({
         businessName: businessSettings.businessName,
-        logoUrl: businessSettings.logoImage || null
+        logoUrl: logoUrl
       });
     } catch (error) {
       console.error("Fehler beim Abrufen der Kiosk Business-Settings:", error);
