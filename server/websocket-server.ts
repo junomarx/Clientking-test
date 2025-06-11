@@ -238,12 +238,13 @@ class OnlineStatusManager {
     const user = this.connectedUsers.get(userId);
     if (user && user.socket === ws) {
       user.isKiosk = true;
-      console.log(`User ${user.username} (${userId}) registered as Kiosk device`);
+      console.log(`📱 Kiosk registriert: ${user.username} (${userId}) - WebSocket bereit`);
       
       // Bestätigung senden
       ws.send(JSON.stringify({
         type: 'kiosk_registered',
-        message: 'Kiosk registration successful'
+        message: 'Kiosk registration successful',
+        timestamp: Date.now()
       }));
     }
   }

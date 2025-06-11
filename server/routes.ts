@@ -4680,8 +4680,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
-      // WebSocket-Nachricht an alle verbundenen Clients senden (wird vom Kiosk-System gefiltert)
+      // WebSocket-Nachricht an alle verbundenen Clients senden
       const onlineStatusManager = getOnlineStatusManager();
+      let messageSent = false;
+      
       if (onlineStatusManager) {
         const message = {
           type: 'signature-request',
@@ -4689,21 +4691,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
             repairId: repairId,
             customerName: `${customer.firstName} ${customer.lastName}`,
             repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            attempt: 1
           }
         };
         
-        console.log('Sende Unterschrifts-Anfrage an alle Clients:', message);
+        console.log('📤 Sende Unterschrifts-Anfrage:', {
+          repairId,
+          customerName: message.payload.customerName,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Primärer Broadcast an alle Clients
         onlineStatusManager.broadcast(message);
         
-        // Zusätzlich gezielter Versuch an Kiosk-Geräte
-        onlineStatusManager.broadcastToKiosks(message);
+        // Gezielter Broadcast an Kiosk-Geräte mit Retry
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          onlineStatusManager.broadcastToKiosks({
+            ...message,
+            payload: { ...message.payload, attempt }
+          });
+          
+          if (attempt < 3) {
+            // Kurze Pause zwischen Versuchen
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        messageSent = true;
       }
 
-      console.log(`Unterschrifts-Anfrage für Reparatur ${repairId} an Kiosk-Geräte gesendet`);
-      res.json({ success: true, message: "Anfrage an Kiosk-Gerät gesendet" });
+      const responseMessage = messageSent 
+        ? "Anfrage erfolgreich an Kiosk-Gerät gesendet"
+        : "Anfrage gesendet, aber keine aktiven Kiosk-Verbindungen gefunden";
+        
+      console.log(`✅ ${responseMessage} für Reparatur ${repairId}`);
+      res.json({ 
+        success: true, 
+        message: responseMessage,
+        sent: messageSent 
+      });
     } catch (error) {
-      console.error("Fehler beim Senden an Kiosk:", error);
+      console.error("❌ Fehler beim Senden an Kiosk:", error);
       res.status(500).json({ message: "Fehler beim Senden der Anfrage" });
     }
   });
