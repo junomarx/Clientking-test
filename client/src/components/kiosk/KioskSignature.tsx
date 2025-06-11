@@ -187,7 +187,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
             {/* Reparaturbedingungen */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Reparaturbedingungen</h3>
-              <div className="p-4 border rounded-lg bg-gray-50 max-h-40 overflow-y-auto">
+              <div className="p-4 border rounded-lg bg-gray-50">
                 <div className="text-sm whitespace-pre-wrap">
                   {signatureRequest?.repairTerms || 'Es wurden keine spezifischen Reparaturbedingungen hinterlegt.'}
                 </div>
