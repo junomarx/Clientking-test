@@ -4726,6 +4726,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Keine Geschäftseinstellungen gefunden" });
       }
       
+      console.log('Kiosk Business Settings Response:', {
+        businessName: businessSettings.businessName,
+        logoUrl: businessSettings.logoUrl,
+        fullSettings: businessSettings
+      });
+      
       // Nur die für das Frontend notwendigen Felder zurückgeben
       res.json({
         businessName: businessSettings.businessName,

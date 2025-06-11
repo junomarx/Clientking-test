@@ -17,9 +17,18 @@ export function KioskOverlay() {
   const [currentView, setCurrentView] = useState<'home' | 'customer-form' | 'signature'>('home');
   
   // Geschäftseinstellungen für Logo abrufen (Kiosk-spezifischer Endpunkt)
-  const { data: businessSettings } = useQuery({
+  const { data: businessSettings, isLoading, error } = useQuery({
     queryKey: ['/api/kiosk/business-settings'],
     enabled: isKioskMode, // Nur laden wenn Kiosk-Modus aktiv ist
+  });
+
+  // Debug-Logs für Business-Settings
+  console.log('Kiosk Business Settings Debug:', {
+    isKioskMode,
+    businessSettings,
+    isLoading,
+    error,
+    logoUrl: businessSettings?.logoUrl
   });
 
   if (!isKioskMode) return null;
@@ -88,9 +97,14 @@ export function KioskOverlay() {
                       src={businessSettings.logoUrl} 
                       alt={businessSettings.businessName || "Firmenlogo"}
                       className="h-16 w-auto max-w-xs object-contain"
+                      onError={(e) => console.log('Logo Fehler:', e)}
+                      onLoad={() => console.log('Logo erfolgreich geladen:', businessSettings.logoUrl)}
                     />
                   ) : (
-                    <Tablet className="h-16 w-16 text-blue-600" />
+                    <>
+                      <Tablet className="h-16 w-16 text-blue-600" />
+                      {console.log('Zeige Tablet-Icon, da kein Logo:', { businessSettings, logoUrl: businessSettings?.logoUrl })}
+                    </>
                   )}
                 </div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
