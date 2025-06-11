@@ -5023,7 +5023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ClientKing Logo für alle außer "bugi"
       const useClientKingLogo = currentUser.username !== "bugi";
       const logoUrl = useClientKingLogo 
-        ? "/assets/clientking-logo.png" 
+        ? "/src/assets/clientking-logo.png" 
         : (businessSettings.logoImage || null);
       
       console.log('Kiosk Business Settings geladen:', {

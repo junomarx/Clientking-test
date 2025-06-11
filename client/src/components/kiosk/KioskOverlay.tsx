@@ -10,6 +10,7 @@ import { KioskSignature } from "@/components/kiosk/KioskSignature";
 import { Tablet, Shield, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import clientKingLogo from "@/assets/clientking-logo.png";
 
 export function KioskOverlay() {
   const { isKioskMode, deactivateKioskMode, signatureRequest, clearSignatureRequest } = useKioskMode();
@@ -92,14 +93,22 @@ export function KioskOverlay() {
               {/* Header */}
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  {businessSettings?.logoUrl ? (
+                  {user?.username === "bugi" ? (
+                    businessSettings?.logoUrl ? (
+                      <img 
+                        src={businessSettings.logoUrl} 
+                        alt={businessSettings.businessName || "Firmenlogo"}
+                        className="h-16 w-auto max-w-xs object-contain"
+                      />
+                    ) : (
+                      <Tablet className="h-16 w-16 text-blue-600" />
+                    )
+                  ) : (
                     <img 
-                      src={businessSettings.logoUrl} 
-                      alt={businessSettings.businessName || "Firmenlogo"}
+                      src={clientKingLogo} 
+                      alt="ClientKing Handyshop Verwaltung"
                       className="h-16 w-auto max-w-xs object-contain"
                     />
-                  ) : (
-                    <Tablet className="h-16 w-16 text-blue-600" />
                   )}
                 </div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
