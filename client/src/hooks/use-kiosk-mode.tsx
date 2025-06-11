@@ -64,6 +64,8 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
             orderCode: message.payload.orderCode,
             estimatedCost: message.payload.estimatedCost,
             status: message.payload.status,
+            repairTerms: message.payload.repairTerms,
+            shopName: message.payload.shopName,
             timestamp: Date.now()
           });
         }

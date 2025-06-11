@@ -4822,6 +4822,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Kunde nicht gefunden" });
       }
 
+      // Geschäftseinstellungen für Reparaturbedingungen und Shop-Name laden
+      const businessSettings = await storage.getBusinessSettings(userId);
+
       // WebSocket-Nachricht an alle verbundenen Clients senden
       const onlineStatusManager = getOnlineStatusManager();
       let messageSent = false;
@@ -4840,6 +4843,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             orderCode: repair.orderCode,
             estimatedCost: repair.estimatedCost ? parseFloat(repair.estimatedCost) : null,
             status: repair.status,
+            repairTerms: businessSettings?.repairTerms || null,
+            shopName: businessSettings?.businessName || 'Handyshop',
             timestamp: Date.now(),
             attempt: 1
           }
