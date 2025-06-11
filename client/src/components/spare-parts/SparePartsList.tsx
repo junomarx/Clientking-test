@@ -58,13 +58,7 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
     queryKey: [`/api/repairs/${repairId}/spare-parts`],
   });
 
-  console.log("SparePartsList Debug:", {
-    repairId,
-    spareParts,
-    isLoading,
-    error,
-    sparePartsLength: spareParts?.length
-  });
+
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {

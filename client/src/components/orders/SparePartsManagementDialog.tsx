@@ -66,7 +66,7 @@ export function SparePartsManagementDialog({
   const queryClient = useQueryClient();
 
   const { data: spareParts = [], isLoading } = useQuery<SparePart[]>({
-    queryKey: ["/api/repairs", repairId, "spare-parts"],
+    queryKey: [`/api/repairs/${repairId}/spare-parts`],
     enabled: open && !!repairId,
   });
 
