@@ -50,6 +50,13 @@ export function OrdersTab() {
     refetchInterval: 30000,
   });
 
+  console.log('OrdersTab Debug:', {
+    isLoading,
+    error: error?.message,
+    repairsCount: repairsWaitingForParts?.length,
+    repairs: repairsWaitingForParts
+  });
+
   const handleManageParts = (repairId: number) => {
     setSelectedRepairId(repairId);
     setIsSparePartsDialogOpen(true);
@@ -59,45 +66,6 @@ export function OrdersTab() {
     setIsSparePartsDialogOpen(false);
     setSelectedRepairId(null);
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Package className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
-        </div>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Package className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
-        </div>
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <p className="text-red-600">Fehler beim Laden der Bestellungen</p>
-            <p className="text-sm text-gray-600 mt-2">{error?.message}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="p-6">
@@ -109,7 +77,30 @@ export function OrdersTab() {
         </Badge>
       </div>
 
-      {repairsWaitingForParts.length === 0 ? (
+      {isLoading && (
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <p className="text-red-600">Fehler beim Laden der Bestellungen</p>
+            <p className="text-sm text-gray-600 mt-2">{error?.message}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && !error && repairsWaitingForParts.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -121,7 +112,9 @@ export function OrdersTab() {
             </p>
           </CardContent>
         </Card>
-      ) : (
+      )}
+
+      {!isLoading && !error && repairsWaitingForParts.length > 0 && (
         <div className="space-y-4">
           {repairsWaitingForParts.map((repair) => (
             <Card key={repair.id} className="hover:shadow-md transition-shadow">
