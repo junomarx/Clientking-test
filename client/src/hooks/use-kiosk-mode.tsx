@@ -14,7 +14,14 @@ interface SignatureRequest {
   repairId: number;
   tempId: string;
   customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAddress?: string;
   repairDetails: string;
+  deviceInfo?: string;
+  orderCode?: string;
+  estimatedCost?: number;
+  status?: string;
   timestamp: number;
 }
 
@@ -47,7 +54,14 @@ export function KioskModeProvider({ children }: { children: ReactNode }) {
             repairId: message.payload.repairId,
             tempId: message.payload.tempId || `temp-${Date.now()}`,
             customerName: message.payload.customerName,
+            customerPhone: message.payload.customerPhone,
+            customerEmail: message.payload.customerEmail,
+            customerAddress: message.payload.customerAddress,
             repairDetails: message.payload.repairDetails,
+            deviceInfo: message.payload.deviceInfo,
+            orderCode: message.payload.orderCode,
+            estimatedCost: message.payload.estimatedCost,
+            status: message.payload.status,
             timestamp: Date.now()
           });
         }

@@ -4693,7 +4693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           payload: {
             repairId: repairId,
             customerName: `${customer.firstName} ${customer.lastName}`,
+            customerPhone: customer.phone,
+            customerEmail: customer.email,
+            customerAddress: customer.address ? `${customer.address}, ${customer.zipCode} ${customer.city}` : null,
             repairDetails: `${repair.deviceType} ${repair.brand} ${repair.model} - ${repair.issue}`,
+            deviceInfo: `${repair.brand} ${repair.model} (${repair.deviceType})`,
+            orderCode: repair.orderCode,
+            estimatedCost: repair.estimatedCost ? parseFloat(repair.estimatedCost) : null,
+            status: repair.status,
             timestamp: Date.now(),
             attempt: 1
           }

@@ -134,10 +134,25 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 <User className="h-5 w-5" />
                 Kundendaten
               </h3>
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
                 <div className="font-medium text-lg">
                   {signatureRequest.customerName}
                 </div>
+                {signatureRequest.customerPhone && (
+                  <div className="text-sm text-gray-600">
+                    📞 {signatureRequest.customerPhone}
+                  </div>
+                )}
+                {signatureRequest.customerEmail && (
+                  <div className="text-sm text-gray-600">
+                    ✉️ {signatureRequest.customerEmail}
+                  </div>
+                )}
+                {signatureRequest.customerAddress && (
+                  <div className="text-sm text-gray-600">
+                    📍 {signatureRequest.customerAddress}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -147,8 +162,30 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                 <Smartphone className="h-5 w-5" />
                 Reparaturdetails
               </h3>
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-blue-900">{signatureRequest.repairDetails}</p>
+              <div className="p-4 bg-blue-50 rounded-lg space-y-3">
+                <div className="font-medium text-blue-900">
+                  {signatureRequest.repairDetails}
+                </div>
+                {signatureRequest.deviceInfo && (
+                  <div className="text-sm text-blue-700">
+                    📱 {signatureRequest.deviceInfo}
+                  </div>
+                )}
+                {signatureRequest.orderCode && (
+                  <div className="text-sm text-blue-700">
+                    🏷️ Auftragsnummer: {signatureRequest.orderCode}
+                  </div>
+                )}
+                {signatureRequest.estimatedCost && (
+                  <div className="text-sm text-blue-700">
+                    💰 Geschätzte Kosten: {signatureRequest.estimatedCost}€
+                  </div>
+                )}
+                {signatureRequest.status && (
+                  <div className="text-sm text-blue-700">
+                    📊 Status: {signatureRequest.status}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -214,40 +251,72 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="codeType">Art des Codes</Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
+                <Label htmlFor="codeType" className="text-base font-medium">Art des Codes</Label>
+                <div className="grid grid-cols-2 gap-4 mt-3">
                   <Button
                     variant={deviceCodeType === "pin" ? "default" : "outline"}
                     onClick={() => setDeviceCodeType("pin")}
-                    className="h-12"
+                    className="h-16 flex flex-col gap-1"
                   >
-                    PIN-Code
+                    <div className="text-2xl">🔢</div>
+                    <div className="text-sm">PIN-Code</div>
                   </Button>
                   <Button
                     variant={deviceCodeType === "pattern" ? "default" : "outline"}
                     onClick={() => setDeviceCodeType("pattern")}
-                    className="h-12"
+                    className="h-16 flex flex-col gap-1"
                   >
-                    Entsperrmuster
+                    <div className="text-2xl">📱</div>
+                    <div className="text-sm">Entsperrmuster</div>
                   </Button>
                 </div>
               </div>
 
-              {deviceCodeType && (
+              {deviceCodeType === "pin" && (
                 <div>
-                  <Label htmlFor="deviceCode">
-                    {deviceCodeType === "pin" ? "PIN-Code" : "Entsperrmuster-Beschreibung"}
-                  </Label>
+                  <Label htmlFor="deviceCode" className="text-base font-medium">PIN-Code eingeben</Label>
                   <Input
                     id="deviceCode"
-                    type={deviceCodeType === "pin" ? "password" : "text"}
+                    type="password"
                     value={deviceCode}
                     onChange={(e) => setDeviceCode(e.target.value)}
-                    placeholder={deviceCodeType === "pin" ? "z.B. 1234" : "z.B. L-Form von oben links"}
-                    className="mt-2"
+                    placeholder="z.B. 1234 oder 0000"
+                    className="mt-2 h-12 text-center text-lg"
+                    maxLength={8}
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Geben Sie den 4-8 stelligen PIN-Code ein
+                  </p>
+                </div>
+              )}
+
+              {deviceCodeType === "pattern" && (
+                <div>
+                  <Label htmlFor="deviceCode" className="text-base font-medium">Entsperrmuster beschreiben</Label>
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-3 gap-2 w-32 mx-auto">
+                      {Array.from({length: 9}, (_, i) => (
+                        <div key={i} className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                          {i + 1}
+                        </div>
+                      ))}
+                    </div>
+                    <Input
+                      id="deviceCode"
+                      type="text"
+                      value={deviceCode}
+                      onChange={(e) => setDeviceCode(e.target.value)}
+                      placeholder="z.B. L-Form: 1-2-3-6-9 oder Z-Form: 1-3-5-7-9"
+                      className="mt-2 h-12"
+                    />
+                    <div className="text-sm text-gray-500 space-y-1">
+                      <p>• Beschreiben Sie das Muster mit Zahlen (1-9)</p>
+                      <p>• Beispiele: "1-2-3-6-9" für L-Form, "1-5-9" für Diagonale</p>
+                      <p>• Oder beschreiben Sie die Form: "L-Form von oben links"</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
