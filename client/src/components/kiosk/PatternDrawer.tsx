@@ -50,9 +50,11 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
         const x = (col + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
         const y = (row + 1) * (CANVAS_SIZE / (GRID_SIZE + 1));
         const index = row * GRID_SIZE + col + 1; // This gives us 1-9
+        console.log(`Creating point: row=${row}, col=${col}, index=${index}`);
         newPoints.push({ x, y, index });
       }
     }
+    console.log('All points created:', newPoints.map(p => p.index));
     setPoints(newPoints);
     drawCanvas(ctx, newPoints, []);
   };
@@ -156,7 +158,9 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
 
   const handleEnd = () => {
     if (currentPattern.length >= 2) {
+      console.log('Pattern indices:', currentPattern);
       const patternString = currentPattern.join('-');
+      console.log('Pattern string:', patternString);
       onPatternComplete(patternString);
     }
     setIsDrawing(false);
