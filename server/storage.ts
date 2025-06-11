@@ -213,6 +213,9 @@ export interface IStorage {
     userId: number,
   ): Promise<Repair | undefined>;
   deleteRepair(id: number, userId: number): Promise<boolean>;
+  
+  // Method to get repairs waiting for spare parts with customer data
+  getRepairsWaitingForParts(userId: number): Promise<any[]>;
 
   // Business settings methods
   getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined>;
@@ -1887,6 +1890,73 @@ export class DatabaseStorage implements IStorage {
       return results;
     } catch (error) {
       console.error("Error getting all repairs:", error);
+      return [];
+    }
+  }
+
+  async getRepairsWaitingForParts(userId: number): Promise<any[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, leere Liste zurückgeben statt Fallback auf Shop 1
+      if (!user.shopId) {
+        console.warn(`❌ Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return [];
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getRepairsWaitingForParts: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
+
+      // Reparaturen mit Status "warten_auf_ersatzteile" und zugehörige Kundendaten abrufen
+      const results = await db
+        .select({
+          id: repairs.id,
+          orderCode: repairs.orderCode,
+          customerId: repairs.customerId,
+          deviceType: repairs.deviceType,
+          brand: repairs.brand,
+          model: repairs.model,
+          issue: repairs.issue,
+          status: repairs.status,
+          estimatedCost: repairs.estimatedCost,
+          depositAmount: repairs.depositAmount,
+          notes: repairs.notes,
+          createdAt: repairs.createdAt,
+          updatedAt: repairs.updatedAt,
+          shopId: repairs.shopId,
+          userId: repairs.userId,
+          customer: {
+            id: customers.id,
+            firstName: customers.firstName,
+            lastName: customers.lastName,
+            email: customers.email,
+            phone: customers.phone,
+            address: customers.address,
+            zipCode: customers.zipCode,
+            city: customers.city,
+            notes: customers.notes,
+            createdAt: customers.createdAt,
+            updatedAt: customers.updatedAt,
+            shopId: customers.shopId,
+            userId: customers.userId
+          }
+        })
+        .from(repairs)
+        .innerJoin(customers, eq(repairs.customerId, customers.id))
+        .where(
+          and(
+            eq(repairs.shopId, shopId),
+            eq(repairs.status, 'warten_auf_ersatzteile')
+          )
+        )
+        .orderBy(desc(repairs.createdAt));
+
+      console.log(`Gefunden: ${results.length} Reparaturen mit ausstehenden Ersatzteilen für Shop ${shopId}`);
+      return results;
+    } catch (error) {
+      console.error("Error getting repairs waiting for parts:", error);
       return [];
     }
   }

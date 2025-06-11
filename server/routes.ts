@@ -892,6 +892,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch repairs" });
     }
   });
+
+  // Reparaturen abrufen, die auf Ersatzteile warten
+  app.get("/api/repairs/waiting-for-parts", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const username = (req.user as any).username;
+      console.log(`Abrufen von Reparaturen mit Ersatzteil-Bestellungen für Benutzer ${username} (ID: ${userId})`);
+      
+      // Reparaturen mit Status "Warten auf Ersatzteile" und zugehörige Kundendaten abrufen
+      const repairsWithPendingParts = await storage.getRepairsWaitingForParts(userId);
+      res.json(repairsWithPendingParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Reparaturen mit ausstehenden Ersatzteilen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Bestellungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   app.get("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
