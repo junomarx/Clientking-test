@@ -70,36 +70,7 @@ export function SparePartsManagementDialog({
     enabled: open && !!repairId,
   });
 
-  // Check if all spare parts have arrived and update repair status
-  const updateRepairStatusMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("PATCH", `/api/repairs/${repairId}/status`, {
-        status: "ersatzteile_eingetroffen"
-      });
-      if (!response.ok) {
-        throw new Error("Fehler beim Aktualisieren des Reparaturstatus");
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs/waiting-for-parts"] });
-      toast({
-        title: "Status aktualisiert",
-        description: "Reparaturstatus wurde auf 'Ersatzteile eingetroffen' gesetzt.",
-      });
-    },
-  });
-
-  // Check if all parts have arrived whenever spare parts data changes
-  useEffect(() => {
-    if (spareParts.length > 0) {
-      const allPartsArrived = spareParts.every(part => part.status === 'eingetroffen');
-      if (allPartsArrived) {
-        // Automatically update repair status
-        updateRepairStatusMutation.mutate();
-      }
-    }
-  }, [spareParts]);
+  // Server automatically handles repair status updates when spare parts change
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
