@@ -54,8 +54,16 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: spareParts = [], isLoading } = useQuery<SparePart[]>({
-    queryKey: ["/api/repairs", repairId, "spare-parts"],
+  const { data: spareParts = [], isLoading, error } = useQuery<SparePart[]>({
+    queryKey: [`/api/repairs/${repairId}/spare-parts`],
+  });
+
+  console.log("SparePartsList Debug:", {
+    repairId,
+    spareParts,
+    isLoading,
+    error,
+    sparePartsLength: spareParts?.length
   });
 
   const deleteMutation = useMutation({
@@ -67,7 +75,7 @@ export default function SparePartsList({ repairId }: SparePartsListProps) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs", repairId, "spare-parts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/spare-parts`] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });

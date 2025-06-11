@@ -96,7 +96,7 @@ export default function SparePartsDialog({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs", repairId, "spare-parts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/spare-parts`] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
@@ -125,7 +125,7 @@ export default function SparePartsDialog({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repairs", repairId, "spare-parts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/repairs/${repairId}/spare-parts`] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
