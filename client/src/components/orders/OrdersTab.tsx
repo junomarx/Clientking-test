@@ -2,11 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Package, User, Phone, Mail, Calendar, Euro, FileText, Settings, ShoppingCart } from "lucide-react";
-import { RepairDetailsDialog } from "@/components/repairs/RepairDetailsDialog";
+import { Clock, Package, User, Phone, Mail, Calendar, Euro, FileText, ShoppingCart } from "lucide-react";
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { useState } from "react";
-import { formatDate } from "@/lib/utils";
 
 interface Customer {
   id: number;
@@ -67,17 +65,13 @@ export function OrdersTab() {
     setSelectedRepairId(null);
   };
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Package className="h-6 w-6 text-blue-600" />
-        <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
-        <Badge variant="secondary" className="ml-2">
-          {repairsWaitingForParts.length}
-        </Badge>
-      </div>
-
-      {isLoading && (
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Package className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
+        </div>
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="animate-pulse">
@@ -89,18 +83,38 @@ export function OrdersTab() {
             </Card>
           ))}
         </div>
-      )}
+      </div>
+    );
+  }
 
-      {error && (
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Package className="h-6 w-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
+        </div>
         <Card className="border-red-200 bg-red-50">
           <CardContent className="p-6">
             <p className="text-red-600">Fehler beim Laden der Bestellungen</p>
             <p className="text-sm text-gray-600 mt-2">{error?.message}</p>
           </CardContent>
         </Card>
-      )}
+      </div>
+    );
+  }
 
-      {!isLoading && !error && repairsWaitingForParts.length === 0 && (
+  return (
+    <div className="p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Package className="h-6 w-6 text-blue-600" />
+        <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
+        <Badge variant="secondary" className="ml-2">
+          {repairsWaitingForParts.length}
+        </Badge>
+      </div>
+
+      {repairsWaitingForParts.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -112,9 +126,7 @@ export function OrdersTab() {
             </p>
           </CardContent>
         </Card>
-      )}
-
-      {!isLoading && !error && repairsWaitingForParts.length > 0 && (
+      ) : (
         <div className="space-y-4">
           {repairsWaitingForParts.map((repair) => (
             <Card key={repair.id} className="hover:shadow-md transition-shadow">
