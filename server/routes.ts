@@ -4806,6 +4806,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Abrufen aller Ersatzteile für Reparatur ${repairId} (Benutzer ${userId})`);
       
       const spareParts = await storage.getSparePartsByRepairId(repairId, userId);
+      console.log(`Gefunden: ${spareParts.length} Ersatzteile für Reparatur ${repairId}`);
+      if (spareParts.length > 0) {
+        console.log('Ersatzteile Details:', spareParts.map(p => ({ id: p.id, name: p.partName, status: p.status })));
+      }
       res.json(spareParts);
     } catch (error) {
       console.error("Fehler beim Abrufen der Ersatzteile:", error);
@@ -4895,7 +4899,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const sparePart = await storage.createSparePart(validatedData, userId);
       
-      console.log(`Ersatzteil ${sparePart.id} für Reparatur ${validatedData.repairId} erstellt von Benutzer ${userId}`);
+      console.log(`✅ Ersatzteil ${sparePart.id} erfolgreich erstellt:`, {
+        id: sparePart.id,
+        name: sparePart.partName,
+        repairId: sparePart.repairId,
+        status: sparePart.status,
+        userId: sparePart.userId,
+        shopId: sparePart.shopId
+      });
       res.status(201).json(sparePart);
     } catch (error) {
       console.error("Fehler beim Erstellen des Ersatzteils:", error);
