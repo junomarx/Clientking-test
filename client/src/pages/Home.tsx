@@ -6,6 +6,7 @@ import { RepairsTab } from '@/components/repairs/RepairsTab';
 import { CustomersTab } from '@/components/customers/CustomersTab';
 import { StatisticsTabRebuilt as StatisticsTab } from '@/components/statistics/StatisticsTabRebuilt';
 import { CostEstimatesTab } from '@/components/cost-estimates/CostEstimatesTab';
+import { OrdersTab } from '@/components/orders/OrdersTab';
 import { NewOrderModal } from '@/components/NewOrderModal';
 import { useLocation, useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ import { PrintSettingsTab } from '@/components/settings/PrintSettingsTab';
 import { SubscriptionSettingsTab } from '@/components/settings/SubscriptionSettingsTab';
 import { UserSettingsTab } from '@/components/settings/UserSettingsTab';
 
-type Tab = 'dashboard' | 'repairs' | 'customers' | 'statistics' | 'cost-estimates' | 
+type Tab = 'dashboard' | 'repairs' | 'orders' | 'customers' | 'statistics' | 'cost-estimates' | 
           'business-settings' | 'email-settings' | 'print-settings' | 'subscription-settings' | 'user-settings';
 
 export default function Home() {
@@ -45,7 +46,7 @@ export default function Home() {
     // Tab aus URL setzen, wenn vorhanden
     if (tabParam) {
       const validTabs = [
-        'dashboard', 'repairs', 'customers', 'statistics',
+        'dashboard', 'repairs', 'orders', 'customers', 'statistics', 'cost-estimates',
         'business-settings', 'email-settings', 'print-settings', 'subscription-settings', 'user-settings'
       ];
       if (validTabs.includes(tabParam)) {
@@ -146,6 +147,10 @@ export default function Home() {
               
               {activeTab === 'repairs' && (
                 <RepairsTab onNewOrder={handleNewOrder} initialFilter={qrCodeFilter} />
+              )}
+              
+              {activeTab === 'orders' && (
+                <OrdersTab />
               )}
               
               {activeTab === 'customers' && (
