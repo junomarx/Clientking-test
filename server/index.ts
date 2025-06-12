@@ -64,6 +64,33 @@ app.get('/manifest.json', (req, res) => {
   }
 });
 
+// PWA-Icons mit korrekten MIME-Types bedienen
+app.get('/icon-192.svg', (req, res) => {
+  const iconPath = path.resolve(import.meta.dirname, '..', 'public', 'icon-192.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const iconContent = fs.readFileSync(iconPath, 'utf8');
+    res.send(iconContent);
+  } catch (error) {
+    console.error('Error serving icon-192.svg:', error);
+    res.status(404).send('Icon not found');
+  }
+});
+
+app.get('/icon-512.svg', (req, res) => {
+  const iconPath = path.resolve(import.meta.dirname, '..', 'public', 'icon-512.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const iconContent = fs.readFileSync(iconPath, 'utf8');
+    res.send(iconContent);
+  } catch (error) {
+    console.error('Error serving icon-512.svg:', error);
+    res.status(404).send('Icon not found');
+  }
+});
+
 // Standard Express-Middleware
 // Erhöhe die maximale Größe für JSON-Anfragen auf 50 MB (für PDF-Upload)
 app.use(express.json({ limit: '50mb' }));
