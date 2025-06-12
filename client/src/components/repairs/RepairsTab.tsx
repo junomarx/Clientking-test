@@ -540,6 +540,8 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
               <SelectItem value="all">Alle Status</SelectItem>
               <SelectItem value="eingegangen">Eingegangen</SelectItem>
               <SelectItem value="in_reparatur">In Reparatur</SelectItem>
+              <SelectItem value="ersatzteile_bestellen">Ersatzteile bestellen</SelectItem>
+              <SelectItem value="warten_auf_ersatzteile">Warten auf Ersatzteile</SelectItem>
               <SelectItem value="ersatzteil_eingetroffen">Ersatzteil eingetroffen</SelectItem>
               <SelectItem value="ausser_haus">Außer Haus</SelectItem>
               <SelectItem value="fertig">Fertig</SelectItem>
