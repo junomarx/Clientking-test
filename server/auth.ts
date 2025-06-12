@@ -44,18 +44,19 @@ export function setupAuth(app: Express) {
     console.warn('Warning: SESSION_SECRET is not set in production environment');
   }
 
-  // Session-Konfiguration
+  // Session-Konfiguration - unterschiedlich für Entwicklung und Produktion
+  const isProduction = process.env.NODE_ENV === 'production';
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "sehr-sicherer-handyshop-session-key-1234567890",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
-    name: 'handyshop.sid', // Anpassung des Cookie-Namens
+    name: isProduction ? 'handyshop.sid' : 'connect.sid', // Standard Cookie-Name in Entwicklung
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 Woche
       sameSite: 'lax',
       httpOnly: true,
-      secure: false, // In Entwicklung immer false, da kein HTTPS
+      secure: isProduction, // Nur in Produktion HTTPS verwenden
       path: '/'
     }
   };
@@ -314,19 +315,26 @@ export function setupAuth(app: Express) {
           return next(destroyErr);
         }
         
-        // Lösche beide möglichen Session-Cookies
-        res.clearCookie('handyshop.sid', { 
+        // Lösche den Session-Cookie basierend auf der Umgebung
+        const cookieName = isProduction ? 'handyshop.sid' : 'connect.sid';
+        res.clearCookie(cookieName, { 
           path: '/',
           httpOnly: true,
-          sameSite: 'lax'
-        });
-        res.clearCookie('connect.sid', { 
-          path: '/',
-          httpOnly: true,
-          sameSite: 'lax'
+          sameSite: 'lax',
+          secure: isProduction
         });
         
-        console.log(`✅ Benutzer ${userId} erfolgreich abgemeldet`);
+        // Zusätzlich in Entwicklung auch handyshop.sid löschen falls vorhanden
+        if (!isProduction) {
+          res.clearCookie('handyshop.sid', { 
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: false
+          });
+        }
+        
+        console.log(`✅ Benutzer ${userId} erfolgreich abgemeldet (${cookieName})`);
         res.sendStatus(200);
       });
     });
