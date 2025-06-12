@@ -63,7 +63,12 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
 
   // Hilfsfunktion um den Gerätecode für das Etikett zu formatieren
   const formatDeviceCodeForLabel = (deviceCodeData: any): string => {
-    if (!deviceCodeData || !deviceCodeData.deviceCode) return '';
+    console.log('formatDeviceCodeForLabel called with:', deviceCodeData);
+    
+    if (!deviceCodeData || !deviceCodeData.deviceCode) {
+      console.log('No device code data available');
+      return '';
+    }
     
     if (deviceCodeData.deviceCodeType === 'pattern') {
       // Pattern codes sind als "6-3-0-1-2-4-5-7-8" gespeichert (0-8 intern)
@@ -72,13 +77,15 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         const digit = parseInt(num);
         return (digit + 1).toString(); // +1 für die Anzeige (0-8 wird zu 1-9)
       });
-      return `Muster: ${patternNumbers.join(',')}`;
-    } else if (deviceCodeData.deviceCodeType === 'text' || !deviceCodeData.deviceCodeType) {
-      // Behandle sowohl 'text' als auch undefined/null als PIN-Code
-      return `Code: ${deviceCodeData.deviceCode}`;
+      const result = `Muster: ${patternNumbers.join(',')}`;
+      console.log('Pattern code formatted:', result);
+      return result;
+    } else {
+      // Behandle sowohl 'text' als auch undefined/null/andere als PIN-Code
+      const result = `Code: ${deviceCodeData.deviceCode}`;
+      console.log('Text code formatted:', result);
+      return result;
     }
-    
-    return '';
   };
 
   // Funktion zum Drucken mit neuem Fenster
