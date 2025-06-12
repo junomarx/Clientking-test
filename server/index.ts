@@ -32,6 +32,66 @@ if (!process.env.SMTP_SENDER_NAME) {
 }
 
 const app = express();
+
+// PWA-Dateien mit korrekten MIME-Types bedienen - VOR allen anderen Middlewares
+import path from 'path';
+import fs from 'fs';
+
+app.get('/sw.js', (req, res) => {
+  const swPath = path.resolve(import.meta.dirname, '..', 'public', 'sw.js');
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const swContent = fs.readFileSync(swPath, 'utf8');
+    res.send(swContent);
+  } catch (error) {
+    console.error('Error serving service worker:', error);
+    res.status(404).send('Service Worker not found');
+  }
+});
+
+app.get('/manifest.json', (req, res) => {
+  const manifestPath = path.resolve(import.meta.dirname, '..', 'public', 'manifest.json');
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    res.send(manifestContent);
+  } catch (error) {
+    console.error('Error serving manifest:', error);
+    res.status(404).send('Manifest not found');
+  }
+});
+
+// PWA-Icons mit korrekten MIME-Types bedienen
+app.get('/icon-192.svg', (req, res) => {
+  const iconPath = path.resolve(import.meta.dirname, '..', 'public', 'icon-192.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const iconContent = fs.readFileSync(iconPath, 'utf8');
+    res.send(iconContent);
+  } catch (error) {
+    console.error('Error serving icon-192.svg:', error);
+    res.status(404).send('Icon not found');
+  }
+});
+
+app.get('/icon-512.svg', (req, res) => {
+  const iconPath = path.resolve(import.meta.dirname, '..', 'public', 'icon-512.svg');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  try {
+    const iconContent = fs.readFileSync(iconPath, 'utf8');
+    res.send(iconContent);
+  } catch (error) {
+    console.error('Error serving icon-512.svg:', error);
+    res.status(404).send('Icon not found');
+  }
+});
+
+// Standard Express-Middleware
 // Erhöhe die maximale Größe für JSON-Anfragen auf 50 MB (für PDF-Upload)
 app.use(express.json({ limit: '50mb' }));
 // Erhöhe die maximale Größe für URL-codierte Anfragen auf 50 MB
