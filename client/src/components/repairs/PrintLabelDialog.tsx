@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Repair, Customer, BusinessSettings } from '@shared/schema';
+import { apiRequest } from '@/lib/queryClient';
 import { Loader2, Printer } from 'lucide-react';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
 import { QRCodeSVG } from 'qrcode.react';
@@ -34,6 +35,17 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
   // Aktive Abfrage des Device-Codes, um sicherzustellen, dass die Daten verfügbar sind
   const { data: deviceCodeData } = useQuery({
     queryKey: ['/api/repairs', repairId, 'device-code'],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/repairs/${repairId}/device-code`);
+      if (!response.ok) {
+        // Wenn kein Device-Code vorhanden ist, geben wir null zurück
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error('Fehler beim Laden des Device-Codes');
+      }
+      return await response.json();
+    },
     enabled: !!repairId && open,
     staleTime: 5 * 60 * 1000, // 5 Minuten Cache
   });
