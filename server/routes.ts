@@ -36,7 +36,8 @@ import {
   businessSettings,
   costEstimates,
   packageFeatures,
-  spareParts
+  spareParts,
+  repairStatusHistory
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -1148,11 +1149,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // Vorherigen Status abrufen für History-Log
+      const existingRepair = await storage.getRepair(id, userId);
+      const oldStatus = existingRepair?.status;
+      
       // Reparaturstatus mit Benutzerkontext und optionaler Techniker-Information aktualisieren
       const repair = await storage.updateRepairStatus(id, status, userId, technicianNote);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
+      }
+      
+      // Status-History-Eintrag erstellen
+      if (oldStatus !== status) {
+        try {
+          await db.insert(repairStatusHistory).values({
+            repairId: id,
+            oldStatus: oldStatus,
+            newStatus: status,
+            changedBy: userId,
+            userId: userId,
+            shopId: repair.shopId
+          });
+          console.log(`Status-History: ${oldStatus} → ${status} für Reparatur ${id} durch Benutzer ${userId}`);
+        } catch (historyError) {
+          console.error('Fehler beim Erstellen des Status-History-Eintrags:', historyError);
+        }
       }
       
       // Kunde und Business-Daten laden (für E-Mail)
@@ -1294,6 +1316,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler bei der Statusaktualisierung:", error);
       res.status(500).json({ message: "Failed to update repair status" });
+    }
+  });
+
+  // Status History Route - get status history for a repair
+  app.get("/api/repairs/:id/status-history", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const repairId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Verify user has access to this repair
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Repair not found" });
+      }
+      
+      // Get status history with user information
+      const statusHistory = await db
+        .select({
+          id: repairStatusHistory.id,
+          oldStatus: repairStatusHistory.oldStatus,
+          newStatus: repairStatusHistory.newStatus,
+          changedAt: repairStatusHistory.changedAt,
+          changedByUsername: users.username,
+          notes: repairStatusHistory.notes
+        })
+        .from(repairStatusHistory)
+        .leftJoin(users, eq(repairStatusHistory.changedBy, users.id))
+        .where(
+          and(
+            eq(repairStatusHistory.repairId, repairId),
+            eq(repairStatusHistory.shopId, repair.shopId || 1)
+          )
+        )
+        .orderBy(desc(repairStatusHistory.changedAt));
+      
+      res.json(statusHistory);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Status-History:", error);
+      res.status(500).json({ message: "Failed to get status history" });
     }
   });
   

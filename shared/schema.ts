@@ -405,6 +405,27 @@ export const insertEmailHistorySchema = createInsertSchema(emailHistory).omit({
 export type EmailHistory = typeof emailHistory.$inferSelect;
 export type InsertEmailHistory = z.infer<typeof insertEmailHistorySchema>;
 
+// Status History - Tabelle für die Nachverfolgung von Statusänderungen
+export const repairStatusHistory = pgTable("repair_status_history", {
+  id: serial("id").primaryKey(),
+  repairId: integer("repair_id").notNull().references(() => repairs.id),
+  oldStatus: text("old_status"),
+  newStatus: text("new_status").notNull(),
+  changedAt: timestamp("changed_at").defaultNow().notNull(),
+  changedBy: integer("changed_by").references(() => users.id),
+  notes: text("notes"),
+  userId: integer("user_id").references(() => users.id),
+  shopId: integer("shop_id").default(1),
+});
+
+export const insertRepairStatusHistorySchema = createInsertSchema(repairStatusHistory).omit({
+  id: true,
+  changedAt: true,
+});
+
+export type RepairStatusHistory = typeof repairStatusHistory.$inferSelect;
+export type InsertRepairStatusHistory = z.infer<typeof insertRepairStatusHistorySchema>;
+
 // Kostenvoranschläge
 export const costEstimates = pgTable("cost_estimates", {
   id: serial("id").primaryKey(),
@@ -481,10 +502,23 @@ export const emailHistoryRelations = relations(emailHistory, ({ one }) => ({
   }),
 }));
 
-// Beziehungen für repairs zu emailHistory und spareParts
+// Beziehungen für repairs zu emailHistory, spareParts und statusHistory
 export const repairsRelations = relations(repairs, ({ many }) => ({
   emailHistory: many(emailHistory),
   spareParts: many(spareParts),
+  statusHistory: many(repairStatusHistory),
+}));
+
+// Beziehungen für repairStatusHistory
+export const repairStatusHistoryRelations = relations(repairStatusHistory, ({ one }) => ({
+  repair: one(repairs, {
+    fields: [repairStatusHistory.repairId],
+    references: [repairs.id],
+  }),
+  changedByUser: one(users, {
+    fields: [repairStatusHistory.changedBy],
+    references: [users.id],
+  }),
 }));
 
 // Beziehungen zwischen Benutzer und Paket definieren
