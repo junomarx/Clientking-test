@@ -140,6 +140,17 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       Reparaturen
                     </Button>
                     <Button 
+                      variant={activeTab === 'orders' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('orders');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <PlusCircle className="h-5 w-5 mr-2" />
+                      Bestellungen
+                    </Button>
+                    <Button 
                       variant={activeTab === 'customers' ? 'default' : 'ghost'}
                       className="w-full justify-start"
                       onClick={() => {
@@ -171,17 +182,6 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                     >
                       <BarChart2 className="h-5 w-5 mr-2" />
                       Statistiken
-                    </Button>
-                    <Button 
-                      variant={activeTab === 'orders' ? 'default' : 'ghost'}
-                      className="w-full justify-start"
-                      onClick={() => {
-                        if (onTabChange) onTabChange('orders');
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <PlusCircle className="h-5 w-5 mr-2" />
-                      Bestellungen
                     </Button>
                     <Button 
                       variant={activeTab === 'kiosk' ? 'default' : 'ghost'}
