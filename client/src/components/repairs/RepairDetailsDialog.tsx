@@ -290,22 +290,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                 <div>
                   <div className="text-sm text-muted-foreground">Status</div>
                   <div>{getStatusBadge(repair.status)}</div>
+                  {repair.technicianNote && (
+                    <div className="mt-2 text-sm">
+                      <div className="text-muted-foreground mb-1">Techniker-Information</div>
+                      <div className="whitespace-pre-wrap">{repair.technicianNote}</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Techniker-Information */}
-          {repair.technicianNote && (
-            <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
-              <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
-                <User className="h-5 w-5" />
-                Techniker-Information
-              </h3>
-              
-              <div className="whitespace-pre-wrap">{repair.technicianNote}</div>
-            </div>
-          )}
           
           {/* Weitere Informationen */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
