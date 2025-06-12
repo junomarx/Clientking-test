@@ -1,5 +1,5 @@
 // Service Worker für PWA
-const CACHE_NAME = 'clientking-handyshop-v2';
+const CACHE_NAME = 'clientking-handyshop-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -44,6 +44,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Skip all API requests - never cache them
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   // For navigation requests, always try network first
   if (event.request.mode === 'navigate') {
     event.respondWith(
@@ -69,13 +79,14 @@ self.addEventListener('fetch', (event) => {
               return response;
             }
 
-            // Clone the response
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
+            // Only cache GET requests for static assets
+            if (event.request.method === 'GET' && !event.request.url.includes('/api/')) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(event.request, responseToCache);
+                });
+            }
 
             return response;
           });

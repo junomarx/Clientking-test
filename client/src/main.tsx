@@ -16,27 +16,26 @@ if (clearCacheOnStartup) {
 
 // PWA Service Worker registrieren
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('PWA Service Worker erfolgreich registriert:', registration.scope);
-        
-        // Prüfe auf Updates
-        registration.addEventListener('updatefound', () => {
-          console.log('PWA Service Worker Update gefunden');
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('PWA Service Worker Update verfügbar');
-              }
-            });
-          }
-        });
-      })
-      .catch((error) => {
-        console.log('PWA Service Worker Registrierung fehlgeschlagen:', error);
-      });
+  window.addEventListener('load', async () => {
+    try {
+      // Alte Service Worker und Caches entfernen
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+        console.log('Alter Service Worker entfernt');
+      }
+      
+      // Alle Caches löschen
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      console.log('Alle Caches gelöscht');
+      
+      // Neuen Service Worker registrieren
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('PWA Service Worker neu registriert:', registration.scope);
+    } catch (error) {
+      console.log('Service Worker Setup fehlgeschlagen:', error);
+    }
   });
 } else {
   console.log('PWA Service Worker wird von diesem Browser nicht unterstützt');
