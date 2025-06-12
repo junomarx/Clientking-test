@@ -2,7 +2,7 @@
   "name": "ClientKing Handyshop Verwaltung",
   "short_name": "ClientKing",
   "description": "Mobile-first web application for phone repair shop management",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "id": "/",
   "display": "standalone",
   "background_color": "#ffffff",
