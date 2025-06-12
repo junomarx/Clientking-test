@@ -217,7 +217,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
         <DialogHeader className="pb-2 border-b">
           <DialogTitle className="text-xl font-semibold text-primary">Auftrag bearbeiten</DialogTitle>
           <DialogDescription className="mt-1">
-            Auftrag {repair.orderCode || `#${repair.id}`} für das Gerät {repair.brand} {repair.model}
+            Auftrag {repair.orderCode} für das Gerät {repair.brand} {repair.model}
           </DialogDescription>
         </DialogHeader>
         
@@ -230,7 +230,7 @@ export function EditRepairDialog({ open, onClose, repair }: EditRepairDialogProp
                 Auftragsnummer
               </label>
               <Input 
-                value={repair?.orderCode || `#${repair?.id}`}
+                value={repair?.orderCode || ""}
                 placeholder="z.B. GS250068"
                 className="rounded-lg border-gray-300 bg-gray-50"
                 readOnly

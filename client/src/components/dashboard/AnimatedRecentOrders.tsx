@@ -100,7 +100,7 @@ export function AnimatedRecentOrders({
                   >
                     <td className="py-3 px-4 font-medium">
                       <motion.div whileHover={{ scale: 1.05 }}>
-                        {repair.orderCode || `#${repair.id}`}
+                        {repair.orderCode}
                       </motion.div>
                     </td>
                     <td className="py-3 px-4">{repair.customerName}</td>
@@ -183,7 +183,7 @@ export function AnimatedRecentOrders({
               whileTap={{ scale: 0.98 }}
             >
               <div className="flex justify-between items-center p-3 border-b bg-muted/30">
-                <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
+                <div className="font-medium">{repair.orderCode}</div>
                 <div>{getStatusBadge(repair.status)}</div>
               </div>
               <div className="p-3 space-y-2">

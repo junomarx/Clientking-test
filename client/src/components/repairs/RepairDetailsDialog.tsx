@@ -179,7 +179,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       <DialogContent className="max-w-3xl mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Reparaturauftrag {repair.orderCode || `#${repair.id}`}
+            Reparaturauftrag {repair.orderCode}
           </DialogTitle>
           <DialogDescription>
             Vollständige Informationen zum Reparaturauftrag und Kundendaten
