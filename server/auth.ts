@@ -307,7 +307,17 @@ export function setupAuth(app: Express) {
         }
       }
       
-      res.sendStatus(200);
+      // Zerstöre die Session vollständig
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          console.error("Session destroy error:", destroyErr);
+          return next(destroyErr);
+        }
+        
+        // Lösche den Session-Cookie
+        res.clearCookie('connect.sid');
+        res.sendStatus(200);
+      });
     });
   });
 
