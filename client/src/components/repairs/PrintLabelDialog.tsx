@@ -263,6 +263,15 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                       />
                     </div>
                     
+                    {/* Geräte-Code (falls vorhanden) */}
+                    {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
+                      <div className="text-center w-full mb-2">
+                        <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-2 py-1 inline-block">
+                          {formatDeviceCodeForLabel(deviceCodeData)}
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Modell */}
                     <div className="text-center w-full">
                       <p className="text-xs font-bold">{repair?.model}</p>
