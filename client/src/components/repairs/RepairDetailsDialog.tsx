@@ -49,7 +49,7 @@ import {
   Check,
   X,
   Printer,
-  Tablet,
+
   Pen,
   Send,
   QrCode
@@ -91,32 +91,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       setRepair(null);
       setCustomer(null);
     }, 300);
-  };
-
-  // Unterschrift an Kiosk senden
-  const sendSignatureToKiosk = async () => {
-    if (!repair) return;
-
-    try {
-      const response = await apiRequest("POST", "/api/send-to-kiosk", {
-        repairId: repair.id
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Unterschrift gesendet",
-          description: "Die Unterschriftsanfrage wurde an das Kiosk-Gerät gesendet.",
-        });
-      } else {
-        throw new Error("Fehler beim Senden der Unterschrift");
-      }
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "Die Unterschrift konnte nicht an das Kiosk gesendet werden.",
-        variant: "destructive",
-      });
-    }
   };
   
   // Daten der Reparatur abrufen
@@ -298,7 +272,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     <div className="text-sm text-muted-foreground">Gerätecode</div>
                     <DeviceCodeDisplay 
                       repairId={repair.id} 
-                      deviceCodeType={repair.deviceCodeType} 
+                      deviceCodeType={repair.deviceCodeType || null} 
                     />
                   </div>
                 </div>
@@ -319,16 +293,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <div>{getStatusBadge(repair.status)}</div>
                 </div>
               </div>
-
-              {repair.technicianNote && (
-                <div className="flex items-start gap-2">
-                  <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Techniker-Information</div>
-                    <div className="whitespace-pre-wrap bg-blue-50 p-2 rounded text-sm">{repair.technicianNote}</div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
           
@@ -574,15 +538,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             Drucken
           </Button>
 
-          {/* Unterschrift an Kiosk senden */}
-          <Button 
-            variant="outline" 
-            onClick={sendSignatureToKiosk}
-            className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 border-blue-200"
-          >
-            <Tablet className="h-4 w-4" />
-            An Kiosk senden
-          </Button>
+
           
           <Button 
             variant="outline" 
