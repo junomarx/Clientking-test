@@ -746,7 +746,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                 onClick={() => openDetailsDialog(repair.id)}
               >
                 <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
-                  <div className="font-medium">{repair.orderCode || `#${repair.id}`}</div>
+                  <div className="font-medium">{repair.orderCode}</div>
                   <div>{getStatusBadge(repair.status)}</div>
                 </div>
                 <div className="p-4 space-y-2">
@@ -930,7 +930,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
           onClose={() => setShowDeleteDialog(false)}
           onConfirm={() => deleteRepairMutation.mutate(selectedRepairId)}
           title="Reparatur löschen"
-          description={`Möchten Sie wirklich die Reparatur ${repairs.find(r => r.id === selectedRepairId)?.orderCode || `#${selectedRepairId}`} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+          description={`Möchten Sie wirklich die Reparatur ${repairs.find(r => r.id === selectedRepairId)?.orderCode} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
           isDeleting={deleteRepairMutation.isPending}
           itemName="Reparatur"
         />

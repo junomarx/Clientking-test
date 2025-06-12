@@ -30,7 +30,7 @@ import { Plus, Edit, Trash2, Package, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SparePartsDialog from "@/components/spare-parts/SparePartsDialog";
-import type { SparePart } from "@shared/schema";
+import type { SparePart, Repair } from "@shared/schema";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -67,6 +67,12 @@ export function SparePartsManagementDialog({
 
   const { data: spareParts = [], isLoading } = useQuery<SparePart[]>({
     queryKey: [`/api/repairs/${repairId}/spare-parts`],
+    enabled: open && !!repairId,
+  });
+
+  // Reparatur-Details laden für Auftragsnummer
+  const { data: repair } = useQuery<Repair>({
+    queryKey: [`/api/repairs/${repairId}`],
     enabled: open && !!repairId,
   });
 
@@ -137,7 +143,9 @@ export function SparePartsManagementDialog({
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">
                 <Package className="h-4 w-4 md:h-5 md:w-5" />
-                <span className="text-sm md:text-base">Ersatzteile verwalten - #{repairId}</span>
+                <span className="text-sm md:text-base">
+                  Ersatzteile verwalten - {repair?.orderCode || `#${repairId}`}
+                </span>
               </DialogTitle>
               <Button
                 variant="ghost"
