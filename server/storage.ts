@@ -50,6 +50,7 @@ import {
   spareParts,
   type SparePart,
   type InsertSparePart,
+  repairStatusHistory,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -2126,6 +2127,9 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
+      // Vorherigen Status für History-Log speichern
+      const oldStatus = existingRepair.status;
+      
       // Aktualisiere den Status und optional die Techniker-Information
       const updateData: any = {
         status: status,
@@ -2156,6 +2160,23 @@ export class DatabaseStorage implements IStorage {
       
       if (updatedRepair) {
         console.log(`updateRepairStatus: Status der Reparatur ${id} erfolgreich auf '${status}' aktualisiert für Benutzer ${userId}`);
+        
+        // Status-History-Eintrag erstellen, wenn sich der Status geändert hat
+        if (oldStatus !== status) {
+          try {
+            await db.insert(repairStatusHistory).values({
+              repairId: id,
+              oldStatus: oldStatus,
+              newStatus: status,
+              changedBy: userId,
+              userId: userId,
+              shopId: user.shopId
+            });
+            console.log(`Status-History: ${oldStatus} → ${status} für Reparatur ${id} durch Benutzer ${userId} (automatisch)`);
+          } catch (historyError) {
+            console.error('Fehler beim Erstellen des automatischen Status-History-Eintrags:', historyError);
+          }
+        }
       } else {
         console.warn(`updateRepairStatus: Status der Reparatur ${id} konnte nicht aktualisiert werden (Shop-ID Konflikt?)`);
       }
