@@ -18,7 +18,8 @@ import {
   Mail,
   Printer,
   CreditCard,
-  UserCog
+  UserCog,
+  Monitor
 } from "lucide-react";
 import { useRef, useState } from "react";
 import ClientKingLogo from "@assets/logo_new.png";
@@ -170,6 +171,28 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                     >
                       <BarChart2 className="h-5 w-5 mr-2" />
                       Statistiken
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'orders' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('orders');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <PlusCircle className="h-5 w-5 mr-2" />
+                      Bestellungen
+                    </Button>
+                    <Button 
+                      variant={activeTab === 'kiosk' ? 'default' : 'ghost'}
+                      className="w-full justify-start"
+                      onClick={() => {
+                        if (onTabChange) onTabChange('kiosk');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Smartphone className="h-5 w-5 mr-2" />
+                      Kiosk Modus
                     </Button>
                     {/* Einstellungskategorie mit Unterpunkten */}
                     <div className="mt-2 mb-1">
