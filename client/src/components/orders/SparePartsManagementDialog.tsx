@@ -144,7 +144,7 @@ export function SparePartsManagementDialog({
               <DialogTitle className="flex items-center gap-2">
                 <Package className="h-4 w-4 md:h-5 md:w-5" />
                 <span className="text-sm md:text-base">
-                  Ersatzteile verwalten - {repair?.orderCode || `#${repairId}`}
+                  Ersatzteile verwalten - {repair?.orderCode || ''}
                 </span>
               </DialogTitle>
               <Button

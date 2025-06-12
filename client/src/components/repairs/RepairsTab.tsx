@@ -583,7 +583,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer" 
                     onClick={() => openDetailsDialog(repair.id)}
                   >
-                    <td className="py-3 px-4">{repair.orderCode || `#${repair.id}`}</td>
+                    <td className="py-3 px-4">{repair.orderCode || ''}</td>
                     <td className="py-3 px-4">{repair.customerName}</td>
                     <td className="py-3 px-4">{repair.model}</td>
                     <td className="py-3 px-4 whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</td>
