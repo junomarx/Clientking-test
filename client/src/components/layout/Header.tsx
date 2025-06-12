@@ -56,7 +56,10 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
   };
   
   const handleLogout = () => {
+    console.log("🖱️ Header handleLogout aufgerufen");
+    console.log("🔍 Logout-Mutation Status:", logoutMutation.status);
     logoutMutation.mutate();
+    console.log("🚀 Logout-Mutation aufgerufen von Header");
   };
 
   // Superadmin-Stil für reguläre App-Ansicht

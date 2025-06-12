@@ -193,5 +193,32 @@ export function useAuth() {
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+  
+  // Globaler Logout-Handler für Debug-Zwecke
+  if (typeof window !== 'undefined') {
+    (window as any).debugLogout = () => {
+      console.log("🐛 Debug-Logout aufgerufen");
+      context.logoutMutation.mutate();
+    };
+    
+    (window as any).directLogout = async () => {
+      console.log("🚪 Direkter Logout-Test");
+      try {
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        console.log("📡 Logout Response:", response.status);
+        if (response.ok) {
+          console.log("✅ Logout erfolgreich - lade Seite neu");
+          window.location.href = '/auth';
+        }
+      } catch (error) {
+        console.log("❌ Logout Fehler:", error);
+      }
+    };
+  }
+  
   return context;
 }
