@@ -32,6 +32,39 @@ if (!process.env.SMTP_SENDER_NAME) {
 }
 
 const app = express();
+
+// PWA-Dateien mit korrekten MIME-Types bedienen - VOR allen anderen Middlewares
+import path from 'path';
+import fs from 'fs';
+
+app.get('/sw.js', (req, res) => {
+  const swPath = path.resolve(import.meta.dirname, '..', 'public', 'sw.js');
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const swContent = fs.readFileSync(swPath, 'utf8');
+    res.send(swContent);
+  } catch (error) {
+    console.error('Error serving service worker:', error);
+    res.status(404).send('Service Worker not found');
+  }
+});
+
+app.get('/manifest.json', (req, res) => {
+  const manifestPath = path.resolve(import.meta.dirname, '..', 'public', 'manifest.json');
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+    res.send(manifestContent);
+  } catch (error) {
+    console.error('Error serving manifest:', error);
+    res.status(404).send('Manifest not found');
+  }
+});
+
+// Standard Express-Middleware
 // Erhöhe die maximale Größe für JSON-Anfragen auf 50 MB (für PDF-Upload)
 app.use(express.json({ limit: '50mb' }));
 // Erhöhe die maximale Größe für URL-codierte Anfragen auf 50 MB
