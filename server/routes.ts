@@ -45,8 +45,9 @@ import { supportAccessRouter } from "./support-access-routes";
 import { registerSuperadminRoutes } from "./superadmin-routes";
 import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
-import path from 'path';
-import fs from 'fs';
+import { db } from "./db";
+import { eq, and, sql, gte, lt } from "drizzle-orm";
+import { emailService } from "./email-service";
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
@@ -122,34 +123,6 @@ async function isAuthenticated(req: Request, res: Response, next: NextFunction) 
 // Hilfsfunktionen entfernt (keine Modellreihen mehr)
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // PWA-ROUTES: Service Worker und Manifest mit korrekten MIME-Types bedienen
-  app.get('/sw.js', (req, res) => {
-    const swPath = path.resolve(import.meta.dirname, '..', 'public', 'sw.js');
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    res.setHeader('Service-Worker-Allowed', '/');
-    res.setHeader('Cache-Control', 'no-cache');
-    try {
-      const swContent = fs.readFileSync(swPath, 'utf8');
-      res.send(swContent);
-    } catch (error) {
-      console.error('Error serving service worker:', error);
-      res.status(404).send('Service Worker not found');
-    }
-  });
-
-  app.get('/manifest.json', (req, res) => {
-    const manifestPath = path.resolve(import.meta.dirname, '..', 'public', 'manifest.json');
-    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache');
-    try {
-      const manifestContent = fs.readFileSync(manifestPath, 'utf8');
-      res.send(manifestContent);
-    } catch (error) {
-      console.error('Error serving manifest:', error);
-      res.status(404).send('Manifest not found');
-    }
-  });
   
   // KIOSK-ROUTE: Registriere Kiosk-Unterschrift-Route ZUERST, um Middleware zu umgehen
   app.post("/api/kiosk-signature", async (req: Request, res: Response) => {

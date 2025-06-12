@@ -1,84 +1,26 @@
 // Service Worker für PWA
-const CACHE_NAME = 'clientking-handyshop-v2';
+const CACHE_NAME = 'clientking-handyshop-v1';
 const urlsToCache = [
   '/',
-  '/manifest.json',
+  '/static/js/bundle.js',
+  '/static/css/main.css',
   '/assets/ClientKing_Logo.png'
 ];
 
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
-      })
-      .catch((error) => {
-        console.error('Service Worker: Cache installation failed:', error);
-      })
+      .then((cache) => cache.addAll(urlsToCache))
   );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
-
-  // For navigation requests, always try network first
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return caches.match('/');
-        })
-    );
-    return;
-  }
-
-  // For other requests, try cache first, then network
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache if not a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            // Clone the response
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          });
-      })
+        // Gib die Datei aus dem Cache zurück oder lade sie vom Netzwerk
+        return response || fetch(event.request);
+      }
+    )
   );
 });

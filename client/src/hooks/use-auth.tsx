@@ -132,16 +132,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
+      queryClient.setQueryData(["/api/user"], null);
       
       // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
       // Dies verhindert, dass Daten des vorherigen Benutzers angezeigt werden
       queryClient.clear();
-      
-      // Benutzer-Daten setzen
-      queryClient.setQueryData(["/api/user"], null);
-      
-      // Zur Login-Seite weiterleiten
-      setLocation("/auth");
       
       toast({
         title: "Abmeldung erfolgreich",
