@@ -38,7 +38,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [canViewStats, setCanViewStats] = useState(false);
   
   const handleLogout = () => {
+    console.log("🖱️ Logout-Button geklickt in Sidebar");
+    console.log("🔍 Logout-Mutation Status:", logoutMutation.status);
     logoutMutation.mutate();
+    console.log("🚀 Logout-Mutation aufgerufen");
   };
 
   // Prüfung der Statistik-Berechtigung

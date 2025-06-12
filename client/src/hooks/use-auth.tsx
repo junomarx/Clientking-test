@@ -131,26 +131,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      console.log("🚪 Logout API-Aufruf gestartet");
       await apiRequest("POST", "/api/logout");
+      console.log("✅ Logout API-Aufruf erfolgreich");
     },
     onSuccess: () => {
+      console.log("🔄 Logout onSuccess - Starte Bereinigung");
+      
       // Token und Benutzerinformationen bei Abmeldung entfernen
       localStorage.removeItem('auth_token');
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
+      console.log("🗑️ localStorage bereinigt");
       
       // Benutzer-Daten sofort auf null setzen
       queryClient.setQueryData(["/api/user"], null);
+      console.log("👤 User-Daten auf null gesetzt");
       
       // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
       // Dies verhindert, dass Daten des vorherigen Benutzers angezeigt werden
       queryClient.clear();
+      console.log("🧹 Query-Cache geleert");
       
       toast({
         title: "Abmeldung erfolgreich",
         description: "Sie wurden erfolgreich abgemeldet."
       });
+      console.log("🔔 Toast-Nachricht angezeigt");
       
+      console.log("🔄 Weiterleitung zu /auth wird gestartet");
       // Seite komplett neu laden, um sicherzustellen, dass der Logout-Status erkannt wird
       window.location.href = '/auth';
     },

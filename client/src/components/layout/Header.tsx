@@ -265,6 +265,7 @@ export function Header({ variant = "landing", activeTab, onTabChange }: HeaderPr
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => {
+                        console.log("🖱️ Logout-Button geklickt in Header");
                         setMenuOpen(false);
                         handleLogout();
                       }}
