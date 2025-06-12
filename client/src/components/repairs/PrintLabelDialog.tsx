@@ -113,6 +113,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     console.log('formatted deviceCode:', deviceCode);
     console.log('deviceCode length:', deviceCode?.length);
     console.log('deviceCode truthy:', !!deviceCode);
+    console.log('repair?.deviceCodeType:', repair?.deviceCodeType);
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
@@ -215,7 +216,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
               
               <div class="qr-code">${qrCode}</div>
               
-              ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : ''}
+              ${deviceCode ? `<div class="device-code">${deviceCode}</div>` : `<!-- Kein Device-Code: deviceCodeData=${JSON.stringify(deviceCodeData)}, deviceCode='${deviceCode}' -->`}
               
               <div class="model">${model}</div>
               

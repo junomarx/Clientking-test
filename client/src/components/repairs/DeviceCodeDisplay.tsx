@@ -51,7 +51,7 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
 
   const renderDeviceCode = () => {
     if (!revealed || !decryptedCode) {
-      return deviceCodeType === 'text' ? '••••••••' : 'Muster';
+      return deviceCodeType === 'pattern' ? 'Muster' : '••••••••';
     }
 
     if (deviceCodeType === 'pattern') {
