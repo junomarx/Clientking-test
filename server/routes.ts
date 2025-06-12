@@ -2862,7 +2862,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
       
-      console.log(`Sende Reparaturauftrag ${orderCode || `#${repairId}`} per E-Mail an ${customerEmail}`);
+      console.log(`Sende Reparaturauftrag ${orderCode || repair.orderCode} per E-Mail an ${customerEmail}`);
       
       // PDF-Buffer aus Base64-Daten erstellen (exakt wie Download)
       const pdfBuffer = Buffer.from(pdfData, 'base64');
@@ -2878,7 +2878,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const senderName = businessSettings?.businessName || 'Handyshop Verwaltung';
       const senderEmail = 'office@connect7.at';
       
-      const subject = `Reparaturauftrag ${orderCode || `#${repairId}`}`;
+      const subject = `Reparaturauftrag ${orderCode || repair.orderCode}`;
       
       // Kunde und vollständige Daten abrufen für das neue Template
       const customer = await storage.getCustomer(repair.customerId, userId);
@@ -2894,7 +2894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subject: subject,
         htmlBody: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || `#${repairId}`}</h2>
+            <h2 style="color: #4f46e5;">Reparaturauftrag ${orderCode || repair.orderCode}</h2>
             <p>Sehr geehrte/r ${customer.firstName} ${customer.lastName},</p>
             <p>anbei erhalten Sie Ihren Reparaturauftrag als PDF-Dokument mit allen wichtigen Informationen.</p>
             <p>Bei Fragen oder für Rücksprachen stehen wir Ihnen gerne zur Verfügung.</p>

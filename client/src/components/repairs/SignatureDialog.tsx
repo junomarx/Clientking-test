@@ -85,8 +85,8 @@ export function SignatureDialog({
   // Titel und Beschreibung je nach Signatur-Typ
   const isDropoff = signatureType === 'dropoff';
   const dialogTitle = isDropoff 
-    ? `Unterschrift bei Abgabe für Auftrag ${repair?.orderCode || `#${repairId}`}` 
-    : `Unterschrift bei Abholung für Auftrag ${repair?.orderCode || `#${repairId}`}`;
+    ? `Unterschrift bei Abgabe für Auftrag ${repair?.orderCode || ''}` 
+    : `Unterschrift bei Abholung für Auftrag ${repair?.orderCode || ''}`;
   const dialogDescription = isDropoff
     ? 'Bitte unterschreiben Sie hier zur Bestätigung der Geräteabgabe zur Reparatur.'
     : 'Bitte unterschreiben Sie hier zur Bestätigung der Geräteabholung nach der Reparatur.';

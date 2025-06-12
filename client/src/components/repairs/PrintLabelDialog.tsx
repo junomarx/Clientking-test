@@ -215,7 +215,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         <body>
           <div class="label">
             <div class="print-area">
-              <div class="repair-number">${orderCode || `#${repairIdValue}`}</div>
+              <div class="repair-number">${orderCode}</div>
               
               <div class="customer-name">${firstName} ${lastName}</div>
               
