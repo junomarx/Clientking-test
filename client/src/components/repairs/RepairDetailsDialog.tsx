@@ -295,6 +295,18 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             </div>
           </div>
           
+          {/* Techniker-Information */}
+          {repair.technicianNote && (
+            <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
+              <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
+                <User className="h-5 w-5" />
+                Techniker-Information
+              </h3>
+              
+              <div className="whitespace-pre-wrap">{repair.technicianNote}</div>
+            </div>
+          )}
+          
           {/* Weitere Informationen */}
           <div className="bg-slate-50 rounded-lg p-4 shadow-sm border md:col-span-2">
             <h3 className="text-lg font-medium flex items-center gap-2 mb-3">
@@ -311,16 +323,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     <div>{formatDate(repair.createdAt.toString())}</div>
                   </div>
                 </div>
-                
-                {repair.technicianNote && (
-                  <div className="flex items-start gap-2">
-                    <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Techniker</div>
-                      <div className="whitespace-pre-wrap">{repair.technicianNote}</div>
-                    </div>
-                  </div>
-                )}
                 
                 {repair.estimatedCost && (
                   <div className="flex items-start gap-2">
