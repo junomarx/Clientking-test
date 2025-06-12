@@ -270,7 +270,7 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                   <Label htmlFor="deviceCode" className="text-base font-medium">PIN-Code eingeben</Label>
                   <Input
                     id="deviceCode"
-                    type="password"
+                    type="text"
                     value={deviceCode}
                     onChange={(e) => setDeviceCode(e.target.value)}
                     placeholder="z.B. 1234 oder 0000"
