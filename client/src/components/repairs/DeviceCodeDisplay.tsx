@@ -84,11 +84,13 @@ export function DeviceCodeDisplay({ repairId, deviceCodeType }: DeviceCodeDispla
           </div>
         );
       } catch (error) {
+        // Fallback: Zeige Zahlen mit +1 Umwandlung
+        const displayPattern = decryptedCode.split('-').map(p => parseInt(p) + 1).join(' → ');
         return (
           <div className="text-sm">
             <div className="font-medium">Android-Muster</div>
             <div className="font-mono text-xs bg-gray-50 px-2 py-1 rounded mt-1">
-              {decryptedCode}
+              Reihenfolge: {displayPattern}
             </div>
           </div>
         );

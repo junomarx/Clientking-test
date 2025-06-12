@@ -291,7 +291,9 @@ export function KioskSignature({ onCancel, onSuccess }: KioskSignatureProps) {
                       <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Check className="h-5 w-5 text-green-600" />
-                          <span className="text-green-800 font-medium">Muster erfasst: {deviceCode}</span>
+                          <span className="text-green-800 font-medium">
+                            Muster erfasst: {deviceCode.split('-').map(p => parseInt(p) + 1).join(' → ')}
+                          </span>
                         </div>
                         <Button
                           variant="outline"

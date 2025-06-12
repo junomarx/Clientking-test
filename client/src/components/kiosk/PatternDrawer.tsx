@@ -202,7 +202,7 @@ export function PatternDrawer({ onPatternComplete, onClose }: PatternDrawerProps
 
         {currentPattern.length > 0 && (
           <div className="text-center mb-4">
-            <div className="text-sm text-gray-600">Muster: {currentPattern.join('-')}</div>
+            <div className="text-sm text-gray-600">Muster: {currentPattern.map(p => p + 1).join(' → ')}</div>
           </div>
         )}
 
