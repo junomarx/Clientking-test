@@ -95,6 +95,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const repairIssue = repair?.issue || '';
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
     
+    // Debug für Geräte-Code
+    console.log('Device Code Debug:');
+    console.log('deviceCodeData:', deviceCodeData);
+    console.log('formatted deviceCode:', deviceCode);
+    console.log('deviceCode length:', deviceCode?.length);
+    console.log('deviceCode truthy:', !!deviceCode);
+    
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
       <!DOCTYPE html>
