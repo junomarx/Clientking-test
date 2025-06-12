@@ -18,10 +18,10 @@ import {
 
 // Mock-Daten für die Demo der Benutzeroberfläche
 const mockRepairs = [
-  { id: "REP-001", customer: "Max Mustermann", device: "iPhone 13", status: "In Bearbeitung", date: "07.05.2025" },
-  { id: "REP-002", customer: "Laura Schmidt", device: "Samsung Galaxy S21", status: "Abgeschlossen", date: "06.05.2025" },
-  { id: "REP-003", customer: "Thomas Meier", device: "Huawei P40", status: "Wartet auf Teile", date: "05.05.2025" },
-  { id: "REP-004", customer: "Anna Weber", device: "iPad Pro", status: "Wartet auf Kunde", date: "04.05.2025" },
+  { id: 1, orderCode: "AS258001", customer: "Max Mustermann", device: "iPhone 13", status: "In Bearbeitung", date: "07.05.2025" },
+  { id: 2, orderCode: "AS258002", customer: "Laura Schmidt", device: "Samsung Galaxy S21", status: "Abgeschlossen", date: "06.05.2025" },
+  { id: 3, orderCode: "AS258003", customer: "Thomas Meier", device: "Huawei P40", status: "Wartet auf Teile", date: "05.05.2025" },
+  { id: 4, orderCode: "AS258004", customer: "Anna Weber", device: "iPad Pro", status: "Wartet auf Kunde", date: "04.05.2025" },
 ];
 
 const mockCustomers = [
@@ -91,7 +91,7 @@ export default function SuperadminDesignPreview() {
                 <TableBody>
                   {mockRepairs.map((repair) => (
                     <TableRow key={repair.id}>
-                      <TableCell className="font-medium">{repair.id}</TableCell>
+                      <TableCell className="font-medium">{repair.orderCode}</TableCell>
                       <TableCell>{repair.customer}</TableCell>
                       <TableCell>{repair.device}</TableCell>
                       <TableCell>
