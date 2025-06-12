@@ -19,12 +19,27 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('PWA Service Worker erfolgreich registriert:', registration);
+        console.log('PWA Service Worker erfolgreich registriert:', registration.scope);
+        
+        // Prüfe auf Updates
+        registration.addEventListener('updatefound', () => {
+          console.log('PWA Service Worker Update gefunden');
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('PWA Service Worker Update verfügbar');
+              }
+            });
+          }
+        });
       })
       .catch((error) => {
         console.log('PWA Service Worker Registrierung fehlgeschlagen:', error);
       });
   });
+} else {
+  console.log('PWA Service Worker wird von diesem Browser nicht unterstützt');
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
