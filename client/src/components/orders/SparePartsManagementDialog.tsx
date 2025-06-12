@@ -136,8 +136,8 @@ export function SparePartsManagementDialog({
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Ersatzteile verwalten - Reparatur #{repairId}
+                <Package className="h-4 w-4 md:h-5 md:w-5" />
+                <span className="text-sm md:text-base">Ersatzteile verwalten - #{repairId}</span>
               </DialogTitle>
               <Button
                 variant="ghost"
@@ -152,15 +152,15 @@ export function SparePartsManagementDialog({
 
           <div className="space-y-4">
             {/* Action Bar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
                   {spareParts.length} Ersatzteile
                 </Badge>
                 {spareParts.length > 0 && (
                   <Badge 
                     variant={spareParts.every(p => p.status === 'eingetroffen') ? "default" : "outline"}
-                    className={spareParts.every(p => p.status === 'eingetroffen') ? "bg-green-100 text-green-800" : ""}
+                    className={`text-xs ${spareParts.every(p => p.status === 'eingetroffen') ? "bg-green-100 text-green-800" : ""}`}
                   >
                     {spareParts.every(p => p.status === 'eingetroffen') 
                       ? "Alle eingetroffen" 
@@ -172,10 +172,11 @@ export function SparePartsManagementDialog({
               
               <Button
                 onClick={handleCreateNew}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 w-full md:w-auto"
+                size="sm"
               >
                 <Plus className="h-4 w-4" />
-                Ersatzteil hinzufügen
+                <span className="text-sm">Ersatzteil hinzufügen</span>
               </Button>
             </div>
 
@@ -202,54 +203,96 @@ export function SparePartsManagementDialog({
                 </Button>
               </div>
             ) : (
-              <div className="rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ersatzteil</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="w-[100px]">Aktionen</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {spareParts.map((sparePart) => (
-                      <TableRow key={sparePart.id}>
-                        <TableCell className="font-medium">
-                          {sparePart.partName}
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="secondary" 
-                            className={statusColors[sparePart.status]}
-                          >
-                            {statusLabels[sparePart.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(sparePart)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(sparePart)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden md:block rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ersatzteil</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[100px]">Aktionen</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {spareParts.map((sparePart) => (
+                        <TableRow key={sparePart.id}>
+                          <TableCell className="font-medium">
+                            {sparePart.partName}
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant="secondary" 
+                              className={statusColors[sparePart.status]}
+                            >
+                              {statusLabels[sparePart.status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(sparePart)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(sparePart)}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
+                  {spareParts.map((sparePart) => (
+                    <div key={sparePart.id} className="rounded-lg border p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{sparePart.partName}</div>
+                          <div className="mt-2">
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-xs ${statusColors[sparePart.status]}`}
+                            >
+                              {statusLabels[sparePart.status]}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 ml-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(sparePart)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(sparePart)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </DialogContent>
