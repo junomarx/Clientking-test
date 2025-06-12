@@ -434,7 +434,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
                     <div className="flex justify-between items-start">
                       <div>
                         <h4 className="font-semibold">{repair.brand} {repair.model}</h4>
-                        <p className="text-sm text-muted-foreground">{repair.deviceType} | Nr. {repair.id}</p>
+                        <p className="text-sm text-muted-foreground">{repair.deviceType} | {repair.orderCode}</p>
                       </div>
                       <div className="text-right flex items-center">
                         <Button 
