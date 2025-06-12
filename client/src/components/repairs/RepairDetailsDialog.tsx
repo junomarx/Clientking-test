@@ -325,14 +325,21 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                       {showStatusHistory ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
                     </Button>
                   </div>
-                  <div>{getStatusBadge(repair.status)}</div>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(repair.status)}
+                    <div className="text-xs text-muted-foreground">
+                      {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                    </div>
+                  </div>
                   
-                  {/* Status History */}
+                  {/* Status History - ohne aktuellen Status */}
                   {showStatusHistory && statusHistoryData && statusHistoryData.length > 0 && (
                     <div className="mt-3 p-3 bg-white rounded border border-gray-200">
                       <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
                       <div className="space-y-2">
-                        {statusHistoryData.map((entry) => (
+                        {statusHistoryData
+                          .filter(entry => entry.newStatus !== repair.status) // Aktuellen Status ausfiltern
+                          .map((entry) => (
                           <div key={entry.id} className="flex items-start gap-2 text-xs">
                             <div className="text-muted-foreground min-w-0 flex-1">
                               <div className="flex items-center gap-1">
@@ -352,6 +359,9 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                           </div>
                         ))}
                       </div>
+                      {statusHistoryData.filter(entry => entry.newStatus !== repair.status).length === 0 && (
+                        <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
+                      )}
                     </div>
                   )}
                   
