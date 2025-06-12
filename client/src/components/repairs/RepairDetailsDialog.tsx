@@ -2,12 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
-import { Customer, EmailHistory, Repair } from '@shared/schema';
+import { Customer, EmailHistory, Repair, RepairStatusHistory } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 
 // Erweiterte EmailHistory mit optionalem templateName
 export interface EmailHistoryWithTemplate extends EmailHistory {
   templateName?: string;
+}
+
+interface StatusHistoryEntry {
+  id: number;
+  oldStatus: string | null;
+  newStatus: string;
+  changedAt: string;
+  changedByUsername: string | null;
+  notes: string | null;
 }
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -47,6 +56,9 @@ import {
   MessageCircle,
   Check,
   X,
+  History,
+  ChevronDown,
+  ChevronUp,
   Printer,
 
   Pen,
@@ -68,6 +80,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistoryWithTemplate[]>([]);
+  const [showStatusHistory, setShowStatusHistory] = useState(false);
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
   const { user } = useAuth();
@@ -117,6 +130,17 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
       const data = await response.json();
       console.log('🔍 DEBUG: E-Mail-Historie-Daten erhalten:', data);
       return data;
+    },
+    enabled: open && repairId !== null,
+  });
+
+  // Status-Verlauf abrufen
+  const { data: statusHistoryData } = useQuery<StatusHistoryEntry[]>({
+    queryKey: ['/api/repairs', repairId, 'status-history'],
+    queryFn: async () => {
+      if (!repairId) return [];
+      const response = await apiRequest('GET', `/api/repairs/${repairId}/status-history`);
+      return await response.json();
     },
     enabled: open && repairId !== null,
   });
@@ -287,9 +311,50 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
               
               <div className="flex items-start gap-2">
                 <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                <div>
-                  <div className="text-sm text-muted-foreground">Status</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-sm text-muted-foreground">Status</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowStatusHistory(!showStatusHistory)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <History className="h-3 w-3 mr-1" />
+                      Verlauf
+                      {showStatusHistory ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
+                    </Button>
+                  </div>
                   <div>{getStatusBadge(repair.status)}</div>
+                  
+                  {/* Status History */}
+                  {showStatusHistory && statusHistoryData && statusHistoryData.length > 0 && (
+                    <div className="mt-3 p-3 bg-white rounded border border-gray-200">
+                      <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
+                      <div className="space-y-2">
+                        {statusHistoryData.map((entry) => (
+                          <div key={entry.id} className="flex items-start gap-2 text-xs">
+                            <div className="text-muted-foreground min-w-0 flex-1">
+                              <div className="flex items-center gap-1">
+                                {entry.oldStatus && (
+                                  <>
+                                    <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">{entry.oldStatus}</span>
+                                    <span>→</span>
+                                  </>
+                                )}
+                                <span className="px-1.5 py-0.5 bg-blue-100 rounded text-xs">{entry.newStatus}</span>
+                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-1">
+                                {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                                {entry.changedByUsername && ` • ${entry.changedByUsername}`}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   {repair.technicianNote && (
                     <div className="mt-2 text-sm">
                       <div className="text-muted-foreground mb-1">Techniker-Information</div>
