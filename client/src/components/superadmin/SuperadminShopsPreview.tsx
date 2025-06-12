@@ -160,7 +160,7 @@ export default function SuperadminDesignPreview() {
                 <TableBody>
                   {mockRepairs.map((repair) => (
                     <TableRow key={repair.id}>
-                      <TableCell className="font-medium">{repair.id}</TableCell>
+                      <TableCell className="font-medium">{repair.orderCode}</TableCell>
                       <TableCell>{repair.customer}</TableCell>
                       <TableCell>{repair.device}</TableCell>
                       <TableCell>
