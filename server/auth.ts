@@ -314,8 +314,19 @@ export function setupAuth(app: Express) {
           return next(destroyErr);
         }
         
-        // Lösche den Session-Cookie
-        res.clearCookie('connect.sid');
+        // Lösche beide möglichen Session-Cookies
+        res.clearCookie('handyshop.sid', { 
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax'
+        });
+        res.clearCookie('connect.sid', { 
+          path: '/',
+          httpOnly: true,
+          sameSite: 'lax'
+        });
+        
+        console.log(`✅ Benutzer ${userId} erfolgreich abgemeldet`);
         res.sendStatus(200);
       });
     });
@@ -364,14 +375,14 @@ export function setupAuth(app: Express) {
     }
   };
   
-  app.get("/api/user", checkTokenAuth, async (req, res) => {
-    if (!req.user) {
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
     
     // Aktualisiere die letzte Aktivität des Benutzers
     try {
-      await storage.updateUserLastActivity(req.user.id);
+      storage.updateUserLastActivity(req.user.id);
     } catch (error) {
       console.error("Fehler beim Aktualisieren der letzten Aktivität:", error);
     }
