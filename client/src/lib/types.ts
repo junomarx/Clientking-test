@@ -42,6 +42,9 @@ export interface Repair {
   pickupSignature?: string | null; // Digitale Unterschrift als Base64-kodiertes Bild (Abholung)
   pickupSignedAt?: string | null; // Datum/Uhrzeit der Unterschrift bei Abholung
   
+  // Techniker-Information für "Ausser Haus" Status
+  technicianNote?: string | null; // Notiz mit Techniker-Information und Zeitstempel
+  
   // Gerätecode-Funktionalität für 2-Schritt Unterschriftsprozess
   deviceCode?: string | null; // Verschlüsselter Gerätecode (PIN oder Pattern-Hash)
   deviceCodeType?: string | null; // "text", "pattern", oder null wenn übersprungen

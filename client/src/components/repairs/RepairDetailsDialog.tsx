@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePrintManager } from './PrintOptionsManager';
 import { apiRequest } from '@/lib/queryClient';
-import { Customer, EmailHistory } from '@shared/schema';
-import { Repair } from '@/lib/types';
+import { Customer, EmailHistory, Repair } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 
 // Erweiterte EmailHistory mit optionalem templateName
@@ -312,6 +311,16 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     <div>{formatDate(repair.createdAt.toString())}</div>
                   </div>
                 </div>
+                
+                {repair.technicianNote && (
+                  <div className="flex items-start gap-2">
+                    <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">Techniker</div>
+                      <div className="whitespace-pre-wrap">{repair.technicianNote}</div>
+                    </div>
+                  </div>
+                )}
                 
                 {repair.estimatedCost && (
                   <div className="flex items-start gap-2">
