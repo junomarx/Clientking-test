@@ -30,7 +30,13 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
   
   const repair = repairs?.find(r => r.id === repairId) || null;
   const customer: Customer | undefined = repair && customers ? customers.find(c => c.id === repair.customerId) : undefined;
-  const deviceCodeData = queryClient.getQueryData(['/api/repairs', repairId, 'device-code']);
+  
+  // Aktive Abfrage des Device-Codes, um sicherzustellen, dass die Daten verfügbar sind
+  const { data: deviceCodeData } = useQuery({
+    queryKey: ['/api/repairs', repairId, 'device-code'],
+    enabled: !!repairId && open,
+    staleTime: 5 * 60 * 1000, // 5 Minuten Cache
+  });
 
   const isLoading = false;
 
@@ -54,8 +60,9 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
         const digit = parseInt(num);
         return (digit + 1).toString(); // +1 für die Anzeige (0-8 wird zu 1-9)
       });
-      return `${patternNumbers.join(',')}`;
-    } else if (deviceCodeData.deviceCodeType === 'text') {
+      return `Muster: ${patternNumbers.join(',')}`;
+    } else if (deviceCodeData.deviceCodeType === 'text' || !deviceCodeData.deviceCodeType) {
+      // Behandle sowohl 'text' als auch undefined/null als PIN-Code
       return `Code: ${deviceCodeData.deviceCode}`;
     }
     
@@ -87,8 +94,6 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
     const model = repair?.model || '';
     const repairIssue = repair?.issue || '';
     const deviceCode = formatDeviceCodeForLabel(deviceCodeData);
-    
-
     
     // Fülle das Druckfenster mit Inhalten
     printWindow.document.write(`
@@ -267,7 +272,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     {deviceCodeData && formatDeviceCodeForLabel(deviceCodeData) && (
                       <div className="text-center w-full mb-2">
                         <div className="text-xs font-bold bg-gray-100 border border-gray-300 rounded px-2 py-1 inline-block">
-                          {formatDeviceCodeForLabel(deviceCodeData)}
+                          {formatDeviceCodeForLabel(deviceCodeData) as string}
                         </div>
                       </div>
                     )}
