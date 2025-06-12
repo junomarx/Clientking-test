@@ -9,6 +9,12 @@ import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+// Hook für Navigation innerhalb des AuthProviders
+function useNavigateInAuth() {
+  const [, setLocation] = useLocation();
+  return setLocation;
+}
+
 // Typendefinition für User ohne Passwort
 type UserResponse = Omit<User, "password">;
 
@@ -41,7 +47,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const setLocation = useNavigateInAuth();
   
   const {
     data: user,
