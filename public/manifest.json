@@ -1,7 +1,7 @@
 {
-  "name": "ClientKing Handyshop Verwaltung",
-  "short_name": "ClientKing",
-  "description": "Mobile-first web application for phone repair shop management",
+  "name": "Handyshop Verwaltung",
+  "short_name": "Handyshop",
+  "description": "Professional mobile repair shop management system",
   "start_url": "/?source=pwa",
   "id": "/",
   "display": "standalone",
@@ -30,7 +30,7 @@
   "edge_side_panel": {},
   "screenshots": [
     {
-      "src": "/assets/ClientKing_Logo.png",
+      "src": "/app-logo.png",
       "sizes": "540x720",
       "type": "image/png",
       "form_factor": "narrow"

@@ -1,8 +1,32 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" rx="64" fill="#1f2937"/>
-<path d="M128 160h256v32H128v-32z" fill="#ffffff"/>
-<path d="M128 224h256v32H128v-32z" fill="#ffffff"/>
-<path d="M128 288h192v32H128v-32z" fill="#ffffff"/>
-<circle cx="384" cy="304" r="24" fill="#3b82f6"/>
-<path d="M128 352h128v32H128v-32z" fill="#ffffff"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#ffffff"/>
+  
+  <!-- Phone body -->
+  <rect x="176" y="128" width="160" height="256" rx="20" ry="20" fill="#2563eb" stroke="#1e3a8a" stroke-width="8"/>
+  
+  <!-- Screen -->
+  <rect x="192" y="160" width="128" height="192" rx="10" ry="10" fill="#bfdbfe"/>
+  
+  <!-- Crown -->
+  <path d="M160 96 L176 128 L213 64 L256 96 L293 64 L330 128 L352 96 L320 160 L192 160 Z" fill="#fbbf24" stroke="#f59e0b" stroke-width="4"/>
+  
+  <!-- Crown jewels -->
+  <circle cx="213" cy="80" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
+  <circle cx="256" cy="112" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
+  <circle cx="299" cy="80" r="16" fill="#fbbf24" stroke="#1e3a8a" stroke-width="4"/>
+  
+  <!-- Arms -->
+  <ellipse cx="144" cy="240" rx="32" ry="20" fill="#1e3a8a"/>
+  <ellipse cx="368" cy="240" rx="32" ry="20" fill="#1e3a8a"/>
+  
+  <!-- Cape -->
+  <path d="M128 224 Q112 256 128 288 Q144 320 176 320 L176 256 Z" fill="#dc2626"/>
+  
+  <!-- Tool (screwdriver) -->
+  <rect x="384" y="192" width="64" height="10" rx="5" fill="#dc2626"/>
+  <rect x="448" y="176" width="32" height="42" rx="5" fill="#1e3a8a"/>
+  
+  <!-- Legs -->
+  <rect x="208" y="384" width="20" height="64" rx="10" fill="#1e3a8a"/>
+  <rect x="284" y="384" width="20" height="64" rx="10" fill="#1e3a8a"/>
 </svg>
