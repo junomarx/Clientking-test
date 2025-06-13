@@ -2277,8 +2277,14 @@ export class DatabaseStorage implements IStorage {
         .delete(repairStatusHistory)
         .where(eq(repairStatusHistory.repairId, id));
       console.log(`deleteRepair: ${statusHistoryResult.rowCount || 0} Status-Historie-Einträge für Reparatur ${id} gelöscht`);
+      
+      // 3. Temporäre Unterschriften löschen (JSON-Daten enthalten repairId)
+      const tempSignaturesResult = await db
+        .delete(tempSignatures)
+        .where(sql`repair_data::text LIKE '%"repairId":${id}%'`);
+      console.log(`deleteRepair: ${tempSignaturesResult.rowCount || 0} temporäre Unterschriften für Reparatur ${id} gelöscht`);
 
-      // 3. Dann die Reparatur mit der korrekten Shop-ID löschen
+      // 4. Dann die Reparatur mit der korrekten Shop-ID löschen
       const result = await db
         .delete(repairs)
         .where(
