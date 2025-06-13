@@ -336,9 +336,10 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   {showStatusHistory && statusHistoryData && statusHistoryData.length > 0 && (
                     <div className="mt-3 p-3 bg-white rounded border border-gray-200">
                       <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
-                      <div className="space-y-2">
+                      <div className="max-h-24 overflow-y-auto space-y-2">
                         {statusHistoryData
                           .filter(entry => entry.newStatus !== repair.status) // Aktuellen Status ausfiltern
+                          .slice(0, 3) // Nur die ersten drei Einträge anzeigen
                           .map((entry) => (
                           <div key={entry.id} className="flex items-start gap-2 text-xs">
                             <div className="text-muted-foreground min-w-0 flex-1">
