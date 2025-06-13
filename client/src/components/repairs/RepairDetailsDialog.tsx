@@ -340,15 +340,12 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                         {statusHistoryData
                           .filter(entry => entry.newStatus !== repair.status) // Aktuellen Status ausfiltern
                           .map((entry) => (
-                          <div key={entry.id} className="flex items-start gap-2 text-xs">
-                            <div className="text-muted-foreground min-w-0 flex-1">
-                              <div className="flex items-center gap-1">
-                                {getStatusBadge(entry.newStatus)}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground mt-1">
+                          <div key={entry.id} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(entry.newStatus)}
+                              <span className="text-[10px] text-muted-foreground">
                                 {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
-                                {entry.changedByUsername && ` • ${entry.changedByUsername}`}
-                              </div>
+                              </span>
                             </div>
                           </div>
                         ))}
