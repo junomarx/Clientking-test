@@ -1,0 +1,63 @@
+PrintOptionsDialog gerendert mit open: true repairId: 203 canPrintLabels: true
+hook.js:608 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. Error Component Stack
+    at DescriptionWarning (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:331:29)
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:235:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:158:58
+    at Presence (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=99b68648:24:11)
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:149:64
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=99b68648:79:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=99b68648:56:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=99b68648:42:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=99b68648:260:22
+    at Presence (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=99b68648:24:11)
+    at Provider (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=99b68648:38:15)
+    at DialogPortal (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:111:11)
+    at _c3 (/src/components/ui/dialog.tsx:52:12)
+    at Provider (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=99b68648:38:15)
+    at Dialog (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:52:5)
+    at PrintOptionsDialog (/src/components/repairs/PrintOptionsDialog.tsx:44:3)
+    at PrintManagerProvider (/src/components/repairs/PrintOptionsManager.tsx:33:40)
+    at ThemeProvider (/src/hooks/use-theme.tsx:26:33)
+    at BusinessSettingsProvider (/src/hooks/use-business-settings.tsx:22:44)
+    at KioskModeProvider (/src/hooks/use-kiosk-mode.tsx:22:37)
+    at OnlineStatusProvider (/src/hooks/use-online-status.tsx:21:40)
+    at AuthProvider (/src/hooks/use-auth.tsx:35:32)
+    at QueryClientProvider (/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=99b68648:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+ WebSocket-Verbindung geschlossen: 1005 
+ RepairDetailsDialog geöffnet: false repairId: null
+ PrintOptionsDialog gerendert mit open: false repairId: 203 canPrintLabels: true
+hook.js:608 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. Error Component Stack
+    at DescriptionWarning (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:331:29)
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:235:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:158:58
+    at Presence (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=99b68648:24:11)
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:149:64
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=99b68648:79:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=99b68648:56:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=99b68648:42:13
+    at /@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=99b68648:260:22
+    at Presence (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=99b68648:24:11)
+    at Provider (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=99b68648:38:15)
+    at DialogPortal (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:111:11)
+    at _c3 (/src/components/ui/dialog.tsx:52:12)
+    at Provider (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=99b68648:38:15)
+    at Dialog (/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NMSCS6KP.js?v=99b68648:52:5)
+    at PrintLabelDialog (/src/components/repairs/PrintLabelDialog.tsx:32:36)
+    at PrintManagerProvider (/src/components/repairs/PrintOptionsManager.tsx:33:40)
+    at ThemeProvider (/src/hooks/use-theme.tsx:26:33)
+    at BusinessSettingsProvider (/src/hooks/use-business-settings.tsx:22:44)
+    at KioskModeProvider (/src/hooks/use-kiosk-mode.tsx:22:37)
+    at OnlineStatusProvider (/src/hooks/use-online-status.tsx:21:40)
+    at AuthProvider (/src/hooks/use-auth.tsx:35:32)
+    at QueryClientProvider (/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=99b68648:2805:3)
+    at App (<anonymous>)
+overrideMethod @ hook.js:608
+ Versuche WebSocket-Wiederverbindung...
+ Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+ WebSocket-Verbindung für Online-Status hergestellt
+ WebSocket-Authentifizierung erfolgreich
+ WebSocket-Verbindung geschlossen: 1005 
+ Versuche WebSocket-Wiederverbindung...
+ Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
