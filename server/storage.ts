@@ -2164,15 +2164,35 @@ export class DatabaseStorage implements IStorage {
         // Status-History-Eintrag erstellen, wenn sich der Status geändert hat
         if (oldStatus !== status) {
           try {
-            await db.insert(repairStatusHistory).values({
-              repairId: id,
-              oldStatus: oldStatus,
-              newStatus: status,
-              changedBy: userId,
-              userId: userId,
-              shopId: user.shopId
-            });
-            console.log(`Status-History: ${oldStatus} → ${status} für Reparatur ${id} durch Benutzer ${userId} (automatisch)`);
+            // Prüfe, ob bereits ein identischer Eintrag in den letzten 5 Minuten existiert
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+            const existingEntry = await db
+              .select()
+              .from(repairStatusHistory)
+              .where(
+                and(
+                  eq(repairStatusHistory.repairId, id),
+                  eq(repairStatusHistory.newStatus, status),
+                  eq(repairStatusHistory.changedBy, userId),
+                  eq(repairStatusHistory.shopId, user.shopId),
+                  gte(repairStatusHistory.changedAt, fiveMinutesAgo)
+                )
+              )
+              .limit(1);
+
+            if (existingEntry.length === 0) {
+              await db.insert(repairStatusHistory).values({
+                repairId: id,
+                oldStatus: oldStatus,
+                newStatus: status,
+                changedBy: userId,
+                userId: userId,
+                shopId: user.shopId
+              });
+              console.log(`Status-History: ${oldStatus} → ${status} für Reparatur ${id} durch Benutzer ${userId} (automatisch)`);
+            } else {
+              console.log(`Status-History: Doppelter Eintrag verhindert für Reparatur ${id}, Status ${status}`);
+            }
           } catch (historyError) {
             console.error('Fehler beim Erstellen des automatischen Status-History-Eintrags:', historyError);
           }

@@ -1149,32 +1149,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Vorherigen Status abrufen für History-Log
-      const existingRepair = await storage.getRepair(id, userId);
-      const oldStatus = existingRepair?.status;
-      
       // Reparaturstatus mit Benutzerkontext und optionaler Techniker-Information aktualisieren
+      // Die updateRepairStatus Methode erstellt automatisch History-Einträge
       const repair = await storage.updateRepairStatus(id, status, userId, technicianNote);
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
-      }
-      
-      // Status-History-Eintrag erstellen
-      if (oldStatus !== status) {
-        try {
-          await db.insert(repairStatusHistory).values({
-            repairId: id,
-            oldStatus: oldStatus,
-            newStatus: status,
-            changedBy: userId,
-            userId: userId,
-            shopId: repair.shopId
-          });
-          console.log(`Status-History: ${oldStatus} → ${status} für Reparatur ${id} durch Benutzer ${userId}`);
-        } catch (historyError) {
-          console.error('Fehler beim Erstellen des Status-History-Eintrags:', historyError);
-        }
       }
       
       // Kunde und Business-Daten laden (für E-Mail)
