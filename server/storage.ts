@@ -2264,14 +2264,21 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
-      // Erst die E-Mail-Historie löschen (Foreign Key Constraint)
-      await db
+      // Alle abhängigen Datensätze löschen (Foreign Key Constraints)
+      
+      // 1. E-Mail-Historie löschen
+      const emailHistoryResult = await db
         .delete(emailHistory)
         .where(eq(emailHistory.repairId, id));
+      console.log(`deleteRepair: ${emailHistoryResult.rowCount || 0} E-Mail-Historie-Einträge für Reparatur ${id} gelöscht`);
       
-      console.log(`deleteRepair: E-Mail-Historie für Reparatur ${id} gelöscht`);
+      // 2. Status-Historie löschen
+      const statusHistoryResult = await db
+        .delete(repairStatusHistory)
+        .where(eq(repairStatusHistory.repairId, id));
+      console.log(`deleteRepair: ${statusHistoryResult.rowCount || 0} Status-Historie-Einträge für Reparatur ${id} gelöscht`);
 
-      // Dann die Reparatur mit der korrekten Shop-ID löschen
+      // 3. Dann die Reparatur mit der korrekten Shop-ID löschen
       const result = await db
         .delete(repairs)
         .where(
