@@ -85,9 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Benutzer-Daten setzen
       queryClient.setQueryData(["/api/user"], data);
       
-      // WICHTIG: Alle Caches vollständig zurücksetzen, um Datenisolierung sicherzustellen
-      // Dies verhindert, dass Daten anderer Benutzer angezeigt werden
-      queryClient.invalidateQueries();
+      // WICHTIG: Spezifische Caches invalidieren, um Datenisolierung sicherzustellen
+      // Dies verhindert, dass Daten anderer Benutzer angezeigt werden, ohne User-State zu löschen
+      queryClient.invalidateQueries({ queryKey: ["/api/repairs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/business-settings"] });
       
       // Nach erfolgreichem Login zur Hauptseite weiterleiten
       setLocation('/');

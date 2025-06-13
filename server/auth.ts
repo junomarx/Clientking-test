@@ -342,49 +342,41 @@ export function setupAuth(app: Express) {
 
   // Middleware zum Überprüfen von Token im Authorization-Header
   const checkTokenAuth = async (req: any, res: any, next: any) => {
+    // Prüfe zuerst Session-Authentifizierung
     if (req.isAuthenticated()) {
-      return next(); // Wenn der Benutzer über Cookie authentifiziert ist, weitermachen
-    }
-    
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.sendStatus(401);
-    }
-    
-    try {
-      const token = authHeader.split(' ')[1];
-      const tokenData = Buffer.from(token, 'base64').toString().split(':');
-      
-      if (tokenData.length < 2) {
-        return res.sendStatus(401);
-      }
-      
-      const userId = parseInt(tokenData[0]);
-      const user = await storage.getUser(userId);
-      
-      if (!user || (!user.isActive && !user.isSuperadmin)) {
-        return res.sendStatus(401);
-      }
-      
-      // DSGVO-Schutz: Prüfe, ob der Benutzer eine Shop-Zuordnung hat (außer bei Superadmins)
-      if (!user.shopId && !user.isSuperadmin) {
-        console.error(`❌ Token-Auth verweigert: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung`);
-        return res.status(403).json({ 
-          message: "Ihr Benutzerkonto ist nicht korrekt konfiguriert. Bitte kontaktieren Sie den Administrator." 
-        });
-      }
-      
-      // Benutzer im Request speichern
-      req.user = user;
       return next();
-    } catch (error) {
-      console.error("Token authentication error:", error);
-      return res.sendStatus(401);
     }
+    
+    // Dann prüfe Token-Authentifizierung
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const tokenData = Buffer.from(token, 'base64').toString().split(':');
+        
+        if (tokenData.length >= 2) {
+          const userId = parseInt(tokenData[0]);
+          const user = await storage.getUser(userId);
+          
+          if (user && (user.isActive || user.isSuperadmin)) {
+            // DSGVO-Schutz: Prüfe Shop-Zuordnung
+            if (user.shopId || user.isSuperadmin) {
+              req.user = user;
+              return next();
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Token authentication error:", error);
+      }
+    }
+    
+    // Keine gültige Authentifizierung gefunden
+    return res.status(401).json({ message: "Nicht angemeldet" });
   };
   
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) {
+  app.get("/api/user", checkTokenAuth, (req, res) => {
+    if (!req.user) {
       return res.status(401).json({ message: "Nicht angemeldet" });
     }
     
