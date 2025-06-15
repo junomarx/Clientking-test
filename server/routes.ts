@@ -1002,7 +1002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Fehler beim Entschlüsseln des Gerätecodes" });
       }
 
-      console.log(`Gerätecode für Reparatur ${repairId} entschlüsselt für Benutzer ${userId}`);
+      console.log(`Gerätecode für Reparatur ${repair.id} entschlüsselt für Benutzer ${userId}`);
       
       res.json({
         deviceCode: decryptedCode,
