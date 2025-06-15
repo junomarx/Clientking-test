@@ -181,6 +181,7 @@ export interface IStorage {
   // Repair methods
   getAllRepairs(userId: number): Promise<Repair[]>;
   getRepair(id: number, userId: number): Promise<Repair | undefined>;
+  getRepairByOrderCode(orderCode: string, userId: number): Promise<Repair | undefined>;
   getRepairsByCustomerId(customerId: number, userId: number): Promise<Repair[]>;
   createRepair(repair: InsertRepair, userId: number): Promise<Repair>;
   updateRepair(
@@ -2028,6 +2029,61 @@ export class DatabaseStorage implements IStorage {
       return repair;
     } catch (error) {
       console.error(`Error getting repair ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async getRepairByOrderCode(orderCode: string, userId: number): Promise<Repair | undefined> {
+    try {
+      console.log(`getRepairByOrderCode: Suche nach Auftragsnummer ${orderCode} für Benutzer ${userId}`);
+      const user = await this.getUser(userId);
+      if (!user) {
+        console.warn(`getRepairByOrderCode: Benutzer mit ID ${userId} nicht gefunden.`);
+        return undefined;
+      }
+
+      // DSGVO-Fix: Wenn keine Shop-ID vorhanden ist, undefined zurückgeben
+      if (!user.shopId) {
+        console.warn(`❌ getRepairByOrderCode: Benutzer ${user.username} (ID: ${user.id}) hat keine Shop-Zuordnung – Zugriff verweigert`);
+        return undefined;
+      }
+      
+      // Spezialfall für Superadmin: Prüfen, ob ein aktiver Support-Zugriff besteht
+      if (user.isSuperadmin) {
+        const { hasActiveSupportAccess } = await import('./support-access');
+        const hasAccess = await hasActiveSupportAccess(userId, user.shopId);
+        
+        if (!hasAccess) {
+          console.warn(`🔒 Superadmin ${user.username} (ID: ${user.id}) hat KEINEN aktiven Support-Zugriff - Zugriff verweigert`);
+          return undefined;
+        }
+        
+        console.log(`✅ Superadmin ${user.username} (ID: ${user.id}) hat aktiven Support-Zugriff - Zugriff erlaubt`);
+      }
+
+      // Shop-ID aus dem Benutzer extrahieren für die Shop-Isolation
+      const shopId = user.shopId;
+      console.log(`getRepairByOrderCode: Benutzer ${user.username} (ID: ${userId}) mit Shop-ID ${shopId}`);
+
+      const [repair] = await db
+        .select()
+        .from(repairs)
+        .where(
+          and(
+            eq(repairs.orderCode, orderCode),
+            eq(repairs.shopId, shopId)
+          )
+        );
+
+      if (repair) {
+        console.log(`getRepairByOrderCode: Reparatur mit Auftragsnummer ${orderCode} gefunden für Benutzer ${userId}`);
+      } else {
+        console.warn(`getRepairByOrderCode: Reparatur mit Auftragsnummer ${orderCode} wurde nicht gefunden oder gehört nicht zu Shop ${shopId}`);
+      }
+
+      return repair;
+    } catch (error) {
+      console.error(`Error getting repair by order code ${orderCode}:`, error);
       return undefined;
     }
   }

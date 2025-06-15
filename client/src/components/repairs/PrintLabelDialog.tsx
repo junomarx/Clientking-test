@@ -289,7 +289,7 @@ export function PrintLabelDialog({ open, onClose, repairId }: PrintLabelDialogPr
                     {/* QR-Code mittig */}
                     <div className="flex justify-center">
                       <QRCodeSVG 
-                        value={`${window.location.origin}/repairs/${repairId}`} 
+                        value={`${window.location.origin}/repairs/${repair?.orderCode || repair?.id}`} 
                         size={64} 
                         level="M"
                       />

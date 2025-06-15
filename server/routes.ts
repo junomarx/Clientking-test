@@ -942,13 +942,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      
-      // Benutzer-ID aus der Authentifizierung abrufen
+      const idParam = req.params.id;
       const userId = (req.user as any).id;
       
-      // Reparatur mit Benutzerfilterung abrufen
-      const repair = await storage.getRepair(id, userId);
+      let repair: any;
+      
+      // Prüfe, ob es sich um eine numerische ID oder eine orderCode handelt
+      const numericId = parseInt(idParam);
+      if (!isNaN(numericId) && numericId.toString() === idParam) {
+        // Numerische ID - verwende normale getRepair Methode
+        repair = await storage.getRepair(numericId, userId);
+      } else {
+        // String (orderCode) - verwende getRepairByOrderCode Methode
+        repair = await storage.getRepairByOrderCode(idParam, userId);
+      }
       
       if (!repair) {
         return res.status(404).json({ message: "Repair not found" });
@@ -963,15 +970,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Route zum Entschlüsseln des Gerätecodes für autorisierte Mitarbeiter
   app.get("/api/repairs/:id/device-code", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
-      const repairId = parseInt(req.params.id);
+      const idParam = req.params.id;
       const userId = (req.user as any).id;
       
-      if (!repairId || isNaN(repairId)) {
-        return res.status(400).json({ message: "Ungültige Reparatur-ID" });
+      let repair: any;
+      
+      // Prüfe, ob es sich um eine numerische ID oder eine orderCode handelt
+      const numericId = parseInt(idParam);
+      if (!isNaN(numericId) && numericId.toString() === idParam) {
+        // Numerische ID - verwende normale getRepair Methode
+        repair = await storage.getRepair(numericId, userId);
+      } else {
+        // String (orderCode) - verwende getRepairByOrderCode Methode
+        repair = await storage.getRepairByOrderCode(idParam, userId);
       }
-
-      // Reparatur abrufen mit Shop-Isolation
-      const repair = await storage.getRepair(repairId, userId);
+      
       if (!repair) {
         return res.status(404).json({ message: "Reparatur nicht gefunden" });
       }
