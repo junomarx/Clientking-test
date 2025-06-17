@@ -112,7 +112,16 @@ export function BonReceipt58mm({
         )}
       </div>
 
-
+      <div style={{
+        border: "1px solid #000",
+        padding: "6px",
+        fontSize: "9px",
+        lineHeight: 1.3,
+        marginBottom: "14px",
+        textAlign: "center"
+      }}>
+        Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.
+      </div>
 
       {/* Unterschrift Abgabe - nur anzeigen wenn vorhanden und nicht leer */}
       {signatur_dropoff && signatur_dropoff.trim() !== "" && (
