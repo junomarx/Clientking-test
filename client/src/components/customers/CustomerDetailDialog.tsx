@@ -206,6 +206,10 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       onClose();
     }
   }
+
+  function handleCreateRepairForCustomer() {
+    handleNewOrder(); // Use the existing handleNewOrder function
+  }
   
   const isLoading = isLoadingCustomer || isLoadingRepairs;
   
