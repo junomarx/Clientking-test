@@ -191,6 +191,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setSelectedCustomerId(null);
       setMatchingCustomers([]);
       form.reset();
+      // localStorage löschen um sicherzustellen, dass keine alten Kundendaten beim nächsten Öffnen verwendet werden
+      localStorage.removeItem('selectedCustomerData');
     }
   }, [open]);
   
