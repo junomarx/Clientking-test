@@ -801,6 +801,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       // localStorage nach erfolgreicher Auftragserstellung löschen
       localStorage.removeItem('selectedCustomerData');
       console.log("localStorage nach Auftragserstellung gelöscht");
+      console.log("Formular wird jetzt vollständig zurückgesetzt...");
       
       // Erfolgsmeldung anzeigen (nur mit Auftragscode, nicht mit ID)
       toast({
@@ -808,8 +809,43 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         description: `Auftrag ${data.orderCode} wurde erfolgreich erstellt.`,
       });
       
-      // Modal schließen und Formular zurücksetzen
+      // Modal schließen und Formular explizit zurücksetzen
       form.reset();
+      
+      // Explizit alle Formularfelder löschen
+      form.setValue('firstName', '');
+      form.setValue('lastName', '');
+      form.setValue('phone', '');
+      form.setValue('email', '');
+      form.setValue('address', '');
+      form.setValue('zipCode', '');
+      form.setValue('city', '');
+      form.setValue('deviceType', '');
+      form.setValue('brand', '');
+      form.setValue('model', '');
+      form.setValue('issue', '');
+      form.setValue('estimatedCost', '');
+      form.setValue('notes', '');
+      form.setValue('serialNumber', '');
+      form.setValue('depositAmount', '');
+      
+      // Zusätzlich alle Zustandsvariablen zurücksetzen
+      setSelectedCustomerId(null);
+      setAvailableIssues([]);
+      setAvailableBrands([]);
+      setAvailableDeviceTypes([]);
+      setAvailableModels([]);
+      setIssueFields(['']);
+      setShowDeviceTypeDropdown(false);
+      setShowBrandDropdown(false);
+      setShowModelDropdown(false);
+      setFilterText('');
+      setSelectedIssueIndex(-1);
+      setSelectedCustomerIndex(-1);
+      setShowIssueDropdown(false);
+      setIsModelChanged(false);
+      setMatchingCustomers([]);
+      
       onClose();
     },
     onError: (error: any) => {
