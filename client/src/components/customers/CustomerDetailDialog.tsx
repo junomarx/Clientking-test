@@ -54,7 +54,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     data: customer, 
     isLoading: isLoadingCustomer 
   } = useQuery<Customer>({
-    queryKey: ['/api/customers', customerId],
+    queryKey: [`/api/customers/${customerId}`],
     enabled: !!customerId && open,
   });
   
@@ -63,7 +63,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     data: repairs, 
     isLoading: isLoadingRepairs 
   } = useQuery<Repair[]>({
-    queryKey: ['/api/customers', customerId, 'repairs'],
+    queryKey: [`/api/customers/${customerId}/repairs`],
     enabled: !!customerId && open,
   });
   
