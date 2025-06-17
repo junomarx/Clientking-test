@@ -155,6 +155,44 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
   
+  // Hook zum Laden der Kundendaten wenn das Modal mit einem customerId öffnet
+  const {
+    data: preSelectedCustomer,
+    isLoading: isLoadingCustomer,
+  } = useQuery({
+    queryKey: ['/api/customers', customerId],
+    queryFn: async () => {
+      if (!customerId) return null;
+      const response = await apiRequest('GET', `/api/customers/${customerId}`);
+      return await response.json();
+    },
+    enabled: !!customerId && open,
+  });
+  
+  // useEffect um Kundendaten zu laden wenn das Modal mit einem customerId öffnet
+  useEffect(() => {
+    if (preSelectedCustomer && customerId && open) {
+      console.log("LOADING CUSTOMER DATA for ID:", customerId);
+      console.log("Customer data:", preSelectedCustomer);
+      
+      // Setze den ausgewählten Kunden
+      setSelectedCustomerId(preSelectedCustomer.id);
+      
+      // Fülle das Formular mit den Kundendaten
+      fillCustomerData(preSelectedCustomer);
+    }
+  }, [preSelectedCustomer, customerId, open]);
+  
+  // useEffect zum Zurücksetzen des States wenn das Modal geschlossen wird
+  useEffect(() => {
+    if (!open) {
+      console.log("MODAL CLOSED - Resetting state");
+      setSelectedCustomerId(customerId || null);
+      setMatchingCustomers([]);
+      form.reset();
+    }
+  }, [open, customerId]);
+  
   // Handler-Funktionen für Autocomplete-System (definiert vor JSX-Verwendung)
   const loadDeviceTypes = async () => {
     try {
@@ -829,8 +867,14 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     try {
       let customerId = selectedCustomerId;
       
+      console.log("=== REPAIR CREATION DEBUG ===");
+      console.log("selectedCustomerId:", selectedCustomerId);
+      console.log("customerId prop:", customerId);
+      console.log("Form data:", data);
+      
       // Wenn kein Kunde ausgewählt wurde, erstellen wir einen neuen Kunden
       if (!customerId) {
+        console.log("NO CUSTOMER SELECTED - Creating new customer");
         const customerData = {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -845,7 +889,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         const newCustomer = await createCustomerMutation.mutateAsync(customerData);
         customerId = newCustomer.id;
         console.log("Neuer Kunde erstellt mit ID:", customerId);
+      } else {
+        console.log("CUSTOMER ALREADY SELECTED - Using existing customer ID:", customerId);
       }
+      
+      console.log("FINAL customerId before repair creation:", customerId);
       
       // Jetzt wird der Auftrag erstellt mit der Kunden-ID
       // Stellen wir sicher, dass wir eine gültige customerId haben
