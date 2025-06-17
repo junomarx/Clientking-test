@@ -54,7 +54,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     data: customer, 
     isLoading: isLoadingCustomer 
   } = useQuery<Customer>({
-    queryKey: [`/api/customers/${customerId}`],
+    queryKey: ['/api/customers', customerId],
     queryFn: async () => {
       if (!customerId) return null;
       const response = await fetch(`/api/customers/${customerId}`, {
@@ -73,7 +73,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     data: repairs, 
     isLoading: isLoadingRepairs 
   } = useQuery<Repair[]>({
-    queryKey: [`/api/customers/${customerId}/repairs`],
+    queryKey: ['/api/customers', customerId, 'repairs'],
     queryFn: async () => {
       if (!customerId) return [];
       const response = await fetch(`/api/customers/${customerId}/repairs`, {
