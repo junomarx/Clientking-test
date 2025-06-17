@@ -209,21 +209,50 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   
   const isLoading = isLoadingCustomer || isLoadingRepairs;
   
+  console.log("CustomerDetailDialog Debug:", {
+    open,
+    customerId,
+    customer,
+    isLoadingCustomer,
+    isLoadingRepairs,
+    repairs
+  });
+  
   if (!open) return null;
+
+  // Emergency fallback for debugging
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Lade Kundendaten...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Emergency fallback if no customer data
+  if (!customer && !isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px]">
+          <div className="flex items-center justify-center p-8">
+            <span>Kunde nicht gefunden</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {isLoading ? (
-              <span className="flex items-center">
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> 
-                Kunde wird geladen...
-              </span>
-            ) : (
-              <span>Kunde: {customer?.firstName} {customer?.lastName}</span>
-            )}
+            <span>Kunde: {customer?.firstName} {customer?.lastName}</span>
           </DialogTitle>
           <DialogDescription>
             Kundendetails ansehen und bearbeiten
