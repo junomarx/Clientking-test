@@ -131,6 +131,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Prüfen, ob der aktuelle Benutzer Bugi (Admin) ist
   const isAdmin = user?.id === 3;
   
+  // State für GlobalDeviceSelector IDs
+  const [selectedDeviceTypeId, setSelectedDeviceTypeId] = useState<number | null>(null);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  
   // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
   
@@ -418,9 +423,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setShowDeviceTypeDropdown(false);
       setShowBrandDropdown(false);
       setShowModelDropdown(false);
-      if (!customerId) {
-        setSelectedCustomerId(null);
-      }
+      // Setze die Kunden-ID basierend auf dem übergebenen customerId-Parameter
+      setSelectedCustomerId(customerId || null);
       setFilterText('');
       setSelectedIssueIndex(-1);
       setSelectedCustomerIndex(-1);
@@ -463,6 +467,38 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       }
     }
   }, [open, customerId]);
+
+  // Kundendaten laden, wenn eine customerId bereitgestellt wird
+  useEffect(() => {
+    if (customerId && open) {
+      const loadCustomerData = async () => {
+        try {
+          const response = await apiRequest('GET', `/api/customers/${customerId}`);
+          const customer = await response.json();
+          
+          console.log('Lade Kundendaten für ID:', customerId, customer);
+          
+          // Formular mit Kundendaten vorausfüllen
+          form.setValue('firstName', customer.firstName || '');
+          form.setValue('lastName', customer.lastName || '');
+          form.setValue('phone', customer.phone || '');
+          form.setValue('email', customer.email || '');
+          form.setValue('address', customer.address || '');
+          form.setValue('zipCode', customer.zipCode || '');
+          form.setValue('city', customer.city || '');
+          
+          // Setze die selectedCustomerId
+          setSelectedCustomerId(customer.id);
+          
+          console.log('Kundendaten geladen und selectedCustomerId gesetzt:', customer.id);
+        } catch (error) {
+          console.error('Fehler beim Laden der Kundendaten:', error);
+        }
+      };
+      
+      loadCustomerData();
+    }
+  }, [customerId, open, form]);
   
   // Wichtige Form-Values, die beobachtet werden
   const watchDeviceType = form.watch('deviceType');
