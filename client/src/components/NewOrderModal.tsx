@@ -136,6 +136,22 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   
+  // Handler für GlobalDeviceSelector Callbacks
+  const handleDeviceTypeSelect = (deviceType: string, deviceTypeId: number | null) => {
+    form.setValue('deviceType', deviceType);
+    setSelectedDeviceTypeId(deviceTypeId);
+  };
+
+  const handleBrandSelect = (brand: string, brandId: number | null) => {
+    form.setValue('brand', brand);
+    setSelectedBrandId(brandId);
+  };
+
+  const handleModelSelect = (model: string, modelId: number | null) => {
+    form.setValue('model', model);
+    setSelectedModelId(modelId);
+  };
+  
   // Hooks für API-Anfragen (nur noch ModelSeries wird verwendet)
   const modelSeries = useModelSeries();
   
