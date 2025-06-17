@@ -752,7 +752,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       }
       
       console.log("Sending repair data:", repairData);
-      await createRepairMutation.mutateAsync(repairData);
+      const result = await createRepairMutation.mutateAsync(repairData);
+      
+      // localStorage nach erfolgreicher Auftragserstellung löschen (für existierende Kunden)
+      localStorage.removeItem('selectedCustomerData');
+      console.log("localStorage nach Auftragserstellung gelöscht (existierender Kunde)");
     } catch (error) {
       console.error("Error creating repair with existing customer:", error);
       // Zeige eine Fehlermeldung an
