@@ -1,0 +1,59 @@
+[Log] Neuer Kunde erstellt mit ID: – 255 (NewOrderModal.tsx, line 646)
+[Log] GlobalDeviceSelector ausgewählte Werte: (NewOrderModal.tsx, line 657)
+[Log] - deviceType: – "Smartphone" (NewOrderModal.tsx, line 658)
+[Log] - brand: – "Apple" (NewOrderModal.tsx, line 659)
+[Log] - model: – "iPhone 12" (NewOrderModal.tsx, line 660)
+[Log] Sende Reparaturdaten mit Kunden-ID: – 255 (NewOrderModal.tsx, line 674)
+[Log] Vollständige Daten: – "{↵  \"customerId\": 255,↵  \"deviceType\": \"Smartphone\",↵  \"brand\": \"Apple\",↵  \"modelSeries\": null,↵  \"model\": \"iPhone 12\",↵  \"serialNumber\"…" (NewOrderModal.tsx, line 675)
+"{
+  \"customerId\": 255,
+  \"deviceType\": \"Smartphone\",
+  \"brand\": \"Apple\",
+  \"modelSeries\": null,
+  \"model\": \"iPhone 12\",
+  \"serialNumber\": null,
+  \"issue\": \"Display defekt\",
+  \"estimatedCost\": \"150\",
+  \"depositAmount\": null,
+  \"status\": \"eingegangen\",
+  \"notes\": null
+}"
+[Log] Alle Validierungen bestanden, sende Daten... (NewOrderModal.tsx, line 696)
+[Log] Neue Reparatur erstellt und Cache aktualisiert (NewOrderModal.tsx, line 592)
+[Log] Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste (NewOrderModal.tsx, line 464)
+[Log] CustomerDetailDialog: onNewOrder aufgerufen mit Kunde: – Object (CustomerDetailDialog.tsx, line 204)
+Object
+[Log] Home: handleNewOrder aufgerufen ohne Parameter (Home.tsx, line 81)
+[Log] Gespeicherte Kundendaten gefunden: – Object (NewOrderModal.tsx, line 371)
+Object
+[Warning] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (chunk-NMSCS6KP.js, line 339)
+> Ausgewähltes Element
+< <div data-state="open" data-replit-metadata="client/src/components/ui/dialog.tsx:37:4" data-component-name="DialogOverlay" class="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" style="pointer-events: auto;" data-aria-hidden="true" aria-hidden="true"></div>
+[Log] Lade Fehlereinträge für Gerätetyp: smartphone (NewOrderModal.tsx, line 439)
+[Log] Gerätetyp geändert, lade Fehlerkatalog neu (NewOrderModal.tsx, line 454)
+[Log] Lade Fehlereinträge für Gerätetyp: smartphone (NewOrderModal.tsx, line 439)
+[Log] Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste (NewOrderModal.tsx, line 464)
+[Log] 0 Fehlereinträge für smartphone geladen (NewOrderModal.tsx, line 443, x2)
+[Log] Neuer Kunde erstellt mit ID: – 256 (NewOrderModal.tsx, line 646)
+[Log] GlobalDeviceSelector ausgewählte Werte: (NewOrderModal.tsx, line 657)
+[Log] - deviceType: – "Smartphone" (NewOrderModal.tsx, line 658)
+[Log] - brand: – "Apple" (NewOrderModal.tsx, line 659)
+[Log] - model: – "iPhone 11 Pro" (NewOrderModal.tsx, line 660)
+[Log] Sende Reparaturdaten mit Kunden-ID: – 256 (NewOrderModal.tsx, line 674)
+[Log] Vollständige Daten: – "{↵  \"customerId\": 256,↵  \"deviceType\": \"Smartphone\",↵  \"brand\": \"Apple\",↵  \"modelSeries\": null,↵  \"model\": \"iPhone 11 Pro\",↵…" (NewOrderModal.tsx, line 675)
+"{
+  \"customerId\": 256,
+  \"deviceType\": \"Smartphone\",
+  \"brand\": \"Apple\",
+  \"modelSeries\": null,
+  \"model\": \"iPhone 11 Pro\",
+  \"serialNumber\": null,
+  \"issue\": \"Display defekt\",
+  \"estimatedCost\": \"90\",
+  \"depositAmount\": null,
+  \"status\": \"eingegangen\",
+  \"notes\": null
+}"
+[Log] Alle Validierungen bestanden, sende Daten... (NewOrderModal.tsx, line 696)
+[Log] Neue Reparatur erstellt und Cache aktualisiert (NewOrderModal.tsx, line 592)
+[Log] Keine Fehlereinträge für den ausgewählten Gerätetyp gefunden, verwende Standardliste (NewOrderModal.tsx, line 464)

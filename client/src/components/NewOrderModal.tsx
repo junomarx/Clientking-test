@@ -497,9 +497,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         // Nicht hier setzen - wird durch useEffect nach Laden der Kundendaten gesetzt
       }
       
-      // Prüfen, ob Kundendaten im localStorage vorhanden sind
+      // Prüfen, ob Kundendaten im localStorage vorhanden sind - aber nur wenn KEIN customerId prop vorhanden ist
       const savedCustomerData = localStorage.getItem('selectedCustomerData');
-      if (savedCustomerData) {
+      if (savedCustomerData && !customerId) {
         try {
           const customerData = JSON.parse(savedCustomerData);
           console.log('Gespeicherte Kundendaten gefunden:', customerData);
