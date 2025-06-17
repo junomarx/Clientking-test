@@ -101,7 +101,8 @@ export default function Home() {
     
     // Event-Listener für "Neuer Auftrag" Button
     const handleTriggerNewOrder = () => {
-      console.log("Event für Neuer Auftrag empfangen");
+      console.log("Event für Neuer Auftrag empfangen - selectedCustomerId wird auf null gesetzt");
+      setSelectedCustomerId(null); // Explizit auf null setzen für neue Aufträge
       setIsNewOrderModalOpen(true);
     };
 
@@ -193,7 +194,11 @@ export default function Home() {
       {/* Modal für neue Aufträge */}
       <NewOrderModal 
         open={isNewOrderModalOpen} 
-        onClose={() => setIsNewOrderModalOpen(false)}
+        onClose={() => {
+          console.log("NewOrderModal wird geschlossen - selectedCustomerId wird zurückgesetzt");
+          setIsNewOrderModalOpen(false);
+          setSelectedCustomerId(null);
+        }}
         customerId={selectedCustomerId}
       />
     </div>
