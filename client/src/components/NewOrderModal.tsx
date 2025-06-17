@@ -494,6 +494,21 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         console.log("NO CUSTOMER ID - Resetting form and selectedCustomerId");
         setSelectedCustomerId(null);
         form.reset();
+        
+        // Explizit alle Kundenfelder löschen für neuen Auftrag
+        form.setValue('firstName', '');
+        form.setValue('lastName', '');
+        form.setValue('phone', '');
+        form.setValue('email', '');
+        form.setValue('address', '');
+        form.setValue('zipCode', '');
+        form.setValue('city', '');
+        form.setValue('deviceType', '');
+        form.setValue('brand', '');
+        form.setValue('model', '');
+        form.setValue('issue', '');
+        form.setValue('estimatedCost', '');
+        form.setValue('notes', '');
       } else {
         console.log("CUSTOMER ID PROVIDED - Will load customer data via useQuery");
         // Nicht hier setzen - wird durch useEffect nach Laden der Kundendaten gesetzt
