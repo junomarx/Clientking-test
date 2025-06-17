@@ -842,7 +842,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Handler für Formular-Submission
   const onSubmit = async (data: OrderFormValues) => {
     try {
-      let customerId = selectedCustomerId;
+      let finalCustomerId = selectedCustomerId;
       
       console.log("=== REPAIR CREATION DEBUG ===");
       console.log("selectedCustomerId:", selectedCustomerId);
@@ -850,7 +850,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       console.log("Form data:", data);
       
       // Wenn kein Kunde ausgewählt wurde, erstellen wir einen neuen Kunden
-      if (!customerId) {
+      if (!finalCustomerId) {
         console.log("NO CUSTOMER SELECTED - Creating new customer");
         const customerData = {
           firstName: data.firstName,
@@ -864,17 +864,17 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         
         // Kunden erstellen und ID sichern
         const newCustomer = await createCustomerMutation.mutateAsync(customerData);
-        customerId = newCustomer.id;
-        console.log("Neuer Kunde erstellt mit ID:", customerId);
+        finalCustomerId = newCustomer.id;
+        console.log("Neuer Kunde erstellt mit ID:", finalCustomerId);
       } else {
-        console.log("CUSTOMER ALREADY SELECTED - Using existing customer ID:", customerId);
+        console.log("CUSTOMER ALREADY SELECTED - Using existing customer ID:", finalCustomerId);
       }
       
-      console.log("FINAL customerId before repair creation:", customerId);
+      console.log("FINAL finalCustomerId before repair creation:", finalCustomerId);
       
       // Jetzt wird der Auftrag erstellt mit der Kunden-ID
-      // Stellen wir sicher, dass wir eine gültige customerId haben
-      if (!customerId) {
+      // Stellen wir sicher, dass wir eine gültige finalCustomerId haben
+      if (!finalCustomerId) {
         console.error("Konnte keinen Kunden finden oder erstellen");
         toast({
           title: "Fehler",
@@ -891,7 +891,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       console.log("- model:", data.model);
       
       const repairData = {
-        customerId: customerId,
+        customerId: finalCustomerId,
         deviceType: data.deviceType,
         brand: data.brand,
         modelSeries: data.modelSeries || null,
