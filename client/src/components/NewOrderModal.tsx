@@ -177,6 +177,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       
       // Setze den ausgewählten Kunden
       setSelectedCustomerId(preSelectedCustomer.id);
+      console.log("SET selectedCustomerId to:", preSelectedCustomer.id);
       
       // Fülle das Formular mit den Kundendaten
       fillCustomerData(preSelectedCustomer);
@@ -187,11 +188,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   useEffect(() => {
     if (!open) {
       console.log("MODAL CLOSED - Resetting state");
-      setSelectedCustomerId(customerId || null);
+      setSelectedCustomerId(null);
       setMatchingCustomers([]);
       form.reset();
     }
-  }, [open, customerId]);
+  }, [open]);
   
   // Handler-Funktionen für Autocomplete-System (definiert vor JSX-Verwendung)
   const loadDeviceTypes = async () => {
@@ -492,8 +493,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         setSelectedCustomerId(null);
         form.reset();
       } else {
-        console.log("CUSTOMER ID PROVIDED - Keeping existing state for customer loading");
-        setSelectedCustomerId(customerId);
+        console.log("CUSTOMER ID PROVIDED - Will load customer data via useQuery");
+        // Nicht hier setzen - wird durch useEffect nach Laden der Kundendaten gesetzt
       }
       
       // Prüfen, ob Kundendaten im localStorage vorhanden sind
@@ -847,7 +848,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       console.log("=== REPAIR CREATION DEBUG ===");
       console.log("selectedCustomerId:", selectedCustomerId);
       console.log("customerId prop:", customerId);
+      console.log("finalCustomerId (initial):", finalCustomerId);
       console.log("Form data:", data);
+      console.log("preSelectedCustomer:", preSelectedCustomer);
       
       // Wenn kein Kunde ausgewählt wurde, erstellen wir einen neuen Kunden
       if (!finalCustomerId) {
