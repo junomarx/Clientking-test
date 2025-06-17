@@ -25,6 +25,7 @@ import { X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -1121,6 +1122,9 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Neuer Auftrag</DialogTitle>
+            <DialogDescription>
+              Erstellen Sie einen neuen Reparaturauftrag für einen Kunden
+            </DialogDescription>
           </DialogHeader>
           
           <Form {...form}>
