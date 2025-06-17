@@ -468,6 +468,8 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
   // Formular zurücksetzen und ggf. mit Kundendaten füllen, wenn das Modal geöffnet wird
   useEffect(() => {
     if (open) {
+      console.log("MODAL OPENING - customerId:", customerId);
+      
       // Alle Zustandsvariablen zurücksetzen
       setAvailableIssues([]);
       setAvailableBrands([]);
@@ -477,8 +479,6 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setShowDeviceTypeDropdown(false);
       setShowBrandDropdown(false);
       setShowModelDropdown(false);
-      // Setze die Kunden-ID basierend auf dem übergebenen customerId-Parameter
-      setSelectedCustomerId(customerId || null);
       setFilterText('');
       setSelectedIssueIndex(-1);
       setSelectedCustomerIndex(-1);
@@ -486,8 +486,15 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setIsModelChanged(false);
       setMatchingCustomers([]);
       
-      // Formular zurücksetzen
-      form.reset();
+      // NUR Form und selectedCustomerId zurücksetzen wenn KEIN customerId vorhanden ist
+      if (!customerId) {
+        console.log("NO CUSTOMER ID - Resetting form and selectedCustomerId");
+        setSelectedCustomerId(null);
+        form.reset();
+      } else {
+        console.log("CUSTOMER ID PROVIDED - Keeping existing state for customer loading");
+        setSelectedCustomerId(customerId);
+      }
       
       // Prüfen, ob Kundendaten im localStorage vorhanden sind
       const savedCustomerData = localStorage.getItem('selectedCustomerData');
@@ -522,37 +529,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
     }
   }, [open, customerId]);
 
-  // Kundendaten laden, wenn eine customerId bereitgestellt wird
-  useEffect(() => {
-    if (customerId && open) {
-      const loadCustomerData = async () => {
-        try {
-          const response = await apiRequest('GET', `/api/customers/${customerId}`);
-          const customer = await response.json();
-          
-          console.log('Lade Kundendaten für ID:', customerId, customer);
-          
-          // Formular mit Kundendaten vorausfüllen
-          form.setValue('firstName', customer.firstName || '');
-          form.setValue('lastName', customer.lastName || '');
-          form.setValue('phone', customer.phone || '');
-          form.setValue('email', customer.email || '');
-          form.setValue('address', customer.address || '');
-          form.setValue('zipCode', customer.zipCode || '');
-          form.setValue('city', customer.city || '');
-          
-          // Setze die selectedCustomerId
-          setSelectedCustomerId(customer.id);
-          
-          console.log('Kundendaten geladen und selectedCustomerId gesetzt:', customer.id);
-        } catch (error) {
-          console.error('Fehler beim Laden der Kundendaten:', error);
-        }
-      };
-      
-      loadCustomerData();
-    }
-  }, [customerId, open, form]);
+
   
   // Wichtige Form-Values, die beobachtet werden
   const watchDeviceType = form.watch('deviceType');
