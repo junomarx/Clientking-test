@@ -402,7 +402,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           <TabsContent value="repairs" className="mt-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Reparaturaufträge</h3>
-              <Button onClick={handleNewOrder} className="flex items-center">
+              <Button onClick={handleCreateRepairForCustomer} className="flex items-center">
                 <Plus className="mr-1 h-4 w-4" /> Neuer Auftrag
               </Button>
             </div>
@@ -497,7 +497,7 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
               <div className="text-center py-8 border rounded-lg">
                 <p className="text-muted-foreground">Keine Reparaturaufträge gefunden</p>
                 <Button 
-                  onClick={handleNewOrder} 
+                  onClick={handleCreateRepairForCustomer} 
                   variant="outline" 
                   className="mt-2"
                 >

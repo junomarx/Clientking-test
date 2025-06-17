@@ -9,7 +9,7 @@ import { NewCustomerDialog } from './NewCustomerDialog';
 import { Plus, Search } from 'lucide-react';
 
 interface CustomersTabProps {
-  onNewOrder: () => void;
+  onNewOrder: (customerId?: number) => void;
   onNewCustomer?: () => void; // Optionaler Handler für das Hinzufügen eines neuen Kunden
 }
 
@@ -95,8 +95,9 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
     setIsCustomerDetailOpen(false);
   };
 
-  const handleNewRepairForCustomer = () => {
-    onNewOrder(); // Stattdessen den vom Parent übergebenen Handler aufrufen
+  const handleNewRepairForCustomer = (customerId: number) => {
+    console.log("CustomersTab: handleNewRepairForCustomer aufgerufen mit customerId:", customerId);
+    onNewOrder(customerId); // Customer ID an den Parent-Handler übergeben
   };
   
   const handleOpenNewCustomerDialog = () => {

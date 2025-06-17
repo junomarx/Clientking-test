@@ -70,8 +70,9 @@ export default function Home() {
     }
   };
   
-  const handleNewOrder = () => {
-    console.log("Home: handleNewOrder aufgerufen ohne Parameter");
+  const handleNewOrder = (customerId?: number) => {
+    console.log("Home: handleNewOrder aufgerufen mit customerId:", customerId);
+    setSelectedCustomerId(customerId || null);
     setIsNewOrderModalOpen(true);
   };
   
