@@ -1749,7 +1749,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(customers)
         .where(eq(customers.shopId, shopId))
-        .orderBy(customers.lastName, customers.firstName);
+        .orderBy(desc(customers.createdAt));
 
       console.log(`Returning all ${results.length} customers`);
       return results;
