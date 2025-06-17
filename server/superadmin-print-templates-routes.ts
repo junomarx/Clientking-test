@@ -96,15 +96,9 @@ const defaultPrintTemplates = [
   
   <div class="divider"></div>
   
-  <div>
-    <p>Mit Ihrer Unterschrift bestätigen Sie die
-Abholung des oben genannten Geräts.</p>
-    <div style="height: 60px;"></div>
-    <div class="center">____________________________</div>
-    <div class="center text-xs">Unterschrift Kunde</div>
+  <div style="border: 1px solid #000; padding: 6px; font-size: 8pt; text-align: center; margin-bottom: 10px;">
+    Mit meiner Unterschrift bestätige ich, dass ich die Reparaturbedingungen gelesen und akzeptiert habe.
   </div>
-  
-  <div class="divider"></div>
   
   <div class="text-xs center">
     <p>{{businessName}} - {{businessSlogan}}</p>
