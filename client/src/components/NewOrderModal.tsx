@@ -490,9 +490,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setMatchingCustomers([]);
       
       if (!customerId) {
-        console.log("NO CUSTOMER ID - Clearing localStorage and resetting form");
-        // SOFORT localStorage löschen um sicherzustellen, dass keine alten Daten verwendet werden
-        localStorage.removeItem('selectedCustomerData');
+        console.log("NO CUSTOMER ID - Resetting form and checking for saved customer data");
         
         setSelectedCustomerId(null);
         form.reset();
@@ -511,6 +509,26 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         form.setValue('issue', '');
         form.setValue('estimatedCost', '');
         form.setValue('notes', '');
+        
+        // Prüfen, ob Kundendaten im localStorage vorhanden sind und diese verwenden
+        const savedCustomerData = localStorage.getItem('selectedCustomerData');
+        if (savedCustomerData) {
+          try {
+            const customerData = JSON.parse(savedCustomerData);
+            console.log('Gespeicherte Kundendaten gefunden:', customerData);
+            
+            // Formular mit Kundendaten aus localStorage vorausfüllen
+            form.setValue('firstName', customerData.firstName || '');
+            form.setValue('lastName', customerData.lastName || '');
+            form.setValue('phone', customerData.phone || '');
+            form.setValue('email', customerData.email || '');
+            form.setValue('address', customerData.address || '');
+            form.setValue('zipCode', customerData.zipCode || '');
+            form.setValue('city', customerData.city || '');
+          } catch (error) {
+            console.error('Fehler beim Parsen der gespeicherten Kundendaten:', error);
+          }
+        }
       } else {
         console.log("CUSTOMER ID PROVIDED - Will load customer data via useQuery");
         // Kundendaten werden über useQuery geladen, nicht über localStorage
@@ -779,6 +797,10 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
       console.log("Neue Reparatur erstellt und Cache aktualisiert");
+      
+      // localStorage nach erfolgreicher Auftragserstellung löschen
+      localStorage.removeItem('selectedCustomerData');
+      console.log("localStorage nach Auftragserstellung gelöscht");
       
       // Erfolgsmeldung anzeigen (nur mit Auftragscode, nicht mit ID)
       toast({
