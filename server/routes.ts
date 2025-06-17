@@ -729,6 +729,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create customer" });
     }
   });
+
+  // Get single customer
+  app.get("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Get user to retrieve shop ID
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user || !user.shopId) {
+        return res.status(403).json({ error: "Access denied: No shop ID" });
+      }
+      
+      // Get customer with shop isolation
+      const [customer] = await db
+        .select()
+        .from(customers)
+        .where(and(eq(customers.id, id), eq(customers.shopId, user.shopId)));
+      
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      
+      console.log(`✅ DSGVO-conform: Customer ${customer.firstName} ${customer.lastName} (ID: ${id}) retrieved for shop ${user.shopId}`);
+      res.json(customer);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      res.status(500).json({ message: "Failed to fetch customer" });
+    }
+  });
+
+  // Get customer repairs
+  app.get("/api/customers/:id/repairs", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      
+      // Get user to retrieve shop ID
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user || !user.shopId) {
+        return res.status(403).json({ error: "Access denied: No shop ID" });
+      }
+      
+      // Get repairs for this customer with shop isolation
+      const customerRepairs = await db
+        .select()
+        .from(repairs)
+        .where(and(eq(repairs.customerId, customerId), eq(repairs.shopId, user.shopId)))
+        .orderBy(desc(repairs.createdAt));
+      
+      console.log(`✅ DSGVO-conform: ${customerRepairs.length} repairs retrieved for customer ${customerId} in shop ${user.shopId}`);
+      res.json(customerRepairs);
+    } catch (error) {
+      console.error("Error fetching customer repairs:", error);
+      res.status(500).json({ message: "Failed to fetch customer repairs" });
+    }
+  });
   
   app.patch("/api/customers/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
