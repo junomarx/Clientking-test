@@ -489,9 +489,11 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
       setIsModelChanged(false);
       setMatchingCustomers([]);
       
-      // NUR Form und selectedCustomerId zurücksetzen wenn KEIN customerId vorhanden ist
       if (!customerId) {
-        console.log("NO CUSTOMER ID - Resetting form and selectedCustomerId");
+        console.log("NO CUSTOMER ID - Clearing localStorage and resetting form");
+        // SOFORT localStorage löschen um sicherzustellen, dass keine alten Daten verwendet werden
+        localStorage.removeItem('selectedCustomerData');
+        
         setSelectedCustomerId(null);
         form.reset();
         
@@ -511,38 +513,7 @@ export function NewOrderModal({ open, onClose, customerId }: NewOrderModalProps)
         form.setValue('notes', '');
       } else {
         console.log("CUSTOMER ID PROVIDED - Will load customer data via useQuery");
-        // Nicht hier setzen - wird durch useEffect nach Laden der Kundendaten gesetzt
-      }
-      
-      // Prüfen, ob Kundendaten im localStorage vorhanden sind - aber nur wenn KEIN customerId prop vorhanden ist
-      const savedCustomerData = localStorage.getItem('selectedCustomerData');
-      if (savedCustomerData && !customerId) {
-        try {
-          const customerData = JSON.parse(savedCustomerData);
-          console.log('Gespeicherte Kundendaten gefunden:', customerData);
-          
-          // Formular mit Kundendaten aus localStorage vorausfüllen
-          form.setValue('firstName', customerData.firstName || '');
-          form.setValue('lastName', customerData.lastName || '');
-          form.setValue('phone', customerData.phone || '');
-          form.setValue('email', customerData.email || '');
-          form.setValue('address', customerData.address || '');
-          form.setValue('zipCode', customerData.zipCode || '');
-          form.setValue('city', customerData.city || '');
-          
-          // Automatisch in den Geräte-Tab springen, indem wir den Fokus auf das Gerätetyp-Feld setzen
-          setTimeout(() => {
-            const deviceTypeInput = document.getElementById('deviceType');
-            if (deviceTypeInput) {
-              deviceTypeInput.focus();
-            }
-          }, 300);
-          
-          // Kundendaten aus dem localStorage entfernen, damit sie nicht für den nächsten Auftrag verwendet werden
-          localStorage.removeItem('selectedCustomerData');
-        } catch (error) {
-          console.error('Fehler beim Parsen der gespeicherten Kundendaten:', error);
-        }
+        // Kundendaten werden über useQuery geladen, nicht über localStorage
       }
     }
   }, [open, customerId]);
