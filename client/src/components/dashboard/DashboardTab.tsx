@@ -220,23 +220,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Übersicht Ihrer Reparaturen und aktuellen Statistiken</p>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Button
-            onClick={onNewOrder}
-            className="bg-primary text-white shadow-md flex items-center gap-2 font-medium"
-          >
-            <motion.span 
-              animate={{ rotate: [0, 0, 180, 180, 0], scale: [1, 1.3, 1.3, 1, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 5 }}
-            >
-              ➕
-            </motion.span> 
-            Neuer Auftrag
-          </Button>
-        </motion.div>
+
       </motion.div>
       
       {/* Statistik-Karten im Superadmin-Stil */}

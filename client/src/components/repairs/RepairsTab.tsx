@@ -509,12 +509,6 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
     <div>
       <div className="flex justify-between items-center p-6">
         <h2 className="text-xl font-semibold">Reparaturübersicht</h2>
-        <Button
-          onClick={onNewOrder}
-          className="bg-white text-primary hover:bg-gray-100 shadow flex items-center gap-2 font-semibold transition-all transform hover:-translate-y-1"
-        >
-          <span>➕</span> Neuer Auftrag
-        </Button>
       </div>
       
       <div className="px-6 pb-4">
