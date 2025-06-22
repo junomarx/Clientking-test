@@ -3607,39 +3607,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const year = today.getFullYear().toString().slice(-2);
       const month = (today.getMonth() + 1).toString().padStart(2, '0');
       
-      // Verwende eine Transaktion um Race Conditions zu vermeiden
+      // Hole die höchste Nummer für diesen Monat einmalig
+      const lastEstimateQuery = await db.execute(`
+        SELECT reference_number
+        FROM cost_estimates 
+        WHERE shop_id = ${shopId} 
+          AND reference_number LIKE 'KV-${year}${month}-%'
+        ORDER BY reference_number DESC
+        LIMIT 1
+      `);
+      
+      let nextNumber = 1;
+      if (lastEstimateQuery.rows.length > 0 && lastEstimateQuery.rows[0].reference_number) {
+        const lastNumber = lastEstimateQuery.rows[0].reference_number;
+        const match = lastNumber.match(/KV-\d{4}-(\d{3})/);
+        if (match && match[1]) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      // Versuche mehrere Nummern, falls die erste bereits vergeben ist
       let estimateNumber;
       let attempts = 0;
       const maxAttempts = 10;
       
       while (attempts < maxAttempts) {
-        attempts++;
-        
-        // Hole die höchste Nummer für diesen Monat
-        const lastEstimateQuery = await db.execute(`
-          SELECT reference_number
-          FROM cost_estimates 
-          WHERE shop_id = ${shopId} 
-            AND reference_number LIKE 'KV-${year}${month}-%'
-          ORDER BY reference_number DESC
-          LIMIT 1
-        `);
-        
-        let nextNumber = 1;
-        if (lastEstimateQuery.rows.length > 0 && lastEstimateQuery.rows[0].reference_number) {
-          const lastNumber = lastEstimateQuery.rows[0].reference_number;
-          const match = lastNumber.match(/KV-\d{4}-(\d{3})/);
-          if (match && match[1]) {
-            nextNumber = parseInt(match[1]) + 1;
-          }
-        }
-        
-        estimateNumber = `KV-${year}${month}-${String(nextNumber).padStart(3, '0')}`;
+        estimateNumber = `KV-${year}${month}-${String(nextNumber + attempts).padStart(3, '0')}`;
         
         // Prüfe ob die Nummer bereits existiert
         const existsQuery = await db.execute(`
           SELECT 1 FROM cost_estimates 
           WHERE reference_number = '${estimateNumber}' 
+          AND shop_id = ${shopId}
           LIMIT 1
         `);
         
@@ -3648,6 +3647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log(`Referenznummer ${estimateNumber} bereits vergeben, versuche nächste...`);
+        attempts++;
       }
       
       if (attempts >= maxAttempts) {
