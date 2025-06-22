@@ -3607,12 +3607,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const year = today.getFullYear().toString().slice(-2);
       const month = (today.getMonth() + 1).toString().padStart(2, '0');
       
-      // Hole die höchste Nummer für diesen Monat einmalig
+      // Hole die höchste Nummer für diesen Monat global (nicht shop-spezifisch)
       const lastEstimateQuery = await db.execute(`
         SELECT reference_number
         FROM cost_estimates 
-        WHERE shop_id = ${shopId} 
-          AND reference_number LIKE 'KV-${year}${month}-%'
+        WHERE reference_number LIKE 'KV-${year}${month}-%'
         ORDER BY reference_number DESC
         LIMIT 1
       `);
@@ -3634,11 +3633,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       while (attempts < maxAttempts) {
         estimateNumber = `KV-${year}${month}-${String(nextNumber + attempts).padStart(3, '0')}`;
         
-        // Prüfe ob die Nummer bereits existiert
+        // Prüfe ob die Nummer bereits existiert (global)
         const existsQuery = await db.execute(`
           SELECT 1 FROM cost_estimates 
           WHERE reference_number = '${estimateNumber}' 
-          AND shop_id = ${shopId}
           LIMIT 1
         `);
         
