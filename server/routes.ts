@@ -3497,8 +3497,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Zuerst: Kunde erstellen oder finden
       let customerId = req.body.customerId;
+      let isNewCustomer = false;
       
       if (!customerId) {
+        isNewCustomer = true;
         // Automatisch einen Kunden erstellen
         const customerData = {
           firstName: req.body.firstName,
