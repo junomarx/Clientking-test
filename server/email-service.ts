@@ -404,7 +404,7 @@ export class EmailService {
           
         if (!businessSetting || !businessSetting.smtpHost || !businessSetting.smtpUser || !businessSetting.smtpPassword) {
           console.error(`❌ Keine vollständigen SMTP-Einstellungen für Benutzer ${userId} gefunden`);
-          throw new Error('Keine SMTP-Einstellungen für diesen Benutzer konfiguriert');
+          throw new Error('Bitte konfigurieren Sie zuerst Ihre SMTP-Einstellungen in den Geschäftseinstellungen, um E-Mails versenden zu können.');
         }
         
         console.log(`✅ SMTP-Einstellungen gefunden: ${businessSetting.smtpHost} für ${businessSetting.smtpUser}`);
@@ -441,7 +441,7 @@ export class EmailService {
         
         return true;
       } else {
-        // Fallback auf globale SMTP-Einstellungen nur wenn keine userId angegeben ist
+        // Kein Fallback auf globale SMTP-Einstellungen mehr
         console.error('❌ Keine Benutzer-ID angegeben - E-Mail-Versand wird abgebrochen');
         throw new Error('Benutzer-ID erforderlich für E-Mail-Versand');
       }

@@ -1329,7 +1329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 res.setHeader('X-Email-Error', emailError);
               }
             } catch (serviceError) {
-              const errorMessage = `E-Mail-Service Fehler: ${serviceError?.message || serviceError}`;
+              const errorMessage = serviceError?.message || 'E-Mail-Versand fehlgeschlagen';
               console.error(`❌ EXCEPTION: EmailService Fehler für Status "${status}":`, serviceError);
               console.error(`❌ Stack Trace:`, serviceError?.stack);
               emailError = errorMessage;
@@ -1352,8 +1352,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Gebe das aktualisierte Repair zurück
       const response = {
         ...repair,
-        emailSent: true,
-        emailError: null
+        emailSent: emailSent,
+        emailError: emailError
       };
       
       console.log(`📧 Response für Frontend:`, { 
