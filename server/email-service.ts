@@ -469,83 +469,92 @@ export class EmailService {
     }>;
   }, userId?: number): Promise<boolean> {
     try {
-      console.log(`Sende E-Mail mit Anhang an ${options.to}...`);
+      console.log(`Sende E-Mail mit Anhang an ${options.to}${userId ? ` für Benutzer ${userId}` : ''}...`);
       
-      if (!this.smtpTransporter) {
-        console.log('Kein SMTP-Transporter vorhanden, versuche Initialisierung...');
-        // Versuche, den Transporter zu initialisieren, falls er noch nicht existiert
-        await this.initSuperadminSmtpTransporter();
+      // Wenn userId angegeben ist, verwende benutzer-spezifische SMTP-Einstellungen
+      if (userId) {
+        console.log(`Lade SMTP-Einstellungen für Benutzer ${userId}...`);
         
-        if (!this.smtpTransporter) {
-          console.error('Initialisierung des SMTP-Transporters fehlgeschlagen');
-          throw new Error('Kein SMTP-Transporter konfiguriert');
+        const [businessSetting] = await db
+          .select()
+          .from(businessSettings)
+          .where(eq(businessSettings.userId, userId))
+          .orderBy(desc(businessSettings.id))
+          .limit(1);
+          
+        if (!businessSetting || !businessSetting.smtpHost || !businessSetting.smtpUser || !businessSetting.smtpPassword) {
+          console.error(`❌ Keine vollständigen SMTP-Einstellungen für Benutzer ${userId} gefunden`);
+          throw new Error('Bitte konfigurieren Sie zuerst Ihre SMTP-Einstellungen in den Geschäftseinstellungen, um E-Mails versenden zu können.');
         }
-      }
-      
-      // Für die E-Mail-Adresse des Absenders - verwende die global konfigurierte wenn vorhanden
-      let senderEmail;
-      let senderName;
-      
-      if (this.superadminEmailConfig) {
-        senderName = this.superadminEmailConfig.smtpSenderName;
-        senderEmail = this.superadminEmailConfig.smtpSenderEmail;
-      } else {
-        // Fallback auf Umgebungsvariablen
-        senderName = process.env.SMTP_SENDER_NAME || 'Handyshop Verwaltung';
-        senderEmail = 'office@connect7.at';
-      }
-      
-      // Wenn options.from bereits eine E-Mail-Adresse enthält, nutze diese
-      // Sonst formatiere mit dem Absendernamen
-      const fromField = options.from.includes('@') 
-        ? options.from 
-        : `"${options.from || senderName}" <${senderEmail}>`;
-      
-      console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
-      
-      const mailOptions: any = {
-        from: fromField,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text
-      };
-
-      // Add attachments separately to ensure proper handling
-      if (options.attachments && options.attachments.length > 0) {
-        mailOptions.attachments = options.attachments.map(att => {
-          // Ensure we have a proper Buffer for attachments
-          let content = att.content;
-          if (typeof content === 'string' && att.encoding === 'base64') {
-            content = Buffer.from(content, 'base64');
-          } else if (Buffer.isBuffer(content)) {
-            // Already a buffer, use as is
-          } else {
-            // Fallback: convert to buffer
-            content = Buffer.from(content);
+        
+        console.log(`✅ SMTP-Einstellungen gefunden: ${businessSetting.smtpHost} für ${businessSetting.smtpUser}`);
+        
+        // Erstelle benutzer-spezifischen Transporter
+        const port = parseInt(businessSetting.smtpPort || '587');
+        const userTransporter = nodemailer.createTransporter({
+          host: businessSetting.smtpHost,
+          port: port,
+          secure: port === 465,
+          auth: {
+            user: businessSetting.smtpUser,
+            pass: businessSetting.smtpPassword
+          },
+          connectionTimeout: 10000,
+          tls: {
+            rejectUnauthorized: false
           }
-          
-          console.log(`Preparing attachment: ${att.filename}, contentType: ${att.contentType}, size: ${content.length} bytes`);
-          
-          return {
-            filename: att.filename,
-            content: content,
-            contentType: att.contentType || 'application/octet-stream',
-            disposition: 'attachment'
-          };
         });
+        
+        const fromField = options.from || `"${businessSetting.smtpSenderName || businessSetting.businessName || 'Handyshop'}" <${businessSetting.smtpUser}>`;
+        
+        console.log(`Sende E-Mail von: ${fromField} an: ${options.to}`);
+        
+        const mailOptions: any = {
+          from: fromField,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text
+        };
+
+        // Add attachments separately to ensure proper handling
+        if (options.attachments && options.attachments.length > 0) {
+          mailOptions.attachments = options.attachments.map(att => {
+            // Ensure we have a proper Buffer for attachments
+            let content = att.content;
+            if (Buffer.isBuffer(content)) {
+              // Already a buffer, use as is
+            } else {
+              // Fallback: convert to buffer
+              content = Buffer.from(content);
+            }
+            
+            console.log(`Preparing attachment: ${att.filename}, contentType: ${att.contentType}, size: ${content.length} bytes`);
+            
+            return {
+              filename: att.filename,
+              content: content,
+              contentType: att.contentType || 'application/octet-stream',
+              disposition: 'attachment'
+            };
+          });
+        }
+        
+        console.log('Sende E-Mail mit folgenden Optionen:', {
+          to: mailOptions.to,
+          subject: mailOptions.subject,
+          attachments: mailOptions.attachments ? mailOptions.attachments.map(a => a.filename) : []
+        });
+        
+        const info = await userTransporter.sendMail(mailOptions);
+        console.log('E-Mail erfolgreich gesendet:', info.messageId);
+        
+        return true;
+      } else {
+        // Kein Fallback auf globale SMTP-Einstellungen mehr
+        console.error('❌ Keine Benutzer-ID angegeben - E-Mail-Versand wird abgebrochen');
+        throw new Error('Benutzer-ID erforderlich für E-Mail-Versand');
       }
-      
-      console.log('Sende E-Mail mit folgenden Optionen:', {
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        attachments: mailOptions.attachments ? mailOptions.attachments.map(a => a.filename) : []
-      });
-      
-      const info = await this.smtpTransporter.sendMail(mailOptions);
-      console.log('E-Mail erfolgreich gesendet:', info.messageId);
-      
-      return true;
     } catch (error) {
       console.error('Fehler beim Senden der E-Mail mit Anhang:', error);
       return false;
