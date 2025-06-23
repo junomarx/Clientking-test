@@ -1219,6 +1219,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
+      // E-Mail-Versandvariablen initialisieren
+      let emailSent = false;
+      let emailError = '';
+      
       // Reparaturstatus mit Benutzerkontext und optionaler Techniker-Information aktualisieren
       // Die updateRepairStatus Methode erstellt automatisch History-Einträge
       const repair = await storage.updateRepairStatus(id, status, userId, technicianNote);
@@ -1254,8 +1258,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // E-Mail-Versandvariablen initialisieren
         let emailResult: any = null;
-        let emailSent = false;
-        let emailError = '';
         
         try {
           // E-Mail-Benachrichtigung nur wenn explizit vom Benutzer gewünscht
@@ -1342,6 +1344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
         } catch (error) {
           console.error("Unerwarteter Fehler beim E-Mail-Versand:", error);
+          emailError = 'Unerwarteter Fehler beim E-Mail-Versand';
         }
         
         // SMS-Funktionalität wurde auf Kundenwunsch entfernt
