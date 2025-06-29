@@ -26,6 +26,7 @@ import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
 import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
+import { PDFExportDialog } from '@/components/statistics/PDFExportDialog';
 
 
 interface DashboardTabProps {
@@ -47,6 +48,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   // State für QR-Unterschrift
   const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
   const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
+  
+  // State für PDF Export Dialog
+  const [showPDFExportDialog, setShowPDFExportDialog] = useState(false);
   
 
   
@@ -190,45 +194,9 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
     }
   };
 
-  // PDF Export Handler
-  const handleExportPDF = async () => {
-    try {
-      // Zeitraum für aktuellen Monat erstellen
-      const currentDate = new Date();
-      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const endDate = new Date();
-
-      const params = new URLSearchParams({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
-      });
-
-      // PDF direkt herunterladen
-      const response = await fetch(`/api/statistics/pdf?${params}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/pdf'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Fehler beim Generieren der PDF-Statistik');
-      }
-
-      // PDF Blob erstellen und Download starten
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Statistik_${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error('Fehler beim PDF-Export:', error);
-      alert('Fehler beim Generieren der PDF-Statistik');
-    }
+  // PDF Export Handler - öffnet Dialog
+  const handleExportPDF = () => {
+    setShowPDFExportDialog(true);
   };
 
   // Container-Animations-Varianten
@@ -418,6 +386,12 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           businessName={businessSettingsData?.businessName || businessSettingsQuery?.businessName || 'Handyshop'}
         />
       )}
+
+      {/* PDF Export Dialog */}
+      <PDFExportDialog
+        open={showPDFExportDialog}
+        onOpenChange={setShowPDFExportDialog}
+      />
 
     </motion.div>
   );
