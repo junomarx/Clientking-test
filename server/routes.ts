@@ -5463,6 +5463,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       finalY += 10;
       doc.setFontSize(14);
+      doc.text(`Zeitraum: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')}`, 105, finalY, { align: 'center' });
+      
+      finalY += 5;
+      doc.setFontSize(12);
       doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, 105, finalY, { align: 'center' });
       
       finalY += 20;
@@ -5504,7 +5508,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let currentX = 10;
         headers.forEach((header, i) => {
           const truncatedHeader = header.length > 20 ? header.substring(0, 17) + '...' : header;
-          doc.text(truncatedHeader, currentX + 2, y + 6);
+          // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder wenn Header "Anzahl" enthält)
+          const isCountColumn = i === headers.length - 1 || header.toLowerCase().includes('anzahl');
+          if (isCountColumn) {
+            doc.text(truncatedHeader, currentX + colWidths[i] - 2, y + 6, { align: 'right' });
+          } else {
+            doc.text(truncatedHeader, currentX + 2, y + 6);
+          }
           if (i < headers.length - 1) {
             doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
           }
@@ -5530,7 +5540,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const cellStr = String(cell);
             const maxChars = Math.floor(colWidths[i] / 2.5); // Schätze max Zeichen pro Spalte
             const truncatedCell = cellStr.length > maxChars ? cellStr.substring(0, maxChars - 3) + '...' : cellStr;
-            doc.text(truncatedCell, currentX + 2, y + 6);
+            
+            // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder numerische Werte)
+            const isCountColumn = i === row.length - 1 || !isNaN(Number(cellStr));
+            if (isCountColumn) {
+              doc.text(truncatedCell, currentX + colWidths[i] - 2, y + 6, { align: 'right' });
+            } else {
+              doc.text(truncatedCell, currentX + 2, y + 6);
+            }
             if (i < row.length - 1) {
               doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
             }
@@ -5538,7 +5555,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           y += rowHeight;
 
-          if (y > 280) {
+          // Prüfe auf Footer-Überlappung - mehr Platz für Footer lassen
+          if (y > 270) {
             doc.addPage();
             y = 20;
           }
@@ -5547,10 +5565,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return y + 15;
       };
 
-      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [140, 50]);
+      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [155, 35]);
 
       // 2. Reparaturen pro Gerätetyp + Marke
-      if (finalY > 250) {
+      if (finalY > 240) {
         doc.addPage();
         finalY = 20;
       }
@@ -5566,7 +5584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [70, 90, 30]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [75, 95, 20]);
 
       // 3. Reparaturen pro Gerätetyp + Marke + Modell
       if (finalY > 200) {
@@ -5586,10 +5604,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [50, 60, 60, 20]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [50, 65, 60, 15]);
 
       // 4. Umsatzstatistik
-      if (finalY > 250) {
+      if (finalY > 240) {
         doc.addPage();
         finalY = 20;
       }
@@ -5607,7 +5625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY, [140, 50]);
 
       // 5. Reparaturen mit Status "Außer Haus"
-      if (finalY > 220) {
+      if (finalY > 200) {
         doc.addPage();
         finalY = 20;
       }
@@ -5626,7 +5644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ])
         : [['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']];
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY, [45, 55, 55, 35]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY, [45, 55, 60, 30]);
 
       // Footer
       const totalPages = doc.getNumberOfPages();
