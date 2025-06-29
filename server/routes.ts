@@ -5404,157 +5404,205 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Hole "Außer Haus" Reparaturen für Tabelle 5
+      const ausserHausRepairs = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        model: repairs.model,
+        changedAt: repairStatusHistory.changedAt
+      })
+      .from(repairs)
+      .innerJoin(repairStatusHistory, eq(repairs.id, repairStatusHistory.repairId))
+      .where(and(
+        eq(repairs.shopId, shopId),
+        eq(repairStatusHistory.newStatus, "ausser_haus"),
+        gte(repairStatusHistory.changedAt, start),
+        lte(repairStatusHistory.changedAt, end)
+      ))
+      .orderBy(repairStatusHistory.changedAt);
+
       // PDF erstellen (dynamisch importiert)
       const jsPDFModule = await import('jspdf');
-      const doc = new jsPDFModule.jsPDF('p', 'mm', 'a4');
+      const { jsPDF } = jsPDFModule;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
       const pageWidth = 210;
       const pageHeight = 297;
+      const margin = 10;
       let currentY = 20;
+
+      // Helper function für Tabellen
+      const createTable = (headers: string[], rows: string[][], startY: number) => {
+        const tableWidth = pageWidth - (2 * margin);
+        const colWidth = tableWidth / headers.length;
+        const rowHeight = 8;
+        let y = startY;
+
+        // Tabellen-Header
+        doc.setFillColor(238, 238, 238);
+        doc.rect(margin, y, tableWidth, rowHeight, 'F');
+        doc.setDrawColor(170, 170, 170);
+        doc.rect(margin, y, tableWidth, rowHeight);
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        headers.forEach((header, i) => {
+          doc.text(header, margin + (i * colWidth) + 2, y + 6);
+          if (i < headers.length - 1) {
+            doc.line(margin + ((i + 1) * colWidth), y, margin + ((i + 1) * colWidth), y + rowHeight);
+          }
+        });
+
+        y += rowHeight;
+
+        // Tabellen-Daten
+        doc.setFont('helvetica', 'normal');
+        rows.forEach((row, rowIndex) => {
+          // Zeilen-Hintergrund (abwechselnd)
+          if (rowIndex % 2 === 0) {
+            doc.setFillColor(248, 248, 248);
+            doc.rect(margin, y, tableWidth, rowHeight, 'F');
+          }
+          
+          doc.setDrawColor(170, 170, 170);
+          doc.rect(margin, y, tableWidth, rowHeight);
+
+          row.forEach((cell, i) => {
+            doc.text(cell.toString(), margin + (i * colWidth) + 2, y + 6);
+            if (i < row.length - 1) {
+              doc.line(margin + ((i + 1) * colWidth), y, margin + ((i + 1) * colWidth), y + rowHeight);
+            }
+          });
+          y += rowHeight;
+
+          // Neue Seite wenn nötig
+          if (y > pageHeight - 40) {
+            doc.addPage();
+            y = 20;
+          }
+        });
+
+        return y + 10;
+      };
 
       // Header
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
-      doc.text('Reparatur-Statistik', pageWidth / 2, currentY, { align: 'center' });
+      doc.text('Reparaturstatistik', pageWidth / 2, currentY, { align: 'center' });
       
       currentY += 10;
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'normal');
-      doc.text(businessSettings?.businessName || 'Handyshop', pageWidth / 2, currentY, { align: 'center' });
+      doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, pageWidth / 2, currentY, { align: 'center' });
       
-      currentY += 10;
-      doc.setFontSize(12);
-      doc.text(`Zeitraum: ${start.toLocaleDateString()} - ${end.toLocaleDateString()}`, pageWidth / 2, currentY, { align: 'center' });
-      
-      currentY += 15;
+      currentY += 20;
 
-      // Reparatur-Flow Übersicht
+      // 1. Reparaturen pro Gerätetyp
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('Reparatur-Flow im Zeitraum', 20, currentY);
+      doc.text('1. Reparaturen pro Gerätetyp', margin, currentY);
       currentY += 10;
 
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Neue Eingänge: ${newRepairs.length}`, 20, currentY);
-      currentY += 6;
-      doc.text(`Abholungen: ${pickedUpRepairs.length}`, 20, currentY);
-      currentY += 6;
-      doc.text(`Netto-Veränderung: ${newRepairs.length - pickedUpRepairs.length}`, 20, currentY);
-      currentY += 6;
-      doc.text(`"Außer Haus" Reparaturen: ${ausserHausCount[0]?.count || 0}`, 20, currentY);
-      currentY += 15;
+      const deviceTypeHeaders = ['Gerätetyp', 'Anzahl Reparaturen'];
+      const deviceTypeRows = deviceTypeStats.map(stat => [
+        stat.deviceType || 'Unbekannt',
+        stat.count.toString()
+      ]);
 
-      // Umsatz-Übersicht
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Umsatz-Übersicht', 20, currentY);
-      currentY += 10;
+      currentY = createTable(deviceTypeHeaders, deviceTypeRows, currentY);
 
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Abgeholter Umsatz: ${totalRevenue.toFixed(2)} €`, 20, currentY);
-      currentY += 6;
-      doc.text(`Ausstehender Umsatz (fertig): ${pendingRevenue.toFixed(2)} €`, 20, currentY);
-      currentY += 6;
-      doc.text(`Gesamt-Potential: ${(totalRevenue + pendingRevenue).toFixed(2)} €`, 20, currentY);
-      currentY += 15;
-
-      // Neue Seite für Statistiken wenn nötig
-      if (currentY > 200) {
-        doc.addPage();
-        currentY = 20;
-      }
-
-      // Gerätetyp-Statistiken
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Reparaturen pro Gerätetyp', 20, currentY);
-      currentY += 10;
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      deviceTypeStats.forEach(stat => {
-        doc.text(`${stat.deviceType}: ${stat.count}`, 20, currentY);
-        currentY += 6;
-        if (currentY > 280) {
-          doc.addPage();
-          currentY = 20;
-        }
-      });
-      currentY += 10;
-
-      // Marken-Statistiken
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Marken pro Gerätetyp', 20, currentY);
-      currentY += 10;
-
-      let currentDeviceType = '';
-      doc.setFontSize(12);
-      brandStats.forEach(stat => {
-        if (stat.deviceType !== currentDeviceType) {
-          currentY += 5;
-          doc.setFont('helvetica', 'bold');
-          doc.text(`${stat.deviceType}:`, 20, currentY);
-          currentY += 6;
-          currentDeviceType = stat.deviceType;
-        }
-        doc.setFont('helvetica', 'normal');
-        doc.text(`  ${stat.brand}: ${stat.count}`, 25, currentY);
-        currentY += 6;
-        if (currentY > 280) {
-          doc.addPage();
-          currentY = 20;
-        }
-      });
-      currentY += 10;
-
-      // Modell-Statistiken
-      if (currentY > 200) {
+      // 2. Reparaturen pro Gerätetyp + Marke
+      if (currentY > pageHeight - 100) {
         doc.addPage();
         currentY = 20;
       }
 
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('Modelle pro Gerätetyp + Marke', 20, currentY);
+      doc.text('2. Reparaturen pro Gerätetyp + Marke', margin, currentY);
       currentY += 10;
 
-      currentDeviceType = '';
-      let currentBrand = '';
-      doc.setFontSize(12);
-      modelStats.forEach(stat => {
-        if (stat.deviceType !== currentDeviceType) {
-          currentY += 5;
-          doc.setFont('helvetica', 'bold');
-          doc.text(`${stat.deviceType}:`, 20, currentY);
-          currentY += 6;
-          currentDeviceType = stat.deviceType;
-          currentBrand = '';
-        }
-        if (stat.brand !== currentBrand) {
-          doc.setFont('helvetica', 'bold');
-          doc.text(`  ${stat.brand}:`, 25, currentY);
-          currentY += 6;
-          currentBrand = stat.brand;
-        }
-        doc.setFont('helvetica', 'normal');
-        doc.text(`    ${stat.model}: ${stat.count}`, 30, currentY);
-        currentY += 6;
-        if (currentY > 280) {
-          doc.addPage();
-          currentY = 20;
-        }
-      });
+      const brandHeaders = ['Gerätetyp', 'Marke', 'Anzahl Reparaturen'];
+      const brandRows = brandStats.map(stat => [
+        stat.deviceType || 'Unbekannt',
+        stat.brand || 'Unbekannt',
+        stat.count.toString()
+      ]);
+
+      currentY = createTable(brandHeaders, brandRows, currentY);
+
+      // 3. Reparaturen pro Gerätetyp + Marke + Modell
+      if (currentY > pageHeight - 100) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('3. Reparaturen pro Gerätetyp + Marke + Modell', margin, currentY);
+      currentY += 10;
+
+      const modelHeaders = ['Gerätetyp', 'Marke', 'Modell', 'Anzahl Reparaturen'];
+      const modelRows = modelStats.map(stat => [
+        stat.deviceType || 'Unbekannt',
+        stat.brand || 'Unbekannt',
+        stat.model || 'Unbekannt',
+        stat.count.toString()
+      ]);
+
+      currentY = createTable(modelHeaders, modelRows, currentY);
+
+      // 4. Umsatzstatistik
+      if (currentY > pageHeight - 100) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('4. Umsatzstatistik', margin, currentY);
+      currentY += 10;
+
+      const revenueHeaders = ['Kategorie', 'Betrag (€)'];
+      const revenueRows = [
+        ['Gesamtumsatz', totalRevenue.toFixed(2)],
+        ['Offene Reparaturen (nicht abgeholt)', pendingRevenue.toFixed(2)]
+      ];
+
+      currentY = createTable(revenueHeaders, revenueRows, currentY);
+
+      // 5. Reparaturen mit Status "Außer Haus"
+      if (currentY > pageHeight - 100) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('5. Reparaturen mit Status "Außer Haus"', margin, currentY);
+      currentY += 10;
+
+      const ausserHausHeaders = ['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'];
+      const ausserHausRows = ausserHausRepairs.map(repair => [
+        repair.deviceType || 'Unbekannt',
+        repair.brand || 'Unbekannt',
+        repair.model || 'Unbekannt',
+        new Date(repair.changedAt).toLocaleDateString('de-DE')
+      ]);
+
+      if (ausserHausRows.length === 0) {
+        ausserHausRows.push(['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']);
+      }
+
+      currentY = createTable(ausserHausHeaders, ausserHausRows, currentY);
 
       // Footer auf jeder Seite
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Erstellt am: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 20, pageHeight - 10);
-        doc.text(`Seite ${i} von ${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+        doc.setTextColor(102, 102, 102);
+        const footerText = `Generiert am: ${new Date().toLocaleDateString('de-DE')} | powered by ${businessSettings?.businessName || 'Dein Reparaturtool'}`;
+        doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
       }
 
       // PDF als Buffer zurückgeben

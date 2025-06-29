@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Reparaturstatistik</title>
+  <style>
+    @media print {
+      body {
+        width: 210mm;
+        height: 297mm;
+        margin: 10mm;
+      }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+      margin: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin: 0.5em 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Reparaturstatistik</h1>
+  <h2 id="report-date">Stand: 29.06.2025</h2>
+
+  <div class="section">
+    <h2>1. Reparaturen pro Gerätetyp</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Gerätetyp</th>
+          <th>Anzahl Reparaturen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Smartphone</td><td>120</td></tr>
+        <tr><td>Laptop</td><td>80</td></tr>
+        <tr><td>Smartwatch</td><td>25</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>2. Reparaturen pro Gerätetyp + Marke</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Gerätetyp</th>
+          <th>Marke</th>
+          <th>Anzahl Reparaturen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Smartphone</td><td>Apple</td><td>60</td></tr>
+        <tr><td>Smartphone</td><td>Samsung</td><td>40</td></tr>
+        <tr><td>Laptop</td><td>Dell</td><td>30</td></tr>
+        <tr><td>Laptop</td><td>HP</td><td>50</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>3. Reparaturen pro Gerätetyp + Marke + Modell</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Gerätetyp</th>
+          <th>Marke</th>
+          <th>Modell</th>
+          <th>Anzahl Reparaturen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Smartphone</td><td>Apple</td><td>iPhone 13</td><td>30</td></tr>
+        <tr><td>Smartphone</td><td>Samsung</td><td>Galaxy S21</td><td>20</td></tr>
+        <tr><td>Laptop</td><td>HP</td><td>Pavilion</td><td>20</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>4. Umsatzstatistik</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Kategorie</th>
+          <th>Betrag (€)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Gesamtumsatz</td><td>15.000</td></tr>
+        <tr><td>Offene Reparaturen (nicht abgeholt)</td><td>3.500</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>5. Reparaturen mit Status "Außer Haus"</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Gerätetyp</th>
+          <th>Marke</th>
+          <th>Modell</th>
+          <th>Statusdatum</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Smartphone</td><td>Apple</td><td>iPhone 11</td><td>15.06.2025</td></tr>
+        <tr><td>Laptop</td><td>Lenovo</td><td>ThinkPad T14</td><td>18.06.2025</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Generiert am: 29.06.2025 &nbsp; | &nbsp; powered by Dein Reparaturtool
+  </div>
+
+</body>
+</html>
