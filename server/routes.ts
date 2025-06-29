@@ -5567,7 +5567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return y + 15;
       };
 
-      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [155, 35]);
+      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [80, 110]);
 
       // 2. Reparaturen pro Gerätetyp + Marke
       if (finalY > 230) {
@@ -5586,7 +5586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [75, 95, 20]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [80, 80, 30]);
 
       // 3. Reparaturen pro Gerätetyp + Marke + Modell
       if (finalY > 190) {
@@ -5606,7 +5606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [20, 25, 120, 20]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [80, 50, 45, 30]);
 
       // 4. Umsatzstatistik
       if (finalY > 220) {
