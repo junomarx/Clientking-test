@@ -11,7 +11,9 @@ import {
   TrendingUp, 
   Wrench as Tool,
   Clock,
-  CheckCircle
+  CheckCircle,
+  FileText,
+  Download
 } from 'lucide-react';
 import { usePrintManager } from '@/components/repairs/PrintOptionsManager';
 import { AnimatedStatCard } from './AnimatedStatCard';
@@ -188,6 +190,47 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
     }
   };
 
+  // PDF Export Handler
+  const handleExportPDF = async () => {
+    try {
+      // Zeitraum für aktuellen Monat erstellen
+      const currentDate = new Date();
+      const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endDate = new Date();
+
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      });
+
+      // PDF direkt herunterladen
+      const response = await fetch(`/api/statistics/pdf?${params}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/pdf'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Generieren der PDF-Statistik');
+      }
+
+      // PDF Blob erstellen und Download starten
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Statistik_${startDate.toISOString().split('T')[0]}_${endDate.toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Fehler beim PDF-Export:', error);
+      alert('Fehler beim Generieren der PDF-Statistik');
+    }
+  };
+
   // Container-Animations-Varianten
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -219,6 +262,17 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Übersicht Ihrer Reparaturen und aktuellen Statistiken</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={handleExportPDF}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <FileText size={16} />
+            PDF-Statistik
+          </Button>
         </div>
 
       </motion.div>

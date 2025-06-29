@@ -48,6 +48,7 @@ import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import path from 'path';
 import fs from 'fs';
+import jsPDF from 'jspdf';
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
@@ -5284,6 +5285,289 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Abrufen der Kiosk Business-Settings:", error);
       res.status(500).json({ message: "Interner Serverfehler" });
+    }
+  });
+
+  // PDF Statistics Export
+  app.get("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      const shopId = user.shopId;
+      const { startDate, endDate } = req.query;
+
+      // Standardzeitraum: aktueller Monat
+      const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      console.log(`Generiere PDF-Statistik für Benutzer ${user.username} (Shop ${shopId}) von ${start.toLocaleDateString()} bis ${end.toLocaleDateString()}`);
+
+      // Hole Business Settings für Firmenname
+      const businessSettings = await storage.getBusinessSettings(userId);
+
+      // 1. Reparatur-Flow im Zeitraum
+      const newRepairs = await db.select().from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          sql`${repairs.createdAt} >= ${start}`,
+          sql`${repairs.createdAt} <= ${end}`
+        ));
+
+      const pickedUpRepairs = await db.select().from(repairs)
+        .where(and(
+          eq(repairs.shopId, shopId),
+          sql`${repairs.pickupSignedAt} >= ${start}`,
+          sql`${repairs.pickupSignedAt} <= ${end}`
+        ));
+
+      // 2. Status-Statistiken für "Außer Haus"
+      const ausserHausCount = await db.select({ count: sql<number>`count(*)` })
+        .from(repairStatusHistory)
+        .where(and(
+          eq(repairStatusHistory.status, "ausser_haus"),
+          sql`${repairStatusHistory.changedAt} >= ${start}`,
+          sql`${repairStatusHistory.changedAt} <= ${end}`
+        ));
+
+      // 3. Hierarchie-Statistiken: Gerätetyp
+      const deviceTypeStats = await db.select({
+        deviceType: repairs.deviceType,
+        count: sql<number>`count(*)`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        sql`${repairs.createdAt} >= ${start}`,
+        sql`${repairs.createdAt} <= ${end}`
+      ))
+      .groupBy(repairs.deviceType)
+      .orderBy(sql`count(*) DESC`);
+
+      // 4. Hierarchie-Statistiken: Marken pro Gerätetyp
+      const brandStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        count: sql<number>`count(*)`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        sql`${repairs.createdAt} >= ${start}`,
+        sql`${repairs.createdAt} <= ${end}`
+      ))
+      .groupBy(repairs.deviceType, repairs.brand)
+      .orderBy(repairs.deviceType, sql`count(*) DESC`);
+
+      // 5. Hierarchie-Statistiken: Modelle pro Gerätetyp+Marke
+      const modelStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        model: repairs.model,
+        count: sql<number>`count(*)`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        sql`${repairs.createdAt} >= ${start}`,
+        sql`${repairs.createdAt} <= ${end}`
+      ))
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
+      .orderBy(repairs.deviceType, repairs.brand, sql`count(*) DESC`);
+
+      // 6. Umsatz-Berechnungen
+      const completedRepairs = await db.select({
+        estimatedCost: repairs.estimatedCost,
+        status: repairs.status
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        sql`${repairs.createdAt} >= ${start}`,
+        sql`${repairs.createdAt} <= ${end}`,
+        sql`${repairs.estimatedCost} IS NOT NULL AND ${repairs.estimatedCost} != ''`
+      ));
+
+      let totalRevenue = 0;
+      let pendingRevenue = 0;
+
+      completedRepairs.forEach(repair => {
+        const cost = parseFloat(repair.estimatedCost || '0');
+        if (repair.status === 'abgeholt') {
+          totalRevenue += cost;
+        } else if (repair.status === 'fertig' || repair.status === 'abholbereit') {
+          pendingRevenue += cost;
+        }
+      });
+
+      // PDF erstellen
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      let currentY = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reparatur-Statistik', pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 10;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'normal');
+      doc.text(businessSettings?.businessName || 'Handyshop', pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 10;
+      doc.setFontSize(12);
+      doc.text(`Zeitraum: ${start.toLocaleDateString()} - ${end.toLocaleDateString()}`, pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 15;
+
+      // Reparatur-Flow Übersicht
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reparatur-Flow im Zeitraum', 20, currentY);
+      currentY += 10;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Neue Eingänge: ${newRepairs.length}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Abholungen: ${pickedUpRepairs.length}`, 20, currentY);
+      currentY += 6;
+      doc.text(`Netto-Veränderung: ${newRepairs.length - pickedUpRepairs.length}`, 20, currentY);
+      currentY += 6;
+      doc.text(`"Außer Haus" Reparaturen: ${ausserHausCount[0]?.count || 0}`, 20, currentY);
+      currentY += 15;
+
+      // Umsatz-Übersicht
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Umsatz-Übersicht', 20, currentY);
+      currentY += 10;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Abgeholter Umsatz: ${totalRevenue.toFixed(2)} €`, 20, currentY);
+      currentY += 6;
+      doc.text(`Ausstehender Umsatz (fertig): ${pendingRevenue.toFixed(2)} €`, 20, currentY);
+      currentY += 6;
+      doc.text(`Gesamt-Potential: ${(totalRevenue + pendingRevenue).toFixed(2)} €`, 20, currentY);
+      currentY += 15;
+
+      // Neue Seite für Statistiken wenn nötig
+      if (currentY > 200) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      // Gerätetyp-Statistiken
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reparaturen pro Gerätetyp', 20, currentY);
+      currentY += 10;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      deviceTypeStats.forEach(stat => {
+        doc.text(`${stat.deviceType}: ${stat.count}`, 20, currentY);
+        currentY += 6;
+        if (currentY > 280) {
+          doc.addPage();
+          currentY = 20;
+        }
+      });
+      currentY += 10;
+
+      // Marken-Statistiken
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Marken pro Gerätetyp', 20, currentY);
+      currentY += 10;
+
+      let currentDeviceType = '';
+      doc.setFontSize(12);
+      brandStats.forEach(stat => {
+        if (stat.deviceType !== currentDeviceType) {
+          currentY += 5;
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${stat.deviceType}:`, 20, currentY);
+          currentY += 6;
+          currentDeviceType = stat.deviceType;
+        }
+        doc.setFont('helvetica', 'normal');
+        doc.text(`  ${stat.brand}: ${stat.count}`, 25, currentY);
+        currentY += 6;
+        if (currentY > 280) {
+          doc.addPage();
+          currentY = 20;
+        }
+      });
+      currentY += 10;
+
+      // Modell-Statistiken
+      if (currentY > 200) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Modelle pro Gerätetyp + Marke', 20, currentY);
+      currentY += 10;
+
+      currentDeviceType = '';
+      let currentBrand = '';
+      doc.setFontSize(12);
+      modelStats.forEach(stat => {
+        if (stat.deviceType !== currentDeviceType) {
+          currentY += 5;
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${stat.deviceType}:`, 20, currentY);
+          currentY += 6;
+          currentDeviceType = stat.deviceType;
+          currentBrand = '';
+        }
+        if (stat.brand !== currentBrand) {
+          doc.setFont('helvetica', 'bold');
+          doc.text(`  ${stat.brand}:`, 25, currentY);
+          currentY += 6;
+          currentBrand = stat.brand;
+        }
+        doc.setFont('helvetica', 'normal');
+        doc.text(`    ${stat.model}: ${stat.count}`, 30, currentY);
+        currentY += 6;
+        if (currentY > 280) {
+          doc.addPage();
+          currentY = 20;
+        }
+      });
+
+      // Footer auf jeder Seite
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Erstellt am: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 20, pageHeight - 10);
+        doc.text(`Seite ${i} von ${totalPages}`, pageWidth - 20, pageHeight - 10, { align: 'right' });
+      }
+
+      // PDF als Buffer zurückgeben
+      const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Statistik_${start.toISOString().split('T')[0]}_${end.toISOString().split('T')[0]}.pdf"`);
+      res.send(pdfBuffer);
+
+    } catch (error) {
+      console.error("Fehler beim Generieren der PDF-Statistik:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Generieren der PDF-Statistik",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
