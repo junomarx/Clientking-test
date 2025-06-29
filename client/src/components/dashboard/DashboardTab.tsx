@@ -26,7 +26,7 @@ import { ChangeStatusDialog } from '../repairs/ChangeStatusDialog';
 import { BusinessDataAlert } from '@/components/common/BusinessDataAlert';
 import { QRSignatureDialog } from '@/components/signature/QRSignatureDialog';
 import { useBusinessSettings } from '@/hooks/use-business-settings';
-import { PDFExportDialog } from '@/components/statistics/PDFExportDialog';
+
 
 
 interface DashboardTabProps {
@@ -49,8 +49,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
   const [showQRSignatureDialog, setShowQRSignatureDialog] = useState(false);
   const [selectedRepairForSignature, setSelectedRepairForSignature] = useState<any>(null);
   
-  // State für PDF Export Dialog
-  const [showPDFExportDialog, setShowPDFExportDialog] = useState(false);
+
   
 
   
@@ -194,10 +193,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
     }
   };
 
-  // PDF Export Handler - öffnet Dialog
-  const handleExportPDF = () => {
-    setShowPDFExportDialog(true);
-  };
+
 
   // Container-Animations-Varianten
   const containerVariants = {
@@ -378,11 +374,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
         />
       )}
 
-      {/* PDF Export Dialog */}
-      <PDFExportDialog
-        open={showPDFExportDialog}
-        onOpenChange={setShowPDFExportDialog}
-      />
+
 
     </motion.div>
   );
