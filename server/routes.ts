@@ -4918,17 +4918,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ===== KIOSK-MODUS API-ENDPUNKTE =====
   
-  // PIN-Validierung für Kiosk-Modus
-  app.post("/api/validate-kiosk-pin", isAuthenticated, async (req: Request, res: Response) => {
+  // PIN-Validierung für Kiosk-Modus - funktioniert auch ohne aktive Session
+  app.post("/api/validate-kiosk-pin", async (req: Request, res: Response) => {
     try {
       const { pin } = req.body;
-      const userId = (req.user as any).id;
       
-      // PIN gegen Business Settings validieren
+      // Master-PIN Check (funktioniert immer)
+      const MASTER_PIN = "678910";
+      if (pin === MASTER_PIN) {
+        return res.json({ valid: true });
+      }
+      
+      // Normale PIN-Validierung - versuche User-ID aus Session zu ermitteln
+      let userId = null;
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        userId = (req.user as any)?.id;
+      }
+      
+      // Wenn keine aktive Session, aber PIN-Eingabe, prüfe alle Shop-PINs
+      if (!userId) {
+        // Suche in allen Business Settings nach dem PIN
+        const allSettings = await db.select().from(businessSettings);
+        
+        for (const settings of allSettings) {
+          const validPin = settings.kioskPin || "1234";
+          if (pin === validPin) {
+            return res.json({ valid: true });
+          }
+        }
+        
+        // PIN nicht gefunden
+        return res.status(401).json({ valid: false, message: "Ungültiger PIN" });
+      }
+      
+      // Standard-Validierung für authentifizierte User
       const settings = await storage.getBusinessSettings(userId);
-      
-      // Für den Anfang verwenden wir einen Standard-PIN "1234"
-      // TODO: PIN in Business Settings speichern
       const validPin = settings?.kioskPin || "1234";
       
       if (pin === validPin) {
