@@ -5540,8 +5540,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const cellStr = String(cell);
             // Angepasste Zeichen-Limits für die neuen Spaltenbreiten
             let maxChars;
-            if (i === 0) maxChars = 8;  // Gerätetyp (20px)
-            else if (i === 1) maxChars = 10; // Marke (25px)
+            if (i === 0) maxChars = 12;  // Gerätetyp (20px) - genug für "Smartphone"
+            else if (i === 1) maxChars = 12; // Marke (25px)
             else if (i === 2) maxChars = 40; // Modell (120px) - viel mehr Platz
             else maxChars = 6; // Anzahl (20px)
             
