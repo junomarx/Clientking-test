@@ -5604,7 +5604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [80, 50, 45, 30]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [30, 25, 105, 25]);
 
       // 4. Umsatzstatistik
       if (finalY > 220) {
