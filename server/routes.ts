@@ -5427,10 +5427,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       completedRepairs.forEach(repair => {
         const cost = parseFloat(repair.estimatedCost || '0');
-        if (repair.status === 'abgeholt') {
-          realTotalRevenue += cost;
-        } else if (repair.status === 'fertig' || repair.status === 'abholbereit') {
-          readyForPickupRevenue += cost;
+        if (!isNaN(cost)) {
+          if (repair.status === 'abgeholt') {
+            realTotalRevenue += cost;
+          } else if (repair.status === 'fertig' || repair.status === 'abholbereit') {
+            readyForPickupRevenue += cost;
+          }
         }
       });
 
@@ -5476,12 +5478,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      // Erstelle Tabelle manuell mit besserer Formatierung
-      const createTable = (headers, data, startY) => {
+      // Erstelle Tabelle manuell mit besserer Formatierung und dynamischen Spaltenbreiten
+      const createTable = (headers: string[], data: string[][], startY: number, customWidths?: number[]) => {
         const tableWidth = 190;
-        const colWidth = tableWidth / headers.length;
         const rowHeight = 8;
         let y = startY;
+
+        // Berechne Spaltenbreiten basierend auf Anzahl der Spalten oder custom widths
+        let colWidths: number[];
+        if (customWidths) {
+          colWidths = customWidths;
+        } else {
+          const baseWidth = tableWidth / headers.length;
+          colWidths = new Array(headers.length).fill(baseWidth);
+        }
 
         // Header
         doc.setFillColor(238, 238, 238);
@@ -5491,18 +5501,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
+        let currentX = 10;
         headers.forEach((header, i) => {
-          doc.text(header, 12 + (i * colWidth), y + 6);
+          const truncatedHeader = header.length > 20 ? header.substring(0, 17) + '...' : header;
+          doc.text(truncatedHeader, currentX + 2, y + 6);
           if (i < headers.length - 1) {
-            doc.line(10 + ((i + 1) * colWidth), y, 10 + ((i + 1) * colWidth), y + rowHeight);
+            doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
           }
+          currentX += colWidths[i];
         });
 
         y += rowHeight;
 
         // Daten
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         data.forEach((row, rowIndex) => {
           if (rowIndex % 2 === 0) {
             doc.setFillColor(248, 248, 248);
@@ -5512,11 +5525,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           doc.setDrawColor(170, 170, 170);
           doc.rect(10, y, tableWidth, rowHeight, 'S');
 
+          currentX = 10;
           row.forEach((cell, i) => {
-            doc.text(String(cell), 12 + (i * colWidth), y + 6);
+            const cellStr = String(cell);
+            const maxChars = Math.floor(colWidths[i] / 2.5); // Schätze max Zeichen pro Spalte
+            const truncatedCell = cellStr.length > maxChars ? cellStr.substring(0, maxChars - 3) + '...' : cellStr;
+            doc.text(truncatedCell, currentX + 2, y + 6);
             if (i < row.length - 1) {
-              doc.line(10 + ((i + 1) * colWidth), y, 10 + ((i + 1) * colWidth), y + rowHeight);
+              doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
             }
+            currentX += colWidths[i];
           });
           y += rowHeight;
 
@@ -5529,7 +5547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return y + 15;
       };
 
-      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY);
+      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [140, 50]);
 
       // 2. Reparaturen pro Gerätetyp + Marke
       if (finalY > 250) {
@@ -5548,7 +5566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl Reparaturen'], brandData, finalY);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [70, 90, 30]);
 
       // 3. Reparaturen pro Gerätetyp + Marke + Modell
       if (finalY > 200) {
@@ -5568,7 +5586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [50, 60, 60, 20]);
 
       // 4. Umsatzstatistik
       if (finalY > 250) {
@@ -5586,7 +5604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ['Offene Reparaturen (nicht abgeholt)', `${readyForPickupRevenue.toFixed(2)} €`]
       ];
 
-      finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY);
+      finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY, [140, 50]);
 
       // 5. Reparaturen mit Status "Außer Haus"
       if (finalY > 220) {
@@ -5608,7 +5626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ])
         : [['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']];
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY, [45, 55, 55, 35]);
 
       // Footer
       const totalPages = doc.getNumberOfPages();
