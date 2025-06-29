@@ -5538,7 +5538,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentX = 10;
           row.forEach((cell, i) => {
             const cellStr = String(cell);
-            const maxChars = Math.floor(colWidths[i] / 2.5); // Schätze max Zeichen pro Spalte
+            // Angepasste Zeichen-Limits für die neuen Spaltenbreiten
+            let maxChars;
+            if (i === 0) maxChars = 8;  // Gerätetyp (20px)
+            else if (i === 1) maxChars = 10; // Marke (25px)
+            else if (i === 2) maxChars = 40; // Modell (120px) - viel mehr Platz
+            else maxChars = 6; // Anzahl (20px)
+            
             const truncatedCell = cellStr.length > maxChars ? cellStr.substring(0, maxChars - 3) + '...' : cellStr;
             
             // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder numerische Werte)
