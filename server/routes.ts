@@ -10,7 +10,7 @@ import { hasAccess, hasAccessAsync } from './permissions';
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
 import { db, pool } from './db';
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, sql, gte, lte, isNotNull } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -5313,24 +5313,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newRepairs = await db.select().from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          sql`${repairs.createdAt} >= ${start}`,
-          sql`${repairs.createdAt} <= ${end}`
+          gte(repairs.createdAt, start),
+          lte(repairs.createdAt, end)
         ));
 
       const pickedUpRepairs = await db.select().from(repairs)
         .where(and(
           eq(repairs.shopId, shopId),
-          sql`${repairs.pickupSignedAt} >= ${start}`,
-          sql`${repairs.pickupSignedAt} <= ${end}`
+          gte(repairs.pickupSignedAt, start),
+          lte(repairs.pickupSignedAt, end),
+          isNotNull(repairs.pickupSignedAt)
         ));
 
       // 2. Status-Statistiken für "Außer Haus"
       const ausserHausCount = await db.select({ count: sql<number>`count(*)` })
         .from(repairStatusHistory)
         .where(and(
-          eq(repairStatusHistory.status, "ausser_haus"),
-          sql`${repairStatusHistory.changedAt} >= ${start}`,
-          sql`${repairStatusHistory.changedAt} <= ${end}`
+          eq(repairStatusHistory.newStatus, "ausser_haus"),
+          gte(repairStatusHistory.changedAt, start),
+          lte(repairStatusHistory.changedAt, end)
         ));
 
       // 3. Hierarchie-Statistiken: Gerätetyp
@@ -5341,8 +5342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
-        sql`${repairs.createdAt} >= ${start}`,
-        sql`${repairs.createdAt} <= ${end}`
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
       ))
       .groupBy(repairs.deviceType)
       .orderBy(sql`count(*) DESC`);
@@ -5356,8 +5357,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
-        sql`${repairs.createdAt} >= ${start}`,
-        sql`${repairs.createdAt} <= ${end}`
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
       ))
       .groupBy(repairs.deviceType, repairs.brand)
       .orderBy(repairs.deviceType, sql`count(*) DESC`);
@@ -5372,8 +5373,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
-        sql`${repairs.createdAt} >= ${start}`,
-        sql`${repairs.createdAt} <= ${end}`
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
       ))
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, sql`count(*) DESC`);
@@ -5386,9 +5387,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
-        sql`${repairs.createdAt} >= ${start}`,
-        sql`${repairs.createdAt} <= ${end}`,
-        sql`${repairs.estimatedCost} IS NOT NULL AND ${repairs.estimatedCost} != ''`
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.estimatedCost)
       ));
 
       let totalRevenue = 0;
