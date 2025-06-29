@@ -5507,7 +5507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         doc.setFont('helvetica', 'bold');
         let currentX = 10;
         headers.forEach((header, i) => {
-          const truncatedHeader = header.length > 20 ? header.substring(0, 17) + '...' : header;
+          const truncatedHeader = header;
           // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder wenn Header "Anzahl" enthält)
           const isCountColumn = i === headers.length - 1 || header.toLowerCase().includes('anzahl');
           if (isCountColumn) {
