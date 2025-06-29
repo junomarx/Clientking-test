@@ -113,7 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
-- June 29, 2025: PDF export text display fixed - "Smartphone" now displays fully instead of truncated "Smart..." with adjusted character limits
+- June 29, 2025: PDF export text truncation completely fixed - dynamic character calculation (1 char per 1.8px) ensures "Smartphone" displays fully in all tables
 - June 29, 2025: PDF export functionality successfully moved from dashboard to statistics section next to CSV export button
 - June 29, 2025: PDF export redesigned to match user's HTML template with structured tables and professional formatting
 - June 29, 2025: Initial setup
