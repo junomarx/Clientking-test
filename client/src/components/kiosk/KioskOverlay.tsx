@@ -38,7 +38,7 @@ export function KioskOverlay() {
     if (pin.trim() === "") return;
     
     // Master-PIN für Emergency-Logout (funktioniert immer, auch bei Session-Timeout)
-    const MASTER_PIN = "9999";
+    const MASTER_PIN = "678910";
     
     if (pin === MASTER_PIN) {
       // Sofortiger Logout ohne API-Call
@@ -74,7 +74,7 @@ export function KioskOverlay() {
         setPin("");
       }
     } catch (error) {
-      alert("Fehler bei der PIN-Validierung. Versuchen Sie den Master-PIN 9999.");
+      alert("Fehler bei der PIN-Validierung. Versuchen Sie den Master-PIN 678910.");
       setPin("");
     }
   };
