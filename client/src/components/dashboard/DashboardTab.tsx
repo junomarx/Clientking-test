@@ -232,16 +232,7 @@ export function DashboardTab({ onNewOrder, onTabChange }: DashboardTabProps) {
           <p className="text-muted-foreground mt-1">Übersicht Ihrer Reparaturen und aktuellen Statistiken</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button 
-            onClick={handleExportPDF}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <FileText size={16} />
-            PDF-Statistik
-          </Button>
-        </div>
+
 
       </motion.div>
       

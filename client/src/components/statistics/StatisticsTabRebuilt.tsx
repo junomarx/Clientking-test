@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, FilePlus2, FileText, Database, Users, Download, ChartBar, Coins, Calendar, PackageOpen, Truck, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { PDFExportDialog } from './PDFExportDialog';
 import { SimpleDatePicker } from './SimpleDatePicker';
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -68,6 +69,9 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
   // Berechtigung für detaillierte Statistiken
   const [canViewDetailedStats, setCanViewDetailedStats] = useState<boolean | null>(null);
   const [isCheckingPermission, setIsCheckingPermission] = useState(true);
+  
+  // PDF Export Dialog
+  const [pdfExportOpen, setPdfExportOpen] = useState(false);
   
   // Prüfung der Berechtigung beim Laden der Komponente
   useEffect(() => {
@@ -294,6 +298,15 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
           >
             <Download className="h-4 w-4 mr-2" />
             CSV Export
+          </Button>
+          
+          <Button
+            variant="outline"
+            onClick={() => setPdfExportOpen(true)}
+            className="whitespace-nowrap"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            PDF Export
           </Button>
         </div>
       </div>
@@ -749,6 +762,12 @@ export function StatisticsTabRebuilt({ onTabChange }: StatisticsTabRebuiltProps)
           )}
         </TabsContent>
       </Tabs>
+      
+      {/* PDF Export Dialog */}
+      <PDFExportDialog 
+        open={pdfExportOpen}
+        onOpenChange={setPdfExportOpen}
+      />
     </div>
   );
 }

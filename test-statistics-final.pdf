@@ -1,1 +1,588 @@
-{"message":"Fehler beim Generieren der PDF-Statistik","error":"jsPDF is not a constructor"}
+%PDF-1.3
+%∫ﬂ¨‡
+3 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 3082
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 20 Tf
+23. TL
+0 g
+208.737795275590571 785.1970866141732586 Td
+(Reparatur-Statistik) Tj
+ET
+BT
+/F1 14 Tf
+16.0999999999999979 TL
+0 g
+224.8377952755905653 756.8506299212598378 Td
+(Handyshop Test GmbH) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+215.7977952755905449 728.5041732283464171 Td
+(Zeitraum: 6/1/2025 - 6/29/2025) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0 g
+56.6929133858267775 685.9844881889763428 Td
+(Reparatur-Flow im Zeitraum) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 657.6380314960629221 Td
+(Neue Eing‰nge: 8) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 640.6301574803148924 Td
+(Abholungen: 0) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 623.6222834645668627 Td
+(Netto-Ver‰nderung: 8) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 606.614409448818833 Td
+("Auﬂer Haus" Reparaturen: 20) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0 g
+56.6929133858267775 564.0947244094487587 Td
+(Umsatz-‹bersicht) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 535.748267716535338 Td
+(Abgeholter Umsatz: 0.00 Ä) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 518.7403937007873083 Td
+(Ausstehender Umsatz \(fertig\): 177.00 Ä) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 501.7325196850393354 Td
+(Gesamt-Potential: 177.00 Ä) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0 g
+56.6929133858267775 459.2128346456692611 Td
+(Reparaturen pro Ger‰tetyp) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 430.8663779527558404 Td
+(Smartphone: 4) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 413.8585039370078107 Td
+(Spielekonsole: 2) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 396.850629921259781 Td
+(Laptop: 2) Tj
+ET
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0 g
+56.6929133858267775 351.4962992125983874 Td
+(Marken pro Ger‰tetyp) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 308.9766141732283131 Td
+(Laptop:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 291.9687401574802834 Td
+(  Apple: 1) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 274.9608661417322537 Td
+(  Acer: 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 243.7797637795274568 Td
+(Smartphone:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 226.7718897637794271 Td
+(  Apple: 3) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 209.7640157480313974 Td
+(  Google: 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 178.5829133858267141 Td
+(Spielekonsole:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 161.5750393700786844 Td
+(  Microsoft: 1) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 144.5671653543306547 Td
+(  Sony: 1) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0 g
+56.6929133858267775 28.3466929133857093 Td
+(Erstellt am: 6/29/2025 4:49:45 PM) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0 g
+480.5826771653543688 28.3466929133857093 Td
+(Seite 1 von 2) Tj
+ET
+endstream
+endobj
+5 0 obj
+<</Type /Page
+/Parent 1 0 R
+/Resources 2 0 R
+/MediaBox [0 0 595.2799999999999727 841.8899999999999864]
+/Contents 6 0 R
+>>
+endobj
+6 0 obj
+<<
+/Length 2194
+>>
+stream
+0.5670000000000001 w
+0 G
+BT
+/F2 16 Tf
+18.3999999999999986 TL
+0 g
+56.6929133858267775 785.1970866141732586 Td
+(Modelle pro Ger‰tetyp + Marke) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 742.6774015748030706 Td
+(Laptop:) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 725.6695275590550409 Td
+(  Acer:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 708.6616535433070112 Td
+(    Aspire: 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 691.6537795275589815 Td
+(  Apple:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 674.6459055118109518 Td
+(    MacBook 12" 2016 \(A1534\): 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 643.4648031496062686 Td
+(Smartphone:) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 626.4569291338582389 Td
+(  Apple:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 609.4490551181102092 Td
+(    iPhone 14: 1) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 592.4411811023621794 Td
+(    iPhone 11: 1) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 575.4333070866141497 Td
+(    iPhone 12 Pro: 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 558.42543307086612 Td
+(  Google:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 541.4175590551180903 Td
+(    Google Pixel 2 XL | 2017 \(G011B, G011D\): 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+56.6929133858267775 510.2364566929133503 Td
+(Spielekonsole:) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 493.2285826771653205 Td
+(  Microsoft:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 476.2207086614172908 Td
+(    Xbox One: 1) Tj
+ET
+BT
+/F2 12 Tf
+13.7999999999999989 TL
+0 g
+70.8661417322834666 459.2128346456692611 Td
+(  Sony:) Tj
+ET
+BT
+/F1 12 Tf
+13.7999999999999989 TL
+0 g
+85.0393700787401627 442.2049606299212314 Td
+(    PlayStation 4 Pro: 1) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0 g
+56.6929133858267775 28.3466929133857093 Td
+(Erstellt am: 6/29/2025 4:49:45 PM) Tj
+ET
+BT
+/F1 10 Tf
+11.5 TL
+0 g
+480.5826771653543688 28.3466929133857093 Td
+(Seite 2 von 2) Tj
+ET
+endstream
+endobj
+1 0 obj
+<</Type /Pages
+/Kids [3 0 R 5 0 R ]
+/Count 2
+>>
+endobj
+7 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+8 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+9 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+10 0 obj
+<<
+/Type /Font
+/BaseFont /Helvetica-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+11 0 obj
+<<
+/Type /Font
+/BaseFont /Courier
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+12 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+13 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-Oblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+14 0 obj
+<<
+/Type /Font
+/BaseFont /Courier-BoldOblique
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+15 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Roman
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+16 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Bold
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+17 0 obj
+<<
+/Type /Font
+/BaseFont /Times-Italic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+18 0 obj
+<<
+/Type /Font
+/BaseFont /Times-BoldItalic
+/Subtype /Type1
+/Encoding /WinAnsiEncoding
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+19 0 obj
+<<
+/Type /Font
+/BaseFont /ZapfDingbats
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+20 0 obj
+<<
+/Type /Font
+/BaseFont /Symbol
+/Subtype /Type1
+/FirstChar 32
+/LastChar 255
+>>
+endobj
+2 0 obj
+<<
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font <<
+/F1 7 0 R
+/F2 8 0 R
+/F3 9 0 R
+/F4 10 0 R
+/F5 11 0 R
+/F6 12 0 R
+/F7 13 0 R
+/F8 14 0 R
+/F9 15 0 R
+/F10 16 0 R
+/F11 17 0 R
+/F12 18 0 R
+/F13 19 0 R
+/F14 20 0 R
+>>
+/XObject <<
+>>
+>>
+endobj
+21 0 obj
+<<
+/Producer (jsPDF 3.0.1)
+/CreationDate (D:20250629164945-00'00')
+>>
+endobj
+22 0 obj
+<<
+/Type /Catalog
+/Pages 1 0 R
+/OpenAction [3 0 R /FitH null]
+/PageLayout /OneColumn
+>>
+endobj
+xref
+0 23
+0000000000 65535 f 
+0000005669 00000 n 
+0000007494 00000 n 
+0000000015 00000 n 
+0000000152 00000 n 
+0000003286 00000 n 
+0000003423 00000 n 
+0000005732 00000 n 
+0000005857 00000 n 
+0000005987 00000 n 
+0000006120 00000 n 
+0000006258 00000 n 
+0000006382 00000 n 
+0000006511 00000 n 
+0000006643 00000 n 
+0000006779 00000 n 
+0000006907 00000 n 
+0000007034 00000 n 
+0000007163 00000 n 
+0000007296 00000 n 
+0000007398 00000 n 
+0000007744 00000 n 
+0000007830 00000 n 
+trailer
+<<
+/Size 23
+/Root 22 0 R
+/Info 21 0 R
+/ID [ <B0E419DA030D239DAF09A7E7E88EB109> <B0E419DA030D239DAF09A7E7E88EB109> ]
+>>
+startxref
+7934
+%%EOF
