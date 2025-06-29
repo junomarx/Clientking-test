@@ -113,7 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
-- June 29, 2025: PDF export formatting perfected - right-aligned count columns, wider model column (80px), date range in title, improved footer spacing to prevent overlap
+- June 29, 2025: PDF export formatting optimized - model column expanded to 100px for full text display, brand column reduced to 40px, right-aligned count columns, date range in title
 - June 29, 2025: PDF export functionality successfully moved from dashboard to statistics section next to CSV export button
 - June 29, 2025: PDF export redesigned to match user's HTML template with structured tables and professional formatting
 - June 29, 2025: Initial setup
