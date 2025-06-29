@@ -48,7 +48,7 @@ import { registerGlobalDeviceRoutes } from "./global-device-routes";
 import { registerSuperadminPrintTemplatesRoutes } from "./superadmin-print-templates-routes";
 import path from 'path';
 import fs from 'fs';
-import jsPDF from 'jspdf';
+// jsPDF will be imported dynamically
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
@@ -5404,8 +5404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // PDF erstellen
-      const doc = new jsPDF('p', 'mm', 'a4');
+      // PDF erstellen (dynamisch importiert)
+      const jsPDFModule = await import('jspdf');
+      const doc = new jsPDFModule.jsPDF('p', 'mm', 'a4');
       const pageWidth = 210;
       const pageHeight = 297;
       let currentY = 20;
