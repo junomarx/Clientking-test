@@ -5556,7 +5556,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           y += rowHeight;
 
           // Prüfe auf Footer-Überlappung - mehr Platz für Footer lassen
-          if (y > 270) {
+          if (y > 260) {
             doc.addPage();
             y = 20;
           }
@@ -5568,7 +5568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [155, 35]);
 
       // 2. Reparaturen pro Gerätetyp + Marke
-      if (finalY > 240) {
+      if (finalY > 230) {
         doc.addPage();
         finalY = 20;
       }
@@ -5587,7 +5587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [75, 95, 20]);
 
       // 3. Reparaturen pro Gerätetyp + Marke + Modell
-      if (finalY > 200) {
+      if (finalY > 190) {
         doc.addPage();
         finalY = 20;
       }
@@ -5604,10 +5604,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stat.count.toString()
       ]);
 
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [50, 65, 60, 15]);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [40, 55, 80, 15]);
 
       // 4. Umsatzstatistik
-      if (finalY > 240) {
+      if (finalY > 220) {
         doc.addPage();
         finalY = 20;
       }
@@ -5625,7 +5625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY, [140, 50]);
 
       // 5. Reparaturen mit Status "Außer Haus"
-      if (finalY > 200) {
+      if (finalY > 180) {
         doc.addPage();
         finalY = 20;
       }
