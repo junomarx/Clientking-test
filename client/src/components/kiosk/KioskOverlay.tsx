@@ -37,8 +37,28 @@ export function KioskOverlay() {
   const handleExitAttempt = async () => {
     if (pin.trim() === "") return;
     
+    // Master-PIN für Emergency-Logout (funktioniert immer, auch bei Session-Timeout)
+    const MASTER_PIN = "9999";
+    
+    if (pin === MASTER_PIN) {
+      // Sofortiger Logout ohne API-Call
+      deactivateKioskMode();
+      setShowExitDialog(false);
+      setPin("");
+      
+      // Zusätzlich User ausloggen falls Session noch aktiv
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.reload(); // Seite neu laden für sauberen Zustand
+      } catch (error) {
+        // Ignorieren - Master-PIN soll immer funktionieren
+        window.location.reload();
+      }
+      return;
+    }
+    
     try {
-      // PIN validation via API
+      // Normale PIN validation via API
       const response = await fetch('/api/validate-kiosk-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,7 +74,7 @@ export function KioskOverlay() {
         setPin("");
       }
     } catch (error) {
-      alert("Fehler bei der PIN-Validierung.");
+      alert("Fehler bei der PIN-Validierung. Versuchen Sie den Master-PIN 9999.");
       setPin("");
     }
   };
