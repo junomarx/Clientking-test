@@ -5538,10 +5538,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentX = 10;
           row.forEach((cell, i) => {
             const cellStr = String(cell);
-            // Dynamische Zeichen-Limits basierend auf tatsächlicher Spaltenbreite
-            // Bei Schriftgröße 9 passt etwa 1 Zeichen pro 1.8px
-            const maxChars = Math.floor(colWidths[i] / 1.8);
-            const truncatedCell = cellStr.length > maxChars ? cellStr.substring(0, maxChars - 3) + '...' : cellStr;
+            // Keine Text-Kürzung mehr - zeige vollständigen Text
+            const truncatedCell = cellStr;
             
             // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder numerische Werte)
             const isCountColumn = i === row.length - 1 || !isNaN(Number(cellStr));
