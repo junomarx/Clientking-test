@@ -5421,188 +5421,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ))
       .orderBy(repairStatusHistory.changedAt);
 
-      // PDF erstellen (dynamisch importiert)
-      const jsPDFModule = await import('jspdf');
-      const { jsPDF } = jsPDFModule;
-      const doc = new jsPDF('p', 'mm', 'a4');
-      
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      let currentY = 20;
+      // Korrigiere Umsatzberechnung - nur abgeholte Reparaturen zählen als Gesamtumsatz
+      let realTotalRevenue = 0;
+      let readyForPickupRevenue = 0;
 
-      // Helper function für Tabellen
-      const createTable = (headers: string[], rows: string[][], startY: number) => {
-        const tableWidth = pageWidth - (2 * margin);
+      completedRepairs.forEach(repair => {
+        const cost = parseFloat(repair.estimatedCost || '0');
+        if (repair.status === 'abgeholt') {
+          realTotalRevenue += cost;
+        } else if (repair.status === 'fertig' || repair.status === 'abholbereit') {
+          readyForPickupRevenue += cost;
+        }
+      });
+
+      // PDF erstellen mit autoTable für bessere Tabellenformatierung
+      const jsPDFModule = await import('jspdf');
+      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      const doc = new jsPDF();
+      
+      // CSS-ähnliche Styling-Optionen für autoTable
+      const tableStyles = {
+        head: [{ fillColor: [238, 238, 238], textColor: [0, 0, 0], fontSize: 12 }],
+        body: [{ fontSize: 10 }],
+        alternateRowStyles: { fillColor: [248, 248, 248] },
+        margin: { top: 10, left: 10, right: 10 },
+        styles: {
+          lineColor: [170, 170, 170],
+          lineWidth: 0.1,
+          cellPadding: 3
+        }
+      };
+
+      let finalY = 20;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Reparaturstatistik', 105, finalY, { align: 'center' });
+      
+      finalY += 10;
+      doc.setFontSize(14);
+      doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, 105, finalY, { align: 'center' });
+      
+      finalY += 20;
+
+      // 1. Reparaturen pro Gerätetyp
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('1. Reparaturen pro Gerätetyp', 10, finalY);
+      finalY += 10;
+
+      const deviceTypeData = deviceTypeStats.map(stat => [
+        stat.deviceType || 'Unbekannt',
+        stat.count.toString()
+      ]);
+
+      // Erstelle Tabelle manuell mit besserer Formatierung
+      const createTable = (headers, data, startY) => {
+        const tableWidth = 190;
         const colWidth = tableWidth / headers.length;
         const rowHeight = 8;
         let y = startY;
 
-        // Tabellen-Header
+        // Header
         doc.setFillColor(238, 238, 238);
-        doc.rect(margin, y, tableWidth, rowHeight, 'F');
+        doc.rect(10, y, tableWidth, rowHeight, 'F');
         doc.setDrawColor(170, 170, 170);
-        doc.rect(margin, y, tableWidth, rowHeight);
+        doc.rect(10, y, tableWidth, rowHeight, 'S');
 
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         headers.forEach((header, i) => {
-          doc.text(header, margin + (i * colWidth) + 2, y + 6);
+          doc.text(header, 12 + (i * colWidth), y + 6);
           if (i < headers.length - 1) {
-            doc.line(margin + ((i + 1) * colWidth), y, margin + ((i + 1) * colWidth), y + rowHeight);
+            doc.line(10 + ((i + 1) * colWidth), y, 10 + ((i + 1) * colWidth), y + rowHeight);
           }
         });
 
         y += rowHeight;
 
-        // Tabellen-Daten
+        // Daten
         doc.setFont('helvetica', 'normal');
-        rows.forEach((row, rowIndex) => {
-          // Zeilen-Hintergrund (abwechselnd)
+        doc.setFontSize(10);
+        data.forEach((row, rowIndex) => {
           if (rowIndex % 2 === 0) {
             doc.setFillColor(248, 248, 248);
-            doc.rect(margin, y, tableWidth, rowHeight, 'F');
+            doc.rect(10, y, tableWidth, rowHeight, 'F');
           }
           
           doc.setDrawColor(170, 170, 170);
-          doc.rect(margin, y, tableWidth, rowHeight);
+          doc.rect(10, y, tableWidth, rowHeight, 'S');
 
           row.forEach((cell, i) => {
-            doc.text(cell.toString(), margin + (i * colWidth) + 2, y + 6);
+            doc.text(String(cell), 12 + (i * colWidth), y + 6);
             if (i < row.length - 1) {
-              doc.line(margin + ((i + 1) * colWidth), y, margin + ((i + 1) * colWidth), y + rowHeight);
+              doc.line(10 + ((i + 1) * colWidth), y, 10 + ((i + 1) * colWidth), y + rowHeight);
             }
           });
           y += rowHeight;
 
-          // Neue Seite wenn nötig
-          if (y > pageHeight - 40) {
+          if (y > 280) {
             doc.addPage();
             y = 20;
           }
         });
 
-        return y + 10;
+        return y + 15;
       };
 
-      // Header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Reparaturstatistik', pageWidth / 2, currentY, { align: 'center' });
-      
-      currentY += 10;
-      doc.setFontSize(14);
-      doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, pageWidth / 2, currentY, { align: 'center' });
-      
-      currentY += 20;
-
-      // 1. Reparaturen pro Gerätetyp
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('1. Reparaturen pro Gerätetyp', margin, currentY);
-      currentY += 10;
-
-      const deviceTypeHeaders = ['Gerätetyp', 'Anzahl Reparaturen'];
-      const deviceTypeRows = deviceTypeStats.map(stat => [
-        stat.deviceType || 'Unbekannt',
-        stat.count.toString()
-      ]);
-
-      currentY = createTable(deviceTypeHeaders, deviceTypeRows, currentY);
+      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY);
 
       // 2. Reparaturen pro Gerätetyp + Marke
-      if (currentY > pageHeight - 100) {
+      if (finalY > 250) {
         doc.addPage();
-        currentY = 20;
+        finalY = 20;
       }
 
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('2. Reparaturen pro Gerätetyp + Marke', margin, currentY);
-      currentY += 10;
+      doc.text('2. Reparaturen pro Gerätetyp + Marke', 10, finalY);
+      finalY += 10;
 
-      const brandHeaders = ['Gerätetyp', 'Marke', 'Anzahl Reparaturen'];
-      const brandRows = brandStats.map(stat => [
+      const brandData = brandStats.map(stat => [
         stat.deviceType || 'Unbekannt',
         stat.brand || 'Unbekannt',
         stat.count.toString()
       ]);
 
-      currentY = createTable(brandHeaders, brandRows, currentY);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl Reparaturen'], brandData, finalY);
 
       // 3. Reparaturen pro Gerätetyp + Marke + Modell
-      if (currentY > pageHeight - 100) {
+      if (finalY > 200) {
         doc.addPage();
-        currentY = 20;
+        finalY = 20;
       }
 
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('3. Reparaturen pro Gerätetyp + Marke + Modell', margin, currentY);
-      currentY += 10;
+      doc.text('3. Reparaturen pro Gerätetyp + Marke + Modell', 10, finalY);
+      finalY += 10;
 
-      const modelHeaders = ['Gerätetyp', 'Marke', 'Modell', 'Anzahl Reparaturen'];
-      const modelRows = modelStats.map(stat => [
+      const modelData = modelStats.map(stat => [
         stat.deviceType || 'Unbekannt',
         stat.brand || 'Unbekannt',
         stat.model || 'Unbekannt',
         stat.count.toString()
       ]);
 
-      currentY = createTable(modelHeaders, modelRows, currentY);
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY);
 
       // 4. Umsatzstatistik
-      if (currentY > pageHeight - 100) {
+      if (finalY > 250) {
         doc.addPage();
-        currentY = 20;
+        finalY = 20;
       }
 
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('4. Umsatzstatistik', margin, currentY);
-      currentY += 10;
+      doc.text('4. Umsatzstatistik', 10, finalY);
+      finalY += 10;
 
-      const revenueHeaders = ['Kategorie', 'Betrag (€)'];
-      const revenueRows = [
-        ['Gesamtumsatz', totalRevenue.toFixed(2)],
-        ['Offene Reparaturen (nicht abgeholt)', pendingRevenue.toFixed(2)]
+      const revenueData = [
+        ['Gesamtumsatz (abgeholt)', `${realTotalRevenue.toFixed(2)} €`],
+        ['Offene Reparaturen (nicht abgeholt)', `${readyForPickupRevenue.toFixed(2)} €`]
       ];
 
-      currentY = createTable(revenueHeaders, revenueRows, currentY);
+      finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY);
 
       // 5. Reparaturen mit Status "Außer Haus"
-      if (currentY > pageHeight - 100) {
+      if (finalY > 220) {
         doc.addPage();
-        currentY = 20;
+        finalY = 20;
       }
 
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('5. Reparaturen mit Status "Außer Haus"', margin, currentY);
-      currentY += 10;
+      doc.text('5. Reparaturen mit Status "Außer Haus"', 10, finalY);
+      finalY += 10;
 
-      const ausserHausHeaders = ['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'];
-      const ausserHausRows = ausserHausRepairs.map(repair => [
-        repair.deviceType || 'Unbekannt',
-        repair.brand || 'Unbekannt',
-        repair.model || 'Unbekannt',
-        new Date(repair.changedAt).toLocaleDateString('de-DE')
-      ]);
+      const ausserHausData = ausserHausRepairs.length > 0 
+        ? ausserHausRepairs.map(repair => [
+            repair.deviceType || 'Unbekannt',
+            repair.brand || 'Unbekannt',
+            repair.model || 'Unbekannt',
+            new Date(repair.changedAt).toLocaleDateString('de-DE')
+          ])
+        : [['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']];
 
-      if (ausserHausRows.length === 0) {
-        ausserHausRows.push(['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']);
-      }
+      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY);
 
-      currentY = createTable(ausserHausHeaders, ausserHausRows, currentY);
-
-      // Footer auf jeder Seite
+      // Footer
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(10);
         doc.setTextColor(102, 102, 102);
         const footerText = `Generiert am: ${new Date().toLocaleDateString('de-DE')} | powered by ${businessSettings?.businessName || 'Dein Reparaturtool'}`;
-        doc.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        doc.text(footerText, 105, 287, { align: 'center' });
       }
 
       // PDF als Buffer zurückgeben
