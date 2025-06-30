@@ -5460,9 +5460,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // PDF erstellen mit autoTable für bessere Tabellenformatierung
-      const jsPDFModule = await import('jspdf');
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+      // PDF erstellen mit robustem jsPDF Import
+      let jsPDF;
+      try {
+        const jsPDFModule = await import('jspdf');
+        jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
+        
+        // Fallback für verschiedene Export-Formate
+        if (typeof jsPDF !== 'function') {
+          throw new Error('jsPDF constructor not found');
+        }
+      } catch (importError) {
+        console.error('Fehler beim Importieren von jsPDF:', importError);
+        throw new Error('PDF-Bibliothek konnte nicht geladen werden');
+      }
+      
       const doc = new jsPDF();
       
       // CSS-ähnliche Styling-Optionen für autoTable
