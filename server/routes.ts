@@ -5460,241 +5460,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // PDF erstellen mit robustem jsPDF Import
-      let jsPDF;
-      try {
-        const jsPDFModule = await import('jspdf');
-        jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
+      // PDF erstellen mit html-pdf (deployment-stabiler)
+      console.log('Erstelle PDF-Statistik mit html-pdf...');
+      const pdf = require('html-pdf');
+      
+      // HTML-Template für PDF generieren
+      const generateHTMLContent = () => {
+        const deviceTypeRows = deviceTypeStats.map(stat => 
+          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
+        ).join('');
         
-        // Fallback für verschiedene Export-Formate
-        if (typeof jsPDF !== 'function') {
-          throw new Error('jsPDF constructor not found');
-        }
-      } catch (importError) {
-        console.error('Fehler beim Importieren von jsPDF:', importError);
-        throw new Error('PDF-Bibliothek konnte nicht geladen werden');
-      }
-      
-      const doc = new jsPDF();
-      
-      // CSS-ähnliche Styling-Optionen für autoTable
-      const tableStyles = {
-        head: [{ fillColor: [238, 238, 238], textColor: [0, 0, 0], fontSize: 12 }],
-        body: [{ fontSize: 10 }],
-        alternateRowStyles: { fillColor: [248, 248, 248] },
-        margin: { top: 10, left: 10, right: 10 },
-        styles: {
-          lineColor: [170, 170, 170],
-          lineWidth: 0.1,
-          cellPadding: 3
-        }
-      };
-
-      let finalY = 20;
-
-      // Header
-      doc.setFontSize(20);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Reparaturstatistik', 105, finalY, { align: 'center' });
-      
-      finalY += 10;
-      doc.setFontSize(14);
-      doc.text(`Zeitraum: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')}`, 105, finalY, { align: 'center' });
-      
-      finalY += 5;
-      doc.setFontSize(12);
-      doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')}`, 105, finalY, { align: 'center' });
-      
-      finalY += 20;
-
-      // 1. Reparaturen pro Gerätetyp
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('1. Reparaturen pro Gerätetyp', 10, finalY);
-      finalY += 10;
-
-      const deviceTypeData = deviceTypeStats.map(stat => [
-        stat.deviceType || 'Unbekannt',
-        stat.count.toString()
-      ]);
-
-      // Erstelle Tabelle manuell mit besserer Formatierung und dynamischen Spaltenbreiten
-      const createTable = (headers: string[], data: string[][], startY: number, customWidths?: number[]) => {
-        const tableWidth = 190;
-        const rowHeight = 8;
-        let y = startY;
-
-        // Berechne Spaltenbreiten basierend auf Anzahl der Spalten oder custom widths
-        let colWidths: number[];
-        if (customWidths) {
-          colWidths = customWidths;
-        } else {
-          const baseWidth = tableWidth / headers.length;
-          colWidths = new Array(headers.length).fill(baseWidth);
-        }
-
-        // Header
-        doc.setFillColor(238, 238, 238);
-        doc.rect(10, y, tableWidth, rowHeight, 'F');
-        doc.setDrawColor(170, 170, 170);
-        doc.rect(10, y, tableWidth, rowHeight, 'S');
-
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        let currentX = 10;
-        headers.forEach((header, i) => {
-          const truncatedHeader = header;
-          // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder wenn Header "Anzahl" enthält)
-          const isCountColumn = i === headers.length - 1 || header.toLowerCase().includes('anzahl');
-          if (isCountColumn) {
-            doc.text(truncatedHeader, currentX + colWidths[i] - 2, y + 6, { align: 'right' });
-          } else {
-            doc.text(truncatedHeader, currentX + 2, y + 6);
-          }
-          if (i < headers.length - 1) {
-            doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
-          }
-          currentX += colWidths[i];
-        });
-
-        y += rowHeight;
-
-        // Daten
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        data.forEach((row, rowIndex) => {
-          if (rowIndex % 2 === 0) {
-            doc.setFillColor(248, 248, 248);
-            doc.rect(10, y, tableWidth, rowHeight, 'F');
-          }
+        const brandRows = brandStats.map(stat => 
+          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td>${stat.brand || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
+        ).join('');
+        
+        const modelRows = modelStats.map(stat => 
+          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td>${stat.brand || 'Unbekannt'}</td><td>${stat.model || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
+        ).join('');
+        
+        const ausserHausRows = ausserHausRepairs.length > 0 
+          ? ausserHausRepairs.map(repair => 
+              `<tr><td>${repair.deviceType || 'Unbekannt'}</td><td>${repair.brand || 'Unbekannt'}</td><td>${repair.model || 'Unbekannt'}</td><td>${new Date(repair.changedAt).toLocaleDateString('de-DE')}</td></tr>`
+            ).join('')
+          : '<tr><td colspan="4" style="text-align: center;">Keine Daten im ausgewählten Zeitraum</td></tr>';
+        
+        return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; font-size: 10px; }
+            h1 { font-size: 20px; text-align: center; margin-bottom: 5px; }
+            h2 { font-size: 14px; text-align: center; margin-bottom: 15px; }
+            h3 { font-size: 16px; margin-top: 20px; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #aaa; padding: 6px; }
+            th { background-color: #eee; font-weight: bold; font-size: 11px; }
+            td { font-size: 9px; }
+            .revenue-table td:last-child { text-align: right; }
+            .footer { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 8px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <h1>Reparaturstatistik</h1>
+          <h2>Zeitraum: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')}</h2>
+          <p style="text-align: center; font-size: 10px;">Stand: ${new Date().toLocaleDateString('de-DE')}</p>
           
-          doc.setDrawColor(170, 170, 170);
-          doc.rect(10, y, tableWidth, rowHeight, 'S');
-
-          currentX = 10;
-          row.forEach((cell, i) => {
-            const cellStr = String(cell);
-            // Keine Text-Kürzung mehr - zeige vollständigen Text
-            const truncatedCell = cellStr;
-            
-            // Rechtsbündig für Anzahl-Spalten (letzte Spalte oder numerische Werte)
-            const isCountColumn = i === row.length - 1 || !isNaN(Number(cellStr));
-            if (isCountColumn) {
-              doc.text(truncatedCell, currentX + colWidths[i] - 2, y + 6, { align: 'right' });
-            } else {
-              doc.text(truncatedCell, currentX + 2, y + 6);
-            }
-            if (i < row.length - 1) {
-              doc.line(currentX + colWidths[i], y, currentX + colWidths[i], y + rowHeight);
-            }
-            currentX += colWidths[i];
-          });
-          y += rowHeight;
-
-          // Prüfe auf Footer-Überlappung - mehr Platz für Footer lassen
-          if (y > 260) {
-            doc.addPage();
-            y = 20;
+          <h3>1. Reparaturen pro Gerätetyp</h3>
+          <table>
+            <thead><tr><th>Gerätetyp</th><th>Anzahl Reparaturen</th></tr></thead>
+            <tbody>${deviceTypeRows}</tbody>
+          </table>
+          
+          <h3>2. Reparaturen pro Gerätetyp + Marke</h3>
+          <table>
+            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Anzahl</th></tr></thead>
+            <tbody>${brandRows}</tbody>
+          </table>
+          
+          <h3>3. Reparaturen pro Gerätetyp + Marke + Modell</h3>
+          <table>
+            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Modell</th><th>Anzahl</th></tr></thead>
+            <tbody>${modelRows}</tbody>
+          </table>
+          
+          <h3>4. Umsatzstatistik</h3>
+          <table class="revenue-table">
+            <thead><tr><th>Kategorie</th><th>Betrag (€)</th></tr></thead>
+            <tbody>
+              <tr><td>Gesamtumsatz (abgeholt)</td><td>${realTotalRevenue.toFixed(2)} €</td></tr>
+              <tr><td>Offene Reparaturen (nicht abgeholt)</td><td>${readyForPickupRevenue.toFixed(2)} €</td></tr>
+            </tbody>
+          </table>
+          
+          <h3>5. Reparaturen mit Status "Außer Haus"</h3>
+          <table>
+            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Modell</th><th>Statusdatum</th></tr></thead>
+            <tbody>${ausserHausRows}</tbody>
+          </table>
+          
+          <div class="footer">
+            Generiert am: ${new Date().toLocaleDateString('de-DE')} | powered by ${businessSettings?.businessName || 'Dein Reparaturtool'}
+          </div>
+        </body>
+        </html>`;
+      };
+      
+      const htmlContent = generateHTMLContent();
+      
+      // PDF-Optionen
+      const options = {
+        format: 'A4',
+        border: {
+          "top": "0.5in",
+          "right": "0.5in", 
+          "bottom": "0.5in",
+          "left": "0.5in"
+        }
+      };
+      
+      // PDF generieren mit Promise
+      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
+        pdf.create(htmlContent, options).toBuffer((err: any, buffer: Buffer) => {
+          if (err) {
+            console.error('Fehler bei PDF-Erstellung:', err);
+            reject(err);
+          } else {
+            console.log('PDF erfolgreich erstellt');
+            resolve(buffer);
           }
         });
-
-        return y + 15;
-      };
-
-      finalY = createTable(['Gerätetyp', 'Anzahl Reparaturen'], deviceTypeData, finalY, [80, 110]);
-
-      // 2. Reparaturen pro Gerätetyp + Marke
-      if (finalY > 230) {
-        doc.addPage();
-        finalY = 20;
-      }
-
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('2. Reparaturen pro Gerätetyp + Marke', 10, finalY);
-      finalY += 10;
-
-      const brandData = brandStats.map(stat => [
-        stat.deviceType || 'Unbekannt',
-        stat.brand || 'Unbekannt',
-        stat.count.toString()
-      ]);
-
-      finalY = createTable(['Gerätetyp', 'Marke', 'Anzahl'], brandData, finalY, [80, 80, 30]);
-
-      // 3. Reparaturen pro Gerätetyp + Marke + Modell
-      if (finalY > 190) {
-        doc.addPage();
-        finalY = 20;
-      }
-
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('3. Reparaturen pro Gerätetyp + Marke + Modell', 10, finalY);
-      finalY += 10;
-
-      const modelData = modelStats.map(stat => [
-        stat.deviceType || 'Unbekannt',
-        stat.brand || 'Unbekannt',
-        stat.model || 'Unbekannt',
-        stat.count.toString()
-      ]);
-
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Anzahl'], modelData, finalY, [30, 25, 105, 25]);
-
-      // 4. Umsatzstatistik
-      if (finalY > 220) {
-        doc.addPage();
-        finalY = 20;
-      }
-
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('4. Umsatzstatistik', 10, finalY);
-      finalY += 10;
-
-      const revenueData = [
-        ['Gesamtumsatz (abgeholt)', `${realTotalRevenue.toFixed(2)} €`],
-        ['Offene Reparaturen (nicht abgeholt)', `${readyForPickupRevenue.toFixed(2)} €`]
-      ];
-
-      finalY = createTable(['Kategorie', 'Betrag (€)'], revenueData, finalY, [140, 50]);
-
-      // 5. Reparaturen mit Status "Außer Haus"
-      if (finalY > 180) {
-        doc.addPage();
-        finalY = 20;
-      }
-
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('5. Reparaturen mit Status "Außer Haus"', 10, finalY);
-      finalY += 10;
-
-      const ausserHausData = ausserHausRepairs.length > 0 
-        ? ausserHausRepairs.map(repair => [
-            repair.deviceType || 'Unbekannt',
-            repair.brand || 'Unbekannt',
-            repair.model || 'Unbekannt',
-            new Date(repair.changedAt).toLocaleDateString('de-DE')
-          ])
-        : [['Keine Daten im ausgewählten Zeitraum', '-', '-', '-']];
-
-      finalY = createTable(['Gerätetyp', 'Marke', 'Modell', 'Statusdatum'], ausserHausData, finalY, [45, 55, 60, 30]);
-
-      // Footer
-      const totalPages = doc.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.setTextColor(102, 102, 102);
-        const footerText = `Generiert am: ${new Date().toLocaleDateString('de-DE')} | powered by ${businessSettings?.businessName || 'Dein Reparaturtool'}`;
-        doc.text(footerText, 105, 287, { align: 'center' });
-      }
-
-      // PDF als Buffer zurückgeben
-      const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
-      
+      });
+      // PDF als Response senden
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="Statistik_${start.toISOString().split('T')[0]}_${end.toISOString().split('T')[0]}.pdf"`);
       res.send(pdfBuffer);
