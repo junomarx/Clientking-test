@@ -5313,7 +5313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PDF Statistics Export
-  app.get("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+  app.post("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
@@ -5322,11 +5322,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const shopId = user.shopId;
-      const { startDate, endDate } = req.query;
+      const { start: startDate, end: endDate } = req.body;
 
-      // Standardzeitraum: aktueller Monat
-      const start = startDate ? new Date(startDate as string) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-      const end = endDate ? new Date(endDate as string) : new Date();
+      // Validierung der Daten
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start- und Enddatum sind erforderlich" });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
 
       console.log(`Generiere PDF-Statistik für Benutzer ${user.username} (Shop ${shopId}) von ${start.toLocaleDateString()} bis ${end.toLocaleDateString()}`);
 
@@ -5349,10 +5353,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isNotNull(repairs.pickupSignedAt)
         ));
 
-      // 2. Status-Statistiken für "Außer Haus"
+      // 2. Status-Statistiken für "Außer Haus" - mit Shop-Isolation
       const ausserHausCount = await db.select({ count: sql<number>`count(*)` })
         .from(repairStatusHistory)
+        .innerJoin(repairs, eq(repairs.id, repairStatusHistory.repairId))
         .where(and(
+          eq(repairs.shopId, shopId),
           eq(repairStatusHistory.newStatus, "ausser_haus"),
           gte(repairStatusHistory.changedAt, start),
           lte(repairStatusHistory.changedAt, end)
