@@ -140,13 +140,12 @@ function addTableSection(
   } else if (headers.length === 3) {
     colWidths = [tableWidth * 0.4, tableWidth * 0.4, tableWidth * 0.2]; // Gerätetyp, Marke, Anzahl
   } else if (headers.length === 4) {
-    // Originalbreiten: Gerätetyp 30px, Marke 25px, Modell 105px, Anzahl 25px
-    const totalOriginal = 30 + 25 + 105 + 25; // 185px
+    // Optimierte Spaltenbreiten für bessere Lesbarkeit
     colWidths = [
-      tableWidth * (30 / totalOriginal), // Gerätetyp
-      tableWidth * (25 / totalOriginal), // Marke  
-      tableWidth * (105 / totalOriginal), // Modell (erweitert)
-      tableWidth * (25 / totalOriginal)  // Anzahl
+      tableWidth * 0.20, // Gerätetyp (20%)
+      tableWidth * 0.25, // Marke (25%)
+      tableWidth * 0.45, // Modell (45% - erweitert für lange Namen)
+      tableWidth * 0.10  // Anzahl (10%)
     ];
   } else {
     colWidths = headers.map(() => tableWidth / headers.length);

@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- June 30, 2025: PDF statistics finalized with "Außer Haus" focus - shows only out-of-house repairs with device details and optimized column widths (20%/25%/45%/10%)
 - June 30, 2025: Complete routes.ts file cleanup - removed all corrupted PDF code fragments and rebuilt DSGVO-compliant statistics endpoint
 - June 30, 2025: Statistics functionality tested and verified working with proper authentication and shop isolation
 - June 30, 2025: Frontend statistics confirmed working correctly for all users - deployment ready
