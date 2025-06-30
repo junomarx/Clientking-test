@@ -5312,7 +5312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // DSGVO-konforme Statistik-Daten ohne spezifische Zahlen
+  // DSGVO-konforme Statistik-Daten
   app.post("/api/statistics/data", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
@@ -5335,50 +5335,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const businessSettings = await storage.getBusinessSettings(userId);
 
-      // DSGVO-konforme Statistiken - nur strukturelle Daten ohne Mengen
-      const deviceTypes = await db.selectDistinct({
-        deviceType: repairs.deviceType
+      // 1. Statistiken nach Gerätetypen
+      const deviceTypeStats = await db.select({
+        deviceType: repairs.deviceType,
+        count: sql<number>`count(*)::int`
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        isNotNull(repairs.deviceType)
+        lte(repairs.createdAt, end)
       ))
+      .groupBy(repairs.deviceType)
       .orderBy(repairs.deviceType);
 
-      const brands = await db.selectDistinct({
-        deviceType: repairs.deviceType,
-        brand: repairs.brand
-      })
-      .from(repairs)
-      .where(and(
-        eq(repairs.shopId, shopId),
-        gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end),
-        isNotNull(repairs.deviceType),
-        isNotNull(repairs.brand)
-      ))
-      .orderBy(repairs.deviceType, repairs.brand);
-
-      const models = await db.selectDistinct({
+      // 2. Statistiken nach Gerätetyp und Marke
+      const brandStats = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
-        model: repairs.model
+        count: sql<number>`count(*)::int`
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
         lte(repairs.createdAt, end),
-        isNotNull(repairs.deviceType),
+        isNotNull(repairs.brand)
+      ))
+      .groupBy(repairs.deviceType, repairs.brand)
+      .orderBy(repairs.deviceType, repairs.brand);
+
+      // 3. Statistiken nach Gerätetyp, Marke und Modell
+      const modelStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        model: repairs.model,
+        count: sql<number>`count(*)::int`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
         isNotNull(repairs.brand),
         isNotNull(repairs.model)
       ))
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // Rückgabe der DSGVO-konformen Strukturdaten
+      // Rückgabe der DSGVO-konformen Statistikdaten
       res.json({
         period: {
           start: start.toISOString().split('T')[0],
@@ -5387,15 +5392,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         businessName: businessSettings?.businessName || 'Reparaturshop',
         data: {
-          deviceTypes: deviceTypes.map(d => d.deviceType || 'Unbekannt'),
-          brands: brands.map(b => ({
-            deviceType: b.deviceType || 'Unbekannt',
-            brand: b.brand || 'Unbekannt'
+          deviceTypeStats: deviceTypeStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            count: stat.count
           })),
-          models: models.map(m => ({
-            deviceType: m.deviceType || 'Unbekannt',
-            brand: m.brand || 'Unbekannt',
-            model: m.model || 'Unbekannt'
+          brandStats: brandStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt', 
+            count: stat.count
+          })),
+          modelStats: modelStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt',
+            model: stat.model || 'Unbekannt',
+            count: stat.count
           }))
         }
       });
@@ -5404,136 +5414,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Fehler beim Generieren der Statistikdaten:", error);
       res.status(500).json({ 
         message: "Fehler beim Generieren der Statistikdaten",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
-            readyForPickupRevenue += cost;
-          }
-        }
-      });
-
-      // PDF erstellen mit html-pdf (deployment-stabiler)
-      console.log('Erstelle PDF-Statistik mit html-pdf...');
-      const pdf = require('html-pdf');
-      
-      // HTML-Template für PDF generieren
-      const generateHTMLContent = () => {
-        const deviceTypeRows = deviceTypeStats.map(stat => 
-          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
-        ).join('');
-        
-        const brandRows = brandStats.map(stat => 
-          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td>${stat.brand || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
-        ).join('');
-        
-        const modelRows = modelStats.map(stat => 
-          `<tr><td>${stat.deviceType || 'Unbekannt'}</td><td>${stat.brand || 'Unbekannt'}</td><td>${stat.model || 'Unbekannt'}</td><td style="text-align: right;">${stat.count}</td></tr>`
-        ).join('');
-        
-        const ausserHausRows = ausserHausRepairs.length > 0 
-          ? ausserHausRepairs.map(repair => 
-              `<tr><td>${repair.deviceType || 'Unbekannt'}</td><td>${repair.brand || 'Unbekannt'}</td><td>${repair.model || 'Unbekannt'}</td><td>${new Date(repair.changedAt).toLocaleDateString('de-DE')}</td></tr>`
-            ).join('')
-          : '<tr><td colspan="4" style="text-align: center;">Keine Daten im ausgewählten Zeitraum</td></tr>';
-        
-        return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; font-size: 10px; }
-            h1 { font-size: 20px; text-align: center; margin-bottom: 5px; }
-            h2 { font-size: 14px; text-align: center; margin-bottom: 15px; }
-            h3 { font-size: 16px; margin-top: 20px; margin-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #aaa; padding: 6px; }
-            th { background-color: #eee; font-weight: bold; font-size: 11px; }
-            td { font-size: 9px; }
-            .revenue-table td:last-child { text-align: right; }
-            .footer { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 8px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <h1>Reparaturstatistik</h1>
-          <h2>Zeitraum: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')}</h2>
-          <p style="text-align: center; font-size: 10px;">Stand: ${new Date().toLocaleDateString('de-DE')}</p>
-          
-          <h3>1. Reparaturen pro Gerätetyp</h3>
-          <table>
-            <thead><tr><th>Gerätetyp</th><th>Anzahl Reparaturen</th></tr></thead>
-            <tbody>${deviceTypeRows}</tbody>
-          </table>
-          
-          <h3>2. Reparaturen pro Gerätetyp + Marke</h3>
-          <table>
-            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Anzahl</th></tr></thead>
-            <tbody>${brandRows}</tbody>
-          </table>
-          
-          <h3>3. Reparaturen pro Gerätetyp + Marke + Modell</h3>
-          <table>
-            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Modell</th><th>Anzahl</th></tr></thead>
-            <tbody>${modelRows}</tbody>
-          </table>
-          
-          <h3>4. Umsatzstatistik</h3>
-          <table class="revenue-table">
-            <thead><tr><th>Kategorie</th><th>Betrag (€)</th></tr></thead>
-            <tbody>
-              <tr><td>Gesamtumsatz (abgeholt)</td><td>${realTotalRevenue.toFixed(2)} €</td></tr>
-              <tr><td>Offene Reparaturen (nicht abgeholt)</td><td>${readyForPickupRevenue.toFixed(2)} €</td></tr>
-            </tbody>
-          </table>
-          
-          <h3>5. Reparaturen mit Status "Außer Haus"</h3>
-          <table>
-            <thead><tr><th>Gerätetyp</th><th>Marke</th><th>Modell</th><th>Statusdatum</th></tr></thead>
-            <tbody>${ausserHausRows}</tbody>
-          </table>
-          
-          <div class="footer">
-            Generiert am: ${new Date().toLocaleDateString('de-DE')} | powered by ${businessSettings?.businessName || 'Dein Reparaturtool'}
-          </div>
-        </body>
-        </html>`;
-      };
-      
-      const htmlContent = generateHTMLContent();
-      
-      // PDF-Optionen
-      const options = {
-        format: 'A4',
-        border: {
-          "top": "0.5in",
-          "right": "0.5in", 
-          "bottom": "0.5in",
-          "left": "0.5in"
-        }
-      };
-      
-      // PDF generieren mit Promise
-      const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-        pdf.create(htmlContent, options).toBuffer((err: any, buffer: Buffer) => {
-          if (err) {
-            console.error('Fehler bei PDF-Erstellung:', err);
-            reject(err);
-          } else {
-            console.log('PDF erfolgreich erstellt');
-            resolve(buffer);
-          }
-        });
-      });
-      // PDF als Response senden
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="Statistik_${start.toISOString().split('T')[0]}_${end.toISOString().split('T')[0]}.pdf"`);
-      res.send(pdfBuffer);
-
-    } catch (error) {
-      console.error("Fehler beim Generieren der PDF-Statistik:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Generieren der PDF-Statistik",
         error: error instanceof Error ? error.message : String(error)
       });
     }
