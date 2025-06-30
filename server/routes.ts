@@ -5488,19 +5488,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. Statistiken nach Status
-      const statusStats = await db.select({
-        status: repairs.status,
+      // 4. Nur "Außer Haus" Reparaturen mit Details
+      const ausserHausRepairs = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        model: repairs.model,
         count: sql<number>`count(*)::int`
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end)
+        lte(repairs.createdAt, end),
+        eq(repairs.status, 'ausser_haus')
       ))
-      .groupBy(repairs.status)
-      .orderBy(repairs.status);
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
+      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
@@ -5526,8 +5529,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             model: stat.model || 'Unbekannt',
             count: stat.count
           })),
-          statusStats: statusStats.map(stat => ({
-            status: stat.status || 'Unbekannt',
+          ausserHausRepairs: ausserHausRepairs.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt',
+            model: stat.model || 'Unbekannt',
             count: stat.count
           }))
         }
