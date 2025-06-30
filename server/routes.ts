@@ -1619,14 +1619,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Detaillierte Reparaturstatistiken für Analysen und Diagramme (nur Enterprise)
-  app.get("/api/stats/detailed", isAuthenticated, async (req: Request, res: Response) => {
+  // Detaillierte Reparaturstatistiken für Analysen und Diagramme - DSGVO-konform mit Shop-Isolation
+  app.get("/api/stats/detailed", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       // Benutzer-ID aus der Authentifizierung abrufen
       const userId = (req.user as any).id;
       
-      // Im vereinfachten System haben alle authentifizierten Benutzer Vollzugriff
-      // Keine weitere Berechtigungsprüfung erforderlich
+      // Shop-Isolation sicherstellen
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      console.log(`✅ DSGVO-Schutz: Benutzer ${user.username} (ID ${userId}) arbeitet mit Shop ${user.shopId}`);
       
       // Zeitraum-Filter aus Query-Parametern holen
       let startDate: Date | undefined;
