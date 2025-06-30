@@ -5312,8 +5312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PDF Statistics Export
-  app.post("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+  // DSGVO-konforme Statistik-Daten ohne spezifische Zahlen
+  app.post("/api/statistics/data", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
@@ -5324,7 +5324,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shopId = user.shopId;
       const { start: startDate, end: endDate } = req.body;
 
-      // Validierung der Daten
       if (!startDate || !endDate) {
         return res.status(400).json({ message: "Start- und Enddatum sind erforderlich" });
       }
@@ -5332,58 +5331,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const start = new Date(startDate);
       const end = new Date(endDate);
 
-      console.log(`Generiere PDF-Statistik für Benutzer ${user.username} (Shop ${shopId}) von ${start.toLocaleDateString()} bis ${end.toLocaleDateString()}`);
+      console.log(`Generiere DSGVO-konforme Statistikdaten für Shop ${shopId}`);
 
-      // Hole Business Settings für Firmenname
       const businessSettings = await storage.getBusinessSettings(userId);
 
-      // 1. Reparatur-Flow im Zeitraum
-      const newRepairs = await db.select().from(repairs)
-        .where(and(
-          eq(repairs.shopId, shopId),
-          gte(repairs.createdAt, start),
-          lte(repairs.createdAt, end)
-        ));
-
-      const pickedUpRepairs = await db.select().from(repairs)
-        .where(and(
-          eq(repairs.shopId, shopId),
-          gte(repairs.pickupSignedAt, start),
-          lte(repairs.pickupSignedAt, end),
-          isNotNull(repairs.pickupSignedAt)
-        ));
-
-      // 2. Status-Statistiken für "Außer Haus" - mit Shop-Isolation
-      const ausserHausCount = await db.select({ count: sql<number>`count(*)` })
-        .from(repairStatusHistory)
-        .innerJoin(repairs, eq(repairs.id, repairStatusHistory.repairId))
-        .where(and(
-          eq(repairs.shopId, shopId),
-          eq(repairStatusHistory.newStatus, "ausser_haus"),
-          gte(repairStatusHistory.changedAt, start),
-          lte(repairStatusHistory.changedAt, end)
-        ));
-
-      // 3. Hierarchie-Statistiken: Gerätetyp
-      const deviceTypeStats = await db.select({
-        deviceType: repairs.deviceType,
-        count: sql<number>`count(*)`
+      // DSGVO-konforme Statistiken - nur strukturelle Daten ohne Mengen
+      const deviceTypes = await db.selectDistinct({
+        deviceType: repairs.deviceType
       })
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
-        lte(repairs.createdAt, end)
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.deviceType)
       ))
-      .groupBy(repairs.deviceType)
-      .orderBy(sql`count(*) DESC`);
+      .orderBy(repairs.deviceType);
 
-      // 4. Hierarchie-Statistiken: Marken pro Gerätetyp
-      const brandStats = await db.select({
+      const brands = await db.selectDistinct({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.deviceType),
+        isNotNull(repairs.brand)
+      ))
+      .orderBy(repairs.deviceType, repairs.brand);
+
+      const models = await db.selectDistinct({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
-        count: sql<number>`count(*)`
+        model: repairs.model
       })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.deviceType),
+        isNotNull(repairs.brand),
+        isNotNull(repairs.model)
+      ))
+      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
+
+      // Rückgabe der DSGVO-konformen Strukturdaten
+      res.json({
+        period: {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0],
+          generated: new Date().toISOString().split('T')[0]
+        },
+        businessName: businessSettings?.businessName || 'Reparaturshop',
+        data: {
+          deviceTypes: deviceTypes.map(d => d.deviceType || 'Unbekannt'),
+          brands: brands.map(b => ({
+            deviceType: b.deviceType || 'Unbekannt',
+            brand: b.brand || 'Unbekannt'
+          })),
+          models: models.map(m => ({
+            deviceType: m.deviceType || 'Unbekannt',
+            brand: m.brand || 'Unbekannt',
+            model: m.model || 'Unbekannt'
+          }))
+        }
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Generieren der Statistikdaten:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Generieren der Statistikdaten",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
       .from(repairs)
       .where(and(
         eq(repairs.shopId, shopId),
