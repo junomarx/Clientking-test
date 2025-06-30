@@ -5488,13 +5488,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. Historische "Außer Haus" Reparaturen - Reparaturen die irgendwann "Außer Haus" Status hatten
-      // Wir suchen nach Reparaturen, die im Zeitraum erstellt wurden UND Status-Historie mit "ausser_haus" haben
+      // 4. "Außer Haus" Reparaturen - aktuell mit diesem Status
       const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        statusDate: repairs.updatedAt,
         count: sql<number>`count(*)::int`
       })
       .from(repairs)
@@ -5502,21 +5500,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
         lte(repairs.createdAt, end),
-        // Hier könnten wir eine Status-Historie-Tabelle abfragen, aber vorerst aktuelle "ausser_haus" Reparaturen
-        // TODO: Implementierung einer Status-Historie-Tabelle für vollständiges historisches Tracking
-        or(
-          eq(repairs.status, 'ausser_haus'),
-          // Zusätzlich: Reparaturen die mal "ausser_haus" waren (falls Status-Notizen vorhanden)
-          sql`${repairs.notes} LIKE '%ausser_haus%' OR ${repairs.notes} LIKE '%Außer Haus%'`
-        )
+        eq(repairs.status, 'ausser_haus')
       ))
-      .groupBy(repairs.deviceType, repairs.brand, repairs.model, repairs.updatedAt)
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung
+      // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung  
       const revenueStats = await db.select({
-        totalRevenue: sql<number>`SUM(CASE WHEN ${repairs.status} = 'abgeholt' AND ${repairs.estimatedCost} IS NOT NULL THEN CAST(${repairs.estimatedCost} AS DECIMAL) ELSE 0 END)`,
-        pendingRevenue: sql<number>`SUM(CASE WHEN ${repairs.status} IN ('abholbereit', 'fertig') AND ${repairs.estimatedCost} IS NOT NULL THEN CAST(${repairs.estimatedCost} AS DECIMAL) ELSE 0 END)`
+        totalRevenue: sql<number>`COALESCE(SUM(CASE WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL THEN CAST(estimated_cost AS DECIMAL) ELSE 0 END), 0)`,
+        pendingRevenue: sql<number>`COALESCE(SUM(CASE WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL THEN CAST(estimated_cost AS DECIMAL) ELSE 0 END), 0)`
       })
       .from(repairs)
       .where(and(

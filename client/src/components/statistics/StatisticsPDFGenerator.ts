@@ -12,6 +12,10 @@ interface StatisticsData {
     brandStats: Array<{ deviceType: string; brand: string; count: number }>;
     modelStats: Array<{ deviceType: string; brand: string; model: string; count: number }>;
     ausserHausRepairs: Array<{ deviceType: string; brand: string; model: string; count: number }>;
+    revenue: {
+      totalRevenue: number;
+      pendingRevenue: number;
+    };
   };
 }
 
@@ -99,6 +103,49 @@ export async function generateStatisticsPDF(data: StatisticsData, startDate: str
       yPos, pageWidth, margin
     );
   }
+
+  // Neue Seite wenn nötig für Umsätze
+  if (yPos > pageHeight - 100) {
+    pdf.addPage();
+    yPos = margin;
+  }
+
+  // Tabelle 5: Umsätze
+  yPos += 10;
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Umsätze', margin, yPos);
+  yPos += 15;
+
+  // Umsatz-Tabelle
+  const revenueTableWidth = pageWidth - (2 * margin);
+  const revenueColWidths = [revenueTableWidth * 0.7, revenueTableWidth * 0.3];
+  
+  // Header
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+  pdf.rect(margin, yPos - 8, revenueColWidths[0], 15);
+  pdf.rect(margin + revenueColWidths[0], yPos - 8, revenueColWidths[1], 15);
+  pdf.text('Kategorie', margin + 5, yPos);
+  pdf.text('Betrag (€)', margin + revenueColWidths[0] + 5, yPos);
+  yPos += 15;
+
+  // Daten
+  pdf.setFont('helvetica', 'normal');
+  
+  // Gesamtumsatz (abgeholte Reparaturen)
+  pdf.rect(margin, yPos - 8, revenueColWidths[0], 15);
+  pdf.rect(margin + revenueColWidths[0], yPos - 8, revenueColWidths[1], 15);
+  pdf.text('Gesamtumsatz (abgeholt)', margin + 5, yPos);
+  pdf.text((data.data.revenue.totalRevenue || 0).toFixed(2), margin + revenueColWidths[0] + 5, yPos);
+  yPos += 15;
+
+  // Ausstehender Umsatz (fertige/abholbereite Reparaturen)
+  pdf.rect(margin, yPos - 8, revenueColWidths[0], 15);
+  pdf.rect(margin + revenueColWidths[0], yPos - 8, revenueColWidths[1], 15);
+  pdf.text('Ausstehender Umsatz (abholbereit)', margin + 5, yPos);
+  pdf.text((data.data.revenue.pendingRevenue || 0).toFixed(2), margin + revenueColWidths[0] + 5, yPos);
+  yPos += 20;
   
   // Footer
   const footerY = pageHeight - 20;

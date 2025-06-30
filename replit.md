@@ -113,9 +113,10 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- June 30, 2025: Enhanced statistics implementation with revenue tracking - Added comprehensive "Umsätze" (revenue) section showing total revenue (abgeholt) and pending revenue (abholbereit)
 - June 30, 2025: PDF statistics finalized with "Außer Haus" focus - shows only out-of-house repairs with device details and optimized column widths (20%/25%/45%/10%)
 - June 30, 2025: Complete routes.ts file cleanup - removed all corrupted PDF code fragments and rebuilt DSGVO-compliant statistics endpoint
-- June 30, 2025: Statistics functionality tested and verified working with proper authentication and shop isolation
+- June 30, 2025: Statistics functionality enhanced with proper revenue calculation and historical repair tracking
 - June 30, 2025: Frontend statistics confirmed working correctly for all users - deployment ready
 - June 29, 2025: Robust kiosk PIN system implemented - Master-PIN (678910) and normal shop PINs work even during session timeouts
 - June 29, 2025: PDF table 3 column widths optimized - Modell column expanded to 105px for better display of longer device names
