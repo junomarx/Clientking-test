@@ -37,7 +37,7 @@ import {
   costEstimates,
   packageFeatures,
   spareParts,
-  repairStatusHistory
+  repairStatusHistory as statusHistory
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -5493,19 +5493,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. "Außer Haus" Reparaturen - aktuell mit diesem Status
+      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten
       const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        count: sql<number>`count(*)::int`
+        count: sql<number>`count(DISTINCT repairs.id)::int`
       })
       .from(repairs)
+      .leftJoin(statusHistory, eq(statusHistory.repairId, repairs.id))
       .where(and(
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
         lte(repairs.createdAt, end),
-        eq(repairs.status, 'ausser_haus')
+        or(
+          // Entweder aktuell "Außer Haus"
+          eq(repairs.status, 'ausser_haus'),
+          // Oder hatte "Außer Haus" Status während des Zeitraums
+          and(
+            eq(statusHistory.newStatus, 'ausser_haus'),
+            gte(statusHistory.changedAt, start),
+            lte(statusHistory.changedAt, end)
+          )
+        )
       ))
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
