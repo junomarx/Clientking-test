@@ -11,6 +11,7 @@ interface StatisticsData {
     deviceTypeStats: Array<{ deviceType: string; count: number }>;
     brandStats: Array<{ deviceType: string; brand: string; count: number }>;
     modelStats: Array<{ deviceType: string; brand: string; model: string; count: number }>;
+    statusStats: Array<{ status: string; count: number }>;
   };
 }
 
@@ -83,6 +84,21 @@ export async function generateStatisticsPDF(data: StatisticsData, startDate: str
       yPos, pageWidth, margin
     );
   }
+
+  // Neue Seite wenn nötig
+  if (yPos > pageHeight - 80) {
+    pdf.addPage();
+    yPos = margin;
+  }
+
+  // Tabelle 4: Status-Statistik (einschließlich "Außer Haus")
+  if (data.data.statusStats.length > 0) {
+    yPos = addTableSection(pdf, 'Statistik nach Reparaturstatus',
+      ['Status', 'Anzahl'],
+      data.data.statusStats.map(item => [item.status, item.count.toString()]),
+      yPos, pageWidth, margin
+    );
+  }
   
   // Footer
   const footerY = pageHeight - 20;
@@ -118,13 +134,20 @@ function addTableSection(
   const tableWidth = pageWidth - (2 * margin);
   let colWidths: number[];
   
-  // Spaltenbreiten je nach Anzahl der Spalten
+  // Spaltenbreiten entsprechend den ursprünglichen Einstellungen
   if (headers.length === 2) {
     colWidths = [tableWidth * 0.7, tableWidth * 0.3]; // Gerätetyp, Anzahl
   } else if (headers.length === 3) {
     colWidths = [tableWidth * 0.4, tableWidth * 0.4, tableWidth * 0.2]; // Gerätetyp, Marke, Anzahl
   } else if (headers.length === 4) {
-    colWidths = [tableWidth * 0.25, tableWidth * 0.25, tableWidth * 0.3, tableWidth * 0.2]; // Gerätetyp, Marke, Modell, Anzahl
+    // Originalbreiten: Gerätetyp 30px, Marke 25px, Modell 105px, Anzahl 25px
+    const totalOriginal = 30 + 25 + 105 + 25; // 185px
+    colWidths = [
+      tableWidth * (30 / totalOriginal), // Gerätetyp
+      tableWidth * (25 / totalOriginal), // Marke  
+      tableWidth * (105 / totalOriginal), // Modell (erweitert)
+      tableWidth * (25 / totalOriginal)  // Anzahl
+    ];
   } else {
     colWidths = headers.map(() => tableWidth / headers.length);
   }
@@ -156,11 +179,8 @@ function addTableSection(
     for (let i = 0; i < row.length; i++) {
       pdf.rect(xPos, yPos, colWidths[i], 6);
       
-      // Text kürzen wenn zu lang
+      // Text vollständig anzeigen (keine Kürzung)
       let text = row[i];
-      if (text.length > 20 && i < row.length - 1) { // Nicht bei Anzahl-Spalte
-        text = text.substring(0, 17) + '...';
-      }
       
       if (i === row.length - 1) {
         // Letzte Spalte (Anzahl) zentriert

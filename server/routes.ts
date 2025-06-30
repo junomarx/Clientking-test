@@ -5488,6 +5488,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
+      // 4. Statistiken nach Status
+      const statusStats = await db.select({
+        status: repairs.status,
+        count: sql<number>`count(*)::int`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
+      ))
+      .groupBy(repairs.status)
+      .orderBy(repairs.status);
+
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
         period: {
@@ -5510,6 +5524,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deviceType: stat.deviceType || 'Unbekannt',
             brand: stat.brand || 'Unbekannt',
             model: stat.model || 'Unbekannt',
+            count: stat.count
+          })),
+          statusStats: statusStats.map(stat => ({
+            status: stat.status || 'Unbekannt',
             count: stat.count
           }))
         }
