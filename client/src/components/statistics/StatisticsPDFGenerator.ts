@@ -11,7 +11,7 @@ interface StatisticsData {
     deviceTypeStats: Array<{ deviceType: string; count: number }>;
     brandStats: Array<{ deviceType: string; brand: string; count: number }>;
     modelStats: Array<{ deviceType: string; brand: string; model: string; count: number }>;
-    ausserHausRepairs: Array<{ deviceType: string; brand: string; model: string; count: number }>;
+    ausserHausRepairs: Array<{ deviceType: string; brand: string; model: string; statusDate: string }>;
     revenue: {
       totalRevenue: number;
       pendingRevenue: number;
@@ -97,9 +97,14 @@ export async function generateStatisticsPDF(data: StatisticsData, startDate: str
 
   // Tabelle 4: Reparaturen mit Status "Außer Haus"
   if (data.data.ausserHausRepairs.length > 0) {
-    yPos = addTableSection(pdf, 'Reparaturen mit Status "Außer Haus"',
-      ['Gerätetyp', 'Marke', 'Modell', 'Anzahl'],
-      data.data.ausserHausRepairs.map(item => [item.deviceType, item.brand, item.model, item.count.toString()]),
+    yPos = addAusserHausTableSection(pdf, 'Reparaturen mit Status "Außer Haus"',
+      ['Gerätetyp', 'Marke', 'Modell', 'Datum'],
+      data.data.ausserHausRepairs.map(item => [
+        item.deviceType, 
+        item.brand, 
+        item.model, 
+        formatDate(item.statusDate)
+      ]),
       yPos, pageWidth, margin
     );
   }
@@ -230,6 +235,74 @@ function addTableSection(
       
       if (i === row.length - 1) {
         // Letzte Spalte (Anzahl) zentriert
+        pdf.text(text, xPos + colWidths[i] / 2, yPos + 4, { align: 'center' });
+      } else {
+        pdf.text(text, xPos + 2, yPos + 4);
+      }
+      xPos += colWidths[i];
+    }
+    yPos += 6;
+  }
+  
+  return yPos + 15; // Abstand zur nächsten Sektion
+}
+
+// Spezielle Tabellenfunktion für "Außer Haus" mit angepassten Spaltenbreiten
+function addAusserHausTableSection(pdf: jsPDF, title: string, headers: string[], data: string[][], yPos: number, pageWidth: number, margin: number): number {
+  // Titel
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(title, margin, yPos);
+  yPos += 15;
+  
+  if (data.length === 0) {
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Keine Daten für diesen Zeitraum verfügbar.', margin, yPos);
+    return yPos + 10;
+  }
+  
+  // Angepasste Spaltenbreiten für "Außer Haus" Tabelle
+  // Gerätetyp: 20%, Marke: 15% (verkleinert), Modell: 45%, Datum: 20%
+  const tableWidth = pageWidth - 2 * margin;
+  const colWidths = [
+    tableWidth * 0.20, // Gerätetyp
+    tableWidth * 0.15, // Marke (verkleinert)
+    tableWidth * 0.45, // Modell
+    tableWidth * 0.20  // Datum (statt Anzahl)
+  ];
+  
+  // Header
+  let xPos = margin;
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  
+  for (let i = 0; i < headers.length; i++) {
+    pdf.rect(xPos, yPos, colWidths[i], 8);
+    pdf.text(headers[i], xPos + 2, yPos + 6);
+    xPos += colWidths[i];
+  }
+  yPos += 8;
+  
+  // Datenzeilen
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  
+  for (const row of data) {
+    // Neue Seite wenn nötig
+    if (yPos > pdf.internal.pageSize.getHeight() - 30) {
+      pdf.addPage();
+      yPos = margin;
+    }
+    
+    xPos = margin;
+    for (let i = 0; i < row.length; i++) {
+      pdf.rect(xPos, yPos, colWidths[i], 6);
+      
+      let text = row[i];
+      
+      if (i === row.length - 1) {
+        // Letzte Spalte (Datum) zentriert
         pdf.text(text, xPos + colWidths[i] / 2, yPos + 4, { align: 'center' });
       } else {
         pdf.text(text, xPos + 2, yPos + 4);

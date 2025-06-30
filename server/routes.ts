@@ -5493,12 +5493,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten
+      // 4. "Außer Haus" Reparaturen - alle die während des Zeitraums diesen Status hatten (mit Datum)
       const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
-        count: sql<number>`count(DISTINCT repairs.id)::int`
+        statusDate: sql<string>`
+          CASE 
+            WHEN ${repairs.status} = 'ausser_haus' AND ${statusHistory.changedAt} IS NOT NULL 
+            THEN ${statusHistory.changedAt}::date
+            WHEN ${repairs.status} = 'ausser_haus' 
+            THEN ${repairs.createdAt}::date
+            ELSE ${statusHistory.changedAt}::date
+          END
+        `
       })
       .from(repairs)
       .leftJoin(statusHistory, eq(statusHistory.repairId, repairs.id))
@@ -5517,7 +5525,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           )
         )
       ))
-      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
       // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung  
@@ -5573,7 +5580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deviceType: stat.deviceType || 'Unbekannt',
             brand: stat.brand || 'Unbekannt',
             model: stat.model || 'Unbekannt',
-            count: stat.count
+            statusDate: stat.statusDate
           })),
           revenue: {
             totalRevenue: Number(revenue.totalRevenue) || 0,
