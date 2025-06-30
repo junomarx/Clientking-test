@@ -10,7 +10,7 @@ import { hasAccess, hasAccessAsync } from './permissions';
 import { checkTrialExpiry } from './middleware/check-trial-expiry';
 import { format } from 'date-fns';
 import { db, pool } from './db';
-import { eq, desc, and, sql, gte, lte, isNotNull } from 'drizzle-orm';
+import { eq, desc, and, sql, gte, lte, isNotNull, or } from 'drizzle-orm';
 import { 
   insertCustomerSchema, 
   insertRepairSchema,
@@ -5488,11 +5488,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .groupBy(repairs.deviceType, repairs.brand, repairs.model)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
 
-      // 4. Nur "Außer Haus" Reparaturen mit Details
+      // 4. Historische "Außer Haus" Reparaturen - Reparaturen die irgendwann "Außer Haus" Status hatten
+      // Wir suchen nach Reparaturen, die im Zeitraum erstellt wurden UND Status-Historie mit "ausser_haus" haben
       const ausserHausRepairs = await db.select({
         deviceType: repairs.deviceType,
         brand: repairs.brand,
         model: repairs.model,
+        statusDate: repairs.updatedAt,
         count: sql<number>`count(*)::int`
       })
       .from(repairs)
@@ -5500,10 +5502,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         eq(repairs.shopId, shopId),
         gte(repairs.createdAt, start),
         lte(repairs.createdAt, end),
-        eq(repairs.status, 'ausser_haus')
+        // Hier könnten wir eine Status-Historie-Tabelle abfragen, aber vorerst aktuelle "ausser_haus" Reparaturen
+        // TODO: Implementierung einer Status-Historie-Tabelle für vollständiges historisches Tracking
+        or(
+          eq(repairs.status, 'ausser_haus'),
+          // Zusätzlich: Reparaturen die mal "ausser_haus" waren (falls Status-Notizen vorhanden)
+          sql`${repairs.notes} LIKE '%ausser_haus%' OR ${repairs.notes} LIKE '%Außer Haus%'`
+        )
       ))
-      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model, repairs.updatedAt)
       .orderBy(repairs.deviceType, repairs.brand, repairs.model);
+
+      // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung
+      const revenueStats = await db.select({
+        totalRevenue: sql<number>`SUM(CASE WHEN ${repairs.status} = 'abgeholt' AND ${repairs.estimatedCost} IS NOT NULL THEN CAST(${repairs.estimatedCost} AS DECIMAL) ELSE 0 END)`,
+        pendingRevenue: sql<number>`SUM(CASE WHEN ${repairs.status} IN ('abholbereit', 'fertig') AND ${repairs.estimatedCost} IS NOT NULL THEN CAST(${repairs.estimatedCost} AS DECIMAL) ELSE 0 END)`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
+      ));
+
+      // Einzelne Revenue-Werte extrahieren
+      const revenue = revenueStats[0] || { totalRevenue: 0, pendingRevenue: 0 };
 
       // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
       res.json({
@@ -5534,7 +5557,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             brand: stat.brand || 'Unbekannt',
             model: stat.model || 'Unbekannt',
             count: stat.count
-          }))
+          })),
+          revenue: {
+            totalRevenue: Number(revenue.totalRevenue) || 0,
+            pendingRevenue: Number(revenue.pendingRevenue) || 0
+          }
         }
       });
 
