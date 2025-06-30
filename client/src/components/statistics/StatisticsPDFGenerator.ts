@@ -1,5 +1,4 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface StatisticsData {
   period: {
@@ -16,201 +15,165 @@ interface StatisticsData {
 }
 
 export async function generateStatisticsPDF(data: StatisticsData, startDate: string, endDate: string) {
-  // HTML-Template für PDF erstellen (gleiche Methode wie bei Kostenvoranschlägen)
-  const htmlContent = createStatisticsHTML(data);
+  // Direkte PDF-Generierung ohne HTML-Konvertierung für beste Qualität
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  let yPos = margin;
   
-  // Temporäres Element erstellen
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = htmlContent;
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.left = '-9999px';
-  tempDiv.style.top = '-9999px';
-  tempDiv.style.width = '800px';
-  tempDiv.style.backgroundColor = 'white';
-  tempDiv.style.fontFamily = 'Arial, sans-serif';
-  tempDiv.style.fontSize = '12px';
-  tempDiv.style.lineHeight = '1.4';
+  // Header
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Reparaturstatistik', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 10;
   
-  document.body.appendChild(tempDiv);
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(data.businessName, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 8;
   
-  try {
-    // Canvas erstellen
-    const canvas = await html2canvas(tempDiv, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff'
-    });
-    
-    // PDF erstellen
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    
-    const imgWidth = pageWidth - (2 * margin);
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    let yOffset = margin;
-    
-    if (imgHeight <= pageHeight - (2 * margin)) {
-      // Bild passt auf eine Seite
-      pdf.addImage(imgData, 'JPEG', margin, yOffset, imgWidth, imgHeight);
-    } else {
-      // Bild auf mehrere Seiten aufteilen
-      const ratio = imgWidth / canvas.width;
-      const pageHeightInPixels = (pageHeight - (2 * margin)) / ratio;
-      
-      let sourceY = 0;
-      
-      while (sourceY < canvas.height) {
-        const sourceHeight = Math.min(pageHeightInPixels, canvas.height - sourceY);
-        const targetHeight = sourceHeight * ratio;
-        
-        // Neuen Canvas für diesen Abschnitt erstellen
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sourceHeight;
-        const pageCtx = pageCanvas.getContext('2d');
-        
-        if (pageCtx) {
-          pageCtx.drawImage(
-            canvas,
-            0, sourceY, canvas.width, sourceHeight,
-            0, 0, canvas.width, sourceHeight
-          );
-          
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-          
-          if (sourceY > 0) {
-            pdf.addPage();
-          }
-          
-          pdf.addImage(pageImgData, 'JPEG', margin, margin, imgWidth, targetHeight);
-        }
-        
-        sourceY += pageHeightInPixels;
-      }
-    }
-    
-    // PDF herunterladen
-    pdf.save(`Statistik_${startDate}_${endDate}.pdf`);
-    
-  } finally {
-    // Aufräumen
-    if (tempDiv.parentNode) {
-      document.body.removeChild(tempDiv);
-    }
+  pdf.setFontSize(10);
+  pdf.text(`Zeitraum: ${formatDate(data.period.start)} - ${formatDate(data.period.end)}`, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 6;
+  
+  pdf.text(`Erstellt am: ${formatDate(data.period.generated)}`, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 15;
+  
+  // Linie unter Header
+  pdf.setLineWidth(0.5);
+  pdf.line(margin, yPos, pageWidth - margin, yPos);
+  yPos += 15;
+  
+  // Tabelle 1: Gerätetyp-Statistik
+  if (data.data.deviceTypeStats.length > 0) {
+    yPos = addTableSection(pdf, 'Statistik nach Gerätetyp', 
+      ['Gerätetyp', 'Anzahl'],
+      data.data.deviceTypeStats.map(item => [item.deviceType, item.count.toString()]),
+      yPos, pageWidth, margin
+    );
   }
+  
+  // Neue Seite wenn nötig
+  if (yPos > pageHeight - 80) {
+    pdf.addPage();
+    yPos = margin;
+  }
+  
+  // Tabelle 2: Marken-Statistik
+  if (data.data.brandStats.length > 0) {
+    yPos = addTableSection(pdf, 'Statistik nach Gerätetyp und Marke',
+      ['Gerätetyp', 'Marke', 'Anzahl'],
+      data.data.brandStats.map(item => [item.deviceType, item.brand, item.count.toString()]),
+      yPos, pageWidth, margin
+    );
+  }
+  
+  // Neue Seite wenn nötig
+  if (yPos > pageHeight - 80) {
+    pdf.addPage();
+    yPos = margin;
+  }
+  
+  // Tabelle 3: Modell-Statistik
+  if (data.data.modelStats.length > 0) {
+    yPos = addTableSection(pdf, 'Statistik nach Gerätetyp, Marke und Modell',
+      ['Gerätetyp', 'Marke', 'Modell', 'Anzahl'],
+      data.data.modelStats.map(item => [item.deviceType, item.brand, item.model, item.count.toString()]),
+      yPos, pageWidth, margin
+    );
+  }
+  
+  // Footer
+  const footerY = pageHeight - 20;
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Diese Statistik wurde automatisch generiert und enthält ausschließlich Strukturdaten ohne personenbezogene Informationen.', 
+    pageWidth / 2, footerY, { align: 'center' });
+  pdf.text(`DSGVO-konform erstellt am ${formatDate(data.period.generated)}`, 
+    pageWidth / 2, footerY + 4, { align: 'center' });
+  
+  // PDF herunterladen
+  pdf.save(`Statistik_${startDate}_${endDate}.pdf`);
 }
 
-function createStatisticsHTML(data: StatisticsData): string {
-  const { period, businessName, data: stats } = data;
+function addTableSection(
+  pdf: jsPDF, 
+  title: string, 
+  headers: string[], 
+  data: string[][], 
+  startY: number, 
+  pageWidth: number, 
+  margin: number
+): number {
+  let yPos = startY;
   
-  return `
-    <div style="padding: 20px; max-width: 800px; margin: 0 auto; background: white;">
-      <!-- Header -->
-      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px;">
-        <h1 style="margin: 0; font-size: 24px; color: #333; font-weight: bold;">Reparaturstatistik</h1>
-        <h2 style="margin: 10px 0 0 0; font-size: 18px; color: #666; font-weight: normal;">${businessName}</h2>
-        <p style="margin: 10px 0 0 0; font-size: 14px; color: #888;">
-          Zeitraum: ${formatDate(period.start)} - ${formatDate(period.end)}
-        </p>
-        <p style="margin: 5px 0 0 0; font-size: 12px; color: #aaa;">
-          Erstellt am: ${formatDate(period.generated)}
-        </p>
-      </div>
-
-      <!-- Statistiken nach Gerätetyp -->
-      ${stats.deviceTypeStats.length > 0 ? `
-      <div style="margin-bottom: 30px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-          Statistik nach Gerätetyp
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 70%;">Gerätetyp</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; width: 30%;">Anzahl</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${stats.deviceTypeStats.map((stat, index) => `
-              <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
-                <td style="border: 1px solid #ddd; padding: 8px;">${stat.deviceType}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">${stat.count}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      ` : ''}
-
-      <!-- Statistiken nach Marke -->
-      ${stats.brandStats.length > 0 ? `
-      <div style="margin-bottom: 30px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-          Statistik nach Gerätetyp und Marke
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 35%;">Gerätetyp</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 35%;">Marke</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; width: 30%;">Anzahl</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${stats.brandStats.map((stat, index) => `
-              <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
-                <td style="border: 1px solid #ddd; padding: 8px;">${stat.deviceType}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${stat.brand}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">${stat.count}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      ` : ''}
-
-      <!-- Statistiken nach Modell -->
-      ${stats.modelStats.length > 0 ? `
-      <div style="margin-bottom: 30px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-          Statistik nach Gerätetyp, Marke und Modell
-        </h3>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 30px;">Gerätetyp</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 25px;">Marke</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: left; font-weight: bold; width: 105px;">Modell</th>
-              <th style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; width: 25px;">Anzahl</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${stats.modelStats.map((stat, index) => `
-              <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8f9fa'};">
-                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${stat.deviceType}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${stat.brand}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${stat.model}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold;">${stat.count}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      ` : ''}
-
-      <!-- Footer -->
-      <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #888; font-size: 10px;">
-        <p style="margin: 0;">Diese Statistik wurde automatisch generiert und enthält ausschließlich Strukturdaten ohne personenbezogene Informationen.</p>
-        <p style="margin: 5px 0 0 0;">DSGVO-konform erstellt am ${formatDate(period.generated)}</p>
-      </div>
-    </div>
-  `;
+  // Titel
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(title, margin, yPos);
+  yPos += 10;
+  
+  // Tabelle vorbereiten
+  const tableWidth = pageWidth - (2 * margin);
+  let colWidths: number[];
+  
+  // Spaltenbreiten je nach Anzahl der Spalten
+  if (headers.length === 2) {
+    colWidths = [tableWidth * 0.7, tableWidth * 0.3]; // Gerätetyp, Anzahl
+  } else if (headers.length === 3) {
+    colWidths = [tableWidth * 0.4, tableWidth * 0.4, tableWidth * 0.2]; // Gerätetyp, Marke, Anzahl
+  } else if (headers.length === 4) {
+    colWidths = [tableWidth * 0.25, tableWidth * 0.25, tableWidth * 0.3, tableWidth * 0.2]; // Gerätetyp, Marke, Modell, Anzahl
+  } else {
+    colWidths = headers.map(() => tableWidth / headers.length);
+  }
+  
+  // Header
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  
+  let xPos = margin;
+  for (let i = 0; i < headers.length; i++) {
+    pdf.rect(xPos, yPos, colWidths[i], 8);
+    pdf.text(headers[i], xPos + 2, yPos + 6);
+    xPos += colWidths[i];
+  }
+  yPos += 8;
+  
+  // Datenzeilen
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  
+  for (const row of data) {
+    // Neue Seite wenn nötig
+    if (yPos > pdf.internal.pageSize.getHeight() - 30) {
+      pdf.addPage();
+      yPos = margin;
+    }
+    
+    xPos = margin;
+    for (let i = 0; i < row.length; i++) {
+      pdf.rect(xPos, yPos, colWidths[i], 6);
+      
+      // Text kürzen wenn zu lang
+      let text = row[i];
+      if (text.length > 20 && i < row.length - 1) { // Nicht bei Anzahl-Spalte
+        text = text.substring(0, 17) + '...';
+      }
+      
+      if (i === row.length - 1) {
+        // Letzte Spalte (Anzahl) zentriert
+        pdf.text(text, xPos + colWidths[i] / 2, yPos + 4, { align: 'center' });
+      } else {
+        pdf.text(text, xPos + 2, yPos + 4);
+      }
+      xPos += colWidths[i];
+    }
+    yPos += 6;
+  }
+  
+  return yPos + 15; // Abstand zur nächsten Sektion
 }
 
 function formatDate(dateString: string): string {
