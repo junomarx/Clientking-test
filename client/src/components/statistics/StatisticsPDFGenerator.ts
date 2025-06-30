@@ -11,7 +11,7 @@ interface StatisticsData {
     deviceTypeStats: Array<{ deviceType: string; count: number }>;
     brandStats: Array<{ deviceType: string; brand: string; count: number }>;
     modelStats: Array<{ deviceType: string; brand: string; model: string; count: number }>;
-    statusStats: Array<{ status: string; count: number }>;
+    ausserHausRepairs: Array<{ deviceType: string; brand: string; model: string; count: number }>;
   };
 }
 
@@ -91,11 +91,11 @@ export async function generateStatisticsPDF(data: StatisticsData, startDate: str
     yPos = margin;
   }
 
-  // Tabelle 4: Status-Statistik (einschließlich "Außer Haus")
-  if (data.data.statusStats.length > 0) {
-    yPos = addTableSection(pdf, 'Statistik nach Reparaturstatus',
-      ['Status', 'Anzahl'],
-      data.data.statusStats.map(item => [item.status, item.count.toString()]),
+  // Tabelle 4: Reparaturen mit Status "Außer Haus"
+  if (data.data.ausserHausRepairs.length > 0) {
+    yPos = addTableSection(pdf, 'Reparaturen mit Status "Außer Haus"',
+      ['Gerätetyp', 'Marke', 'Modell', 'Anzahl'],
+      data.data.ausserHausRepairs.map(item => [item.deviceType, item.brand, item.model, item.count.toString()]),
       yPos, pageWidth, margin
     );
   }
