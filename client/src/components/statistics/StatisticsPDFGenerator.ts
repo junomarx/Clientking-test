@@ -50,11 +50,20 @@ export async function generateStatisticsPDF(data: StatisticsData, startDate: str
   pdf.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 15;
   
-  // Tabelle 1: Gerätetyp-Statistik
+  // Tabelle 1: Gerätetyp-Statistik mit Gesamtsumme
   if (data.data.deviceTypeStats.length > 0) {
-    yPos = addTableSection(pdf, 'Statistik nach Gerätetyp', 
+    // Berechne Gesamtsumme
+    const totalCount = data.data.deviceTypeStats.reduce((sum, item) => sum + item.count, 0);
+    
+    // Erstelle Datenarray mit Summenzeile
+    const deviceTypeData = [
+      ...data.data.deviceTypeStats.map(item => [item.deviceType, item.count.toString()]),
+      ['Gesamt', totalCount.toString()]
+    ];
+    
+    yPos = addTableSectionWithTotal(pdf, 'Statistik nach Gerätetyp', 
       ['Gerätetyp', 'Anzahl'],
-      data.data.deviceTypeStats.map(item => [item.deviceType, item.count.toString()]),
+      deviceTypeData,
       yPos, pageWidth, margin
     );
   }
@@ -242,6 +251,85 @@ function addTableSection(
       xPos += colWidths[i];
     }
     yPos += 6;
+  }
+  
+  return yPos + 15; // Abstand zur nächsten Sektion
+}
+
+// Tabellenfunktion mit Gesamtsumme (für Gerätetyp-Statistik)
+function addTableSectionWithTotal(pdf: jsPDF, title: string, headers: string[], data: string[][], yPos: number, pageWidth: number, margin: number): number {
+  // Titel
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(title, margin, yPos);
+  yPos += 15;
+  
+  if (data.length === 0) {
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Keine Daten für diesen Zeitraum verfügbar.', margin, yPos);
+    return yPos + 10;
+  }
+  
+  // Spaltenbreiten
+  const tableWidth = pageWidth - 2 * margin;
+  const colWidths = headers.length === 2 
+    ? [tableWidth * 0.7, tableWidth * 0.3] // 2 Spalten
+    : [tableWidth * 0.25, tableWidth * 0.25, tableWidth * 0.25, tableWidth * 0.25]; // 4 Spalten
+  
+  // Header
+  let xPos = margin;
+  pdf.setFontSize(9);
+  pdf.setFont('helvetica', 'bold');
+  
+  for (let i = 0; i < headers.length; i++) {
+    pdf.rect(xPos, yPos, colWidths[i], 8);
+    pdf.text(headers[i], xPos + 2, yPos + 6);
+    xPos += colWidths[i];
+  }
+  yPos += 8;
+  
+  // Datenzeilen
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  
+  for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+    const row = data[rowIndex];
+    const isLastRow = rowIndex === data.length - 1; // Summenzeile
+    
+    // Neue Seite wenn nötig
+    if (yPos > pdf.internal.pageSize.getHeight() - 30) {
+      pdf.addPage();
+      yPos = margin;
+    }
+    
+    // Summenzeile hervorheben
+    if (isLastRow) {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setLineWidth(0.8);
+    }
+    
+    xPos = margin;
+    for (let i = 0; i < row.length; i++) {
+      pdf.rect(xPos, yPos, colWidths[i], 6);
+      
+      let text = row[i];
+      
+      if (i === row.length - 1) {
+        // Letzte Spalte (Anzahl) zentriert
+        pdf.text(text, xPos + colWidths[i] / 2, yPos + 4, { align: 'center' });
+      } else {
+        pdf.text(text, xPos + 2, yPos + 4);
+      }
+      xPos += colWidths[i];
+    }
+    yPos += 6;
+    
+    // Reset für nächste Zeile
+    if (isLastRow) {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setLineWidth(0.5);
+    }
   }
   
   return yPos + 15; // Abstand zur nächsten Sektion
