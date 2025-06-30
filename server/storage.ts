@@ -4022,17 +4022,17 @@ export class DatabaseStorage implements IStorage {
       const shopId = user.shopId;
       
       // Alle Reparaturen des Shops abrufen (mit Zeitraumfilter falls angegeben)
-      let query = db.select().from(repairs).where(eq(repairs.shopId, shopId));
+      let conditions = [eq(repairs.shopId, shopId)];
       
       if (startDate) {
-        query = query.where(gte(repairs.createdAt, startDate));
+        conditions.push(gte(repairs.createdAt, startDate));
       }
       
       if (endDate) {
-        query = query.where(lte(repairs.createdAt, endDate));
+        conditions.push(lte(repairs.createdAt, endDate));
       }
       
-      const allRepairs = await query;
+      const allRepairs = await db.select().from(repairs).where(and(...conditions));
       
       // Nach Gerätetyp gruppieren
       const byDeviceType: Record<string, number> = {};
