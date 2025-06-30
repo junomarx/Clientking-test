@@ -5507,8 +5507,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // 5. Umsatzstatistik - Gesamtumsatz und Status-basierte Aufschlüsselung  
       const revenueStats = await db.select({
-        totalRevenue: sql<number>`COALESCE(SUM(CASE WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL THEN CAST(estimated_cost AS DECIMAL) ELSE 0 END), 0)`,
-        pendingRevenue: sql<number>`COALESCE(SUM(CASE WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL THEN CAST(estimated_cost AS DECIMAL) ELSE 0 END), 0)`
+        totalRevenue: sql<number>`COALESCE(SUM(CASE 
+          WHEN status = 'abgeholt' AND estimated_cost IS NOT NULL 
+          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          THEN CAST(estimated_cost AS DECIMAL) 
+          ELSE 0 
+        END), 0)`,
+        pendingRevenue: sql<number>`COALESCE(SUM(CASE 
+          WHEN status IN ('abholbereit', 'fertig') AND estimated_cost IS NOT NULL 
+          AND estimated_cost ~ '^[0-9]+\.?[0-9]*$' 
+          THEN CAST(estimated_cost AS DECIMAL) 
+          ELSE 0 
+        END), 0)`
       })
       .from(repairs)
       .where(and(
