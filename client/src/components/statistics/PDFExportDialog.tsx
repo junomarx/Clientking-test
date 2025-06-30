@@ -38,28 +38,23 @@ export function PDFExportDialog({ open, onOpenChange }: PDFExportDialogProps) {
         endDate: endDateTime.toISOString()
       });
 
-      // PDF direkt herunterladen
+      // Statistikdaten abrufen (gleiche Methode wie bei Kostenvoranschlägen)
       const response = await fetch(`/api/statistics/pdf?${params}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/pdf'
+          'Accept': 'application/json'
         }
       });
 
       if (!response.ok) {
-        throw new Error('Fehler beim Generieren der PDF-Statistik');
+        throw new Error('Fehler beim Abrufen der Statistikdaten');
       }
 
-      // PDF Blob erstellen und Download starten
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Statistik_${startDate}_${endDate}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      const statisticsData = await response.json();
+      
+      // PDF-Generierung mit jsPDF (gleiche Methode wie bei Kostenvoranschlägen)
+      const { generateStatisticsPDF } = await import('./StatisticsPDFGenerator');
+      await generateStatisticsPDF(statisticsData, startDate, endDate);
 
       // Dialog schließen nach erfolgreichem Export
       onOpenChange(false);

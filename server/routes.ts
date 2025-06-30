@@ -5419,6 +5419,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PDF-Statistik-Endpoint - Verwendet Frontend-PDF-Generierung wie bei Kostenvoranschlägen
+  app.get("/api/statistics/pdf", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+
+      const shopId = user.shopId;
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: "Start- und Enddatum sind erforderlich" });
+      }
+
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+
+      console.log(`Generiere PDF-Statistik für Shop ${shopId}`);
+
+      const businessSettings = await storage.getBusinessSettings(userId);
+
+      // Gleiche Datenabfrage wie bei /api/statistics/data
+      const deviceTypeStats = await db.select({
+        deviceType: repairs.deviceType,
+        count: sql<number>`count(*)::int`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end)
+      ))
+      .groupBy(repairs.deviceType)
+      .orderBy(repairs.deviceType);
+
+      const brandStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        count: sql<number>`count(*)::int`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.brand)
+      ))
+      .groupBy(repairs.deviceType, repairs.brand)
+      .orderBy(repairs.deviceType, repairs.brand);
+
+      const modelStats = await db.select({
+        deviceType: repairs.deviceType,
+        brand: repairs.brand,
+        model: repairs.model,
+        count: sql<number>`count(*)::int`
+      })
+      .from(repairs)
+      .where(and(
+        eq(repairs.shopId, shopId),
+        gte(repairs.createdAt, start),
+        lte(repairs.createdAt, end),
+        isNotNull(repairs.brand),
+        isNotNull(repairs.model)
+      ))
+      .groupBy(repairs.deviceType, repairs.brand, repairs.model)
+      .orderBy(repairs.deviceType, repairs.brand, repairs.model);
+
+      // JSON-Antwort für Frontend-PDF-Generierung (wie bei Kostenvoranschlägen)
+      res.json({
+        period: {
+          start: start.toISOString().split('T')[0],
+          end: end.toISOString().split('T')[0],
+          generated: new Date().toISOString().split('T')[0]
+        },
+        businessName: businessSettings?.businessName || 'Reparaturshop',
+        data: {
+          deviceTypeStats: deviceTypeStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            count: stat.count
+          })),
+          brandStats: brandStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt', 
+            count: stat.count
+          })),
+          modelStats: modelStats.map(stat => ({
+            deviceType: stat.deviceType || 'Unbekannt',
+            brand: stat.brand || 'Unbekannt',
+            model: stat.model || 'Unbekannt',
+            count: stat.count
+          }))
+        }
+      });
+
+    } catch (error) {
+      console.error("Fehler beim Generieren der PDF-Statistik:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Generieren der PDF-Statistik",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // WebSocket-Server initialisieren
