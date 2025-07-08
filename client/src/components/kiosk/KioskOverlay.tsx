@@ -113,7 +113,7 @@ export function KioskOverlay() {
               {/* Header */}
               <div className="text-center">
                 <div className="flex justify-center mb-4">
-                  {user?.username === "bugi" ? (
+                  {(user?.username === "bugi" || user?.username === "jahuu.eu") ? (
                     businessSettings?.logoUrl ? (
                       <img 
                         src={businessSettings.logoUrl} 

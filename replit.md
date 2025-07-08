@@ -113,6 +113,9 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 8, 2025: Enhanced Kiosk Mode - Added custom business logo support for user "jahuu.eu" alongside existing "bugi" user, replacing default ClientKing logo with individual business branding
+- July 8, 2025: Improved customer list functionality - New customers from Kiosk Mode now appear at the top with visual "NEU" indicators and green highlighting for easier identification
+- July 8, 2025: Added compact "Zur Unterschrift" button in Kiosk Mode for manual page refresh to better detect signature requests
 - June 30, 2025: PDF statistics FINAL VERSION completed and ready for deployment - added total count row to device type table and optimized "Außer Haus" table layout with 15% brand column and date display
 - June 30, 2025: CRITICAL DSGVO fix implemented and VERIFIED - Shop isolation in statistics completely repaired for /api/stats/detailed endpoint and storage.ts getDetailedRepairStats method - USER CONFIRMED WORKING
 - June 30, 2025: Enhanced statistics implementation with revenue tracking - Added comprehensive "Umsätze" (revenue) section showing total revenue (abgeholt) and pending revenue (abholbereit)  
