@@ -183,26 +183,16 @@ export function KioskOverlay() {
                   </Card>
                 )}
 
-                {/* Zur Unterschrift Button - immer sichtbar für Refresh */}
-                <Card className="border-green-300 bg-green-50 cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => window.location.reload()}>
-                  <CardHeader className="text-center pb-4">
-                    <div className="flex justify-center mb-4">
-                      <Shield className="h-12 w-12 text-green-600" />
-                    </div>
-                    <CardTitle className="text-2xl text-green-700">
-                      Zur Unterschrift
-                    </CardTitle>
-                    <CardDescription className="text-lg text-green-600">
-                      Seite aktualisieren um Unterschriften-Anfragen zu laden
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full h-16 text-xl bg-green-600 hover:bg-green-700" size="lg">
-                      Seite aktualisieren
-                    </Button>
-                  </CardContent>
-                </Card>
+                {/* Zur Unterschrift Button - kompakt */}
+                <div className="text-center">
+                  <Button 
+                    onClick={() => window.location.reload()}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 text-lg"
+                    size="lg"
+                  >
+                    Zur Unterschrift
+                  </Button>
+                </div>
               </div>
 
               {/* Exit Button - Small and discrete */}
