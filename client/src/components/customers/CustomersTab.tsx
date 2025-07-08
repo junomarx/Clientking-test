@@ -63,7 +63,20 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
         };
       })
       .sort((a, b) => {
-        // Sort by last order date (most recent first)
+        // Priorität 1: Neue Kunden ohne Aufträge (kürzlich erstellt) - ganz oben
+        if (a.orderCount === 0 && b.orderCount === 0) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        
+        // Priorität 2: Neue Kunden ohne Aufträge vor Kunden mit Aufträgen
+        if (a.orderCount === 0 && b.orderCount > 0) {
+          return -1; // a (neuer Kunde) kommt vor b
+        }
+        if (a.orderCount > 0 && b.orderCount === 0) {
+          return 1; // b (neuer Kunde) kommt vor a
+        }
+        
+        // Priorität 3: Kunden mit Aufträgen nach letztem Auftragsdatum sortieren
         if (a.lastOrderDate && b.lastOrderDate) {
           return new Date(b.lastOrderDate).getTime() - new Date(a.lastOrderDate).getTime();
         }
@@ -169,24 +182,38 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
                   <td colSpan={6} className="py-4 text-center text-gray-500">Keine Kunden gefunden</td>
                 </tr>
               ) : (
-                paginatedCustomers.map(customer => (
-                  <tr 
-                    key={customer.id} 
-                    className="border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer"
-                    onClick={() => handleCustomerClick(customer.id)}
-                  >
-                    <td className="py-3 px-4">{customer.firstName}</td>
-                    <td className="py-3 px-4">{customer.lastName}</td>
-                    <td className="py-3 px-4">{customer.phone}</td>
-                    <td className="py-3 px-4">{customer.email || '-'}</td>
-                    <td className="py-3 px-4">{customer.orderCount}</td>
-                    <td className="py-3 px-4">
-                      {customer.lastOrderDate 
-                        ? new Date(customer.lastOrderDate).toLocaleDateString('de-DE') 
-                        : '-'}
-                    </td>
-                  </tr>
-                ))
+                paginatedCustomers.map(customer => {
+                  const isNewCustomer = customer.orderCount === 0;
+                  return (
+                    <tr 
+                      key={customer.id} 
+                      className={`border-b border-gray-200 hover:bg-blue-50 transition-all cursor-pointer ${
+                        isNewCustomer ? 'bg-green-50 border-l-4 border-l-green-500' : ''
+                      }`}
+                      onClick={() => handleCustomerClick(customer.id)}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {customer.firstName}
+                          {isNewCustomer && (
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                              NEU
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">{customer.lastName}</td>
+                      <td className="py-3 px-4">{customer.phone}</td>
+                      <td className="py-3 px-4">{customer.email || '-'}</td>
+                      <td className="py-3 px-4">{customer.orderCount}</td>
+                      <td className="py-3 px-4">
+                        {customer.lastOrderDate 
+                          ? new Date(customer.lastOrderDate).toLocaleDateString('de-DE') 
+                          : '-'}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -199,38 +226,56 @@ export function CustomersTab({ onNewOrder, onNewCustomer }: CustomersTabProps) {
           ) : paginatedCustomers.length === 0 ? (
             <div className="p-4 text-center text-gray-500">Keine Kunden gefunden</div>
           ) : (
-            paginatedCustomers.map(customer => (
-              <div 
-                key={customer.id} 
-                className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden cursor-pointer"
-                onClick={() => handleCustomerClick(customer.id)}
-              >
-                <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
-                  <div className="font-medium text-sm">{customer.firstName} {customer.lastName}</div>
-                  <div className="text-xs bg-blue-100 text-blue-800 rounded px-2 py-1">{customer.orderCount} Aufträge</div>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  <div className="p-3 flex justify-between">
-                    <span className="text-xs text-gray-500">Telefon</span>
-                    <span className="text-sm">{customer.phone}</span>
-                  </div>
-                  {customer.email && (
-                    <div className="p-3 flex justify-between">
-                      <span className="text-xs text-gray-500">Email</span>
-                      <span className="text-sm">{customer.email}</span>
+            paginatedCustomers.map(customer => {
+              const isNewCustomer = customer.orderCount === 0;
+              return (
+                <div 
+                  key={customer.id} 
+                  className={`bg-white rounded-lg shadow border overflow-hidden cursor-pointer ${
+                    isNewCustomer ? 'border-green-500 border-l-4' : 'border-gray-200'
+                  }`}
+                  onClick={() => handleCustomerClick(customer.id)}
+                >
+                  <div className={`flex justify-between items-center p-3 border-b border-gray-200 ${
+                    isNewCustomer ? 'bg-green-50' : 'bg-gray-50'
+                  }`}>
+                    <div className="font-medium text-sm flex items-center gap-2">
+                      {customer.firstName} {customer.lastName}
+                      {isNewCustomer && (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                          NEU
+                        </span>
+                      )}
                     </div>
-                  )}
-                  <div className="p-3 flex justify-between">
-                    <span className="text-xs text-gray-500">Letzter Auftrag</span>
-                    <span className="text-sm font-medium">
-                      {customer.lastOrderDate 
-                        ? new Date(customer.lastOrderDate).toLocaleDateString('de-DE') 
-                        : '-'}
-                    </span>
+                    <div className={`text-xs rounded px-2 py-1 ${
+                      isNewCustomer ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {customer.orderCount} Aufträge
+                    </div>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    <div className="p-3 flex justify-between">
+                      <span className="text-xs text-gray-500">Telefon</span>
+                      <span className="text-sm">{customer.phone}</span>
+                    </div>
+                    {customer.email && (
+                      <div className="p-3 flex justify-between">
+                        <span className="text-xs text-gray-500">Email</span>
+                        <span className="text-sm">{customer.email}</span>
+                      </div>
+                    )}
+                    <div className="p-3 flex justify-between">
+                      <span className="text-xs text-gray-500">Letzter Auftrag</span>
+                      <span className="text-sm font-medium">
+                        {customer.lastOrderDate 
+                          ? new Date(customer.lastOrderDate).toLocaleDateString('de-DE') 
+                          : '-'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         
