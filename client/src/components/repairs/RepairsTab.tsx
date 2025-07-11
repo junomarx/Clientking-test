@@ -638,7 +638,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                           <QrCode className="h-4 w-4" />
                         </button>
                         <button 
-                          className="text-red-600 hover:text-red-700 p-1 transform hover:scale-110 transition-all" 
+                          className="text-green-700 hover:text-green-800 p-1 transform hover:scale-110 transition-all" 
                           title="Status ändern"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -799,7 +799,7 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     <QrCode className="h-5 w-5" />
                   </button>
                   <button 
-                    className="text-red-600 hover:text-red-700 p-2 rounded-full hover:bg-white transition-colors" 
+                    className="text-green-700 hover:text-green-800 p-2 rounded-full hover:bg-white transition-colors" 
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedRepairId(repair.id);
