@@ -582,28 +582,8 @@ export function OrdersTab() {
     );
   }
 
-  if (allSpareParts.length === 0) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Package className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Bestellungen</h1>
-          <Badge variant="secondary" className="ml-2">0</Badge>
-        </div>
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Keine Bestellungen
-            </h3>
-            <p className="text-gray-500">
-              Aktuell warten keine Reparaturen auf Ersatzteile.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Entferne die frühe Rückkehr - zeige immer die vollständige Bestellungsseite
+  // auch wenn keine Ersatzteile vorhanden sind, da Zubehör trotzdem bestellt werden kann
 
   return (
     <div className="p-3 md:p-6">
@@ -807,86 +787,100 @@ export function OrdersTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-              {filteredSpareParts.map((part) => {
-                const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
-                return (
-                  <TableRow key={part.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedParts.has(part.id)}
-                        onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {relatedRepair ? (
-                        <div>
-                          <div className="font-medium">{relatedRepair.orderCode}</div>
-                          <div className="text-sm text-gray-500">
-                            {relatedRepair.brand} {relatedRepair.model}
+              {filteredSpareParts.length > 0 ? (
+                filteredSpareParts.map((part) => {
+                  const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
+                  return (
+                    <TableRow key={part.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedParts.has(part.id)}
+                          onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {relatedRepair ? (
+                          <div>
+                            <div className="font-medium">{relatedRepair.orderCode}</div>
+                            <div className="text-sm text-gray-500">
+                              {relatedRepair.brand} {relatedRepair.model}
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">Nicht gefunden</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{part.partName}</div>
-                        {part.notes && (
-                          <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                        ) : (
+                          <span className="text-gray-500">Nicht gefunden</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {part.supplier || <span className="text-gray-400">-</span>}
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs">
-                        {getStatusLabel(part.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => relatedRepair && handleManageParts(relatedRepair.id)}>
-                            <Settings className="h-4 w-4 mr-2" />
-                            Bearbeiten
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleSinglePartStatusUpdate(part.id, "bestellt")}
-                            disabled={part.status === "bestellt"}
-                          >
-                            <CheckSquare className="h-4 w-4 mr-2" />
-                            Als bestellt markieren
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleSinglePartStatusUpdate(part.id, "eingetroffen")}
-                            disabled={part.status === "eingetroffen"}
-                          >
-                            <Package className="h-4 w-4 mr-2" />
-                            Als eingetroffen markieren
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleSinglePartStatusUpdate(part.id, "erledigt")}
-                            disabled={part.status === "erledigt"}
-                          >
-                            <CheckSquare className="h-4 w-4 mr-2" />
-                            Als erledigt markieren
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div>{part.partName}</div>
+                          {part.notes && (
+                            <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {part.supplier || <span className="text-gray-400">-</span>}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs">
+                          {getStatusLabel(part.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => relatedRepair && handleManageParts(relatedRepair.id)}>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Bearbeiten
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleSinglePartStatusUpdate(part.id, "bestellt")}
+                              disabled={part.status === "bestellt"}
+                            >
+                              <CheckSquare className="h-4 w-4 mr-2" />
+                              Als bestellt markieren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleSinglePartStatusUpdate(part.id, "eingetroffen")}
+                              disabled={part.status === "eingetroffen"}
+                            >
+                              <Package className="h-4 w-4 mr-2" />
+                              Als eingetroffen markieren
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleSinglePartStatusUpdate(part.id, "erledigt")}
+                              disabled={part.status === "erledigt"}
+                            >
+                              <CheckSquare className="h-4 w-4 mr-2" />
+                              Als erledigt markieren
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center">
+                    <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                      <Package className="h-8 w-8 mb-2 text-gray-400" />
+                      <p className="text-sm">Keine Ersatzteile vorhanden</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Fügen Sie Ersatzteile über "Ersatzteil hinzufügen" hinzu
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
             </Table>
           </div>
