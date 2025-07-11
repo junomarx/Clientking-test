@@ -113,6 +113,8 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 11, 2025: Multi-Artikel Interface für "Auf Lager" Zubehör-Bestellungen implementiert - Benutzer kann mehrere Artikel mit Stückzahl gleichzeitig hinzufügen über dynamische +/- Buttons, keine Preiseingabe erforderlich, vereinfachte Benutzerführung für Lager-Artikel
+- July 11, 2025: Bestellungen-Seite UI-Fix - Vollständige Interface bleibt immer sichtbar auch ohne Ersatzteile, Zubehör-Tab und alle Buttons zugänglich, Empty-State nur innerhalb Ersatzteile-Tabelle angezeigt
 - July 11, 2025: KRITISCHER BUGFIX BEHOBEN - Frontend Routing-Fehler korrigiert: bulkUpdateMutation und singlePartUpdateMutation verwenden jetzt korrekte Header-basierte Endpunkte (/api/orders/spare-parts-bulk-update statt /api/spare-parts/bulk-update), "Ungültige Ersatzteil-ID" Fehler vollständig behoben, alle Status-Änderungen funktionieren wieder ordnungsgemäß
 - July 11, 2025: ALLE BESTELLFUNKTIONEN VOLLSTÄNDIG REPARIERT - Einzelne Status-Änderungen verwenden jetzt korrekte Einzelupdate-Funktionen statt Bulk-Operationen, Status-Auswahl durch Dropdown-Menüs statt automatischer Progression, PDF-Export inkludiert sowohl Ersatzteile als auch Zubehör-Daten, Bulk-Operationen nutzen korrekte Endpunkte mit ID-Validierung, Status-Aktions-Buttons für Zubehör mit vollständigen Dropdown-Menüs implementiert
 - July 11, 2025: Tabellenspalten für Bestellungen erfolgreich angepasst zu: "Auftrag, Ersatzteil, Lieferant, Erstellt, Status, Aktionen" - Kosten-Spalte entfernt und Spaltenreihenfolge entsprechend Benutzeranforderungen geändert

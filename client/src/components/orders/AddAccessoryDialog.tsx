@@ -21,11 +21,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { insertAccessorySchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import type { InsertAccessory } from "@shared/schema";
 import { z } from "zod";
+
+interface Article {
+  articleName: string;
+  quantity: number;
+}
 
 const accessoryFormSchema = z.object({
   // Auf Lager Checkbox
@@ -40,14 +46,52 @@ const accessoryFormSchema = z.object({
   email: z.string().optional(),
   address: z.string().optional(),
   
-  // Vereinfachte Artikeldaten
-  articleName: z.string().min(1, "Artikel-Name ist erforderlich"),
-  quantity: z.number().min(1, "Stückzahl muss mindestens 1 sein"),
-  price: z.number().min(0, "Preis muss positiv sein"),
+  // Für Einzelartikel (alte Methode - nicht auf Lager)
+  articleName: z.string().optional(),
+  quantity: z.number().optional(),
+  price: z.number().optional(),
+  
+  // Für Multi-Artikel (auf Lager)
+  articles: z.array(z.object({
+    articleName: z.string().min(1, "Artikel-Name ist erforderlich"),
+    quantity: z.number().min(1, "Stückzahl muss mindestens 1 sein"),
+  })).optional(),
+  
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
-  // Nur Kundendaten validieren wenn nicht auf Lager
-  if (!data.inStock) {
+  // Validierung für Auf Lager vs. Einzelartikel
+  if (data.inStock) {
+    // Auf Lager: Validiere Artikel-Array
+    if (!data.articles || data.articles.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Mindestens ein Artikel ist erforderlich",
+        path: ["articles"],
+      });
+    }
+  } else {
+    // Nicht auf Lager: Validiere Einzelartikel und Kundendaten
+    if (!data.articleName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Artikel-Name ist erforderlich",
+        path: ["articleName"],
+      });
+    }
+    if (!data.quantity || data.quantity < 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Stückzahl muss mindestens 1 sein",
+        path: ["quantity"],
+      });
+    }
+    if (data.price === undefined || data.price < 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Preis muss positiv sein",
+        path: ["price"],
+      });
+    }
     if (!data.selectedCustomerId && (!data.firstName || !data.lastName || !data.phone)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -82,6 +126,7 @@ export function AddAccessoryDialog({
   const queryClient = useQueryClient();
   const [step, setStep] = useState(1); // 1: Kunde/Lager, 2: Artikel
   const [customerSearch, setCustomerSearch] = useState("");
+  const [articles, setArticles] = useState<Article[]>([{ articleName: "", quantity: 1 }]);
 
   // Kundendaten abrufen für Autovervollständigung
   const { data: customers = [] } = useQuery<Customer[]>({
@@ -103,6 +148,7 @@ export function AddAccessoryDialog({
       articleName: "",
       quantity: 1,
       price: 0,
+      articles: [{ articleName: "", quantity: 1 }],
       notes: "",
     },
   });
@@ -121,6 +167,7 @@ export function AddAccessoryDialog({
     if (open) {
       setStep(1);
       setCustomerSearch("");
+      setArticles([{ articleName: "", quantity: 1 }]);
       form.reset({
         inStock: false,
         customerSearch: "",
@@ -133,6 +180,7 @@ export function AddAccessoryDialog({
         articleName: "",
         quantity: 1,
         price: 0,
+        articles: [{ articleName: "", quantity: 1 }],
         notes: "",
       });
     }
@@ -166,28 +214,57 @@ export function AddAccessoryDialog({
         }
       }
       
-      // Zubehör-Bestellung erstellen
-      const accessoryData: InsertAccessory = {
-        articleName: data.articleName,
-        quantity: data.quantity,
-        unitPrice: data.price.toFixed(2),
-        totalPrice: (data.price * data.quantity).toFixed(2),
-        customerId: customerId,
-        type: data.inStock ? "lager" : "kundenbestellung",
-        status: "bestellt",
-        notes: data.notes || "",
-      };
-      
-      const response = await apiRequest("POST", "/api/orders/accessories", accessoryData);
-      if (!response.ok) {
-        throw new Error("Fehler beim Erstellen der Zubehör-Bestellung");
+      // Verschiedene Behandlung für Auf Lager vs. Einzelartikel
+      if (data.inStock && data.articles) {
+        // Auf Lager: Mehrere Artikel erstellen
+        const createdAccessories = [];
+        for (const article of data.articles) {
+          const accessoryData: InsertAccessory = {
+            articleName: article.articleName,
+            quantity: article.quantity,
+            unitPrice: "0.00", // Kein Preis für Lagerartikel
+            totalPrice: "0.00",
+            customerId: null, // Kein Kunde für Lagerartikel
+            type: "lager",
+            status: "bestellt",
+            notes: data.notes || "",
+          };
+          
+          const response = await apiRequest("POST", "/api/orders/accessories", accessoryData);
+          if (!response.ok) {
+            throw new Error(`Fehler beim Erstellen von Artikel: ${article.articleName}`);
+          }
+          const result = await response.json();
+          createdAccessories.push(result);
+        }
+        return createdAccessories;
+      } else {
+        // Einzelartikel für Kundenbestellung
+        const accessoryData: InsertAccessory = {
+          articleName: data.articleName!,
+          quantity: data.quantity!,
+          unitPrice: data.price!.toFixed(2),
+          totalPrice: (data.price! * data.quantity!).toFixed(2),
+          customerId: customerId,
+          type: "kundenbestellung",
+          status: "bestellt",
+          notes: data.notes || "",
+        };
+        
+        const response = await apiRequest("POST", "/api/orders/accessories", accessoryData);
+        if (!response.ok) {
+          throw new Error("Fehler beim Erstellen der Zubehör-Bestellung");
+        }
+        return response.json();
       }
-      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const isMultiple = Array.isArray(result);
       toast({
         title: "Bestellung erstellt",
-        description: "Die Zubehör-Bestellung wurde erfolgreich erstellt.",
+        description: isMultiple 
+          ? `${result.length} Lagerartikel wurden erfolgreich erstellt.`
+          : "Die Zubehör-Bestellung wurde erfolgreich erstellt.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
       onOpenChange(false);
@@ -202,7 +279,28 @@ export function AddAccessoryDialog({
   });
 
   const onSubmit = (data: AccessoryFormData) => {
+    // Setze die aktuellen Artikel vor dem Absenden
+    if (data.inStock) {
+      data.articles = articles.filter(a => a.articleName.trim() !== "");
+    }
     createMutation.mutate(data);
+  };
+
+  // Funktionen für Multi-Artikel Management
+  const addArticle = () => {
+    setArticles([...articles, { articleName: "", quantity: 1 }]);
+  };
+
+  const removeArticle = (index: number) => {
+    if (articles.length > 1) {
+      setArticles(articles.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateArticle = (index: number, field: keyof Article, value: string | number) => {
+    const updated = [...articles];
+    updated[index] = { ...updated[index], [field]: value };
+    setArticles(updated);
   };
 
   const selectCustomer = (customer: Customer) => {
@@ -382,77 +480,156 @@ export function AddAccessoryDialog({
 
             {step === 2 && (
               <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="articleName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Artikel</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="z.B. iPhone 8 Hülle schwarz" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {inStock ? (
+                  // Multi-Artikel Interface für "Auf Lager"
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Artikel hinzufügen</h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addArticle}
+                        className="flex items-center gap-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Artikel hinzufügen
+                      </Button>
+                    </div>
+                    
+                    {articles.map((article, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-600">
+                            Artikel {index + 1}
+                          </span>
+                          {articles.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeArticle(index)}
+                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Artikel</label>
+                            <Input
+                              value={article.articleName}
+                              onChange={(e) => updateArticle(index, "articleName", e.target.value)}
+                              placeholder="z.B. iPhone 8 Hülle schwarz"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Stückzahl</label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={article.quantity}
+                              onChange={(e) => updateArticle(index, "quantity", parseInt(e.target.value) || 1)}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="quantity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stückzahl</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notizen (optional)</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ) : (
+                  // Standard Interface für Kundenbestellungen
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="articleName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Artikel</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="z.B. iPhone 8 Hülle schwarz" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Preis (€)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="quantity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Stückzahl</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                min={1}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notizen (optional)</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      <FormField
+                        control={form.control}
+                        name="price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Preis (€)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number"
+                                step="0.01"
+                                min={0}
+                                {...field}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notizen (optional)</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
             )}
 
