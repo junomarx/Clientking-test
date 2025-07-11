@@ -33,6 +33,8 @@ import {
 import { EditCustomerDialog } from './EditCustomerDialog';
 import { NewCostEstimateDialog } from '@/components/cost-estimates/NewCostEstimateDialog';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { RepairDetailsDialog } from '@/components/repairs/RepairDetailsDialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -56,6 +58,10 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showNewRepairDialog, setShowNewRepairDialog] = useState(false);
   const [showNewCostEstimateDialog, setShowNewCostEstimateDialog] = useState(false);
+  const [showRepairDetailsDialog, setShowRepairDetailsDialog] = useState(false);
+  const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
+  const [showDeleteRepairDialog, setShowDeleteRepairDialog] = useState(false);
+  const [repairToDelete, setRepairToDelete] = useState<number | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -109,6 +115,43 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     // Invalidate cost estimates to refresh the list
     queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
   };
+
+  const handleRepairClick = (repairId: number) => {
+    setSelectedRepairId(repairId);
+    setShowRepairDetailsDialog(true);
+  };
+
+  const handleDeleteRepair = (repairId: number) => {
+    setRepairToDelete(repairId);
+    setShowDeleteRepairDialog(true);
+  };
+
+  // Delete repair mutation
+  const deleteRepairMutation = useMutation({
+    mutationFn: async (repairId: number) => {
+      const response = await apiRequest('DELETE', `/api/repairs/${repairId}`);
+      if (!response.ok) {
+        throw new Error('Fehler beim Löschen der Reparatur');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      setShowDeleteRepairDialog(false);
+      setRepairToDelete(null);
+      toast({
+        title: "Reparatur gelöscht",
+        description: "Die Reparatur wurde erfolgreich gelöscht.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const isLoading = isLoadingCustomer || isLoadingRepairs || isLoadingCostEstimates;
   
@@ -258,15 +301,36 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {repairs && repairs.length > 0 ? (
                   repairs.map((repair) => (
-                    <div key={repair.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-white rounded border">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm md:text-base break-words">{repair.brand} {repair.model}</div>
+                    <div key={repair.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-white rounded border hover:bg-gray-50 transition-colors">
+                      <div 
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => handleRepairClick(repair.id)}
+                      >
+                        <div className="font-medium text-sm md:text-base break-words hover:text-blue-600">{repair.brand} {repair.model}</div>
                         <div className="text-xs md:text-sm text-muted-foreground break-words">{repair.issue}</div>
                         <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt)}</div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {getStatusBadge(repair.status)}
                         <div className="text-sm font-medium">{repair.estimatedCost} €</div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteRepair(repair.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Reparatur löschen</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </div>
                   ))
@@ -370,6 +434,34 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
             zipCode: customer.zipCode,
             city: customer.city
           }}
+        />
+      )}
+      
+      {/* Repair Details Dialog */}
+      {showRepairDetailsDialog && selectedRepairId && (
+        <RepairDetailsDialog
+          open={showRepairDetailsDialog}
+          onClose={() => {
+            setShowRepairDetailsDialog(false);
+            setSelectedRepairId(null);
+          }}
+          repairId={selectedRepairId}
+        />
+      )}
+      
+      {/* Delete Repair Confirmation Dialog */}
+      {showDeleteRepairDialog && repairToDelete && (
+        <DeleteConfirmDialog
+          open={showDeleteRepairDialog}
+          onClose={() => {
+            setShowDeleteRepairDialog(false);
+            setRepairToDelete(null);
+          }}
+          onConfirm={() => deleteRepairMutation.mutate(repairToDelete)}
+          title="Reparatur löschen"
+          description="Möchten Sie diese Reparatur wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+          confirmText="Löschen"
+          isLoading={deleteRepairMutation.isPending}
         />
       )}
     </Dialog>
