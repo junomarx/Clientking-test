@@ -153,6 +153,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ORDERS/SPARE-PARTS ROUTES - Diese müssen GANZ VORNE stehen!
+  app.get("/api/orders/spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Ersatzteile für Benutzer ${userId}`);
+      
+      const spareParts = await storage.getAllSpareParts(userId);
+      console.log(`Gefunden: ${spareParts.length} Ersatzteile für Benutzer ${userId}`);
+      
+      res.json(spareParts);
+    } catch (error) {
+      console.error("Fehler beim Abrufen aller Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  app.patch("/api/orders/spare-parts-bulk-update", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      const { partIds, status } = req.body;
+      
+      console.log(`Bulk-Update für Ersatzteile:`, { partIds, status, userId });
+      
+      if (!Array.isArray(partIds) || partIds.length === 0) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-IDs" });
+      }
+      
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      const success = await storage.bulkUpdateSparePartStatus(partIds, status, userId);
+      
+      if (success) {
+        res.json({ message: "Ersatzteile erfolgreich aktualisiert", partIds, status });
+      } else {
+        res.status(500).json({ message: "Fehler beim Aktualisieren der Ersatzteile" });
+      }
+    } catch (error) {
+      console.error("Fehler beim Bulk-Update der Ersatzteile:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Ersatzteile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // KIOSK-ROUTE: Registriere Kiosk-Unterschrift-Route ZUERST, um Middleware zu umgehen
   app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
     try {
@@ -5277,6 +5327,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+
 
   // Einzelnes Ersatzteil abrufen
   app.get("/api/spare-parts/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {

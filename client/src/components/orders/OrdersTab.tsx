@@ -98,7 +98,7 @@ export function OrdersTab() {
 
   // Alle Ersatzteile abrufen (nicht nur wartende Reparaturen)
   const { data: allSpareParts = [], isLoading: isLoadingSpareParts } = useQuery<SparePart[]>({
-    queryKey: ['/api/spare-parts/all'],
+    queryKey: ['/api/orders/spare-parts'],
     refetchInterval: 30000,
   });
 
@@ -123,7 +123,7 @@ export function OrdersTab() {
   // Bulk-Aktionen für Ersatzteile
   const bulkUpdateMutation = useMutation({
     mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
-      const response = await apiRequest("PATCH", "/api/spare-parts/bulk-update", {
+      const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
         partIds,
         status,
       });
@@ -133,7 +133,7 @@ export function OrdersTab() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/all'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
       toast({
         title: "Ersatzteile aktualisiert",
