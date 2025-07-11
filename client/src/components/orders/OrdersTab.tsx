@@ -28,6 +28,7 @@ import {
 import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckSquare, Calendar } from "lucide-react";
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
+import { AddAccessoryDialog } from "./AddAccessoryDialog";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -86,6 +87,7 @@ export function OrdersTab() {
   const [selectedRepairId, setSelectedRepairId] = useState<number | null>(null);
   const [isSparePartsDialogOpen, setIsSparePartsDialogOpen] = useState(false);
   const [isAddSparePartDialogOpen, setIsAddSparePartDialogOpen] = useState(false);
+  const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
   
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
@@ -378,14 +380,25 @@ export function OrdersTab() {
           </Badge>
         </div>
         
-        <Button
-          onClick={() => setIsAddSparePartDialogOpen(true)}
-          className="flex items-center gap-2"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden md:inline">Ersatzteil hinzufügen</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsAddSparePartDialogOpen(true)}
+            className="flex items-center gap-2"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden md:inline">Ersatzteil hinzufügen</span>
+          </Button>
+          <Button
+            onClick={() => setIsAddAccessoryDialogOpen(true)}
+            className="flex items-center gap-2"
+            size="sm"
+            variant="outline"
+          >
+            <Package className="h-4 w-4" />
+            <span className="hidden md:inline">Zubehör hinzufügen</span>
+          </Button>
+        </div>
       </div>
 
       {/* Erweiterte Filter- und Suchleiste */}
@@ -679,6 +692,11 @@ export function OrdersTab() {
       <AddSparePartDialog
         open={isAddSparePartDialogOpen}
         onOpenChange={setIsAddSparePartDialogOpen}
+      />
+
+      <AddAccessoryDialog
+        open={isAddAccessoryDialogOpen}
+        onOpenChange={setIsAddAccessoryDialogOpen}
       />
     </div>
   );
