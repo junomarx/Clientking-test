@@ -423,6 +423,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE individual accessory
+  app.delete("/api/orders/accessories/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Löschen des Zubehörs ${id} für Benutzer ${userId}`);
+      
+      const success = await storage.deleteAccessory(id, userId);
+      
+      if (success) {
+        console.log(`[DIREKTE ROUTE] Zubehör ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+        res.json({ message: "Zubehör erfolgreich gelöscht", accessoryId: id });
+      } else {
+        res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Löschen des Zubehörs:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Löschen des Zubehörs",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // DELETE individual spare part from orders
+  app.delete("/api/orders/spare-parts/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Ungültige Ersatzteil-ID" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Löschen des Ersatzteils ${id} für Benutzer ${userId}`);
+      
+      const success = await storage.deleteSparePart(id, userId);
+      
+      if (success) {
+        console.log(`[DIREKTE ROUTE] Ersatzteil ${id} erfolgreich gelöscht für Benutzer ${userId}`);
+        res.json({ message: "Ersatzteil erfolgreich gelöscht", sparePartId: id });
+      } else {
+        res.status(404).json({ message: "Ersatzteil nicht gefunden oder keine Berechtigung" });
+      }
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Löschen des Ersatzteils:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Löschen des Ersatzteils",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // KIOSK-ROUTE: Registriere Kiosk-Unterschrift-Route ZUERST, um Middleware zu umgehen
   app.post("/api/kiosk-signature", async (req: Request, res: Response) => {
     try {

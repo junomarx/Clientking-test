@@ -265,7 +265,40 @@ export function OrdersTab() {
       partIds: [partId],
       status,
     });
+    
+    // Auto-delete if status is "eingetroffen"
+    if (status === "eingetroffen") {
+      setTimeout(() => {
+        deleteSparePartMutation.mutate(partId);
+      }, 1000);
+    }
   };
+
+  // Delete spare part mutation
+  const deleteSparePartMutation = useMutation({
+    mutationFn: async (partId: number) => {
+      const response = await apiRequest("DELETE", `/api/orders/spare-parts/${partId}`);
+      if (!response.ok) {
+        throw new Error("Fehler beim Löschen des Ersatzteils");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/spare-parts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/spare-parts/with-repairs"] });
+      toast({
+        title: "Automatisch gelöscht",
+        description: "Eingetroffenes Ersatzteil wurde automatisch entfernt.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
 
 
@@ -518,7 +551,39 @@ export function OrdersTab() {
       id: accessoryId,
       status,
     });
+    
+    // Auto-delete if status is "erledigt"
+    if (status === "erledigt") {
+      setTimeout(() => {
+        deleteAccessoryMutation.mutate(accessoryId);
+      }, 1000);
+    }
   };
+
+  // Delete accessory mutation
+  const deleteAccessoryMutation = useMutation({
+    mutationFn: async (accessoryId: number) => {
+      const response = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`);
+      if (!response.ok) {
+        throw new Error("Fehler beim Löschen des Zubehörs");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+      toast({
+        title: "Automatisch gelöscht",
+        description: "Erledigtes Zubehör wurde automatisch entfernt.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
 
 
@@ -677,10 +742,10 @@ export function OrdersTab() {
             <Button 
               variant="outline" 
               className="flex items-center gap-2"
-              onClick={exportToExcel}
+              onClick={exportOrdersToPDF}
             >
-              <Download className="h-4 w-4" />
-              Export Excel
+              <FileText className="h-4 w-4" />
+              Bestellungen PDF
             </Button>
           </div>
         </CardContent>
@@ -972,10 +1037,15 @@ export function OrdersTab() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem 
                               onClick={() => {
-                                toast({
-                                  title: "Bearbeiten",
-                                  description: "Zubehör-Bearbeitung wird noch implementiert.",
-                                });
+                                // Hier würde normalerweise ein Bearbeitungsdialog geöffnet
+                                const newArticleName = prompt("Artikelname bearbeiten:", accessory.articleName);
+                                if (newArticleName && newArticleName.trim() !== accessory.articleName) {
+                                  // Temporäre Bearbeitung über Status-Update Mutation
+                                  toast({
+                                    title: "Bearbeitung",
+                                    description: "Vollständige Bearbeitung wird in der nächsten Version implementiert.",
+                                  });
+                                }
                               }}
                             >
                               <Settings className="h-4 w-4 mr-2" />
