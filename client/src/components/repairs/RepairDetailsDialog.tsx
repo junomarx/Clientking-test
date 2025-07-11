@@ -56,9 +56,7 @@ import {
   MessageCircle,
   Check,
   X,
-  History,
-  ChevronDown,
-  ChevronUp,
+
   Printer,
 
   Pen,
@@ -80,7 +78,6 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [repair, setRepair] = useState<Repair | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [emailHistory, setEmailHistory] = useState<EmailHistoryWithTemplate[]>([]);
-  const [showStatusHistory, setShowStatusHistory] = useState(false);
   
   // Auth-Hook für Benutzerinformationen (Preispaket)
   const { user } = useAuth();
@@ -315,53 +312,41 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
               <div className="flex items-start gap-2">
                 <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="text-sm text-muted-foreground">Status</div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowStatusHistory(!showStatusHistory)}
-                      className="h-6 px-2 text-xs"
-                    >
-                      <History className="h-3 w-3 mr-1" />
-                      Verlauf
-                      {showStatusHistory ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                    </Button>
-                  </div>
+                  <div className="text-sm text-muted-foreground mb-1">Status</div>
                   
                   {/* Aktueller Status */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mb-3">
                     {getStatusBadge(repair.status)}
                     <div className="text-xs text-muted-foreground">
                       {format(new Date(repair.updatedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                     </div>
                   </div>
                   
-                  {/* Status-Verlauf (ausklappbar) */}
-                  {showStatusHistory && (
-                    <div className="mt-3 p-3 bg-white rounded border border-gray-200">
-                      <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
-                      <div className="max-h-32 overflow-y-auto space-y-2">
-                        {statusHistoryData && statusHistoryData.length > 0 ? (
-                          statusHistoryData
-                            .filter(entry => entry.newStatus !== repair.status) // Aktuellen Status ausschließen
-                            .slice(0, 5)
-                            .map((entry) => (
-                              <div key={entry.id} className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                  {getStatusBadge(entry.newStatus)}
-                                </div>
+                  {/* Status-Verlauf */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Status-Verlauf</div>
+                    <div className="max-h-32 overflow-y-auto space-y-2 pr-1">
+                      {statusHistoryData && statusHistoryData.length > 0 ? (
+                        statusHistoryData.slice(0, 5).map((entry) => (
+                          <div key={entry.id} className="flex items-center justify-between text-xs py-1">
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(entry.newStatus)}
+                              {entry.changedByUsername && (
                                 <span className="text-[10px] text-muted-foreground">
-                                  {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                                  von {entry.changedByUsername}
                                 </span>
-                              </div>
-                            ))
-                        ) : (
-                          <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
-                        )}
-                      </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-muted-foreground">
+                              {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   
                   {repair.technicianNote && (
                     <div className="mt-2 text-sm">
