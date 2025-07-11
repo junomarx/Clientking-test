@@ -310,16 +310,19 @@ export function OrdersTab() {
       
       // Auto-delete if status is "eingetroffen"
       if (status === "eingetroffen") {
+        console.log(`Auto-deleting ${partIds.length} spare parts with status "eingetroffen"`);
         for (const partId of partIds) {
           try {
             const deleteResponse = await apiRequest("DELETE", `/api/orders/spare-parts/${partId}`, null, {
               "X-User-ID": String(user?.id || 0),
             });
             if (deleteResponse.ok) {
-              console.log(`Auto-deleted spare part ${partId} with status "eingetroffen"`);
+              console.log(`✅ Auto-deleted spare part ${partId} with status "eingetroffen"`);
+            } else {
+              console.error(`❌ Failed to delete spare part ${partId}: ${deleteResponse.status}`);
             }
           } catch (deleteError) {
-            console.error(`Failed to auto-delete spare part ${partId}:`, deleteError);
+            console.error(`❌ Failed to auto-delete spare part ${partId}:`, deleteError);
           }
         }
       }
@@ -581,16 +584,19 @@ export function OrdersTab() {
       
       // Auto-delete if status is "erledigt"
       if (status === "erledigt") {
+        console.log(`Auto-deleting ${accessoryIds.length} accessories with status "erledigt"`);
         for (const accessoryId of accessoryIds) {
           try {
             const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
               "X-User-ID": String(user?.id || 0),
             });
             if (deleteResponse.ok) {
-              console.log(`Auto-deleted accessory ${accessoryId} with status "erledigt"`);
+              console.log(`✅ Auto-deleted accessory ${accessoryId} with status "erledigt"`);
+            } else {
+              console.error(`❌ Failed to delete accessory ${accessoryId}: ${deleteResponse.status}`);
             }
           } catch (deleteError) {
-            console.error(`Failed to auto-delete accessory ${accessoryId}:`, deleteError);
+            console.error(`❌ Failed to auto-delete accessory ${accessoryId}:`, deleteError);
           }
         }
       }
