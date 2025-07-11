@@ -1,6 +1,5 @@
 /**
- * Migrationsskript zur Erstellung der "Auftragsbestätigung" E-Mail-Vorlage
- * für Test-E-Mails direkt aus dem RepairDetailsDialog
+ * Skript zum Aktualisieren der Auftragsbestätigungs-E-Mail-Vorlage mit einheitlichem HTML-Design
  */
 
 import { Pool, neonConfig } from '@neondatabase/serverless';
@@ -11,49 +10,18 @@ import * as schema from "./shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
-}
-
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle({ client: pool, schema });
 
-async function createTestEmailTemplate() {
+async function updateAuftragsbestaetigungTemplate() {
   try {
-    console.log('Erstelle Auftragsbestätigungs-E-Mail-Vorlage...');
-
+    console.log('Aktualisiere Auftragsbestätigungs-E-Mail-Vorlage mit einheitlichem HTML-Design...');
+    
     // Alle Benutzer abrufen
     const users = await db.select().from(schema.users);
-    
     console.log(`Gefunden: ${users.length} Benutzer`);
 
-    for (const user of users) {
-      console.log(`Bearbeite Benutzer: ${user.username} (ID: ${user.id})`);
-      
-      // Prüfen, ob die Vorlage bereits existiert
-      const existingTemplate = await db
-        .select()
-        .from(schema.emailTemplates)
-        .where(
-          and(
-            eq(schema.emailTemplates.userId, user.id),
-            eq(schema.emailTemplates.name, 'Auftragsbestätigung'),
-            eq(schema.emailTemplates.type, 'auftragsbestaetigung')
-          )
-        );
-
-      if (existingTemplate.length > 0) {
-        console.log(`  Vorlage "Auftragsbestätigung" bereits vorhanden für Benutzer ${user.username}`);
-        continue;
-      }
-
-      // Neue Vorlage erstellen
-      const template = {
-        userId: user.id,
-        name: 'Auftragsbestätigung',
-        subject: 'Auftragsbestätigung - Reparatur {{orderCode}}',
-        type: 'auftragsbestaetigung' as const,
-        body: `
+    const newHtmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
         <div style="text-align: center; margin-bottom: 20px;">
           <h2 style="color: #10b981;">Auftragsbestätigung</h2>
@@ -91,17 +59,30 @@ async function createTestEmailTemplate() {
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
           <p>Diese E-Mail wurde automatisch von {{businessName}} gesendet.</p>
         </div>
-      </div>`
-      };
+      </div>`;
 
-      await db.insert(schema.emailTemplates).values(template);
-      console.log(`  ✓ Vorlage "Auftragsbestätigung" für Benutzer ${user.username} erstellt`);
+    for (const user of users) {
+      console.log(`Aktualisiere Benutzer: ${user.username} (ID: ${user.id})`);
+      
+      // Auftragsbestätigungs-Vorlage finden und aktualisieren
+      const result = await db
+        .update(schema.emailTemplates)
+        .set({ 
+          body: newHtmlContent,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(schema.emailTemplates.userId, user.id),
+          eq(schema.emailTemplates.type, 'auftragsbestaetigung')
+        ));
+
+      console.log(`  ✓ Vorlage "Auftragsbestätigung" für Benutzer ${user.username} aktualisiert`);
     }
 
-    console.log('Auftragsbestätigungs-E-Mail-Vorlage erfolgreich erstellt für alle Benutzer!');
+    console.log('Auftragsbestätigungs-E-Mail-Vorlage erfolgreich mit einheitlichem HTML-Design aktualisiert!');
 
   } catch (error) {
-    console.error('Fehler beim Erstellen der E-Mail-Vorlage:', error);
+    console.error('Fehler beim Aktualisieren der E-Mail-Vorlage:', error);
     throw error;
   } finally {
     await pool.end();
@@ -109,7 +90,7 @@ async function createTestEmailTemplate() {
 }
 
 async function main() {
-  await createTestEmailTemplate();
+  await updateAuftragsbestaetigungTemplate();
 }
 
 // ESM-kompatible Ausführung
@@ -117,4 +98,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
 
-export { createTestEmailTemplate };
+export { updateAuftragsbestaetigungTemplate };

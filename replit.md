@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 11, 2025: Test-E-Mail-Funktionalität implementiert - Test-E-Mail-Button im RepairDetailsDialog (Kundendaten-Bereich) sendet professionelle Auftragsbestätigungs-E-Mails mit vollständigen Reparatur- und Firmendetails, HTML-Design-Vorlage für einheitliches Layout erstellt
 - July 11, 2025: Added quick status change icon (RefreshCw) to repairs table - Red circular arrow icon placed after QR-Code button allows direct status updates without opening RepairDetailsDialog, available in both desktop and mobile views
 - July 11, 2025: Fixed preselectedCustomer functionality in NewCostEstimateDialog - Customer data now automatically pre-fills when creating cost estimates from CustomerDetailDialog
 - July 11, 2025: Mobile optimization completed for CustomerDetailDialog - Responsive design matches RepairDetailsDialog with optimized buttons, icons, and layout for small screens
