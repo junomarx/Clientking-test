@@ -299,6 +299,22 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                   <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                   <div>Kunde seit {formatDate(customer.createdAt.toString())}</div>
                 </div>
+                
+                {/* Test-E-Mail Button im Kundendaten-Bereich */}
+                {customer.email && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendTestEmail}
+                      disabled={isSendingTestEmail}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <TestTube className="h-4 w-4" />
+                      {isSendingTestEmail ? 'Sende Auftragsbestätigung...' : 'Test-E-Mail senden'}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-muted-foreground italic">Kundendaten konnten nicht geladen werden</div>
@@ -657,31 +673,7 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             Drucken
           </Button>
 
-          {/* Test-E-Mail Button - nur wenn Kunde E-Mail hat */}
-          {customer?.email && (
-            <Button 
-              variant="outline"
-              onClick={handleSendTestEmail}
-              disabled={isSendingTestEmail}
-              className="flex items-center gap-1"
-            >
-              <TestTube className="h-4 w-4" />
-              {isSendingTestEmail ? 'Sende...' : 'Test-E-Mail'}
-            </Button>
-          )}
 
-          {/* Test-E-Mail Button - nur wenn Kunde E-Mail hat */}
-          {customer?.email && (
-            <Button 
-              variant="outline"
-              onClick={handleSendTestEmail}
-              disabled={isSendingTestEmail}
-              className="flex items-center gap-1"
-            >
-              <TestTube className="h-4 w-4" />
-              {isSendingTestEmail ? 'Sende...' : 'Test-E-Mail'}
-            </Button>
-          )}
           
           <Button 
             variant="outline" 
