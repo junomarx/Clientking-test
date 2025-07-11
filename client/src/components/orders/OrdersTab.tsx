@@ -32,6 +32,7 @@ import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -113,6 +114,7 @@ export function OrdersTab() {
   const [selectedAccessories, setSelectedAccessories] = useState<Set<number>>(new Set());
   
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Alle Ersatzteile abrufen (ohne "erledigt" Status)

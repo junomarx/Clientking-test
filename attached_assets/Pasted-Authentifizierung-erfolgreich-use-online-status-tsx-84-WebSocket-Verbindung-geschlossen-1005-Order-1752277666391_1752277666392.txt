@@ -1,0 +1,35 @@
+Authentifizierung erfolgreich
+use-online-status.tsx:84 WebSocket-Verbindung geschlossen: 1005 
+OrdersTab.tsx:725 🧪 Testing auto-delete functionality...
+OrdersTab.tsx:754 ❌ Error creating test accessory: ReferenceError: user is not defined
+    at onClick (OrdersTab.tsx:738:39)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=2e28e5a6:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=2e28e5a6:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=2e28e5a6:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-RPCDYKBN.js?v=2e28e5a6:3736:33)
+    at executeDispatch (chunk-RPCDYKBN.js?v=2e28e5a6:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-RPCDYKBN.js?v=2e28e5a6:7034:15)
+    at processDispatchQueue (chunk-RPCDYKBN.js?v=2e28e5a6:7043:13)
+    at dispatchEventsForPlugins (chunk-RPCDYKBN.js?v=2e28e5a6:7051:11)
+    at chunk-RPCDYKBN.js?v=2e28e5a6:7174:20
+overrideMethod @ hook.js:608
+onClick @ OrdersTab.tsx:754
+callCallback2 @ chunk-RPCDYKBN.js?v=2e28e5a6:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=2e28e5a6:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=2e28e5a6:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=2e28e5a6:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=2e28e5a6:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=2e28e5a6:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=2e28e5a6:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=2e28e5a6:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=2e28e5a6:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=2e28e5a6:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=2e28e5a6:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=2e28e5a6:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=2e28e5a6:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=2e28e5a6:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=2e28e5a6:5449
+use-online-status.tsx:93 Versuche WebSocket-Wiederverbindung...
+use-online-status.tsx:50 Verbinde WebSocket für Online-Status: wss://887532ea-ea11-4f31-a07f-4e786e0ded7e-00-yfs3dne0kl6y.riker.replit.dev/ws/status
+use-online-status.tsx:55 WebSocket-Verbindung für Online-Status hergestellt
+use-online-status.tsx:115 WebSocket-Authentifizierung erfolgreich
