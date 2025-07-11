@@ -998,6 +998,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+
+  
   app.get("/api/repairs/:id", isAuthenticated, requireShopIsolation, async (req: Request, res: Response) => {
     try {
       const idParam = req.params.id;
@@ -5257,6 +5259,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alle Reparaturen mit Ersatzteilen abrufen - MUSS vor :id Route stehen!
+  app.get("/api/spare-parts/with-repairs", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Abrufen aller Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
+      
+      const repairs = await storage.getRepairsWithSpareParts(userId);
+      console.log(`Gefunden: ${repairs.length} Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
+      
+      res.json(repairs);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Reparaturen mit Ersatzteilen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Reparaturen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Einzelnes Ersatzteil abrufen
   app.get("/api/spare-parts/:id", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
     try {
@@ -5415,24 +5436,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Alle Reparaturen mit Ersatzteilen abrufen
-  app.get("/api/repairs/with-spare-parts", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {
-    try {
-      const userId = (req.user as any).id;
-      console.log(`Abrufen aller Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
-      
-      const repairs = await storage.getRepairsWithSpareParts(userId);
-      console.log(`Gefunden: ${repairs.length} Reparaturen mit Ersatzteilen für Benutzer ${userId}`);
-      
-      res.json(repairs);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Reparaturen mit Ersatzteilen:", error);
-      res.status(500).json({ 
-        message: "Fehler beim Abrufen der Reparaturen",
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  });
+
+
+
 
   // Bulk-Update für Ersatzteil-Status
   app.patch("/api/spare-parts/bulk-update", isAuthenticated, enforceShopIsolation, async (req: Request, res: Response) => {

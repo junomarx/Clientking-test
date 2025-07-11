@@ -104,7 +104,7 @@ export function OrdersTab() {
 
   // Reparaturen mit Ersatzteilen abrufen
   const { data: repairsWithParts = [], isLoading: isLoadingRepairs } = useQuery<RepairWithCustomer[]>({
-    queryKey: ['/api/repairs/with-spare-parts'],
+    queryKey: ['/api/spare-parts/with-repairs'],
     refetchInterval: 30000,
   });
 
@@ -134,7 +134,7 @@ export function OrdersTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/all'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs/with-spare-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
       toast({
         title: "Ersatzteile aktualisiert",
         description: "Die ausgewählten Ersatzteile wurden erfolgreich aktualisiert.",

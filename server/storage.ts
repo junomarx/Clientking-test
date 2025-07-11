@@ -398,6 +398,11 @@ export interface IStorage {
   
   // Trial-Version Methoden
   isTrialExpired(userId: number): Promise<boolean>;
+  
+  // Ersatzteile-Methoden für erweiterte OrdersTab
+  getAllSpareParts(userId: number): Promise<SparePart[]>;
+  getRepairsWithSpareParts(userId: number): Promise<any[]>;
+  bulkUpdateSparePartStatus(partIds: number[], status: string, userId: number): Promise<boolean>;
 }
 
 /**
