@@ -139,8 +139,11 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
     queryKey: ['/api/repairs', repairId, 'status-history'],
     queryFn: async () => {
       if (!repairId) return [];
+      console.log('🔍 Status-History abfragen für Reparatur ID:', repairId);
       const response = await apiRequest('GET', `/api/repairs/${repairId}/status-history`);
-      return await response.json();
+      const data = await response.json();
+      console.log('🔍 Status-History-Daten erhalten:', data);
+      return data;
     },
     enabled: open && repairId !== null,
   });
@@ -332,27 +335,31 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
                     </div>
                   </div>
                   
-                  {/* Status History - ohne aktuellen Status */}
-                  {showStatusHistory && statusHistoryData && statusHistoryData.length > 0 && (
+                  {/* Status History - Alle Status-Änderungen anzeigen */}
+                  {showStatusHistory && (
                     <div className="mt-3 p-3 bg-white rounded border border-gray-200">
                       <div className="text-xs font-medium text-muted-foreground mb-2">Status-Verlauf</div>
-                      <div className="max-h-24 overflow-y-auto space-y-2">
-                        {statusHistoryData
-                          .filter(entry => entry.newStatus !== repair.status) // Aktuellen Status ausfiltern
-                          .map((entry) => (
-                          <div key={entry.id} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(entry.newStatus)}
+                      <div className="max-h-32 overflow-y-auto space-y-2">
+                        {statusHistoryData && statusHistoryData.length > 0 ? (
+                          statusHistoryData.map((entry) => (
+                            <div key={entry.id} className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(entry.newStatus)}
+                                {entry.changedByUsername && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    von {entry.changedByUsername}
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-[10px] text-muted-foreground">
                                 {format(new Date(entry.changedAt), 'dd.MM.yyyy HH:mm', { locale: de })}
                               </span>
                             </div>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
+                        )}
                       </div>
-                      {statusHistoryData.filter(entry => entry.newStatus !== repair.status).length === 0 && (
-                        <div className="text-xs text-muted-foreground">Kein Verlauf vorhanden</div>
-                      )}
                     </div>
                   )}
                   

@@ -2657,7 +2657,31 @@ export class DatabaseStorage implements IStorage {
       
       console.log("Reparatur erfolgreich erstellt:", result.rows[0]);
       
-      return result.rows[0];
+      const createdRepair = result.rows[0];
+      
+      // Status-History-Eintrag für den initialen "eingegangen" Status erstellen
+      try {
+        // Benutzer-Daten für Shop-ID holen
+        const user = userId ? await this.getUser(userId) : null;
+        const userShopId = user?.shopId || shopId;
+        
+        await db.insert(repairStatusHistory).values({
+          repairId: createdRepair.id,
+          oldStatus: null, // Kein vorheriger Status bei Erstellung
+          newStatus: status,
+          changedBy: userId || null,
+          userId: userId || null,
+          shopId: userShopId,
+          notes: "Auftrag erstellt"
+        });
+        
+        console.log(`Status-History-Eintrag für neue Reparatur ${createdRepair.id} erstellt: "eingegangen"`);
+      } catch (historyError) {
+        console.error("Fehler beim Erstellen des Status-History-Eintrags:", historyError);
+        // Fehler nicht weiterwerfen, da die Reparatur bereits erstellt wurde
+      }
+      
+      return createdRepair;
     } catch (error) {
       console.error("Fehler beim Erstellen einer Reparatur:", error);
       throw error;
