@@ -37,7 +37,8 @@ import {
   costEstimates,
   packageFeatures,
   spareParts,
-  repairStatusHistory
+  repairStatusHistory,
+  emailTemplates
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -3116,6 +3117,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fehler beim Senden der Test-E-Mail:", error);
       res.status(500).json({ message: "Fehler beim Senden der Test-E-Mail" });
+    }
+  });
+
+  // Test-E-Mail mit Auftragsbestätigungs-Vorlage senden
+  app.post("/api/send-test-email", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { repairId, customerEmail } = req.body;
+      
+      if (!repairId || !customerEmail) {
+        return res.status(400).json({ message: "Reparatur-ID und Kunden-E-Mail erforderlich" });
+      }
+      
+      const userId = (req.user as any).id;
+      
+      // Reparatur abrufen
+      const repair = await storage.getRepair(repairId, userId);
+      if (!repair) {
+        return res.status(404).json({ message: "Reparatur nicht gefunden" });
+      }
+
+      // Kunde abrufen
+      const customer = await storage.getCustomer(repair.customerId, userId);
+      if (!customer) {
+        return res.status(404).json({ message: "Kunde nicht gefunden" });
+      }
+
+      // Auftragsbestätigungs-Vorlage finden
+      const templates = await db.select()
+        .from(emailTemplates)
+        .where(and(
+          eq(emailTemplates.userId, userId),
+          eq(emailTemplates.type, 'auftragsbestaetigung')
+        ));
+
+      if (templates.length === 0) {
+        return res.status(404).json({ message: "Auftragsbestätigungs-Vorlage nicht gefunden" });
+      }
+
+      const template = templates[0];
+      
+      // Geschäftseinstellungen abrufen
+      const businessSettings = await storage.getBusinessSettings(userId);
+      
+      // Template-Variablen ersetzen
+      let emailContent = template.body;
+      let emailSubject = template.subject;
+      
+      const variables = {
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        orderCode: repair.orderCode,
+        brand: repair.brand,
+        model: repair.model,
+        issue: repair.issue,
+        createdAt: format(new Date(repair.createdAt), 'dd.MM.yyyy'),
+        estimatedCost: repair.estimatedCost?.toString() || '0',
+        businessName: businessSettings?.businessName || 'Handyshop',
+        businessPhone: businessSettings?.phone || '',
+        businessEmail: businessSettings?.email || '',
+        businessAddress: businessSettings?.address || '',
+        businessZipCode: businessSettings?.zipCode || '',
+        businessCity: businessSettings?.city || ''
+      };
+      
+      // Variablen im Subject und Content ersetzen
+      Object.entries(variables).forEach(([key, value]) => {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        emailContent = emailContent.replace(regex, value);
+        emailSubject = emailSubject.replace(regex, value);
+      });
+      
+      console.log(`🧪 Sende Auftragsbestätigung-Test-E-Mail an ${customerEmail}`);
+      
+      const emailSent = await storage.sendEmailWithAttachment({
+        to: customerEmail,
+        from: `"${businessSettings?.businessName || 'Handyshop'}" <${businessSettings?.email || process.env.SMTP_USER}>`,
+        subject: emailSubject,
+        htmlBody: emailContent.replace(/\n/g, '<br>'),
+        textBody: emailContent,
+        attachments: [],
+        userId: userId
+      });
+      
+      if (emailSent) {
+        // E-Mail-Historie speichern
+        try {
+          await storage.saveEmailHistory({
+            repairId: repair.id,
+            templateId: template.id,
+            recipient: customerEmail,
+            subject: emailSubject,
+            status: 'sent',
+            userId: userId
+          });
+        } catch (historyError) {
+          console.warn('Fehler beim Speichern der E-Mail-Historie:', historyError);
+        }
+        
+        res.json({ 
+          success: true, 
+          message: `Auftragsbestätigung wurde an ${customerEmail} gesendet` 
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Auftragsbestätigung konnte nicht gesendet werden" 
+        });
+      }
+      
+    } catch (error) {
+      console.error("Fehler beim Senden der Auftragsbestätigung:", error);
+      res.status(500).json({ message: "Fehler beim Senden der Auftragsbestätigung" });
     }
   });
 

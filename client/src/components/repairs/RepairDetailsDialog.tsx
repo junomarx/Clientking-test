@@ -63,7 +63,8 @@ import {
 
   Pen,
   Send,
-  QrCode
+  QrCode,
+  TestTube
 } from 'lucide-react';
 
 interface RepairDetailsDialogProps {
@@ -94,6 +95,45 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const { showPrintOptions } = usePrintManager();
   const { toast } = useToast();
+
+  // Test-E-Mail-Funktionalität
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+
+  const handleSendTestEmail = async () => {
+    if (!repair || !customer?.email) {
+      toast({
+        title: "Fehler",
+        description: "Kunde hat keine E-Mail-Adresse hinterlegt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    try {
+      const response = await apiRequest('POST', '/api/send-test-email', {
+        repairId: repair.id,
+        customerEmail: customer.email
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Test-E-Mail gesendet",
+          description: `Auftragsbestätigung wurde an ${customer.email} gesendet`,
+        });
+      } else {
+        throw new Error('Fehler beim Senden der Test-E-Mail');
+      }
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Test-E-Mail konnte nicht gesendet werden",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
   
   // Dialog schließen mit Verzögerung für Animationen
   const handleClose = () => {
@@ -617,7 +657,31 @@ export function RepairDetailsDialog({ open, onClose, repairId, onStatusChange, o
             Drucken
           </Button>
 
+          {/* Test-E-Mail Button - nur wenn Kunde E-Mail hat */}
+          {customer?.email && (
+            <Button 
+              variant="outline"
+              onClick={handleSendTestEmail}
+              disabled={isSendingTestEmail}
+              className="flex items-center gap-1"
+            >
+              <TestTube className="h-4 w-4" />
+              {isSendingTestEmail ? 'Sende...' : 'Test-E-Mail'}
+            </Button>
+          )}
 
+          {/* Test-E-Mail Button - nur wenn Kunde E-Mail hat */}
+          {customer?.email && (
+            <Button 
+              variant="outline"
+              onClick={handleSendTestEmail}
+              disabled={isSendingTestEmail}
+              className="flex items-center gap-1"
+            >
+              <TestTube className="h-4 w-4" />
+              {isSendingTestEmail ? 'Sende...' : 'Test-E-Mail'}
+            </Button>
+          )}
           
           <Button 
             variant="outline" 
