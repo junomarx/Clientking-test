@@ -5906,11 +5906,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
-          doc.text(accessory.articleName.substring(0, 25), 20, yPos);
-          doc.text(accessory.quantity.toString(), 70, yPos);
-          doc.text(customerName, 100, yPos);
-          doc.text(accessory.status, 150, yPos);
-          doc.text(new Date(accessory.createdAt).toLocaleDateString('de-DE'), 180, yPos);
+          doc.text((accessory.articleName || '').substring(0, 25), 20, yPos);
+          doc.text((accessory.quantity || 1).toString(), 70, yPos);
+          doc.text(customerName || '-', 100, yPos);
+          doc.text(accessory.status || 'bestellen', 150, yPos);
+          doc.text(accessory.createdAt ? new Date(accessory.createdAt).toLocaleDateString('de-DE') : '-', 180, yPos);
           yPos += 8;
         }
       }
