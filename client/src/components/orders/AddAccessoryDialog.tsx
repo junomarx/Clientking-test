@@ -83,19 +83,6 @@ export function AddAccessoryDialog({
     enabled: open,
   });
 
-  // Gerätetypen abrufen
-  const { data: deviceTypes = [] } = useQuery<string[]>({
-    queryKey: ['/api/device-types'],
-    enabled: open && step >= 2,
-  });
-
-  // Marken abrufen basierend auf Gerätetyp
-  const deviceType = form.watch('deviceType');
-  const { data: brands = [] } = useQuery<string[]>({
-    queryKey: ['/api/brands', deviceType],
-    enabled: open && step >= 2 && !!deviceType,
-  });
-
   const form = useForm<AccessoryFormData>({
     resolver: zodResolver(accessoryFormSchema),
     defaultValues: {
@@ -112,6 +99,19 @@ export function AddAccessoryDialog({
       price: 0,
       notes: "",
     },
+  });
+
+  // Gerätetypen abrufen
+  const { data: deviceTypes = [] } = useQuery<string[]>({
+    queryKey: ['/api/device-types'],
+    enabled: open && step >= 2,
+  });
+
+  // Marken abrufen basierend auf Gerätetyp
+  const deviceType = form.watch('deviceType');
+  const { data: brands = [] } = useQuery<string[]>({
+    queryKey: ['/api/brands', deviceType],
+    enabled: open && step >= 2 && !!deviceType,
   });
 
   useEffect(() => {
