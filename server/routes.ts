@@ -1155,6 +1155,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .values(newRepair)
         .returning();
       
+      // Status-History-Eintrag für den initialen "eingegangen" Status erstellen
+      try {
+        console.log(`Erstelle Status-History-Eintrag für Reparatur ${repair.id}...`);
+        const historyEntry = {
+          repairId: repair.id,
+          oldStatus: null, // Kein vorheriger Status bei Erstellung
+          newStatus: repair.status || 'eingegangen',
+          changedBy: userId,
+          userId: userId,
+          shopId: user.shopId,
+          notes: "Auftrag erstellt"
+        };
+        console.log("Status-History-Eintrag Daten:", historyEntry);
+        
+        await db.insert(repairStatusHistory).values(historyEntry);
+        
+        console.log(`✅ Status-History-Eintrag für neue Reparatur ${repair.id} erstellt: "${repair.status || 'eingegangen'}"`);
+      } catch (historyError) {
+        console.error("❌ Fehler beim Erstellen des Status-History-Eintrags:", historyError);
+      }
+      
       console.log(`✅ DSGVO-konform: Neue Reparatur ${repair.id} für Shop ${user.shopId} erstellt`);
       res.status(201).json(repair);
     } catch (error) {
