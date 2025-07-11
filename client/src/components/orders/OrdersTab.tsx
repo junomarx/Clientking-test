@@ -260,11 +260,42 @@ export function OrdersTab() {
 
   // Einzelne Ersatzteil-Status-Änderung
   const handleSinglePartStatusUpdate = (partId: number, status: string) => {
-    bulkUpdateMutation.mutate({
+    // Verwende die korrekte Header-basierte Route für Einzelupdates
+    singlePartUpdateMutation.mutate({
       partIds: [partId],
       status,
     });
   };
+
+  // Mutation für Einzelupdates über Header-basierte Route
+  const singlePartUpdateMutation = useMutation({
+    mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
+      const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
+        partIds,
+        status,
+      });
+      if (!response.ok) {
+        throw new Error("Fehler beim Aktualisieren des Ersatzteils");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
+      toast({
+        title: "Ersatzteil aktualisiert",
+        description: "Das Ersatzteil wurde erfolgreich aktualisiert.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleBulkAccessoryUpdate = (status: string) => {
     if (selectedAccessories.size === 0) {
