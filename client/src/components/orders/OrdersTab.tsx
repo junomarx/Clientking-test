@@ -730,6 +730,8 @@ export function OrdersTab() {
               const testAccessory = {
                 articleName: "TEST Auto-Delete",
                 quantity: 1,
+                unitPrice: "0.00",
+                totalPrice: "0.00",
                 notes: "Test für automatisches Löschen",
                 customerId: null,
                 isStock: true,
@@ -744,11 +746,11 @@ export function OrdersTab() {
                   const data = await response.json();
                   console.log(`✅ Created test accessory with ID: ${data.id}`);
                   
-                  // Wait 500ms then mark as "erledigt" to trigger auto-delete
+                  // Wait 1000ms then mark as "erledigt" to trigger auto-delete
                   setTimeout(() => {
                     console.log(`🔄 Marking accessory ${data.id} as "erledigt"...`);
                     handleAccessoryStatusChange(data.id, "erledigt");
-                  }, 500);
+                  }, 1000);
                 } else {
                   console.error("❌ Failed to create test accessory");
                 }

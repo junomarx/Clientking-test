@@ -113,7 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
-- July 11, 2025: VOLLSTÄNDIGE BESTELLFUNKTIONEN REPARIERT - PDF Export Button ersetzt Excel Button, automatisches Löschen bei Status "eingetroffen" (Ersatzteile) und "erledigt" (Zubehör) implementiert, "Bearbeiten" Button für Zubehör mit temporärer Prompt-Funktionalität repariert, nur noch ein PDF Export Button der gefiltert nur "bestellen" Status exportiert
+- July 11, 2025: VOLLSTÄNDIGE BESTELLFUNKTIONEN REPARIERT - PDF Export Button ersetzt Excel Button, automatisches Löschen bei Status "eingetroffen" (Ersatzteile) und "erledigt" (Zubehör) implementiert, "Bearbeiten" Button für Zubehör mit temporärer Prompt-Funktionalität repariert, nur noch ein PDF Export Button der gefiltert nur "bestellen" Status exportiert, Test-Button für Auto-Delete-Funktionalität hinzugefügt
 - July 11, 2025: KRITISCHE LOGIK-FEHLER BEHOBEN - Status-Problem für neue Zubehör-Artikel korrigiert: Standard-Status von "bestellt" auf "bestellen" geändert in Schema und AddAccessoryDialog, "Bearbeiten" Button in Zubehör-Tabelle funktionsfähig gemacht mit onClick-Handler und singleAccessoryUpdateMutation
 - July 11, 2025: Dialog-Interface komplett überarbeitet - Karteikarten-Design entfernt, kompakte Grid-Ansicht mit direkten Eingabefeldern implementiert, Dialog scrollbar gemacht, "Erstellen" Button repariert mit direkter onSubmit-Funktion und Console-Logging für Debugging
 - July 11, 2025: Multi-Artikel Interface für "Auf Lager" Zubehör-Bestellungen implementiert - Benutzer kann mehrere Artikel mit Stückzahl gleichzeitig hinzufügen über dynamische +/- Buttons, keine Preiseingabe erforderlich, vereinfachte Benutzerführung für Lager-Artikel
