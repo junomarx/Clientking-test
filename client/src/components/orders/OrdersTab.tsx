@@ -260,18 +260,11 @@ export function OrdersTab() {
 
   // Einzelne Ersatzteil-Status-Änderung
   const handleSinglePartStatusUpdate = (partId: number, status: string) => {
-    // Verwende die korrekte Header-basierte Route für Einzelupdates
+    // Use single part update mutation with auto-delete logic
     singlePartUpdateMutation.mutate({
       partIds: [partId],
       status,
     });
-    
-    // Auto-delete if status is "eingetroffen"
-    if (status === "eingetroffen") {
-      setTimeout(() => {
-        deleteSparePartMutation.mutate(partId);
-      }, 1000);
-    }
   };
 
   // Delete spare part mutation
@@ -302,16 +295,35 @@ export function OrdersTab() {
 
 
 
-  // Mutation für Einzelupdates über Header-basierte Route
+  // Mutation für Einzelupdates über Header-basierte Route mit Auto-Delete-Logik
   const singlePartUpdateMutation = useMutation({
     mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
       const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
         partIds,
         status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
       });
       if (!response.ok) {
         throw new Error("Fehler beim Aktualisieren des Ersatzteils");
       }
+      
+      // Auto-delete if status is "eingetroffen"
+      if (status === "eingetroffen") {
+        for (const partId of partIds) {
+          try {
+            const deleteResponse = await apiRequest("DELETE", `/api/orders/spare-parts/${partId}`, null, {
+              "X-User-ID": String(user?.id || 0),
+            });
+            if (deleteResponse.ok) {
+              console.log(`Auto-deleted spare part ${partId} with status "eingetroffen"`);
+            }
+          } catch (deleteError) {
+            console.error(`Failed to auto-delete spare part ${partId}:`, deleteError);
+          }
+        }
+      }
+      
       return response.json();
     },
     onSuccess: () => {
@@ -319,8 +331,8 @@ export function OrdersTab() {
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
       queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
       toast({
-        title: "Ersatzteil aktualisiert",
-        description: "Das Ersatzteil wurde erfolgreich aktualisiert.",
+        title: "Status aktualisiert",
+        description: "Ersatzteil-Status wurde erfolgreich geändert.",
       });
     },
     onError: (error: Error) => {
@@ -547,18 +559,59 @@ export function OrdersTab() {
   });
 
   const handleAccessoryStatusChange = (accessoryId: number, status: string) => {
-    updateAccessoryStatusMutation.mutate({
-      id: accessoryId,
+    // Use single accessory update mutation with auto-delete logic
+    singleAccessoryUpdateMutation.mutate({
+      accessoryIds: [accessoryId],
       status,
     });
-    
-    // Auto-delete if status is "erledigt"
-    if (status === "erledigt") {
-      setTimeout(() => {
-        deleteAccessoryMutation.mutate(accessoryId);
-      }, 1000);
-    }
   };
+
+  // Single accessory update mutation with auto-delete logic
+  const singleAccessoryUpdateMutation = useMutation({
+    mutationFn: async ({ accessoryIds, status }: { accessoryIds: number[]; status: string }) => {
+      const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
+        accessoryIds,
+        status,
+      }, {
+        "X-User-ID": String(user?.id || 0),
+      });
+      if (!response.ok) {
+        throw new Error("Fehler beim Aktualisieren des Zubehörs");
+      }
+      
+      // Auto-delete if status is "erledigt"
+      if (status === "erledigt") {
+        for (const accessoryId of accessoryIds) {
+          try {
+            const deleteResponse = await apiRequest("DELETE", `/api/orders/accessories/${accessoryId}`, null, {
+              "X-User-ID": String(user?.id || 0),
+            });
+            if (deleteResponse.ok) {
+              console.log(`Auto-deleted accessory ${accessoryId} with status "erledigt"`);
+            }
+          } catch (deleteError) {
+            console.error(`Failed to auto-delete accessory ${accessoryId}:`, deleteError);
+          }
+        }
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+      toast({
+        title: "Status aktualisiert",
+        description: "Zubehör-Status wurde erfolgreich geändert.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler beim Aktualisieren",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Delete accessory mutation
   const deleteAccessoryMutation = useMutation({
