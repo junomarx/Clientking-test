@@ -316,44 +316,7 @@ export function OrdersTab() {
   };
 
   // Exportfunktionen
-  const exportToPDF = async () => {
-    try {
-      toast({
-        title: "Export gestartet",
-        description: "PDF wird vorbereitet...",
-      });
 
-      const response = await apiRequest("POST", "/api/orders/export-orders-pdf", {
-        spareParts: filteredSpareParts,
-        accessories: accessories
-      });
-
-      if (!response.ok) {
-        throw new Error('PDF-Export fehlgeschlagen');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ersatzteile-${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "Export abgeschlossen",
-        description: "PDF wurde erfolgreich heruntergeladen.",
-      });
-    } catch (error) {
-      toast({
-        title: "Export-Fehler",
-        description: "PDF konnte nicht erstellt werden.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const exportToExcel = async () => {
     try {
@@ -711,24 +674,14 @@ export function OrdersTab() {
             </Select>
             
             {/* Export Buttons */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={exportToPDF}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Als PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToExcel}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Als Excel
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={exportToExcel}
+            >
+              <Download className="h-4 w-4" />
+              Export Excel
+            </Button>
           </div>
         </CardContent>
       </Card>
