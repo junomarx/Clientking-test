@@ -564,6 +564,7 @@ export function OrdersTab() {
   });
 
   const handleAccessoryStatusChange = (accessoryId: number, status: string) => {
+    console.log(`🔄 handleAccessoryStatusChange called: ID ${accessoryId}, Status ${status}`);
     // Use single accessory update mutation with auto-delete logic
     singleAccessoryUpdateMutation.mutate({
       accessoryIds: [accessoryId],
@@ -1172,7 +1173,10 @@ export function OrdersTab() {
                               Als eingetroffen markieren
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleAccessoryStatusChange(accessory.id, "erledigt")}
+                              onClick={async () => {
+                                console.log(`🔄 Manual status change: ${accessory.id} -> erledigt`);
+                                handleAccessoryStatusChange(accessory.id, "erledigt");
+                              }}
                               disabled={accessory.status === "erledigt"}
                             >
                               <CheckSquare className="h-4 w-4 mr-2" />
