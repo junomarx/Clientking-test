@@ -5605,20 +5605,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       doc.text('Status', 170, yPos);
       yPos += 10;
       
-      // Daten
-      spareParts.forEach((part: any) => {
+      // Daten - Auftragsnummer von zugehöriger Reparatur abrufen
+      for (const part of spareParts) {
         if (yPos > 250) {
           doc.addPage();
           yPos = 20;
         }
         
+        // Auftragsnummer von der zugehörigen Reparatur abrufen
+        const repair = await storage.getRepair(part.repairId, req.user.id);
+        const orderCode = repair ? repair.orderCode : `R${part.repairId}`;
+        
         doc.text(part.partName.substring(0, 20), 20, yPos);
-        doc.text(part.repairId.toString(), 60, yPos);
+        doc.text(orderCode, 60, yPos);
         doc.text(part.supplier?.substring(0, 15) || '-', 100, yPos);
         doc.text(part.cost ? `€${part.cost.toFixed(2)}` : '-', 140, yPos);
         doc.text(part.status, 170, yPos);
         yPos += 8;
-      });
+      }
       
       const pdfBuffer = doc.output('arraybuffer');
       
