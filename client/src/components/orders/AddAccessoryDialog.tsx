@@ -279,10 +279,19 @@ export function AddAccessoryDialog({
   });
 
   const onSubmit = (data: AccessoryFormData) => {
-    // Setze die aktuellen Artikel vor dem Absenden
+    // Für Multi-Artikel: Zusätzliche Validierung
     if (data.inStock) {
+      if (!validateMultiArticles()) {
+        toast({
+          title: "Validierungsfehler",
+          description: "Bitte füllen Sie mindestens einen Artikel vollständig aus.",
+          variant: "destructive",
+        });
+        return;
+      }
       data.articles = articles.filter(a => a.articleName.trim() !== "");
     }
+    
     createMutation.mutate(data);
   };
 
@@ -322,6 +331,18 @@ export function AddAccessoryDialog({
     });
   };
 
+  const validateMultiArticles = (): boolean => {
+    if (!inStock) return true; // Standard-Validierung für Einzelartikel
+    
+    const validArticles = articles.filter(a => a.articleName.trim() !== "");
+    if (validArticles.length === 0) {
+      return false;
+    }
+    
+    // Prüfe ob alle Artikel ausgefüllt sind
+    return validArticles.every(a => a.articleName.trim() !== "" && a.quantity > 0);
+  };
+
   const prevStep = () => {
     setStep(step - 1);
   };
@@ -335,6 +356,10 @@ export function AddAccessoryDialog({
         }
         return selectedCustomerId ? [] : ['firstName', 'lastName', 'phone'];
       case 2:
+        // Verschiedene Validierung für Auf Lager vs. Kundenbestellung
+        if (form.getValues('inStock')) {
+          return []; // Multi-Artikel werden separat validiert
+        }
         return ['articleName', 'quantity', 'price'];
       default:
         return [];
@@ -343,7 +368,7 @@ export function AddAccessoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             {step === 1 ? "Schritt 1: Kunde/Lager" : "Schritt 2: Artikel"}
@@ -483,62 +508,60 @@ export function AddAccessoryDialog({
                 {inStock ? (
                   // Multi-Artikel Interface für "Auf Lager"
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Artikel hinzufügen</h3>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addArticle}
-                        className="flex items-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Artikel hinzufügen
-                      </Button>
-                    </div>
+                    <h3 className="text-lg font-medium">Artikel hinzufügen</h3>
                     
-                    {articles.map((article, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-600">
-                            Artikel {index + 1}
-                          </span>
-                          {articles.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeArticle(index)}
-                              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Artikel</label>
-                            <Input
-                              value={article.articleName}
-                              onChange={(e) => updateArticle(index, "articleName", e.target.value)}
-                              placeholder="z.B. iPhone 8 Hülle schwarz"
-                              className="mt-1"
-                            />
+                    <div className={`space-y-3 ${articles.length > 4 ? 'max-h-96 overflow-y-auto pr-2' : ''}`}>
+                      {articles.map((article, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-end">
+                            {articles.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeArticle(index)}
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Stückzahl</label>
-                            <Input
-                              type="number"
-                              min={1}
-                              value={article.quantity}
-                              onChange={(e) => updateArticle(index, "quantity", parseInt(e.target.value) || 1)}
-                              className="mt-1"
-                            />
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="col-span-2">
+                              <label className="text-sm font-medium text-gray-700">Artikel</label>
+                              <Input
+                                value={article.articleName}
+                                onChange={(e) => updateArticle(index, "articleName", e.target.value)}
+                                placeholder="z.B. iPhone 8 Hülle schwarz"
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700">Stückzahl</label>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={article.quantity}
+                                onChange={(e) => updateArticle(index, "quantity", parseInt(e.target.value) || 1)}
+                                className="mt-1 w-20"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addArticle}
+                      className="flex items-center gap-2 w-full"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Artikel hinzufügen
+                    </Button>
 
                     <FormField
                       control={form.control}
@@ -644,7 +667,10 @@ export function AddAccessoryDialog({
                   <Button type="button" variant="outline" onClick={prevStep}>
                     Zurück
                   </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
+                  <Button 
+                    type="submit" 
+                    disabled={createMutation.isPending || (inStock && !validateMultiArticles())}
+                  >
                     {createMutation.isPending ? "Wird erstellt..." : "Erstellen"}
                   </Button>
                 </div>
