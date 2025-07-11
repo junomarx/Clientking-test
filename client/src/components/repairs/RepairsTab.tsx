@@ -20,6 +20,7 @@ import { RepairDetailsDialog } from './RepairDetailsDialog';
 import { ChangeStatusDialog } from './ChangeStatusDialog';
 import { useToast } from '@/hooks/use-toast';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Pencil, 
   Printer, 
@@ -593,74 +594,104 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
-                        <button 
-                          className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Druckoptionen anzeigen"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            showPrintOptions(repair.id);
-                          }}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="text-gray-600 hover:text-gray-800 p-1 transform hover:scale-110 transition-all" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                showPrintOptions(repair.id);
+                              }}
+                            >
+                              <Printer className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Drucken</p>
+                          </TooltipContent>
+                        </Tooltip>
                         {repair.status === 'abgeholt' && (
-                          <button 
-                            className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
-                            title={repair.reviewRequestSent ? "Bewertungsanfrage erneut senden" : "Bewertungsanfrage senden"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendReviewRequest(repair.id);
-                            }}
-                          >
-                            {repair.reviewRequestSent ? 
-                             <Star className="h-4 w-4 fill-yellow-500" /> : 
-                              <Star className="h-4 w-4" />
-                            }
-                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button 
+                                className="text-yellow-600 hover:text-yellow-800 p-1 transform hover:scale-110 transition-all" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSendReviewRequest(repair.id);
+                                }}
+                              >
+                                {repair.reviewRequestSent ? 
+                                 <Star className="h-4 w-4 fill-yellow-500" /> : 
+                                  <Star className="h-4 w-4" />
+                                }
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{repair.reviewRequestSent ? "Bewertung erneut senden" : "Bewertung senden"}</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
-                        <button 
-                          className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
-                          title="QR-Code Unterschrift"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRepairForSignature({
-                              id: repair.id,
-                              customerName: repair.customerName,
-                              device: `${repair.brand} ${repair.model}`,
-                              issue: repair.issue,
-                              status: repair.status,
-                              estimatedCost: repair.estimatedCost,
-                              depositAmount: repair.depositAmount
-                            });
-                            setShowQRSignatureDialog(true);
-                          }}
-                        >
-                          <QrCode className="h-4 w-4" />
-                        </button>
-                        <button 
-                          className="text-green-700 hover:text-green-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Status ändern"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRepairId(repair.id);
-                            setNewStatus(repair.status);
-                            setSendEmail(false);
-                            setShowStatusDialog(true);
-                          }}
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </button>
-                        <button 
-                          className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
-                          title="Auftrag löschen"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedRepairId(repair.id);
-                            setShowDeleteDialog(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="text-blue-600 hover:text-blue-800 p-1 transform hover:scale-110 transition-all" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRepairForSignature({
+                                  id: repair.id,
+                                  customerName: repair.customerName,
+                                  device: `${repair.brand} ${repair.model}`,
+                                  issue: repair.issue,
+                                  status: repair.status,
+                                  estimatedCost: repair.estimatedCost,
+                                  depositAmount: repair.depositAmount
+                                });
+                                setShowQRSignatureDialog(true);
+                              }}
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>QR-Code Unterschrift</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="text-green-700 hover:text-green-800 p-1 transform hover:scale-110 transition-all" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRepairId(repair.id);
+                                setNewStatus(repair.status);
+                                setSendEmail(false);
+                                setShowStatusDialog(true);
+                              }}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Status ändern</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="text-red-600 hover:text-red-800 p-1 transform hover:scale-110 transition-all" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRepairId(repair.id);
+                                setShowDeleteDialog(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Löschen</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
@@ -780,62 +811,97 @@ export function RepairsTab({ onNewOrder, initialFilter }: RepairsTabProps) {
                   </div>
                 </div>
                 <div className="flex justify-center gap-6 p-3 bg-gray-50 border-t border-gray-100">
-                  <button 
-                    className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      showPrintOptions(repair.id);
-                    }}
-                  >
-                    <Printer className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenQRSignature(repair);
-                    }}
-                  >
-                    <QrCode className="h-5 w-5" />
-                  </button>
-                  <button 
-                    className="text-green-700 hover:text-green-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRepairId(repair.id);
-                      setNewStatus(repair.status);
-                      setSendEmail(false);
-                      setShowStatusDialog(true);
-                    }}
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="text-gray-600 hover:text-gray-800 p-2 rounded-full hover:bg-white transition-colors" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          showPrintOptions(repair.id);
+                        }}
+                      >
+                        <Printer className="h-5 w-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Drucken</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-white transition-colors" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenQRSignature(repair);
+                        }}
+                      >
+                        <QrCode className="h-5 w-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>QR-Code Unterschrift</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="text-green-700 hover:text-green-800 p-2 rounded-full hover:bg-white transition-colors" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRepairId(repair.id);
+                          setNewStatus(repair.status);
+                          setSendEmail(false);
+                          setShowStatusDialog(true);
+                        }}
+                      >
+                        <RefreshCw className="h-5 w-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Status ändern</p>
+                    </TooltipContent>
+                  </Tooltip>
                   {repair.status === 'abgeholt' ? (
-                    <button 
-                      className="text-yellow-600 hover:text-yellow-800 p-2 rounded-full hover:bg-white transition-colors" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendReviewRequest(repair.id);
-                      }}
-                    >
-                      {repair.reviewRequestSent ? 
-                       <Star className="h-5 w-5 fill-yellow-500" /> : 
-                        <Star className="h-5 w-5" />
-                      }
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          className="text-yellow-600 hover:text-yellow-800 p-2 rounded-full hover:bg-white transition-colors" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSendReviewRequest(repair.id);
+                          }}
+                        >
+                          {repair.reviewRequestSent ? 
+                           <Star className="h-5 w-5 fill-yellow-500" /> : 
+                            <Star className="h-5 w-5" />
+                          }
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{repair.reviewRequestSent ? "Bewertung erneut senden" : "Bewertung senden"}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   ) : (
                     <div className="w-9" aria-hidden="true"></div>
                   )}
-                  <button 
-                    className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-white transition-colors" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRepairId(repair.id);
-                      setShowDeleteDialog(true);
-                    }}
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-white transition-colors" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRepairId(repair.id);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Löschen</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             ))

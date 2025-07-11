@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Printer, Info, QrCode, RefreshCw } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface RepairWithCustomer {
   id: number;
@@ -113,45 +114,63 @@ export function AnimatedRecentOrders({
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex space-x-2">
-                        <motion.button 
-                          className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-muted"
-                          title="Druckoptionen anzeigen"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPrintClick(repair.id);
-                          }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </motion.button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <motion.button 
+                              className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-muted"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPrintClick(repair.id);
+                              }}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Printer className="h-4 w-4" />
+                            </motion.button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Drucken</p>
+                          </TooltipContent>
+                        </Tooltip>
                         {onQRSignatureClick && (
-                          <motion.button 
-                            className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
-                            title="QR-Code für Unterschrift generieren"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onQRSignatureClick(repair.id);
-                            }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <QrCode className="h-4 w-4" />
-                          </motion.button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <motion.button 
+                                className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onQRSignatureClick(repair.id);
+                                }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <QrCode className="h-4 w-4" />
+                              </motion.button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>QR-Code Unterschrift</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         {onStatusChange && (
-                          <motion.button 
-                            className="text-green-700 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
-                            title="Status ändern"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStatusChange(repair.id, repair.status);
-                            }}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            <RefreshCw className="h-4 w-4" />
-                          </motion.button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <motion.button 
+                                className="text-green-700 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onStatusChange(repair.id, repair.status);
+                                }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </motion.button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Status ändern</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </td>
@@ -203,42 +222,63 @@ export function AnimatedRecentOrders({
                 </div>
               </div>
               <div className="flex justify-center gap-6 p-2 border-t">
-                <motion.button 
-                  className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPrintClick(repair.id);
-                  }}
-                >
-                  <Printer className="h-5 w-5" />
-                </motion.button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.button 
+                      className="text-muted-foreground hover:text-foreground p-2 rounded-full hover:bg-muted"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPrintClick(repair.id);
+                      }}
+                    >
+                      <Printer className="h-5 w-5" />
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Drucken</p>
+                  </TooltipContent>
+                </Tooltip>
                 {onQRSignatureClick && (
-                  <motion.button 
-                    className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onQRSignatureClick(repair.id);
-                    }}
-                  >
-                    <QrCode className="h-5 w-5" />
-                  </motion.button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button 
+                        className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onQRSignatureClick(repair.id);
+                        }}
+                      >
+                        <QrCode className="h-5 w-5" />
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>QR-Code Unterschrift</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {onStatusChange && (
-                  <motion.button 
-                    className="text-green-700 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange(repair.id, repair.status);
-                    }}
-                  >
-                    <RefreshCw className="h-5 w-5" />
-                  </motion.button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button 
+                        className="text-green-700 hover:text-green-800 p-2 rounded-full hover:bg-green-50"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStatusChange(repair.id, repair.status);
+                        }}
+                      >
+                        <RefreshCw className="h-5 w-5" />
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Status ändern</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             </motion.div>
