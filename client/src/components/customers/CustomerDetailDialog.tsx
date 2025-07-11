@@ -30,9 +30,8 @@ import {
   AlertCircle,
   Smartphone
 } from 'lucide-react';
-// import { EditCustomerDialog } from './EditCustomerDialog';
-// import { NewRepairDialog } from '@/components/repairs/NewRepairDialog';
-// import { NewCostEstimateDialog } from '@/components/cost-estimates/NewCostEstimateDialog';
+import { EditCustomerDialog } from './EditCustomerDialog';
+import { NewCostEstimateDialog } from '@/components/cost-estimates/NewCostEstimateDialog';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
@@ -103,6 +102,12 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
 
   const handleNewCostEstimate = () => {
     setShowNewCostEstimateDialog(true);
+  };
+
+  const handleCloseNewCostEstimate = () => {
+    setShowNewCostEstimateDialog(false);
+    // Invalidate cost estimates to refresh the list
+    queryClient.invalidateQueries({ queryKey: ['/api/cost-estimates'] });
   };
 
   const isLoading = isLoadingCustomer || isLoadingRepairs || isLoadingCostEstimates;
@@ -340,6 +345,23 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Edit Customer Dialog */}
+      {showEditDialog && (
+        <EditCustomerDialog
+          open={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          customer={customer}
+        />
+      )}
+
+      {/* New Cost Estimate Dialog */}
+      {showNewCostEstimateDialog && (
+        <NewCostEstimateDialog
+          open={showNewCostEstimateDialog}
+          onClose={handleCloseNewCostEstimate}
+        />
+      )}
     </Dialog>
   );
 }
