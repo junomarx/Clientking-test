@@ -1948,7 +1948,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Stattdessen verwenden wir jetzt den aktuellen Benutzer (Shop-Isolation)
       console.log(`GET /api/device-types: Verwende Benutzer ${userId} statt fest codierter bugi-ID`);
       
-      const deviceTypes = await storage.getUserDeviceTypes(userId);
+      const deviceTypes = await storage.getDeviceTypes(userId);
       res.json(deviceTypes);
     } catch (error) {
       console.error("Error retrieving device types:", error);

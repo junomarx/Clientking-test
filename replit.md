@@ -113,6 +113,7 @@ The Handyshop Verwaltung is a comprehensive phone repair shop management system 
 
 ## Changelog
 
+- July 11, 2025: KRITISCHER BUGFIX - Zubehör-Dialog komplett überarbeitet: "Auf Lager" Checkbox für Geschäftsbestellungen ohne Kundendaten, Autofilter-Eingabefeld für Kundensuche, vereinfachter 2-Schritte-Prozess mit direkter Artikel-Eingabe (z.B. "iPhone 8 Hülle schwarz") und Stückzahl-Eingabe, API-Fehler getUserDeviceTypes behoben
 - July 11, 2025: KRITISCHER BUGFIX - Bestellungen-Seite komplett repariert: JavaScript-Fehler "error is not defined" behoben, API-Routing-Konflikte mit Middleware gelöst durch Platzierung der /api/orders/spare-parts Route am Anfang der registerRoutes Funktion, Header-basierte Authentifizierung ohne Middleware implementiert - Bestellungen-Seite funktioniert jetzt vollständig
 - July 11, 2025: Test-E-Mail-Funktionalität implementiert - Test-E-Mail-Button im RepairDetailsDialog (Kundendaten-Bereich) sendet professionelle Auftragsbestätigungs-E-Mails mit vollständigen Reparatur- und Firmendetails, HTML-Design-Vorlage für einheitliches Layout erstellt
 - July 11, 2025: Added quick status change icon (RefreshCw) to repairs table - Red circular arrow icon placed after QR-Code button allows direct status updates without opening RepairDetailsDialog, available in both desktop and mobile views
