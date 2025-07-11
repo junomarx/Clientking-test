@@ -149,7 +149,7 @@ export function OrdersTab() {
   // Bulk-Aktionen für Ersatzteile
   const bulkUpdateMutation = useMutation({
     mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
-      const response = await apiRequest("PATCH", "/api/spare-parts/bulk-update", {
+      const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
         partIds,
         status,
       });
