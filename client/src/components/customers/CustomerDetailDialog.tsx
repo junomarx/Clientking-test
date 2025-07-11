@@ -1,36 +1,43 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Customer as SchemaCustomer, InsertCustomer } from '@shared/schema';
-import { Customer, Repair } from '@/lib/types';
+import { Customer as SchemaCustomer, InsertCustomer, Repair, CostEstimate } from '@shared/schema';
+import { Customer } from '@/lib/types';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Plus, Loader2, Phone, Mail, User, Calendar, Pencil, Trash2 } from 'lucide-react';
-import { EditRepairDialog } from '@/components/repairs/EditRepairDialog';
+import { 
+  Plus, 
+  Loader2, 
+  Phone, 
+  Mail, 
+  User, 
+  Calendar, 
+  Pencil, 
+  Trash2, 
+  MapPin,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Euro,
+  Tag,
+  Clock,
+  AlertCircle,
+  Smartphone
+} from 'lucide-react';
+// import { EditCustomerDialog } from './EditCustomerDialog';
+// import { NewRepairDialog } from '@/components/repairs/NewRepairDialog';
+// import { NewCostEstimateDialog } from '@/components/cost-estimates/NewCostEstimateDialog';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
-
-const customerSchema = z.object({
-  firstName: z.string().min(2, "Vorname muss mindestens 2 Zeichen haben"),
-  lastName: z.string().min(2, "Nachname muss mindestens 2 Zeichen haben"),
-  phone: z.string().min(5, "Telefonnummer muss mindestens 5 Zeichen haben"),
-  email: z.string().email("Ungültige E-Mail").optional().or(z.literal('')).transform(e => e === '' ? null : e),
-  address: z.string().optional().or(z.literal('')),
-  zipCode: z.string().optional().or(z.literal('')),
-  city: z.string().optional().or(z.literal('')),
-});
-
-type CustomerFormValues = z.infer<typeof customerSchema>;
+import { de } from 'date-fns/locale';
+import { getStatusBadge } from '@/lib/utils';
 
 interface CustomerDetailDialogProps {
   open: boolean;
@@ -39,13 +46,17 @@ interface CustomerDetailDialogProps {
   onNewOrder?: (customerId: number) => void;
 }
 
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  return format(new Date(dateString), 'dd.MM.yyyy HH:mm', { locale: de });
+};
+
 export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: CustomerDetailDialogProps) {
-  const [activeTab, setActiveTab] = useState('details');
-  const [editRepairId, setEditRepairId] = useState<number | null>(null);
+  const [showRepairs, setShowRepairs] = useState(false);
+  const [showCostEstimates, setShowCostEstimates] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteCustomerDialog, setShowDeleteCustomerDialog] = useState(false);
-  const [showDeleteRepairDialog, setShowDeleteRepairDialog] = useState(false);
-  const [repairToDelete, setRepairToDelete] = useState<number | null>(null);
+  const [showNewRepairDialog, setShowNewRepairDialog] = useState(false);
+  const [showNewCostEstimateDialog, setShowNewCostEstimateDialog] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -66,169 +77,42 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     queryKey: [`/api/customers/${customerId}/repairs`],
     enabled: !!customerId && open,
   });
-  
-  // Setup form
-  const form = useForm<CustomerFormValues>({
-    resolver: zodResolver(customerSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: '',
-      address: '',
-      zipCode: '',
-      city: '',
-    },
-  });
-  
-  // Update form values when customer data is loaded
-  useEffect(() => {
-    if (customer) {
-      form.reset({
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        phone: customer.phone,
-        email: customer.email || '',
-        address: customer.address || '',
-        zipCode: customer.zipCode || '',
-        city: customer.city || '',
-      });
-    }
-  }, [customer, form]);
-  
-  // Update customer mutation
-  const updateMutation = useMutation({
-    mutationFn: async (values: CustomerFormValues) => {
-      if (!customerId) throw new Error("Kunden-ID fehlt");
-      const response = await apiRequest('PATCH', `/api/customers/${customerId}`, values);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Kunde aktualisiert",
-        description: "Die Kundendaten wurden erfolgreich aktualisiert.",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-      // Invalidate customer queries to refresh data
-      onClose(); // Dialog schließen
-      queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler",
-        description: `Kunde konnte nicht aktualisiert werden: ${error.message}`,
-        variant: "destructive",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-    },
-  });
-  
-  // Delete customer mutation
-  const deleteCustomerMutation = useMutation({
-    mutationFn: async () => {
-      if (!customerId) throw new Error("Kunden-ID fehlt");
-      await apiRequest('DELETE', `/api/customers/${customerId}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Kunde gelöscht",
-        description: "Der Kunde wurde erfolgreich gelöscht.",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-      // Cache umfassend invalidieren
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      // Dialog schließen und State zurücksetzen
-      setShowDeleteCustomerDialog(false);
-      onClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler",
-        description: `Kunde konnte nicht gelöscht werden: ${error.message}`,
-        variant: "destructive",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-      // Dialog-State zurücksetzen auch bei Fehler
-      setShowDeleteCustomerDialog(false);
-    },
-  });
-  
-  // Delete repair mutation
-  const deleteRepairMutation = useMutation({
-    mutationFn: async () => {
-      if (!repairToDelete) throw new Error("Reparatur-ID fehlt");
-      await apiRequest('DELETE', `/api/repairs/${repairToDelete}`);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Reparatur gelöscht",
-        description: "Die Reparatur wurde erfolgreich gelöscht.",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-      // Cache umfassend invalidieren
-      queryClient.invalidateQueries({ queryKey: [`/api/customers/${customerId}/repairs`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
-      // State zurücksetzen
-      setShowDeleteRepairDialog(false);
-      setRepairToDelete(null);
-    },
-    onError: (error) => {
-      toast({
-        title: "Fehler",
-        description: `Reparatur konnte nicht gelöscht werden: ${error.message}`,
-        variant: "destructive",
-        duration: 2000, // Nach 2 Sekunden ausblenden
-      });
-      // State auch bei Fehler zurücksetzen
-      setShowDeleteRepairDialog(false);
-      setRepairToDelete(null);
-    },
-  });
-  
-  function onSubmit(values: CustomerFormValues) {
-    updateMutation.mutate(values);
-  }
-  
-  function handleNewOrder() {
-    if (customer && onNewOrder) {
-      console.log("CustomerDetailDialog: onNewOrder aufgerufen mit Kunde:", customer);
-      
-      // Statt nur die ID zu übergeben, übergeben wir das gesamte Kundenobjekt als String
-      // Dies ist ein Workaround, da wir Probleme mit der ID-Übergabe haben
-      const customerDataString = JSON.stringify(customer);
-      localStorage.setItem('selectedCustomerData', customerDataString);
-      
-      onNewOrder(customer.id);
-      onClose();
-    }
-  }
 
-  function handleCreateRepairForCustomer() {
-    handleNewOrder(); // Use the existing handleNewOrder function
-  }
-  
-  const isLoading = isLoadingCustomer || isLoadingRepairs;
-  
-  console.log("CustomerDetailDialog Debug:", {
-    open,
-    customerId,
-    customer,
-    isLoadingCustomer,
-    isLoadingRepairs,
-    repairs
+  // Load customer cost estimates - using the general endpoint and filtering
+  const { 
+    data: allCostEstimates, 
+    isLoading: isLoadingCostEstimates 
+  } = useQuery<CostEstimate[]>({
+    queryKey: ['/api/cost-estimates'],
+    enabled: !!customerId && open,
   });
+
+  // Filter cost estimates for this customer
+  const costEstimates = allCostEstimates?.filter(estimate => estimate.customerId === customerId) || [];
+
+  const handleEditCustomer = () => {
+    setShowEditDialog(true);
+  };
+
+  const handleNewRepair = () => {
+    if (customerId && onNewOrder) {
+      onNewOrder(customerId);
+      onClose();
+    }
+  };
+
+  const handleNewCostEstimate = () => {
+    setShowNewCostEstimateDialog(true);
+  };
+
+  const isLoading = isLoadingCustomer || isLoadingRepairs || isLoadingCostEstimates;
   
   if (!open) return null;
 
-  // Emergency fallback for debugging
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[900px]">
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-2">Lade Kundendaten...</span>
@@ -238,11 +122,10 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
     );
   }
 
-  // Emergency fallback if no customer data
   if (!customer && !isLoading) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[900px]">
           <div className="flex items-center justify-center p-8">
             <span>Kunde nicht gefunden</span>
           </div>
@@ -253,304 +136,209 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-auto">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            <span>Kunde: {customer?.firstName} {customer?.lastName}</span>
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <User className="h-6 w-6" />
+            <span>{customer?.firstName} {customer?.lastName}</span>
           </DialogTitle>
           <DialogDescription>
-            Kundendetails ansehen und bearbeiten
+            Kundendetails und zugehörige Aufträge
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="mt-2">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="repairs">Reparaturen ({repairs?.length || 0})</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="space-y-4 mt-4">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Vorname</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Vorname" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nachname</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nachname" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Telefonnummer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>E-Mail (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="E-Mail" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Adresse (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Straße und Hausnummer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="zipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PLZ (optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Postleitzahl" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ort (optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Stadt" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="flex justify-between pt-2">
-                  <div className="flex space-x-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={onClose}
-                    >
-                      Abbrechen
-                    </Button>
-                    
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => setShowDeleteCustomerDialog(true)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Löschen
-                    </Button>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    disabled={updateMutation.isPending}
-                  >
-                    {updateMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Speichern...
-                      </>
-                    ) : (
-                      "Speichern"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </TabsContent>
-          
-          <TabsContent value="repairs" className="mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Reparaturaufträge</h3>
-              <Button onClick={handleCreateRepairForCustomer} className="flex items-center">
-                <Plus className="mr-1 h-4 w-4" /> Neuer Auftrag
+        <div className="space-y-6">
+          {/* Kundendaten */}
+          <div className="bg-blue-50 rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Kundendaten
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEditCustomer}
+                className="flex items-center gap-2"
+              >
+                <Pencil className="h-4 w-4" />
+                Bearbeiten
               </Button>
             </div>
             
-            {isLoadingRepairs ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : repairs && repairs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
-                {repairs.map((repair) => (
-                  <div key={repair.id} 
-                    className="border rounded-lg p-4 shadow-sm hover:shadow-md cursor-pointer transition-all"
-                    onClick={() => {
-                      // Öffne direkt den Reparaturdetails-Dialog, statt zur Reparaturseite zu navigieren
-                      if (repair.id) {
-                        onClose(); // Schließe Kundendialog zuerst
-                        // Öffne den Dialog für diese Reparatur
-                        setTimeout(() => {
-                          // Event-Objekt erstellen und auslösen, um den Reparaturdetails-Dialog zu öffnen
-                          const event = new CustomEvent('open-repair-details', { 
-                            detail: { repairId: repair.id }
-                          });
-                          window.dispatchEvent(event);
-                        }, 100); // Kleine Verzögerung, damit der Dialog schließen kann
-                      }
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold">{repair.brand} {repair.model}</h4>
-                        <p className="text-sm text-muted-foreground">{repair.deviceType} | {repair.orderCode}</p>
-                      </div>
-                      <div className="text-right flex items-center">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7 mr-1 hover:bg-slate-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setRepairToDelete(repair.id);
-                            setShowDeleteRepairDialog(true);
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-7 w-7 mr-2 hover:bg-slate-100"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditRepairId(repair.id);
-                            setShowEditDialog(true);
-                          }}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          repair.status === 'eingegangen' ? 'bg-blue-100 text-blue-800' :
-                          repair.status === 'in_reparatur' ? 'bg-amber-100 text-amber-800' :
-                          repair.status === 'fertig' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {repair.status === 'eingegangen' ? 'Eingegangen' :
-                           repair.status === 'in_reparatur' ? 'In Reparatur' :
-                           repair.status === 'fertig' ? 'Fertig' :
-                           repair.status === 'abgeholt' ? 'Abgeholt' : repair.status}
-                        </span>
-                      </div>
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Name</div>
+                    <div className="font-medium">{customer?.firstName} {customer?.lastName}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-2">
+                  <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Telefon</div>
+                    <div>{customer?.phone}</div>
+                  </div>
+                </div>
+                
+                {customer?.email && (
+                  <div className="flex items-start gap-2">
+                    <Mail className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">E-Mail</div>
+                      <div>{customer.email}</div>
                     </div>
-                    
-                    <p className="mt-2 text-sm whitespace-pre-wrap">{repair.issue ? repair.issue.split(',').join('\n') : ''}</p>
-                    
-                    <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
-                      <div className="flex justify-between">
-                        <span className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {format(new Date(repair.createdAt), 'dd.MM.yyyy')}
-                        </span>
-                        <span className="flex items-center">
-                          {repair.estimatedCost !== null && repair.estimatedCost !== '' && (
-                            <>Kostenvoranschlag: {repair.estimatedCost}€</>
-                          )}
-                        </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                {(customer?.address || customer?.zipCode || customer?.city) && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">Adresse</div>
+                      <div>
+                        {customer?.address && <div>{customer.address}</div>}
+                        {(customer?.zipCode || customer?.city) && (
+                          <div>{customer?.zipCode} {customer?.city}</div>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
+                
+                <div className="flex items-start gap-2">
+                  <Calendar className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <div className="text-sm text-muted-foreground">Kunde seit</div>
+                    <div>{formatDate(customer?.createdAt || '')}</div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8 border rounded-lg">
-                <p className="text-muted-foreground">Keine Reparaturaufträge gefunden</p>
-                <Button 
-                  onClick={handleCreateRepairForCustomer} 
-                  variant="outline" 
-                  className="mt-2"
+            </div>
+          </div>
+
+          {/* Reparaturen */}
+          <div className="bg-slate-50 rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Reparaturen ({repairs?.length || 0})
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRepairs(!showRepairs)}
+                  className="h-6 px-2 ml-2"
                 >
-                  Ersten Auftrag erstellen
+                  {showRepairs ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </Button>
+              </h3>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNewRepair}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Neue Reparatur
+              </Button>
+            </div>
+            
+            {showRepairs && (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {repairs && repairs.length > 0 ? (
+                  repairs.map((repair) => (
+                    <div key={repair.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="font-medium">{repair.brand} {repair.model}</div>
+                          <div className="text-sm text-muted-foreground">{repair.issue}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(repair.createdAt)}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(repair.status)}
+                        <div className="text-sm font-medium">{repair.estimatedCost} €</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground py-4 text-center">
+                    Keine Reparaturen vorhanden
+                  </div>
+                )}
               </div>
             )}
-          </TabsContent>
-        </Tabs>
-        
-        {/* Repair Edit Dialog */}
-        {showEditDialog && (
-          <EditRepairDialog
-            open={showEditDialog}
-            onClose={() => setShowEditDialog(false)}
-            repair={repairs?.find(r => r.id === editRepairId) || null}
-          />
-        )}
+          </div>
 
-        {/* Customer Delete Confirmation */}
-        <DeleteConfirmDialog
-          open={showDeleteCustomerDialog}
-          onClose={() => setShowDeleteCustomerDialog(false)}
-          onConfirm={() => deleteCustomerMutation.mutate()}
-          title="Kunde löschen"
-          description={`Möchten Sie wirklich den Kunden "${customer?.firstName} ${customer?.lastName}" löschen? Diese Aktion kann nicht rückgängig gemacht werden. Alle zugehörigen Reparaturaufträge werden ebenfalls gelöscht.`}
-          isDeleting={deleteCustomerMutation.isPending}
-          itemName="Kunde"
-        />
+          {/* Kostenvoranschläge */}
+          <div className="bg-green-50 rounded-lg p-4 shadow-sm border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Kostenvoranschläge ({costEstimates?.length || 0})
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCostEstimates(!showCostEstimates)}
+                  className="h-6 px-2 ml-2"
+                >
+                  {showCostEstimates ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </h3>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNewCostEstimate}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Neuer Kostenvoranschlag
+              </Button>
+            </div>
+            
+            {showCostEstimates && (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {costEstimates && costEstimates.length > 0 ? (
+                  costEstimates.map((estimate) => (
+                    <div key={estimate.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <div className="font-medium">{estimate.brand} {estimate.model}</div>
+                          <div className="text-sm text-muted-foreground">{estimate.issue}</div>
+                          <div className="text-xs text-muted-foreground">{formatDate(estimate.createdAt)}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={estimate.status === 'angenommen' ? 'default' : 
+                                   estimate.status === 'abgelehnt' ? 'destructive' : 'secondary'}
+                        >
+                          {estimate.status}
+                        </Badge>
+                        <div className="text-sm font-medium">{estimate.total} €</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground py-4 text-center">
+                    Keine Kostenvoranschläge vorhanden
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* Repair Delete Confirmation */}
-        <DeleteConfirmDialog
-          open={showDeleteRepairDialog}
-          onClose={() => setShowDeleteRepairDialog(false)}
-          onConfirm={() => deleteRepairMutation.mutate()}
-          title="Reparatur löschen"
-          description={`Möchten Sie wirklich die Reparatur #${repairToDelete} löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
-          isDeleting={deleteRepairMutation.isPending}
-          itemName="Reparatur"
-        />
+        <DialogFooter className="flex justify-between">
+          <Button variant="outline" onClick={onClose}>
+            Schließen
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
