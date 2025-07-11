@@ -145,6 +145,18 @@ export function NewCostEstimateDialog({
       totalPrice: "0,00"
     }
   });
+
+  // Debug: Watch form values in real-time
+  const watchedValues = form.watch();
+  console.log('🔍 REALTIME FORM VALUES:', {
+    firstName: watchedValues.firstName,
+    lastName: watchedValues.lastName,
+    phone: watchedValues.phone,
+    email: watchedValues.email,
+    address: watchedValues.address,
+    postalCode: watchedValues.postalCode,
+    city: watchedValues.city
+  });
   
   // useEffect to populate form with preselected customer data
   useEffect(() => {
@@ -684,18 +696,21 @@ export function NewCostEstimateDialog({
                   <FormField
                     control={form.control}
                     name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Vorname*</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field}
-                            onKeyDown={handleInputKeyDown}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      console.log('🔍 DEBUG firstName field:', field.value, 'form state:', form.getValues('firstName'));
+                      return (
+                        <FormItem>
+                          <FormLabel>Vorname*</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              onKeyDown={handleInputKeyDown}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
                 
@@ -703,18 +718,21 @@ export function NewCostEstimateDialog({
                   <FormField
                     control={form.control}
                     name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nachname*</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field}
-                            onKeyDown={handleInputKeyDown}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      console.log('🔍 DEBUG lastName field:', field.value, 'form state:', form.getValues('lastName'));
+                      return (
+                        <FormItem>
+                          <FormLabel>Nachname*</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              onKeyDown={handleInputKeyDown}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                   
                   {/* Dropdown für Kundenauswahl */}
@@ -784,15 +802,18 @@ export function NewCostEstimateDialog({
                 <FormField
                   control={form.control}
                   name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefonnummer*</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="tel" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    console.log('🔍 DEBUG phone field:', field.value, 'form state:', form.getValues('phone'));
+                    return (
+                      <FormItem>
+                        <FormLabel>Telefonnummer*</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
                 
                 <FormField
