@@ -356,10 +356,20 @@ export function CustomerDetailDialog({ open, onClose, customerId, onNewOrder }: 
       )}
 
       {/* New Cost Estimate Dialog */}
-      {showNewCostEstimateDialog && (
+      {showNewCostEstimateDialog && customer && (
         <NewCostEstimateDialog
           open={showNewCostEstimateDialog}
           onClose={handleCloseNewCostEstimate}
+          preselectedCustomer={{
+            id: customer.id,
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            phone: customer.phone,
+            email: customer.email,
+            address: customer.address,
+            zipCode: customer.zipCode,
+            city: customer.city
+          }}
         />
       )}
     </Dialog>

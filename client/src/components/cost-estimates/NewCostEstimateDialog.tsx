@@ -74,12 +74,23 @@ interface NewCostEstimateDialogProps {
   open: boolean;
   onClose: () => void;
   onCreateCostEstimate?: (data: CostEstimateFormData) => void;
+  preselectedCustomer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email?: string;
+    address?: string;
+    zipCode?: string;
+    city?: string;
+  };
 }
 
 export function NewCostEstimateDialog({ 
   open, 
   onClose,
-  onCreateCostEstimate 
+  onCreateCostEstimate,
+  preselectedCustomer 
 }: NewCostEstimateDialogProps) {
   const { toast } = useToast();
   
@@ -134,6 +145,23 @@ export function NewCostEstimateDialog({
       totalPrice: "0,00"
     }
   });
+  
+  // useEffect to populate form with preselected customer data
+  useEffect(() => {
+    if (preselectedCustomer && open) {
+      form.setValue('customerId', preselectedCustomer.id);
+      form.setValue('firstName', preselectedCustomer.firstName);
+      form.setValue('lastName', preselectedCustomer.lastName);
+      form.setValue('phone', preselectedCustomer.phone);
+      form.setValue('email', preselectedCustomer.email || '');
+      form.setValue('address', preselectedCustomer.address || '');
+      form.setValue('postalCode', preselectedCustomer.zipCode || '');
+      form.setValue('city', preselectedCustomer.city || '');
+      
+      // Set customer ID for future reference
+      setSelectedCustomerId(preselectedCustomer.id);
+    }
+  }, [preselectedCustomer, open, form]);
   
   // Vereinfachter Ansatz für Kostenvoranschläge - ohne Kundendatenbank-Zugriff
   const checkForExistingCustomer = async (firstName: string, lastName: string) => {
