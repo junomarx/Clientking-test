@@ -5547,8 +5547,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Keine Ersatzteil-IDs angegeben" });
       }
       
-      if (!status) {
-        return res.status(400).json({ message: "Kein Status angegeben" });
+      if (!["bestellen", "bestellt", "eingetroffen", "erledigt"].includes(status)) {
+        return res.status(400).json({ message: "Ungültiger Status" });
       }
       
       console.log(`Bulk-Update für ${partIds.length} Ersatzteile auf Status "${status}" für Benutzer ${userId}`);
@@ -5567,6 +5567,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Fehler beim Aktualisieren der Ersatzteile",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // PDF-Export für Ersatzteile
+  app.post("/api/orders/export-pdf", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { spareParts, filters } = req.body;
+      
+      // PDF-Erstellung mit jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('Ersatzteile-Übersicht', 20, 20);
+      
+      doc.setFontSize(12);
+      doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 20, 35);
+      
+      if (filters.searchTerm) {
+        doc.text(`Suchbegriff: ${filters.searchTerm}`, 20, 45);
+      }
+      if (filters.statusFilter !== 'all') {
+        doc.text(`Status-Filter: ${filters.statusFilter}`, 20, 55);
+      }
+      
+      // Tabelle
+      let yPos = 70;
+      doc.setFontSize(10);
+      
+      // Header der Tabelle
+      doc.text('Teil', 20, yPos);
+      doc.text('Auftrag', 60, yPos);
+      doc.text('Lieferant', 100, yPos);
+      doc.text('Kosten', 140, yPos);
+      doc.text('Status', 170, yPos);
+      yPos += 10;
+      
+      // Daten
+      spareParts.forEach((part: any) => {
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.text(part.partName.substring(0, 20), 20, yPos);
+        doc.text(part.repairId.toString(), 60, yPos);
+        doc.text(part.supplier?.substring(0, 15) || '-', 100, yPos);
+        doc.text(part.cost ? `€${part.cost.toFixed(2)}` : '-', 140, yPos);
+        doc.text(part.status, 170, yPos);
+        yPos += 8;
+      });
+      
+      const pdfBuffer = doc.output('arraybuffer');
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="ersatzteile.pdf"');
+      res.send(Buffer.from(pdfBuffer));
+      
+    } catch (error) {
+      console.error('PDF-Export-Fehler:', error);
+      res.status(500).json({ error: "PDF konnte nicht erstellt werden" });
     }
   });
 

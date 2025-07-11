@@ -124,7 +124,7 @@ export function OrdersTab() {
   // Bulk-Aktionen für Ersatzteile
   const bulkUpdateMutation = useMutation({
     mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
-      const response = await apiRequest("PATCH", "/api/orders/spare-parts-bulk-update", {
+      const response = await apiRequest("PATCH", "/api/spare-parts/bulk-update", {
         partIds,
         status,
       });
@@ -136,6 +136,7 @@ export function OrdersTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/orders/spare-parts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/spare-parts/with-repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] }); // Auch Reparaturen neu laden
       toast({
         title: "Ersatzteile aktualisiert",
         description: "Die ausgewählten Ersatzteile wurden erfolgreich aktualisiert.",
@@ -189,19 +190,34 @@ export function OrdersTab() {
   // Exportfunktionen
   const exportToPDF = async () => {
     try {
-      // Erstelle eine einfache PDF-Export-Funktion
       toast({
         title: "Export gestartet",
         description: "PDF wird vorbereitet...",
       });
-      
-      // Für jetzt nur eine einfache Benachrichtigung
-      setTimeout(() => {
-        toast({
-          title: "Export abgeschlossen",
-          description: "PDF wurde erfolgreich erstellt.",
-        });
-      }, 2000);
+
+      const response = await apiRequest("POST", "/api/orders/export-pdf", {
+        spareParts: filteredSpareParts,
+        filters: { searchTerm, statusFilter, dateFilter }
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF-Export fehlgeschlagen');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ersatzteile-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export abgeschlossen",
+        description: "PDF wurde erfolgreich heruntergeladen.",
+      });
     } catch (error) {
       toast({
         title: "Export-Fehler",
