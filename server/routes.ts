@@ -37,7 +37,7 @@ import {
   costEstimates,
   packageFeatures,
   spareParts,
-  repairStatusHistory as statusHistory
+  repairStatusHistory
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth } from "./auth";
@@ -52,7 +52,6 @@ import fs from 'fs';
 import { requireShopIsolation, attachShopId } from "./middleware/shop-isolation";
 import { enforceShopIsolation, validateCustomerBelongsToShop } from "./middleware/enforce-shop-isolation";
 import nodemailer from "nodemailer";
-import { initializeWebSocketServer, getOnlineStatusManager } from "./websocket-server";
 
 // Middleware to check if user is authenticated
 async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
