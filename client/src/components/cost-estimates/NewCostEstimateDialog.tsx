@@ -149,6 +149,12 @@ export function NewCostEstimateDialog({
   // useEffect to populate form with preselected customer data
   useEffect(() => {
     if (preselectedCustomer && open) {
+      console.log('Setting preselected customer data:', preselectedCustomer);
+      
+      // Reset form first
+      form.reset();
+      
+      // Set customer data
       form.setValue('customerId', preselectedCustomer.id);
       form.setValue('firstName', preselectedCustomer.firstName);
       form.setValue('lastName', preselectedCustomer.lastName);
@@ -158,8 +164,26 @@ export function NewCostEstimateDialog({
       form.setValue('postalCode', preselectedCustomer.zipCode || '');
       form.setValue('city', preselectedCustomer.city || '');
       
+      // Also set default values for other fields to prevent form errors
+      form.setValue('title', 'Kostenvoranschlag');
+      form.setValue('deviceType', '');
+      form.setValue('brand', '');
+      form.setValue('model', '');
+      form.setValue('serialNumber', '');
+      form.setValue('issueDescription', '');
+      form.setValue('subtotal', '0,00');
+      form.setValue('taxRate', '20');
+      form.setValue('taxAmount', '0,00');
+      form.setValue('totalPrice', '0,00');
+      
       // Set customer ID for future reference
       setSelectedCustomerId(preselectedCustomer.id);
+      
+      console.log('Form values set:', form.getValues());
+    } else if (open && !preselectedCustomer) {
+      // Reset form when opening without preselected customer
+      form.reset();
+      setSelectedCustomerId(null);
     }
   }, [preselectedCustomer, open, form]);
   
