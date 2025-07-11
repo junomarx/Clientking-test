@@ -147,6 +147,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ZUBEHÖR ROUTES - MÜSSEN EBENFALLS AM ANFANG STEHEN!
+  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
+      
+      const accessories = await storage.getAllAccessories(userId);
+      console.log(`[DIREKTE ROUTE] Gefunden: ${accessories.length} Zubehör-Bestellungen für Benutzer ${userId}`);
+      
+      res.json(accessories);
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Abrufen aller Zubehör-Bestellungen:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Abrufen der Zubehör-Bestellungen",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Erstellen einer Zubehör-Bestellung für Benutzer ${userId}:`, req.body);
+      
+      // Benutzer abrufen für Shop-ID
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Benutzer nicht gefunden" });
+      }
+      
+      const shopId = user.shopId || 1;
+      
+      // Zubehör-Daten mit Shop-ID und Benutzer-ID ergänzen
+      const accessoryData = {
+        ...req.body,
+        userId: userId,
+        shopId: shopId
+      };
+      
+      const accessory = await storage.createAccessory(accessoryData);
+      console.log(`[DIREKTE ROUTE] Zubehör-Bestellung erstellt:`, accessory);
+      res.status(201).json(accessory);
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Erstellen der Zubehör-Bestellung:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Erstellen der Zubehör-Bestellung",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
   
   app.patch("/api/orders/spare-parts-bulk-update", async (req: Request, res: Response) => {
     try {
@@ -180,6 +239,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Fehler beim Aktualisieren der Ersatzteile",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+  });
+
+  // API-Routen für Zubehör-Bestellungen
+  app.get("/api/orders/accessories", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ error: "Nicht authentifiziert" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Abrufen aller Zubehör-Bestellungen für Benutzer ${userId}`);
+      const accessories = await storage.getAllAccessories(userId);
+      console.log(`[DIREKTE ROUTE] Gefunden: ${accessories.length} Zubehör-Bestellungen für Benutzer ${userId}`);
+      
+      res.json(accessories);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Zubehör-Bestellungen:", error);
+      res.status(500).json({ error: "Fehler beim Abrufen der Zubehör-Bestellungen" });
+    }
+  });
+
+  app.post("/api/orders/accessories", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ error: "Nicht authentifiziert" });
+      }
+      
+      // Benutzer abrufen für Shop-ID
+      const user = await storage.getUser(userId);
+      if (!user || !user.shopId) {
+        return res.status(403).json({ error: "Zugriff verweigert: Keine Shop-ID vorhanden" });
+      }
+
+      console.log(`[DIREKTE ROUTE] Erstelle Zubehör-Bestellung für Benutzer ${userId}`);
+      
+      const accessoryData = {
+        ...req.body,
+        userId: userId,
+        shopId: user.shopId
+      };
+      
+      const accessory = await storage.createAccessory(accessoryData);
+      console.log(`[DIREKTE ROUTE] Zubehör-Bestellung erstellt:`, accessory);
+      
+      res.status(201).json(accessory);
+    } catch (error) {
+      console.error("Fehler beim Erstellen der Zubehör-Bestellung:", error);
+      res.status(500).json({ error: "Fehler beim Erstellen der Zubehör-Bestellung" });
     }
   });
 

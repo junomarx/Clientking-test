@@ -21,17 +21,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertRepairSchema } from "@shared/schema";
+import { insertAccessorySchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import type { InsertRepair } from "@shared/schema";
+import type { InsertAccessory } from "@shared/schema";
 import { z } from "zod";
 
 const accessoryFormSchema = z.object({
@@ -173,43 +166,35 @@ export function AddAccessoryDialog({
         }
       }
       
-      // Artikel-Auftrag erstellen
-      const issueText = data.inStock 
-        ? `LAGER: ${data.articleName} (${data.quantity}x)`
-        : `ZUBEHÖR: ${data.articleName} (${data.quantity}x)`;
-      
-      const repairData: InsertRepair = {
+      // Zubehör-Bestellung erstellen
+      const accessoryData: InsertAccessory = {
+        articleName: data.articleName,
+        quantity: data.quantity,
+        unitPrice: data.price.toFixed(2),
+        totalPrice: (data.price * data.quantity).toFixed(2),
         customerId: customerId,
-        deviceType: data.inStock ? "Lager" : "Zubehör",
-        brand: "Sonstiges",
-        model: data.articleName,
-        issue: issueText,
-        estimatedCost: data.price * data.quantity,
-        status: "eingegangen",
-        notes: data.notes || undefined,
+        type: data.inStock ? "lager" : "kundenbestellung",
+        status: "bestellt",
+        notes: data.notes || "",
       };
       
-      const repairResponse = await apiRequest("POST", "/api/repairs", repairData);
-      if (!repairResponse.ok) {
-        throw new Error("Fehler beim Erstellen des Auftrags");
+      const response = await apiRequest("POST", "/api/orders/accessories", accessoryData);
+      if (!response.ok) {
+        throw new Error("Fehler beim Erstellen der Zubehör-Bestellung");
       }
-      
-      return repairResponse.json();
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/repairs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       toast({
-        title: "Auftrag erstellt",
-        description: form.getValues('inStock') 
-          ? "Der Lager-Auftrag wurde erfolgreich erstellt."
-          : "Der Zubehör-Auftrag wurde erfolgreich erstellt.",
+        title: "Bestellung erstellt",
+        description: "Die Zubehör-Bestellung wurde erfolgreich erstellt.",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
       onOpenChange(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Fehler beim Erstellen",
+        title: "Fehler beim Erstellen der Bestellung",
         description: error.message,
         variant: "destructive",
       });
@@ -218,6 +203,16 @@ export function AddAccessoryDialog({
 
   const onSubmit = (data: AccessoryFormData) => {
     createMutation.mutate(data);
+  };
+
+  const selectCustomer = (customer: Customer) => {
+    form.setValue('selectedCustomerId', customer.id);
+    form.setValue('firstName', customer.firstName);
+    form.setValue('lastName', customer.lastName);
+    form.setValue('phone', customer.phone);
+    form.setValue('email', customer.email || '');
+    form.setValue('address', customer.address || '');
+    setCustomerSearch(`${customer.firstName} ${customer.lastName}`);
   };
 
   const nextStep = () => {
@@ -248,193 +243,143 @@ export function AddAccessoryDialog({
     }
   };
 
-  // Kundenauswahl Handler
-  const selectCustomer = (customer: Customer) => {
-    form.setValue('selectedCustomerId', customer.id);
-    form.setValue('firstName', customer.firstName);
-    form.setValue('lastName', customer.lastName);
-    form.setValue('phone', customer.phone);
-    form.setValue('email', customer.email || '');
-    form.setValue('address', customer.address || '');
-    setCustomerSearch(`${customer.firstName} ${customer.lastName}`);
-  };
-
-  // Kunde abwählen
-  const clearCustomer = () => {
-    form.setValue('selectedCustomerId', undefined);
-    form.setValue('firstName', '');
-    form.setValue('lastName', '');
-    form.setValue('phone', '');
-    form.setValue('email', '');
-    form.setValue('address', '');
-    setCustomerSearch('');
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 && "Auftrag erstellen - Schritt 1 von 2: Kunde / Lager"}
-            {step === 2 && "Auftrag erstellen - Schritt 2 von 2: Artikel"}
+            {step === 1 ? "Schritt 1: Kunde/Lager" : "Schritt 2: Artikel"}
           </DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            
-            {/* Schritt 1: Kunde/Lager */}
             {step === 1 && (
               <div className="space-y-4">
-                {/* Auf Lager Checkbox */}
                 <FormField
                   control={form.control}
                   name="inStock"
                   render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
-                        <Checkbox 
-                          checked={field.value} 
+                        <Checkbox
+                          checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Für Lager bestellen (kein Kunde erforderlich)</FormLabel>
-                        <p className="text-sm text-gray-500">
-                          Aktivieren Sie diese Option, um Artikel für das Geschäft zu bestellen
+                        <FormLabel>
+                          Auf Lager
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Für Geschäftsbestellungen ohne Kundendaten
                         </p>
                       </div>
                     </FormItem>
                   )}
                 />
 
-                {/* Kundendaten nur wenn nicht auf Lager */}
                 {!inStock && (
-                  <>
-                    {/* Kundensuche */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Kunde suchen</label>
-                      <div className="relative">
-                        <Input
-                          placeholder="Kunde suchen (Name oder Telefon)..."
-                          value={customerSearch}
-                          onChange={(e) => setCustomerSearch(e.target.value)}
-                          className="pr-10"
-                        />
-                        {selectedCustomerId && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={clearCustomer}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                          >
-                            ×
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {/* Suchergebnisse */}
-                      {customerSearch && !selectedCustomerId && filteredCustomers.length > 0 && (
-                        <div className="max-h-40 overflow-y-auto border rounded-md bg-white">
-                          {filteredCustomers.slice(0, 5).map((customer) => (
-                            <button
-                              key={customer.id}
-                              type="button"
-                              onClick={() => selectCustomer(customer)}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b last:border-b-0"
-                            >
-                              <div className="font-medium">{customer.firstName} {customer.lastName}</div>
-                              <div className="text-sm text-gray-500">{customer.phone}</div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                  <div className="space-y-4">
+                    <div>
+                      <FormLabel>Kunde suchen</FormLabel>
+                      <Input
+                        placeholder="Name oder Telefonnummer eingeben..."
+                        value={customerSearch}
+                        onChange={(e) => setCustomerSearch(e.target.value)}
+                      />
                     </div>
 
-                    {/* Manuelle Kundendaten-Eingabe */}
-                    {!selectedCustomerId && (
-                      <>
-                        <div className="text-sm font-medium">Oder neue Kundendaten eingeben:</div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={form.control}
-                            name="firstName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Vorname *</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Max" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="lastName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Nachname *</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Mustermann" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Telefon *</FormLabel>
-                              <FormControl>
-                                <Input placeholder="+43 123 456 789" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>E-Mail</FormLabel>
-                              <FormControl>
-                                <Input placeholder="max@example.com" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="address"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Adresse</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Musterstraße 1, 1010 Wien" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
+                    {customerSearch && filteredCustomers.length > 0 && (
+                      <div className="max-h-32 overflow-y-auto border rounded p-2">
+                        {filteredCustomers.map(customer => (
+                          <div 
+                            key={customer.id} 
+                            className="p-2 hover:bg-gray-100 cursor-pointer rounded"
+                            onClick={() => selectCustomer(customer)}
+                          >
+                            <div className="font-medium">{customer.firstName} {customer.lastName}</div>
+                            <div className="text-sm text-gray-600">{customer.phone}</div>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Vorname</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nachname</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefon</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-Mail (optional)</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Adresse (optional)</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Schritt 2: Artikel */}
             {step === 2 && (
               <div className="space-y-4">
                 <FormField
@@ -442,11 +387,11 @@ export function AddAccessoryDialog({
                   name="articleName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Artikel-Name *</FormLabel>
+                      <FormLabel>Artikel</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="z.B. iPhone 8 Hülle schwarz, Samsung Galaxy S21 Panzerglas" 
                           {...field} 
+                          placeholder="z.B. iPhone 8 Hülle schwarz" 
                         />
                       </FormControl>
                       <FormMessage />
@@ -460,14 +405,13 @@ export function AddAccessoryDialog({
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Stückzahl *</FormLabel>
+                        <FormLabel>Stückzahl</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            min="1" 
-                            placeholder="1" 
+                            type="number"
+                            min={1}
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : 1)}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -480,14 +424,14 @@ export function AddAccessoryDialog({
                     name="price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Preis pro Stück (€) *</FormLabel>
+                        <FormLabel>Preis (€)</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="19.99" 
+                            type="number"
+                            step="0.01"
+                            min={0}
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -501,9 +445,9 @@ export function AddAccessoryDialog({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notizen</FormLabel>
+                      <FormLabel>Notizen (optional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Zusätzliche Informationen..." {...field} />
+                        <Textarea {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -512,29 +456,22 @@ export function AddAccessoryDialog({
               </div>
             )}
 
-            <DialogFooter className="flex justify-between">
-              <div className="flex gap-2">
-                {step > 1 && (
+            <DialogFooter>
+              {step === 1 && (
+                <Button type="button" onClick={nextStep}>
+                  Weiter
+                </Button>
+              )}
+              {step === 2 && (
+                <div className="flex gap-2">
                   <Button type="button" variant="outline" onClick={prevStep}>
                     Zurück
                   </Button>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
-                {step < 2 ? (
-                  <Button type="button" onClick={nextStep}>
-                    Weiter
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? "Wird erstellt..." : "Erstellen"}
                   </Button>
-                ) : (
-                  <Button 
-                    type="submit" 
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending ? "Erstelle..." : "Auftrag erstellen"}
-                  </Button>
-                )}
-              </div>
+                </div>
+              )}
             </DialogFooter>
           </form>
         </Form>

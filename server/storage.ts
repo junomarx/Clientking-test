@@ -51,6 +51,9 @@ import {
   type SparePart,
   type InsertSparePart,
   repairStatusHistory,
+  accessories,
+  type Accessory,
+  type InsertAccessory,
 } from "@shared/schema";
 import crypto from "crypto";
 import { db } from "./db";
@@ -219,6 +222,13 @@ export interface IStorage {
   
   // Method to get repairs waiting for spare parts with customer data
   getRepairsWaitingForParts(userId: number): Promise<any[]>;
+
+  // Zubehör-Methoden
+  createAccessory(accessoryData: InsertAccessory): Promise<Accessory>;
+  getAllAccessories(userId: number): Promise<Accessory[]>;
+  getAccessory(id: number, userId: number): Promise<Accessory | undefined>;
+  updateAccessory(id: number, accessoryData: Partial<InsertAccessory>, userId: number): Promise<Accessory | undefined>;
+  deleteAccessory(id: number, userId: number): Promise<boolean>;
 
   // Business settings methods
   getBusinessSettings(userId?: number): Promise<BusinessSettings | undefined>;
@@ -1983,6 +1993,60 @@ export class DatabaseStorage implements IStorage {
       console.error("Error getting repairs waiting for parts:", error);
       return [];
     }
+  }
+
+  // Zubehör-Methoden
+  async createAccessory(accessoryData: InsertAccessory): Promise<Accessory> {
+    const [accessory] = await db
+      .insert(accessories)
+      .values(accessoryData)
+      .returning();
+    return accessory;
+  }
+
+  async getAllAccessories(userId: number): Promise<Accessory[]> {
+    const user = await this.getUser(userId);
+    if (!user || !user.shopId) return [];
+    
+    const userAccessories = await db
+      .select()
+      .from(accessories)
+      .where(eq(accessories.shopId, user.shopId))
+      .orderBy(desc(accessories.createdAt));
+    return userAccessories;
+  }
+
+  async getAccessory(id: number, userId: number): Promise<Accessory | undefined> {
+    const user = await this.getUser(userId);
+    if (!user || !user.shopId) return undefined;
+    
+    const [accessory] = await db
+      .select()
+      .from(accessories)
+      .where(and(eq(accessories.id, id), eq(accessories.shopId, user.shopId)));
+    return accessory;
+  }
+
+  async updateAccessory(id: number, accessoryData: Partial<InsertAccessory>, userId: number): Promise<Accessory | undefined> {
+    const user = await this.getUser(userId);
+    if (!user || !user.shopId) return undefined;
+    
+    const [accessory] = await db
+      .update(accessories)
+      .set({ ...accessoryData, updatedAt: new Date() })
+      .where(and(eq(accessories.id, id), eq(accessories.shopId, user.shopId)))
+      .returning();
+    return accessory;
+  }
+
+  async deleteAccessory(id: number, userId: number): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user || !user.shopId) return false;
+    
+    const result = await db
+      .delete(accessories)
+      .where(and(eq(accessories.id, id), eq(accessories.shopId, user.shopId)));
+    return result.rowCount > 0;
   }
 
   async getRepair(id: number, userId: number): Promise<Repair | undefined> {
@@ -4613,6 +4677,114 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Fehler beim Abrufen der Reparaturen mit Ersatzteilen:', error);
       return [];
+    }
+  }
+
+  // Zubehör-Verwaltung Implementierung
+  async createAccessory(accessoryData: InsertAccessory): Promise<Accessory> {
+    try {
+      const [accessory] = await db
+        .insert(accessories)
+        .values(accessoryData)
+        .returning();
+
+      console.log(`✅ Zubehör-Bestellung erstellt: ${accessory.articleName}`);
+      return accessory;
+    } catch (error) {
+      console.error('❌ Fehler beim Erstellen der Zubehör-Bestellung:', error);
+      throw error;
+    }
+  }
+
+  async getAllAccessories(userId: number): Promise<Accessory[]> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return [];
+      
+      const shopId = user.shopId || 1;
+      
+      const accessoryList = await db
+        .select()
+        .from(accessories)
+        .where(eq(accessories.shopId, shopId))
+        .orderBy(desc(accessories.createdAt));
+      
+      console.log(`✅ ${accessoryList.length} Zubehör-Bestellungen für Benutzer ${userId} abgerufen`);
+      return accessoryList;
+    } catch (error) {
+      console.error('❌ Fehler beim Abrufen der Zubehör-Bestellungen:', error);
+      return [];
+    }
+  }
+
+  async getAccessory(id: number, userId: number): Promise<Accessory | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      const shopId = user.shopId || 1;
+      
+      const [accessory] = await db
+        .select()
+        .from(accessories)
+        .where(and(
+          eq(accessories.id, id),
+          eq(accessories.shopId, shopId)
+        ));
+
+      return accessory;
+    } catch (error) {
+      console.error('❌ Fehler beim Abrufen der Zubehör-Bestellung:', error);
+      return undefined;
+    }
+  }
+
+  async updateAccessory(id: number, accessoryData: Partial<InsertAccessory>, userId: number): Promise<Accessory | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return undefined;
+      
+      const shopId = user.shopId || 1;
+      
+      const [updatedAccessory] = await db
+        .update(accessories)
+        .set({
+          ...accessoryData,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(accessories.id, id),
+          eq(accessories.shopId, shopId)
+        ))
+        .returning();
+
+      console.log(`✅ Zubehör-Bestellung ${id} aktualisiert`);
+      return updatedAccessory;
+    } catch (error) {
+      console.error('❌ Fehler beim Aktualisieren der Zubehör-Bestellung:', error);
+      return undefined;
+    }
+  }
+
+  async deleteAccessory(id: number, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user) return false;
+      
+      const shopId = user.shopId || 1;
+      
+      const result = await db
+        .delete(accessories)
+        .where(and(
+          eq(accessories.id, id),
+          eq(accessories.shopId, shopId)
+        ));
+
+      console.log(`✅ Zubehör-Bestellung ${id} gelöscht`);
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('❌ Fehler beim Löschen der Zubehör-Bestellung:', error);
+      return false;
     }
   }
 }

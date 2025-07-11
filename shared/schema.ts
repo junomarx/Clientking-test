@@ -100,7 +100,7 @@ export type InsertErrorCatalogEntry = z.infer<typeof insertErrorCatalogEntrySche
 export const repairs = pgTable("repairs", {
   id: serial("id").primaryKey(),
   orderCode: text("order_code").unique(), // Neue Spalte für das spezielle Auftragsnummerformat: z.B. AS1496
-  customerId: integer("customer_id").notNull().references(() => customers.id),
+  customerId: integer("customer_id").references(() => customers.id),
   deviceType: text("device_type").notNull(),
   brand: text("brand").notNull(),
   model: text("model").notNull(),
@@ -804,6 +804,57 @@ export const sparePartsRelations = relations(spareParts, ({ one }) => ({
   }),
   user: one(users, {
     fields: [spareParts.userId],
+    references: [users.id],
+  }),
+}));
+
+// Zubehör-Tabelle - separate Verwaltung von Zubehör-Bestellungen
+export const accessories = pgTable("accessories", {
+  id: serial("id").primaryKey(),
+  
+  // Artikel-Informationen
+  articleName: text("article_name").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: text("unit_price").notNull(), // Preis pro Stück
+  totalPrice: text("total_price").notNull(), // Gesamtpreis
+  
+  // Kunden-Informationen (optional für Lager-Artikel)
+  customerId: integer("customer_id").references(() => customers.id),
+  
+  // Typ: "lager" für Lager-Artikel, "kundenbestellung" für Kundenbestellungen
+  type: text("type").notNull().default("kundenbestellung"),
+  
+  // Status der Bestellung
+  status: text("status").notNull().default("bestellt"),
+  
+  // Notizen
+  notes: text("notes"),
+  
+  // Zugehörigkeit zu Benutzer und Shop
+  userId: integer("user_id").references(() => users.id),
+  shopId: integer("shop_id").default(1),
+  
+  // Zeitstempel
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertAccessorySchema = createInsertSchema(accessories).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Accessory = typeof accessories.$inferSelect;
+export type InsertAccessory = z.infer<typeof insertAccessorySchema>;
+
+export const accessoriesRelations = relations(accessories, ({ one }) => ({
+  customer: one(customers, {
+    fields: [accessories.customerId],
+    references: [customers.id],
+  }),
+  user: one(users, {
+    fields: [accessories.userId],
     references: [users.id],
   }),
 }));

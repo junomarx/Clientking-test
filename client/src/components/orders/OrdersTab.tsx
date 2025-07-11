@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -63,6 +64,20 @@ interface SparePart {
   updatedAt: Date;
 }
 
+interface Accessory {
+  id: number;
+  articleName: string;
+  quantity: number;
+  unitPrice: string;
+  totalPrice: string;
+  customerId: number | null;
+  type: "lager" | "kundenbestellung";
+  status: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface RepairWithCustomer {
   id: number;
   orderCode: string;
@@ -88,6 +103,7 @@ export function OrdersTab() {
   const [isSparePartsDialogOpen, setIsSparePartsDialogOpen] = useState(false);
   const [isAddSparePartDialogOpen, setIsAddSparePartDialogOpen] = useState(false);
   const [isAddAccessoryDialogOpen, setIsAddAccessoryDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"spare-parts" | "accessories">("spare-parts");
   
   // Filter und Suche States
   const [searchTerm, setSearchTerm] = useState("");
@@ -110,8 +126,14 @@ export function OrdersTab() {
     refetchInterval: 5000, // Reduziert von 30s auf 5s für bessere Performance
   });
 
-  const isLoading = isLoadingSpareParts || isLoadingRepairs;
-  const error = sparePartsError || repairsError;
+  // Zubehör-Bestellungen abrufen
+  const { data: accessories = [], isLoading: isLoadingAccessories, error: accessoriesError } = useQuery<Accessory[]>({
+    queryKey: ['/api/orders/accessories'],
+    refetchInterval: 5000,
+  });
+
+  const isLoading = isLoadingSpareParts || isLoadingRepairs || isLoadingAccessories;
+  const error = sparePartsError || repairsError || accessoriesError;
 
   const handleManageParts = (repairId: number) => {
     setSelectedRepairId(repairId);
@@ -401,6 +423,32 @@ export function OrdersTab() {
         </div>
       </div>
 
+      {/* Tab-Navigation */}
+      <div className="flex space-x-1 mb-6">
+        <Button
+          variant={activeTab === "spare-parts" ? "default" : "outline"}
+          onClick={() => setActiveTab("spare-parts")}
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Ersatzteile
+          <Badge variant="secondary" className="ml-2">
+            {filteredSpareParts.length}
+          </Badge>
+        </Button>
+        <Button
+          variant={activeTab === "accessories" ? "default" : "outline"}
+          onClick={() => setActiveTab("accessories")}
+          className="flex items-center gap-2"
+        >
+          <Package className="h-4 w-4" />
+          Zubehör
+          <Badge variant="secondary" className="ml-2">
+            {accessories.length}
+          </Badge>
+        </Button>
+      </div>
+
       {/* Erweiterte Filter- und Suchleiste */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
@@ -515,27 +563,28 @@ export function OrdersTab() {
       )}
 
       {/* Ersatzteile-Tabelle */}
-      <Card>
-        <div className="p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedParts.size === filteredSpareParts.length && filteredSpareParts.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Ersatzteil</TableHead>
-                <TableHead>Auftrag</TableHead>
-                <TableHead>Lieferant</TableHead>
-                <TableHead>Kosten</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Erstellt</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      {activeTab === "spare-parts" && (
+        <Card>
+          <div className="p-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedParts.size === filteredSpareParts.length && filteredSpareParts.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Ersatzteil</TableHead>
+                  <TableHead>Auftrag</TableHead>
+                  <TableHead>Lieferant</TableHead>
+                  <TableHead>Kosten</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Erstellt</TableHead>
+                  <TableHead className="text-right">Aktionen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {filteredSpareParts.map((part) => {
                 const relatedRepair = repairsWithParts.find(r => r.id === part.repairId);
                 return (
@@ -613,9 +662,101 @@ export function OrdersTab() {
                 );
               })}
             </TableBody>
-          </Table>
-        </div>
-      </Card>
+            </Table>
+          </div>
+        </Card>
+      )}
+
+      {/* Zubehör-Tabelle */}
+      {activeTab === "accessories" && (
+        <Card>
+          <div className="p-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Artikel</TableHead>
+                  <TableHead>Menge</TableHead>
+                  <TableHead>Einzelpreis</TableHead>
+                  <TableHead>Gesamtpreis</TableHead>
+                  <TableHead>Kunde</TableHead>
+                  <TableHead>Typ</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Erstellt</TableHead>
+                  <TableHead className="text-right">Aktionen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {accessories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                      <div className="flex flex-col items-center gap-2">
+                        <Package className="h-12 w-12 text-gray-300" />
+                        <div className="text-lg font-medium">Noch keine Zubehör-Bestellungen</div>
+                        <div className="text-sm">Erstellen Sie Ihre erste Zubehör-Bestellung mit dem Button oben.</div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  accessories.map((accessory) => (
+                    <TableRow key={accessory.id} className="hover:bg-gray-50">
+                      <TableCell className="font-medium">
+                        <div>
+                          <div>{accessory.articleName}</div>
+                          {accessory.notes && (
+                            <div className="text-xs text-gray-500 mt-1">{accessory.notes}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{accessory.quantity}x</Badge>
+                      </TableCell>
+                      <TableCell>€{accessory.unitPrice}</TableCell>
+                      <TableCell className="font-medium">€{accessory.totalPrice}</TableCell>
+                      <TableCell>
+                        {accessory.customerId ? (
+                          <span className="text-blue-600">Kunde #{accessory.customerId}</span>
+                        ) : (
+                          <span className="text-gray-500">Lager</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={accessory.type === "lager" ? "secondary" : "default"}>
+                          {accessory.type === "lager" ? "Lager" : "Kunde"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{accessory.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {format(new Date(accessory.createdAt), 'dd.MM.yyyy', { locale: de })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Settings className="h-4 w-4 mr-2" />
+                              Bearbeiten
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <CheckSquare className="h-4 w-4 mr-2" />
+                              Status ändern
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">
