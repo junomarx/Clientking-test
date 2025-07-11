@@ -278,10 +278,17 @@ export function AddAccessoryDialog({
     },
   });
 
-  const onSubmit = (data: AccessoryFormData) => {
+  const onSubmit = async (data: AccessoryFormData) => {
+    console.log("onSubmit called with data:", data);
+    console.log("inStock:", data.inStock);
+    console.log("articles state:", articles);
+    
     // Für Multi-Artikel: Zusätzliche Validierung
     if (data.inStock) {
-      if (!validateMultiArticles()) {
+      const validArticles = articles.filter(a => a.articleName.trim() !== "" && a.quantity > 0);
+      console.log("Valid articles:", validArticles);
+      
+      if (validArticles.length === 0) {
         toast({
           title: "Validierungsfehler",
           description: "Bitte füllen Sie mindestens einen Artikel vollständig aus.",
@@ -289,9 +296,10 @@ export function AddAccessoryDialog({
         });
         return;
       }
-      data.articles = articles.filter(a => a.articleName.trim() !== "");
+      data.articles = validArticles;
     }
     
+    console.log("Calling createMutation.mutate with:", data);
     createMutation.mutate(data);
   };
 
@@ -368,15 +376,16 @@ export function AddAccessoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {step === 1 ? "Schritt 1: Kunde/Lager" : "Schritt 2: Artikel"}
           </DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="flex-1 overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {step === 1 && (
               <div className="space-y-4">
                 <FormField
@@ -506,47 +515,41 @@ export function AddAccessoryDialog({
             {step === 2 && (
               <div className="space-y-4">
                 {inStock ? (
-                  // Multi-Artikel Interface für "Auf Lager"
-                  <div className="space-y-4">
+                  // Multi-Artikel Interface für "Auf Lager" - KOMPAKT
+                  <div className="space-y-3">
                     <h3 className="text-lg font-medium">Artikel hinzufügen</h3>
                     
-                    <div className={`space-y-3 ${articles.length > 4 ? 'max-h-96 overflow-y-auto pr-2' : ''}`}>
+                    <div className={`space-y-2 ${articles.length > 4 ? 'max-h-80 overflow-y-auto pr-2' : ''}`}>
                       {articles.map((article, index) => (
-                        <div key={index} className="border rounded-lg p-4 space-y-3">
-                          <div className="flex items-center justify-end">
+                        <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                          <div className="col-span-8">
+                            <Input
+                              value={article.articleName}
+                              onChange={(e) => updateArticle(index, "articleName", e.target.value)}
+                              placeholder="z.B. iPhone 8 Hülle schwarz"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Input
+                              type="number"
+                              min={1}
+                              value={article.quantity}
+                              onChange={(e) => updateArticle(index, "quantity", parseInt(e.target.value) || 1)}
+                              placeholder="1"
+                            />
+                          </div>
+                          <div className="col-span-2 flex justify-end">
                             {articles.length > 1 && (
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeArticle(index)}
-                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                className="h-9 w-9 p-0 text-red-500 hover:text-red-700"
                               >
                                 <Minus className="h-4 w-4" />
                               </Button>
                             )}
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="col-span-2">
-                              <label className="text-sm font-medium text-gray-700">Artikel</label>
-                              <Input
-                                value={article.articleName}
-                                onChange={(e) => updateArticle(index, "articleName", e.target.value)}
-                                placeholder="z.B. iPhone 8 Hülle schwarz"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-700">Stückzahl</label>
-                              <Input
-                                type="number"
-                                min={1}
-                                value={article.quantity}
-                                onChange={(e) => updateArticle(index, "quantity", parseInt(e.target.value) || 1)}
-                                className="mt-1 w-20"
-                              />
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -557,7 +560,7 @@ export function AddAccessoryDialog({
                       variant="outline"
                       size="sm"
                       onClick={addArticle}
-                      className="flex items-center gap-2 w-full"
+                      className="flex items-center gap-2 w-full mt-3"
                     >
                       <Plus className="h-4 w-4" />
                       Artikel hinzufügen
@@ -656,28 +659,34 @@ export function AddAccessoryDialog({
               </div>
             )}
 
-            <DialogFooter>
-              {step === 1 && (
-                <Button type="button" onClick={nextStep}>
-                  Weiter
-                </Button>
-              )}
-              {step === 2 && (
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={prevStep}>
-                    Zurück
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createMutation.isPending || (inStock && !validateMultiArticles())}
-                  >
-                    {createMutation.isPending ? "Wird erstellt..." : "Erstellen"}
-                  </Button>
-                </div>
-              )}
-            </DialogFooter>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
+        
+        <DialogFooter className="mt-4">
+          {step === 1 && (
+            <Button type="button" onClick={nextStep}>
+              Weiter
+            </Button>
+          )}
+          {step === 2 && (
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={prevStep}>
+                Zurück
+              </Button>
+              <Button 
+                type="button"
+                onClick={() => {
+                  const formData = form.getValues();
+                  onSubmit(formData);
+                }}
+                disabled={createMutation.isPending}
+              >
+                {createMutation.isPending ? "Wird erstellt..." : "Erstellen"}
+              </Button>
+            </div>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
