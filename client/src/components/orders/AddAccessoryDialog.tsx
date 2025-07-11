@@ -226,7 +226,7 @@ export function AddAccessoryDialog({
             totalPrice: "0.00",
             customerId: null, // Kein Kunde für Lagerartikel
             type: "lager",
-            status: "bestellt",
+            status: "bestellen",
             notes: data.notes || "",
           };
           
@@ -247,7 +247,7 @@ export function AddAccessoryDialog({
           totalPrice: (data.price! * data.quantity!).toFixed(2),
           customerId: customerId,
           type: "kundenbestellung",
-          status: "bestellt",
+          status: "bestellen",
           notes: data.notes || "",
         };
         

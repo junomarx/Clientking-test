@@ -825,7 +825,7 @@ export const accessories = pgTable("accessories", {
   type: text("type").notNull().default("kundenbestellung"),
   
   // Status der Bestellung
-  status: text("status").notNull().default("bestellt"),
+  status: text("status").notNull().default("bestellen"),
   
   // Notizen
   notes: text("notes"),

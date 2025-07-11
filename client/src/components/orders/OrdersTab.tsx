@@ -267,6 +267,8 @@ export function OrdersTab() {
     });
   };
 
+
+
   // Mutation für Einzelupdates über Header-basierte Route
   const singlePartUpdateMutation = useMutation({
     mutationFn: async ({ partIds, status }: { partIds: number[]; status: string }) => {
@@ -523,31 +525,39 @@ export function OrdersTab() {
   // Mutation für Zubehör-Status-Updates
   const updateAccessoryStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      await apiRequest("PATCH", `/api/orders/accessories/${id}`, { status });
+      const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
+        accessoryIds: [id],
+        status,
+      });
+      if (!response.ok) {
+        throw new Error("Fehler beim Aktualisieren des Zubehörs");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+      toast({
+        title: "Status aktualisiert",
+        description: "Zubehör-Status wurde erfolgreich aktualisiert.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
-  const handleAccessoryStatusChange = async (accessoryId: number, newStatus: string) => {
-    try {
-      await updateAccessoryStatusMutation.mutateAsync({
-        id: accessoryId,
-        status: newStatus
-      });
-      toast({
-        title: "Status aktualisiert",
-        description: `Zubehör-Status wurde auf "${getAccessoryStatusLabel(newStatus)}" geändert.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "Status konnte nicht aktualisiert werden.",
-        variant: "destructive",
-      });
-    }
+  const handleAccessoryStatusChange = (accessoryId: number, status: string) => {
+    updateAccessoryStatusMutation.mutate({
+      id: accessoryId,
+      status,
+    });
   };
+
+
 
   if (isLoading) {
     return (
@@ -1007,7 +1017,14 @@ export function OrdersTab() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                toast({
+                                  title: "Bearbeiten",
+                                  description: "Zubehör-Bearbeitung wird noch implementiert.",
+                                });
+                              }}
+                            >
                               <Settings className="h-4 w-4 mr-2" />
                               Bearbeiten
                             </DropdownMenuItem>
