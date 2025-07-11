@@ -575,12 +575,11 @@ export function OrdersTab() {
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>Ersatzteil</TableHead>
                   <TableHead>Auftrag</TableHead>
+                  <TableHead>Ersatzteil</TableHead>
                   <TableHead>Lieferant</TableHead>
-                  <TableHead>Kosten</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Erstellt</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
@@ -595,14 +594,6 @@ export function OrdersTab() {
                         onCheckedChange={(checked) => handleSelectPart(part.id, checked as boolean)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div>{part.partName}</div>
-                        {part.notes && (
-                          <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
-                        )}
-                      </div>
-                    </TableCell>
                     <TableCell>
                       {relatedRepair ? (
                         <div>
@@ -615,19 +606,24 @@ export function OrdersTab() {
                         <span className="text-gray-500">Nicht gefunden</span>
                       )}
                     </TableCell>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div>{part.partName}</div>
+                        {part.notes && (
+                          <div className="text-xs text-gray-500 mt-1">{part.notes}</div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {part.supplier || <span className="text-gray-400">-</span>}
                     </TableCell>
-                    <TableCell>
-                      {part.cost ? `€${part.cost.toFixed(2)}` : <span className="text-gray-400">-</span>}
+                    <TableCell className="text-sm text-gray-500">
+                      {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
                     </TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(part.status)} className="text-xs">
                         {getStatusLabel(part.status)}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {format(new Date(part.createdAt), 'dd.MM.yyyy', { locale: de })}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
