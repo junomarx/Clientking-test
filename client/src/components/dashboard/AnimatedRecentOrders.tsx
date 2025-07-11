@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Info, QrCode, RotateCw } from 'lucide-react';
+import { Printer, Info, QrCode, RefreshCw } from 'lucide-react';
 import { getStatusBadge } from '@/lib/utils';
 
 interface RepairWithCustomer {
@@ -141,7 +141,7 @@ export function AnimatedRecentOrders({
                         )}
                         {onStatusChange && (
                           <motion.button 
-                            className="text-purple-600 hover:text-purple-800 p-1 rounded-full hover:bg-purple-50"
+                            className="text-red-600 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
                             title="Status ändern"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -150,7 +150,7 @@ export function AnimatedRecentOrders({
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                           >
-                            <RotateCw className="h-4 w-4" />
+                            <RefreshCw className="h-4 w-4" />
                           </motion.button>
                         )}
                         <motion.button 
@@ -241,7 +241,7 @@ export function AnimatedRecentOrders({
                 )}
                 {onStatusChange && (
                   <motion.button 
-                    className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-50"
+                    className="text-red-600 hover:text-red-700 p-2 rounded-full hover:bg-red-50"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={(e) => {
@@ -249,7 +249,7 @@ export function AnimatedRecentOrders({
                       onStatusChange(repair.id, repair.status);
                     }}
                   >
-                    <RotateCw className="h-5 w-5" />
+                    <RefreshCw className="h-5 w-5" />
                   </motion.button>
                 )}
                 <motion.button 
