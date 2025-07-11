@@ -292,6 +292,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/orders/accessories/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const accessoryId = parseInt(req.params.id);
+      if (!accessoryId) {
+        return res.status(400).json({ message: "Ungültige Zubehör-ID" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Aktualisiere Zubehör-Status für ID ${accessoryId} (Benutzer ${userId}):`, req.body);
+      
+      const updatedAccessory = await storage.updateAccessory(accessoryId, req.body, userId);
+      
+      if (!updatedAccessory) {
+        return res.status(404).json({ message: "Zubehör nicht gefunden oder keine Berechtigung" });
+      }
+      
+      console.log(`[DIREKTE ROUTE] Zubehör-Status aktualisiert:`, updatedAccessory);
+      res.json(updatedAccessory);
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Aktualisieren des Zubehör-Status:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren des Zubehör-Status",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  app.patch("/api/orders/accessories-bulk-update", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.header('X-User-ID') || '0');
+      if (!userId) {
+        return res.status(401).json({ message: "X-User-ID Header fehlt" });
+      }
+      
+      const { accessoryIds, status } = req.body;
+      
+      console.log(`[DIREKTE ROUTE] Bulk-Update für Zubehör:`, { accessoryIds, status, userId });
+      
+      if (!Array.isArray(accessoryIds) || accessoryIds.length === 0) {
+        return res.status(400).json({ message: "Ungültige Zubehör-IDs" });
+      }
+      
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: "Ungültiger Status" });
+      }
+      
+      const success = await storage.bulkUpdateAccessoryStatus(accessoryIds, status, userId);
+      
+      if (success) {
+        res.json({ message: "Zubehör erfolgreich aktualisiert", accessoryIds, status });
+      } else {
+        res.status(500).json({ message: "Fehler beim Aktualisieren der Zubehör-Artikel" });
+      }
+    } catch (error) {
+      console.error("[DIREKTE ROUTE] Fehler beim Bulk-Update der Zubehör-Artikel:", error);
+      res.status(500).json({ 
+        message: "Fehler beim Aktualisieren der Zubehör-Artikel",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // PWA-ROUTES: Service Worker und Manifest mit korrekten MIME-Types bedienen
   app.get('/sw.js', (req, res) => {
     const swPath = path.resolve(import.meta.dirname, '..', 'public', 'sw.js');
@@ -5742,6 +5808,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('PDF-Export-Fehler:', error);
       res.status(500).json({ error: "PDF konnte nicht erstellt werden" });
+    }
+  });
+
+  // PDF Export für Bestellungen mit Status "bestellen"
+  app.post("/api/orders/export-orders-pdf", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const { spareParts, accessories } = req.body;
+      
+      if ((!spareParts || spareParts.length === 0) && (!accessories || accessories.length === 0)) {
+        return res.status(400).json({ message: "Keine Artikel zum Exportieren vorhanden" });
+      }
+      
+      // PDF-Erstellung mit jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('Bestellungen Übersicht', 20, 20);
+      
+      doc.setFontSize(12);
+      doc.text(`Exportiert am: ${new Date().toLocaleDateString('de-DE')}`, 20, 35);
+      doc.text('Status: Bestellen', 20, 45);
+      
+      let yPos = 60;
+      
+      // Ersatzteile Sektion
+      if (spareParts && spareParts.length > 0) {
+        doc.setFontSize(14);
+        doc.text('Ersatzteile', 20, yPos);
+        yPos += 15;
+        
+        doc.setFontSize(10);
+        // Header der Tabelle
+        doc.text('Ersatzteil', 20, yPos);
+        doc.text('Auftrag', 70, yPos);
+        doc.text('Lieferant', 110, yPos);
+        doc.text('Status', 150, yPos);
+        doc.text('Erstellt', 180, yPos);
+        yPos += 10;
+        
+        // Ersatzteile-Daten
+        for (const part of spareParts) {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          // Auftragsnummer von der zugehörigen Reparatur abrufen
+          const repair = await storage.getRepair(part.repairId, req.user.id);
+          const orderCode = repair ? repair.orderCode : `R${part.repairId}`;
+          
+          doc.text(part.partName.substring(0, 25), 20, yPos);
+          doc.text(orderCode, 70, yPos);
+          doc.text(part.supplier?.substring(0, 15) || '-', 110, yPos);
+          doc.text(part.status, 150, yPos);
+          doc.text(new Date(part.createdAt).toLocaleDateString('de-DE'), 180, yPos);
+          yPos += 8;
+        }
+        
+        yPos += 10;
+      }
+      
+      // Zubehör Sektion
+      if (accessories && accessories.length > 0) {
+        if (yPos > 200) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.text('Zubehör', 20, yPos);
+        yPos += 15;
+        
+        doc.setFontSize(10);
+        // Header der Tabelle
+        doc.text('Artikel', 20, yPos);
+        doc.text('Menge', 70, yPos);
+        doc.text('Kunde', 100, yPos);
+        doc.text('Status', 150, yPos);
+        doc.text('Erstellt', 180, yPos);
+        yPos += 10;
+        
+        // Zubehör-Daten
+        for (const accessory of accessories) {
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          let customerName = '-';
+          if (accessory.customerId) {
+            const customer = await storage.getCustomer(accessory.customerId, req.user.id);
+            if (customer) {
+              customerName = `${customer.firstName} ${customer.lastName}`.substring(0, 20);
+            }
+          }
+          
+          doc.text(accessory.articleName.substring(0, 25), 20, yPos);
+          doc.text(accessory.quantity.toString(), 70, yPos);
+          doc.text(customerName, 100, yPos);
+          doc.text(accessory.status, 150, yPos);
+          doc.text(new Date(accessory.createdAt).toLocaleDateString('de-DE'), 180, yPos);
+          yPos += 8;
+        }
+      }
+      
+      const pdfBuffer = doc.output('arraybuffer');
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="bestellungen.pdf"');
+      res.send(Buffer.from(pdfBuffer));
+      
+    } catch (error) {
+      console.error('Fehler beim Bestellungen-PDF-Export:', error);
+      res.status(500).json({ message: 'Fehler beim Bestellungen-PDF-Export' });
     }
   });
 

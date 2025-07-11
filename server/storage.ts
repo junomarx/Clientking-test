@@ -2049,6 +2049,40 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
+  async bulkUpdateAccessoryStatus(accessoryIds: number[], status: string, userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      if (!user || !user.shopId) {
+        console.error(`bulkUpdateAccessoryStatus: Benutzer ${userId} nicht gefunden oder keine Shop-ID`);
+        return false;
+      }
+      
+      console.log(`bulkUpdateAccessoryStatus: Aktualisiere ${accessoryIds.length} Zubehör-Artikel für Benutzer ${userId} (Shop ${user.shopId}) auf Status '${status}'`);
+      
+      // Shop-Isolation: Nur Zubehör des eigenen Shops aktualisieren
+      const result = await db
+        .update(accessories)
+        .set({ 
+          status: status,
+          updatedAt: new Date()
+        })
+        .where(
+          and(
+            inArray(accessories.id, accessoryIds),
+            eq(accessories.shopId, user.shopId)
+          )
+        );
+      
+      const updatedCount = result.rowCount;
+      console.log(`bulkUpdateAccessoryStatus: ${updatedCount} von ${accessoryIds.length} Zubehör-Artikel erfolgreich aktualisiert`);
+      
+      return updatedCount > 0;
+    } catch (error) {
+      console.error("Fehler beim Bulk-Update der Zubehör-Status:", error);
+      return false;
+    }
+  }
+
   async getRepair(id: number, userId: number): Promise<Repair | undefined> {
     try {
       console.log(`getRepair: Abrufen der Reparatur ID ${id} für Benutzer ${userId}`);

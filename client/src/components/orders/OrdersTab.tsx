@@ -26,7 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckSquare, Calendar } from "lucide-react";
+import { Package, Settings, Search, Filter, Download, Plus, MoreVertical, CheckSquare, Calendar, FileText } from "lucide-react";
 import { SparePartsManagementDialog } from "./SparePartsManagementDialog";
 import { AddSparePartDialog } from "./AddSparePartDialog";
 import { AddAccessoryDialog } from "./AddAccessoryDialog";
@@ -110,6 +110,7 @@ export function OrdersTab() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [selectedParts, setSelectedParts] = useState<Set<number>>(new Set());
+  const [selectedAccessories, setSelectedAccessories] = useState<Set<number>>(new Set());
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -176,6 +177,34 @@ export function OrdersTab() {
     },
   });
 
+  const bulkAccessoryUpdateMutation = useMutation({
+    mutationFn: async ({ accessoryIds, status }: { accessoryIds: number[]; status: string }) => {
+      const response = await apiRequest("PATCH", "/api/orders/accessories-bulk-update", {
+        accessoryIds,
+        status,
+      });
+      if (!response.ok) {
+        throw new Error("Fehler beim Aktualisieren der Zubehör-Artikel");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/orders/accessories'] });
+      toast({
+        title: "Zubehör aktualisiert",
+        description: "Die ausgewählten Zubehör-Artikel wurden erfolgreich aktualisiert.",
+      });
+      setSelectedAccessories(new Set());
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handler-Funktionen
   const handleSelectPart = (partId: number, checked: boolean) => {
     const newSelected = new Set(selectedParts);
@@ -195,6 +224,24 @@ export function OrdersTab() {
     }
   };
 
+  const handleSelectAllAccessories = (checked: boolean) => {
+    if (checked) {
+      setSelectedAccessories(new Set(accessories.map(accessory => accessory.id)));
+    } else {
+      setSelectedAccessories(new Set());
+    }
+  };
+
+  const handleSelectAccessory = (accessoryId: number, checked: boolean) => {
+    const newSelected = new Set(selectedAccessories);
+    if (checked) {
+      newSelected.add(accessoryId);
+    } else {
+      newSelected.delete(accessoryId);
+    }
+    setSelectedAccessories(newSelected);
+  };
+
   const handleBulkUpdate = (status: string) => {
     if (selectedParts.size === 0) {
       toast({
@@ -207,6 +254,22 @@ export function OrdersTab() {
 
     bulkUpdateMutation.mutate({
       partIds: Array.from(selectedParts),
+      status,
+    });
+  };
+
+  const handleBulkAccessoryUpdate = (status: string) => {
+    if (selectedAccessories.size === 0) {
+      toast({
+        title: "Keine Auswahl",
+        description: "Bitte wählen Sie mindestens ein Zubehör aus.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    bulkAccessoryUpdateMutation.mutate({
+      accessoryIds: Array.from(selectedAccessories),
       status,
     });
   };
@@ -274,6 +337,59 @@ export function OrdersTab() {
     }
   };
 
+  // PDF Export für Bestellungen mit Status "bestellen"
+  const exportOrdersToPDF = async () => {
+    try {
+      toast({
+        title: "Export gestartet", 
+        description: "PDF für Bestellungen wird vorbereitet...",
+      });
+
+      // Filter für Artikel mit Status "bestellen"
+      const orderSpareParts = allSpareParts.filter(part => part.status === "bestellen");
+      const orderAccessories = accessories.filter(accessory => accessory.status === "bestellen");
+
+      if (orderSpareParts.length === 0 && orderAccessories.length === 0) {
+        toast({
+          title: "Keine Bestellungen",
+          description: "Es gibt keine Artikel mit Status 'bestellen' zum Exportieren.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await apiRequest("POST", "/api/orders/export-orders-pdf", {
+        spareParts: orderSpareParts,
+        accessories: orderAccessories
+      });
+
+      if (!response.ok) {
+        throw new Error('PDF-Export fehlgeschlagen');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bestellungen-${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export abgeschlossen",
+        description: "Bestellungen-PDF wurde erfolgreich heruntergeladen.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export-Fehler",
+        description: "Bestellungen-PDF konnte nicht erstellt werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Gefilterte und gesuchte Ersatzteile
   const filteredSpareParts = useMemo(() => {
     return allSpareParts.filter(part => {
@@ -332,6 +448,69 @@ export function OrdersTab() {
         return 'Erledigt';
       default:
         return status;
+    }
+  };
+
+  const getAccessoryStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'bestellen':
+        return 'destructive';
+      case 'bestellt':
+        return 'secondary';
+      case 'eingetroffen':
+        return 'default';
+      case 'erledigt':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getAccessoryStatusLabel = (status: string) => {
+    switch (status) {
+      case 'bestellen':
+        return 'Bestellen';
+      case 'bestellt':
+        return 'Bestellt';
+      case 'eingetroffen':
+        return 'Eingetroffen';
+      case 'erledigt':
+        return 'Erledigt';
+      default:
+        return status;
+    }
+  };
+
+  // Mutation für Zubehör-Status-Updates
+  const updateAccessoryStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      await apiRequest("PATCH", `/api/orders/accessories/${id}`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/orders/accessories"] });
+    },
+  });
+
+  const handleAccessoryStatusChange = async (accessoryId: number, currentStatus: string) => {
+    const statusOrder = ["bestellen", "bestellt", "eingetroffen", "erledigt"];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+    
+    try {
+      await updateAccessoryStatusMutation.mutateAsync({
+        id: accessoryId,
+        status: nextStatus
+      });
+      toast({
+        title: "Status aktualisiert",
+        description: `Zubehör-Status wurde auf "${getAccessoryStatusLabel(nextStatus)}" geändert.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Status konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -403,6 +582,15 @@ export function OrdersTab() {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            onClick={exportOrdersToPDF}
+            className="flex items-center gap-2"
+            size="sm"
+            variant="secondary"
+          >
+            <FileText className="h-4 w-4" />
+            <span className="hidden md:inline">Bestellungen PDF</span>
+          </Button>
           <Button
             onClick={() => setIsAddSparePartDialogOpen(true)}
             className="flex items-center gap-2"
@@ -663,6 +851,48 @@ export function OrdersTab() {
         </Card>
       )}
 
+      {/* Bulk-Aktionen für Zubehör */}
+      {activeTab === "accessories" && selectedAccessories.size > 0 && (
+        <Card className="mb-4 border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {selectedAccessories.size} Zubehör-Artikel ausgewählt
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAccessoryUpdate("bestellt")}
+                  disabled={bulkAccessoryUpdateMutation.isPending}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Als bestellt markieren
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAccessoryUpdate("eingetroffen")}
+                  disabled={bulkAccessoryUpdateMutation.isPending}
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  Als eingetroffen markieren
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAccessoryUpdate("erledigt")}
+                  disabled={bulkAccessoryUpdateMutation.isPending}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Als erledigt markieren
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Zubehör-Tabelle */}
       {activeTab === "accessories" && (
         <Card>
@@ -670,12 +900,15 @@ export function OrdersTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedAccessories.size === accessories.length && accessories.length > 0}
+                      onCheckedChange={handleSelectAllAccessories}
+                    />
+                  </TableHead>
                   <TableHead>Artikel</TableHead>
                   <TableHead>Menge</TableHead>
-                  <TableHead>Einzelpreis</TableHead>
-                  <TableHead>Gesamtpreis</TableHead>
                   <TableHead>Kunde</TableHead>
-                  <TableHead>Typ</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Erstellt</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
@@ -695,6 +928,12 @@ export function OrdersTab() {
                 ) : (
                   accessories.map((accessory) => (
                     <TableRow key={accessory.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedAccessories.has(accessory.id)}
+                          onCheckedChange={(checked) => handleSelectAccessory(accessory.id, checked as boolean)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div>
                           <div>{accessory.articleName}</div>
@@ -706,8 +945,6 @@ export function OrdersTab() {
                       <TableCell>
                         <Badge variant="outline">{accessory.quantity}x</Badge>
                       </TableCell>
-                      <TableCell>€{accessory.unitPrice}</TableCell>
-                      <TableCell className="font-medium">€{accessory.totalPrice}</TableCell>
                       <TableCell>
                         {accessory.customerId ? (
                           <span className="text-blue-600">Kunde #{accessory.customerId}</span>
@@ -716,12 +953,13 @@ export function OrdersTab() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={accessory.type === "lager" ? "secondary" : "default"}>
-                          {accessory.type === "lager" ? "Lager" : "Kunde"}
+                        <Badge 
+                          variant={getAccessoryStatusBadgeVariant(accessory.status)} 
+                          className="text-xs cursor-pointer"
+                          onClick={() => handleAccessoryStatusChange(accessory.id, accessory.status)}
+                        >
+                          {getAccessoryStatusLabel(accessory.status)}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{accessory.status}</Badge>
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">
                         {format(new Date(accessory.createdAt), 'dd.MM.yyyy', { locale: de })}
@@ -738,7 +976,7 @@ export function OrdersTab() {
                               <Settings className="h-4 w-4 mr-2" />
                               Bearbeiten
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAccessoryStatusChange(accessory.id, accessory.status)}>
                               <CheckSquare className="h-4 w-4 mr-2" />
                               Status ändern
                             </DropdownMenuItem>
